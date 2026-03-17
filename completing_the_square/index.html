@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tam Kareye Tamamlama</title>
+<style>
+  :root{
+    --bg:#fff; --ink:#111827;
+    --outline:#38bdf8; --outline-shadow:rgba(56,189,248,.10);
+    --hover-fill:rgba(56,189,248,.06);
+    --card:#e5e7eb;
+    --hoverY:-56px; --fly-dur:.95s;
+    --between:6px; --leftPad:4px; --betweenCompact:4px; --leftPadCompact:3px;
+    --fade-fast:.22s;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; padding:24px; background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,Inter,Segoe UI,Roboto,Arial,sans-serif;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .app{width:min(1100px,96vw);}
+
+  .bar{display:flex; gap:12px; align-items:center; margin-bottom:10px;}
+  .btn{
+    border:1px solid var(--outline); background:#fff; color:var(--ink);
+    padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600;
+    transition:transform .08s ease, box-shadow .2s ease;
+  }
+  .btn:hover{transform:translateY(-1px); box-shadow:0 6px 16px rgba(56,189,248,.18)}
+
+  .card{
+    background:#fff; border:1px solid var(--card); border-radius:16px;
+    padding:24px 20px; min-height:260px; box-shadow:0 8px 24px rgba(0,0,0,.06);
+    position:relative; user-select:none;
+  }
+
+  .line{
+    position:relative; font-size:clamp(28px,4.0vw,40px); font-weight:500; letter-spacing:.15px;
+    display:flex; align-items:center; flex-wrap:wrap; gap:.25ch; min-height:3.3em;
+  }
+  .term{display:inline-block; position:relative; white-space:nowrap}
+  .sup{font-size:.6em; vertical-align:super; line-height:0}
+
+  /* Hover kutusu = Kolay butonu stili */
+  .clickable{cursor:pointer; position:relative}
+  .clickable::after{
+    content:""; position:absolute; inset:-2px -4px; border-radius:12px;
+    border:1.5px solid transparent; background:transparent; box-shadow:none;
+    opacity:0; pointer-events:none;
+    transition:opacity .12s ease, border-color .12s ease, background-color .12s ease, box-shadow .18s ease, inset .18s ease;
+  }
+  .clickable:hover::after{
+    border-color:var(--outline); background:var(--hover-fill);
+    box-shadow:0 6px 16px var(--outline-shadow); opacity:1;
+  }
+
+  .c-block{display:inline-block; position:relative}
+  .c-inner{display:inline-flex; align-items:baseline; gap:.4ch}
+  .spacer{display:inline-block}
+  .sp-left{width:var(--leftPad)}
+  .sp-between{width:var(--between)}
+  .bl-probe{display:inline-block; width:0; height:0; vertical-align:baseline}
+
+  .bubble{
+    position:absolute; font-size:inherit; font-weight:500; left:0; top:0;
+    transform:translateX(-50%) translateY(var(--hoverY));
+    will-change:transform,opacity,left,top;
+  }
+  @keyframes riseHold{
+    0%{transform:translateX(-50%) translateY(0) scale(.94); opacity:0}
+    55%{transform:translateX(-50%) translateY(calc(var(--hoverY) - 10px)) scale(1.06); opacity:1}
+    100%{transform:translateX(-50%) translateY(var(--hoverY))}
+  }
+  .rise-hold{animation:riseHold .50s cubic-bezier(.22,1.2,.36,1) both}
+
+  /* Sahne FX */
+  .flyUpFade{animation:flyUp .38s cubic-bezier(.2,.8,.2,1) forwards}
+  @keyframes flyUp{to{transform:translateY(-14px); opacity:0; filter:blur(1.2px)}}
+
+  .sup-shrink{display:inline-block; animation:supOut .38s cubic-bezier(.2,.8,.2,1) forwards}
+  @keyframes supOut{to{transform:translateY(-10px) scale(.2); opacity:0}}
+
+  .pulse{animation:pulse .28s cubic-bezier(.2,1.2,.3,1) forwards}
+  @keyframes pulse{from{transform:scale(.94); opacity:.85} to{transform:scale(1); opacity:1}}
+
+  .parenL,.parenR{display:inline-block; transform-origin:center top; transform:scaleY(0); opacity:0;
+    animation:drawParen .42s cubic-bezier(.2,.8,.2,1) .05s forwards}
+  @keyframes drawParen{to{transform:scaleY(1); opacity:1}}
+
+  .pow-pop{animation:pow .28s cubic-bezier(.2,1.2,.3,1) .06s both}
+  @keyframes pow{from{opacity:0; transform:translateY(-6px) scale(.6)} to{opacity:1; transform:none}}
+
+  .fade-out{animation:fadeout var(--fade-fast) ease forwards}
+  @keyframes fadeout{to{opacity:0; transform:translateY(-6px)}}
+</style>
+</head>
+<body>
+<body>
+
+<!-- HOME BUTTON -->
+<div style="
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+">
+  <a href="../index.html" style="
+    text-decoration: none;
+    background: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: black;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  ">
+    ← Home
+  </a>
+</div>
+
+<div class="wrap">
+  <div class="app">
+    <div class="bar">
+      <button id="btnEasy" class="btn">Kolay</button>
+      <button id="btnAdv" class="btn">Gelişmiş</button>
+    </div>
+    <div class="card">
+      <div id="eqLine" class="line" aria-live="polite"></div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const $=(s,el=document)=>el.querySelector(s);
+  const eqLine=$("#eqLine"); const btnEasy=$("#btnEasy"), btnAdv=$("#btnAdv");
+  let a=1,b=0,c=0,k=0, state="idle", bStageStep=0, lock=false;
+  const THIN="\u200A";
+
+  function newSet(){
+    a=1; const ev=[]; for(let x=-12;x<=12;x++) if(x&&x%2===0) ev.push(x);
+    b=ev[Math.floor(Math.random()*ev.length)];
+    c=Math.floor(Math.random()*19)-9; k=b/2;
+  }
+  const signed=(n,withPlus=true)=> n===0?(withPlus?`+${THIN}0`:`0`):( (n<0?"−":(withPlus?"+":""))+THIN+Math.abs(n) );
+  function coeffBx(v){ if(v===1) return `+${THIN}x`; if(v===-1) return `−${THIN}x`; const s=v<0?"−":"+"; return `${s}${THIN}${Math.abs(v)}x`; }
+  const span=(html,role)=>{ const t=document.createElement("span"); t.className="term"; if(role) t.dataset.role=role; t.innerHTML=html; return t; };
+
+  function cBlock(){
+    const w=document.createElement("span"); w.className="c-block"; w.dataset.role="cblock";
+    const inner=document.createElement("span"); inner.className="c-inner"; inner.dataset.role="cinner";
+    const cm=document.createElement("span"); cm.className="term clickable"; cm.dataset.role="cmove"; cm.innerHTML=signed(c);
+    cm.addEventListener("click",onC); inner.append(cm); w.append(inner); return w;
+  }
+
+  function render(){
+    eqLine.innerHTML="";
+    const x2=span("x<sup class='sup' data-role='xsup'>2</sup>","x2");
+    const bx=span(`${coeffBx(b)}`,"bx");
+    const cb=cBlock();
+    eqLine.append(x2,bx,cb);
+    state="idle"; bStageStep=0; lock=false;
+  }
+
+  function onC(){
+    if(state!=="idle"||lock) return; lock=true; setTimeout(()=>lock=false,180);
+    const cmove=$("[data-role='cmove']"); const bx=$("[data-role='bx']");
+    const first=cmove.getBoundingClientRect();
+
+    const k2=k*k, plusHTML=`+${THIN}${k2}`, minusHTML=`−${THIN}${k2}`;
+    const cin=$("[data-role='cinner']");
+    const spL=document.createElement("span"); spL.className="spacer sp-left"; spL.dataset.role="spLeft";
+    const tgtP=span(`${plusHTML}<span class="bl-probe"></span>`,"k2finalPlus");
+    const spB=document.createElement("span"); spB.className="spacer sp-between"; spB.dataset.role="spBetween";
+    const tgtM=span(`${minusHTML}<span class="bl-probe"></span>`,"k2finalMinus");
+    tgtP.style.visibility="hidden"; tgtM.style.visibility="hidden";
+    cin.insertBefore(spL,cmove); cin.insertBefore(tgtP,cmove); cin.insertBefore(spB,cmove); cin.insertBefore(tgtM,cmove);
+
+    const last=cmove.getBoundingClientRect(); const dx=(first.left-last.left);
+    cmove.style.transform=`translateX(${dx}px)`; cmove.style.willChange="transform";
+    const dist=Math.abs(dx); const dur=Math.max(0.55,Math.min(1.10,0.55+dist/900));
+    cmove.getBoundingClientRect(); cmove.style.transition=`transform ${dur}s cubic-bezier(.2,.8,.2,1)`;
+    requestAnimationFrame(()=>{ cmove.style.transform="translateX(0)"; });
+    cmove.addEventListener("transitionend", function te(e){
+      if(e.propertyName!=="transform") return;
+      cmove.style.transition=""; cmove.style.transform=""; cmove.style.willChange="";
+      /* DÜZELTME: Bu aşamada +c hover kutusu çıkmaması için clickable’ı kaldırıyoruz */
+      cmove.classList.remove('clickable');
+
+      bx.classList.add("clickable");
+      bx.addEventListener("click",onBx,{once:true});
+      state="cSplit";
+      cmove.removeEventListener("transitionend",te);
+    });
+  }
+
+  function onBx(){
+    if(state!=="cSplit"||lock) return; lock=true; setTimeout(()=>lock=false,180);
+    const bx=$("[data-role='bx']"); const bxR=bx.getBoundingClientRect(); const lineR=eqLine.getBoundingClientRect();
+    bx.classList.remove("clickable"); bx.style.pointerEvents="none";
+    const startCX=bxR.left-lineR.left+bxR.width/2, startTop=bxR.top-lineR.top;
+    const bub=document.createElement("div"); bub.className="bubble rise-hold clickable"; bub.dataset.role="bubble";
+    bub.style.left=`${startCX}px`; bub.style.top=`${startTop}px`; bub.innerHTML=`${b} <span class="bl-probe"></span>`;
+    bub.addEventListener("click",onBubble); eqLine.appendChild(bub); state="bStage"; bStageStep=0;
+  }
+
+  function onBubble(){
+    if(lock) return; lock=true; setTimeout(()=>lock=false,160);
+    const bub=$("[data-role='bubble']",eqLine); if(!bub) return;
+    if(bStageStep===0){ bub.innerHTML=`${k} <span class="bl-probe"></span>`; bStageStep=1; return; }
+    if(bStageStep===1){ const k2=k*k; bub.innerHTML=`${k2} <span class="bl-probe"></span>`; bStageStep=2; return; }
+    if(bStageStep===2){ splitDrop(bub); bub.remove(); bStageStep=3; }
+  }
+
+  function splitDrop(bub){
+    const lineR=eqLine.getBoundingClientRect(), br=bub.getBoundingClientRect();
+    const startCX=br.left-lineR.left+br.width/2, startTop=br.top-lineR.top, k2=k*k;
+    const plus=document.createElement("div"); plus.className="bubble"; plus.style.left=`${startCX}px`; plus.style.top=`${startTop}px`;
+    plus.innerHTML=`+${THIN}${k2} <span class="bl-probe" data-role="p"></span>`;
+    const minus=document.createElement("div"); minus.className="bubble"; minus.style.left=`${startCX}px`; minus.style.top=`${startTop}px`;
+    minus.innerHTML=`−${THIN}${k2} <span class="bl-probe" data-role="m"></span>`;
+    eqLine.append(plus,minus);
+
+    const pProbe=$("[data-role='p']",plus).getBoundingClientRect();
+    const mProbe=$("[data-role='m']",minus).getBoundingClientRect();
+    const pOff=pProbe.bottom-plus.getBoundingClientRect().top;
+    const mOff=mProbe.bottom-minus.getBoundingClientRect().top;
+
+    const tgtP=$("[data-role='k2finalPlus']"); const tgtM=$("[data-role='k2finalMinus']");
+    const rP=tgtP.getBoundingClientRect(), rM=tgtM.getBoundingClientRect();
+    const rPP=tgtP.querySelector(".bl-probe").getBoundingClientRect();
+    const rMP=tgtM.querySelector(".bl-probe").getBoundingClientRect();
+
+    const dxP=(rP.left-lineR.left+rP.width/2)-startCX;
+    const dyP=(rPP.bottom-lineR.top)-(startTop+pOff);
+    const dxM=(rM.left-lineR.left+rM.width/2)-startCX;
+    const dyM=(rMP.bottom-lineR.top)-(startTop+mOff);
+
+    const easing='cubic-bezier(.25,.9,.25,1)';
+    plus.style.transition=`transform var(--fly-dur) ${easing}`;
+    minus.style.transition=`transform var(--fly-dur) ${easing}`;
+
+    let arrived=0; const done=()=>{ if(++arrived<2) return;
+      tgtP.style.visibility="visible"; tgtM.style.visibility="visible";
+      const spL=$("[data-role='spLeft']"); const spB=$("[data-role='spBetween']");
+      if(spL) spL.style.width="var(--leftPadCompact)"; if(spB) spB.style.width="var(--betweenCompact)";
+      plus.remove(); minus.remove(); prepareGroup(); state="placedAwait";
+    };
+    plus.addEventListener("transitionend",e=>{if(e.propertyName==="transform") done();});
+    minus.addEventListener("transitionend",e=>{if(e.propertyName==="transform") done();});
+    requestAnimationFrame(()=>{ plus.style.transform=`translateX(-50%) translate(${dxP}px, ${dyP}px)`; minus.style.transform=`translateX(-50%) translate(${dxM}px, ${dyM}px)`; });
+  }
+
+  function prepareGroup(){
+    if(eqLine.querySelector("[data-role='groupWrap']")) return;
+    const tX2=$("[data-role='x2']"); const tBx=$("[data-role='bx']"); const tK2=$("[data-role='k2finalPlus']");
+    if(!tX2||!tBx||!tK2) return;
+
+    const wrap=document.createElement("span");
+    wrap.className="term clickable"; wrap.dataset.role="groupWrap"; wrap.style.position="relative";
+    tX2.replaceWith(wrap); wrap.append(tX2,tBx,tK2);
+
+    wrap.addEventListener("click", ()=>{
+      if(lock) return; lock=true; setTimeout(()=>lock=false,180);
+      wrap.classList.remove("clickable");
+
+      tBx.classList.add("flyUpFade");                         /* bx yok oluş */
+      const xsup=$("[data-role='xsup']",tX2);                 /* x² -> x */
+      if(xsup){ xsup.classList.add("sup-shrink"); }
+      tK2.classList.add("pulse");                             /* +k² (sayı) vurgusu */
+
+      setTimeout(()=> toSquareScene(wrap), 420);             /* parantez sahnesi */
+    }, {once:true});
+  }
+
+  function toSquareScene(container){
+    container.innerHTML =
+      `<span class="parenL">(</span>`+
+      `x ${k>=0?`<span class="sign">+</span>`:`<span class="sign">−</span>`} ${Math.abs(k)}`+
+      `<span class="parenR">)</span><sup class="sup pow-pop">2</sup>`;
+
+    enableCombineRest();
+  }
+
+  /* +c ve −k²'yi tek kutuda birleştir */
+  function enableCombineRest(){
+    const cin=$("[data-role='cinner']"); const cm=$("[data-role='cmove']"); const mK2=$("[data-role='k2finalMinus']");
+    if(!cin||!cm||!mK2) return;
+
+    cm.classList.remove("clickable"); mK2.classList.remove("clickable");
+
+    const duo=document.createElement("span"); duo.className="term clickable"; duo.dataset.role="restWrap";
+    cin.insertBefore(duo,mK2); duo.append(mK2,cm);
+
+    const compress=()=>{ $("[data-role='spLeft']")?.remove(); $("[data-role='spBetween']")?.remove(); };
+    duo.addEventListener("click", ()=>{
+      if(lock) return; lock=true; setTimeout(()=>lock=false,160);
+      duo.classList.remove("clickable");
+      const sum=parseInt(c,10)-(k*k);
+      mK2.classList.add("fade-out"); cm.classList.add("fade-out");
+      setTimeout(()=>{
+        compress(); mK2.remove(); cm.remove();
+        if(sum!==0){ const s=document.createElement("span"); s.className="term pulse"; s.innerHTML=(sum>0?`+${THIN}`:"−"+THIN)+Math.abs(sum); duo.replaceWith(s); }
+        else duo.remove();
+      },210);
+    }, {once:true});
+  }
+
+  btnEasy.addEventListener("click", ()=>{ newSet(); render(); });
+  btnAdv.addEventListener("click", ()=>{ alert("Gelişmiş mod daha sonra."); });
+
+  newSet(); render();
+})();
+</script>
+</body>
+</html>

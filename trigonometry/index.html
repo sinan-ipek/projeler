@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Trigonometri Silindiri – Son Sürüm</title>
+  <style>
+    body { margin:0; padding:0; background:#f0f0f0; overflow:hidden; }
+    button {
+      position:absolute; top:10px; padding:8px 12px; font-size:14px; z-index:10;
+      background:linear-gradient(to bottom,#fff,#ddd);
+      border:1px solid #aaa; border-radius:4px;
+      box-shadow:0 2px 4px rgba(0,0,0,0.3);
+      cursor:pointer; transition:background 0.2s,box-shadow 0.2s;
+    }
+    button:active {
+      background:linear-gradient(to bottom,#ddd,#bbb);
+      box-shadow:0 1px 2px rgba(0,0,0,0.5);
+    }
+    #sinBtn  { right:165px; }
+    #cosBtn  { right:230px; }
+    #zoomBtn { right:10px; }
+    #showBtn { right:310px; }
+
+    /* bilgi kutusu */
+    #infoBox {
+      position: absolute;
+      top: 50px; right: 10px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid #888;
+      border-radius: 4px;
+      font: 12px sans-serif;
+      line-height: 1.4;
+      display: none;
+      z-index: 10;
+    }
+
+    svg { width:100vw; height:100vh; display:block; }
+
+    .tick        { stroke:#000; }
+    .tick-minor  { stroke-width:0.3; }
+    .tick-medium { stroke-width:0.6; }
+    .tick-major  { stroke-width:1; }
+
+    .label   { font:8px sans-serif;  fill:#000; user-select:none; }
+    .h-label { font:6px sans-serif;  fill:#000; user-select:none; }
+
+    .sine   { fill:none !important; stroke:#ED2024; stroke-width:0.5; mix-blend-mode:multiply; }
+    .cosine { fill:none !important; stroke:#0066CC; stroke-width:0.5; mix-blend-mode:multiply; }
+    #scaleGroup line { mix-blend-mode:multiply; }
+
+    /* Dikey skala sürüklenebilir imleç */
+    #scaleGroup:hover,
+    #scaleGroup line { cursor: ew-resize; }
+  </style>
+</head>
+<body>
+<body>
+
+<!-- HOME BUTTON -->
+<div style="
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+">
+  <a href="../index.html" style="
+    text-decoration: none;
+    background: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: black;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  ">
+    ← Home
+  </a>
+</div>
+
+<div class="wrap">
+
+
+  <!-- Mevcut butonlar -->
+  <button id="sinBtn">sinüs</button>
+  <button id="cosBtn">kosinüs</button>
+  <button id="zoomBtn">büyüteç</button>
+  <!-- Yeni buton -->
+  <button id="showBtn">değerleri göster</button>
+
+  <!-- Bilgi kutusu -->
+  <div id="infoBox">
+    <div id="angleInfo">Açı: –°</div>
+    <div id="sinInfo">Sinüs: –</div>
+    <div id="cosInfo">Kosinüs: –</div>
+  </div>
+
+  <svg id="svg" viewBox="0 0 800 520">
+    <defs>
+      <clipPath id="lensClip"><circle id="lensCircle" cx="0" cy="0" r="60"/></clipPath>
+    </defs>
+    <g id="svgContent">
+      <path id="sinePath"   class="sine"   display="block" fill="none"/>
+      <path id="cosinePath" class="cosine" display="none"  fill="none"/>
+      <g id="horizRuler"/>
+      <g id="scaleGroup"/>
+      <!-- Sinüs ve kosinüs için sarı noktalar -->
+      <circle id="sinDot" fill="yellow" r="0.5" display="block"/>
+      <circle id="cosDot" fill="yellow" r="0.5" display="none"/>
+      <polygon id="angleMarker" fill="red"/>
+    </g>
+    <g id="lensGroup" clip-path="url(#lensClip)" display="none">
+      <use href="#svgContent"/>
+    </g>
+  </svg>
+
+  <script>
+  (function(){
+    // DOM öğeleri
+    const svg         = document.getElementById('svg');
+    const sinePath    = document.getElementById('sinePath');
+    const cosPath     = document.getElementById('cosinePath');
+    const horiz       = document.getElementById('horizRuler');
+    const scale       = document.getElementById('scaleGroup');
+    const sinDot      = document.getElementById('sinDot');
+    const cosDot      = document.getElementById('cosDot');
+    const angleMarker = document.getElementById('angleMarker');
+    const lensGroup   = document.getElementById('lensGroup');
+    const lensCircle  = document.getElementById('lensCircle');
+    const sinBtn      = document.getElementById('sinBtn');
+    const cosBtn      = document.getElementById('cosBtn');
+    const zoomBtn     = document.getElementById('zoomBtn');
+    const showBtn     = document.getElementById('showBtn');
+    const infoBox     = document.getElementById('infoBox');
+    const angleInfo   = document.getElementById('angleInfo');
+    const sinInfo     = document.getElementById('sinInfo');
+    const cosInfo     = document.getElementById('cosInfo');
+
+    // Sabitler
+    const W = 800, H = 520;
+    const ox = 40, oy = 260, sy = 200;
+    const degreePx = (W - ox - 20) / 360;
+    const snapPx   = degreePx;
+    let showValues = false;
+    let lensActive = false;
+    let cx = 0;
+
+    // Çizim fonksiyonları
+    function drawSine(){
+      let d=''; for(let deg=0;deg<=360;deg++){
+        const rad=deg*Math.PI/180;
+        const x=ox+deg*degreePx;
+        const y=oy-Math.sin(rad)*sy;
+        d+=(deg===0?'M':'L')+x+','+y+' ';
+      }
+      sinePath.setAttribute('d',d);
+    }
+    function drawCosine(){
+      let d=''; for(let deg=0;deg<=360;deg++){
+        const rad=deg*Math.PI/180;
+        const x=ox+deg*degreePx;
+        const y=oy-Math.cos(rad)*sy;
+        d+=(deg===0?'M':'L')+x+','+y+' ';
+      }
+      cosPath.setAttribute('d',d);
+    }
+    function drawHorizontalScale(){
+      horiz.innerHTML='';
+      const bottom=H-20, maj=20, med=15, min=10;
+      const yTop=bottom-maj, labelY=bottom;
+      for(let deg=0;deg<=360;deg++){
+        const x=ox+deg*degreePx;
+        let len,cls;
+        if(deg%10===0){len=maj;cls='tick-major';}
+        else if(deg%5===0){len=med;cls='tick-medium';}
+        else{len=min;cls='tick-minor';}
+        const ln=document.createElementNS(svg.namespaceURI,'line');
+        ln.setAttribute('x1',x);ln.setAttribute('y1',yTop);
+        ln.setAttribute('x2',x);ln.setAttribute('y2',yTop+len);
+        ln.classList.add('tick',cls);
+        horiz.appendChild(ln);
+        if(deg%10===0){
+          const txt=document.createElementNS(svg.namespaceURI,'text');
+          txt.setAttribute('x',x); txt.setAttribute('y',labelY+12);
+          txt.setAttribute('text-anchor','middle');
+          txt.classList.add('label','h-label');
+          txt.textContent=deg+'°';
+          horiz.appendChild(txt);
+        }
+      }
+    }
+    function drawVerticalScale(){
+      scale.innerHTML='';
+      // omurga
+      const sp=document.createElementNS(svg.namespaceURI,'line');
+      sp.setAttribute('x1',ox);sp.setAttribute('y1',oy-sy);
+      sp.setAttribute('x2',ox);sp.setAttribute('y2',oy+sy);
+      sp.setAttribute('stroke','green');sp.setAttribute('stroke-width','1');
+      scale.appendChild(sp);
+      // major
+      for(let i=-10;i<=10;i++){
+        const val=(i/10).toFixed(2);
+        const y=oy-(i/10)*sy;
+        const ln=document.createElementNS(svg.namespaceURI,'line');
+        ln.setAttribute('x1',ox);ln.setAttribute('y1',y);
+        ln.setAttribute('x2',ox+15);ln.setAttribute('y2',y);
+        ln.classList.add('tick','tick-major');
+        scale.appendChild(ln);
+        const txt=document.createElementNS(svg.namespaceURI,'text');
+        txt.setAttribute('x',ox-2);txt.setAttribute('y',y+4);
+        txt.setAttribute('text-anchor','end');
+        txt.classList.add('label');
+        txt.textContent=val;
+        scale.appendChild(txt);
+      }
+      // medium
+      for(let i=-10;i<10;i++){
+        const y=oy-((i/10)+0.05)*sy;
+        const ln=document.createElementNS(svg.namespaceURI,'line');
+        ln.setAttribute('x1',ox);ln.setAttribute('y1',y);
+        ln.setAttribute('x2',ox+10);ln.setAttribute('y2',y);
+        ln.classList.add('tick','tick-medium');
+        scale.appendChild(ln);
+      }
+      // minor
+      for(let i=-10;i<10;i++){
+        for(let j=1;j<10;j++){
+          if(j===5) continue;
+          const y=oy-((i/10)+j*0.01)*sy;
+          const ln=document.createElementNS(svg.namespaceURI,'line');
+          ln.setAttribute('x1',ox);ln.setAttribute('y1',y);
+          ln.setAttribute('x2',ox+5);ln.setAttribute('y2',y);
+          ln.classList.add('tick','tick-minor');
+          scale.appendChild(ln);
+        }
+      }
+    }
+    function drawAngleMarker(offsetX){
+      const sizeY=12, sizeX=5;
+      const vertBottom=oy+sy;
+      const x=ox+offsetX, yTip=vertBottom+20;
+      angleMarker.setAttribute('points',
+        `${x},${yTip} ${x-sizeX},${yTip-sizeY} ${x+sizeX},${yTip-sizeY}`
+      );
+    }
+    function updateDots(offsetX){
+      const deg=offsetX/degreePx, rad=deg*Math.PI/180;
+      const xDot=ox+offsetX;
+      // sin
+      if(sinePath.getAttribute('display')!=='none'){
+        const ySin=oy-Math.sin(rad)*sy;
+        sinDot.setAttribute('display','block');
+        sinDot.setAttribute('cx',xDot);
+        sinDot.setAttribute('cy',ySin);
+      } else {
+        sinDot.setAttribute('display','none');
+      }
+      // cos
+      if(cosPath.getAttribute('display')!=='none'){
+        const yCos=oy-Math.cos(rad)*sy;
+        cosDot.setAttribute('display','block');
+        cosDot.setAttribute('cx',xDot);
+        cosDot.setAttribute('cy',yCos);
+      } else {
+        cosDot.setAttribute('display','none');
+      }
+    }
+    function updateInfo(offsetX){
+      const deg=offsetX/degreePx, rad=deg*Math.PI/180;
+      angleInfo.textContent = `Açı: ${deg.toFixed(0)}°`;
+      if(sinePath.getAttribute('display')!=='none') {
+        sinInfo.textContent = `Sinüs: ${Math.sin(rad).toFixed(3)}`;
+      } else {
+        sinInfo.textContent = '';
+      }
+      if(cosPath.getAttribute('display')!=='none') {
+        cosInfo.textContent = `Kosinüs: ${Math.cos(rad).toFixed(3)}`;
+      } else {
+        cosInfo.textContent = '';
+      }
+    }
+
+    // Başlangıç
+    drawSine(); drawCosine();
+    drawHorizontalScale(); drawVerticalScale();
+    drawAngleMarker(0); updateDots(0); updateInfo(0);
+
+    // Butonlar
+    sinBtn.onclick = ()=>{
+      const d=sinePath.getAttribute('display');
+      sinePath.setAttribute('display',d==='none'?'block':'none');
+      updateDots(cx);
+      if(showValues) updateInfo(cx);
+    };
+    cosBtn.onclick = ()=>{
+      const d=cosPath.getAttribute('display');
+      cosPath.setAttribute('display',d==='none'?'block':'none');
+      updateDots(cx);
+      if(showValues) updateInfo(cx);
+    };
+    zoomBtn.onclick = ()=>{
+      lensActive=!lensActive;
+      lensGroup.setAttribute('display',lensActive?'block':'none');
+      zoomBtn.textContent = lensActive?'büyüteci bırak':'büyüteç';
+    };
+    showBtn.onclick = ()=> {
+      showValues = !showValues;
+      showBtn.textContent = showValues 
+        ? 'değerleri gizle' 
+        : 'değerleri göster';        // ← Burayı ekledik
+    infoBox.style.display = showValues 
+      ? 'block' 
+      : 'none';
+    if (showValues) updateInfo(cx);
+};
+
+
+    // Lens hareketi
+    window.addEventListener('mousemove',e=>{
+      if(!lensActive) return;
+      const pt=svg.createSVGPoint();
+      pt.x=e.clientX; pt.y=e.clientY;
+      const p=pt.matrixTransform(svg.getScreenCTM().inverse());
+      lensCircle.setAttribute('cx',p.x);
+      lensCircle.setAttribute('cy',p.y);
+      const sf=e.altKey?10:3;
+      const offX=150, offY=(p.y>H-40?-100:0);
+      lensGroup.setAttribute('transform',
+        `translate(${p.x-p.x*sf+offX},${p.y-p.y*sf+offY}) scale(${sf})`
+      );
+    });
+
+    // Skala sürükleme
+    let isDrag=false, sx=0;
+    scale.addEventListener('mousedown',e=>{
+      isDrag=true;
+      const pt=svg.createSVGPoint();
+      pt.x=e.clientX; pt.y=e.clientY;
+      sx=pt.matrixTransform(svg.getScreenCTM().inverse()).x-cx;
+    });
+    window.addEventListener('mousemove',e=>{
+      if(!isDrag) return;
+      const pt=svg.createSVGPoint();
+      pt.x=e.clientX; pt.y=e.clientY;
+      cx=pt.matrixTransform(svg.getScreenCTM().inverse()).x-sx;
+      scale.setAttribute('transform',`translate(${cx},0)`);
+      drawAngleMarker(cx);
+      updateDots(cx);
+      if(showValues) updateInfo(cx);
+    });
+    window.addEventListener('mouseup',()=>{
+      if(isDrag){
+        cx=Math.round(cx/snapPx)*snapPx;
+        scale.setAttribute('transform',`translate(${cx},0)`);
+        drawAngleMarker(cx);
+        updateDots(cx);
+        if(showValues) updateInfo(cx);
+      }
+      isDrag=false;
+    });
+
+  })();
+  </script>
+</body>
+</html>

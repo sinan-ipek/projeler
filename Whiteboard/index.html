@@ -1,0 +1,1598 @@
+<!-- v1.0.0 | Windows Whiteboard (browser) - single-file index.html -->
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Whiteboard (index.html)</title>
+  <style>
+    :root{
+      --bg:#0f1220;
+      --panel:#151a2d;
+      --panel2:#101427;
+      --text:#e9ecff;
+      --muted:#aab2e6;
+      --line:rgba(255,255,255,.10);
+      --accent:#6aa6ff;
+      --danger:#ff5a7a;
+      --ok:#63e6be;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:14px;
+      --btn:#1c2340;
+      --btn2:#232c52;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; overflow:hidden; background:var(--bg); color:var(--text); font: 14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Arial;}
+    #app{height:100%; width:100%; position:relative;}
+
+    /* Top bar */
+    .topbar{
+      position:absolute; left:12px; right:12px; top:12px;
+      display:flex; gap:10px; align-items:center;
+      padding:10px 12px; background:rgba(21,26,45,.78);
+      border:1px solid var(--line); border-radius:var(--radius);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      z-index:50;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px; padding-right:8px;
+      border-right:1px solid var(--line);
+      min-width: 200px;
+    }
+    .dot{width:10px; height:10px; border-radius:99px; background:var(--accent); box-shadow:0 0 0 6px rgba(106,166,255,.18)}
+    .title{font-weight:700; letter-spacing:.2px}
+    .sub{font-size:12px; color:var(--muted); margin-top:1px}
+    .brandText{display:flex; flex-direction:column}
+    .chip{
+      font-size:12px; padding:3px 8px; border:1px solid var(--line);
+      border-radius:999px; color:var(--muted); background:rgba(16,20,39,.6);
+    }
+
+    .tools{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+    .btn{
+      appearance:none; border:1px solid var(--line); background:var(--btn);
+      color:var(--text); padding:8px 10px; border-radius:12px;
+      cursor:pointer; display:inline-flex; gap:8px; align-items:center;
+      transition:transform .05s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+    }
+    .btn:hover{background:var(--btn2); border-color: rgba(255,255,255,.18)}
+    .btn:active{transform: translateY(1px)}
+    .btn[aria-pressed="true"]{outline:2px solid rgba(106,166,255,.55); background:rgba(106,166,255,.16)}
+    .btn.danger{background:rgba(255,90,122,.12); border-color:rgba(255,90,122,.28)}
+    .btn.danger:hover{background:rgba(255,90,122,.18)}
+    .btn.ok{background:rgba(99,230,190,.10); border-color:rgba(99,230,190,.26)}
+    .btn.ok:hover{background:rgba(99,230,190,.16)}
+    .sep{width:1px; height:26px; background:var(--line); margin:0 2px}
+    .kbd{font-size:12px; color:var(--muted); border:1px solid var(--line); background:rgba(16,20,39,.6); padding:2px 6px; border-radius:8px}
+    .row{display:flex; align-items:center; gap:8px}
+    label{color:var(--muted); font-size:12px}
+    input[type="range"]{width:120px}
+    input[type="color"]{
+      width:34px; height:34px; border-radius:12px; border:1px solid var(--line);
+      padding:0; background:transparent; cursor:pointer;
+    }
+    input[type="text"]{
+      background:rgba(16,20,39,.6); border:1px solid var(--line); color:var(--text);
+      padding:8px 10px; border-radius:12px; width:220px;
+    }
+
+    /* Canvas area */
+    #stage{
+      position:absolute; inset:0;
+    }
+    canvas{display:block; width:100%; height:100%}
+
+    /* Bottom hint */
+    .hint{
+      position:absolute; left:12px; bottom:12px;
+      display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+      padding:8px 10px;
+      border:1px solid var(--line); border-radius:12px;
+      background:rgba(21,26,45,.64);
+      backdrop-filter: blur(10px);
+      color:var(--muted);
+      z-index:40;
+    }
+
+    /* Sticky note overlay */
+    .note{
+      position:absolute;
+      min-width:180px; min-height:120px;
+      padding:10px;
+      border-radius:14px;
+      background: #ffd86a;
+      color:#1b1b1b;
+      box-shadow: 0 16px 30px rgba(0,0,0,.35);
+      border:1px solid rgba(0,0,0,.15);
+      z-index:30;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      transform: translateZ(0);
+    }
+    .noteHeader{
+      display:flex; justify-content:space-between; align-items:center;
+      gap:8px;
+    }
+    .noteGrip{
+      width:26px; height:18px; border-radius:10px;
+      background:rgba(0,0,0,.12);
+      cursor:move;
+      position:relative;
+    }
+    .noteGrip:before, .noteGrip:after{
+      content:""; position:absolute; left:6px; right:6px; height:2px; background:rgba(0,0,0,.20);
+      top:6px; border-radius:2px;
+    }
+    .noteGrip:after{top:11px}
+    .noteBtn{
+      appearance:none; border:1px solid rgba(0,0,0,.18);
+      background: rgba(255,255,255,.35);
+      color:#1b1b1b;
+      border-radius:10px; padding:4px 8px; cursor:pointer;
+    }
+    .noteBtn:hover{background:rgba(255,255,255,.5)}
+    .noteText{
+      flex:1;
+      width:100%;
+      resize:none;
+      border:none;
+      outline:none;
+      background:transparent;
+      font: 14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:#1b1b1b;
+    }
+    .noteFooter{
+      display:flex; gap:8px; align-items:center; justify-content:space-between;
+      color:rgba(0,0,0,.55);
+      font-size:12px;
+    }
+    .noteColor{
+      width:26px; height:26px; border-radius:10px; border:1px solid rgba(0,0,0,.18);
+      padding:0; cursor:pointer; background:transparent;
+    }
+
+    /* Small modal */
+    .modal{
+      position:absolute; inset:0; display:none; place-items:center;
+      background: rgba(0,0,0,.45);
+      z-index:60;
+    }
+    .modal.open{display:grid}
+    .dialog{
+      width:min(720px, 92vw);
+      background:rgba(21,26,45,.92);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      padding:14px;
+    }
+    .dialog h3{margin:6px 6px 10px; font-size:16px}
+    .dialog p{margin:0 6px 12px; color:var(--muted)}
+    .dialog .actions{display:flex; justify-content:flex-end; gap:8px; margin-top:10px}
+    textarea.big{
+      width:100%;
+      height:260px;
+      resize:vertical;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(16,20,39,.65);
+      color:var(--text);
+      padding:10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px;
+      line-height:1.4;
+      outline:none;
+    }
+    .toast{
+      position:absolute; right:12px; bottom:12px;
+      padding:10px 12px;
+      background:rgba(21,26,45,.85);
+      border:1px solid var(--line);
+      border-radius:14px;
+      box-shadow: var(--shadow);
+      color:var(--text);
+      z-index:70;
+      display:none;
+      max-width:min(520px, 92vw);
+    }
+    .toast.show{display:block}
+    .muted{color:var(--muted)}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar" role="toolbar" aria-label="Whiteboard tools">
+    <div class="brand">
+      <div class="dot" aria-hidden="true"></div>
+      <div class="brandText">
+        <div class="title">Whiteboard</div>
+        <div class="sub">Tek dosya • Pan/Zoom • Undo/Redo • Export</div>
+      </div>
+      <span class="chip mono" id="zoomChip">100%</span>
+    </div>
+
+    <div class="tools">
+      <button class="btn" id="toolPen" aria-pressed="true" title="Kalem (P)">✍️ <span>Kalem</span></button>
+      <button class="btn" id="toolEraser" aria-pressed="false" title="Silgi (E)">🧽 <span>Silgi</span></button>
+      <button class="btn" id="toolLine" aria-pressed="false" title="Çizgi (L)">📏 <span>Çizgi</span></button>
+      <button class="btn" id="toolRect" aria-pressed="false" title="Dikdörtgen (R)">▭ <span>Dikdörtgen</span></button>
+      <button class="btn" id="toolEllipse" aria-pressed="false" title="Elips (O)">◯ <span>Elips</span></button>
+      <button class="btn" id="toolSelect" aria-pressed="false" title="Seç/Taşı (V)">🖱️ <span>Seç</span></button>
+      <button class="btn" id="toolNote" aria-pressed="false" title="Not (N)">🗒️ <span>Not</span></button>
+      <button class="btn" id="toolHand" aria-pressed="false" title="El aracı (H) / Space basılı tut">✋ <span>El</span></button>
+
+      <div class="sep" aria-hidden="true"></div>
+
+      <div class="row" title="Renk">
+        <label for="colorPick">Renk</label>
+        <input id="colorPick" type="color" value="#ffffff" />
+      </div>
+
+      <div class="row" title="Kalınlık">
+        <label for="sizeRange">Kalınlık</label>
+        <input id="sizeRange" type="range" min="1" max="40" value="4" />
+        <span class="chip mono" id="sizeChip">4</span>
+      </div>
+
+      <div class="sep" aria-hidden="true"></div>
+
+      <button class="btn" id="btnUndo" title="Geri al (Ctrl+Z)">↶ Undo</button>
+      <button class="btn" id="btnRedo" title="İleri al (Ctrl+Y / Ctrl+Shift+Z)">↷ Redo</button>
+
+      <button class="btn ok" id="btnExport" title="PNG olarak dışa aktar">⬇️ Export PNG</button>
+      <button class="btn" id="btnImportImage" title="Resim ekle">🖼️ Resim</button>
+
+      <div class="sep" aria-hidden="true"></div>
+
+      <button class="btn" id="btnSave" title="Kaydet (LocalStorage)">💾 Kaydet</button>
+      <button class="btn" id="btnLoad" title="Yükle (LocalStorage)">📂 Yükle</button>
+      <button class="btn" id="btnJSON" title="JSON içe/dışa aktar">{} JSON</button>
+
+      <button class="btn danger" id="btnClear" title="Tümünü sil">🗑️ Temizle</button>
+    </div>
+  </div>
+
+  <div id="stage">
+    <canvas id="c"></canvas>
+  </div>
+
+  <div class="hint">
+    <span class="kbd">Mouse Wheel</span> Zoom • <span class="kbd">Space</span> Basılı tut: El (pan) •
+    <span class="kbd">Ctrl+Z</span> Undo • <span class="kbd">Ctrl+Y</span> Redo •
+    <span class="kbd">P</span> Kalem • <span class="kbd">E</span> Silgi • <span class="kbd">V</span> Seç •
+    <span class="kbd">Del</span> Sil (seçili)
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="dialog">
+      <h3 id="modalTitle">JSON</h3>
+      <p class="muted" id="modalHelp">Dışa aktar / içe aktar.</p>
+      <textarea class="big" id="modalText" spellcheck="false"></textarea>
+      <div class="actions">
+        <button class="btn" id="modalClose">Kapat</button>
+        <button class="btn ok" id="modalPrimary">Uygula</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <input id="fileImage" type="file" accept="image/*" style="display:none" />
+</div>
+
+<script>
+/* v1.0.0 - Whiteboard engine (no libs) */
+(() => {
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+
+  const zoomChip = document.getElementById('zoomChip');
+  const colorPick = document.getElementById('colorPick');
+  const sizeRange = document.getElementById('sizeRange');
+  const sizeChip = document.getElementById('sizeChip');
+
+  const modal = document.getElementById('modal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalHelp = document.getElementById('modalHelp');
+  const modalText = document.getElementById('modalText');
+  const modalClose = document.getElementById('modalClose');
+  const modalPrimary = document.getElementById('modalPrimary');
+
+  const toastEl = document.getElementById('toast');
+  function toast(msg, ms=1800){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastEl._t);
+    toastEl._t = setTimeout(() => toastEl.classList.remove('show'), ms);
+  }
+
+  // Tools
+  const toolButtons = {
+    pen: document.getElementById('toolPen'),
+    eraser: document.getElementById('toolEraser'),
+    line: document.getElementById('toolLine'),
+    rect: document.getElementById('toolRect'),
+    ellipse: document.getElementById('toolEllipse'),
+    select: document.getElementById('toolSelect'),
+    note: document.getElementById('toolNote'),
+    hand: document.getElementById('toolHand'),
+  };
+
+  const btnUndo = document.getElementById('btnUndo');
+  const btnRedo = document.getElementById('btnRedo');
+  const btnExport = document.getElementById('btnExport');
+  const btnImportImage = document.getElementById('btnImportImage');
+  const btnSave = document.getElementById('btnSave');
+  const btnLoad = document.getElementById('btnLoad');
+  const btnJSON = document.getElementById('btnJSON');
+  const btnClear = document.getElementById('btnClear');
+  const fileImage = document.getElementById('fileImage');
+
+  // Canvas sizing / DPR
+  function resize(){
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.floor(rect.width * dpr);
+    canvas.height = Math.floor(rect.height * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    render();
+  }
+  window.addEventListener('resize', resize);
+
+  // World transform (camera)
+  const cam = {
+    x: 0, y: 0, // world coordinates at screen center offset
+    scale: 1,
+    minScale: 0.15,
+    maxScale: 6
+  };
+
+  function screenToWorld(sx, sy){
+    // screen px => world
+    const rect = canvas.getBoundingClientRect();
+    const x = (sx - rect.width/2) / cam.scale + cam.x;
+    const y = (sy - rect.height/2) / cam.scale + cam.y;
+    return {x,y};
+  }
+  function worldToScreen(wx, wy){
+    const rect = canvas.getBoundingClientRect();
+    const x = (wx - cam.x)*cam.scale + rect.width/2;
+    const y = (wy - cam.y)*cam.scale + rect.height/2;
+    return {x,y};
+  }
+
+  // Model
+  const state = {
+    tool: 'pen',
+    color: colorPick.value,
+    size: +sizeRange.value,
+    eraserSize: 18,
+    isPointerDown: false,
+    pointerId: null,
+    spacePan: false,
+    isPanning: false,
+    panStart: null,
+    currentStroke: null,
+    currentShape: null,
+    hoveringId: null,
+    selectedId: null,
+    draggingSelection: false,
+    dragStart: null,
+    dragOrig: null,
+    showGrid: true,
+    notes: new Map(), // id -> dom
+  };
+
+  // Elements list (drawn on canvas)
+  // Types: stroke, shape(line/rect/ellipse), image
+  let elements = [];
+  let nextId = 1;
+
+  function makeId(){ return String(nextId++); }
+
+  // Undo/redo (snapshot-based)
+  const history = {
+    past: [],
+    future: [],
+    max: 80
+  };
+  function snapshot(){
+    // serialize ONLY canvas elements; notes are separate but included in json export/save.
+    const snap = {
+      nextId,
+      cam: {...cam},
+      elements: deepClone(elements),
+      notes: exportNotes()
+    };
+    history.past.push(snap);
+    if(history.past.length > history.max) history.past.shift();
+    history.future.length = 0;
+    updateUndoRedoUI();
+  }
+  function restoreSnapshot(snap){
+    nextId = snap.nextId || nextId;
+    cam.x = snap.cam?.x ?? cam.x;
+    cam.y = snap.cam?.y ?? cam.y;
+    cam.scale = snap.cam?.scale ?? cam.scale;
+    elements = deepClone(snap.elements || []);
+    // notes: replace DOM notes
+    importNotes(snap.notes || []);
+    updateZoomUI();
+    render();
+  }
+  function undo(){
+    if(history.past.length === 0) return;
+    const current = {
+      nextId, cam: {...cam}, elements: deepClone(elements), notes: exportNotes()
+    };
+    const prev = history.past.pop();
+    history.future.push(current);
+    restoreSnapshot(prev);
+    toast('Undo');
+    updateUndoRedoUI();
+  }
+  function redo(){
+    if(history.future.length === 0) return;
+    const current = {
+      nextId, cam: {...cam}, elements: deepClone(elements), notes: exportNotes()
+    };
+    const nxt = history.future.pop();
+    history.past.push(current);
+    restoreSnapshot(nxt);
+    toast('Redo');
+    updateUndoRedoUI();
+  }
+  function updateUndoRedoUI(){
+    btnUndo.disabled = history.past.length === 0;
+    btnRedo.disabled = history.future.length === 0;
+    btnUndo.style.opacity = btnUndo.disabled ? 0.5 : 1;
+    btnRedo.style.opacity = btnRedo.disabled ? 0.5 : 1;
+  }
+
+  function deepClone(obj){
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  // Grid/background
+  function drawBackground(){
+    const rect = canvas.getBoundingClientRect();
+    ctx.fillStyle = '#0f1220';
+    ctx.fillRect(0,0,rect.width,rect.height);
+
+    if(!state.showGrid) return;
+
+    // grid in world coords
+    const gridSize = 100; // world units
+    const minor = 20;
+
+    // visible world bounds
+    const tl = screenToWorld(0,0);
+    const br = screenToWorld(rect.width, rect.height);
+
+    // choose alpha based on zoom
+    const z = cam.scale;
+    const majorAlpha = clamp((z-0.25)/2.2, 0.10, 0.22);
+    const minorAlpha = clamp((z-0.7)/2.0, 0.00, 0.14);
+
+    // minor lines
+    if(minorAlpha > 0.005){
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(255,255,255,${minorAlpha})`;
+      ctx.beginPath();
+      const startX = Math.floor(tl.x/minor)*minor;
+      const endX = Math.ceil(br.x/minor)*minor;
+      const startY = Math.floor(tl.y/minor)*minor;
+      const endY = Math.ceil(br.y/minor)*minor;
+
+      for(let x=startX; x<=endX; x+=minor){
+        const s = worldToScreen(x, tl.y);
+        const e = worldToScreen(x, br.y);
+        ctx.moveTo(s.x, s.y);
+        ctx.lineTo(e.x, e.y);
+      }
+      for(let y=startY; y<=endY; y+=minor){
+        const s = worldToScreen(tl.x, y);
+        const e = worldToScreen(br.x, y);
+        ctx.moveTo(s.x, s.y);
+        ctx.lineTo(e.x, e.y);
+      }
+      ctx.stroke();
+    }
+
+    // major lines
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = `rgba(255,255,255,${majorAlpha})`;
+    ctx.beginPath();
+    const startX2 = Math.floor(tl.x/gridSize)*gridSize;
+    const endX2 = Math.ceil(br.x/gridSize)*gridSize;
+    const startY2 = Math.floor(tl.y/gridSize)*gridSize;
+    const endY2 = Math.ceil(br.y/gridSize)*gridSize;
+
+    for(let x=startX2; x<=endX2; x+=gridSize){
+      const s = worldToScreen(x, tl.y);
+      const e = worldToScreen(x, br.y);
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(e.x, e.y);
+    }
+    for(let y=startY2; y<=endY2; y+=gridSize){
+      const s = worldToScreen(tl.x, y);
+      const e = worldToScreen(br.x, y);
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(e.x, e.y);
+    }
+    ctx.stroke();
+
+    // axes (subtle)
+    const ax = worldToScreen(0,0);
+    ctx.strokeStyle = 'rgba(106,166,255,.20)';
+    ctx.beginPath();
+    ctx.moveTo(0, ax.y); ctx.lineTo(rect.width, ax.y);
+    ctx.moveTo(ax.x, 0); ctx.lineTo(ax.x, rect.height);
+    ctx.stroke();
+  }
+
+  // Render all elements
+  function render(){
+    const rect = canvas.getBoundingClientRect();
+    drawBackground();
+
+    // render elements in order
+    for(const el of elements){
+      drawElement(el, false);
+    }
+
+    // preview current stroke/shape
+    if(state.currentStroke){
+      drawElement(state.currentStroke, true);
+    }
+    if(state.currentShape){
+      drawElement(state.currentShape, true);
+    }
+
+    // selection box
+    if(state.selectedId){
+      const el = elements.find(e=>e.id===state.selectedId);
+      if(el){
+        const bb = elementBounds(el);
+        if(bb){
+          const p1 = worldToScreen(bb.x, bb.y);
+          const p2 = worldToScreen(bb.x+bb.w, bb.y+bb.h);
+          ctx.save();
+          ctx.strokeStyle = 'rgba(106,166,255,.9)';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([6,4]);
+          ctx.strokeRect(p1.x, p1.y, p2.x-p1.x, p2.y-p1.y);
+          ctx.restore();
+        }
+      }
+    }
+
+    syncNotesToCamera();
+  }
+
+  function drawElement(el, isPreview){
+    const kind = el.kind;
+    if(kind === 'stroke'){
+      drawStroke(el, isPreview);
+    }else if(kind === 'shape'){
+      drawShape(el, isPreview);
+    }else if(kind === 'image'){
+      drawImage(el, isPreview);
+    }
+  }
+
+  function drawStroke(st, isPreview){
+    const pts = st.points;
+    if(!pts || pts.length<2) return;
+
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.globalCompositeOperation = st.isEraser ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = st.color;
+    ctx.lineWidth = st.size / 1 * cam.scale; // keep thickness visually consistent? actually scale with zoom makes it too thick.
+    // Better: keep in screen space: lineWidth = st.size
+    ctx.lineWidth = st.size;
+    if(isPreview) ctx.globalAlpha = 0.9;
+
+    // draw in screen space by projecting each point
+    ctx.beginPath();
+    const p0 = worldToScreen(pts[0].x, pts[0].y);
+    ctx.moveTo(p0.x, p0.y);
+
+    for(let i=1;i<pts.length;i++){
+      const p = worldToScreen(pts[i].x, pts[i].y);
+      ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawShape(sh, isPreview){
+    const {shapeType, a, b, color, size, fill, isEraser} = sh;
+    if(!a || !b) return;
+    const pA = worldToScreen(a.x, a.y);
+    const pB = worldToScreen(b.x, b.y);
+    const x = Math.min(pA.x,pB.x), y = Math.min(pA.y,pB.y);
+    const w = Math.abs(pA.x-pB.x), h = Math.abs(pA.y-pB.y);
+
+    ctx.save();
+    ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size;
+    if(isPreview) ctx.globalAlpha = 0.9;
+
+    if(shapeType === 'line'){
+      ctx.beginPath();
+      ctx.moveTo(pA.x, pA.y);
+      ctx.lineTo(pB.x, pB.y);
+      ctx.stroke();
+    } else if(shapeType === 'rect'){
+      if(fill){
+        ctx.fillStyle = fill;
+        ctx.fillRect(x,y,w,h);
+      }
+      ctx.strokeRect(x,y,w,h);
+    } else if(shapeType === 'ellipse'){
+      ctx.beginPath();
+      ctx.ellipse(x+w/2, y+h/2, w/2, h/2, 0, 0, Math.PI*2);
+      if(fill){
+        ctx.fillStyle = fill;
+        ctx.fill();
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawImage(imgEl){
+    if(!imgEl.img) {
+      // lazy load if dataURL present
+      if(imgEl.dataURL){
+        const im = new Image();
+        im.onload = () => { imgEl.img = im; render(); };
+        im.src = imgEl.dataURL;
+      }
+      return;
+    }
+    const bb = imgEl; // x,y,w,h in world
+    const p = worldToScreen(bb.x, bb.y);
+    const p2 = worldToScreen(bb.x+bb.w, bb.y+bb.h);
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.drawImage(imgEl.img, p.x, p.y, p2.x-p.x, p2.y-p.y);
+    ctx.restore();
+  }
+
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+  // Hit testing / selection
+  function elementBounds(el){
+    if(el.kind === 'stroke'){
+      const pts = el.points || [];
+      if(pts.length===0) return null;
+      let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+      for(const p of pts){
+        minX = Math.min(minX,p.x); minY = Math.min(minY,p.y);
+        maxX = Math.max(maxX,p.x); maxY = Math.max(maxY,p.y);
+      }
+      const pad = (el.size || 4) * 0.6;
+      return {x:minX-pad,y:minY-pad,w:(maxX-minX)+pad*2,h:(maxY-minY)+pad*2};
+    }
+    if(el.kind === 'shape'){
+      const a = el.a, b = el.b;
+      if(!a||!b) return null;
+      const minX = Math.min(a.x,b.x), minY = Math.min(a.y,b.y);
+      const maxX = Math.max(a.x,b.x), maxY = Math.max(a.y,b.y);
+      const pad = (el.size || 4) * 0.6;
+      return {x:minX-pad,y:minY-pad,w:(maxX-minX)+pad*2,h:(maxY-minY)+pad*2};
+    }
+    if(el.kind === 'image'){
+      return {x:el.x,y:el.y,w:el.w,h:el.h};
+    }
+    return null;
+  }
+
+  function hitTestWorld(wx, wy){
+    // check notes first (they are DOM), but we'll handle via DOM events.
+    // check elements in reverse (top-most)
+    for(let i=elements.length-1;i>=0;i--){
+      const el = elements[i];
+      const bb = elementBounds(el);
+      if(!bb) continue;
+      if(wx>=bb.x && wx<=bb.x+bb.w && wy>=bb.y && wy<=bb.y+bb.h){
+        return el.id;
+      }
+    }
+    return null;
+  }
+
+  // Notes: DOM overlays anchored in world coords
+  function createNoteAtWorld(x,y, preset){
+    const id = makeId();
+    const n = {
+      id,
+      x, y,
+      w: preset?.w ?? 220,
+      h: preset?.h ?? 160,
+      color: preset?.color ?? '#ffd86a',
+      text: preset?.text ?? ''
+    };
+    addNoteDOM(n);
+    snapshot();
+    toast('Not eklendi');
+  }
+
+  function addNoteDOM(n){
+    const el = document.createElement('div');
+    el.className = 'note';
+    el.dataset.noteId = n.id;
+    el.style.background = n.color;
+
+    el.innerHTML = `
+      <div class="noteHeader">
+        <div class="noteGrip" title="Taşı"></div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input class="noteColor" type="color" value="${escapeHTMLAttr(n.color)}" title="Not rengi" />
+          <button class="noteBtn" data-act="delete" title="Sil">Sil</button>
+        </div>
+      </div>
+      <textarea class="noteText" placeholder="Not..." spellcheck="false"></textarea>
+      <div class="noteFooter">
+        <span class="muted">🗒️ Sticky</span>
+        <span class="muted mono">${n.id}</span>
+      </div>
+    `;
+    const ta = el.querySelector('.noteText');
+    ta.value = n.text || '';
+
+    // state store on DOM
+    el._note = n;
+
+    // events
+    const grip = el.querySelector('.noteGrip');
+    let dragging = false;
+    let start = null;
+    let startPos = null;
+
+    const onDown = (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      dragging = true;
+      grip.setPointerCapture(ev.pointerId);
+      start = {x:ev.clientX, y:ev.clientY};
+      startPos = {x:n.x, y:n.y};
+    };
+    const onMove = (ev) => {
+      if(!dragging) return;
+      const dx = (ev.clientX - start.x) / cam.scale;
+      const dy = (ev.clientY - start.y) / cam.scale;
+      n.x = startPos.x + dx;
+      n.y = startPos.y + dy;
+      syncOneNoteToCamera(el);
+    };
+    const onUp = (ev) => {
+      if(!dragging) return;
+      dragging = false;
+      try{ grip.releasePointerCapture(ev.pointerId); }catch(_){}
+      snapshot();
+    };
+    grip.addEventListener('pointerdown', onDown);
+    grip.addEventListener('pointermove', onMove);
+    grip.addEventListener('pointerup', onUp);
+    grip.addEventListener('pointercancel', onUp);
+
+    el.querySelector('[data-act="delete"]').addEventListener('click', (ev)=>{
+      ev.stopPropagation();
+      deleteNote(n.id);
+      snapshot();
+      toast('Not silindi');
+    });
+
+    el.querySelector('.noteColor').addEventListener('input', (ev)=>{
+      n.color = ev.target.value;
+      el.style.background = n.color;
+    });
+    el.querySelector('.noteColor').addEventListener('change', ()=>{
+      snapshot();
+    });
+
+    ta.addEventListener('input', ()=>{
+      n.text = ta.value;
+    });
+    ta.addEventListener('change', ()=>{
+      snapshot();
+    });
+
+    // allow focusing without panning
+    el.addEventListener('pointerdown', (ev)=> ev.stopPropagation());
+
+    document.getElementById('app').appendChild(el);
+    state.notes.set(n.id, el);
+    syncOneNoteToCamera(el);
+  }
+
+  function deleteNote(id){
+    const el = state.notes.get(id);
+    if(el){
+      el.remove();
+      state.notes.delete(id);
+    }
+  }
+
+  function exportNotes(){
+    const arr = [];
+    for(const [id, dom] of state.notes){
+      const n = dom._note;
+      arr.push({id:n.id, x:n.x, y:n.y, w:n.w, h:n.h, color:n.color, text:n.text});
+    }
+    return arr;
+  }
+
+  function importNotes(notesArr){
+    // remove existing
+    for(const [id, dom] of state.notes) dom.remove();
+    state.notes.clear();
+    // add new
+    for(const n of notesArr){
+      // keep nextId ahead
+      const num = parseInt(n.id, 10);
+      if(Number.isFinite(num)) nextId = Math.max(nextId, num+1);
+      addNoteDOM(n);
+    }
+    syncNotesToCamera();
+  }
+
+  function syncOneNoteToCamera(dom){
+    const n = dom._note;
+    const p = worldToScreen(n.x, n.y);
+    const p2 = worldToScreen(n.x+n.w, n.y+n.h);
+
+    dom.style.left = `${p.x}px`;
+    dom.style.top = `${p.y}px`;
+    dom.style.width = `${Math.max(140, p2.x-p.x)}px`;
+    dom.style.height = `${Math.max(90, p2.y-p.y)}px`;
+  }
+
+  function syncNotesToCamera(){
+    for(const [id, dom] of state.notes){
+      syncOneNoteToCamera(dom);
+    }
+  }
+
+  function escapeHTMLAttr(s){
+    return String(s).replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+  }
+
+  // Tool switching
+  function setTool(name){
+    state.tool = name;
+    for(const [k,btn] of Object.entries(toolButtons)){
+      btn.setAttribute('aria-pressed', String(k===name));
+    }
+    if(name !== 'select') state.selectedId = null;
+    render();
+  }
+
+  // UI handlers
+  colorPick.addEventListener('input', ()=>{
+    state.color = colorPick.value;
+  });
+  sizeRange.addEventListener('input', ()=>{
+    state.size = +sizeRange.value;
+    sizeChip.textContent = String(state.size);
+  });
+  sizeChip.textContent = String(state.size);
+
+  toolButtons.pen.onclick = () => setTool('pen');
+  toolButtons.eraser.onclick = () => setTool('eraser');
+  toolButtons.line.onclick = () => setTool('line');
+  toolButtons.rect.onclick = () => setTool('rect');
+  toolButtons.ellipse.onclick = () => setTool('ellipse');
+  toolButtons.select.onclick = () => setTool('select');
+  toolButtons.note.onclick = () => setTool('note');
+  toolButtons.hand.onclick = () => setTool('hand');
+
+  btnUndo.onclick = undo;
+  btnRedo.onclick = redo;
+
+  btnClear.onclick = () => {
+    snapshot();
+    elements.length = 0;
+    state.selectedId = null;
+    // clear notes
+    importNotes([]);
+    render();
+    toast('Temizlendi');
+  };
+
+  // Save/Load localStorage
+  const LS_KEY = 'whiteboard_v1_save';
+  function getSavePayload(){
+    return {
+      version: '1.0.0',
+      savedAt: new Date().toISOString(),
+      nextId,
+      cam: {...cam},
+      elements: elements.map(e=>{
+        const copy = {...e};
+        // remove runtime image object
+        if(copy.kind==='image') delete copy.img;
+        return copy;
+      }),
+      notes: exportNotes()
+    };
+  }
+  function applyPayload(payload){
+    if(!payload || typeof payload !== 'object') throw new Error('Geçersiz payload');
+    nextId = payload.nextId ?? nextId;
+    cam.x = payload.cam?.x ?? cam.x;
+    cam.y = payload.cam?.y ?? cam.y;
+    cam.scale = payload.cam?.scale ?? cam.scale;
+    elements = (payload.elements || []).map(e=>({...e}));
+    // restore image objects lazily
+    for(const e of elements){
+      if(e.kind==='image' && e.dataURL){
+        e.img = null;
+      }
+    }
+    importNotes(payload.notes || []);
+    updateZoomUI();
+    render();
+  }
+
+  btnSave.onclick = () => {
+    try{
+      const payload = getSavePayload();
+      localStorage.setItem(LS_KEY, JSON.stringify(payload));
+      toast('Kaydedildi (LocalStorage)');
+    }catch(err){
+      toast('Kaydetme hatası: ' + err.message, 2400);
+    }
+  };
+  btnLoad.onclick = () => {
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw){ toast('Kayıt bulunamadı'); return; }
+      snapshot(); // allow undo of load
+      const payload = JSON.parse(raw);
+      applyPayload(payload);
+      toast('Yüklendi');
+    }catch(err){
+      toast('Yükleme hatası: ' + err.message, 2400);
+    }
+  };
+
+  // JSON modal
+  function openModal(title, help, text, primaryLabel, onPrimary){
+    modalTitle.textContent = title;
+    modalHelp.textContent = help;
+    modalText.value = text || '';
+    modalPrimary.textContent = primaryLabel || 'Uygula';
+    modal._onPrimary = onPrimary;
+    modal.classList.add('open');
+    modalText.focus();
+    modalText.select();
+  }
+  function closeModal(){
+    modal.classList.remove('open');
+    modal._onPrimary = null;
+  }
+  modalClose.onclick = closeModal;
+  modal.addEventListener('pointerdown', (ev)=>{
+    if(ev.target === modal) closeModal();
+  });
+  modalPrimary.onclick = () => {
+    if(typeof modal._onPrimary === 'function'){
+      modal._onPrimary(modalText.value);
+    }
+  };
+
+  btnJSON.onclick = () => {
+    const payload = getSavePayload();
+    openModal(
+      'JSON Dışa Aktar / İçe Aktar',
+      'Dışa aktarmak için kopyala. İçe aktarmak için JSON yapıştırıp “Uygula” de.',
+      JSON.stringify(payload, null, 2),
+      'Uygula',
+      (txt) => {
+        try{
+          const data = JSON.parse(txt);
+          snapshot();
+          applyPayload(data);
+          closeModal();
+          toast('JSON uygulandı');
+        }catch(err){
+          toast('JSON hatası: ' + err.message, 2400);
+        }
+      }
+    );
+  };
+
+  // Export PNG
+  btnExport.onclick = () => {
+    // Render to offscreen at current viewport resolution
+    const rect = canvas.getBoundingClientRect();
+    const out = document.createElement('canvas');
+    out.width = Math.floor(rect.width * (window.devicePixelRatio||1));
+    out.height = Math.floor(rect.height * (window.devicePixelRatio||1));
+    const octx = out.getContext('2d', {alpha:false});
+
+    // draw similar to render(), but at DPR
+    const dpr = (window.devicePixelRatio||1);
+    octx.setTransform(dpr,0,0,dpr,0,0);
+
+    // background
+    octx.fillStyle = '#0f1220';
+    octx.fillRect(0,0,rect.width,rect.height);
+
+    // grid off in export? keep subtle grid: choose keep as-is
+    // We'll export WITHOUT notes (DOM). We'll draw notes as boxes with text.
+    // Draw grid:
+    if(state.showGrid){
+      const tl = screenToWorld(0,0);
+      const br = screenToWorld(rect.width, rect.height);
+      const gridSize = 100, minor=20;
+      const z = cam.scale;
+      const majorAlpha = clamp((z-0.25)/2.2, 0.10, 0.22);
+      const minorAlpha = clamp((z-0.7)/2.0, 0.00, 0.14);
+      const w2s = (wx,wy)=>{
+        const x = (wx - cam.x)*cam.scale + rect.width/2;
+        const y = (wy - cam.y)*cam.scale + rect.height/2;
+        return {x,y};
+      };
+      if(minorAlpha>0.005){
+        octx.lineWidth=1;
+        octx.strokeStyle=`rgba(255,255,255,${minorAlpha})`;
+        octx.beginPath();
+        const startX = Math.floor(tl.x/minor)*minor;
+        const endX = Math.ceil(br.x/minor)*minor;
+        const startY = Math.floor(tl.y/minor)*minor;
+        const endY = Math.ceil(br.y/minor)*minor;
+        for(let x=startX;x<=endX;x+=minor){
+          const s = w2s(x, tl.y), e = w2s(x, br.y);
+          octx.moveTo(s.x,s.y); octx.lineTo(e.x,e.y);
+        }
+        for(let y=startY;y<=endY;y+=minor){
+          const s = w2s(tl.x, y), e = w2s(br.x, y);
+          octx.moveTo(s.x,s.y); octx.lineTo(e.x,e.y);
+        }
+        octx.stroke();
+      }
+      octx.lineWidth=1;
+      octx.strokeStyle=`rgba(255,255,255,${majorAlpha})`;
+      octx.beginPath();
+      const startX2 = Math.floor(tl.x/gridSize)*gridSize;
+      const endX2 = Math.ceil(br.x/gridSize)*gridSize;
+      const startY2 = Math.floor(tl.y/gridSize)*gridSize;
+      const endY2 = Math.ceil(br.y/gridSize)*gridSize;
+      for(let x=startX2;x<=endX2;x+=gridSize){
+        const s = w2s(x, tl.y), e = w2s(x, br.y);
+        octx.moveTo(s.x,s.y); octx.lineTo(e.x,e.y);
+      }
+      for(let y=startY2;y<=endY2;y+=gridSize){
+        const s = w2s(tl.x, y), e = w2s(br.x, y);
+        octx.moveTo(s.x,s.y); octx.lineTo(e.x,e.y);
+      }
+      octx.stroke();
+      const ax = w2s(0,0);
+      octx.strokeStyle = 'rgba(106,166,255,.20)';
+      octx.beginPath();
+      octx.moveTo(0, ax.y); octx.lineTo(rect.width, ax.y);
+      octx.moveTo(ax.x, 0); octx.lineTo(ax.x, rect.height);
+      octx.stroke();
+    }
+
+    // draw elements (canvas-only)
+    const w2s = (wx,wy)=>({ x:(wx-cam.x)*cam.scale + rect.width/2, y:(wy-cam.y)*cam.scale + rect.height/2 });
+    const drawEl = (el)=>{
+      if(el.kind==='stroke'){
+        const pts=el.points||[];
+        if(pts.length<2) return;
+        octx.save();
+        octx.lineCap='round'; octx.lineJoin='round';
+        octx.globalCompositeOperation = el.isEraser ? 'destination-out' : 'source-over';
+        octx.strokeStyle = el.color;
+        octx.lineWidth = el.size;
+        octx.beginPath();
+        const p0 = w2s(pts[0].x, pts[0].y);
+        octx.moveTo(p0.x,p0.y);
+        for(let i=1;i<pts.length;i++){
+          const p=w2s(pts[i].x, pts[i].y);
+          octx.lineTo(p.x,p.y);
+        }
+        octx.stroke();
+        octx.restore();
+      } else if(el.kind==='shape'){
+        const a=el.a,b=el.b; if(!a||!b) return;
+        const pA=w2s(a.x,a.y), pB=w2s(b.x,b.y);
+        const x=Math.min(pA.x,pB.x), y=Math.min(pA.y,pB.y);
+        const w=Math.abs(pA.x-pB.x), h=Math.abs(pA.y-pB.y);
+        octx.save();
+        octx.globalCompositeOperation = el.isEraser ? 'destination-out' : 'source-over';
+        octx.strokeStyle=el.color; octx.lineWidth=el.size;
+        if(el.shapeType==='line'){
+          octx.beginPath(); octx.moveTo(pA.x,pA.y); octx.lineTo(pB.x,pB.y); octx.stroke();
+        } else if(el.shapeType==='rect'){
+          if(el.fill){ octx.fillStyle=el.fill; octx.fillRect(x,y,w,h); }
+          octx.strokeRect(x,y,w,h);
+        } else if(el.shapeType==='ellipse'){
+          octx.beginPath();
+          octx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);
+          if(el.fill){ octx.fillStyle=el.fill; octx.fill(); }
+          octx.stroke();
+        }
+        octx.restore();
+      } else if(el.kind==='image'){
+        if(!el.dataURL) return;
+        // draw image synchronously only if loaded:
+        // We'll try draw from current in-memory element if available; else skip.
+        const im = el.img;
+        if(!im) return;
+        const p=w2s(el.x,el.y), p2=w2s(el.x+el.w, el.y+el.h);
+        octx.drawImage(im, p.x, p.y, p2.x-p.x, p2.y-p.y);
+      }
+    };
+    for(const el of elements) drawEl(el);
+
+    // draw notes
+    const notes = exportNotes();
+    octx.save();
+    octx.font = '14px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    octx.textBaseline = 'top';
+    for(const n of notes){
+      const p=w2s(n.x,n.y), p2=w2s(n.x+n.w,n.y+n.h);
+      const x=p.x, y=p.y, w=p2.x-p.x, h=p2.y-p.y;
+      // box
+      octx.fillStyle = n.color || '#ffd86a';
+      roundRect(octx, x, y, w, h, 14);
+      octx.fill();
+      octx.strokeStyle = 'rgba(0,0,0,.18)';
+      octx.lineWidth = 1;
+      octx.stroke();
+
+      // text (simple wrap)
+      octx.fillStyle = '#1b1b1b';
+      const pad=10;
+      const maxW = Math.max(20, w - pad*2);
+      const lines = wrapText(octx, n.text || '', maxW);
+      let ty = y + 38; // header space
+      for(const line of lines){
+        if(ty > y + h - 18) break;
+        octx.fillText(line, x+pad, ty);
+        ty += 18;
+      }
+    }
+    octx.restore();
+
+    const url = out.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `whiteboard_${new Date().toISOString().slice(0,19).replaceAll(':','-')}.png`;
+    a.click();
+    toast('PNG indiriliyor…');
+  };
+
+  function roundRect(c, x,y,w,h,r){
+    const rr = Math.min(r, w/2, h/2);
+    c.beginPath();
+    c.moveTo(x+rr,y);
+    c.arcTo(x+w,y, x+w,y+h, rr);
+    c.arcTo(x+w,y+h, x,y+h, rr);
+    c.arcTo(x,y+h, x,y, rr);
+    c.arcTo(x,y, x+w,y, rr);
+    c.closePath();
+  }
+  function wrapText(c, text, maxW){
+    const words = String(text).replace(/\r/g,'').split(/\s+/).filter(Boolean);
+    const lines = [];
+    let line = '';
+    for(const w of words){
+      const test = line ? (line+' '+w) : w;
+      if(c.measureText(test).width <= maxW){
+        line = test;
+      } else {
+        if(line) lines.push(line);
+        // if single word too long, hard split
+        if(c.measureText(w).width > maxW){
+          let chunk='';
+          for(const ch of w){
+            const t = chunk+ch;
+            if(c.measureText(t).width <= maxW) chunk=t;
+            else { lines.push(chunk); chunk=ch; }
+          }
+          line = chunk;
+        } else {
+          line = w;
+        }
+      }
+    }
+    if(line) lines.push(line);
+    // preserve newlines roughly:
+    const withNL = [];
+    const blocks = String(text).split('\n');
+    if(blocks.length>1){
+      // naive: wrap each line separately
+      for(const b of blocks){
+        const ls = wrapTextSingle(c, b, maxW);
+        for(const l of ls) withNL.push(l);
+      }
+      return withNL;
+    }
+    return lines;
+  }
+  function wrapTextSingle(c, text, maxW){
+    const words = String(text).split(/\s+/).filter(Boolean);
+    const lines = [];
+    let line = '';
+    for(const w of words){
+      const test = line ? (line+' '+w) : w;
+      if(c.measureText(test).width <= maxW){
+        line = test;
+      } else {
+        if(line) lines.push(line);
+        line = w;
+      }
+    }
+    if(line) lines.push(line);
+    return lines.length?lines:[''];
+  }
+
+  // Import image
+  btnImportImage.onclick = () => fileImage.click();
+  fileImage.addEventListener('change', async () => {
+    const file = fileImage.files && fileImage.files[0];
+    fileImage.value = '';
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataURL = reader.result;
+      const im = new Image();
+      im.onload = () => {
+        snapshot();
+        const center = screenToWorld(canvas.getBoundingClientRect().width/2, canvas.getBoundingClientRect().height/2);
+        // fit image to reasonable size in world: max 800px screen
+        const maxScreen = 520;
+        const scale = Math.min(1, maxScreen / Math.max(im.width, im.height));
+        const wWorld = (im.width * scale) / cam.scale;
+        const hWorld = (im.height * scale) / cam.scale;
+        const el = {
+          id: makeId(),
+          kind:'image',
+          x: center.x - wWorld/2,
+          y: center.y - hWorld/2,
+          w: wWorld,
+          h: hWorld,
+          dataURL,
+          img: im
+        };
+        elements.push(el);
+        render();
+        toast('Resim eklendi');
+      };
+      im.src = dataURL;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Pointer interactions
+  canvas.addEventListener('pointerdown', (ev) => {
+    // ignore if modal open
+    if(modal.classList.contains('open')) return;
+
+    // if clicking on UI overlay
+    if(ev.button !== 0 && ev.pointerType === 'mouse') return;
+
+    canvas.setPointerCapture(ev.pointerId);
+    state.isPointerDown = true;
+    state.pointerId = ev.pointerId;
+
+    const ptW = screenToWorld(ev.clientX, ev.clientY);
+
+    // Space-pan overrides
+    const effectiveTool = (state.spacePan || state.tool==='hand') ? 'hand' : state.tool;
+
+    if(effectiveTool === 'hand'){
+      state.isPanning = true;
+      state.panStart = {sx: ev.clientX, sy: ev.clientY, cx: cam.x, cy: cam.y};
+      return;
+    }
+
+    if(effectiveTool === 'note'){
+      createNoteAtWorld(ptW.x, ptW.y);
+      return;
+    }
+
+    if(effectiveTool === 'select'){
+      const hit = hitTestWorld(ptW.x, ptW.y);
+      state.selectedId = hit;
+      if(hit){
+        state.draggingSelection = true;
+        state.dragStart = {sx: ev.clientX, sy: ev.clientY};
+        const el = elements.find(e=>e.id===hit);
+        state.dragOrig = deepClone(el);
+      }
+      render();
+      return;
+    }
+
+    if(effectiveTool === 'pen' || effectiveTool === 'eraser'){
+      const st = {
+        id: makeId(),
+        kind:'stroke',
+        color: (effectiveTool === 'eraser') ? '#000000' : state.color,
+        size: (effectiveTool === 'eraser') ? state.eraserSize : state.size,
+        isEraser: (effectiveTool === 'eraser'),
+        points: [{x: ptW.x, y: ptW.y}]
+      };
+      state.currentStroke = st;
+      render();
+      return;
+    }
+
+    // shapes
+    if(effectiveTool === 'line' || effectiveTool === 'rect' || effectiveTool === 'ellipse'){
+      const sh = {
+        id: makeId(),
+        kind:'shape',
+        shapeType: effectiveTool,
+        a: {x: ptW.x, y: ptW.y},
+        b: {x: ptW.x, y: ptW.y},
+        color: state.color,
+        size: state.size,
+        fill: null,
+        isEraser: false
+      };
+      // shift => fill with 25% alpha
+      if(ev.shiftKey){
+        sh.fill = hexToRgba(state.color, 0.20);
+      }
+      state.currentShape = sh;
+      render();
+      return;
+    }
+  });
+
+  canvas.addEventListener('pointermove', (ev) => {
+    if(!state.isPointerDown) return;
+    if(ev.pointerId !== state.pointerId) return;
+
+    const ptW = screenToWorld(ev.clientX, ev.clientY);
+    const effectiveTool = (state.spacePan || state.tool==='hand') ? 'hand' : state.tool;
+
+    if(effectiveTool === 'hand' && state.isPanning && state.panStart){
+      const dx = (ev.clientX - state.panStart.sx) / cam.scale;
+      const dy = (ev.clientY - state.panStart.sy) / cam.scale;
+      cam.x = state.panStart.cx - dx;
+      cam.y = state.panStart.cy - dy;
+      updateZoomUI(false);
+      render();
+      return;
+    }
+
+    if(effectiveTool === 'select' && state.draggingSelection && state.selectedId){
+      const el = elements.find(e=>e.id===state.selectedId);
+      if(!el) return;
+      const dx = (ev.clientX - state.dragStart.sx) / cam.scale;
+      const dy = (ev.clientY - state.dragStart.sy) / cam.scale;
+
+      // Move based on type
+      if(el.kind === 'stroke'){
+        const orig = state.dragOrig;
+        for(let i=0;i<el.points.length;i++){
+          el.points[i].x = orig.points[i].x + dx;
+          el.points[i].y = orig.points[i].y + dy;
+        }
+      } else if(el.kind === 'shape'){
+        el.a.x = state.dragOrig.a.x + dx;
+        el.a.y = state.dragOrig.a.y + dy;
+        el.b.x = state.dragOrig.b.x + dx;
+        el.b.y = state.dragOrig.b.y + dy;
+      } else if(el.kind === 'image'){
+        el.x = state.dragOrig.x + dx;
+        el.y = state.dragOrig.y + dy;
+      }
+      render();
+      return;
+    }
+
+    if(state.currentStroke){
+      const pts = state.currentStroke.points;
+      const last = pts[pts.length-1];
+      const dist2 = (ptW.x-last.x)**2 + (ptW.y-last.y)**2;
+      if(dist2 > 0.15){ // smoothing threshold
+        pts.push({x: ptW.x, y: ptW.y});
+        render();
+      }
+      return;
+    }
+
+    if(state.currentShape){
+      state.currentShape.b = {x: ptW.x, y: ptW.y};
+      render();
+      return;
+    }
+  });
+
+  canvas.addEventListener('pointerup', (ev) => {
+    if(ev.pointerId !== state.pointerId) return;
+    state.isPointerDown = false;
+    state.pointerId = null;
+    try{ canvas.releasePointerCapture(ev.pointerId); }catch(_){}
+
+    if(state.isPanning){
+      state.isPanning = false;
+      state.panStart = null;
+      return;
+    }
+
+    if(state.draggingSelection){
+      state.draggingSelection = false;
+      state.dragStart = null;
+      state.dragOrig = null;
+      snapshot();
+      return;
+    }
+
+    if(state.currentStroke){
+      // finalize
+      snapshot();
+      elements.push(state.currentStroke);
+      state.currentStroke = null;
+      render();
+      return;
+    }
+
+    if(state.currentShape){
+      snapshot();
+      elements.push(state.currentShape);
+      state.currentShape = null;
+      render();
+      return;
+    }
+  });
+
+  canvas.addEventListener('pointercancel', () => {
+    state.isPointerDown = false;
+    state.pointerId = null;
+    state.currentStroke = null;
+    state.currentShape = null;
+    state.isPanning = false;
+    state.draggingSelection = false;
+  });
+
+  // Wheel zoom
+  canvas.addEventListener('wheel', (ev) => {
+    if(modal.classList.contains('open')) return;
+    ev.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const mouse = {x: ev.clientX - rect.left, y: ev.clientY - rect.top};
+    // world point under cursor before zoom
+    const before = screenToWorld(ev.clientX, ev.clientY);
+
+    const delta = -ev.deltaY;
+    const zoomFactor = Math.exp(delta * 0.0012);
+    const newScale = clamp(cam.scale * zoomFactor, cam.minScale, cam.maxScale);
+
+    cam.scale = newScale;
+
+    // keep cursor anchored: adjust cam so before stays under mouse
+    const after = screenToWorld(ev.clientX, ev.clientY);
+    cam.x += (before.x - after.x);
+    cam.y += (before.y - after.y);
+
+    updateZoomUI();
+    render();
+  }, {passive:false});
+
+  function updateZoomUI(showToast=true){
+    zoomChip.textContent = `${Math.round(cam.scale*100)}%`;
+    if(showToast) {
+      // no toast spam on every wheel tick; comment out
+    }
+  }
+
+  // Keyboard shortcuts
+  window.addEventListener('keydown', (ev) => {
+    // prevent when typing in note textarea or modal
+    const t = ev.target;
+    const typing = (t && (t.tagName==='TEXTAREA' || t.tagName==='INPUT') && !t.classList.contains('noteGrip'));
+    if(modal.classList.contains('open')){
+      if(ev.key === 'Escape'){ closeModal(); }
+      return;
+    }
+    if(typing){
+      // allow ctrl+z inside text areas default
+      if(ev.key === 'Escape') t.blur();
+      return;
+    }
+
+    // Space pan
+    if(ev.code === 'Space'){
+      state.spacePan = true;
+      toolButtons.hand.setAttribute('aria-pressed', 'true');
+    }
+
+    if((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase()==='z' && !ev.shiftKey){
+      ev.preventDefault();
+      undo();
+      return;
+    }
+    if((ev.ctrlKey || ev.metaKey) && (ev.key.toLowerCase()==='y' || (ev.key.toLowerCase()==='z' && ev.shiftKey))){
+      ev.preventDefault();
+      redo();
+      return;
+    }
+
+    if(ev.key === 'Delete' || ev.key === 'Backspace'){
+      if(state.selectedId){
+        snapshot();
+        const idx = elements.findIndex(e=>e.id===state.selectedId);
+        if(idx>=0) elements.splice(idx,1);
+        state.selectedId = null;
+        render();
+        toast('Silindi');
+      }
+      return;
+    }
+
+    // Tool hotkeys
+    const k = ev.key.toLowerCase();
+    if(k==='p') setTool('pen');
+    else if(k==='e') setTool('eraser');
+    else if(k==='l') setTool('line');
+    else if(k==='r') setTool('rect');
+    else if(k==='o') setTool('ellipse');
+    else if(k==='v') setTool('select');
+    else if(k==='n') setTool('note');
+    else if(k==='h') setTool('hand');
+
+    // 0 => reset view
+    if(k==='0'){
+      snapshot();
+      cam.x=0; cam.y=0; cam.scale=1;
+      updateZoomUI();
+      render();
+      toast('Görünüm sıfırlandı');
+    }
+  });
+
+  window.addEventListener('keyup', (ev) => {
+    if(ev.code === 'Space'){
+      state.spacePan = false;
+      // restore hand pressed state based on active tool
+      toolButtons.hand.setAttribute('aria-pressed', String(state.tool==='hand'));
+    }
+  });
+
+  // Helpers
+  function hexToRgba(hex, a){
+    const h = hex.replace('#','').trim();
+    const v = parseInt(h.length===3 ? h.split('').map(x=>x+x).join('') : h, 16);
+    const r = (v>>16)&255, g=(v>>8)&255, b=v&255;
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  // initial
+  function init(){
+    // seed history with initial state so undo works after first draw
+    updateUndoRedoUI();
+    resize();
+    setTool('pen');
+    state.color = colorPick.value;
+    state.size = +sizeRange.value;
+    updateZoomUI(false);
+    toast('Hazır');
+  }
+
+  init();
+
+})();
+</script>
+</body>
+</html>

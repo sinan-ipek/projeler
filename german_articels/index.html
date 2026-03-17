@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Artikel Diyagramı</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: #f2f2f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .app {
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+      padding: 20px;
+      max-width: 980px;
+      width: 100%;
+    }
+
+    .diagram-wrapper {
+      position: relative;
+      margin: 0 auto;
+      max-width: 900px;
+      height: 420px;
+    }
+
+    .diagram {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #f9fafc;
+      border-radius: 16px;
+      border: 1px solid #dde0ea;
+      overflow: hidden;
+    }
+
+    .diagram svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .node {
+      position: absolute;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 1.4rem;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      background: transparent;
+      transform: translate(-50%, -50%);
+      transition: box-shadow 0.16s ease, background 0.16s ease,
+        transform 0.16s ease;
+      border: 2px solid transparent;
+      z-index: 2;
+    }
+
+    .node span {
+      display: inline-block;
+      min-width: 44px;
+    }
+
+    .node[data-color="green"] {
+      color: #2e7d32;
+    }
+    .node[data-color="red"] {
+      color: #c62828;
+    }
+    .node[data-color="blue"] {
+      color: #1565c0;
+    }
+    .node[data-color="black"] {
+      color: #212121;
+    }
+
+    .node.start:hover {
+      box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.2);
+      background: #ffffff;
+      transform: translate(-50%, -52%);
+    }
+
+    .node.active {
+      background: #fffde7;
+      box-shadow: 0 0 0 4px #ffeb3b;
+      border-color: #fbc02d;
+      transform: translate(-50%, -52%);
+    }
+
+    /* BALON – MAVİ */
+    .bubble {
+      position: absolute;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #1976d2;           /* mavi */
+      color: #ffffff;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      transform: translate(-50%, -100%);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .bubble::after {
+      content: "";
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 6px 6px 0 6px;
+      border-style: solid;
+      border-color: #1976d2 transparent transparent transparent; /* mavi ok ucu */
+    }
+
+    .bubble.hidden {
+      display: none;
+    }
+
+    .die-menu {
+      position: absolute;
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 6px 8px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+      border: 1px solid #cfd8dc;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 6;
+    }
+
+    .die-menu.hidden {
+      display: none;
+    }
+
+    .die-menu button {
+      border: none;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      background: #e3f2fd;
+      transition: background 0.15s ease, transform 0.15s ease,
+        box-shadow 0.15s ease;
+    }
+
+    .die-menu button:hover {
+      background: #bbdefb;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.18);
+    }
+
+    .die-menu button:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    @media (max-width: 700px) {
+      .diagram-wrapper {
+        height: 360px;
+      }
+      .node {
+        font-size: 1.1rem;
+        padding: 6px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app">
+    <div class="diagram-wrapper">
+      <div class="diagram" id="diagram">
+        <!-- SVG oklar -->
+        <svg viewBox="0 0 900 420">
+          <defs>
+            <marker id="arrowHead" markerWidth="6" markerHeight="6" refX="5" refY="3"
+              orient="auto" markerUnits="strokeWidth">
+              <polygon points="0 0, 6 3, 0 6" fill="#555" />
+            </marker>
+          </defs>
+
+          <!-- Üst yatay oklar: die → die → der → der -->
+          <line x1="175" y1="90" x2="280" y2="90"
+            stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            marker-end="url(#arrowHead)" />
+          <line x1="355" y1="90" x2="460" y2="90"
+            stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            marker-end="url(#arrowHead)" />
+          <line x1="535" y1="90" x2="640" y2="90"
+            stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            marker-end="url(#arrowHead)" />
+
+          <!-- der (üst) ↓ den -->
+          <line x1="500" y1="110" x2="500" y2="185"
+            stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            marker-end="url(#arrowHead)" />
+
+          <!-- den ↓ dem -->
+          <line x1="500" y1="235" x2="500" y2="310"
+            stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            marker-end="url(#arrowHead)" />
+
+          <!-- den → der (sağ üst) -->
+          <line x1="520" y1="195" x2="660" y2="110"
+            stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            marker-end="url(#arrowHead)" />
+
+          <!-- die (ikinci) ↘ den (çoğul yol) -->
+          <line x1="335" y1="110" x2="480" y2="190"
+            stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            marker-end="url(#arrowHead)" />
+
+          <!-- Alt yatay oklar: das → das → dem → des -->
+          <line x1="175" y1="330" x2="280" y2="330"
+            stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            marker-end="url(#arrowHead)" />
+          <line x1="355" y1="330" x2="460" y2="330"
+            stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            marker-end="url(#arrowHead)" />
+          <line x1="535" y1="330" x2="640" y2="330"
+            stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            marker-end="url(#arrowHead)" />
+        </svg>
+
+        <!-- NODLAR -->
+        <div
+          class="node start"
+          data-node-id="die_left"
+          data-start="die"
+          data-color="green"
+          style="left: 140px; top: 80px;"
+        >
+          <span>die</span>
+        </div>
+
+        <div
+          class="node"
+          data-node-id="die_mid"
+          data-color="green"
+          style="left: 320px; top: 80px;"
+        >
+          <span>die</span>
+        </div>
+
+        <div
+          class="node start"
+          data-node-id="der_top"
+          data-start="der"
+          data-color="red"
+          style="left: 500px; top: 80px;"
+        >
+          <span>der</span>
+        </div>
+
+        <div
+          class="node"
+          data-node-id="der_right"
+          data-color="black"
+          style="left: 680px; top: 80px;"
+        >
+          <span>der</span>
+        </div>
+
+        <div
+          class="node"
+          data-node-id="den_mid"
+          data-color="red"
+          style="left: 500px; top: 210px;"
+        >
+          <span>den</span>
+        </div>
+
+        <div
+          class="node start"
+          data-node-id="das_left"
+          data-start="das"
+          data-color="blue"
+          style="left: 140px; top: 320px;"
+        >
+          <span>das</span>
+        </div>
+
+        <div
+          class="node"
+          data-node-id="das_mid"
+          data-color="blue"
+          style="left: 320px; top: 320px;"
+        >
+          <span>das</span>
+        </div>
+
+        <div
+          class="node"
+          data-node-id="dem_bottom"
+          data-color="red"
+          style="left: 500px; top: 320px;"
+        >
+          <span>dem</span>
+        </div>
+
+        <div
+          class="node"
+          data-node-id="des_bottom"
+          data-color="black"
+          style="left: 680px; top: 320px;"
+        >
+          <span>des</span>
+        </div>
+
+        <div id="bubble" class="bubble hidden">Nominativ</div>
+
+        <div id="dieMenu" class="die-menu hidden">
+          <button type="button" data-mode="fem">dişil</button>
+          <button type="button" data-mode="pl">çoğul</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const diagram = document.getElementById("diagram");
+    const bubble = document.getElementById("bubble");
+    const dieMenu = document.getElementById("dieMenu");
+    const nodes = document.querySelectorAll(".node");
+
+    const paths = {
+      der: [
+        { nodeId: "der_top", label: "Nominativ (maskulin)" },
+        { nodeId: "den_mid", label: "Akkusativ (maskulin)" },
+        { nodeId: "dem_bottom", label: "Dativ (maskulin/neutrum)" },
+        { nodeId: "des_bottom", label: "Genitiv (maskulin/neutrum)" },
+      ],
+      das: [
+        { nodeId: "das_left", label: "Nominativ (neutrum)" },
+        { nodeId: "das_mid", label: "Akkusativ (neutrum)" },
+        { nodeId: "dem_bottom", label: "Dativ (maskulin/neutrum)" },
+        { nodeId: "des_bottom", label: "Genitiv (maskulin/neutrum)" },
+      ],
+      die_fem: [
+        { nodeId: "die_left", label: "Nominativ (feminin)" },
+        { nodeId: "die_mid", label: "Akkusativ (feminin)" },
+        { nodeId: "der_top", label: "Dativ (feminin)" },
+        { nodeId: "der_right", label: "Genitiv (feminin)" },
+      ],
+      die_pl: [
+        { nodeId: "die_left", label: "Nominativ (Plural)" },
+        { nodeId: "die_mid", label: "Akkusativ (Plural)" },
+        { nodeId: "den_mid", label: "Dativ (Plural)" },
+        { nodeId: "der_right", label: "Genitiv (Plural)" },
+      ],
+    };
+
+    let currentPath = null;
+    let currentIndex = -1;
+    let currentNode = null;
+
+    function clearActive() {
+      nodes.forEach((n) => n.classList.remove("active"));
+      currentNode = null;
+    }
+
+    function resetAll() {
+      clearActive();
+      currentPath = null;
+      currentIndex = -1;
+      bubble.classList.add("hidden");
+      dieMenu.classList.add("hidden");
+    }
+
+    function getNodeById(id) {
+      return document.querySelector('.node[data-node-id="' + id + '"]');
+    }
+
+    function positionBubble(node, label) {
+      const nodeRect = node.getBoundingClientRect();
+      const diagRect = diagram.getBoundingClientRect();
+
+      bubble.textContent = label;
+      bubble.classList.remove("hidden");
+
+      const left =
+        nodeRect.left - diagRect.left + nodeRect.width / 2;
+      const top = nodeRect.top - diagRect.top - 8;
+
+      bubble.style.left = left + "px";
+      bubble.style.top = top + "px";
+    }
+
+    function goToStep(index) {
+      if (!currentPath) return;
+      if (index < 0 || index >= currentPath.length) return;
+
+      currentIndex = index;
+      clearActive();
+
+      const step = currentPath[currentIndex];
+      const node = getNodeById(step.nodeId);
+      if (!node) return;
+      currentNode = node;
+      node.classList.add("active");
+      positionBubble(node, step.label);
+    }
+
+    function startPath(key) {
+      currentPath = paths[key];
+      if (!currentPath) return;
+      goToStep(0);
+    }
+
+    function finishPath() {
+      bubble.classList.add("hidden");
+      clearActive();
+      currentPath = null;
+      currentIndex = -1;
+    }
+
+    function positionDieMenu(anchorNode) {
+      const nRect = anchorNode.getBoundingClientRect();
+      const dRect = diagram.getBoundingClientRect();
+
+      const left =
+        nRect.left - dRect.left + nRect.width / 2;
+      const top = nRect.top - dRect.top - 10;
+
+      dieMenu.style.left = left + "px";
+      dieMenu.style.top = top + "px";
+    }
+
+    nodes.forEach((node) => {
+      node.addEventListener("click", () => {
+        const startType = node.dataset.start;
+
+        if (currentPath && currentNode === node) {
+          const nextIndex = currentIndex + 1;
+          if (nextIndex >= currentPath.length) {
+            finishPath();
+          } else {
+            goToStep(nextIndex);
+          }
+          return;
+        }
+
+        if (!startType) return;
+
+        resetAll();
+
+        if (startType === "der") {
+          startPath("der");
+        } else if (startType === "das") {
+          startPath("das");
+        } else if (startType === "die") {
+          positionDieMenu(node);
+          dieMenu.classList.remove("hidden");
+        }
+      });
+    });
+
+    dieMenu.querySelectorAll("button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.mode;
+        dieMenu.classList.add("hidden");
+        resetAll();
+        if (mode === "fem") {
+          startPath("die_fem");
+        } else if (mode === "pl") {
+          startPath("die_pl");
+        }
+      });
+    });
+
+    resetAll();
+  </script>
+</body>
+</html>

@@ -1,0 +1,2610 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Satranç – Koç Sürümü (Offline)</title>
+  <style>
+    /* v0.9.0 */
+    :root{
+      --bg:#0f1115;
+      --panel:#161a22;
+      --text:#e8e8ea;
+      --muted:#a9adba;
+      --accent:#5dd6ff;
+      --danger:#ff5d73;
+
+      --sq-light:#d9d9d9;
+      --sq-dark:#8a8a8a;
+
+      --atk-one: rgba(93, 214, 255, 0.22);
+
+      --hl-select: rgba(93,214,255,0.35);
+      --hl-move: rgba(93,214,255,0.22);
+      --hl-capture: rgba(255,93,115,0.25);
+
+      --shadow: 0 14px 40px rgba(0,0,0,0.35);
+
+      --good: rgba(93, 214, 255, 0.16);
+      --warn: rgba(255, 190, 93, 0.18);
+      --bad: rgba(255, 93, 115, 0.16);
+    }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 900px at 30% 20%, #1a2240 0%, var(--bg) 55%) fixed;
+      color: var(--text);
+    }
+    .wrap{
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 18px;
+      display:grid;
+      gap: 14px;
+      grid-template-columns: 520px 1fr;
+      align-items:start;
+    }
+    @media (max-width: 1100px){
+      .wrap{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card h2{
+      margin:0;
+      padding: 12px 14px;
+      font-size: 16px;
+      background: rgba(0,0,0,0.18);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .card .body{ padding: 12px 14px; }
+
+    .btn{
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform .04s ease, background .12s ease, border-color .12s ease;
+      user-select:none;
+      white-space: nowrap;
+    }
+    .btn:hover{ background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.22); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{ border-color: rgba(93,214,255,0.55); background: rgba(93,214,255,0.10); }
+    .btn.danger{ border-color: rgba(255,93,115,0.50); background: rgba(255,93,115,0.10); }
+    .btn.toggle.on{
+      border-color: rgba(93,214,255,0.75);
+      background: rgba(93,214,255,0.18);
+      box-shadow: 0 0 0 2px rgba(93,214,255,0.10) inset;
+    }
+    .btn.small{ padding:7px 10px; border-radius: 10px; font-size: 13px; }
+
+    label{
+      font-size: 12px;
+      color: var(--muted);
+      display:flex;
+      gap:8px;
+      align-items:center;
+      user-select:none;
+    }
+    input[type="range"]{ width: 160px; }
+    select, textarea, input[type="text"]{
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 8px 10px;
+      outline:none;
+    }
+    textarea{
+      width:100%;
+      min-height: 92px;
+      resize: vertical;
+      line-height: 1.25;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:10px;
+    }
+
+    .status{
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.20);
+      font-size: 13px;
+    }
+    .status small{ color: var(--muted); display:block; margin-top: 4px; }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width:1100px){ .grid2{ grid-template-columns: 1fr; } }
+
+    .movelist{
+      max-height: 220px;
+      overflow:auto;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.18);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .boardWrap{
+      width:100%;
+      max-width:520px;
+      margin:0 auto;
+      border-radius: 10px;
+      overflow:hidden;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+    .board{
+      display:grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      width:100%;
+      aspect-ratio: 1 / 1;
+      background: #000;
+    }
+    .sq{
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      aspect-ratio: 1 / 1;
+      user-select:none;
+      cursor:pointer;
+    }
+    .sq.light{ background: var(--sq-light); color: #111; }
+    .sq.dark { background: var(--sq-dark);  color: #111; }
+
+    .piece{
+      font-size: clamp(26px, 5.2vw, 46px);
+      line-height: 1;
+      pointer-events:none;
+    }
+    .piece.w{ text-shadow: 0 1px 0 rgba(255,255,255,0.65), 0 2px 10px rgba(0,0,0,0.25); }
+    .piece.b{ text-shadow: 0 1px 0 rgba(0,0,0,0.35), 0 2px 10px rgba(0,0,0,0.35); }
+
+    .sq.sel::after{
+      content:"";
+      position:absolute; inset:0;
+      background: var(--hl-select);
+      pointer-events:none;
+    }
+    .sq.mv::after{
+      content:"";
+      position:absolute; inset:0;
+      background: var(--hl-move);
+      pointer-events:none;
+    }
+    .sq.cap::after{
+      content:"";
+      position:absolute; inset:0;
+      background: var(--hl-capture);
+      pointer-events:none;
+    }
+    .sq.atk::before{
+      content:"";
+      position:absolute; inset:0;
+      pointer-events:none;
+      background: var(--atk-one);
+    }
+
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,0.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index: 9999;
+    }
+    .modal{
+      width: min(520px, 92vw);
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.55);
+      overflow:hidden;
+    }
+    .modal header{
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.18);
+      display:flex; align-items:center; justify-content:space-between;
+      gap: 12px;
+    }
+    .modal .content{ padding: 12px 14px; }
+    .promo-btns{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top: 10px;
+    }
+    .promo-btns .btn{ flex: 1 1 45%; text-align:center; }
+
+    .hint{ font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+    .capturedBox{
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.18);
+    }
+    .capturedRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin: 6px 0;
+    }
+    .capturedLabel{
+      color: var(--muted);
+      font-size: 12px;
+      min-width: 120px;
+    }
+    .capturedPieces{
+      flex:1;
+      font-size: 18px;
+      letter-spacing: 2px;
+      line-height: 1.1;
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .coachBox{
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.18);
+    }
+    .coachHeader{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom: 8px;
+    }
+    .coachFeed{
+      max-height: 260px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .coachItem{
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      padding: 8px 10px;
+      background: rgba(0,0,0,0.14);
+    }
+    .tag{
+      display:inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      font-size: 12px;
+      color: var(--text);
+      margin-right: 8px;
+    }
+    .tag.good{ background: var(--good); }
+    .tag.warn{ background: var(--warn); }
+    .tag.bad{ background: var(--bad); border-color: rgba(255,93,115,0.30); }
+    .coachLine{
+      font-size: 13px;
+      line-height: 1.35;
+      margin-top: 6px;
+    }
+    .coachMeta{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      white-space: pre-wrap;
+    }
+
+    .gamesList{
+      max-height: 240px;
+      overflow:auto;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.18);
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .gameRow{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      padding: 8px 10px;
+      background: rgba(0,0,0,0.14);
+    }
+    .gameRow .left{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width: 0;
+    }
+    .gameRow .title{
+      font-size: 13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .gameRow .sub{
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .gameRow .actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+<body>
+
+<!-- HOME BUTTON -->
+<div style="
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+">
+  <a href="../index.html" style="
+    text-decoration: none;
+    background: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: black;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  ">
+    ← Home
+  </a>
+</div>
+
+<div class="wrap">
+<div class="wrap">
+  <!-- LEFT: Board -->
+  <div class="card">
+    <h2>
+      <span>Satranç Tahtası (Offline) – Koç</span>
+      <button id="btnFlip" class="btn">Tahtayı Döndür</button>
+    </h2>
+    <div class="body">
+      <div class="boardWrap">
+        <div id="board" class="board"></div>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <button id="btnNew" class="btn primary">Yeni Oyun</button>
+        <button id="btnUndo" class="btn">Geri Al</button>
+        <button id="btnStop" class="btn danger" title="Motor düşünüyorsa durdurur">Motoru Durdur</button>
+
+        <button id="btnShowCtrlW" class="btn toggle" title="Beyaz'ın kontrol ettiği kareleri göster">Beyaz Kontrol</button>
+        <button id="btnShowCtrlB" class="btn toggle" title="Siyah'ın kontrol ettiği kareleri göster">Siyah Kontrol</button>
+      </div>
+
+      <div class="status" id="statusBox">
+        Hazır.
+        <small id="statusSub"></small>
+      </div>
+
+      <div class="capturedBox">
+        <div class="capturedRow">
+          <div class="capturedLabel">Beyazın Aldıkları:</div>
+          <div id="capByWhite" class="capturedPieces"></div>
+        </div>
+        <div class="capturedRow">
+          <div class="capturedLabel">Siyahın Aldıkları:</div>
+          <div id="capByBlack" class="capturedPieces"></div>
+        </div>
+        <div class="hint" style="margin-top:6px;">Captured taşlar hamle geçmişinden hesaplanır (undo/PGN/FEN uyumlu).</div>
+      </div>
+
+      <div class="coachBox">
+        <div class="coachHeader">
+          <div class="row" style="margin:0;">
+            <span class="pill" id="coachStatePill">Koç: Kapalı</span>
+            <button id="btnCoach" class="btn toggle">Koç Analizi</button>
+            <button id="btnSaveGame" class="btn">Oyunu Kaydet</button>
+          </div>
+          <div class="row" style="margin:0;">
+            <label>
+              Koç Süresi (ms/hamle):
+              <input id="coachThink" type="range" min="100" max="6000" step="100" value="1200">
+              <span id="coachThinkVal" style="min-width:62px; display:inline-block; text-align:right;">1200</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="coachFeed" id="coachFeed">
+          <div class="hint">Koçu açınca, her <b>senin hamlenden sonra</b> değerlendirme yapılır ve hatalar raporlanır.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT: Settings / History / Save -->
+  <div class="card">
+    <h2>Ayarlar, Kayıtlar, Raporlar</h2>
+    <div class="body">
+
+      <div class="grid2">
+        <div class="card" style="border-radius:14px;">
+          <h2 style="border-radius:14px 14px 0 0;">Motor</h2>
+          <div class="body">
+            <div class="row">
+              <label>
+                Tarafın:
+                <select id="playerSide">
+                  <option value="w">Beyaz</option>
+                  <option value="b">Siyah</option>
+                </select>
+              </label>
+
+              <label>
+                Motor Gücü:
+                <input id="skill" type="range" min="0" max="20" value="14">
+                <span id="skillVal" style="min-width:34px; display:inline-block; text-align:right;">14</span>
+              </label>
+            </div>
+
+            <div class="row">
+              <label>
+                Motor Düşünme Süresi (ms/hamle):
+                <input id="think" type="range" min="50" max="5000" step="50" value="800">
+                <span id="thinkVal" style="min-width:58px; display:inline-block; text-align:right;">800</span>
+              </label>
+            </div>
+
+            <div class="row">
+              <button id="btnApply" class="btn primary">Ayarları Uygula</button>
+              <button id="btnEngineMove" class="btn" title="Sıra motordaysa hamle yaptırır">Motor Hamlesi</button>
+              <button id="btnSound" class="btn toggle on" title="Motor hamlesinde küçük ses çal">Ses: Aç</button>
+            </div>
+
+            <div class="hint">Koç analizi ayrı bir süre ayarıyla çalışır (ms/hamle).</div>
+          </div>
+        </div>
+
+        <div class="card" style="border-radius:14px;">
+          <h2 style="border-radius:14px 14px 0 0;">Hamleler</h2>
+          <div class="body">
+            <div id="moves" class="movelist"></div>
+            <div class="row" style="margin-top:10px;">
+              <button id="btnCopyPGN" class="btn">PGN Kopyala</button>
+              <button id="btnDownloadPGN" class="btn">PGN İndir</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:12px;">
+        <div class="card" style="border-radius:14px;">
+          <h2 style="border-radius:14px 14px 0 0;">FEN / PGN</h2>
+          <div class="body">
+            <textarea id="fenBox" spellcheck="false" placeholder="FEN burada..."></textarea>
+            <div class="row" style="margin-top:10px;">
+              <button id="btnGetFEN" class="btn">FEN Getir</button>
+              <button id="btnLoadFEN" class="btn primary">FEN Yükle</button>
+            </div>
+
+            <textarea id="pgnBox" spellcheck="false" placeholder="PGN burada..."></textarea>
+            <div class="row" style="margin-top:10px;">
+              <button id="btnGetPGN" class="btn">PGN Getir</button>
+              <button id="btnLoadPGN" class="btn primary">PGN Yükle</button>
+            </div>
+
+            <div class="hint">FEN/PGN yüklemek oyunu değiştirir. Koç raporu sıfırlanır.</div>
+          </div>
+        </div>
+
+        <div class="card" style="border-radius:14px;">
+          <h2 style="border-radius:14px 14px 0 0;">Kayıtlı Oyunlar</h2>
+          <div class="body">
+            <div class="row">
+              <button id="btnRefreshGames" class="btn">Listeyi Yenile</button>
+              <button id="btnExportAll" class="btn">Tüm Kayıtları Dışa Aktar</button>
+              <button id="btnImportAll" class="btn">Kayıt İçe Al</button>
+              <button id="btnClearAll" class="btn danger">Tüm Kayıtları Sil</button>
+            </div>
+            <input id="importFile" type="file" accept="application/json" style="display:none;"/>
+            <div class="gamesList" id="gamesList">
+              <div class="hint">Henüz kayıt yok.</div>
+            </div>
+            <div class="hint">Kayıtlar sadece bu tarayıcı/cihazda saklanır (IndexedDB).</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hint" style="margin-top:12px;">
+        Koç mantığı: “senin hamlenden önceki pozisyonda en iyi hamle” ile “senin hamlen” arasındaki değerlendirme farkına bakar.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Promotion Modal -->
+<div class="modal-backdrop" id="promoBackdrop">
+  <div class="modal">
+    <header>
+      <strong>Terfi Seç</strong>
+      <button id="promoCancel" class="btn danger">İptal</button>
+    </header>
+    <div class="content">
+      Piyon son sıraya ulaştı. Hangi taşa terfi edilsin?
+      <div class="promo-btns">
+        <button class="btn primary" data-piece="q">Vezir</button>
+        <button class="btn" data-piece="r">Kale</button>
+        <button class="btn" data-piece="b">Fil</button>
+        <button class="btn" data-piece="n">At</button>
+      </div>
+      <div class="hint">İpucu: Genelde vezir seçilir.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ===================== UTIL =====================
+  const VERSION = "v0.9.0";
+
+  const FILES = "abcdefgh";
+  const RANKS = "12345678";
+
+  const PIECE_UNI = {
+    P:"♙", N:"♘", B:"♗", R:"♖", Q:"♕", K:"♔",
+    p:"♟", n:"♞", b:"♝", r:"♜", q:"♛", k:"♚"
+  };
+
+  const PIECE_VAL = { p:100, n:320, b:330, r:500, q:900, k:20000 };
+
+  const PST = {
+    p: [
+      0,0,0,0,0,0,0,0,
+      5,10,10,-20,-20,10,10,5,
+      5,-5,-10,0,0,-10,-5,5,
+      0,0,0,20,20,0,0,0,
+      5,5,10,25,25,10,5,5,
+      10,10,20,30,30,20,10,10,
+      50,50,50,50,50,50,50,50,
+      0,0,0,0,0,0,0,0
+    ],
+    n: [
+      -50,-40,-30,-30,-30,-30,-40,-50,
+      -40,-20,0,0,0,0,-20,-40,
+      -30,0,10,15,15,10,0,-30,
+      -30,5,15,20,20,15,5,-30,
+      -30,0,15,20,20,15,0,-30,
+      -30,5,10,15,15,10,5,-30,
+      -40,-20,0,5,5,0,-20,-40,
+      -50,-40,-30,-30,-30,-30,-40,-50
+    ],
+    b: [
+      -20,-10,-10,-10,-10,-10,-10,-20,
+      -10,0,0,0,0,0,0,-10,
+      -10,0,5,10,10,5,0,-10,
+      -10,5,5,10,10,5,5,-10,
+      -10,0,10,10,10,10,0,-10,
+      -10,10,10,10,10,10,10,-10,
+      -10,5,0,0,0,0,5,-10,
+      -20,-10,-10,-10,-10,-10,-10,-20
+    ],
+    r: [
+      0,0,0,0,0,0,0,0,
+      5,10,10,10,10,10,10,5,
+      -5,0,0,0,0,0,0,-5,
+      -5,0,0,0,0,0,0,-5,
+      -5,0,0,0,0,0,0,-5,
+      -5,0,0,0,0,0,0,-5,
+      -5,0,0,0,0,0,0,-5,
+      0,0,0,5,5,0,0,0
+    ],
+    q: [
+      -20,-10,-10,-5,-5,-10,-10,-20,
+      -10,0,0,0,0,0,0,-10,
+      -10,0,5,5,5,5,0,-10,
+      -5,0,5,5,5,5,0,-5,
+      0,0,5,5,5,5,0,-5,
+      -10,5,5,5,5,5,0,-10,
+      -10,0,5,0,0,0,0,-10,
+      -20,-10,-10,-5,-5,-10,-10,-20
+    ],
+    k: [
+      -30,-40,-40,-50,-50,-40,-40,-30,
+      -30,-40,-40,-50,-50,-40,-40,-30,
+      -30,-40,-40,-50,-50,-40,-40,-30,
+      -30,-40,-40,-50,-50,-40,-40,-30,
+      -20,-30,-30,-40,-40,-30,-30,-20,
+      -10,-20,-20,-20,-20,-20,-20,-10,
+      20,20,0,0,0,0,20,20,
+      20,30,10,0,0,10,30,20
+    ],
+  };
+
+  function isUpper(ch){ return ch >= "A" && ch <= "Z"; }
+  function colorOf(piece){ if (!piece) return null; return isUpper(piece) ? "w" : "b"; }
+  function typeOf(piece){ if (!piece) return null; return piece.toLowerCase(); }
+  function inBounds(f,r){ return f>=0 && f<8 && r>=0 && r<8; }
+  function sqFR(sq){ return { f: FILES.indexOf(sq[0]), r: RANKS.indexOf(sq[1]) }; }
+  function frToSq(f,r){ return FILES[f] + RANKS[r]; }
+  function nowISO(){ return new Date().toISOString(); }
+  function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
+
+  function scoreToText(cp){
+    // White perspective: + good for white.
+    const s = (cp>=0?"+":"") + (cp/100).toFixed(2);
+    return s;
+  }
+
+  // ===================== SOUND =====================
+  let soundEnabled = true;
+  let audioCtx = null;
+  function ensureAudio(){
+    if (!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === "suspended"){
+      audioCtx.resume().catch(()=>{});
+    }
+    return audioCtx;
+  }
+  function playEngineTick(){
+    if (!soundEnabled) return;
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, now);
+    osc.frequency.exponentialRampToValueAtTime(660, now + 0.04);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.06, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.08);
+  }
+
+  // ===================== IndexedDB =====================
+  const DB_NAME = "chessCoachDB";
+  const DB_VER = 1;
+  const STORE_GAMES = "games";
+
+  function openDB(){
+    return new Promise((resolve,reject)=>{
+      const req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = (ev)=>{
+        const db = req.result;
+        if (!db.objectStoreNames.contains(STORE_GAMES)){
+          const store = db.createObjectStore(STORE_GAMES, {keyPath:"id"});
+          store.createIndex("by_date","createdAt",{unique:false});
+        }
+      };
+      req.onsuccess = ()=>resolve(req.result);
+      req.onerror = ()=>reject(req.error);
+    });
+  }
+
+  async function dbPutGame(gameObj){
+    const db = await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction([STORE_GAMES],"readwrite");
+      tx.oncomplete = ()=>resolve(true);
+      tx.onerror = ()=>reject(tx.error);
+      tx.objectStore(STORE_GAMES).put(gameObj);
+    });
+  }
+
+  async function dbDeleteGame(id){
+    const db = await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction([STORE_GAMES],"readwrite");
+      tx.oncomplete = ()=>resolve(true);
+      tx.onerror = ()=>reject(tx.error);
+      tx.objectStore(STORE_GAMES).delete(id);
+    });
+  }
+
+  async function dbGetAllGames(){
+    const db = await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction([STORE_GAMES],"readonly");
+      const req = tx.objectStore(STORE_GAMES).getAll();
+      req.onsuccess = ()=>resolve(req.result || []);
+      req.onerror = ()=>reject(req.error);
+    });
+  }
+
+  async function dbGetGame(id){
+    const db = await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction([STORE_GAMES],"readonly");
+      const req = tx.objectStore(STORE_GAMES).get(id);
+      req.onsuccess = ()=>resolve(req.result || null);
+      req.onerror = ()=>reject(req.error);
+    });
+  }
+
+  async function dbClearAll(){
+    const db = await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction([STORE_GAMES],"readwrite");
+      const req = tx.objectStore(STORE_GAMES).clear();
+      req.onsuccess = ()=>resolve(true);
+      req.onerror = ()=>reject(req.error);
+    });
+  }
+
+  // ===================== CHESS CORE =====================
+  class ChessGame {
+    constructor(){ this.reset(); }
+
+    reset(){
+      this.loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    }
+
+    fenPieces(){
+      let parts = [];
+      for (let rr=7; rr>=0; rr--){
+        let empty=0, rowStr="";
+        for (let f=0; f<8; f++){
+          const p = this.board[rr][f];
+          if (!p) empty++;
+          else{
+            if (empty){ rowStr += String(empty); empty=0; }
+            rowStr += p;
+          }
+        }
+        if (empty) rowStr += String(empty);
+        parts.push(rowStr);
+      }
+      return parts.join("/");
+    }
+
+    getFEN(){
+      return `${this.fenPieces()} ${this.turn} ${this.castling||"-"} ${this.ep||"-"} ${this.halfmove} ${this.fullmove}`;
+    }
+
+    repKey(){
+      return this.fenPieces() + " " + this.turn + " " + (this.castling || "-") + " " + (this.ep || "-");
+    }
+
+    bumpRepetition(){
+      const k = this.repKey();
+      this.rep.set(k, (this.rep.get(k)||0) + 1);
+    }
+
+    loadFEN(fen){
+      const parts = fen.trim().split(/\s+/);
+      if (parts.length < 4) return false;
+      const [piecePart, turn, castling, ep, half, full] = parts;
+      const ranks = piecePart.split("/");
+      if (ranks.length !== 8) return false;
+
+      const b = Array.from({length:8},()=>Array(8).fill(null));
+      for (let rr=7; rr>=0; rr--){
+        const fenRank = ranks[7-rr];
+        let f=0;
+        for (const ch of fenRank){
+          if (f>7) return false;
+          if (ch >= "1" && ch <= "8"){
+            f += parseInt(ch,10);
+          } else {
+            b[rr][f] = ch;
+            f++;
+          }
+        }
+        if (f !== 8) return false;
+      }
+
+      this.board = b;
+      this.turn = (turn === "w" ? "w" : "b");
+      this.castling = (castling && castling !== "-" ? castling : "");
+      this.ep = (ep && ep !== "-" ? ep : "");
+      this.halfmove = half ? parseInt(half,10) : 0;
+      this.fullmove = full ? parseInt(full,10) : 1;
+
+      this.history = [];
+      this.rep = new Map();
+      this.bumpRepetition();
+      return true;
+    }
+
+    getPGN(){
+      const sans = this.history.map(h => h.san);
+      let out = "";
+      for (let i=0; i<sans.length; i+=2){
+        const n = (i/2)+1;
+        const w = sans[i] || "";
+        const b = sans[i+1] || "";
+        out += `${n}. ${w}${b ? " " + b : ""}\n`;
+      }
+      return out.trim();
+    }
+
+    loadPGN(pgnText){
+      const text = pgnText
+        .replace(/\r/g," ")
+        .replace(/\{[^}]*\}/g," ")
+        .replace(/\[[^\]]*\]/g," ")
+        .replace(/\d+\.(\.\.)?/g," ")
+        .replace(/1-0|0-1|1\/2-1\/2|\*/g," ")
+        .trim();
+      if (!text) return false;
+
+      const tokens = text.split(/\s+/).filter(Boolean);
+      this.reset();
+      for (const san of tokens){
+        const ok = this.moveSAN(san);
+        if (!ok) return false;
+      }
+      return true;
+    }
+
+    pieceAt(sq){
+      const {f,r} = sqFR(sq);
+      if (!inBounds(f,r)) return null;
+      return this.board[r][f];
+    }
+    setPiece(sq, piece){
+      const {f,r} = sqFR(sq);
+      this.board[r][f] = piece;
+    }
+
+    findKing(color){
+      const k = (color==="w" ? "K" : "k");
+      for (let r=0;r<8;r++){
+        for (let f=0;f<8;f++){
+          if (this.board[r][f] === k) return frToSq(f,r);
+        }
+      }
+      return null;
+    }
+
+    isSquareAttackedBy(sq, attackerColor){
+      const {f:tf, r:tr} = sqFR(sq);
+      for (let r=0;r<8;r++){
+        for (let f=0;f<8;f++){
+          const p = this.board[r][f];
+          if (!p) continue;
+          if (colorOf(p) !== attackerColor) continue;
+          const t = typeOf(p);
+
+          if (t==="p"){
+            const dir = (attackerColor==="w") ? 1 : -1;
+            const a1 = {f:f-1, r:r+dir};
+            const a2 = {f:f+1, r:r+dir};
+            if (inBounds(a1.f,a1.r) && a1.f===tf && a1.r===tr) return true;
+            if (inBounds(a2.f,a2.r) && a2.f===tf && a2.r===tr) return true;
+          }
+          else if (t==="n"){
+            const deltas = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
+            for (const [df,dr] of deltas){
+              const nf=f+df, nr=r+dr;
+              if (nf===tf && nr===tr) return true;
+            }
+          }
+          else if (t==="b"||t==="r"||t==="q"){
+            const dirs = [];
+            if (t==="b"||t==="q") dirs.push([1,1],[1,-1],[-1,1],[-1,-1]);
+            if (t==="r"||t==="q") dirs.push([1,0],[-1,0],[0,1],[0,-1]);
+            for (const [df,dr] of dirs){
+              let nf=f+df, nr=r+dr;
+              while(inBounds(nf,nr)){
+                if (nf===tf && nr===tr) return true;
+                if (this.board[nr][nf]) break;
+                nf+=df; nr+=dr;
+              }
+            }
+          }
+          else if (t==="k"){
+            for (let df=-1;df<=1;df++){
+              for (let dr=-1;dr<=1;dr++){
+                if (!df && !dr) continue;
+                const nf=f+df, nr=r+dr;
+                if (nf===tf && nr===tr) return true;
+              }
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    inCheck(color){
+      const ksq = this.findKing(color);
+      if (!ksq) return false;
+      const opp = (color==="w") ? "b" : "w";
+      return this.isSquareAttackedBy(ksq, opp);
+    }
+
+    legalMovesFrom(sq){
+      return this.generateLegalMoves().filter(m => m.from === sq);
+    }
+
+    generateLegalMoves(){
+      const pseudo = this.generatePseudoMoves(this.turn);
+      const legal = [];
+      for (const m of pseudo){
+        const u = this.makeMove(m, true);
+        const ok = !this.inCheck(this.turn==="w" ? "b":"w");
+        this.undoMove(u, true);
+        if (ok) legal.push(m);
+      }
+      return legal;
+    }
+
+    generatePseudoMoves(color){
+      const moves = [];
+      const dir = (color==="w") ? 1 : -1;
+      const homeRank = (color==="w") ? 1 : 6;
+      const promRank = (color==="w") ? 7 : 0;
+
+      for (let r=0;r<8;r++){
+        for (let f=0;f<8;f++){
+          const p = this.board[r][f];
+          if (!p) continue;
+          if (colorOf(p) !== color) continue;
+          const t = typeOf(p);
+          const from = frToSq(f,r);
+
+          if (t==="p"){
+            const fr1 = r + dir;
+            if (inBounds(f,fr1) && !this.board[fr1][f]){
+              if (fr1 === promRank){
+                for (const pr of ["q","r","b","n"]) moves.push({from, to: frToSq(f,fr1), promo: pr});
+              } else {
+                moves.push({from, to: frToSq(f,fr1)});
+                if (r===homeRank){
+                  const fr2 = r + 2*dir;
+                  if (inBounds(f,fr2) && !this.board[fr2][f]){
+                    moves.push({from, to: frToSq(f,fr2), epSet: frToSq(f, r+dir)});
+                  }
+                }
+              }
+            }
+            for (const df of [-1,1]){
+              const nf = f+df;
+              const nr = r+dir;
+              if (!inBounds(nf,nr)) continue;
+              const target = this.board[nr][nf];
+              const to = frToSq(nf,nr);
+              if (target && colorOf(target)!==color){
+                if (nr===promRank){
+                  for (const pr of ["q","r","b","n"]) moves.push({from,to,capture:true,promo:pr});
+                } else moves.push({from,to,capture:true});
+              }
+              if (this.ep && this.ep === to){
+                moves.push({from,to,capture:true, enpassant:true});
+              }
+            }
+          }
+          else if (t==="n"){
+            const deltas = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
+            for (const [df,dr] of deltas){
+              const nf=f+df, nr=r+dr;
+              if (!inBounds(nf,nr)) continue;
+              const target = this.board[nr][nf];
+              const to = frToSq(nf,nr);
+              if (!target || colorOf(target)!==color){
+                moves.push({from,to,capture: !!target});
+              }
+            }
+          }
+          else if (t==="b"||t==="r"||t==="q"){
+            const dirs=[];
+            if (t==="b"||t==="q") dirs.push([1,1],[1,-1],[-1,1],[-1,-1]);
+            if (t==="r"||t==="q") dirs.push([1,0],[-1,0],[0,1],[0,-1]);
+            for (const [df,dr] of dirs){
+              let nf=f+df, nr=r+dr;
+              while(inBounds(nf,nr)){
+                const target = this.board[nr][nf];
+                const to = frToSq(nf,nr);
+                if (!target){
+                  moves.push({from,to});
+                } else {
+                  if (colorOf(target)!==color) moves.push({from,to,capture:true});
+                  break;
+                }
+                nf+=df; nr+=dr;
+              }
+            }
+          }
+          else if (t==="k"){
+            for (let df=-1;df<=1;df++){
+              for (let dr=-1;dr<=1;dr++){
+                if (!df && !dr) continue;
+                const nf=f+df, nr=r+dr;
+                if (!inBounds(nf,nr)) continue;
+                const target = this.board[nr][nf];
+                const to = frToSq(nf,nr);
+                if (!target || colorOf(target)!==color){
+                  moves.push({from,to,capture:!!target});
+                }
+              }
+            }
+            if (color==="w"){
+              if (this.castling.includes("K")){
+                if (!this.board[0][5] && !this.board[0][6] &&
+                    !this.inCheck("w") &&
+                    !this.isSquareAttackedBy("f1","b") &&
+                    !this.isSquareAttackedBy("g1","b")){
+                  moves.push({from:"e1", to:"g1", castle:"K"});
+                }
+              }
+              if (this.castling.includes("Q")){
+                if (!this.board[0][1] && !this.board[0][2] && !this.board[0][3] &&
+                    !this.inCheck("w") &&
+                    !this.isSquareAttackedBy("d1","b") &&
+                    !this.isSquareAttackedBy("c1","b")){
+                  moves.push({from:"e1", to:"c1", castle:"Q"});
+                }
+              }
+            } else {
+              if (this.castling.includes("k")){
+                if (!this.board[7][5] && !this.board[7][6] &&
+                    !this.inCheck("b") &&
+                    !this.isSquareAttackedBy("f8","w") &&
+                    !this.isSquareAttackedBy("g8","w")){
+                  moves.push({from:"e8", to:"g8", castle:"k"});
+                }
+              }
+              if (this.castling.includes("q")){
+                if (!this.board[7][1] && !this.board[7][2] && !this.board[7][3] &&
+                    !this.inCheck("b") &&
+                    !this.isSquareAttackedBy("d8","w") &&
+                    !this.isSquareAttackedBy("c8","w")){
+                  moves.push({from:"e8", to:"c8", castle:"q"});
+                }
+              }
+            }
+          }
+        }
+      }
+      return moves;
+    }
+
+    updateCastlingRights(m, fromP, toP){
+      const movedType = typeOf(fromP);
+      if (movedType==="k"){
+        if (colorOf(fromP)==="w") this.castling = this.castling.replace(/K|Q/g,"");
+        else this.castling = this.castling.replace(/k|q/g,"");
+      }
+      if (m.from==="a1") this.castling = this.castling.replace(/Q/g,"");
+      if (m.from==="h1") this.castling = this.castling.replace(/K/g,"");
+      if (m.from==="a8") this.castling = this.castling.replace(/q/g,"");
+      if (m.from==="h8") this.castling = this.castling.replace(/k/g,"");
+
+      if (m.to==="a1") this.castling = this.castling.replace(/Q/g,"");
+      if (m.to==="h1") this.castling = this.castling.replace(/K/g,"");
+      if (m.to==="a8") this.castling = this.castling.replace(/q/g,"");
+      if (m.to==="h8") this.castling = this.castling.replace(/k/g,"");
+    }
+
+    makeMove(m, silent=false){
+      const fromP = this.pieceAt(m.from);
+      const toP = this.pieceAt(m.to);
+
+      const undo = {
+        m: {...m},
+        fromP, toP,
+        castling: this.castling,
+        ep: this.ep,
+        halfmove: this.halfmove,
+        fullmove: this.fullmove,
+        turn: this.turn
+      };
+
+      const movedType = typeOf(fromP);
+      if (movedType==="p" || m.capture) this.halfmove = 0;
+      else this.halfmove++;
+
+      this.ep = "";
+
+      this.setPiece(m.from, null);
+
+      if (m.enpassant){
+        const {f:tf,r:tr} = sqFR(m.to);
+        const capR = tr + (this.turn==="w" ? -1 : 1);
+        const capSq = frToSq(tf, capR);
+        undo.epCapSq = capSq;
+        undo.epCapPiece = this.pieceAt(capSq);
+        this.setPiece(capSq, null);
+      }
+
+      if (m.castle){
+        if (m.to==="g1"){
+          const rook = this.pieceAt("h1");
+          this.setPiece("h1", null);
+          this.setPiece("f1", rook);
+          undo.castleRook = {from:"h1",to:"f1",piece:rook};
+        } else if (m.to==="c1"){
+          const rook = this.pieceAt("a1");
+          this.setPiece("a1", null);
+          this.setPiece("d1", rook);
+          undo.castleRook = {from:"a1",to:"d1",piece:rook};
+        } else if (m.to==="g8"){
+          const rook = this.pieceAt("h8");
+          this.setPiece("h8", null);
+          this.setPiece("f8", rook);
+          undo.castleRook = {from:"h8",to:"f8",piece:rook};
+        } else if (m.to==="c8"){
+          const rook = this.pieceAt("a8");
+          this.setPiece("a8", null);
+          this.setPiece("d8", rook);
+          undo.castleRook = {from:"a8",to:"d8",piece:rook};
+        }
+      }
+
+      let placePiece = fromP;
+      if (m.promo){
+        placePiece = (this.turn==="w") ? m.promo.toUpperCase() : m.promo.toLowerCase();
+      }
+      this.setPiece(m.to, placePiece);
+
+      if (m.epSet){
+        this.ep = m.epSet;
+      }
+
+      this.updateCastlingRights(m, fromP, toP);
+
+      if (this.turn==="b") this.fullmove++;
+      this.turn = (this.turn==="w") ? "b" : "w";
+
+      if (!silent) this.bumpRepetition();
+
+      if (!silent){
+        const san = this.makeSAN(undo, m);
+        undo.san = san;
+        this.history.push(undo);
+      }
+      return undo;
+    }
+
+    undoMove(undo, silent=false){
+      if (!silent){
+        const kNow = this.repKey();
+        this.rep.set(kNow, (this.rep.get(kNow)||1) - 1);
+      }
+
+      this.turn = undo.turn;
+      this.castling = undo.castling;
+      this.ep = undo.ep;
+      this.halfmove = undo.halfmove;
+      this.fullmove = undo.fullmove;
+
+      this.setPiece(undo.m.from, undo.fromP);
+      this.setPiece(undo.m.to, undo.toP);
+
+      if (undo.m.enpassant){
+        this.setPiece(undo.epCapSq, undo.epCapPiece);
+      }
+      if (undo.castleRook){
+        this.setPiece(undo.castleRook.to, null);
+        this.setPiece(undo.castleRook.from, undo.castleRook.piece);
+      }
+
+      if (!silent && this.history.length){
+        this.history.pop();
+      }
+    }
+
+    makeSAN(undo, m){
+      this.undoMove(undo, true);
+      const san = this._computeSAN(m);
+      this.makeMove(m, true);
+      return san;
+    }
+
+    _computeSAN(m){
+      const fromP = this.pieceAt(m.from);
+      const color = colorOf(fromP);
+      const t = typeOf(fromP);
+
+      if (m.castle){
+        let san = (m.to[0]==="g") ? "O-O" : "O-O-O";
+        const u = this.makeMove(m, true);
+        const inCheck = this.inCheck(this.turn);
+        const legalNext = this.generateLegalMoves().length;
+        this.undoMove(u, true);
+        if (inCheck && legalNext===0) san += "#";
+        else if (inCheck) san += "+";
+        return san;
+      }
+
+      let pieceLetter = "";
+      if (t !== "p") pieceLetter = t.toUpperCase();
+
+      const isCapture = !!m.capture;
+      const dest = m.to;
+
+      let disamb = "";
+      if (t !== "p"){
+        const all = this.generateLegalMoves().filter(mm => mm.to===dest);
+        const rivals = all.filter(mm => mm.from !== m.from && this.pieceAt(mm.from) && typeOf(this.pieceAt(mm.from))===t && colorOf(this.pieceAt(mm.from))===color);
+        if (rivals.length){
+          const fFrom = m.from[0], rFrom = m.from[1];
+          const needFile = rivals.some(mm => mm.from[0] === fFrom);
+          const needRank = rivals.some(mm => mm.from[1] === rFrom);
+          if (needFile && needRank) disamb = m.from;
+          else if (needFile) disamb = rFrom;
+          else disamb = fFrom;
+        }
+      } else {
+        if (isCapture) disamb = m.from[0];
+      }
+
+      let san = pieceLetter + disamb;
+      if (isCapture) san += "x";
+      san += dest;
+
+      if (m.promo){
+        san += "=" + m.promo.toUpperCase();
+      }
+
+      const u = this.makeMove(m, true);
+      const inCheck = this.inCheck(this.turn);
+      const legalNext = this.generateLegalMoves().length;
+      this.undoMove(u, true);
+      if (inCheck && legalNext===0) san += "#";
+      else if (inCheck) san += "+";
+
+      return san;
+    }
+
+    moveSAN(san){
+      const target = san.trim();
+      const legal = this.generateLegalMoves();
+      for (const m of legal){
+        const sanM = this._computeSAN(m);
+        if (sanM === target){
+          this.makeMove(m, false);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    isDrawBy50(){ return this.halfmove >= 100; }
+    isThreefold(){
+      const k = this.repKey();
+      return (this.rep.get(k) || 0) >= 3;
+    }
+
+    gameStatus(){
+      const legal = this.generateLegalMoves();
+      const inChk = this.inCheck(this.turn);
+      if (legal.length===0){
+        if (inChk) return {over:true, type:"mate"};
+        return {over:true, type:"stalemate"};
+      }
+      if (this.isDrawBy50()) return {over:true, type:"draw50"};
+      if (this.isThreefold()) return {over:true, type:"draw3"};
+      return {over:false, type:"play", inCheck: inChk};
+    }
+  }
+
+  // ===================== ENGINE =====================
+  class Engine {
+    constructor(game){
+      this.game = game;
+      this.stopFlag = false;
+      this.bestMove = null;
+      this.nodes = 0;
+    }
+    stop(){ this.stopFlag = true; }
+
+    skillToDepth(skill){
+      if (skill<=2) return 1;
+      if (skill<=5) return 2;
+      if (skill<=9) return 3;
+      if (skill<=13) return 4;
+      if (skill<=17) return 5;
+      return 6;
+    }
+    skillToNoise(skill){
+      const x = Math.max(0, 20-skill);
+      return 10 + x*6;
+    }
+
+    // White-perspective eval in centipawns
+    evalWhiteCP(){
+      let score = 0;
+      for (let r=0;r<8;r++){
+        for (let f=0;f<8;f++){
+          const p = this.game.board[r][f];
+          if (!p) continue;
+          const c = colorOf(p);
+          const t = typeOf(p);
+          const idxW = r*8 + f;
+          const idxB = (7-r)*8 + f;
+          const base = PIECE_VAL[t];
+          const pst = PST[t] ? (c==="w" ? PST[t][idxW] : PST[t][idxB]) : 0;
+          const v = base + pst;
+          score += (c==="w" ? v : -v);
+        }
+      }
+      return score;
+    }
+
+    // side-to-move perspective used by alpha-beta
+    evalSTM(){
+      const w = this.evalWhiteCP();
+      return (this.game.turn==="w") ? w : -w;
+    }
+
+    orderMoves(moves){
+      const g = this.game;
+      const scored = moves.map(m=>{
+        const fromP = g.pieceAt(m.from);
+        const toP = g.pieceAt(m.to);
+        let s = 0;
+        if (m.capture){
+          const a = toP ? PIECE_VAL[typeOf(toP)] : 100;
+          const b = fromP ? PIECE_VAL[typeOf(fromP)] : 100;
+          s += 10000 + (a - b);
+        }
+        if (m.promo) s += 8000;
+        if (m.castle) s += 50;
+        const {f,r} = sqFR(m.to);
+        if (f>=2 && f<=5 && r>=2 && r<=5) s += 10;
+        return {m, s};
+      });
+      scored.sort((a,b)=>b.s-a.s);
+      return scored.map(x=>x.m);
+    }
+
+    search(timeMs, skill){
+      this.stopFlag = false;
+      this.bestMove = null;
+      this.nodes = 0;
+
+      const start = performance.now();
+      const deadline = start + timeMs;
+
+      const maxDepth = this.skillToDepth(skill);
+      const noise = this.skillToNoise(skill);
+
+      for (let depth=1; depth<=maxDepth; depth++){
+        const res = this.alphaBeta(depth, -Infinity, Infinity, deadline);
+        if (this.stopFlag) break;
+        if (res && res.move){
+          this.bestMove = res.move;
+        }
+        if (performance.now() > deadline) break;
+      }
+
+      if (this.bestMove){
+        const moves = this.orderMoves(this.game.generateLegalMoves());
+        const scored = [];
+        for (const m of moves.slice(0, 10)){
+          const u = this.game.makeMove(m, true);
+          const sc = -this.evalSTM();
+          this.game.undoMove(u, true);
+          scored.push({m, sc});
+        }
+        scored.sort((a,b)=>b.sc-a.sc);
+        const top = scored[0].sc;
+        const pool = scored.filter(x => (top - x.sc) <= noise/100);
+        if (pool.length>1){
+          const pick = pool[Math.floor(Math.random()*pool.length)];
+          this.bestMove = pick.m;
+        }
+      }
+
+      return this.bestMove;
+    }
+
+    alphaBeta(depth, alpha, beta, deadline){
+      if (this.stopFlag) return null;
+      if (performance.now() > deadline){
+        this.stopFlag = true;
+        return null;
+      }
+
+      this.nodes++;
+
+      const status = this.game.gameStatus();
+      if (status.over){
+        if (status.type==="mate"){
+          return {score: -100000 + (6-depth)};
+        }
+        return {score: 0};
+      }
+      if (depth===0){
+        return {score: this.evalSTM()};
+      }
+
+      const moves = this.orderMoves(this.game.generateLegalMoves());
+      let bestMove = null;
+
+      for (const m of moves){
+        const u = this.game.makeMove(m, true);
+        const child = this.alphaBeta(depth-1, -beta, -alpha, deadline);
+        this.game.undoMove(u, true);
+        if (!child) return null;
+        const score = -child.score;
+
+        if (score > alpha){
+          alpha = score;
+          bestMove = m;
+          if (alpha >= beta) break;
+        }
+      }
+      return {score: alpha, move: bestMove};
+    }
+  }
+
+  // ===================== COACH =====================
+  function classifyLoss(cpLoss){
+    // cpLoss: positive means you lost advantage (worse for you)
+    if (cpLoss < 20) return {label:"Best/Çok iyi", level:"good"};
+    if (cpLoss < 60) return {label:"İyi", level:"good"};
+    if (cpLoss < 120) return {label:"Inaccuracy", level:"warn"};
+    if (cpLoss < 250) return {label:"Mistake", level:"warn"};
+    return {label:"Blunder", level:"bad"};
+  }
+
+  function pieceNameTR(t){
+    return ({p:"piyon",n:"at",b:"fil",r:"kale",q:"vezir",k:"şah"})[t] || t;
+  }
+
+  function analyzeHangingPieces(game, side){
+    // Basit “asılı taş” testi:
+    // Bir taş rakip tarafından saldırılıyor ve aynı kare rakip için kazanımlı görünüyorsa uyar.
+    // Burada “savunma sayısı” gibi detay yok; ama pratikte çok işe yarar.
+    const opp = (side==="w") ? "b" : "w";
+    const hangs = [];
+    for (let r=0;r<8;r++){
+      for (let f=0;f<8;f++){
+        const p = game.board[r][f];
+        if (!p) continue;
+        if (colorOf(p)!==side) continue;
+        const sq = frToSq(f,r);
+        if (game.isSquareAttackedBy(sq, opp)){
+          const t = typeOf(p);
+          const v = PIECE_VAL[t] || 0;
+          if (v >= 300){ // at/fil ve üstü
+            hangs.push({sq, piece:p, value:v});
+          } else {
+            // piyonları da bazen önemli, ama spam olmasın
+            // yine de çok sayıda ise raporlamayalım
+          }
+        }
+      }
+    }
+    hangs.sort((a,b)=>b.value-a.value);
+    return hangs.slice(0,3);
+  }
+
+  function quickHeuristicAdvice(gameBefore, movePlayed, gameAfter, playerSide){
+    // Bu hamle sonrası görülen tipik problemler için kısa tavsiye.
+    const adv = [];
+
+    // 1) Şah güvenliği: hamle sonrası kendi şahın checkte mi?
+    if (gameAfter.inCheck(playerSide)){
+      adv.push("Hamlen sonunda şahın açıkta kaldı (şah çekiliyor). Önce şah güvenliği kontrolü yap.");
+    }
+
+    // 2) Büyük taş asılı kaldı mı?
+    const hangs = analyzeHangingPieces(gameAfter, playerSide);
+    if (hangs.length){
+      const h = hangs[0];
+      adv.push(`Asılı taş riski: ${pieceNameTR(typeOf(h.piece))} (${h.sq}) rakip tarafından saldırılıyor. Hamleden sonra "taşım saldırıda mı?" kontrolü ekle.`);
+    }
+
+    // 3) Rakip bir sonraki hamlede şah çekebiliyor mu? (çok basit: rakibin legal hamlelerinden biri + check)
+    try{
+      const opp = (playerSide==="w") ? "b":"w";
+      if (gameAfter.turn === opp){
+        const legal = gameAfter.generateLegalMoves();
+        let givesCheck = 0;
+        for (const m of legal.slice(0, 40)){
+          const u = gameAfter.makeMove(m, true);
+          const chk = gameAfter.inCheck(playerSide);
+          gameAfter.undoMove(u, true);
+          if (chk){
+            givesCheck++;
+            if (givesCheck>=2) break;
+          }
+        }
+        if (givesCheck){
+          adv.push("Rakibin bir sonraki hamlede şah çekme imkanları var. Şah çevresindeki zayıflıkları azaltmayı düşün.");
+        }
+      }
+    } catch(e){ /* ignore */ }
+
+    return adv;
+  }
+
+  function moveToUCI(m){
+    // for display
+    return `${m.from}${m.to}${m.promo?m.promo:""}`;
+  }
+
+  // ===================== UI STATE =====================
+  const game = new ChessGame();
+  const engine = new Engine(game);
+
+  let orientation = "w";
+  let playerSide = "w";
+  let engineThinking = false;
+
+  let showCtrlW = false;
+  let showCtrlB = false;
+
+  let selectedSq = null;
+  let legalFromSelected = [];
+  let pendingPromotion = null;
+
+  // coach state
+  let coachEnabled = false;
+  let coachBusy = false;
+  let coachFeed = []; // array of coach items
+  let coachStats = {
+    total:0, best:0, good:0, inacc:0, mistake:0, blunder:0,
+    avgLoss:0
+  };
+  let coachGameId = null; // will be set on save
+  let gameStartAt = nowISO();
+
+  // ===================== UI ELEMENTS =====================
+  const elBoard = document.getElementById("board");
+  const elStatusMain = document.getElementById("statusBox");
+  const elStatusSub = document.getElementById("statusSub");
+  const elMoves = document.getElementById("moves");
+
+  const elSkill = document.getElementById("skill");
+  const elSkillVal = document.getElementById("skillVal");
+  const elThink = document.getElementById("think");
+  const elThinkVal = document.getElementById("thinkVal");
+
+  const elCoach = document.getElementById("btnCoach");
+  const elCoachFeed = document.getElementById("coachFeed");
+  const elCoachPill = document.getElementById("coachStatePill");
+  const elCoachThink = document.getElementById("coachThink");
+  const elCoachThinkVal = document.getElementById("coachThinkVal");
+
+  const promoBackdrop = document.getElementById("promoBackdrop");
+  const promoCancel = document.getElementById("promoCancel");
+
+  const btnSound = document.getElementById("btnSound");
+  const btnShowCtrlW = document.getElementById("btnShowCtrlW");
+  const btnShowCtrlB = document.getElementById("btnShowCtrlB");
+
+  const capByWhiteEl = document.getElementById("capByWhite");
+  const capByBlackEl = document.getElementById("capByBlack");
+
+  const gamesListEl = document.getElementById("gamesList");
+  const importFileEl = document.getElementById("importFile");
+
+  // ===================== UI HELPERS =====================
+  function updateSoundButton(){
+    btnSound.classList.toggle("on", soundEnabled);
+    btnSound.textContent = soundEnabled ? "Ses: Aç" : "Ses: Kapalı";
+  }
+
+  function setStatus(main, sub=""){
+    elStatusMain.childNodes[0].nodeValue = main;
+    elStatusSub.textContent = sub;
+  }
+
+  function currentThinkMs(){ return parseInt(elThink.value,10); }
+  function currentSkill(){ return parseInt(elSkill.value,10); }
+
+  function coachThinkMs(){ return parseInt(elCoachThink.value,10); }
+  function coachSkill(){
+    // Koç analizinde de motor gücünü kullanacağız (aynı slider)
+    return currentSkill();
+  }
+
+  function isPlayersTurn(){ return game.turn === playerSide; }
+
+  function clearHighlights(){
+    for (const sqEl of elBoard.querySelectorAll(".sq")){
+      sqEl.classList.remove("sel","mv","cap");
+    }
+  }
+  function clearAttackOverlays(){
+    for (const sqEl of elBoard.querySelectorAll(".sq")){
+      sqEl.classList.remove("atk");
+    }
+  }
+
+  function computeAttacks(color){
+    const attacks = new Set();
+    for (let r=0;r<8;r++){
+      for (let f=0;f<8;f++){
+        const p = game.board[r][f];
+        if (!p || colorOf(p)!==color) continue;
+        const t = typeOf(p);
+
+        if (t==="p"){
+          const dir = (color==="w") ? 1 : -1;
+          const a1 = {f:f-1, r:r+dir};
+          const a2 = {f:f+1, r:r+dir};
+          if (inBounds(a1.f,a1.r)) attacks.add(frToSq(a1.f,a1.r));
+          if (inBounds(a2.f,a2.r)) attacks.add(frToSq(a2.f,a2.r));
+        } else if (t==="n"){
+          const deltas = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
+          for (const [df,dr] of deltas){
+            const nf=f+df, nr=r+dr;
+            if (inBounds(nf,nr)) attacks.add(frToSq(nf,nr));
+          }
+        } else if (t==="b"||t==="r"||t==="q"){
+          const dirs=[];
+          if (t==="b"||t==="q") dirs.push([1,1],[1,-1],[-1,1],[-1,-1]);
+          if (t==="r"||t==="q") dirs.push([1,0],[-1,0],[0,1],[0,-1]);
+          for (const [df,dr] of dirs){
+            let nf=f+df, nr=r+dr;
+            while(inBounds(nf,nr)){
+              attacks.add(frToSq(nf,nr));
+              if (game.board[nr][nf]) break;
+              nf+=df; nr+=dr;
+            }
+          }
+        } else if (t==="k"){
+          for (let df=-1;df<=1;df++){
+            for (let dr=-1;dr<=1;dr++){
+              if (!df && !dr) continue;
+              const nf=f+df, nr=r+dr;
+              if (inBounds(nf,nr)) attacks.add(frToSq(nf,nr));
+            }
+          }
+        }
+      }
+    }
+    return attacks;
+  }
+
+  function applyControlOverlays(){
+    clearAttackOverlays();
+    if (!showCtrlW && !showCtrlB) return;
+
+    const set = new Set();
+    if (showCtrlW) for (const sq of computeAttacks("w")) set.add(sq);
+    if (showCtrlB) for (const sq of computeAttacks("b")) set.add(sq);
+
+    for (const sq of set){
+      const el = document.querySelector(`.sq[data-sq="${sq}"]`);
+      if (el) el.classList.add("atk");
+    }
+  }
+
+  function updateCapturedPanels(){
+    const capByWhite = [];
+    const capByBlack = [];
+
+    for (const u of game.history){
+      if (u.m.capture){
+        let capPiece = u.toP;
+        if (u.m.enpassant) capPiece = u.epCapPiece;
+        if (capPiece){
+          const capturer = u.turn;
+          if (capturer === "w") capByWhite.push(capPiece);
+          else capByBlack.push(capPiece);
+        }
+      }
+    }
+    const order = (p)=>-(PIECE_VAL[typeOf(p)]||0);
+    capByWhite.sort((a,b)=>order(a)-order(b));
+    capByBlack.sort((a,b)=>order(a)-order(b));
+
+    capByWhiteEl.innerHTML = capByWhite.map(p => `<span class="piece b">${PIECE_UNI[p]}</span>`).join("");
+    capByBlackEl.innerHTML = capByBlack.map(p => `<span class="piece w">${PIECE_UNI[p]}</span>`).join("");
+    if (!capByWhite.length) capByWhiteEl.textContent = "—";
+    if (!capByBlack.length) capByBlackEl.textContent = "—";
+  }
+
+  function updateMoveList(){
+    const pgn = game.getPGN();
+    elMoves.textContent = pgn || "(Henüz hamle yok)";
+  }
+
+  function updateStatus(){
+    const st = game.gameStatus();
+    if (st.over){
+      if (st.type==="mate"){
+        const winner = (game.turn==="w") ? "Siyah" : "Beyaz";
+        setStatus("Oyun bitti: ŞAH MAT!", `${winner} kazandı.`);
+      } else if (st.type==="stalemate"){
+        setStatus("Oyun bitti: Pat (stalemate).", "Berabere.");
+      } else if (st.type==="draw50"){
+        setStatus("Oyun bitti: Berabere.", "50 hamle kuralı.");
+      } else if (st.type==="draw3"){
+        setStatus("Oyun bitti: Berabere.", "Üç tekrar.");
+      } else {
+        setStatus("Oyun bitti.", "Berabere.");
+      }
+      // oyun bitince koç açıksa otomatik kaydet önerisi
+      if (coachEnabled){
+        setTimeout(()=>maybeAutoSaveOnGameOver(), 50);
+      }
+      return;
+    }
+    const turnText = (game.turn==="w") ? "Beyaz" : "Siyah";
+    const who = (isPlayersTurn() ? "Senin sıran" : "Motorun sırası");
+    const extra = st.inCheck ? " (Şah çekildi!)" : "";
+    setStatus(`${who} – ${turnText} oynar${extra}`, `FEN: ${game.getFEN()}`);
+  }
+
+  // ===================== RENDER =====================
+  function render(){
+    if (!elBoard.dataset.built){
+      elBoard.innerHTML = "";
+      for (let i=0;i<64;i++){
+        const div = document.createElement("div");
+        div.className = "sq";
+        div.addEventListener("click", onSquareClick);
+        elBoard.appendChild(div);
+      }
+      elBoard.dataset.built = "1";
+    }
+
+    const sqEls = elBoard.querySelectorAll(".sq");
+    let idx = 0;
+
+    for (let vr=7; vr>=0; vr--){
+      for (let vf=0; vf<8; vf++){
+        const el = sqEls[idx++];
+
+        let f, r;
+        if (orientation==="w"){
+          f = vf; r = vr;
+        } else {
+          f = 7 - vf; r = 7 - vr;
+        }
+        const sq = frToSq(f,r);
+
+        // a1 must be black
+        const isLight = ((f + r) % 2 === 1);
+        el.classList.toggle("light", isLight);
+        el.classList.toggle("dark", !isLight);
+
+        el.dataset.sq = sq;
+
+        const p = game.board[r][f];
+        el.innerHTML = p ? `<span class="piece ${colorOf(p)}">${PIECE_UNI[p]}</span>` : "";
+      }
+    }
+
+    updateMoveList();
+    updateCapturedPanels();
+    updateStatus();
+    applyControlOverlays();
+    renderCoachFeed();
+  }
+
+  // ===================== ENGINE MOVE =====================
+  function stopEngine(){
+    engine.stop();
+    engineThinking = false;
+    updateStatus();
+  }
+
+  function maybeEngineMove(){
+    if (engineThinking) return;
+    const st = game.gameStatus();
+    if (st.over) return;
+    if (isPlayersTurn()) return;
+
+    engineThinking = true;
+    engine.stopFlag = false;
+
+    const ms = currentThinkMs();
+    const sk = currentSkill();
+    setStatus("Motor düşünüyor...", `Süre=${ms}ms | Güç=${sk}`);
+
+    setTimeout(()=>{
+      const best = engine.search(ms, sk);
+      engineThinking = false;
+      if (!best) { updateStatus(); return; }
+
+      game.makeMove(best, false);
+      playEngineTick();
+
+      selectedSq = null;
+      legalFromSelected = [];
+      clearHighlights();
+      render();
+    }, 20);
+  }
+
+  // ===================== MOVE UI =====================
+  function showSelection(){
+    clearHighlights();
+    const selEl = document.querySelector(`.sq[data-sq="${selectedSq}"]`);
+    if (selEl) selEl.classList.add("sel");
+
+    for (const m of legalFromSelected){
+      const tEl = document.querySelector(`.sq[data-sq="${m.to}"]`);
+      if (!tEl) continue;
+      if (m.capture) tEl.classList.add("cap");
+      else tEl.classList.add("mv");
+    }
+  }
+
+  // ===================== COACH FEED RENDER =====================
+  function renderCoachFeed(){
+    // top item: summary
+    const summary = coachEnabled
+      ? `<div class="hint">Koç açık. Hamle analizi: <b>${coachStats.total}</b> | Best: ${coachStats.best} | İyi: ${coachStats.good} | Inacc: ${coachStats.inacc} | Mistake: ${coachStats.mistake} | Blunder: ${coachStats.blunder} | Ortalama kayıp: <b>${coachStats.total? (coachStats.avgLoss/coachStats.total).toFixed(0):0} cp</b></div>`
+      : `<div class="hint">Koç kapalı. Açarsan her <b>senin hamlenden sonra</b> analiz yapılır.</div>`;
+
+    const items = coachFeed.slice().reverse().map(it=>{
+      const tagClass = it.level==="bad" ? "bad" : (it.level==="warn" ? "warn" : "good");
+      return `
+        <div class="coachItem">
+          <span class="tag ${tagClass}">${it.label}</span>
+          <span class="pill">${it.moveNo}</span>
+          <div class="coachLine">${it.text}</div>
+          <div class="coachMeta">${it.meta}</div>
+        </div>
+      `;
+    }).join("");
+
+    elCoachFeed.innerHTML = summary + (items ? `<div style="height:8px;"></div>${items}` : "");
+    elCoachPill.textContent = coachEnabled ? "Koç: Açık" : "Koç: Kapalı";
+  }
+
+  function coachReset(){
+    coachFeed = [];
+    coachStats = {total:0, best:0, good:0, inacc:0, mistake:0, blunder:0, avgLoss:0};
+    renderCoachFeed();
+  }
+
+  function addCoachItem(item){
+    coachFeed.push(item);
+    renderCoachFeed();
+  }
+
+  // ===================== COACH ANALYSIS =====================
+  function computeMoveNumberForHistoryIndex(idx0){
+    // idx0 is zero-based halfmove index in game.history
+    const ply = idx0+1;
+    const full = Math.floor((ply+1)/2);
+    const side = (ply%2===1) ? "w" : "b"; // ply 1 is white
+    return `${full}${side==="w"?".":"..."} `;
+  }
+
+  function makeGameCloneFromFEN(fen){
+    const g = new ChessGame();
+    g.loadFEN(fen);
+    return g;
+  }
+
+  function evalWhiteCP_ofGame(g){
+    // reuse evaluation logic (material + PST)
+    let score = 0;
+    for (let r=0;r<8;r++){
+      for (let f=0;f<8;f++){
+        const p = g.board[r][f];
+        if (!p) continue;
+        const c = colorOf(p);
+        const t = typeOf(p);
+        const idxW = r*8 + f;
+        const idxB = (7-r)*8 + f;
+        const base = PIECE_VAL[t];
+        const pst = PST[t] ? (c==="w" ? PST[t][idxW] : PST[t][idxB]) : 0;
+        const v = base + pst;
+        score += (c==="w" ? v : -v);
+      }
+    }
+    return score;
+  }
+
+  function analyzePlayerMoveAsync(gameBeforeFEN, playedMove, playedSAN, historyIndex){
+    // returns Promise of coach item
+    return new Promise((resolve)=>{
+      const ms = coachThinkMs();
+      const sk = coachSkill();
+
+      // build gameBefore and gameAfter
+      const gBefore = makeGameCloneFromFEN(gameBeforeFEN);
+
+      const engBefore = new Engine(gBefore);
+
+      // compute best move for the player side at before position (side-to-move is player)
+      setTimeout(()=>{
+        const best = engBefore.search(ms, sk);
+
+        let bestSAN = "(?)";
+        let bestUCI = "";
+        let bestAfterScore = 0;
+
+        if (best){
+          // apply best on clone for score
+          const u = gBefore.makeMove(best, true);
+          bestSAN = gBefore._computeSAN(best);
+          bestUCI = moveToUCI(best);
+          bestAfterScore = evalWhiteCP_ofGame(gBefore);
+          gBefore.undoMove(u, true);
+        }
+
+        // played move score
+        const gAfter = makeGameCloneFromFEN(gameBeforeFEN);
+        const uPlayed = gAfter.makeMove(playedMove, true);
+        const playedAfterScore = evalWhiteCP_ofGame(gAfter);
+        gAfter.undoMove(uPlayed, true);
+
+        // cpLoss in player's perspective:
+        // If player is white, we want (bestScore - playedScore) from white perspective.
+        // If player is black, we want (-(bestScore) - (-(playedScore))) = (playedScore - bestScore) ??? Let's do generic:
+        // Define "playerScore" = score from player's view = (whiteScore) * (playerSide=="w"? 1 : -1)
+        const playerMul = (playerSide==="w") ? 1 : -1;
+        const bestPlayerScore = best ? bestAfterScore*playerMul : playedAfterScore*playerMul;
+        const playedPlayerScore = playedAfterScore*playerMul;
+
+        const loss = clamp(Math.round(bestPlayerScore - playedPlayerScore), 0, 99999);
+
+        const cls = classifyLoss(loss);
+
+        // update stats
+        coachStats.total++;
+        coachStats.avgLoss += loss;
+        if (cls.label.startsWith("Best")) coachStats.best++;
+        else if (cls.label==="İyi") coachStats.good++;
+        else if (cls.label==="Inaccuracy") coachStats.inacc++;
+        else if (cls.label==="Mistake") coachStats.mistake++;
+        else coachStats.blunder++;
+
+        const moveNo = computeMoveNumberForHistoryIndex(historyIndex) + playedSAN;
+
+        const advice = quickHeuristicAdvice(makeGameCloneFromFEN(gameBeforeFEN), playedMove, makeGameCloneFromFEN(game.getFEN()), playerSide);
+
+        const metaLines = [];
+        metaLines.push(`Δ=${loss}cp | Sen: ${playedSAN} (${moveToUCI(playedMove)})`);
+        if (best){
+          metaLines.push(`En iyi: ${bestSAN} (${bestUCI})`);
+        } else {
+          metaLines.push(`En iyi: (bulunamadı)`);
+        }
+        metaLines.push(`Skor (Beyaz açısından): Best=${scoreToText(bestAfterScore)} | Sen=${scoreToText(playedAfterScore)}`);
+
+        let mainText = "";
+        if (loss < 20) mainText = "Çok iyi hamle. Büyük kayıp yok.";
+        else if (loss < 60) mainText = "İyi hamle. Küçük bir doğruluk kaybı var.";
+        else if (loss < 120) mainText = "Bu hamlede doğruluk düştü. Alternatif hamleyi düşünmeye değer.";
+        else if (loss < 250) mainText = "Bu hamle ciddi kayıp. Genelde taktik veya taş güvenliği problemi olur.";
+        else mainText = "Bu hamle büyük hata (blunder). Genelde asılı taş / taktik kaçırma / şah güvenliği temalıdır.";
+
+        if (advice.length){
+          mainText += " " + advice[0];
+        }
+
+        resolve({
+          label: cls.label,
+          level: cls.level,
+          moveNo,
+          text: mainText,
+          meta: metaLines.join("\n"),
+          loss,
+          bestSAN,
+          bestUCI,
+          playedSAN,
+          playedUCI: moveToUCI(playedMove),
+          createdAt: nowISO()
+        });
+      }, 10);
+    });
+  }
+
+  async function runCoachOnPlayerMove(gameBeforeFEN, playedMove, playedSAN, historyIndex){
+    if (!coachEnabled) return;
+    if (coachBusy) return; // avoid overlap
+    coachBusy = true;
+    try{
+      setStatus("Koç analiz ediyor...", `Hamle: ${playedSAN} | ${coachThinkMs()}ms`);
+      const item = await analyzePlayerMoveAsync(gameBeforeFEN, playedMove, playedSAN, historyIndex);
+      addCoachItem(item);
+    } finally {
+      coachBusy = false;
+      updateStatus();
+    }
+  }
+
+  // ===================== SQUARE CLICK =====================
+  async function onSquareClick(e){
+    ensureAudio();
+    if (engineThinking) return;
+
+    const st = game.gameStatus();
+    if (st.over) return;
+    if (!isPlayersTurn()) return;
+
+    const sq = e.currentTarget.dataset.sq;
+    const p = game.pieceAt(sq);
+    const pColor = colorOf(p);
+
+    if (!selectedSq){
+      if (!p || pColor !== playerSide) return;
+      selectedSq = sq;
+      legalFromSelected = game.legalMovesFrom(sq);
+      showSelection();
+      return;
+    }
+
+    if (sq === selectedSq){
+      selectedSq = null;
+      legalFromSelected = [];
+      clearHighlights();
+      return;
+    }
+
+    if (p && pColor === playerSide){
+      selectedSq = sq;
+      legalFromSelected = game.legalMovesFrom(sq);
+      showSelection();
+      return;
+    }
+
+    const cand = legalFromSelected.filter(m => m.to === sq);
+    if (!cand.length) return;
+
+    const promos = cand.filter(m => m.promo);
+    if (promos.length){
+      pendingPromotion = { choices: promos };
+      openPromotionModal();
+      return;
+    }
+
+    // --- COACH needs pre-move FEN ---
+    const beforeFEN = game.getFEN();
+
+    const mv = cand[0];
+    const undo = game.makeMove(mv, false);
+    const playedSAN = undo.san;
+    const idx = game.history.length - 1; // history index of this move
+
+    selectedSq = null;
+    legalFromSelected = [];
+    clearHighlights();
+    render();
+
+    // run coach
+    runCoachOnPlayerMove(beforeFEN, mv, playedSAN, idx);
+
+    setTimeout(()=>maybeEngineMove(), 30);
+  }
+
+  // ===================== PROMOTION MODAL =====================
+  function openPromotionModal(){ promoBackdrop.style.display = "flex"; }
+  function closePromotionModal(){ promoBackdrop.style.display = "none"; }
+
+  promoCancel.addEventListener("click", ()=>{
+    pendingPromotion = null;
+    closePromotionModal();
+  });
+  promoBackdrop.addEventListener("click",(ev)=>{
+    if (ev.target === promoBackdrop){
+      pendingPromotion = null;
+      closePromotionModal();
+    }
+  });
+  document.querySelectorAll(".promo-btns .btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      ensureAudio();
+      if (!pendingPromotion) return;
+      const piece = btn.getAttribute("data-piece");
+      const pick = pendingPromotion.choices.find(m => m.promo === piece);
+      pendingPromotion = null;
+      closePromotionModal();
+      if (!pick) return;
+
+      const beforeFEN = game.getFEN();
+      const undo = game.makeMove(pick, false);
+      const playedSAN = undo.san;
+      const idx = game.history.length - 1;
+
+      selectedSq = null;
+      legalFromSelected = [];
+      clearHighlights();
+      render();
+
+      runCoachOnPlayerMove(beforeFEN, pick, playedSAN, idx);
+
+      setTimeout(()=>maybeEngineMove(), 30);
+    });
+  });
+
+  // ===================== SIDE / FLIP =====================
+  function setPlayerSide(newSide){
+    playerSide = newSide;
+    orientation = (playerSide==="w") ? "w" : "b";
+    document.getElementById("playerSide").value = playerSide;
+
+    selectedSq = null;
+    legalFromSelected = [];
+    clearHighlights();
+    render();
+
+    setTimeout(()=>maybeEngineMove(), 50);
+  }
+
+  document.getElementById("btnFlip").addEventListener("click", ()=>{
+    ensureAudio();
+    const next = (playerSide === "w") ? "b" : "w";
+    setPlayerSide(next);
+  });
+
+  // ===================== BUTTONS =====================
+  document.getElementById("btnNew").addEventListener("click", ()=>{
+    ensureAudio();
+    stopEngine();
+    game.reset();
+    gameStartAt = nowISO();
+    coachReset();
+
+    selectedSq = null;
+    legalFromSelected = [];
+    clearHighlights();
+    render();
+    setTimeout(()=>maybeEngineMove(), 50);
+  });
+
+  document.getElementById("btnUndo").addEventListener("click", ()=>{
+    ensureAudio();
+    stopEngine();
+    if (!game.history.length) return;
+
+    // if coach enabled, remove last coach item if it belongs to player's move
+    // We simply pop last coach item when undoing any move (safe enough for practical use)
+    if (coachFeed.length){
+      coachFeed.pop();
+      // stats rollback is complex; easiest: recompute stats from feed
+      coachStats = {total:0, best:0, good:0, inacc:0, mistake:0, blunder:0, avgLoss:0};
+      for (const it of coachFeed){
+        coachStats.total++;
+        coachStats.avgLoss += it.loss || 0;
+        if ((it.label||"").startsWith("Best")) coachStats.best++;
+        else if (it.label==="İyi") coachStats.good++;
+        else if (it.label==="Inaccuracy") coachStats.inacc++;
+        else if (it.label==="Mistake") coachStats.mistake++;
+        else if (it.label==="Blunder") coachStats.blunder++;
+      }
+    }
+
+    const last = game.history[game.history.length-1];
+    game.undoMove(last, false);
+
+    if (game.history.length && game.turn !== playerSide){
+      const last2 = game.history[game.history.length-1];
+      game.undoMove(last2, false);
+    }
+
+    selectedSq = null;
+    legalFromSelected = [];
+    clearHighlights();
+    render();
+  });
+
+  document.getElementById("btnStop").addEventListener("click", ()=>stopEngine());
+
+  btnShowCtrlW.addEventListener("click", (e)=>{
+    ensureAudio();
+    showCtrlW = !showCtrlW;
+    e.currentTarget.classList.toggle("on", showCtrlW);
+    render();
+  });
+  btnShowCtrlB.addEventListener("click", (e)=>{
+    ensureAudio();
+    showCtrlB = !showCtrlB;
+    e.currentTarget.classList.toggle("on", showCtrlB);
+    render();
+  });
+
+  document.getElementById("playerSide").addEventListener("change",(e)=>{
+    ensureAudio();
+    setPlayerSide(e.target.value);
+  });
+
+  elSkill.addEventListener("input",(e)=>{ elSkillVal.textContent = e.target.value; });
+  elThink.addEventListener("input",(e)=>{ elThinkVal.textContent = e.target.value; });
+  elCoachThink.addEventListener("input",(e)=>{ elCoachThinkVal.textContent = e.target.value; });
+
+  document.getElementById("btnApply").addEventListener("click", ()=>{
+    ensureAudio();
+    setStatus("Ayarlar uygulandı.", `Motor Güç=${currentSkill()} | Motor Süre=${currentThinkMs()}ms | Koç Süre=${coachThinkMs()}ms`);
+    setTimeout(()=>updateStatus(), 400);
+  });
+
+  document.getElementById("btnEngineMove").addEventListener("click", ()=>{
+    ensureAudio();
+    if (engineThinking) return;
+    if (game.gameStatus().over) return;
+    if (!isPlayersTurn()) maybeEngineMove();
+    else setStatus("Sıra sende.", "Motor hamlesi için sıranın motorda olması gerekir.");
+  });
+
+  btnSound.addEventListener("click", ()=>{
+    ensureAudio();
+    soundEnabled = !soundEnabled;
+    updateSoundButton();
+    if (soundEnabled) playEngineTick();
+  });
+
+  // Coach toggle
+  elCoach.addEventListener("click", ()=>{
+    ensureAudio();
+    coachEnabled = !coachEnabled;
+    elCoach.classList.toggle("on", coachEnabled);
+    elCoachPill.textContent = coachEnabled ? "Koç: Açık" : "Koç: Kapalı";
+    setStatus(coachEnabled ? "Koç açıldı." : "Koç kapandı.", coachEnabled ? "Senin hamlelerinden sonra analiz yapacak." : "");
+    renderCoachFeed();
+  });
+
+  // ===================== FEN / PGN =====================
+  document.getElementById("btnGetFEN").addEventListener("click", ()=>{
+    document.getElementById("fenBox").value = game.getFEN();
+  });
+  document.getElementById("btnLoadFEN").addEventListener("click", ()=>{
+    ensureAudio();
+    stopEngine();
+    const fen = document.getElementById("fenBox").value.trim();
+    if (!fen) return;
+    const ok = game.loadFEN(fen);
+    if (!ok){ setStatus("Hatalı FEN.", "FEN formatını kontrol et."); return; }
+    coachReset();
+    gameStartAt = nowISO();
+    selectedSq = null;
+    legalFromSelected = [];
+    clearHighlights();
+    render();
+    setTimeout(()=>maybeEngineMove(), 50);
+  });
+
+  document.getElementById("btnGetPGN").addEventListener("click", ()=>{
+    document.getElementById("pgnBox").value = game.getPGN();
+  });
+  document.getElementById("btnLoadPGN").addEventListener("click", ()=>{
+    ensureAudio();
+    stopEngine();
+    const pgn = document.getElementById("pgnBox").value.trim();
+    if (!pgn) return;
+    const ok = game.loadPGN(pgn);
+    if (!ok){ setStatus("Hatalı PGN.", "Bu programın ürettiği PGN formatında olduğundan emin ol."); return; }
+    coachReset();
+    gameStartAt = nowISO();
+    selectedSq = null;
+    legalFromSelected = [];
+    clearHighlights();
+    render();
+    setTimeout(()=>maybeEngineMove(), 50);
+  });
+
+  // ===================== CLIPBOARD / DOWNLOAD =====================
+  async function copyToClipboard(text){
+    try{ await navigator.clipboard.writeText(text); return true; }
+    catch(e){
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      ta.remove();
+      return ok;
+    }
+  }
+  function downloadText(filename, text){
+    const blob = new Blob([text], {type:"text/plain;charset=utf-8"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  }
+
+  document.getElementById("btnCopyPGN").addEventListener("click", async ()=>{
+    ensureAudio();
+    const pgn = game.getPGN();
+    const ok = await copyToClipboard(pgn);
+    setStatus(ok ? "PGN kopyalandı." : "Kopyalama başarısız.", ok ? "" : "Tarayıcı izin vermemiş olabilir.");
+  });
+  document.getElementById("btnDownloadPGN").addEventListener("click", ()=>{
+    ensureAudio();
+    const pgn = game.getPGN();
+    downloadText("game.pgn", pgn);
+    setStatus("PGN indirildi.", "game.pgn");
+  });
+
+  // ===================== SAVE / LOAD GAMES =====================
+  function makeGameTitle(){
+    const side = (playerSide==="w") ? "Beyaz" : "Siyah";
+    const st = game.gameStatus();
+    let result = "Devam ediyor";
+    if (st.over){
+      if (st.type==="mate"){
+        const winner = (game.turn==="w") ? "Siyah" : "Beyaz";
+        result = `Mat – ${winner} kazandı`;
+      } else if (st.type==="stalemate") result = "Pat – Berabere";
+      else if (st.type==="draw50") result = "Berabere (50)";
+      else if (st.type==="draw3") result = "Berabere (3 tekrar)";
+      else result = "Bitti";
+    }
+    return `${side} – ${result}`;
+  }
+
+  function getResultCode(){
+    const st = game.gameStatus();
+    if (!st.over) return "*";
+    if (st.type==="mate"){
+      const winner = (game.turn==="w") ? "b" : "w";
+      return (winner==="w") ? "1-0" : "0-1";
+    }
+    return "1/2-1/2";
+  }
+
+  async function saveCurrentGame(){
+    const id = coachGameId || (crypto.randomUUID ? crypto.randomUUID() : ("g_"+Math.random().toString(16).slice(2)));
+    coachGameId = id;
+
+    const obj = {
+      id,
+      version: VERSION,
+      createdAt: gameStartAt,
+      savedAt: nowISO(),
+      title: makeGameTitle(),
+      playerSide,
+      engine: { skill: currentSkill(), thinkMs: currentThinkMs() },
+      coach: {
+        enabled: coachEnabled,
+        thinkMs: coachThinkMs(),
+        stats: coachStats,
+        feed: coachFeed
+      },
+      fen: game.getFEN(),
+      pgn: game.getPGN(),
+      result: getResultCode()
+    };
+
+    await dbPutGame(obj);
+    setStatus("Oyun kaydedildi.", `Kayıt ID: ${id}`);
+    await refreshGamesList();
+  }
+
+  function maybeAutoSaveOnGameOver(){
+    // otomatik kaydetmek yerine "kaydet" uyarısı yapıyoruz,
+    // ama istersen otomatik kayda çevirebiliriz.
+    // Burada: eğer koç açık ve en az 6 hamle varsa otomatik kaydet.
+    if (game.history.length >= 6){
+      saveCurrentGame().catch(()=>{});
+    }
+  }
+
+  async function refreshGamesList(){
+    const all = await dbGetAllGames();
+    all.sort((a,b)=> (b.savedAt||b.createdAt).localeCompare(a.savedAt||a.createdAt));
+    if (!all.length){
+      gamesListEl.innerHTML = `<div class="hint">Henüz kayıt yok.</div>`;
+      return;
+    }
+    gamesListEl.innerHTML = all.map(g=>{
+      const dt = (g.savedAt||g.createdAt||"").replace("T"," ").slice(0,16);
+      const sub = `${dt} | ${g.result || "*"} | Koç: ${g.coach?.stats?.total || 0} analiz`;
+      return `
+        <div class="gameRow">
+          <div class="left">
+            <div class="title">${escapeHtml(g.title || "(Başlıksız)")}</div>
+            <div class="sub">${escapeHtml(sub)}</div>
+          </div>
+          <div class="actions">
+            <button class="btn small" data-act="load" data-id="${g.id}">Yükle</button>
+            <button class="btn small" data-act="report" data-id="${g.id}">Rapor</button>
+            <button class="btn small danger" data-act="del" data-id="${g.id}">Sil</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    gamesListEl.querySelectorAll("button[data-act]").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        ensureAudio();
+        const id = btn.getAttribute("data-id");
+        const act = btn.getAttribute("data-act");
+        if (!id) return;
+
+        if (act==="del"){
+          await dbDeleteGame(id);
+          if (coachGameId === id) coachGameId = null;
+          setStatus("Kayıt silindi.", id);
+          await refreshGamesList();
+          return;
+        }
+        if (act==="load"){
+          const g = await dbGetGame(id);
+          if (!g){ setStatus("Kayıt bulunamadı.", id); return; }
+          stopEngine();
+          const ok = game.loadFEN(g.fen);
+          if (!ok){ setStatus("Kayıt FEN'i yüklenemedi.", "Kayıt bozuk olabilir."); return; }
+
+          // restore settings
+          coachGameId = g.id;
+          gameStartAt = g.createdAt || nowISO();
+          setPlayerSide(g.playerSide || "w");
+          elSkill.value = String(g.engine?.skill ?? 14);
+          elThink.value = String(g.engine?.thinkMs ?? 800);
+          elSkillVal.textContent = elSkill.value;
+          elThinkVal.textContent = elThink.value;
+
+          coachEnabled = !!(g.coach?.enabled);
+          elCoach.classList.toggle("on", coachEnabled);
+          elCoachThink.value = String(g.coach?.thinkMs ?? 1200);
+          elCoachThinkVal.textContent = elCoachThink.value;
+
+          coachFeed = Array.isArray(g.coach?.feed) ? g.coach.feed : [];
+          coachStats = g.coach?.stats || {total:0,best:0,good:0,inacc:0,mistake:0,blunder:0,avgLoss:0};
+
+          selectedSq = null;
+          legalFromSelected = [];
+          clearHighlights();
+          render();
+          setStatus("Kayıt yüklendi.", g.title || id);
+          setTimeout(()=>maybeEngineMove(), 50);
+          return;
+        }
+        if (act==="report"){
+          const g = await dbGetGame(id);
+          if (!g){ setStatus("Kayıt bulunamadı.", id); return; }
+          // Load report into coach panel without changing board
+          coachEnabled = true;
+          elCoach.classList.add("on", true);
+          elCoachPill.textContent = "Koç: Açık";
+
+          coachFeed = Array.isArray(g.coach?.feed) ? g.coach.feed : [];
+          coachStats = g.coach?.stats || {total:0,best:0,good:0,inacc:0,mistake:0,blunder:0,avgLoss:0};
+          renderCoachFeed();
+          setStatus("Rapor yüklendi.", g.title || id);
+          return;
+        }
+      });
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (c)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  document.getElementById("btnSaveGame").addEventListener("click", ()=>{
+    ensureAudio();
+    saveCurrentGame().catch(err=>{
+      console.error(err);
+      setStatus("Kaydetme hatası.", String(err));
+    });
+  });
+
+  document.getElementById("btnRefreshGames").addEventListener("click", ()=>{
+    ensureAudio();
+    refreshGamesList().catch(()=>{});
+  });
+
+  document.getElementById("btnClearAll").addEventListener("click", async ()=>{
+    ensureAudio();
+    const ok = confirm("Tüm kayıtlar silinsin mi? Bu işlem geri alınamaz.");
+    if (!ok) return;
+    await dbClearAll();
+    coachGameId = null;
+    setStatus("Tüm kayıtlar silindi.", "");
+    await refreshGamesList();
+  });
+
+  document.getElementById("btnExportAll").addEventListener("click", async ()=>{
+    ensureAudio();
+    const all = await dbGetAllGames();
+    const payload = {
+      version: VERSION,
+      exportedAt: nowISO(),
+      games: all
+    };
+    downloadText(`chess_coach_export_${Date.now()}.json`, JSON.stringify(payload, null, 2));
+    setStatus("Dışa aktarıldı.", "JSON indirildi.");
+  });
+
+  document.getElementById("btnImportAll").addEventListener("click", ()=>{
+    ensureAudio();
+    importFileEl.click();
+  });
+
+  importFileEl.addEventListener("change", async ()=>{
+    ensureAudio();
+    const f = importFileEl.files && importFileEl.files[0];
+    if (!f) return;
+    const txt = await f.text();
+    try{
+      const data = JSON.parse(txt);
+      const games = data.games || [];
+      if (!Array.isArray(games)) throw new Error("Geçersiz format.");
+      for (const g of games){
+        if (g && g.id) await dbPutGame(g);
+      }
+      setStatus("İçe aktarma tamam.", `${games.length} kayıt işlendi.`);
+      await refreshGamesList();
+    } catch(e){
+      setStatus("İçe aktarma hatası.", String(e));
+    } finally {
+      importFileEl.value = "";
+    }
+  });
+
+  // ===================== BOOT =====================
+  function boot(){
+    elSkillVal.textContent = elSkill.value;
+    elThinkVal.textContent = elThink.value;
+    elCoachThinkVal.textContent = elCoachThink.value;
+    updateSoundButton();
+
+    setStatus(`Hazır. (${VERSION})`, `Koç: Kapalı | Taşlara tıkla → hedef kareyi seç → motor oynar.`);
+    render();
+
+    // if player chooses black by flipping or dropdown, engine starts
+    setTimeout(()=>maybeEngineMove(), 50);
+
+    refreshGamesList().catch(()=>{});
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,442 @@
+<!-- Version 1.6 -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Küp Döndürme</title>
+
+<style>
+body{
+  background:#f0f0f0;
+  font-family:Arial, sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin:20px 0;
+}
+
+h2{
+  margin-bottom:14px;
+}
+
+.panel{
+  margin-bottom:15px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.controlBlock{
+  background:white;
+  border:1px solid #ccc;
+  border-radius:10px;
+  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+input{
+  width:80px;
+  padding:4px 6px;
+  font-size:15px;
+}
+
+button{
+  padding:7px 12px;
+  font-size:15px;
+  cursor:pointer;
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:none;
+}
+
+#info{
+  background:white;
+  border:1px solid #ccc;
+  padding:10px 12px;
+  border-radius:10px;
+  min-width:260px;
+  line-height:1.5;
+}
+
+svg{
+  background:white;
+  border:1px solid #aaa;
+}
+
+.edgeFront{
+  stroke:black;
+  stroke-width:2;
+}
+
+.edgeBack{
+  stroke:#bdbdbd;
+  stroke-width:2;
+}
+
+.vertex{
+  fill:red;
+}
+
+.label{
+  font-size:14px;
+  font-weight:bold;
+  fill:#111;
+}
+</style>
+</head>
+
+<body>
+<body>
+
+<!-- HOME BUTTON -->
+<div style="
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+">
+  <a href="../index.html" style="
+    text-decoration: none;
+    background: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: black;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  ">
+    ← Home
+  </a>
+</div>
+
+<div class="wrap">
+<h2>3D Küp Döndürme</h2>
+
+<div class="panel">
+  <div class="controlBlock">
+    <label for="stepInput">Adım açısı s :</label>
+    <input id="stepInput" type="number" value="2" step="0.1">
+    <button onclick="startRotation()">Başlat</button>
+    <button onclick="stopRotation()">Durdur</button>
+    <button onclick="resetAll()">Sıfırla</button>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="controlBlock">
+    <strong>Yukarı / Aşağı</strong>
+    <button id="upBtn">Yukarı</button>
+    <button id="downBtn">Aşağı</button>
+  </div>
+
+  <div class="controlBlock">
+    <strong>Sağa / Sola</strong>
+    <button id="rightBtn">Sağa</button>
+    <button id="leftBtn">Sola</button>
+  </div>
+
+  <div class="controlBlock">
+    <strong>İleri / Geri</strong>
+    <button id="forwardBtn">İleri</button>
+    <button id="backwardBtn">Geri</button>
+  </div>
+</div>
+
+<div id="info">a = 0°, s = 2°, tx = 0, ty = 0, tz = 0</div>
+
+<br>
+
+<svg id="scene" width="700" height="500"></svg>
+
+<script>
+const svg = document.getElementById("scene");
+const stepInput = document.getElementById("stepInput");
+const info = document.getElementById("info");
+
+const upBtn = document.getElementById("upBtn");
+const downBtn = document.getElementById("downBtn");
+const rightBtn = document.getElementById("rightBtn");
+const leftBtn = document.getElementById("leftBtn");
+const forwardBtn = document.getElementById("forwardBtn");
+const backwardBtn = document.getElementById("backwardBtn");
+
+const width = 700;
+const height = 500;
+const centerX = width / 2;
+const centerY = height / 2;
+const scale = 900;
+
+const moveStep = 0.08;
+const moveIntervalMs = 20;
+
+const basePoints = {
+  A:{x:-1, y: 1, z:12},
+  B:{x: 1, y: 1, z:12},
+  C:{x: 1, y: 1, z:10},
+  D:{x:-1, y: 1, z:10},
+  E:{x:-1, y:-1, z:12},
+  F:{x: 1, y:-1, z:12},
+  G:{x: 1, y:-1, z:10},
+  H:{x:-1, y:-1, z:10}
+};
+
+const edges = [
+  ["A","B"],
+  ["B","C"],
+  ["C","D"],
+  ["D","A"],
+  ["E","F"],
+  ["F","G"],
+  ["G","H"],
+  ["H","E"],
+  ["A","E"],
+  ["B","F"],
+  ["C","G"],
+  ["D","H"]
+];
+
+let a = 0;
+let s = 2;
+let rotationTimer = null;
+
+let tx = 0;
+let ty = 0;
+let tz = 0;
+
+let moveTimer = null;
+
+function rad(angle){
+  return angle * Math.PI / 180;
+}
+
+function translatePoint(p){
+  return {
+    x: p.x + tx,
+    y: p.y + ty,
+    z: p.z + tz
+  };
+}
+
+function rotateAroundShiftedYAxis(p, angle){
+  const r = rad(angle);
+
+  const axisX = tx;
+  const axisZ = 11 + tz;
+
+  const x = p.x - axisX;
+  const y = p.y;
+  const z = p.z - axisZ;
+
+  const xr = x * Math.cos(r) + z * Math.sin(r);
+  const yr = y;
+  const zr = -x * Math.sin(r) + z * Math.cos(r);
+
+  return {
+    x: xr + axisX,
+    y: yr,
+    z: zr + axisZ
+  };
+}
+
+function project(p){
+  return {
+    x: p.x / p.z,
+    y: p.y / p.z
+  };
+}
+
+function toScreen(p){
+  return {
+    x: centerX + p.x * scale,
+    y: centerY - p.y * scale
+  };
+}
+
+function clearScene(){
+  while(svg.firstChild){
+    svg.removeChild(svg.firstChild);
+  }
+}
+
+function drawLine(x1, y1, x2, y2, cssClass){
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  line.setAttribute("x1", x1);
+  line.setAttribute("y1", y1);
+  line.setAttribute("x2", x2);
+  line.setAttribute("y2", y2);
+  line.setAttribute("class", cssClass);
+  svg.appendChild(line);
+}
+
+function drawPoint(x, y, name){
+  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("cx", x);
+  circle.setAttribute("cy", y);
+  circle.setAttribute("r", 4);
+  circle.setAttribute("class", "vertex");
+  svg.appendChild(circle);
+
+  const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  text.setAttribute("x", x + 7);
+  text.setAttribute("y", y - 7);
+  text.setAttribute("class", "label");
+  text.textContent = name;
+  svg.appendChild(text);
+}
+
+function updateInfo(){
+  info.textContent =
+    `a = ${a.toFixed(2)}°, s = ${s}°, tx = ${tx.toFixed(2)}, ty = ${ty.toFixed(2)}, tz = ${tz.toFixed(2)}`;
+}
+
+function draw(){
+  clearScene();
+
+  const translated = {};
+  const rotated = {};
+  const projected = {};
+  const screen = {};
+
+  for(const name in basePoints){
+    translated[name] = translatePoint(basePoints[name]);
+    rotated[name] = rotateAroundShiftedYAxis(translated[name], a);
+    projected[name] = project(rotated[name]);
+    screen[name] = toScreen(projected[name]);
+  }
+
+  for(const [p1, p2] of edges){
+    const zAvg = (rotated[p1].z + rotated[p2].z) / 2;
+    const cssClass = zAvg < (11 + tz) ? "edgeFront" : "edgeBack";
+
+    drawLine(
+      screen[p1].x, screen[p1].y,
+      screen[p2].x, screen[p2].y,
+      cssClass
+    );
+  }
+
+  for(const name in screen){
+    drawPoint(screen[name].x, screen[name].y, name);
+  }
+
+  updateInfo();
+}
+
+function rotationStep(){
+  a = a + s;
+  draw();
+}
+
+function startRotation(){
+  const inputValue = parseFloat(stepInput.value);
+  if(!isNaN(inputValue)){
+    s = inputValue;
+  }
+
+  if(rotationTimer === null){
+    rotationTimer = setInterval(rotationStep, 80);
+  }
+}
+
+function stopRotation(){
+  if(rotationTimer !== null){
+    clearInterval(rotationTimer);
+    rotationTimer = null;
+  }
+}
+
+function resetAll(){
+  stopRotation();
+  stopMove();
+
+  a = 0;
+
+  const inputValue = parseFloat(stepInput.value);
+  if(!isNaN(inputValue)){
+    s = inputValue;
+  }
+
+  tx = 0;
+  ty = 0;
+  tz = 0;
+
+  draw();
+}
+
+function clampDepth(){
+  const minZ = 2.2;
+  const nearestBaseZ = 10 + tz;
+  if(nearestBaseZ < minZ){
+    tz = minZ - 10;
+  }
+}
+
+function startMove(direction){
+  stopMove();
+
+  moveTimer = setInterval(() => {
+    if(direction === "up"){
+      ty += moveStep;
+    }
+    else if(direction === "down"){
+      ty -= moveStep;
+    }
+    else if(direction === "right"){
+      tx += moveStep;
+    }
+    else if(direction === "left"){
+      tx -= moveStep;
+    }
+    else if(direction === "forward"){
+      tz -= moveStep;
+      clampDepth();
+    }
+    else if(direction === "backward"){
+      tz += moveStep;
+    }
+
+    draw();
+  }, moveIntervalMs);
+}
+
+function stopMove(){
+  if(moveTimer !== null){
+    clearInterval(moveTimer);
+    moveTimer = null;
+  }
+}
+
+function bindHoldButton(button, direction){
+  button.addEventListener("mousedown", () => startMove(direction));
+  button.addEventListener("mouseup", stopMove);
+  button.addEventListener("mouseleave", stopMove);
+
+  button.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    startMove(direction);
+  }, { passive: false });
+
+  button.addEventListener("touchend", stopMove);
+  button.addEventListener("touchcancel", stopMove);
+}
+
+document.addEventListener("mouseup", stopMove);
+document.addEventListener("touchend", stopMove);
+document.addEventListener("touchcancel", stopMove);
+
+bindHoldButton(upBtn, "up");
+bindHoldButton(downBtn, "down");
+bindHoldButton(rightBtn, "right");
+bindHoldButton(leftBtn, "left");
+bindHoldButton(forwardBtn, "forward");
+bindHoldButton(backwardBtn, "backward");
+
+draw();
+</script>
+
+</body>
+</html>

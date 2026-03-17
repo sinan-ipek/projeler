@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>16×16 4-Renk (2^512) Resim Uzayı — Adresle & Gör</title>
+  <style>
+    :root{
+      --bg:#0b0d12;
+      --text:#e8eefc;
+      --muted:#a6b3d1;
+      --border:rgba(255,255,255,.12);
+
+      --c0:#0b0d12;
+      --c1:#e8eefc;
+      --c2:#7aa2ff;
+      --c3:#ffb86c;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(122,162,255,.18), transparent 60%),
+                  radial-gradient(900px 600px at 90% 20%, rgba(255,184,108,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width:1050px;margin:0 auto;padding:18px}
+    h1{font-size:18px;margin:0 0 12px;font-weight:750;letter-spacing:.2px}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;align-items:start}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      border-radius:14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+    .head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--border);
+      background: rgba(0,0,0,.12);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .title{font-size:13px;color:var(--muted)}
+    .badge{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px;color:var(--muted);
+      padding:6px 9px;border-radius:999px;border:1px solid var(--border);
+      background: rgba(0,0,0,.20);
+      white-space:nowrap;
+    }
+    .body{padding:14px}
+
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .row.spread{justify-content:space-between}
+
+    button{
+      padding:9px 11px;border-radius:10px;border:1px solid var(--border);
+      background: rgba(122,162,255,.18);color:var(--text);
+      cursor:pointer;font-weight:650;font-size:12px;
+    }
+    button:hover{background: rgba(122,162,255,.26)}
+    button.secondary{background: rgba(255,255,255,.06)}
+    button.secondary:hover{background: rgba(255,255,255,.10)}
+
+    label{font-size:12px;color:var(--muted);display:block;margin:10px 0 6px}
+    textarea{
+      width:100%;
+      padding:10px 10px;border-radius:10px;border:1px solid var(--border);
+      background: rgba(0,0,0,.25);color:var(--text);
+      outline:none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px;line-height:1.35;
+      min-height:78px;resize:vertical;
+    }
+    .hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.35}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+    .kline{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.14)}
+
+    /* 16×16 “resim” */
+    .pixelWrap{
+      padding:14px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background: rgba(0,0,0,.18);
+    }
+    .pixels{
+      width:min(520px, 92vw);
+      aspect-ratio:1/1;
+      display:grid;
+      grid-template-columns: repeat(16, 1fr);
+      grid-template-rows: repeat(16, 1fr);
+      gap:1px;
+      background: rgba(255,255,255,.07);
+      border-radius:12px;
+      padding:12px;
+      border:1px solid var(--border);
+    }
+    .px{background: var(--c0);border-radius:3px}
+
+    .palette{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap:10px;
+      margin-top:8px;
+    }
+    @media (max-width: 520px){ .palette{grid-template-columns:1fr} }
+    .colorPick{
+      display:flex;align-items:center;gap:8px;
+      padding:8px 10px;border:1px solid var(--border);
+      border-radius:10px;background: rgba(0,0,0,.18);
+    }
+    input[type="color"]{width:36px;height:28px;border:0;background:transparent;padding:0;cursor:pointer}
+    .small{font-size:12px;color:var(--muted);line-height:1.35}
+
+    /* Uyarı lambası */
+    .lampBox{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 10px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background: rgba(0,0,0,.18);
+    }
+    .lamp{
+      width:16px;height:16px;border-radius:50%;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow: inset 0 0 6px rgba(0,0,0,.55);
+      flex:0 0 auto;
+    }
+    .lamp.on{
+      background: #ff2a2a;
+      border-color: rgba(255,60,60,.85);
+      box-shadow:
+        0 0 10px rgba(255,40,40,.85),
+        0 0 24px rgba(255,40,40,.55),
+        inset 0 0 6px rgba(255,255,255,.25);
+    }
+    .statLine{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .statPill{
+      padding:6px 9px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background: rgba(0,0,0,.20);
+      color:var(--muted);
+      font-size:12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      white-space:nowrap;
+    }
+    .pillStrong{color:var(--text)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>16×16 • 4 Renk • 2^512 olası resim — “Adres ver, resmi hesapla”</h1>
+
+    <div class="grid">
+      <div class="card">
+        <div class="head">
+          <div class="title">Adresleme: 512-bit sayı ↔ 16×16 (her piksel 2 bit)</div>
+          <div class="badge" id="badge">index (hex): 0x00000000…</div>
+        </div>
+        <div class="body">
+          <div class="row">
+            <button id="prev" class="secondary">◀ Prev</button>
+            <button id="next">Next ▶</button>
+            <button id="rand" class="secondary">Random</button>
+            <button id="rot" class="secondary">Rotate Palette</button>
+          </div>
+
+          <!-- İstatistik + lamba -->
+          <div class="kline">
+            <div class="row spread">
+              <div class="statLine">
+                <span class="statPill pillStrong" id="aPill">A(0+1): 256</span>
+                <span class="statPill pillStrong" id="bPill">B(2+3): 0</span>
+                <span class="statPill" id="diffPill">|A-B|/256: 100.0%</span>
+              </div>
+              <div class="lampBox" title="|A-B|/256 > 10% ise yanar ve ses çalar">
+                <div class="lamp" id="warnLamp" aria-label="Uyarı lambası"></div>
+                <div class="small"><b>Uyarı</b></div>
+              </div>
+            </div>
+            <div class="hint" style="margin-top:8px">
+              Grup A = renk <b>0</b> + renk <b>1</b> sayısı. Grup B = renk <b>2</b> + renk <b>3</b> sayısı.  
+              Kriter: <span class="mono">|A - B| / 256 &gt; 0.10</span>
+            </div>
+          </div>
+
+          <div class="kline">
+            <div class="small">
+              <b>Toplam:</b> 256 piksel × 2 bit = <b>512 bit</b> → <b>2^512</b> farklı resim.
+            </div>
+          </div>
+
+          <label>Hex adres (tam 128 hex hane = 512 bit). “0x” opsiyonel.</label>
+          <textarea id="hex" spellcheck="false" class="mono"
+            placeholder="0, 1, 2... veya 128 haneli hex (0-9a-f)"></textarea>
+          <div class="row" style="margin-top:8px">
+            <button id="applyHex">Hex’i uygula</button>
+            <button id="padHex" class="secondary">128 haneye pad</button>
+            <button id="copyHex" class="secondary">Hex kopyala</button>
+          </div>
+
+          <label>Base-4 adres (256 hane: sadece 0/1/2/3). İstersen buradan da gir.</label>
+          <textarea id="base4" spellcheck="false" class="mono"
+            placeholder="256 adet 0/1/2/3..."></textarea>
+          <div class="row" style="margin-top:8px">
+            <button id="applyB4">Base-4’ü uygula</button>
+            <button id="copyB4" class="secondary">Base-4 kopyala</button>
+          </div>
+
+          <label>4 renk paleti (piksel değeri 0/1/2/3 → renk)</label>
+          <div class="palette">
+            <div class="colorPick"><input type="color" id="c0" value="#0b0d12"><div class="small mono" id="t0">#0b0d12</div></div>
+            <div class="colorPick"><input type="color" id="c1" value="#e8eefc"><div class="small mono" id="t1">#e8eefc</div></div>
+            <div class="colorPick"><input type="color" id="c2" value="#7aa2ff"><div class="small mono" id="t2">#7aa2ff</div></div>
+            <div class="colorPick"><input type="color" id="c3" value="#ffb86c"><div class="small mono" id="t3">#ffb86c</div></div>
+          </div>
+
+          <div class="hint kline">
+            <b>Haritalama:</b> index’in en düşük 2 biti sol-üst piksele gider (değer 0..3). Sonraki 2 bit bir sonraki piksel…
+            Soldan sağa, yukarıdan aşağıya.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="head">
+          <div class="title">16×16 görüntü</div>
+          <div class="badge">256 piksel</div>
+        </div>
+        <div class="pixelWrap">
+          <div class="pixels" id="pixels"></div>
+        </div>
+        <div class="body">
+          <div class="small">
+            “Base-4 adres” alanı: her karakter, ilgili pikselin 0/1/2/3 değeridir.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const SIZE = 16;
+  const P = SIZE * SIZE;            // 256 pixels
+  const HEX_LEN = 128;              // 512 bits / 4
+  const MASK_512 = (1n << 512n) - 1n;
+
+  const elPixels = document.getElementById('pixels');
+  const badge = document.getElementById('badge');
+
+  const hex = document.getElementById('hex');
+  const base4 = document.getElementById('base4');
+
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  const rand = document.getElementById('rand');
+  const rot = document.getElementById('rot');
+
+  const applyHex = document.getElementById('applyHex');
+  const padHex = document.getElementById('padHex');
+  const copyHex = document.getElementById('copyHex');
+
+  const applyB4 = document.getElementById('applyB4');
+  const copyB4 = document.getElementById('copyB4');
+
+  const c0 = document.getElementById('c0');
+  const c1 = document.getElementById('c1');
+  const c2 = document.getElementById('c2');
+  const c3 = document.getElementById('c3');
+
+  const t0 = document.getElementById('t0');
+  const t1 = document.getElementById('t1');
+  const t2 = document.getElementById('t2');
+  const t3 = document.getElementById('t3');
+
+  // Yeni: istatistik + uyarı
+  const aPill = document.getElementById('aPill');
+  const bPill = document.getElementById('bPill');
+  const diffPill = document.getElementById('diffPill');
+  const warnLamp = document.getElementById('warnLamp');
+
+  // 256 hücreyi bir kere oluştur
+  const cells = [];
+  for (let i = 0; i < P; i++) {
+    const d = document.createElement('div');
+    d.className = 'px';
+    elPixels.appendChild(d);
+    cells.push(d);
+  }
+
+  // state
+  let index = 0n;
+
+  // uyarı "durum değişimi" izleme
+  let lastWarnOn = false;
+
+  // Ses (WebAudio ile kısa bip)
+  let audioCtx = null;
+
+  function ensureAudio(){
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    }
+  }
+
+  function beep(){
+    // Tarayıcı politikaları: ilk kullanıcı etkileşimi sonrası çalışır.
+    ensureAudio();
+    if (!audioCtx) return;
+
+    // suspended ise resume dene
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(()=>{});
+    }
+
+    const now = audioCtx.currentTime;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    // kısa, net bir uyarı bip'i
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, now); // la5
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.20);
+  }
+
+  function clamp512(x){
+    x &= MASK_512;
+    if (x < 0n) x += (MASK_512 + 1n);
+    return x;
+  }
+
+  function normalizeHex(str){
+    let s = (str || '').trim().toLowerCase();
+    if (s.startsWith('0x')) s = s.slice(2);
+    s = s.replace(/[^0-9a-f]/g, '');
+    if (s.length === 0) s = '0';
+    if (s.length > HEX_LEN) s = s.slice(-HEX_LEN); // keep LSB side
+    return s;
+  }
+
+  function toHex128(x){
+    let s = x.toString(16);
+    if (s.length > HEX_LEN) s = s.slice(-HEX_LEN);
+    return s.padStart(HEX_LEN, '0');
+  }
+
+  function toBase4_256(x){
+    // 512-bit number -> 256 base4 digits (LSB 2-bit chunks)
+    const out = new Array(P);
+    for (let i = 0n; i < BigInt(P); i++) {
+      const v = Number((x >> (2n*i)) & 3n);
+      out[Number(i)] = String(v);
+    }
+    return out.join('');
+  }
+
+  function base4ToIndex(s){
+    let x = 0n;
+    const L = Math.min(s.length, P);
+    for (let i = 0; i < L; i++) {
+      const ch = s[i];
+      if (ch < '0' || ch > '3') continue;
+      const v = BigInt(ch.charCodeAt(0) - 48); // 0..3
+      x |= (v << (2n * BigInt(i)));
+    }
+    return clamp512(x);
+  }
+
+  function syncInputs(){
+    const h = toHex128(index);
+    hex.value = '0x' + h;
+    base4.value = toBase4_256(index);
+    badge.textContent = 'index (hex): 0x' + h.slice(0, 8) + '…';
+  }
+
+  function applyPalette(){
+    document.documentElement.style.setProperty('--c0', c0.value);
+    document.documentElement.style.setProperty('--c1', c1.value);
+    document.documentElement.style.setProperty('--c2', c2.value);
+    document.documentElement.style.setProperty('--c3', c3.value);
+    t0.textContent = c0.value.toLowerCase();
+    t1.textContent = c1.value.toLowerCase();
+    t2.textContent = c2.value.toLowerCase();
+    t3.textContent = c3.value.toLowerCase();
+    render(); // renkler değişince tekrar boya
+  }
+
+  function updateStatsAndWarning(count0, count1, count2, count3){
+    const A = count0 + count1;
+    const B = count2 + count3;
+
+    const diffRatio = Math.abs(A - B) / P;     // 0..1
+    const diffPct = (diffRatio * 100).toFixed(1);
+
+    aPill.textContent = `A(0+1): ${A}`;
+    bPill.textContent = `B(2+3): ${B}`;
+    diffPill.textContent = `|A-B|/256: ${diffPct}%`;
+
+    const warnOn = diffRatio > 0.10;
+    warnLamp.classList.toggle('on', warnOn);
+
+    // sadece durum OFF→ON olunca ses çal
+    if (warnOn && !lastWarnOn) beep();
+    lastWarnOn = warnOn;
+  }
+
+  function render(){
+    const styles = getComputedStyle(document.documentElement);
+    const pal = [
+      styles.getPropertyValue('--c0').trim(),
+      styles.getPropertyValue('--c1').trim(),
+      styles.getPropertyValue('--c2').trim(),
+      styles.getPropertyValue('--c3').trim()
+    ];
+
+    // sayımlar
+    let cts = [0,0,0,0];
+
+    // pixel i: value = (index >> (2*i)) & 3
+    for (let i = 0n; i < BigInt(P); i++) {
+      const v = Number((index >> (2n*i)) & 3n);
+      cts[v]++;
+      cells[Number(i)].style.background = pal[v];
+    }
+
+    updateStatsAndWarning(cts[0], cts[1], cts[2], cts[3]);
+  }
+
+  function parseHex(){
+    const s = normalizeHex(hex.value);
+    index = clamp512(BigInt('0x' + s));
+    syncInputs();
+    render();
+  }
+
+  function parseB4(){
+    let s = (base4.value || '').replace(/[^0-3]/g,'');
+    if (s.length === 0) s = '0';
+    if (s.length > P) s = s.slice(0, P);
+    index = base4ToIndex(s);
+    syncInputs();
+    render();
+  }
+
+  function nextOne(){ index = clamp512(index + 1n); syncInputs(); render(); }
+  function prevOne(){ index = clamp512(index - 1n); syncInputs(); render(); }
+
+  function randomIndex(){
+    // 512 bits = 64 bytes
+    const bytes = new Uint8Array(64);
+    if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(bytes);
+    else for (let i=0;i<bytes.length;i++) bytes[i] = Math.floor(Math.random()*256);
+
+    // big-endian to BigInt
+    let x = 0n;
+    for (const b of bytes) x = (x << 8n) | BigInt(b);
+    index = clamp512(x);
+    syncInputs();
+    render();
+  }
+
+  function rotatePalette(){
+    const v0 = c0.value, v1 = c1.value, v2 = c2.value, v3 = c3.value;
+    c0.value = v1; c1.value = v2; c2.value = v3; c3.value = v0;
+    applyPalette();
+  }
+
+  async function copyText(txt){
+    try{ await navigator.clipboard.writeText(txt); }
+    catch{
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+  }
+
+  // Kullanıcı etkileşimi olduğunda audio context'i hazırla (tarayıcı kısıtları için)
+  function primeAudio(){
+    ensureAudio();
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(()=>{});
+    }
+  }
+
+  // events
+  prev.addEventListener('click', () => { primeAudio(); prevOne(); });
+  next.addEventListener('click', () => { primeAudio(); nextOne(); });
+  rand.addEventListener('click', () => { primeAudio(); randomIndex(); });
+  rot.addEventListener('click', () => { primeAudio(); rotatePalette(); });
+
+  applyHex.addEventListener('click', () => { primeAudio(); parseHex(); });
+  padHex.addEventListener('click', () => { primeAudio(); parseHex(); });
+  copyHex.addEventListener('click', () => { primeAudio(); copyText(hex.value.trim()); });
+
+  applyB4.addEventListener('click', () => { primeAudio(); parseB4(); });
+  copyB4.addEventListener('click', () => { primeAudio(); copyText(base4.value.trim()); });
+
+  c0.addEventListener('input', () => { primeAudio(); applyPalette(); });
+  c1.addEventListener('input', () => { primeAudio(); applyPalette(); });
+  c2.addEventListener('input', () => { primeAudio(); applyPalette(); });
+  c3.addEventListener('input', () => { primeAudio(); applyPalette(); });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); primeAudio(); nextOne(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); primeAudio(); prevOne(); }
+  }, {passive:false});
+
+  // init
+  applyPalette();
+  syncInputs();
+  render();
+})();
+</script>
+</body>
+<body>
+
+<!-- HOME BUTTON -->
+<div style="
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+">
+  <a href="../index.html" style="
+    text-decoration: none;
+    background: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: black;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  ">
+    ← Home
+  </a>
+</div>
+
+<div class="wrap">
+</html>

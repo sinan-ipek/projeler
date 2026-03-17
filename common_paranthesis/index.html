@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ortak Çarpan Parantezi (a) – Adım Adım Etkileşim</title>
+<style>
+  :root{
+    --bg:#0b0c0f; --fg:#e7e9ee; --muted:#a7adba;
+    --card:#141822; --border:#232637; --accent:#4f8cff; --err:#ff6b6b;
+    --sep:#ffd166; /* + / − için sarı */
+  }
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  .wrap{max-width:1000px;margin:auto;padding:22px}
+  h1{font-size:20px;margin:0 0 10px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  input[type="text"]{flex:1;min-width:260px;background:transparent;border:1px solid var(--border);color:var(--fg);border-radius:12px;padding:10px 12px}
+  button{border:1px solid var(--border);background:#10131b;color:var(--fg);padding:10px 12px;border-radius:12px;cursor:pointer}
+  .muted{color:var(--muted);font-size:13px}
+  .stage{min-height:200px;padding:14px;border-radius:14px;border:1px dashed var(--border);position:relative;overflow:hidden}
+  .topFactors{min-height:34px;margin-bottom:8px;text-align:center}
+  .exprLine{min-height:48px}
+  .token{display:inline-block;margin:0 2px}
+  .dot{opacity:.95; display:inline-block; min-width:.6ch; text-align:center}
+  .sep{color:var(--sep); font-weight:700} /* + / − ayraçları */
+  .common{color:#ff5b5b;font-weight:800}
+  .big{font-size:20px}
+  .paren{display:inline-block;transform-origin:left center}
+  .paren.right{transform-origin:right center}
+  .hidden{display:none}
+  .center{text-align:center}
+  .error{color:#fff;background:#9b1c1c;border:1px solid #b52a2a;padding:8px 10px;border-radius:10px;margin-top:8px}
+  .stepBadge{font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:999px}
+  .animLayer{position:absolute; inset:0; pointer-events:none; overflow:visible; z-index:2}
+  .flying{position:absolute; will-change:transform,opacity}
+  .ghost{display:inline-block; visibility:hidden}
+  .expandable{cursor:pointer; position:relative}
+  .expandable::after{content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px; background:linear-gradient(90deg,var(--accent),transparent); opacity:.0; transition:opacity .2s}
+  .expandable:hover::after{opacity:.8}
+  .blocked{opacity:.55; cursor:not-allowed}
+  .term{display:inline-block}
+  /* Parantez önünde sabit boşluk; Step 7'de gereksiz oynamayı engeller */
+  .prefix{ display:inline-block; margin-right:10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Ortak Çarpan Parantezi (a) – Adım Adım Etkileşim</h1>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="row">
+      <input id="inp" type="text" placeholder="Örn: 6x+2y  |  6x^2+3x^3  |  2xyz-xyz">
+      <button id="btnDemo1" type="button">Örnek 1</button>
+      <button id="btnDemo2" type="button">Örnek 2</button>
+      <button id="btnDemo3" type="button">Örnek 3</button>
+      <button id="btnBuild" type="button">Adımları Hazırla</button>
+    </div>
+    <div class="muted">
+      <b>Adım 1:</b> Tek hamlede <b>6x→6·x</b> ve (varsa) <b>xy→x·y</b> ayrımları.<br/>
+      <b>Adım 2:</b> Sayıları aç (6 → 2·3).  <b>Adım 3:</b> Üsleri aç (x² → x·x).<br/>
+      Devamı: ortakları vurgula → yukarı çıkar → <u>parantez (yavaş kapanma)</u> → ortak öne iner → harfler kaynaşır (xx → x²) → noktalar sönükleşir.
+    </div>
+    <div id="err" class="error hidden"></div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:8px">
+      <div><span class="stepBadge" id="stepBadge">Adım 0/0</span></div>
+      <div class="row">
+        <button id="btnPrev" type="button">⟵ Geri</button>
+        <button id="btnNext" type="button">İleri ⟶</button>
+        <button id="btnPlay" type="button">Oynat ▶</button>
+        <button id="btnReset" type="button">Sıfırla</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage">
+      <div id="top" class="topFactors"></div>
+      <div id="line" class="exprLine big center"></div>
+      <div id="animLayer" class="animLayer"></div>
+    </div>
+
+    <div class="muted" style="margin-top:8px" id="caption"></div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+/* ==== Süreler ==== */
+const DUR = { lift: 850, group: 800, parenOpen: 1100, insideGather: 950, fade: 450, split: 650, letters: 600, merge: 650 };
+
+/* ==== Yardımcılar ==== */
+const $=id=>document.getElementById(id);
+const stage=$("stage"), animLayer=$("animLayer");
+const supToCaret=s=>s.replace(/⁰/g,"^0").replace(/¹/g,"^1").replace(/²/g,"^2").replace(/³/g,"^3").replace(/⁴/g,"^4").replace(/⁵/g,"^5").replace(/⁶/g,"^6").replace(/⁷/g,"^7").replace(/⁸/g,"^8").replace(/⁹/g,"^9");
+const toSup=n=>String(n).replace(/0/g,"⁰").replace(/1/g,"¹").replace(/2/g,"²").replace(/3/g,"³").replace(/4/g,"⁴").replace(/5/g,"⁵").replace(/6/g,"⁶").replace(/7/g,"⁷").replace(/8/g,"⁸").replace(/9/g,"⁹");
+const normalize=s=>supToCaret(s).replace(/[…·*×]/g,"").replace(/−/g,"-").replace(/\s+/g,"");
+function err(msg){const e=$("err");e.textContent=msg;e.classList.remove("hidden");}
+function clearErr(){$("err").classList.add("hidden");}
+function sp(t,cls=""){const el=document.createElement("span");el.textContent=t;if(cls)el.className=cls;return el;}
+function dot(){return sp("·","dot token");}
+
+/* === Zorunlu çarpım noktası ekleyici === */
+function ensureMulDots(){
+  const line = $("line");
+  line.querySelectorAll(".term").forEach(term=>{
+    let lastTokenEl=null;
+    const kids = Array.from(term.childNodes);
+    for(let i=0;i<kids.length;i++){
+      const node = kids[i];
+      if(node.nodeType===1 && node.classList?.contains("token")){
+        const isDot = node.classList.contains("dot");
+        if(lastTokenEl && !lastTokenEl.classList.contains("dot") && !isDot){
+          let between=node.previousSibling, hasDot=false;
+          while(between && between!==lastTokenEl){
+            if(between.nodeType===1 && between.classList?.contains("dot")) { hasDot=true; break; }
+            between=between.previousSibling;
+          }
+          if(!hasDot){
+            const d=dot(); d.style.opacity="0"; term.insertBefore(d,node);
+            d.animate([{opacity:0},{opacity:1}],
+                      {duration:240,easing:"cubic-bezier(.2,.8,.2,1)",fill:"forwards"});
+          }
+        }
+        lastTokenEl = node;
+      }
+    }
+  });
+}
+
+/* ==== Ayrıştırma ==== */
+function parseExpression(input){
+  const s=normalize(input);
+  if(!s) throw new Error("İfade boş.");
+  if(/[^0-9a-zA-Z+\-^]/.test(s)) throw new Error("Sadece rakam, harf, +, -, ^ kullanılabilir.");
+  const pieces=s.match(/([+\-]?[^+\-]+)/g);
+  if(!pieces || pieces.length<2) throw new Error("En az iki terim + ya da − ile ayrılmalı.");
+  return pieces.map(parseTerm);
+}
+function parseTerm(t){
+  let rest=t, sign=1;
+  if(rest[0]=='-'){sign=-1;rest=rest.slice(1);} else if(rest[0]=='+'){rest=rest.slice(1);}
+  let coeff=1; const m=rest.match(/^\d+/); if(m){coeff=parseInt(m[0],10); rest=rest.slice(m[0].length);}
+  const vars={}; if(rest){const re=/([a-zA-Z])(\^(\d+))?/g; let k; while((k=re.exec(rest))!==null){const v=k[1]; const p=k[3]?parseInt(k[3],10):1; vars[v]=(vars[v]||0)+p;}}
+  const factors=[]; if(sign<0) factors.push("−1");
+  if(coeff!==1){let n=coeff; for(let p=2;p*p<=n;p++){while(n%p===0){factors.push(String(p)); n/=p;}} if(n>1) factors.push(String(n));}
+  Object.keys(vars).sort().forEach(v=>{for(let i=0;i<vars[v];i++) factors.push(v);});
+  if(!factors.length) factors.push("1");
+  return {raw:t, sign, coeff, vars, factors};
+}
+function multisetIntersection(list){
+  const count=a=>{const m=new Map(); for(const x of a){m.set(x,(m.get(x)||0)+1);} return m;};
+  const maps=list.map(count); const keys=Array.from(new Set(list.flat())); const out=new Map();
+  for(const k of keys){let mn=Infinity; for(const m of maps){mn=Math.min(mn,m.get(k)||0);} if(mn>0) out.set(k,mn);}
+  return out;
+}
+function divideByCommon(term, common){
+  const need=new Map(common); const rest=[];
+  for(const f of term.factors){const c=need.get(f)||0; if(c>0) need.set(f,c-1); else rest.push(f);}
+  let sign=1,num=1; const vars={};
+  for(const f of rest){ if(f==="−1"){sign*=-1;continue;} if(/^\d+$/.test(f)) num*=parseInt(f,10); else vars[f]=(vars[f]||0)+1; }
+  const varStr=Object.keys(vars).sort().map(v=>vars[v]===1?v:v+toSup(vars[v])).join("");
+  const coef=(num!==1 || !varStr)? String(num):""; const signStr=sign<0?"−":"";
+  return (signStr+coef+varStr)||"1";
+}
+function factorsToPretty(factors){
+  let sign=1,num=1; const vars={};
+  for(const f of factors){ if(f==="−1"){sign*=-1;continue;} if(/^\d+$/.test(f)) num*=parseInt(f,10); else vars[f]=(vars[f]||0)+1; }
+  const varStr=Object.keys(vars).sort().map(v=>vars[v]===1?v:v+toSup(vars[v])).join("");
+  const coef=(num!==1 || !varStr)? String(num):""; const signStr=sign<0?"−":"";
+  return (signStr+coef+varStr)||"1";
+}
+/* İşaretsiz yazım: sadece Adım 1’in ilk gösterimi için */
+function factorsToPrettyUnsigned(factors){
+  let num=1; const vars={};
+  for(const f of factors){ if(f==="−1") continue; if(/^\d+$/.test(f)) num*=parseInt(f,10); else vars[f]=(vars[f]||0)+1; }
+  const varStr=Object.keys(vars).sort().map(v=>vars[v]===1?v:v+toSup(vars[v])).join("");
+  const coef=(num!==1 || !varStr)? String(num):"";
+  return (coef+varStr)||"1";
+}
+function primeFactors(n){const out=[];let x=n;for(let p=2;p*p<=x;p++){while(x%p===0){out.push(String(p));x/=p;}} if(x>1) out.push(String(x));return out;}
+function canSplitNumber(n){return primeFactors(n).length>1;}
+
+/* ==== Satırı token olarak kur ==== */
+function buildLetterLine(parsed){
+  const line=$("line"); line.innerHTML="";
+  parsed.forEach((t,i)=>{
+    if(i>0) line.appendChild(sp(t.sign<0 ? " − " : " + ","token sep"));
+    if(i===0 && t.sign<0) line.appendChild(sp("−","token sep"));
+    const term=document.createElement("span"); term.className="term"; term.dataset.sep="0"; term.dataset.sepNum="0";
+    const n=Math.abs(t.coeff); if(n>1) term.appendChild(sp(String(n),"token numToken"));
+    Object.keys(t.vars).sort().forEach(v=>{
+      const p=t.vars[v];
+      term.appendChild(sp(p>1? (v+toSup(p)) : v,"token varChunk"));
+    });
+    if(term.childNodes.length===0) term.appendChild(sp("1","token"));
+    line.appendChild(term);
+  });
+}
+
+/* ==== 6x→6·x ve xy→x·y (tek hamle) ==== */
+async function separateNumVarInTerm(term){
+  if(!term || term.dataset.sepNum==="1") return false;
+  const num=term.querySelector(':scope > .numToken');
+  const firstVar=term.querySelector(':scope > .varChunk');
+  if(!num || !firstVar){ term.dataset.sepNum="1"; return false; }
+  if(firstVar.previousElementSibling && firstVar.previousElementSibling.classList.contains('dot')){
+    term.dataset.sepNum="1"; return false;
+  }
+  const pre=firstVar.getBoundingClientRect();
+  const d=dot(); d.style.opacity="0"; d.style.transform="scale(0.6)";
+  firstVar.before(d);
+  await new Promise(r=>requestAnimationFrame(r));
+  const post=firstVar.getBoundingClientRect();
+  const dx=pre.left-post.left, dy=pre.top-post.top;
+  const ease="cubic-bezier(.2,.8,.2,1)";
+  const move=firstVar.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:"translate(0,0)"}],
+                              {duration:DUR.letters, easing:ease, fill:"forwards"}).finished;
+  const fade=d.animate([{opacity:0, transform:"scale(0.6)"},{opacity:1, transform:"scale(1)"}],
+                       {duration:Math.max(280,DUR.letters*0.75), easing:ease, fill:"forwards"}).finished;
+  await Promise.all([move,fade]);
+  term.dataset.sepNum="1";
+  return true;
+}
+async function separateLettersInTerm(term){
+  if(!term || term.dataset.sep==="1") return false;
+  const vars=[...term.querySelectorAll(":scope > .varChunk")];
+  if(vars.length<2){ term.dataset.sep="1"; return false; }
+  const preRects=new Map(vars.map(v=>[v,v.getBoundingClientRect()]));
+  for(let i=vars.length-1;i>=1;i--){ const d=dot(); d.style.opacity="0"; d.style.transform="scale(0.6)"; vars[i].before(d); }
+  await new Promise(r=>requestAnimationFrame(r));
+  const ease="cubic-bezier(.2,.8,.2,1)";
+  const moves=vars.map(v=>{
+    const post=v.getBoundingClientRect(), pre=preRects.get(v);
+    const dx=pre.left-post.left, dy=pre.top-post.top;
+    return v.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:"translate(0,0)"}],
+                     {duration:DUR.letters,easing:ease,fill:"forwards"}).finished;
+  });
+  const dots=[...term.querySelectorAll(":scope > .dot")];
+  dots.forEach((d,i)=> d.animate([{opacity:0,transform:"scale(0.6)"},{opacity:1,transform:"scale(1)"}],
+                                 {duration:Math.max(240,DUR.letters*0.8),delay:i*40,easing:ease,fill:"forwards"}));
+  await Promise.all(moves);
+  term.dataset.sep="1";
+  return true;
+}
+
+/* ==== Adım 2/3 için işaretleme ==== */
+function markNumberExpandablesInPlace(){
+  const line=$("line");
+  [...line.querySelectorAll('.term > .numToken')].forEach(el=>{
+    const n=parseInt(el.textContent,10);
+    if(n>1 && canSplitNumber(n)){ el.classList.add("expandable"); el.dataset.kind="num"; el.dataset.value=String(n); }
+  });
+}
+function markPowerExpandablesInPlace(){
+  const vars=[...$("line").querySelectorAll('.term > .varChunk')];
+  vars.forEach(el=>{
+    const m=el.textContent.match(/^([a-zA-Z])(.+)$/);
+    if(m){
+      const letter=m[1], sup=m[2];
+      const p=supToCaret(sup).replace("^","");
+      const k=parseInt(p||"1",10);
+      if(k>1){ el.classList.add("expandable"); el.dataset.kind="var"; el.dataset.value=letter; el.dataset.pow=String(k); }
+    }
+  });
+}
+
+/* ==== Çarpanlara ayırma (içerden doğma) ==== */
+async function splitToken(token, allowKind){
+  if(!token || !token.classList.contains("expandable")) return false;
+  const kind=token.dataset.kind; if(allowKind && kind!==allowKind) return false;
+
+  let children=[];
+  if(kind==="num"){
+    const n=parseInt(token.dataset.value,10);
+    const pf=primeFactors(n); if(pf.length<=1){ token.classList.remove("expandable"); return false; }
+    children=pf;
+  }else if(kind==="var"){
+    const v=token.dataset.value; const p=parseInt(token.dataset.pow,10); if(p<=1) return false;
+    children=Array.from({length:p}, ()=>v);
+  }else return false;
+
+  const parentRect=token.getBoundingClientRect();
+  const cx=parentRect.left+parentRect.width/2, cy=parentRect.top+parentRect.height/2;
+
+  const frag=document.createDocumentFragment();
+  const childEls=[], dotEls=[];
+  children.forEach((txt,i)=>{
+    const s=sp(txt,"token"); s.style.display="inline-block"; s.style.visibility="hidden";
+    frag.appendChild(s); childEls.push(s);
+    if(i<children.length-1){ const d=dot(); d.style.display="inline-block"; d.style.visibility="hidden"; frag.appendChild(d); dotEls.push(d); }
+  });
+  token.replaceWith(frag);
+
+  const all=[...childEls,...dotEls];
+  all.forEach(el=>{
+    const r=el.getBoundingClientRect();
+    const tx=cx-(r.left+r.width/2), ty=cy-(r.top+r.height/2);
+    el.style.visibility="visible";
+    el.style.transform=`translate(${tx}px,${ty}px) scale(${el.classList.contains("dot")?0.6:0.92})`;
+    el.style.opacity="0"; el.style.willChange="transform,opacity";
+  });
+  await new Promise(r=>requestAnimationFrame(r));
+  const ease="cubic-bezier(.2,.8,.2,1)";
+  const a1=childEls.map(el=> el.animate(
+      [{transform:el.style.transform,opacity:0},
+       {transform:"translate(0,0) scale(1)",opacity:1}],
+      {duration:DUR.split,easing:ease,fill:"forwards"}).finished);
+  const a2=dotEls.map(el=> el.animate(
+      [{transform:el.style.transform,opacity:0},
+       {transform:"translate(0,0) scale(1)",opacity:1}],
+      {duration:Math.max(240,DUR.split*0.85),easing:ease,fill:"forwards"}).finished);
+  await Promise.all([...a1,...a2]);
+
+  // zincirleme açılmalar için tekrar işaretle
+  childEls.forEach(el=>{
+    const t=el.textContent;
+    if(/^\d+$/.test(t)){ const n=parseInt(t,10); if(canSplitNumber(n)){ el.classList.add("expandable"); el.dataset.kind="num"; el.dataset.value=String(n); } }
+  });
+
+  // her split sonrasında noktaları doğrula
+  ensureMulDots();
+  return true;
+}
+
+/* ==== Ortak, parantez, kaynaştırma ==== */
+function renderFactorRow(container,factors,markMap=null,appendOne=false){
+  const row=document.createElement("span");
+  const marks=markMap?new Map(markMap):null;
+  factors.forEach((f,i)=>{
+    const mark=marks&&(marks.get(f)||0)>0;
+    row.appendChild(sp(f,"token"+(mark?" common":"")));
+    if(mark){ marks.set(f,marks.get(f)-1); }
+    if(i<factors.length-1) row.appendChild(dot());
+  });
+  if(appendOne){ row.appendChild(dot()); row.appendChild(sp("1","token")); }
+  container.appendChild(row);
+}
+const toSupUI=n=>String(n).replace(/0/g,"⁰").replace(/1/g,"¹").replace(/2/g,"²").replace(/3/g,"³").replace(/4/g,"⁴").replace(/5/g,"⁵").replace(/6/g,"⁶").replace(/7/g,"⁷").replace(/8/g,"⁸").replace(/9/g,"⁹");
+function classifyToken(t){
+  if(t.classList.contains('dot')) return {type:'dot',value:'·',node:t};
+  const tx=t.textContent;
+  if(/^\d+$/.test(tx)) return {type:'num',value:tx,node:t};
+  if(/^[a-zA-Z]$/.test(tx)) return {type:'var',value:tx,node:t};
+  return {type:'other',value:tx,node:t};
+}
+function findVarRun(holder){
+  const tokens=[...holder.querySelectorAll(':scope > .token')];
+  for(let i=0;i<tokens.length;i++){
+    const a=classifyToken(tokens[i]); if(a.type!=='var') continue;
+    let vars=[a.node], dots=[]; let j=i+1;
+    while(j<tokens.length){
+      const d=classifyToken(tokens[j]); if(d.type!=='dot') break;
+      const v=classifyToken(tokens[j+1]||{}); if(v.type!=='var'||v.value!==a.value) break;
+      dots.push(d.node); vars.push(v.node); j+=2;
+    }
+    if(vars.length>=2) return {letter:a.value, vars, dots};
+  }
+  return null;
+}
+async function animateVarRunMerge(holder,run){
+  const stageRect=stage.getBoundingClientRect();
+  const varRects=run.vars.map(n=>n.getBoundingClientRect());
+  const clones=run.vars.map((n,i)=>{
+    const c=sp(n.textContent,'token flying common');
+    c.style.left=(varRects[i].left-stageRect.left)+"px";
+    c.style.top =(varRects[i].top -stageRect.top )+"px";
+    animLayer.appendChild(c);
+    n.style.opacity=0; return c;
+  });
+  await Promise.all(run.dots.map((d,i)=>
+    d.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(0.7)'}],
+      {duration:240+60*i,easing:'ease-in',fill:'forwards'}).finished
+  ));
+  run.dots.forEach(d=>d.remove());
+  const k=run.vars.length;
+  const newTok=sp(run.letter+toSupUI(k),'token common');
+  newTok.style.opacity=0; newTok.style.transform='scale(0.85)';
+  run.vars[0].replaceWith(newTok);
+  for(let i=1;i<run.vars.length;i++) run.vars[i].remove();
+  await new Promise(r=>requestAnimationFrame(r));
+  const targetRect=newTok.getBoundingClientRect();
+  const tcx=targetRect.left+targetRect.width/2, tcy=targetRect.top+targetRect.height/2;
+  const promises=clones.map(c=>{
+    const cr=c.getBoundingClientRect();
+    const ccx=cr.left+cr.width/2, ccy=cr.top+cr.height/2;
+    const dx=tcx-ccx, dy=tcy-ccy;
+    return c.animate(
+      [{transform:'translate(0,0) scale(1)'},
+       {transform:`translate(${dx*0.9}px,${dy*0.9}px) scale(1.05)`,offset:.75,easing:'cubic-bezier(.2,.8,.2,1)'},
+       {transform:`translate(${dx}px,${dy}px) scale(0.7)`,opacity:0}],
+      {duration:DUR.merge,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'}
+    ).finished;
+  });
+  const appear=newTok.animate(
+    [{opacity:0,transform:'scale(0.85)'},{opacity:1,transform:'scale(1)'}],
+    {duration:Math.max(260,DUR.merge*0.55),easing:'ease-out',delay:DUR.merge*0.45,fill:"forwards"}
+  ).finished;
+  await Promise.all([...promises,appear]);
+  clones.forEach(c=>c.remove());
+}
+
+/* ==== Adım akışı ==== */
+let currentExpandMode=null;
+function buildSteps(parsed){
+  const top=$("top");
+  const common=multisetIntersection(parsed.map(t=>t.factors));
+
+  // ADIM 1
+  let clickBound=false;
+  const s1={
+    caption:"Adım 1 — 6x→6·x ve xy→x·y ayrımları tek hamlede.",
+    make(){
+      top.innerHTML="";
+      // Başlangıç satırı: işaret ayraçta, terimler işaretsiz yazılır
+      const lineEl=$("line"); lineEl.innerHTML="";
+      parsed.forEach((t,i)=>{
+        if(i>0) lineEl.appendChild(sp(t.sign<0 ? " − " : " + ","token sep"));
+        if(i===0 && t.sign<0) lineEl.appendChild(sp("−","token sep"));
+        lineEl.appendChild(sp(factorsToPrettyUnsigned(t.factors),"token"));
+      });
+      // Tıklamayla tek tek ayırma (İleri basmadan)
+      if(!clickBound){
+        $("line").addEventListener("click",async (e)=>{
+          const term=e.target.closest(".term"); if(!term) return;
+          await separateNumVarInTerm(term); await separateLettersInTerm(term); ensureMulDots();
+        });
+        clickBound=true;
+      }
+    },
+    async onNext(){
+      buildLetterLine(parsed);
+      await new Promise(r=>requestAnimationFrame(r));
+      const terms=[...$("line").querySelectorAll(".term")];
+      await Promise.all(terms.map(t=>separateNumVarInTerm(t)));
+      await Promise.all(terms.map(t=>separateLettersInTerm(t)));
+      ensureMulDots();
+      return true;
+    }
+  };
+
+  // ADIM 2
+  let splitClickBound=false;
+  const s2={caption:"Adım 2 — Sayıları aç (6 → 2·3).", make(){
+    currentExpandMode="num";
+    markNumberExpandablesInPlace();
+    $("line").querySelectorAll('.expandable[data-kind="var"]').forEach(el=>el.classList.add("blocked"));
+    if(!splitClickBound){
+      $("line").addEventListener("click", async (ev)=>{
+        const t=ev.target.closest(".expandable"); if(!t) return;
+        await splitToken(t,currentExpandMode); // split sonunda ensureMulDots çağrılıyor
+      });
+      splitClickBound=true;
+    }
+  }, async onNext(){
+    const line=$("line");
+    const nums=[...line.querySelectorAll('.expandable[data-kind="num"]')]
+      .filter(el=>{
+        const n=parseInt(el.dataset.value,10);
+        if(!Number.isFinite(n)||n<=1) return false;
+        const pf=(function(x){const out=[];let y=x;for(let p=2;p*p<=y;p++){while(y%p===0){out.push(String(p));y/=p;}} if(y>1) out.push(String(y));return out;})(n);
+        return pf.length>1;
+      });
+    if(nums.length===0){ ensureMulDots(); return true; }
+    await Promise.all(nums.map(el=>splitToken(el,"num")));
+    ensureMulDots();
+    return true;
+  }};
+
+  // ADIM 3
+  const s3={caption:"Adım 3 — Üsleri aç (x² → x·x).", make(){
+    currentExpandMode="var";
+    markPowerExpandablesInPlace();
+    $("line").querySelectorAll('.expandable[data-kind="num"]').forEach(el=>el.classList.add("blocked"));
+    $("line").querySelectorAll('.expandable[data-kind="var"]').forEach(el=>el.classList.remove("blocked"));
+    ensureMulDots();
+  }, async onNext(){
+    const vars=[...$("line").querySelectorAll('.expandable[data-kind="var"]')];
+    if(vars.length===0){ ensureMulDots(); return true; }
+    await Promise.all(vars.map(el=>splitToken(el,"var")));
+    ensureMulDots();
+    return true;
+  }};
+
+  // ADIM 4
+  const s4={caption:"Ortak çarpan(lar) kırmızı-kalın vurgulanır. Tam ortak terimde sonda ·1 gösterilir.", make(){
+    currentExpandMode=null; top.innerHTML=""; const line=$("line"); line.innerHTML="";
+    parsed.forEach((t,i)=>{
+      if(i>0) line.appendChild(sp(" + ","token sep"));
+      const rem=divideByCommon(t,common);
+      const appendOne=(rem==="1");
+      renderFactorRow(line,t.factors,common,appendOne);
+    });
+  }};
+
+  // ADIM 5
+  const s5={caption:"Ortak çarpanlar yukarı çıkar ve birleşir.", async make(){
+    s4.make();
+    top.innerHTML="";
+    const group=document.createElement("span"); group.id="mergedGroup"; group.className="big"; top.appendChild(group);
+
+    const slotsByFactor=new Map();
+    common.forEach((cnt,f)=>{
+      const arr=[];
+      for(let i=0;i<cnt;i++){
+        const slot=sp(f,"token common"); slot.style.opacity="0";
+        group.appendChild(slot); if(i<cnt-1) group.appendChild(dot());
+        arr.push(slot);
+      }
+      slotsByFactor.set(f,arr);
+      group.appendChild(document.createTextNode(" "));
+    });
+
+    const commons=[...$("line").querySelectorAll(".common")];
+    const stageRect=$("stage").getBoundingClientRect();
+    const byFactor=new Map();
+    for(const el of commons){ const k=el.textContent; if(!byFactor.has(k)) byFactor.set(k,[]); byFactor.get(k).push(el); }
+
+    const jobs=[];
+    byFactor.forEach((els,f)=>{
+      const slots=slotsByFactor.get(f)||[];
+      els.forEach((el,j)=>{
+        const target=slots[Math.min(j,slots.length-1)];
+        const from=el.getBoundingClientRect(), to=target.getBoundingClientRect();
+        const fly=sp(f,"token common flying");
+        fly.style.left=(from.left-stageRect.left)+"px"; fly.style.top=(from.top-stageRect.top)+"px";
+        animLayer.appendChild(fly);
+        el.style.opacity=".18";
+        const dx=(to.left-from.left), dy=(to.top-from.top);
+        const anim = fly.animate(
+          [{transform:"translate(0,0)"},
+           {transform:"translate(0,6px) scale(0.98)", offset:.12, easing:"cubic-bezier(.45,0,.55,1)"},
+           {transform:`translate(${dx}px,${dy}px)`}],
+          {duration:DUR.lift, delay:j*110, easing:"cubic-bezier(.2,.8,.2,1)", fill:"forwards"}
+        );
+        const fadeIn=target.animate([{opacity:0},{opacity:1}],
+          {duration:380,delay:j*110+DUR.lift*0.55,fill:"forwards",easing:"ease-out"});
+        const onFinish=anim.finished.then(()=>{
+          if(j>=slots.length){
+            target.animate([{transform:"scale(1)"},{transform:"scale(1.06)"},{transform:"scale(1)"}],
+                           {duration:300,easing:"ease-out"});
+            fly.animate([{opacity:1,transform:`translate(${dx}px,${dy}px) scale(1)`},
+                         {opacity:0,transform:`translate(${dx}px,${dy}px) scale(0.7)`}],
+                        {duration:260,easing:"ease-in",fill:"forwards"}).finished.then(()=>fly.remove());
+          }else{ fly.remove(); }
+        });
+        jobs.push(Promise.all([fadeIn.finished,onFinish]));
+      });
+    });
+    await Promise.all(jobs);
+  }};
+
+  // ADIM 6
+  const s6={caption:"Kalan terimler paranteze alınır (parantezler yavaşça yaklaşır; içerisi toparlanır).", async make(){
+    ensureMergedGroup(common);
+    const remainders=parsed.map(t=>divideByCommon(t,common));
+
+    const L=sp("(","paren"), R=sp(")","paren right"), inner=sp("","big");
+    const line=$("line"); line.innerHTML=""; line.appendChild(L); line.appendChild(inner); line.appendChild(R);
+
+    // Parantez içini token’larla (sarı +/−) oluştur
+    inner.innerHTML="";
+    remainders.forEach((r,i)=>{
+      const neg=r.startsWith("−")||r.startsWith("-");
+      const core=neg?r.slice(1):r;
+      if(i===0){
+        if(neg) inner.appendChild(sp("−","token sep"));
+      }else{
+        inner.appendChild(sp(neg?" − ":" + ","token sep"));
+      }
+      inner.appendChild(sp(core,"token"));
+    });
+
+    const ease="cubic-bezier(.2,.8,.2,1)";
+    L.style.opacity="0"; L.style.transform="translateX(-36px) scale(0.9,0.85)";
+    R.style.opacity="0"; R.style.transform="translateX(36px) scale(0.9,0.85)";
+    inner.style.letterSpacing="0.28em"; inner.style.filter="blur(1.2px)"; inner.style.opacity="0.85"; inner.style.transform="scale(1.04)";
+    await new Promise(r=>requestAnimationFrame(r));
+    const aL=L.animate([{opacity:0,transform:"translateX(-36px) scale(0.9,0.85)"},{opacity:1,transform:"translateX(0px) scale(1,1)"}],{duration:DUR.parenOpen,easing:ease,fill:"forwards"}).finished;
+    const aR=R.animate([{opacity:0,transform:"translateX(36px) scale(0.9,0.85)"},{opacity:1,transform:"translateX(0px) scale(1,1)"}],{duration:DUR.parenOpen,easing:ease,fill:"forwards"}).finished;
+    const aT=inner.animate([{letterSpacing:"0.28em",filter:"blur(1.2px)",opacity:.85,transform:"scale(1.04)"},{letterSpacing:"0em",filter:"blur(0px)",opacity:1,transform:"scale(1)"}],{duration:DUR.insideGather,easing:ease,fill:"forwards",delay:80}).finished;
+    await Promise.all([aL,aR,aT]);
+  }};
+
+  // ADIM 7
+  const s7={caption:"Ortak çarpan yukarıdan, parantezin önüne iner.", async make(){
+    const line=$("line"); const group=$("mergedGroup"); if(!group) return;
+    const fromRect=group.getBoundingClientRect(); const stageRect=stage.getBoundingClientRect();
+    const preSlot=document.createElement("span"); preSlot.id="preSlot"; preSlot.style.display="inline-block"; preSlot.style.verticalAlign="baseline";
+    preSlot.style.width=fromRect.width+"px"; preSlot.style.height=fromRect.height+"px"; line.prepend(preSlot);
+    const toRect=preSlot.getBoundingClientRect();
+    const ghost=document.createElement("span"); ghost.className="ghost"; ghost.style.width=fromRect.width+"px"; ghost.style.height=fromRect.height+"px"; group.replaceWith(ghost);
+    group.classList.add("flying"); group.style.left=(fromRect.left-stageRect.left)+"px"; group.style.top=(fromRect.top-stageRect.top)+"px"; animLayer.appendChild(group);
+    const dx=(toRect.left-fromRect.left), dy=(toRect.top-fromRect.top);
+    await group.animate([{transform:"translate(0,0)"},
+                         {transform:"translate(8px,0) scale(0.995)",offset:.1,easing:"cubic-bezier(.4,0,.6,1)"},
+                         {transform:`translate(${dx}px,${dy}px)`}],
+                        {duration:DUR.group,easing:"cubic-bezier(.2,.8,.2,1)",fill:"forwards"}).finished;
+
+    // SABİT yerleşim: ekstra boşluk token'ı eklemiyoruz; CSS ile sabit boşluk
+    const holder=document.createElement("span");
+    holder.id="prefixHolder";
+    holder.className="prefix";
+    while(group.firstChild) holder.appendChild(group.firstChild);
+    preSlot.replaceWith(holder);
+
+    group.remove(); ghost.remove();
+  }};
+
+  // ADIM 8
+  const s8={caption:"Harfler kaynaşır (xx → x²). Noktalar sönükleşir.", async make(){
+    const holder=$("prefixHolder");
+    if(holder){
+      let run; 
+      while((run=findVarRun(holder))){
+        await animateVarRunMerge(holder,run);
+        await new Promise(r=>setTimeout(r,120));
+      }
+      [...holder.querySelectorAll(".dot")].forEach((d,i)=>
+        d.animate([{opacity:1},{opacity:.08}],
+                  {duration:DUR.fade,delay:i*20,fill:"forwards",easing:"ease-out"}));
+      [...holder.querySelectorAll(".token")].forEach(t=> t.classList.add("common"));
+      // holder.innerHTML yeniden yazılmıyor → reflow yok
+    }
+  }};
+
+  const s9={caption:"Bitti.", make(){}};
+
+  return [s1,s2,s3,s4,s5,s6,s7,s8,s9];
+
+  function ensureMergedGroup(commonMap){
+    let group=$("mergedGroup"); if(group) return group;
+    const merged=[]; commonMap.forEach((c,f)=>{ for(let i=0;i<c;i++) merged.push(f); });
+    const top=$("top"); top.innerHTML="";
+    group=document.createElement("span"); group.id="mergedGroup"; group.className="big";
+    merged.forEach((f,i)=>{ group.appendChild(sp(f,"token common")); if(i<merged.length-1) group.appendChild(dot()); });
+    top.appendChild(group);
+    return group;
+  }
+}
+
+/* ==== UI ==== */
+const stepBadge=$("stepBadge"), caption=$("caption");
+const btnPrev=$("btnPrev"), btnNext=$("btnNext"), btnPlay=$("btnPlay"), btnReset=$("btnReset");
+let steps=[], idx=0, auto=null;
+
+function setSteps(arr){ steps=arr; idx=0; updateStep(); }
+async function updateStep(){
+  if(!steps.length){ stepBadge.textContent="Adım 0/0"; caption.textContent=""; return; }
+  $("animLayer").innerHTML="";
+  const res=steps[idx].make(); if(res && typeof res.then==="function"){ await res; }
+  stepBadge.textContent=`Adım ${idx+1}/${steps.length}`;
+  caption.textContent=steps[idx].caption;
+}
+btnPrev.onclick=()=>{ if(idx>0){ idx--; updateStep(); } };
+btnNext.onclick=async ()=>{
+  if(!steps.length) return;
+  const cur=steps[idx];
+  if(cur.onNext){ const ok=await cur.onNext(); if(!ok) return; }
+  if(idx<steps.length-1){ idx++; await updateStep(); }
+};
+btnPlay.onclick=async ()=>{
+  if(auto){ clearInterval(auto); auto=null; btnPlay.textContent="Oynat ▶"; return; }
+  btnPlay.textContent="Durdur ⏸";
+  auto=setInterval(async ()=>{
+    if(steps[idx]?.onNext){ const ok=await steps[idx].onNext(); if(!ok) return; }
+    if(idx<steps.length-1){ idx++; await updateStep(); }
+    else { clearInterval(auto); auto=null; btnPlay.textContent="Oynat ▶"; }
+  }, 1200);
+};
+btnReset.onclick=()=>{ if(steps.length){ idx=0; updateStep(); } };
+
+function run(input){
+  try{ clearErr(); const parsed=parseExpression(input); setSteps(buildSteps(parsed)); }
+  catch(e){ err(e.message); }
+}
+
+/* ==== Butonlar & açılış ==== */
+$("btnBuild").onclick = ()=> run($("inp").value);
+$("btnDemo1").onclick = ()=>{ $("inp").value="6x+2y"; run("6x+2y"); };
+$("btnDemo2").onclick = ()=>{ $("inp").value="6x^2+3x^3"; run("6x^2+3x^3"); };
+$("btnDemo3").onclick = ()=>{ $("inp").value="2xyz-xyz"; run("2xyz-xyz"); };
+
+$("inp").value="6x+2y"; run("6x+2y");
+
+window.addEventListener("keydown",(e)=>{
+  if(e.ctrlKey && e.key==="Enter"){ e.preventDefault(); btnNext.click(); }
+  if(e.shiftKey && e.key==="Enter"){ e.preventDefault(); btnPrev.click(); }
+});
+});
+</script>
+</body>
+</html>

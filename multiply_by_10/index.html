@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Virgül ve Sıfır Silme Animasyonu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Comic Neue', cursive;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #d0e6f6, #fddede);
+      margin: 0;
+    }
+
+    #inputField {
+      font-size: 26px;
+      padding: 12px;
+      border: 3px solid #444;
+      border-radius: 14px;
+      text-align: center;
+      margin-bottom: 24px;
+      width: 240px;
+      background-color: #fffdfd;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .number-container {
+      background-color: #ffffff;
+      padding: 24px 48px;
+      border-radius: 20px;
+      font-size: 52px;
+      font-weight: bold;
+      color: #222;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      min-width: 200px;
+    }
+
+    .digit, .comma, .zero {
+      display: inline-block;
+      position: relative;
+    }
+
+    .comma.animate-right {
+      transition: transform 1s ease-in-out;
+      transform: translateX(30px);
+    }
+
+    .comma.animate-left {
+      transition: transform 1s ease-in-out;
+      transform: translateX(-30px);
+    }
+
+    .comma.fade-in {
+      opacity: 0;
+      animation: fadeIn 1s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    .scale-fade-in {
+      transform: scale(0.5);
+      opacity: 0;
+      animation: scaleFadeIn 0.5s ease-out forwards;
+    }
+
+    @keyframes scaleFadeIn {
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .fade-out {
+      opacity: 1;
+      animation: fadeOut 0.5s ease forwards;
+      transform: scale(1);
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: scale(0.5);
+      }
+    }
+
+    .strike {
+      position: absolute;
+      width: 120%;
+      height: 3px;
+      background: red;
+      top: 60%;
+      left: 0;
+      transform: translateX(10%) rotate(-45deg) scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s ease-in-out;
+    }
+
+    .strike.active {
+      transform: translateX(10%) rotate(-45deg) scaleX(1);
+    }
+
+    .controls {
+      display: flex;
+      gap: 20px;
+      margin-top: 36px;
+    }
+
+    .controls button {
+      font-size: 20px;
+      padding: 12px 28px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(to bottom, #ffda77, #f4a261);
+      color: #000;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .controls button:hover {
+      transform: scale(1.08);
+    }
+
+    .controls button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+<body>
+
+<!-- HOME BUTTON -->
+<div style="
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+">
+  <a href="../index.html" style="
+    text-decoration: none;
+    background: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: black;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  ">
+    ← Home
+  </a>
+</div>
+
+<div class="wrap">
+
+  <input type="text" id="inputField" placeholder="Buraya sayı girin" />
+  <div class="number-container" id="numberDisplay"></div>
+  <div class="controls">
+    <button id="btnMultiply" onclick="handleClick('multiply')">10 ile Çarp</button>
+    <button id="btnDivide" onclick="handleClick('divide')">10'a Böl</button>
+  </div>
+
+  <script>
+    const input = document.getElementById("inputField");
+    const display = document.getElementById("numberDisplay");
+    const btnMultiply = document.getElementById("btnMultiply");
+    const btnDivide = document.getElementById("btnDivide");
+
+    input.addEventListener("change", async () => {
+      const value = input.value;
+      if (/^0+\d/.test(value)) {
+        disableButtons();
+        renderNumber(value);
+        await new Promise(r => setTimeout(r, 300));
+        const match = value.match(/^0+(?=\d)/);
+        if (match) {
+          const zeros = display.querySelectorAll(".zero");
+          for (let i = 0; i < match[0].length; i++) {
+            const strike = document.createElement("div");
+            strike.className = "strike";
+            zeros[i]?.appendChild(strike);
+            await new Promise(r => setTimeout(r, 50));
+            strike.classList.add("active");
+            await new Promise(r => setTimeout(r, 300));
+            zeros[i]?.classList.add("fade-out");
+          }
+          await new Promise(r => setTimeout(r, 500));
+          input.value = value.replace(/^0+(?=\d)/, '');
+          renderNumber(input.value);
+        }
+        enableButtons();
+      } else {
+        renderNumber(value);
+      }
+    });
+
+    function renderNumber(value, revealComma = false, fadeInZeroIndex = -1) {
+      display.innerHTML = "";
+      if (!value.includes(",")) {
+        for (let i = 0; i < value.length; i++) {
+          const span = document.createElement("span");
+          if (value[i] === "0") {
+            span.className = "zero" + (i === fadeInZeroIndex ? " scale-fade-in" : "");
+          } else {
+            span.className = "digit";
+          }
+          span.textContent = value[i];
+          display.appendChild(span);
+        }
+        return;
+      }
+      const [whole, decimal] = value.split(",");
+      for (let i = 0; i < whole.length; i++) {
+        const span = document.createElement("span");
+        if (whole[i] === "0") {
+          span.className = "zero" + (i === fadeInZeroIndex ? " scale-fade-in" : "");
+        } else {
+          span.className = "digit";
+        }
+        span.textContent = whole[i];
+        display.appendChild(span);
+      }
+      const spanComma = document.createElement("span");
+      spanComma.className = "comma" + (revealComma ? " fade-in" : "");
+      spanComma.id = "comma";
+      spanComma.textContent = ",";
+      display.appendChild(spanComma);
+      for (let i = 0; i < decimal.length; i++) {
+        const span = document.createElement("span");
+        span.className = decimal[i] === "0" ? "zero" : "digit";
+        span.textContent = decimal[i];
+        display.appendChild(span);
+      }
+    }
+
+    function handleClick(type) {
+      disableButtons();
+      if (type === "multiply") {
+        multiplyByTen().then(enableButtons);
+      } else {
+        divideByTen().then(enableButtons);
+      }
+    }
+
+    function disableButtons() {
+      btnMultiply.disabled = true;
+      btnDivide.disabled = true;
+    }
+
+    function enableButtons() {
+      btnMultiply.disabled = false;
+      btnDivide.disabled = false;
+    }
+
+    async function multiplyByTen() {
+      let value = input.value;
+      if (!value.includes(",")) {
+        input.value = value + "0";
+        renderNumber(input.value, false, value.length); // Yeni sıfır animasyonlu
+        return;
+      }
+
+      const comma = document.getElementById("comma");
+      comma?.classList.add("animate-right");
+      await new Promise(r => setTimeout(r, 1100));
+
+      const [intPart, decPart = ""] = value.split(",");
+      let newValue;
+      if (decPart.length === 1) {
+        newValue = intPart + decPart;
+      } else {
+        newValue = intPart + decPart[0] + "," + decPart.slice(1);
+      }
+      input.value = newValue;
+      renderNumber(newValue);
+
+      await new Promise(r => setTimeout(r, 300));
+      const match = input.value.match(/^0+(?=\d)/);
+      if (match) {
+        const zeros = display.querySelectorAll(".zero");
+        for (let i = 0; i < match[0].length; i++) {
+          const strike = document.createElement("div");
+          strike.className = "strike";
+          zeros[i]?.appendChild(strike);
+          await new Promise(r => setTimeout(r, 50));
+          strike.classList.add("active");
+          await new Promise(r => setTimeout(r, 300));
+          zeros[i]?.classList.add("fade-out");
+        }
+        await new Promise(r => setTimeout(r, 500));
+        input.value = input.value.replace(/^0+(?=\d)/, '');
+        renderNumber(input.value);
+      }
+    }
+
+    async function divideByTen() {
+      let value = input.value;
+      if (!value.includes(",") && value.endsWith("0")) {
+        renderNumber(value);
+        await new Promise(r => setTimeout(r, 100));
+        const digits = Array.from(display.children);
+        for (let i = digits.length - 1; i >= 0; i--) {
+          if (digits[i].textContent === "0" && digits[i].classList.contains("zero")) {
+            const strike = document.createElement("div");
+            strike.className = "strike";
+            digits[i].appendChild(strike);
+            await new Promise(r => setTimeout(r, 50));
+            strike.classList.add("active");
+            await new Promise(r => setTimeout(r, 300));
+            digits[i].classList.add("fade-out");
+            await new Promise(r => setTimeout(r, 500));
+            input.value = value.slice(0, -1);
+            renderNumber(input.value);
+            return;
+          }
+        }
+      }
+
+      if (!input.value.includes(",")) {
+        let current = input.value;
+        renderNumber(current + ",", true);
+        await new Promise(r => setTimeout(r, 800));
+        const comma = document.getElementById("comma");
+        comma?.classList.add("animate-left");
+        await new Promise(r => setTimeout(r, 1100));
+
+        const [intPart, _] = (current + ",").split(",");
+        if (intPart.length === 1) {
+          input.value = "0," + intPart;
+        } else {
+          const moved = intPart.slice(0, -1);
+          const last = intPart.slice(-1);
+          input.value = moved + "," + last;
+        }
+        renderNumber(input.value, false, 0); // Yeni baştaki sıfır için animasyon
+        return;
+      }
+
+      const comma = document.getElementById("comma");
+      comma?.classList.add("animate-left");
+      await new Promise(r => setTimeout(r, 1100));
+
+      const [intPart, decPart = ""] = input.value.split(",");
+      if (intPart.length === 1) {
+        input.value = "0," + intPart + decPart;
+        renderNumber(input.value, false, 0); // Yeni baştaki sıfır
+      } else {
+        const moved = intPart.slice(0, -1);
+        const last = intPart.slice(-1);
+        input.value = moved + "," + last + decPart;
+        renderNumber(input.value);
+      }
+    }
+  </script>
+
+</body>
+</html>

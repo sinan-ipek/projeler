@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Rasyonel İfadelerin Sadeleştirilmesi</title>
+<style>
+  :root{
+    --ink:#111827; --red:#ef4444;
+    --cream:#f7f1e3; --btn:#eef0f3; --btn-border:#d6dae0;
+    --t-in:cubic-bezier(0.4,0,1,1);     /* ease-in */
+    --t-out:cubic-bezier(0,0,0.2,1);    /* ease-out */
+    --dur:.28s;
+    --dur-move:.6s;                     /* kayma süresi */
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--cream);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+  .wrap{max-width:1100px;margin:24px auto;padding:0 12px}
+  header{display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+  h1{margin:0;font-size:clamp(22px,3.4vw,32px)}
+
+  .examples{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 10px;justify-content:center}
+  .btn{appearance:none;background:var(--btn);color:#111;border:1px solid var(--btn-border);
+    padding:10px 12px;border-radius:12px;cursor:pointer;transition:transform .06s,box-shadow .15s;font-weight:600;line-height:1}
+  .btn:hover{box-shadow:0 1px 0 rgba(0,0,0,.05),0 6px 14px rgba(0,0,0,.08)}
+  .btn:active{transform:translateY(1px)}
+  .btn .mexpr{display:inline-block;font-family:"Cambria Math","STIX Two Math","Times New Roman",Times,serif}
+  .btn .mfrac{display:inline-grid;grid-template-rows:auto 1px auto;align-items:center;gap:4px}
+  .btn .mrow{display:inline-flex;align-items:baseline;gap:.35em;white-space:nowrap}
+  .btn .mt{display:inline-block}.btn .mt i{font-style:normal}
+  .btn .mbar{height:1px;background:#111;width:100%}
+  .btn sup{font-size:.75em;line-height:0;margin-left:1px;vertical-align:super}
+
+  .stage{min-height:60vh;display:flex;align-items:center;justify-content:center}
+  .frac{display:inline-block;padding:6px;background:transparent;
+    font-family:"Cambria Math","STIX Two Math","Times New Roman",Times,serif;color:#111;
+    font-size:clamp(28px,6.2vw,48px);text-align:center}
+  .num,.den{display:block;width:max-content;margin:0 auto}
+  .tokens{display:inline}
+
+  .token{position:relative;padding:0;cursor:pointer;font-weight:500;opacity:0;transform:scale(.86);
+    transition:opacity var(--dur) var(--t-in),transform var(--dur) var(--t-in), box-shadow .18s var(--t-out), outline-color .18s var(--t-out)}
+  .token.show{opacity:1;transform:scale(1)}
+  .token[data-kind="var"],.token[data-kind="pow"]{font-style:italic}
+
+  /* İMLEÇ VURGUSU → İnce kutu + hafif gölge */
+  .token:hover{
+    text-decoration:none;
+    outline:1.5px solid rgba(25,25,200,.2);   /* ince kutu */
+    outline-offset:2px;
+    border-radius:4px;
+    box-shadow:0 0px 0px rgba(17,24,39,.16); /* hafif gölge */
+  }
+
+  sup{font-size:.65em;line-height:0}
+
+  .dot{display:inline-block;padding:0 .12em;transition:opacity .22s var(--t-out)}
+  .dot.fade{opacity:0}
+
+  .bar{display:block;height:2px;background:#111827;margin:10px 0;width:60px;opacity:0;transform:scaleX(0.2);
+    transform-origin:center;transition:opacity .22s var(--t-in),transform .22s var(--t-in),width .22s var(--t-out)}
+  .bar.on{opacity:1;transform:scaleX(1)}
+
+  /* ÇAPRAZ ve daha KALIN silme çizgisi */
+  .strike{
+    position:absolute;
+    left:50%; top:50%;
+    width:130%; height:4px;
+    background:var(--red);
+    border-radius:3px;
+    transform:translate(-50%,-50%) rotate(-24deg) scaleX(0);
+    transform-origin:center;
+    transition:transform var(--dur) var(--t-in);
+    pointer-events:none;
+  }
+  .striking .strike{ transform:translate(-50%,-50%) rotate(-24deg) scaleX(1); }
+
+  .closing{transform:scale(.92);transition:transform .26s var(--t-out)}
+  .vanish{transition:opacity .26s var(--t-out) .22s;opacity:0}
+</style>
+</head>
+
+<style id="patch-no-italic">
+:where(.frac, .token, .token[data-kind="var"], .token[data-kind="pow"], .btn .mt i){
+  font-style: normal !important;
+}
+</style>
+
+<body>
+<body>
+
+<!-- HOME BUTTON -->
+<div style="
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+">
+  <a href="../index.html" style="
+    text-decoration: none;
+    background: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: black;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  ">
+    ← Home
+  </a>
+</div>
+
+<div class="wrap">
+
+<div class="wrap">
+  <header><h1>Rasyonel İfadelerin Sadeleştirilmesi</h1></header>
+
+  <div class="examples" id="exBtns" aria-label="Örnekler">
+    <button class="btn" data-ex="1"><span class="mexpr"><span class="mfrac">
+      <span class="mrow"><span class="mt">12</span><span class="mt"><i>a</i><sup>2</sup></span><span class="mt"><i>b</i></span></span>
+      <span class="mbar"></span>
+      <span class="mrow"><span class="mt">18</span><span class="mt"><i>a</i></span><span class="mt"><i>b</i><sup>3</sup></span></span>
+    </span></span></button>
+    <button class="btn" data-ex="2"><span class="mexpr"><span class="mfrac">
+      <span class="mrow"><span class="mt">8</span><span class="mt"><i>x</i><sup>3</sup></span><span class="mt"><i>y</i><sup>2</sup></span></span>
+      <span class="mbar"></span>
+      <span class="mrow"><span class="mt">20</span><span class="mt"><i>x</i></span><span class="mt"><i>y</i></span></span>
+    </span></span></button>
+    <button class="btn" data-ex="3"><span class="mexpr"><span class="mfrac">
+      <span class="mrow"><span class="mt">15</span><span class="mt"><i>m</i><sup>2</sup></span><span class="mt"><i>n</i><sup>3</sup></span></span>
+      <span class="mbar"></span>
+      <span class="mrow"><span class="mt">9</span><span class="mt"><i>m</i></span><span class="mt"><i>n</i></span></span>
+    </span></span></button>
+    <button class="btn" data-ex="4"><span class="mexpr"><span class="mfrac">
+      <span class="mrow"><span class="mt">21</span><span class="mt"><i>a</i><sup>2</sup></span><span class="mt"><i>b</i><sup>3</sup></span><span class="mt"><i>c</i></span></span>
+      <span class="mbar"></span>
+      <span class="mrow"><span class="mt">14</span><span class="mt"><i>a</i></span><span class="mt"><i>b</i></span><span class="mt"><i>c</i><sup>2</sup></span></span>
+    </span></span></button>
+    <button class="btn" data-ex="5"><span class="mexpr"><span class="mfrac">
+      <span class="mrow"><span class="mt">50</span><span class="mt"><i>p</i><sup>2</sup></span><span class="mt"><i>q</i></span></span>
+      <span class="mbar"></span>
+      <span class="mrow"><span class="mt">15</span><span class="mt"><i>p</i></span><span class="mt"><i>r</i></span></span>
+    </span></span></button>
+  </div>
+
+  <div class="stage">
+    <div class="frac" id="frac">
+      <div class="num"><span class="tokens" id="numTokens"></span></div>
+      <span class="bar" id="bar"></span>
+      <div class="den"><span class="tokens" id="denTokens"></span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* — helpers & state — */
+const $=s=>document.querySelector(s);
+const exBtns=$('#exBtns');
+const numTokensEl=$('#numTokens'), denTokensEl=$('#denTokens');
+const bar=$('#bar');
+
+function supersToCaret(s){
+  const map={'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9'};
+  return s.replace(/([A-Za-z])([⁰¹²³⁴⁵⁶⁷⁸⁹]+)/g,(_,b,sup)=>`${b}^${sup.split('').map(ch=>map[ch]??'').join('')}`);
+}
+function isPrime(n){ if(n<2) return false; for(let i=2;i*i<=n;i++) if(n%i===0) return false; return true; }
+function primeFactors(n){ let x=Math.abs(n), r=[]; if(x===0) return [0]; if(x===1) return [1];
+  for(let p=2;p*p<=x;p++){ while(x%p===0){ r.push(p); x/=p; } } if(x>1) r.push(x); return r; }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+let NUM=[], DEN=[];
+let readyToCondense=false, condensed=false;
+let showDots=false;
+
+/* examples */
+const EXAMPLES={
+  1:{num:"12 a^2 b", den:"18 a b^3"},
+  2:{num:"8 x^3 y^2", den:"20 x y"},
+  3:{num:"15 m^2 n^3", den:"9 m n"},
+  4:{num:"21 a^2 b^3 c", den:"14 a b c^2"},
+  5:{num:"50 p^2 q", den:"15 p r"},
+};
+function parseSide(str){
+  str=supersToCaret(str).replace(/\s*\*\s*/g,' ').trim();
+  if(!str) return [];
+  return str.split(/\s+/).map(t=>{
+    if(/^\d+$/.test(t)) return {id:uid(),kind:'num',value:parseInt(t)};
+    const m=t.match(/^([A-Za-z])\^(\d+)$/);
+    if(m) return {id:uid(),kind:'pow',base:m[1],exp:parseInt(m[2])};
+    if(/^[A-Za-z]$/.test(t)) return {id:uid(),kind:'var',value:t};
+    return {id:uid(),kind:'var',value:t};
+  });
+}
+
+/* — render — */
+function chipHTML(t){
+  if(t.kind==='num') return String(t.value);
+  if(t.kind==='var') return t.value;
+  if(t.kind==='pow') return `${t.base}<sup>${t.exp}</sup>`;
+  return '?';
+}
+function shouldDot(a,b){ return showDots && a && b && a.kind==='num' && b.kind==='num'; }
+function renderList(container, arr){
+  container.innerHTML='';
+  for(let i=0;i<arr.length;i++){
+    const t=arr[i];
+    const s=document.createElement('span');
+    s.className='token show';
+    s.dataset.id=t.id; s.dataset.kind=t.kind; s.dataset.key=tokenKey(t);
+    if(t.kind==='pow') s.dataset.base=t.base;
+    s.innerHTML= chipHTML(t) + '<span class="strike"></span>';
+    if(!condensed) s.addEventListener('click', onTokenClick);
+    container.appendChild(s);
+    if(i<arr.length-1 && shouldDot(t,arr[i+1])){
+      const dot=document.createElement('span'); dot.className='dot'; dot.textContent='·'; container.appendChild(dot);
+    }
+  }
+}
+function refreshAll(){
+  renderList(numTokensEl, NUM);
+  renderList(denTokensEl, DEN);
+  requestAnimationFrame(updateBar);
+  updateReadyFlag();
+}
+function updateBar(){
+  const wTop=numTokensEl.getBoundingClientRect().width;
+  const wBottom=denTokensEl.getBoundingClientRect().width;
+  const hasTokens=(NUM.length>0 || DEN.length>0);
+  bar.style.width=Math.max(20,Math.round(Math.max(wTop,wBottom)))+'px';
+  bar.classList.toggle('on',hasTokens);
+}
+window.addEventListener('resize',()=>requestAnimationFrame(updateBar));
+window.addEventListener('load',()=>requestAnimationFrame(updateBar));
+
+/* — logic — */
+function tokenKey(t){ return t.kind==='num' ? '#'+t.value : (t.kind==='var'? t.value : null); }
+function hasExpandable(arr){
+  return arr.some(t=> (t.kind==='num' && t.value>1 && !isPrime(t.value)) || (t.kind==='pow' && t.exp>1) );
+}
+function hasCommonPair(){
+  const setN=new Set(NUM.filter(t=>!t._ghost && tokenKey(t)).map(tokenKey));
+  const setD=new Set(DEN.filter(t=>!t._ghost && tokenKey(t)).map(tokenKey));
+  for(const k of setN){ if(setD.has(k)) return true; } return false;
+}
+function updateReadyFlag(){
+  if(condensed){ readyToCondense=false; return; }
+  if(hasExpandable(NUM) || hasExpandable(DEN)){ readyToCondense=false; return; }
+  if(hasCommonPair()){ readyToCondense=false; return; }
+  readyToCondense=true;
+}
+
+/* — animation helpers — */
+function flipInFromPoint(pt, el){
+  const r=el.getBoundingClientRect();
+  const dx=pt.x-(r.left+r.width/2), dy=pt.y-(r.top+r.height/2);
+  el.style.transition='none';
+  el.style.transform=`translate(${dx}px,${dy}px) scale(.86)`;
+  el.style.opacity='0';
+  el.getBoundingClientRect();
+  el.style.transition=`transform var(--dur-move) var(--t-out), opacity var(--dur-move) var(--t-out)`;
+  el.style.transform='translate(0,0) scale(1)';
+  el.style.opacity='1';
+  el.addEventListener('transitionend',()=>{el.style.transition='';el.style.transform='';el.style.opacity='';},{once:true});
+}
+function spreadFromPoint(pt, els){
+  const n=els.length; const base=24;
+  els.forEach((el,i)=>{
+    const r=el.getBoundingClientRect();
+    const dx0=pt.x-(r.left+r.width/2);
+    const dy0=pt.y-(r.top+r.height/2);
+    const offset=(i-(n-1)/2)*base;
+    el.style.transition='none';
+    el.style.transform=`translate(${dx0+offset}px,${dy0}px) scale(.86)`;
+    el.style.opacity='0';
+    el.getBoundingClientRect();
+    el.style.transition=`transform var(--dur-move) var(--t-out), opacity var(--dur-move) var(--t-out)`;
+    el.style.transform='translate(0,0) scale(1)';
+    el.style.opacity='1';
+    el.addEventListener('transitionend',()=>{el.style.transition='';el.style.transform='';el.style.opacity='';},{once:true});
+  });
+}
+function centroidOfEls(els){
+  if(!els.length) return {x:window.innerWidth/2,y:window.innerHeight/2};
+  let sx=0,sy=0; els.forEach(el=>{const r=el.getBoundingClientRect(); sx+=r.left+r.width/2; sy+=r.top+r.height/2;});
+  return {x:sx/els.length,y:sy/els.length};
+}
+function slideElsToPoint(els, pt){
+  els.forEach(el=>{
+    const r=el.getBoundingClientRect();
+    const dx=pt.x-(r.left+r.width/2);
+    const dy=pt.y-(r.top+r.height/2);
+    el.style.transition=`transform var(--dur-move) var(--t-in)`;
+    el.style.transform=`translate(${dx}px,${dy}px) scale(.92)`;
+  });
+}
+
+/* contiguous runs */
+function runOfSameVars(list, idx){
+  const v=list[idx].value; let i=idx, j=idx;
+  while(i-1>=0 && list[i-1].kind==='var' && list[i-1].value===v) i--;
+  while(j+1<list.length && list[j+1].kind==='var' && list[j+1].value===v) j++;
+  return [i,j];
+}
+function runOfNumbers(list, idx){
+  let i=idx, j=idx;
+  while(i-1>=0 && list[i-1].kind==='num') i--;
+  while(j+1<list.length && list[j+1].kind==='num') j++;
+  return [i,j];
+}
+
+/* — expansions & collapses — */
+function expandPow(list, idx, inNum){
+  showDots=true;
+  const container=inNum?numTokensEl:denTokensEl;
+  const oldEl=container.querySelector(`.token[data-id="${list[idx].id}"]`);
+  const oldRect=oldEl.getBoundingClientRect();
+  oldEl.classList.add('closing'); setTimeout(()=>oldEl.classList.add('vanish'),80);
+  setTimeout(()=>{
+    const reps=Array.from({length:list[idx].exp},()=>({id:uid(),kind:'var',value:list[idx].base}));
+    list.splice(idx,1,...reps); refreshAll();
+    const newEls=reps.map(t=> container.querySelector(`.token[data-id="${t.id}"]`)).filter(Boolean);
+    spreadFromPoint({x:oldRect.left+oldRect.width/2,y:oldRect.top+oldRect.height/2}, newEls);
+  },220);
+}
+function expandCompositeNumber(list, idx, inNum){
+  showDots=true;
+  const container=inNum?numTokensEl:denTokensEl;
+  const oldEl=container.querySelector(`.token[data-id="${list[idx].id}"]`);
+  const oldRect=oldEl.getBoundingClientRect();
+  oldEl.classList.add('closing'); setTimeout(()=>oldEl.classList.add('vanish'),80);
+  setTimeout(()=>{
+    const factors=primeFactors(list[idx].value).map(p=>({id:uid(),kind:'num',value:p}));
+    list.splice(idx,1,...factors); refreshAll();
+    const newEls=factors.map(t=> container.querySelector(`.token[data-id="${t.id}"]`)).filter(Boolean);
+    spreadFromPoint({x:oldRect.left+oldRect.width/2,y:oldRect.top+oldRect.height/2}, newEls);
+  },220);
+}
+function collapseVarRun(list, L, R, inNum){
+  const container=inNum?numTokensEl:denTokensEl;
+  const els=[]; for(let k=L;k<=R;k++){ const node=container.querySelector(`.token[data-id="${list[k].id}"]`); if(node) els.push(node); }
+  const center=centroidOfEls(els);
+  slideElsToPoint(els, center);
+  setTimeout(()=>{ els.forEach(el=>el.classList.add('vanish')); }, 420);
+  setTimeout(()=>{
+    const base=list[L].value, len=R-L+1;
+    const newTok={id:uid(),kind:'pow',base,exp:len};
+    list.splice(L,len,newTok); refreshAll();
+    const dest=container.querySelector(`.token[data-id="${newTok.id}"]`);
+    if(dest) flipInFromPoint(center, dest);
+  }, 600);
+}
+function collapseNumberRun(list, L, R, inNum){
+  const container=inNum?numTokensEl:denTokensEl;
+  const els=[]; for(let k=L;k<=R;k++){ const node=container.querySelector(`.token[data-id="${list[k].id}"]`); if(node) els.push(node); }
+  const center=centroidOfEls(els);
+  slideElsToPoint(els, center);
+  setTimeout(()=>{ els.forEach(el=>el.classList.add('vanish')); }, 420);
+  setTimeout(()=>{
+    const prod=list.slice(L,R+1).reduce((a,b)=>a*b.value,1);
+    const newTok={id:uid(),kind:'num',value:prod};
+    list.splice(L,R-L+1,newTok); refreshAll();
+    const dest=container.querySelector(`.token[data-id="${newTok.id}"]`);
+    if(dest) flipInFromPoint(center, dest);
+  }, 600);
+}
+
+/* — interaction — */
+function onTokenClick(e){
+  if(readyToCondense && !condensed){ condenseAll(); return; }
+  if(condensed) return;
+
+  const el=e.currentTarget, id=el.dataset.id;
+  const inNum=!!NUM.find(x=>x.id===id);
+  let list=inNum?NUM:DEN; let other=inNum?DEN:NUM;
+  const idx=list.findIndex(x=>x.id===id); if(idx<0) return;
+  const tok=list[idx];
+
+  const key=tokenKey(tok);
+  if(key){
+    const countHere=list.filter(t=>tokenKey(t)===key).length;
+    const countOther=other.filter(t=>tokenKey(t)===key).length;
+    const pairs=Math.min(countHere,countOther);
+    if(pairs>0){ multiCancel(key,inNum,pairs); return; }
+  }
+
+  if(tok.kind==='pow' && tok.exp>1){ expandPow(list,idx,inNum); return; }
+
+  if(tok.kind==='var'){
+    const [L,R]=runOfSameVars(list,idx);
+    if(R-L+1>=2){ collapseVarRun(list,L,R,inNum); return; }
+  }
+
+  if(tok.kind==='num'){
+    if(tok.value>1 && !isPrime(tok.value)){ expandCompositeNumber(list,idx,inNum); return; }
+    const [L,R]=runOfNumbers(list,idx);
+    if(R-L+1>=2){ collapseNumberRun(list,L,R,inNum); return; }
+  }
+}
+
+/* — multi cancel — */
+function multiCancel(key, clickedInNum, pairs){
+  const list=clickedInNum?NUM:DEN, other=clickedInNum?DEN:NUM;
+  const contHere=clickedInNum?numTokensEl:denTokensEl, contOther=clickedInNum?denTokensEl:numTokensEl;
+
+  const selHere=list.filter(t=>tokenKey(t)===key).slice(0,pairs);
+  const selOther=other.filter(t=>tokenKey(t)===key).slice(0,pairs);
+  const hereEls=selHere.map(t=>contHere.querySelector(`.token[data-id="${t.id}"]`)).filter(Boolean);
+  const otherEls=selOther.map(t=>contOther.querySelector(`.token[data-id="${t.id}"]`)).filter(Boolean);
+  [...hereEls,...otherEls].forEach(el=>el.classList.add('striking'));
+  setTimeout(()=>{ [...hereEls,...otherEls].forEach(el=>el.classList.add('closing')); },140);
+  setTimeout(()=>{ [...hereEls,...otherEls].forEach(el=>el.classList.add('vanish')); },260);
+  setTimeout(()=>{
+    function removeFirst(arr,key,count){for(let c=0;c<count;c++){const i=arr.findIndex(t=>tokenKey(t)===key); if(i>-1) arr.splice(i,1);}}
+    removeFirst(list,key,pairs); removeFirst(other,key,pairs);
+    refreshAll(); ensureOnesIfEmpty();
+  },560);
+}
+
+/* — utilities — */
+function ensureOnesIfEmpty(){
+  function ensureOne(arr, container){
+    if(arr.filter(t=>!t._ghost).length===0){
+      arr.length=0; arr.push({id:uid(),kind:'num',value:1,_ghost:true});
+      container.innerHTML=''; const s=document.createElement('span');
+      s.className='token show'; s.textContent='1'; s.style.opacity='.6'; s.style.cursor='default';
+      container.appendChild(s);
+    }
+  }
+  ensureOne(NUM,numTokensEl); ensureOne(DEN,denTokensEl);
+  requestAnimationFrame(updateBar);
+}
+
+/* — condense (final) — */
+function condenseSide(arr){
+  const items=arr.filter(t=>!t._ghost);
+  let hasNum=false, numProd=1; const vCount={};
+  for(const t of items){
+    if(t.kind==='num'){ hasNum=true; numProd*=t.value; }
+    else if(t.kind==='pow'){ vCount[t.base]=(vCount[t.base]||0)+t.exp; }
+    else if(t.kind==='var'){ vCount[t.value]=(vCount[t.value]||0)+1; }
+  }
+  const out=[]; if(hasNum && numProd!==1) out.push({id:uid(),kind:'num',value:numProd});
+  Object.keys(vCount).sort().forEach(k=>{ const e=vCount[k]; out.push(e<=1?{id:uid(),kind:'var',value:k}:{id:uid(),kind:'pow',base:k,exp:e}); });
+  if(out.length===0) out.push({id:uid(),kind:'num',value:1});
+  return out;
+}
+function groupKeyOfEl(el){ const k=el.dataset.kind; if(k==='num') return'__NUM__'; if(k==='var') return el.dataset.key; if(k==='pow') return el.dataset.base||'?'; return null; }
+function centroidsFor(container){
+  const toks=[...container.querySelectorAll('.token')]; const sums={},counts={},all={x:0,y:0,c:0};
+  toks.forEach(el=>{ const r=el.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2;
+    const gk=groupKeyOfEl(el)||'__ALL__'; (sums[gk]||(sums[gk]={x:0,y:0})).x+=cx; (sums[gk]||(sums[gk]={x:0,y:0})).y+=cy; counts[gk]=(counts[gk]||0)+1;
+    all.x+=cx; all.y+=cy; all.c++; });
+  const byKey={}; Object.keys(sums).forEach(k=>{ byKey[k]={x:sums[k].x/counts[k], y:sums[k].y/counts[k]}; });
+  const contR=container.getBoundingClientRect();
+  const fallback=all.c?{x:all.x/all.c,y:all.y/all.c}:{x:contR.left+contR.width/2,y:contR.top+contR.height/2};
+  return {byKey,fallback};
+}
+function condenseAll(){
+  const cNum=centroidsFor(numTokensEl), cDen=centroidsFor(denTokensEl);
+  const oldEls=[...numTokensEl.querySelectorAll('.token'),...denTokensEl.querySelectorAll('.token')];
+  const oldDots=[...numTokensEl.querySelectorAll('.dot'),...denTokensEl.querySelectorAll('.dot')];
+  oldEls.forEach(el=>{ el.classList.add('closing'); setTimeout(()=> el.classList.add('vanish'),80); });
+  oldDots.forEach(d=> d.classList.add('fade'));
+  setTimeout(()=>{
+    NUM=condenseSide(NUM); DEN=condenseSide(DEN);
+    condensed=true; readyToCondense=false; showDots=false;
+    refreshAll();
+    const animateSide=(arr,container,cents)=>{
+      arr.forEach(t=>{ const dest=container.querySelector(`.token[data-id="${t.id}"]`); if(!dest) return;
+        const key=(t.kind==='num')?'__NUM__':(t.kind==='var'?t.value:t.base); const from=cents.byKey[key]||cents.fallback;
+        flipInFromPoint(from,dest);
+      });
+    };
+    animateSide(NUM,numTokensEl,cNum); animateSide(DEN,denTokensEl,cDen);
+  },300);
+}
+
+/* — events — */
+exBtns.addEventListener('click',e=>{
+  const btn=e.target.closest('[data-ex]'); if(!btn) return;
+  const ex=EXAMPLES[btn.getAttribute('data-ex')]; if(!ex) return;
+  NUM=parseSide(ex.num); DEN=parseSide(ex.den);
+  condensed=false; readyToCondense=false; showDots=false;
+  refreshAll();
+});
+document.addEventListener('click',e=>{
+  if(e.target.closest('#exBtns')) return;
+  if(readyToCondense && !condensed){ condenseAll(); }
+});
+</script>
+</body>
+</html>

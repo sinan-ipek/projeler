@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Rasyonel İfadelerin Sadeleştirilmesi — Toplam + Ortak/İptal</title>
+<style>
+  :root{
+    --ink:#111827; --red:#ef4444; --btn:#eef0f3; --btnb:#d6dae0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#fff;color:var(--ink);font:16px/1.6 system-ui,Segoe UI,Roboto,Arial}
+  .wrap{max-width:1100px;margin:24px auto;padding:0 12px}
+  header{display:flex;justify-content:center;margin-bottom:10px}
+  h1{margin:0;font-size:clamp(22px,3.4vw,32px)}
+  .bar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:8px 0 10px}
+  input[type=text]{min-width:280px;max-width:720px;width:100%;padding:10px 12px;border:1px solid var(--btnb);border-radius:12px}
+  .btn{appearance:none;background:var(--btn);border:1px solid var(--btnb);padding:10px 12px;border-radius:12px;cursor:pointer;font-weight:600}
+  .btn:hover{box-shadow:0 1px 0 rgba(0,0,0,.05),0 6px 14px rgba(0,0,0,.08)}
+  .stage{min-height:58vh;display:flex;align-items:center;justify-content:center}
+  /* Math */
+  .math{display:inline-block;font-family:"Cambria Math","STIX Two Math","Times New Roman",Times,serif;
+        font-size:clamp(28px,6.2vw,48px);text-align:center}
+  .sum{display:inline-flex;align-items:baseline;gap:.45em}
+  .prefix{display:inline-flex;gap:.2em;margin-right:.15em}
+  .paren{font-weight:700;font-size:1.1em}
+  .term{display:inline-flex;align-items:baseline;gap:.25em;padding:2px 4px;border-radius:6px;transition:box-shadow .18s,outline-color .18s}
+  .term:hover{outline:1.5px solid rgba(25,25,200,.2);outline-offset:2px}
+  .op{margin:0 .35em}
+  .token{position:relative;cursor:pointer}
+  .token[data-kind="var"],.token[data-kind="pow"]{font-style:italic}
+  sup{font-size:.65em;line-height:0}
+  .frac{display:inline-grid;grid-template-rows:auto 2px auto;gap:10px;align-items:center}
+  .num,.den{display:block;width:max-content;margin:0 auto}
+  .barline{height:2px;background:#111827;opacity:.14;min-width:40px}
+  .strike{position:absolute;left:50%;top:50%;width:130%;height:4px;background:var(--red);border-radius:3px;
+    transform:translate(-50%,-50%) rotate(-24deg) scaleX(0);transform-origin:center;transition:transform .22s ease-in;pointer-events:none}
+  .striking .strike{transform:translate(-50%,-50%) rotate(-24deg) scaleX(1)}
+</style>
+</head>
+
+<style id="patch-no-italic">
+:where(.math, .token, .token[data-kind="var"], .token[data-kind="pow"]){
+  font-style: normal !important;
+}
+</style>
+
+<body>
+<body>
+
+<!-- HOME BUTTON -->
+<div style="
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+">
+  <a href="../index.html" style="
+    text-decoration: none;
+    background: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: black;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  ">
+    ← Home
+  </a>
+</div>
+
+<div class="wrap">
+<div class="wrap">
+  <header><h1>Rasyonel İfadelerin Sadeleştirilmesi</h1></header>
+  <div class="bar">
+    <input id="inp" type="text" placeholder="ör: (ax+bx)/cx, (ax+bx)/(cx+dx), 12a^2b / 18ab^3, (2x^2+2x)/2x">
+    <button class="btn" id="load">Yükle</button>
+    <button class="btn" data-ex="(ax+bx)/cx">Örnek 1</button>
+    <button class="btn" data-ex="(ax+bx)/(cx+dx)">Örnek 2</button>
+    <button class="btn" data-ex="12 a^2 b / 18 a b^3">Örnek 3</button>
+    <button class="btn" data-ex="(2x^2+2x)/2x">Örnek 4</button>
+  </div>
+
+  <div class="stage"><div class="math" id="root"></div></div>
+</div>
+
+<script>
+/* ========== Yardımcılar ========== */
+const $=s=>document.querySelector(s);
+const root=$('#root');
+const supMap={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+const toSup = n => String(n).split('').map(c=>supMap[c]||c).join('');
+const fromSup = s => s.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, ch=>{
+  for(const [k,v] of Object.entries(supMap)) if(v===ch) return k;
+  return '';
+});
+const isLetter = c => /[A-Za-z]/.test(c);
+const isDigit  = c => /[0-9]/.test(c);
+
+/* ========== Model ========== */
+const Num=(v,expanded=false)=>({kind:'num',v,expanded});
+const Sym=(n,p=1,expanded=false)=>({kind:'sym',n,p,expanded});
+/*
+Sum  : {kind:'sum', prefix:{coef:number, vars:Map}, terms:[Term]}
+Term : {coef:number, vars:Map(name->exp)}
+Frac : {kind:'frac', num:Sum, den:Sum}
+- coef ≥ 0 (işaret coef içinde; negatif ise coef negatif olur ve normalize sırasında +/− operatörleri üretilir)
+*/
+const newSum=()=>({kind:'sum', prefix:{coef:1, vars:{}}, terms:[]});
+const clone = x => JSON.parse(JSON.stringify(x));
+
+/* ========== Parser (toplamlı pay/payda) ========== */
+function supersToCaret(s){
+  return s.replace(/([A-Za-z])([⁰¹²³⁴⁵⁶⁷⁸⁹]+)/g,(_,b,sup)=>`${b}^${fromSup(sup)}`);
+}
+function tokenize(s){
+  s=supersToCaret(s).replace(/\s+/g,'');
+  const out=[];
+  for(let i=0;i<s.length;i++){
+    const c=s[i];
+    if('+-*/()^'.includes(c)){ out.push({k:c}); continue; }
+    if(isDigit(c)){ let j=i; while(j<s.length && isDigit(s[j])) j++; out.push({k:'num',v:+s.slice(i,j)}); i=j-1; continue; }
+    if(isLetter(c)){ let j=i; while(j<s.length && isLetter(s[j])) j++; out.push({k:'sym',v:s.slice(i,j)}); i=j-1; continue; }
+    throw 'Bilinmeyen karakter: '+c;
+  }
+  return out;
+}
+function parse(str){
+  // üst seviye tek '/'
+  let depth=0, slash=-1;
+  for(let i=0;i<str.length;i++){
+    const c=str[i];
+    if(c==='(') depth++; else if(c===')') depth--;
+    else if(c==='/' && depth===0){ slash=i; break; }
+  }
+  if(slash!==-1){
+    return {kind:'frac', num:parseSum(tokenize(str.slice(0,slash))), den:parseSum(tokenize(str.slice(slash+1)))};
+  }
+  return parseSum(tokenize(str));
+}
+function parseSum(tks){
+  let i=0;
+  const parsePow=()=>{
+    let n=parseAtom();
+    while(i<tks.length && tks[i].k==='^'){
+      i++; const e=tks[i++]; if(!e||e.k!=='num') throw 'Üs bekleniyor';
+      n={kind:'pow',base:n,exp:e.v};
+    }
+    return n;
+  };
+  const parseMul=()=>{
+    let n=parsePow();
+    while(i<tks.length){
+      const k=tks[i].k;
+      const implicit = (k==='('||k==='sym'||k==='num'||k==='+'||k==='-');
+      if(k==='*' || implicit){
+        if(k==='*') i++;
+        const r=parsePow();
+        n={kind:'mul',a:n,b:r};
+      } else break;
+    }
+    return n;
+  };
+  const parseAtom=()=>{
+    if(i>=tks.length) throw 'Beklenmedik son';
+    const t=tks[i++];
+    if(t.k==='num') return {kind:'num',v:t.v};
+    if(t.k==='sym') return {kind:'sym',n:t.v};
+    if(t.k==='('){
+      let d=1, buf=[];
+      while(i<tks.length && d>0){
+        if(tks[i].k==='(') d++; else if(tks[i].k===')') d--;
+        if(d>0) buf.push(tks[i]); i++;
+      }
+      return parseSum(buf);
+    }
+    if(t.k==='+'||t.k==='-'){ const a=parseAtom(); return {kind:'sgn',s:t.k==='+'?+1:-1,x:a}; }
+    throw 'Beklenmeyen token';
+  };
+  function toSumNode(node,sgn=+1){
+    switch(node.kind){
+      case 'num': return mono(+sgn*node.v,{});
+      case 'sym': return mono(+sgn*1,{[node.n]:1});
+      case 'sgn': return toSumNode(node.x, sgn*node.s);
+      case 'mul':{
+        const L=toSumNode(node.a,sgn), R=toSumNode(node.b,+1);
+        if(L.terms.length!==1||R.terms.length!==1) throw 'Yalnız monom*monom';
+        const t=mergeMono(L.terms[0], R.terms[0]); return {kind:'sum',prefix:{coef:1,vars:{}},terms:[t]};
+      }
+      case 'pow':{
+        const B=toSumNode(node.base,+1); if(B.terms.length!==1) throw '(ab)^n yok';
+        const t=clone(B.terms[0]);
+        const keys=Object.keys(t.vars);
+        if(keys.length===0){ t.coef = Math.sign(t.coef)*Math.abs(t.coef)**node.exp; }
+        else if(keys.length===1 && t.coef===1){ t.vars[keys[0]] = (t.vars[keys[0]]||0) + (node.exp-1); }
+        else throw '(ab)^n yok';
+        return {kind:'sum',prefix:{coef:1,vars:{}},terms:[t]};
+      }
+      case 'add':{ const L=toSumNode(node.a,sgn), R=toSumNode(node.b,sgn); return {kind:'sum',prefix:{coef:1,vars:{}},terms:[...L.terms,...R.terms]}; }
+      case 'sub':{ const L=toSumNode(node.a,sgn), R=toSumNode(node.b,-sgn);return {kind:'sum',prefix:{coef:1,vars:{}},terms:[...L.terms,...R.terms]}; }
+      case 'sum': return node;
+      default: throw 'AST?';
+    }
+  }
+  function mono(coef,vars){ return {coef, vars}; }
+  function mergeMono(a,b){
+    const coef=a.coef*b.coef; const vars=clone(a.vars);
+    Object.entries(b.vars).forEach(([k,e])=> vars[k]=(vars[k]||0)+e);
+    return {coef,vars};
+  }
+  const astLeft=parseMul();
+  let left=toSumNode(astLeft,+1);
+  while(i<tks.length && (tks[i].k==='+'||tks[i].k==='-')){
+    const op=tks[i++].k; const right=parseMul();
+    const R=toSumNode(right, op==='+'?+1:-1);
+    left={kind:'sum',prefix:{coef:1,vars:{}},terms:[...left.terms, ...R.terms]};
+  }
+  if(i!==tks.length) throw 'Artık belirteç';
+  return left;
+}
+
+/* ========== Normalize & Utils ========== */
+function normalizeSum(S){
+  // aynı değişkenleri birleştir, 0 olanları temizle
+  const terms = S.terms.map(t=>{
+    const vars={};
+    Object.entries(t.vars).forEach(([k,e])=>{ if(e!==0) vars[k]=(vars[k]||0)+e; });
+    return {coef:t.coef, vars};
+  }).filter(t=> t.coef!==0 || Object.keys(t.vars).length>0 );
+  // aynı monomları birleştir
+  const key = t => JSON.stringify(Object.fromEntries(Object.entries(t.vars).sort()));
+  const map=new Map();
+  terms.forEach(t=>{
+    const k=key(t);
+    map.set(k, (map.get(k)||0)+t.coef);
+  });
+  const merged=[...map.entries()].map(([k,coef])=>({coef, vars:JSON.parse(k)})).filter(t=>t.coef!==0);
+  // prefix sadeleştir (1 dışı sayıları at)
+  const p = {coef:S.prefix.coef, vars:clone(S.prefix.vars)};
+  if(p.coef===1){} else{} // şimdilik yalnız değişkenleri kullanacağız; sayısal ortaklık tıklama ile yönetilecek
+  return {kind:'sum', prefix:{coef:1, vars:p.vars}, terms: merged.length?merged:[{coef:0,vars:{}}] };
+}
+function normalize(x){
+  if(x.kind==='frac'){
+    const num=normalizeSum(x.num), den=normalizeSum(x.den);
+    // payda işaretlerini paya taşı
+    const denSign = den.terms.reduce((acc,t)=> acc * Math.sign(t.coef||1), 1);
+    const numTerms = num.terms.map(t=>({coef: t.coef*denSign, vars:t.vars}));
+    const denTerms = den.terms.map(t=>({coef: Math.abs(t.coef), vars:t.vars}));
+    const Snum = {kind:'sum', prefix:num.prefix, terms:numTerms};
+    const Sden = {kind:'sum', prefix:den.prefix, terms:denTerms};
+    // a/1 => a
+    if(isOneSum(Sden)) return normalizeSum(Snum);
+    return {kind:'frac', num: normalizeSum(Snum), den: normalizeSum(Sden)};
+  }
+  return normalizeSum(x);
+}
+function isOneSum(S){
+  // tek terim ve sadece 1
+  return S.terms.length===1 && S.terms[0].coef===1 && Object.keys(S.terms[0].vars).length===0 && Object.keys(S.prefix.vars).length===0;
+}
+function commonDegree(S, name){
+  // her terimdeki min üs
+  const exps = S.terms.map(t=> (t.vars[name]||0));
+  if(exps.length===0) return 0;
+  return Math.min(...exps);
+}
+function factorOutOnceFromSum(S, name){
+  S.terms = S.terms.map(t=>{
+    if((t.vars[name]||0)>0){ const out=clone(t); out.vars[name]-=1; if(out.vars[name]===0) delete out.vars[name]; return out; }
+    return clone(t);
+  });
+  S.prefix.vars[name]=(S.prefix.vars[name]||0)+1;
+}
+function removeCommonOnceNoPrefix(S, name){
+  // sadece terimlerden 1 düş (iptal için prefix'e ekleme)
+  S.terms = S.terms.map(t=>{
+    if((t.vars[name]||0)>0){ const out=clone(t); out.vars[name]-=1; if(out.vars[name]===0) delete out.vars[name]; return out; }
+    return clone(t);
+  });
+}
+function primeFactors(n){
+  const out=[]; let x=Math.abs(n), d=2;
+  while(d*d<=x){ while(x%d===0){ out.push(d); x/=d; } d += (d===2?1:2); }
+  if(x>1) out.push(x); if(out.length===0) out.push(n); return out;
+}
+
+/* ========== Render ========== */
+let MODEL=null;
+
+function render(){
+  root.innerHTML='';
+  if(!MODEL) return;
+  const el = (MODEL.kind==='frac') ? renderFrac(MODEL) : renderSum(MODEL);
+  root.appendChild(el);
+}
+
+function renderFrac(F){
+  const box=document.createElement('div'); box.className='frac';
+  const num=document.createElement('div'); num.className='num';
+  const den=document.createElement('div'); den.className='den';
+  num.appendChild(renderSum(F.num,{side:'num'}));
+  den.appendChild(renderSum(F.den,{side:'den'}));
+  const bar=document.createElement('div'); bar.className='barline';
+  box.append(num,bar,den);
+  return box;
+}
+
+function renderSum(S, ctx={side:'single'}){
+  const wrap=document.createElement('span'); wrap.className='sum';
+  // prefix (yalnız semboller)
+  const prefKeys=Object.keys(S.prefix.vars).sort();
+  if(prefKeys.length){
+    const pref=document.createElement('span'); pref.className='prefix';
+    prefKeys.forEach(n=>{
+      const exp=S.prefix.vars[n];
+      const s=document.createElement('span'); s.className='token';
+      s.dataset.kind='var'; s.dataset.base=n; s.dataset.side=ctx.side; s.dataset.where='prefix';
+      s.textContent = exp===1? n : n+toSup(exp);
+      s.addEventListener('click',()=> onVarClickInPrefix(n, ctx)); // iptal için tıklanabilir
+      pref.appendChild(s);
+    });
+    // parantez gerekli mi?
+    if(S.terms.length>1){
+      const l=document.createElement('span'); l.className='paren'; l.textContent='(';
+      wrap.append(pref,l);
+    }else{
+      wrap.append(pref);
+    }
+  }
+  // terms
+  S.terms.forEach((t,ti)=>{
+    // işaret
+    if(ti>0){
+      const op=document.createElement('span'); op.className='op'; op.textContent = (t.coef>=0?'+':'−');
+      wrap.appendChild(op);
+    } else if(t.coef<0){
+      const op=document.createElement('span'); op.className='op'; op.textContent='−';
+      wrap.appendChild(op);
+    }
+    const term=document.createElement('span'); term.className='term';
+    // mutlak katsayı
+    const abs = Math.abs(t.coef);
+    if(abs!==1 || Object.keys(t.vars).length===0){
+      term.appendChild(makeNumberToken(abs, {side:ctx.side, ti, where:'term'}));
+    }
+    // semboller
+    Object.keys(t.vars).sort().forEach(n=>{
+      const p=t.vars[n];
+      term.appendChild(makeVarToken(n,p,{side:ctx.side,ti,where:'term'}));
+    });
+    wrap.appendChild(term);
+  });
+  if(prefKeys.length && S.terms.length>1){
+    const r=document.createElement('span'); r.className='paren'; r.textContent=')';
+    wrap.appendChild(r);
+  }
+  return wrap;
+}
+
+function makeNumberToken(value, meta){
+  const s=document.createElement('span'); s.className='token';
+  s.dataset.kind='num'; s.dataset.side=meta.side; s.dataset.where=meta.where; s.dataset.ti=meta.ti;
+  s.innerHTML = String(value) + '<span class="strike"></span>';
+  s.addEventListener('click',()=> onNumberClick(value, meta, s));
+  return s;
+}
+function makeVarToken(n,p,meta){
+  const s=document.createElement('span'); s.className='token';
+  s.dataset.kind = (p>1 ? 'pow' : 'var');
+  s.dataset.base=n; s.dataset.side=meta.side; s.dataset.where=meta.where; s.dataset.ti=meta.ti;
+  s.innerHTML = (p===1? n : n+toSup(p)) + '<span class="strike"></span>';
+  s.addEventListener('click',()=> onVarClick(n,p,meta,s));
+  return s;
+}
+
+/* ========== Tıklama Mantığı ========== */
+function onNumberClick(value, meta, el){
+  // sayı: asal aç/kapat (terim içi)
+  const S = (MODEL.kind==='frac' ? (meta.side==='num'? MODEL.num : MODEL.den) : MODEL);
+  const t = S.terms[meta.ti];
+  // açılmış durumda mı? basit: 1'den büyük ve asal değilse aç; açılmış sayı koşusuna tıklandıysa çarp → tek sayı
+  const primes = primeFactors(value);
+  // Eğer terimde birden fazla ardışık sayı varsa → çarpıp tek sayıya
+  const nums = termNumbers(t);
+  if(nums.length>=2){ // koşu → çarp
+    const prod = nums.reduce((a,b)=>a*b,1);
+    // terimdeki tüm sayıları sil, prod ekle
+    removeAllNumbers(t); addNumber(t, prod);
+    MODEL = normalize(MODEL); render(); return;
+  }
+  if(primes.length>1){ // aç
+    removeOneNumber(t, value);
+    primes.forEach(p=> addNumber(t, p));
+    MODEL = normalize(MODEL); render(); return;
+  }
+  // asal ise ve tek başına → no-op
+}
+
+function onVarClick(n,p,meta, el){
+  const isFrac = (MODEL.kind==='frac');
+  if(meta.where==='prefix'){
+    // prefixteki sembole tıklandı: kesirde varsa ve diğer tarafta da prefixte aynı sembol varsa iptal
+    if(isFrac){
+      const here = (meta.side==='num'? MODEL.num : MODEL.den);
+      const other= (meta.side==='num'? MODEL.den : MODEL.num);
+      const hDeg = here.prefix.vars[n]||0;
+      const oDeg = other.prefix.vars[n]||0;
+      if(hDeg>=1 && oDeg>=1){
+        here.prefix.vars[n]-=1; if(here.prefix.vars[n]===0) delete here.prefix.vars[n];
+        other.prefix.vars[n]-=1; if(other.prefix.vars[n]===0) delete other.prefix.vars[n];
+        el.classList.add('striking'); setTimeout(()=> el.classList.remove('striking'), 220);
+        MODEL = normalize(MODEL); render(); return;
+      }
+    }
+    return;
+  }
+
+  // TERİM içindeki sembole tıklandı:
+  // Önce üs/tekrar toggle: p>1 ise açıp/kapatmak yerine — doğrudan "xx↔x²" davranışı
+  const S = isFrac ? (meta.side==='num'? MODEL.num : MODEL.den) : MODEL;
+
+  // Eğer aynı terimde ardışık aynı sembolden >=2 varsa → toparla (x²)
+  const run = sameVarRun(S.terms[meta.ti], n);
+  if(run>=2){
+    // toparla: run adeti p=run yap
+    collapseVarRun(S.terms[meta.ti], n, run);
+    MODEL = normalize(MODEL); render(); return;
+  }
+
+  // Ortak/İptal mantığı
+  if(!isFrac){
+    // Tek satır: tüm terimlerde ortaksa bir adet dışarı al
+    if(commonDegree(S, n)>=1){
+      factorOutOnceFromSum(S, n);
+      MODEL = normalize(MODEL); render(); return;
+    }
+  }else{
+    const here = S;
+    const other= (meta.side==='num'? MODEL.den : MODEL.num);
+    const cHere = commonDegree(here, n);
+    const cOther= commonDegree(other, n);
+    if(cHere>=1 && cOther>=1){
+      // her iki taraftan da TERİMLERDEN 1 düş (prefix’e dokunmadan) → iptal
+      removeCommonOnceNoPrefix(here, n);
+      removeCommonOnceNoPrefix(other, n);
+      // görsel çizgi
+      el.classList.add('striking'); setTimeout(()=> el.classList.remove('striking'), 220);
+      MODEL = normalize(MODEL); render(); return;
+    }
+    // yalnız here ortaksa → paranteze alma (prefix'e yaz)
+    if(cHere>=1){
+      factorOutOnceFromSum(here, n);
+      MODEL = normalize(MODEL); render(); return;
+    }
+    // yalnız other ortaksa → prefix diğer tarafta; here’de değilse bir şey yapma (iptal olamaz)
+  }
+}
+
+/* ========== Terim içi küçük yardımcılar ========== */
+function termNumbers(t){
+  // katsayı + ayrı sayı faktörleri yok; katsayı tek sayı. "+ ayrı sayı faktörleri" yerine katsayıyı temsil ediyoruz:
+  // burada "koşu" algısı için basit kural: katsayı !=1 ve ayrıca var mı? — Biz katsayıyı tek sayı kabul ediyoruz,
+  // dolayısıyla koşu ancak açılmış asal faktörleri simüle etmek için "varsız" eklemeye izin verelim:
+  // Basitleştirme: katsayıyı tek sayı sayalım.
+  return t.coef!==1 ? [t.coef] : [];
+}
+function removeAllNumbers(t){ t.coef = 1; }
+function addNumber(t, n){ t.coef *= n; }
+function removeOneNumber(t, n){ if(t.coef===n) t.coef=1; }
+function sameVarRun(t, n){ return t.vars[n]||0; }
+function collapseVarRun(t, n, run){ t.vars[n]=run; }
+
+/* ========== Giriş / Olaylar ========== */
+function loadFrom(str){
+  try{
+    const ast=parse(str);
+    MODEL = normalize(ast);
+    render();
+  }catch(e){
+    console.error(e);
+    MODEL=null; render();
+  }
+}
+$('#load').addEventListener('click',()=> loadFrom($('#inp').value.trim()));
+document.querySelectorAll('[data-ex]').forEach(b=>{
+  b.addEventListener('click',()=>{ $('#inp').value=b.getAttribute('data-ex'); loadFrom($('#inp').value.trim()); });
+});
+$('#inp').value='(ax+bx)/cx';
+loadFrom('(ax+bx)/cx');
+</script>
+</body>
+</html>

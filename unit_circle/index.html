@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Birim Çember – Özel Değerler Tam Konum (LaTeX) + Açı Yayı</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --axis:#000; --ticks:#000; --circle:#000;
+    --ray:#000; --proj:#f00; --point:#000; --label:#000;
+    --special:#1e90ff;   /* mavi (özel sin/cos) */
+    --arc:#0fa34a;       /* YEŞİL açı yayı */
+  }
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--label);
+    font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;user-select:none}
+  svg{width:100%;height:100%;display:block;
+      shape-rendering:geometricPrecision;text-rendering:optimizeLegibility}
+  .handle{cursor:grab; fill:var(--point); fill-opacity:.45;}
+  .handle:active{cursor:grabbing}
+  text{fill:#000}
+  .hud{
+    position:fixed; right:12px; top:12px; font-size:14px; line-height:1.4;
+    background:#ffffffcc; border:1px solid #000; padding:8px 10px; border-radius:10px;
+  }
+  .hud .v{font-weight:700}
+  .lens-ring{fill:none; stroke:var(--special); stroke-width:1.2}
+  #lens, #lens * { pointer-events:none; }
+
+.toolbar{
+  position: fixed;
+  left: 120px;   /* ← BURASI ÖNEMLİ */
+  top: 20px;     /* ← Home ile aynı hizaya */
+  display: flex;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #000;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+  .btn{
+    appearance:none; border:1px solid #000; background:#fff; padding:6px 10px; border-radius:8px;
+    font:600 14px/1 system-ui,Segoe UI,Roboto,Arial,sans-serif; cursor:pointer;
+  }
+  .btn.active{ background:#000; color:#fff; }
+</style>
+
+<!-- MathJax v3 (TeX→SVG) -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<!-- HOME BUTTON -->
+<div style="
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+">
+  <a href="../index.html" style="
+    text-decoration: none;
+    background: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: black;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  ">
+    ← Home
+  </a>
+</div>
+<div class="toolbar">
+  <button id="snapBtn" class="btn" aria-pressed="false">Snap: Kapalı</button>
+  <button id="unitBtn" class="btn" aria-pressed="false">Birim: Derece</button>
+</div>
+<div class="hud" id="hud">–</div>
+
+<svg id="svg" viewBox="0 0 1000 700" aria-label="Birim Çember">
+  <defs>
+    <!-- lens için piksel koordinatlarını kullan -->
+    <clipPath id="lensClip" clipPathUnits="userSpaceOnUse">
+      <circle id="lensCircle" r="230" cx="0" cy="0"/>
+    </clipPath>
+  </defs>
+
+  <!-- SAHNE -->
+  <g id="scene">
+    <circle id="uc" cx="250" cy="350" r="230" stroke="var(--circle)" stroke-width="1" fill="none"/>
+    <line id="xAxis" x1="10" y1="350" x2="960" y2="350" stroke="var(--axis)" stroke-width="1"/>
+    <line id="yAxis" x1="250" y1="80"  x2="250" y2="620" stroke="var(--axis)" stroke-width="1"/>
+
+    <g id="rulerX"></g>
+    <g id="rulerY"></g>
+
+    <g id="degTicks"></g>
+    <g id="labelBG"></g>
+    <g id="degLabels"></g>
+
+    <!-- Özel değerler: mavi tikler -->
+    <g id="specialTicksX"></g>
+    <g id="specialTicksY"></g>
+    <!-- LaTeX etiketler (MathJax SVG kopyası bu grubun içine) -->
+    <g id="mathSvgLabels"></g>
+
+    <!-- *** YENİ: YEŞİL AÇI YAYI (1,0) → P(cosθ,sinθ) *** -->
+    <path id="angleArc" d="" fill="none" stroke="var(--arc)" stroke-width="1.4"/>
+
+    <line id="ray" x1="250" y1="350" x2="480" y2="350" stroke="var(--ray)" stroke-width="1.2"/>
+    <line id="projX" stroke="var(--proj)" stroke-width="0.9" stroke-dasharray="4 3"/>
+    <line id="projY" stroke="var(--proj)" stroke-width="0.9" stroke-dasharray="4 3"/>
+    <circle id="handle" class="handle" cx="480" cy="350" r="5.6" stroke="#fff" stroke-width="1"/>
+  </g>
+
+  <!-- LENS -->
+  <g id="lens" visibility="visible">
+    <g id="lensContent" clip-path="url(#lensClip)">
+      <use href="#scene" id="lensUse"/>
+    </g>
+    <circle id="lensRing" class="lens-ring" r="230" cx="0" cy="0"/>
+  </g>
+</svg>
+
+<script>
+/* ==== Sabitler ==== */
+const svg=document.getElementById("svg");
+const hud=document.getElementById("hud");
+
+const W=1000, H=700;
+const R=230, CX=250, CY=350;
+
+let ZOOM=3;
+const LENS_R=R, RIGHT_MARGIN=20, GAP=40, AXIS_LEFT=10, AXIS_GAP=12;
+const circleRight=CX+R, desiredBX=circleRight+GAP+LENS_R;
+const BX=Math.min(W-LENS_R-RIGHT_MARGIN, desiredBX), BY=CY;
+
+const degTicks=document.getElementById("degTicks");
+const degLabels=document.getElementById("degLabels");
+const labelBG=document.getElementById("labelBG");
+const rulerX=document.getElementById("rulerX");
+const rulerY=document.getElementById("rulerY");
+const specialTicksX=document.getElementById("specialTicksX");
+const specialTicksY=document.getElementById("specialTicksY");
+const mathSvgLabels=document.getElementById("mathSvgLabels");
+const ray=document.getElementById("ray");
+const handle=document.getElementById("handle");
+const projX=document.getElementById("projX");
+const projY=document.getElementById("projY");
+const lensUse=document.getElementById("lensUse");
+const lensCircle=document.getElementById("lensCircle");
+const lensRing=document.getElementById("lensRing");
+const angleArc=document.getElementById("angleArc");
+const xAxis=document.getElementById("xAxis");
+const yAxis=document.getElementById("yAxis");
+
+/* ==== Lens konumu (önceki gibi) ==== */
+lensCircle.setAttribute("r", LENS_R);
+lensRing.setAttribute("r", LENS_R);
+lensCircle.setAttribute("cx", BX); lensCircle.setAttribute("cy", BY);
+lensRing.setAttribute("cx", BX);   lensRing.setAttribute("cy", BY);
+
+xAxis.setAttribute("x1", AXIS_LEFT);
+xAxis.setAttribute("y1", CY); xAxis.setAttribute("y2", CY);
+xAxis.setAttribute("x2", BX - LENS_R - AXIS_GAP);
+yAxis.setAttribute("x1", CX); yAxis.setAttribute("x2", CX);
+
+const DEG = Math.PI/180;
+let ANGLE_MODE='deg'; // 'deg' | 'rad'
+
+/* ==== Çember çevresi etiketleri (aynen) ==== */
+const RAD_SPECIAL = [
+  {deg:  0,  label:"0"},
+  {deg: 30,  label:"π/6"},
+  {deg: 45,  label:"π/4"},
+  {deg: 60,  label:"π/3"},
+  {deg: 90,  label:"π/2"},
+  {deg:120,  label:"2π/3"},
+  {deg:135,  label:"3π/4"},
+  {deg:150,  label:"5π/6"},
+  {deg:180,  label:"π"},
+  {deg:210,  label:"7π/6"},
+  {deg:225,  label:"5π/4"},
+  {deg:240,  label:"4π/3"},
+  {deg:270,  label:"3π/2"},
+  {deg:300,  label:"5π/3"},
+  {deg:315,  label:"7π/4"},
+  {deg:330,  label:"11π/6"},
+];
+const RAD_SPECIAL_SET=new Set(RAD_SPECIAL.map(o=>o.deg));
+
+function addBGRectForText(textEl){
+  const bb=textEl.getBBox();
+  const padX=3, padY=2;
+  const rect=document.createElementNS("http://www.w3.org/2000/svg","rect");
+  rect.setAttribute("x",bb.x-padX);
+  rect.setAttribute("y",bb.y-padY);
+  rect.setAttribute("width",bb.width+padX*2);
+  rect.setAttribute("height",bb.height+padY*2);
+  rect.setAttribute("fill","#fff");
+  labelBG.appendChild(rect);
+}
+
+function buildCircleScale(){
+  degTicks.innerHTML=""; degLabels.innerHTML=""; labelBG.innerHTML="";
+  for(let d=0; d<360; d++){
+    const th=d*DEG, c=Math.cos(th), s=Math.sin(th);
+    let len=4, sw=0.8;
+    if(ANGLE_MODE==='deg'){
+      const cat10=(d%10===0), cat5=(!cat10 && d%5===0);
+      len=cat10?10:(cat5?7:4); sw=cat10?1:0.8;
+    }else{
+      if(RAD_SPECIAL_SET.has(d)) { len=11; sw=1.1; }
+      else if(d%5===0)           { len=7;  sw=0.9; }
+      else                       { len=4;  sw=0.8; }
+    }
+    const x1=CX+c*R, y1=CY-s*R, x2=CX+c*(R+len), y2=CY-s*(R+len);
+    const ln=document.createElementNS("http://www.w3.org/2000/svg","line");
+    ln.setAttribute("x1",x1); ln.setAttribute("y1",y1);
+    ln.setAttribute("x2",x2); ln.setAttribute("y2",y2);
+    ln.setAttribute("stroke","#000"); ln.setAttribute("stroke-width",sw);
+    degTicks.appendChild(ln);
+  }
+  if(ANGLE_MODE==='deg'){
+    for(let d=0; d<360; d+=5){
+      const th=d*DEG, c=Math.cos(th), s=Math.sin(th);
+      const t=document.createElementNS("http://www.w3.org/2000/svg","text");
+      t.setAttribute("x",CX+c*(R+18)); t.setAttribute("y",CY-s*(R+18));
+      t.setAttribute("text-anchor","middle"); t.setAttribute("dominant-baseline","middle");
+      t.setAttribute("font-size","9"); t.textContent=String(d);
+      degLabels.appendChild(t);
+      if(d===0 || d===90 || d===270) addBGRectForText(t);
+    }
+  }else{
+    for(const o of RAD_SPECIAL){
+      const d=o.deg, th=d*DEG, c=Math.cos(th), s=Math.sin(th);
+      const t=document.createElementNS("http://www.w3.org/2000/svg","text");
+      t.setAttribute("x",CX+c*(R+22)); t.setAttribute("y",CY-s*(R+22));
+      t.setAttribute("text-anchor","middle"); t.setAttribute("dominant-baseline","middle");
+      t.setAttribute("font-size","10"); t.textContent=o.label;
+      degLabels.appendChild(t);
+      if(d===0 || d===90 || d===270) addBGRectForText(t);
+    }
+  }
+}
+buildCircleScale();
+
+/* ==== LaTeX etiketlerini SVG içine koy ==== */
+function addMathLabelSVG(latex, wx, wy, align='center', color='var(--special)'){
+  const span=document.createElement('span');
+  span.style.position='absolute'; span.style.left='-9999px'; span.style.top='-9999px';
+  span.innerHTML = '\\(' + latex + '\\)';
+  document.body.appendChild(span);
+
+  const ensure = () => {
+    if(!window.MathJax || !MathJax.typesetPromise) return Promise.resolve();
+    return MathJax.typesetPromise([span]);
+  };
+  return ensure().then(()=>{
+    const mjSvg = span.querySelector('svg');
+    if(!mjSvg){ span.remove(); return; }
+    const clone = mjSvg.cloneNode(true);
+    clone.style.color = color;
+    clone.setAttribute('overflow','visible');
+
+    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    const bg=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    g.appendChild(bg); g.appendChild(clone);
+    mathSvgLabels.appendChild(g);
+
+    g.setAttribute('transform','translate(-9999,-9999)');
+    requestAnimationFrame(()=>{
+      const bb=g.getBBox(), pad=3;
+      bg.setAttribute('x', bb.x - pad);
+      bg.setAttribute('y', bb.y - pad);
+      bg.setAttribute('width', bb.width + pad*2);
+      bg.setAttribute('height', bb.height + pad*2);
+      bg.setAttribute('fill', '#fff');
+
+      let ax=bb.width/2, ay=bb.height/2;
+      if(align==='left'){ ax=0; } else if(align==='right'){ ax=bb.width; }
+      g.setAttribute('transform', `translate(${wx-ax},${wy-ay})`);
+      span.remove();
+    });
+  });
+}
+
+/* ==== Cetveller (siyah) ==== */
+function buildPlainRulers(){
+  rulerX.innerHTML=""; rulerY.innerHTML="";
+  const STEPS=200;
+  for(let i=-STEPS/2;i<=STEPS/2;i++){
+    const t=i/(STEPS/2);
+    const x=CX + t*R;
+    const isLong=(i%10===0), isMid=(!isLong && i%5===0);
+    const len=isLong?10:(isMid?7:4), sw=isLong?1:0.6;
+    const ln=document.createElementNS("http://www.w3.org/2000/svg","line");
+    ln.setAttribute("x1",x); ln.setAttribute("x2",x);
+    ln.setAttribute("y1",CY-len); ln.setAttribute("y2",CY+len);
+    ln.setAttribute("stroke","#000"); ln.setAttribute("stroke-width",sw);
+    rulerX.appendChild(ln);
+
+    if(ANGLE_MODE==='deg' && isLong){
+      const val=Number(t.toFixed(1));
+      if(val!==0 && Math.abs(val)!==1){
+        const lab=document.createElementNS("http://www.w3.org/2000/svg","text");
+        lab.setAttribute("x",x); lab.setAttribute("y",CY+22);
+        lab.setAttribute("text-anchor","middle"); lab.setAttribute("font-size","10");
+        lab.textContent=val.toFixed(1);
+        rulerX.appendChild(lab);
+      }
+    }
+  }
+  for(let i=-STEPS/2;i<=STEPS/2;i++){
+    const t=i/(STEPS/2);
+    const y=CY + t*R;
+    const isLong=(i%10===0), isMid=(!isLong && i%5===0);
+    const len=isLong?10:(isMid?7:4), sw=isLong?1:0.6;
+    const ln=document.createElementNS("http://www.w3.org/2000/svg","line");
+    ln.setAttribute("y1",y); ln.setAttribute("y2",y);
+    ln.setAttribute("x1",CX-len); ln.setAttribute("x2",CX+len);
+    ln.setAttribute("stroke","#000"); ln.setAttribute("stroke-width",sw);
+    rulerY.appendChild(ln);
+
+    if(ANGLE_MODE==='deg' && isLong){
+      const val=(-t).toFixed(1);
+      if(val!=="0.0" && Math.abs(parseFloat(val))!==1){
+        const lab=document.createElementNS("http://www.w3.org/2000/svg","text");
+        lab.setAttribute("x",CX-14); lab.setAttribute("y",y+4);
+        lab.setAttribute("text-anchor","end"); lab.setAttribute("font-size","10");
+        lab.textContent=val;
+        rulerY.appendChild(lab);
+      }
+    }
+  }
+}
+
+/* ==== Özel değerler (mavi) – tam konum ==== */
+const SPECIALS = [0.5, Math.SQRT1_2, Math.sqrt(3)/2];
+function signTex(v){ return (v<0 ? '-' : '') + '\\large '; }
+function texOf(absVal){
+  if(Math.abs(absVal-0.5)<1e-9)            return '\\frac{1}{2}';
+  if(Math.abs(absVal-Math.SQRT1_2)<1e-9)   return '\\frac{\\sqrt{2}}{2}';
+  if(Math.abs(absVal-Math.sqrt(3)/2)<1e-9) return '\\frac{\\sqrt{3}}{2}';
+  return '';
+}
+async function drawSpecials(){
+  specialTicksX.innerHTML=""; specialTicksY.innerHTML="";
+  mathSvgLabels.innerHTML="";
+  if(ANGLE_MODE!=='rad') return;
+
+  const len=18, sw=1.25;
+
+  // X ekseni: aşağı (etiket biraz yukarı)
+  for(const s of SPECIALS){
+    for(const v of [-s, s]){
+      const x = CX + v*R;
+      const tick=document.createElementNS("http://www.w3.org/2000/svg","line");
+      tick.setAttribute("x1",x); tick.setAttribute("x2",x);
+      tick.setAttribute("y1",CY); tick.setAttribute("y2",CY+len);
+      tick.setAttribute("stroke","var(--special)"); tick.setAttribute("stroke-width",sw);
+      specialTicksX.appendChild(tick);
+
+      const tex = signTex(v) + texOf(Math.abs(v));
+      const yLbl = CY + len + 16;
+      await addMathLabelSVG(tex, x, yLbl, 'center');
+    }
+  }
+
+  // Y ekseni: sağa (etiket biraz sola)
+  for(const s of SPECIALS){
+    for(const v of [-s, s]){
+      const y = CY - v*R;
+      const tick=document.createElementNS("http://www.w3.org/2000/svg","line");
+      tick.setAttribute("y1",y); tick.setAttribute("y2",y);
+      tick.setAttribute("x1",CX); tick.setAttribute("x2",CX+len);
+      tick.setAttribute("stroke","var(--special)"); tick.setAttribute("stroke-width",sw);
+      specialTicksY.appendChild(tick);
+
+      const tex = signTex(v) + texOf(Math.abs(v));
+      const xLbl = CX + len + 8;
+      await addMathLabelSVG(tex, xLbl, y+1, 'left');
+    }
+  }
+}
+
+/* ==== RULER+SPECIAL ==== */
+function buildRulers(){ buildPlainRulers(); drawSpecials(); }
+
+/* ==== Snap ==== */
+let SNAP=false;
+function snapRad(theta){ if(!SNAP) return theta; const d=Math.round(theta*180/Math.PI); return d*DEG; }
+
+/* ==== HUD ==== */
+function setHUD(theta){
+  const deg=((theta*180/Math.PI)%360+360)%360, rad=theta;
+  if(ANGLE_MODE==='deg'){
+    hud.innerHTML=`Açı: <span class="v">${deg.toFixed(2)}°</span> (≈ ${rad.toFixed(3)} rad, Zoom: <span class="v">${ZOOM}×</span>, Snap: <span class="v">${SNAP?"Açık":"Kapalı"}</span>)<br>`+
+      `cos(θ) = <span class="v">${Math.cos(theta).toFixed(4)}</span><br>`+
+      `sin(θ) = <span class="v">${Math.sin(theta).toFixed(4)}</span>`;
+  }else{
+    hud.innerHTML=`Açı: <span class="v">${rad.toFixed(3)} rad</span> (≈ ${deg.toFixed(2)}°; Zoom: <span class="v">${ZOOM}×</span>, Snap: <span class="v">${SNAP?"Açık":"Kapalı"}</span>)<br>`+
+      `cos(θ) = <span class="v">${Math.cos(theta).toFixed(4)}</span><br>`+
+      `sin(θ) = <span class="v">${Math.sin(theta).toFixed(4)}</span>`;
+  }
+}
+
+/* ==== YEŞİL AÇI YAYI ==== */
+function setAngleArc(theta){
+  const x0 = CX + R, y0 = CY;                             // (1,0)
+  const x1 = CX + R*Math.cos(theta), y1 = CY - R*Math.sin(theta); // P
+  const largeArc = (Math.abs(theta) > Math.PI) ? 1 : 0;
+  const sweep    = (theta < 0) ? 1 : 0;                   // SVG’de +sweep saat yönü
+  angleArc.setAttribute('d', `M ${x0} ${y0} A ${R} ${R} 0 ${largeArc} ${sweep} ${x1} ${y1}`);
+}
+
+/* ==== Geometri ==== */
+function setByAngle(theta){
+  const c=Math.cos(theta), s=Math.sin(theta);
+  const x=CX+R*c, y=CY-R*s;
+  handle.setAttribute("cx",x); handle.setAttribute("cy",y);
+  ray.setAttribute("x2",x); ray.setAttribute("y2",y);
+  projY.setAttribute("x1",x); projY.setAttribute("y1",y); projY.setAttribute("x2",x); projY.setAttribute("y2",CY);
+  projX.setAttribute("x1",x); projX.setAttribute("y1",y); projX.setAttribute("x2",CX); projX.setAttribute("y2",y);
+  setAngleArc(theta);        // ← sadece bunu ekledim
+  setHUD(theta);
+}
+
+/* ==== Etkileşim ==== */
+function clientToWorld(clientX,clientY){
+  const pt=svg.createSVGPoint(); pt.x=clientX; pt.y=clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+let dragging=false;
+const handleEl=document.getElementById("handle");
+handleEl.addEventListener("pointerdown",e=>{
+  dragging=true; try{ handleEl.setPointerCapture(e.pointerId); }catch(_){}
+  e.preventDefault();
+});
+window.addEventListener("pointerup",()=>{ dragging=false; });
+window.addEventListener("pointercancel",()=>{ dragging=false; });
+
+svg.addEventListener("pointermove",e=>{
+  if(dragging){
+    const p=clientToWorld(e.clientX,e.clientY);
+    let th=Math.atan2(CY - p.y, p.x - CX);
+    th=snapRad(th);
+    setByAngle(th);
+  }
+  updateLens(e.clientX,e.clientY);
+});
+svg.addEventListener("pointerdown",e=>{
+  if(e.target!==handleEl){
+    const p=clientToWorld(e.clientX,e.clientY);
+    const r=Math.hypot(p.x-CX,p.y-CY);
+    if(r>R*0.85){
+      let th=Math.atan2(CY - p.y, p.x - CX);
+      th=snapRad(th);
+      setByAngle(th);
+    }
+  }
+});
+
+/* ==== Lens (3× ↔ 10×) ==== */
+function updateLens(clientX,clientY){
+  const A=clientToWorld(clientX,clientY);
+  const tx=BX - ZOOM*A.x, ty=BY - ZOOM*A.y;
+  lensUse.setAttribute("transform", `translate(${tx},${ty}) scale(${ZOOM})`);
+}
+window.addEventListener("keydown",e=>{
+  if(e.key==="Control"){
+    ZOOM=(ZOOM===3)?10:3;
+    const hx=Number(handle.getAttribute("cx"));
+    const hy=Number(handle.getAttribute("cy"));
+    const th=Math.atan2(CY - hy, hx - CX);
+    setHUD(th);
+  }
+});
+
+/* ==== Toggle’lar ==== */
+const snapBtn=document.getElementById("snapBtn");
+snapBtn.addEventListener("click", ()=>{
+  SNAP=!SNAP;
+  snapBtn.classList.toggle("active", SNAP);
+  snapBtn.setAttribute("aria-pressed", SNAP?"true":"false");
+  snapBtn.textContent=SNAP ? "Snap: Açık (1°)" : "Snap: Kapalı";
+  const hx=Number(handle.getAttribute("cx"));
+  const hy=Number(handle.getAttribute("cy"));
+  const th=Math.atan2(CY - hy, hx - CX);
+  setByAngle(snapRad(th));
+});
+const unitBtn=document.getElementById("unitBtn");
+unitBtn.addEventListener("click", ()=>{
+  ANGLE_MODE=(ANGLE_MODE==='deg')?'rad':'deg';
+  unitBtn.classList.toggle("active", ANGLE_MODE==='rad');
+  unitBtn.setAttribute("aria-pressed", ANGLE_MODE==='rad' ? "true":"false");
+  unitBtn.textContent="Birim: " + (ANGLE_MODE==='rad' ? "Radyan" : "Derece");
+  buildCircleScale();
+  buildRulers();
+  const hx=Number(handle.getAttribute("cx"));
+  const hy=Number(handle.getAttribute("cy"));
+  const th=Math.atan2(CY - hy, hx - CX);
+  setHUD(th);
+});
+
+/* ==== Kurulum ==== */
+function buildRulers(){ buildPlainRulers(); drawSpecials(); }
+setByAngle(30 * DEG);
+(function init(){
+  const pt=svg.createSVGPoint(); pt.x=CX; pt.y=CY;
+  const sp=pt.matrixTransform(svg.getScreenCTM());
+  updateLens(sp.x, sp.y);
+  buildRulers();
+  if(window.MathJax && MathJax.startup && MathJax.startup.promise){
+    MathJax.startup.promise.then(()=> { buildRulers(); setByAngle(30*DEG); });
+  } else {
+    window.addEventListener('load', ()=> {
+      if(window.MathJax && MathJax.startup && MathJax.startup.promise){
+        MathJax.startup.promise.then(()=> { buildRulers(); setByAngle(30*DEG); });
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>
