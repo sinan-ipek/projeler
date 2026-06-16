@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Özel Üçgenler</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .layout {
+      width: min(1180px, calc(100% - 28px));
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 20px 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      align-items: center;
+    }
+
+    .panel {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .panel-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .panel-title {
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .small-btn {
+      appearance: none;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      color: #111827;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .small-btn:hover {
+      background: #f9fafb;
+    }
+
+    svg {
+      width: 100%;
+      height: min(430px, 58vh);
+      min-height: 360px;
+      display: block;
+      background: #ffffff;
+      border-radius: 12px;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .triangle-fill {
+      fill: #dbeafe;
+      stroke: #bfdbfe;
+      stroke-width: 2;
+      cursor: grab;
+    }
+
+    .triangle-fill:active {
+      cursor: grabbing;
+    }
+
+    .side-line {
+      stroke-width: 5.5;
+      stroke-linecap: round;
+      transition: stroke 0.15s ease, stroke-width 0.15s ease;
+      pointer-events: none;
+    }
+
+    .side-line.short-side {
+      stroke: #2563eb;
+    }
+
+    .side-line.long-side {
+      stroke: #059669;
+    }
+
+    .side-line.hyp-side {
+      stroke: #dc2626;
+    }
+
+    .side-line.selected {
+      stroke: #f97316;
+      stroke-width: 8;
+    }
+
+    .hit-line {
+      stroke: rgba(0, 0, 0, 0);
+      stroke-width: 28;
+      stroke-linecap: round;
+      cursor: pointer;
+      pointer-events: stroke;
+    }
+
+    .vertex-dot {
+      fill: #ffffff;
+      stroke: #111827;
+      stroke-width: 2.4;
+      pointer-events: none;
+    }
+
+    .angle-arc {
+      fill: none;
+      stroke: #111827;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+
+    .right-angle-mark {
+      fill: rgba(255, 255, 255, 0.72);
+      stroke: #111827;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+
+    .right-angle-dot {
+      fill: #111827;
+      pointer-events: none;
+    }
+
+    .side-label {
+      font-size: 17px;
+      font-weight: 800;
+      fill: #111827;
+      paint-order: stroke;
+      stroke: #ffffff;
+      stroke-width: 5px;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+
+    .side-label.hint {
+      font-size: 14px;
+      font-weight: 700;
+      fill: #64748b;
+    }
+
+    .angle-label {
+      font-size: 15px;
+      font-weight: 800;
+      fill: #334155;
+      paint-order: stroke;
+      stroke: #ffffff;
+      stroke-width: 5px;
+      pointer-events: none;
+    }
+
+    .mini-keyboard {
+      position: fixed;
+      z-index: 9999;
+      width: 188px;
+      padding: 7px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.52);
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .mini-keyboard.hidden {
+      display: none;
+    }
+
+    .kb-title {
+      font-size: 11px;
+      color: #334155;
+      line-height: 1.15;
+      margin-bottom: 5px;
+      font-weight: 800;
+    }
+
+    .kb-input {
+      width: 100%;
+      height: 29px;
+      border: 1.5px solid rgba(100, 116, 139, 0.55);
+      border-radius: 9px;
+      padding: 0 7px;
+      font-size: 15px;
+      font-weight: 800;
+      outline: none;
+      color: #111827;
+      background: rgba(248, 250, 252, 0.50);
+    }
+
+    .kb-input:focus {
+      border-color: #2563eb;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .kb-error {
+      display: none;
+      margin: 5px 0 0;
+      color: #991b1b;
+      font-size: 10px;
+      line-height: 1.15;
+      font-weight: 800;
+    }
+
+    .kb-error.show {
+      display: block;
+    }
+
+    .kb-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .kb-grid button {
+      appearance: none;
+      border: 1px solid rgba(100, 116, 139, 0.48);
+      background: rgba(248, 250, 252, 0.46);
+      color: #111827;
+      border-radius: 8px;
+      height: 27px;
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .kb-grid button:hover {
+      background: rgba(238, 242, 255, 0.72);
+    }
+
+    .kb-grid button.action {
+      background: rgba(254, 226, 226, 0.58);
+      border-color: rgba(254, 202, 202, 0.70);
+      color: #991b1b;
+    }
+
+    .kb-grid button.ok {
+      grid-column: span 2;
+      background: rgba(220, 38, 38, 0.72);
+      border-color: rgba(220, 38, 38, 0.72);
+      color: #ffffff;
+    }
+
+    .kb-grid button.clear {
+      grid-column: span 2;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+
+      svg {
+        height: 410px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="layout">
+    <section class="panel">
+      <div class="panel-top">
+        <div class="panel-title">30° - 60° - 90°</div>
+        <button class="small-btn" id="mirror30">Yansıt</button>
+      </div>
+      <svg id="svg30" viewBox="0 0 520 420" aria-label="30-60-90 üçgeni"></svg>
+    </section>
+
+    <section class="panel">
+      <div class="panel-top">
+        <div class="panel-title">45° - 45° - 90°</div>
+        <button class="small-btn" id="mirror45">Yansıt</button>
+      </div>
+      <svg id="svg45" viewBox="0 0 520 420" aria-label="45-45-90 üçgeni"></svg>
+    </section>
+  </main>
+
+  <div class="mini-keyboard hidden" id="miniKeyboard">
+    <div class="kb-title" id="keyboardTitle">Seçilen kenar</div>
+
+    <input class="kb-input" id="keyboardInput" autocomplete="off" spellcheck="false" />
+
+    <div class="kb-error" id="keyboardError">
+      Örnek: 12, 2√2, 2/√3
+    </div>
+
+    <div class="kb-grid">
+      <button data-insert="1">1</button>
+      <button data-insert="2">2</button>
+      <button data-insert="3">3</button>
+      <button data-insert="/">/</button>
+
+      <button data-insert="4">4</button>
+      <button data-insert="5">5</button>
+      <button data-insert="6">6</button>
+      <button data-insert="√2">√2</button>
+
+      <button data-insert="7">7</button>
+      <button data-insert="8">8</button>
+      <button data-insert="9">9</button>
+      <button data-insert="√3">√3</button>
+
+      <button data-insert="0">0</button>
+      <button data-insert="(">(</button>
+      <button data-insert=")">)</button>
+      <button class="action" data-action="backspace">Sil</button>
+
+      <button class="clear" data-action="clear">Temizle</button>
+      <button class="ok" data-action="ok">Enter</button>
+    </div>
+  </div>
+
+  <script>
+    const SVG_NS = "http://www.w3.org/2000/svg";
+
+    function gcd(a, b) {
+      a = Math.abs(a);
+      b = Math.abs(b);
+
+      while (b !== 0) {
+        const t = b;
+        b = a % b;
+        a = t;
+      }
+
+      return a || 1;
+    }
+
+    function simplifyRadicand(n) {
+      if (!Number.isInteger(n) || n <= 0) {
+        throw new Error("Kök içi pozitif tam sayı olmalıdır.");
+      }
+
+      let outside = 1;
+      let inside = n;
+
+      for (let i = 2; i * i <= inside; i++) {
+        const square = i * i;
+
+        while (inside % square === 0) {
+          inside = inside / square;
+          outside = outside * i;
+        }
+      }
+
+      return { outside, inside };
+    }
+
+    class RadicalTerm {
+      constructor(num, den = 1, rad = 1) {
+        this.num = num;
+        this.den = den;
+        this.rad = rad;
+        this.normalize();
+      }
+
+      normalize() {
+        if (!Number.isInteger(this.num) || !Number.isInteger(this.den) || !Number.isInteger(this.rad)) {
+          throw new Error("Yalnızca tam sayılı katsayılar desteklenir.");
+        }
+
+        if (this.den === 0) {
+          throw new Error("Payda sıfır olamaz.");
+        }
+
+        if (this.num === 0) {
+          this.den = 1;
+          this.rad = 1;
+          return;
+        }
+
+        if (this.den < 0) {
+          this.num *= -1;
+          this.den *= -1;
+        }
+
+        const simplified = simplifyRadicand(this.rad);
+
+        this.num *= simplified.outside;
+        this.rad = simplified.inside;
+
+        const d = gcd(this.num, this.den);
+
+        this.num /= d;
+        this.den /= d;
+      }
+
+      multiply(other) {
+        return new RadicalTerm(
+          this.num * other.num,
+          this.den * other.den,
+          this.rad * other.rad
+        );
+      }
+
+      divide(other) {
+        if (other.num === 0) {
+          throw new Error("Sıfıra bölme yapılamaz.");
+        }
+
+        return new RadicalTerm(
+          this.num * other.den,
+          this.den * other.num * other.rad,
+          this.rad * other.rad
+        );
+      }
+
+      toString() {
+        if (this.num === 0) return "0";
+
+        const negative = this.num < 0;
+        const absNum = Math.abs(this.num);
+        const sign = negative ? "-" : "";
+
+        if (this.rad === 1) {
+          if (this.den === 1) return sign + String(absNum);
+          return sign + absNum + "/" + this.den;
+        }
+
+        const radicalPart = "√" + this.rad;
+        let numeratorText = "";
+
+        if (absNum === 1) {
+          numeratorText = radicalPart;
+        } else {
+          numeratorText = absNum + radicalPart;
+        }
+
+        if (this.den === 1) {
+          return sign + numeratorText;
+        }
+
+        return sign + numeratorText + "/" + this.den;
+      }
+    }
+
+    const TWO = new RadicalTerm(2, 1, 1);
+    const ROOT2 = new RadicalTerm(1, 1, 2);
+    const ROOT3 = new RadicalTerm(1, 1, 3);
+
+    function stripOuterParens(s) {
+      let changed = true;
+
+      while (changed && s.startsWith("(") && s.endsWith(")")) {
+        changed = false;
+
+        let depth = 0;
+        let wraps = true;
+
+        for (let i = 0; i < s.length; i++) {
+          if (s[i] === "(") depth++;
+          if (s[i] === ")") depth--;
+
+          if (depth === 0 && i < s.length - 1) {
+            wraps = false;
+            break;
+          }
+        }
+
+        if (wraps) {
+          s = s.slice(1, -1);
+          changed = true;
+        }
+      }
+
+      return s;
+    }
+
+    function normalizeUserInput(raw) {
+      let s = raw.trim().toLowerCase();
+
+      s = s.replace(/,/g, ".");
+
+      if (s.includes(".")) {
+        throw new Error("Ondalık yerine kesin değer giriniz.");
+      }
+
+      s = s.replace(/kök\s*üç/g, "√3");
+      s = s.replace(/kok\s*uc/g, "√3");
+      s = s.replace(/kök\s*iki/g, "√2");
+      s = s.replace(/kok\s*iki/g, "√2");
+
+      s = s.replace(/√\s*üç/g, "√3");
+      s = s.replace(/√\s*uc/g, "√3");
+      s = s.replace(/√\s*iki/g, "√2");
+
+      s = s.replace(/sqrt\s*\(\s*(\d+)\s*\)/g, "√$1");
+      s = s.replace(/sqrt\s*(\d+)/g, "√$1");
+
+      s = s.replace(/kök\s*\(\s*(\d+)\s*\)/g, "√$1");
+      s = s.replace(/kok\s*\(\s*(\d+)\s*\)/g, "√$1");
+      s = s.replace(/kök\s*(\d+)/g, "√$1");
+      s = s.replace(/kok\s*(\d+)/g, "√$1");
+
+      s = s.replace(/[×·*]/g, "");
+      s = s.replace(/\s+/g, "");
+
+      return s;
+    }
+
+    function splitTopLevelFraction(s) {
+      let depth = 0;
+      let slashIndex = -1;
+
+      for (let i = 0; i < s.length; i++) {
+        const ch = s[i];
+
+        if (ch === "(") depth++;
+        if (ch === ")") depth--;
+
+        if (depth < 0) {
+          throw new Error("Parantez hatası.");
+        }
+
+        if (ch === "/" && depth === 0) {
+          if (slashIndex !== -1) {
+            throw new Error("Tek kesir çizgisi kullanınız.");
+          }
+
+          slashIndex = i;
+        }
+      }
+
+      if (depth !== 0) {
+        throw new Error("Parantez hatası.");
+      }
+
+      if (slashIndex === -1) {
+        return [s, "1"];
+      }
+
+      return [s.slice(0, slashIndex), s.slice(slashIndex + 1)];
+    }
+
+    function parseSingleTerm(s) {
+      s = stripOuterParens(s);
+
+      if (!s) {
+        throw new Error("Boş değer.");
+      }
+
+      const match = s.match(/^(\d+)?(?:√(\d+))?$/);
+
+      if (!match) {
+        throw new Error("Bu ifade desteklenmiyor.");
+      }
+
+      const hasCoeff = match[1] !== undefined;
+      const hasRoot = match[2] !== undefined;
+
+      if (!hasCoeff && !hasRoot) {
+        throw new Error("Boş değer.");
+      }
+
+      const coeff = hasCoeff ? parseInt(match[1], 10) : 1;
+      const rad = hasRoot ? parseInt(match[2], 10) : 1;
+
+      if (coeff <= 0) {
+        throw new Error("Uzunluk pozitif olmalıdır.");
+      }
+
+      return new RadicalTerm(coeff, 1, rad);
+    }
+
+    function parseExpression(raw) {
+      const normalized = normalizeUserInput(raw);
+      const [numText, denText] = splitTopLevelFraction(normalized);
+
+      const numerator = parseSingleTerm(numText);
+      const denominator = parseSingleTerm(denText);
+
+      const result = numerator.divide(denominator);
+
+      if (result.num <= 0) {
+        throw new Error("Uzunluk pozitif olmalıdır.");
+      }
+
+      return result;
+    }
+
+    function makeSvgElement(tag, attrs = {}) {
+      const el = document.createElementNS(SVG_NS, tag);
+
+      for (const [key, value] of Object.entries(attrs)) {
+        el.setAttribute(key, value);
+      }
+
+      return el;
+    }
+
+    function pointsToString(points) {
+      return Object.values(points)
+        .map(p => `${p.x},${p.y}`)
+        .join(" ");
+    }
+
+    function centerRawPoints(raw) {
+      const keys = Object.keys(raw);
+      const cx = keys.reduce((sum, key) => sum + raw[key].x, 0) / keys.length;
+      const cy = keys.reduce((sum, key) => sum + raw[key].y, 0) / keys.length;
+
+      const result = {};
+
+      for (const key of keys) {
+        result[key] = {
+          x: raw[key].x - cx,
+          y: raw[key].y - cy
+        };
+      }
+
+      return result;
+    }
+
+    function normalizeVector(v) {
+      const len = Math.hypot(v.x, v.y);
+
+      if (len === 0) {
+        return { x: 0, y: 0 };
+      }
+
+      return {
+        x: v.x / len,
+        y: v.y / len
+      };
+    }
+
+    function vectorFromTo(a, b) {
+      return {
+        x: b.x - a.x,
+        y: b.y - a.y
+      };
+    }
+
+    function createAngleArcPath(vertex, p1, p2, radius) {
+      const u = normalizeVector(vectorFromTo(vertex, p1));
+      const v = normalizeVector(vectorFromTo(vertex, p2));
+
+      let a1 = Math.atan2(u.y, u.x);
+      let a2 = Math.atan2(v.y, v.x);
+
+      let delta = a2 - a1;
+
+      while (delta > Math.PI) delta -= 2 * Math.PI;
+      while (delta < -Math.PI) delta += 2 * Math.PI;
+
+      const steps = 18;
+      const points = [];
+
+      for (let i = 0; i <= steps; i++) {
+        const t = a1 + delta * (i / steps);
+
+        points.push({
+          x: vertex.x + Math.cos(t) * radius,
+          y: vertex.y + Math.sin(t) * radius
+        });
+      }
+
+      return points
+        .map((p, index) => `${index === 0 ? "M" : "L"} ${p.x} ${p.y}`)
+        .join(" ");
+    }
+
+    function createRightAnglePath(vertex, p1, p2, size) {
+      const u = normalizeVector(vectorFromTo(vertex, p1));
+      const v = normalizeVector(vectorFromTo(vertex, p2));
+
+      const a = {
+        x: vertex.x + u.x * size,
+        y: vertex.y + u.y * size
+      };
+
+      const b = {
+        x: vertex.x + u.x * size + v.x * size,
+        y: vertex.y + u.y * size + v.y * size
+      };
+
+      const c = {
+        x: vertex.x + v.x * size,
+        y: vertex.y + v.y * size
+      };
+
+      return `M ${a.x} ${a.y} L ${b.x} ${b.y} L ${c.x} ${c.y}`;
+    }
+
+    function rightAngleDotPoint(vertex, p1, p2, size) {
+      const u = normalizeVector(vectorFromTo(vertex, p1));
+      const v = normalizeVector(vectorFromTo(vertex, p2));
+
+      return {
+        x: vertex.x + (u.x + v.x) * size * 0.5,
+        y: vertex.y + (u.y + v.y) * size * 0.5
+      };
+    }
+
+    class SpecialTriangle {
+      constructor(options) {
+        this.kind = options.kind;
+        this.svg = document.getElementById(options.svgId);
+        this.center = { x: 260, y: 210 };
+        this.rotation = options.initialRotation || 0;
+        this.initialRotation = this.rotation;
+        this.flipX = false;
+        this.points = centerRawPoints(options.points);
+        this.sides = options.sides;
+        this.angles = options.angles;
+        this.values = null;
+        this.selectedSide = null;
+        this.sideElements = new Map();
+        this.sideLabelElements = new Map();
+        this.angleLabelElements = [];
+
+        this.group = makeSvgElement("g");
+        this.labelLayer = makeSvgElement("g");
+
+        this.svg.appendChild(this.group);
+        this.svg.appendChild(this.labelLayer);
+
+        this.buildShape();
+        this.render();
+      }
+
+      buildShape() {
+        const polygon = makeSvgElement("polygon", {
+          points: pointsToString(this.points),
+          class: "triangle-fill"
+        });
+
+        polygon.addEventListener("pointerdown", event => this.startRotation(event));
+
+        this.group.appendChild(polygon);
+        this.polygon = polygon;
+
+        for (const side of this.sides) {
+          const p1 = this.points[side.from];
+          const p2 = this.points[side.to];
+
+          const visible = makeSvgElement("line", {
+            x1: p1.x,
+            y1: p1.y,
+            x2: p2.x,
+            y2: p2.y,
+            class: `side-line ${side.cssClass}`
+          });
+
+          this.group.appendChild(visible);
+
+          const hit = makeSvgElement("line", {
+            x1: p1.x,
+            y1: p1.y,
+            x2: p2.x,
+            y2: p2.y,
+            class: "hit-line"
+          });
+
+          hit.addEventListener("pointerdown", event => {
+            event.preventDefault();
+            event.stopPropagation();
+            openKeyboard(this, side.key, event.clientX, event.clientY);
+          });
+
+          this.group.appendChild(hit);
+
+          this.sideElements.set(side.key, { visible, hit, side });
+        }
+
+        this.buildAngleMarks();
+
+        for (const key of Object.keys(this.points)) {
+          const p = this.points[key];
+
+          const dot = makeSvgElement("circle", {
+            cx: p.x,
+            cy: p.y,
+            r: 5,
+            class: "vertex-dot"
+          });
+
+          this.group.appendChild(dot);
+        }
+
+        for (const side of this.sides) {
+          const text = makeSvgElement("text", {
+            class: "side-label hint",
+            "text-anchor": "middle",
+            "dominant-baseline": "middle"
+          });
+
+          text.textContent = side.hint;
+
+          this.labelLayer.appendChild(text);
+          this.sideLabelElements.set(side.key, text);
+        }
+      }
+
+      buildAngleMarks() {
+        for (const angle of this.angles) {
+          const vertex = this.points[angle.vertex];
+          const p1 = this.points[angle.from];
+          const p2 = this.points[angle.to];
+
+          if (angle.right) {
+            const rightMark = makeSvgElement("path", {
+              d: createRightAnglePath(vertex, p1, p2, angle.size || 24),
+              class: "right-angle-mark"
+            });
+
+            const dotPoint = rightAngleDotPoint(vertex, p1, p2, angle.size || 24);
+
+            const dot = makeSvgElement("circle", {
+              cx: dotPoint.x,
+              cy: dotPoint.y,
+              r: 3.2,
+              class: "right-angle-dot"
+            });
+
+            this.group.appendChild(rightMark);
+            this.group.appendChild(dot);
+          } else {
+            const arc = makeSvgElement("path", {
+              d: createAngleArcPath(vertex, p1, p2, angle.radius || 30),
+              class: "angle-arc"
+            });
+
+            this.group.appendChild(arc);
+
+            if (angle.text) {
+              const text = makeSvgElement("text", {
+                class: "angle-label",
+                "text-anchor": "middle",
+                "dominant-baseline": "middle"
+              });
+
+              text.textContent = angle.text;
+
+              this.labelLayer.appendChild(text);
+              this.angleLabelElements.push({ text, angle });
+            }
+          }
+        }
+      }
+
+      startRotation(event) {
+        if (event.button !== 0) return;
+
+        event.preventDefault();
+
+        const startClient = {
+          x: event.clientX,
+          y: event.clientY
+        };
+
+        const startSvg = this.clientToSvg(event.clientX, event.clientY);
+
+        const startPointerAngle = Math.atan2(
+          startSvg.y - this.center.y,
+          startSvg.x - this.center.x
+        );
+
+        const startRotation = this.rotation;
+
+        let movedEnough = false;
+
+        const onMove = moveEvent => {
+          const dx = moveEvent.clientX - startClient.x;
+          const dy = moveEvent.clientY - startClient.y;
+          const distance = Math.hypot(dx, dy);
+
+          if (distance > 5 && !movedEnough) {
+            movedEnough = true;
+            closeKeyboard();
+          }
+
+          if (movedEnough) {
+            const currentSvg = this.clientToSvg(moveEvent.clientX, moveEvent.clientY);
+
+            const currentPointerAngle = Math.atan2(
+              currentSvg.y - this.center.y,
+              currentSvg.x - this.center.x
+            );
+
+            const delta = (currentPointerAngle - startPointerAngle) * 180 / Math.PI;
+
+            this.rotation = startRotation + delta;
+            this.render();
+          }
+        };
+
+        const onUp = () => {
+          window.removeEventListener("pointermove", onMove);
+          window.removeEventListener("pointerup", onUp);
+        };
+
+        window.addEventListener("pointermove", onMove);
+        window.addEventListener("pointerup", onUp);
+      }
+
+      clientToSvg(clientX, clientY) {
+        const rect = this.svg.getBoundingClientRect();
+        const viewBox = this.svg.viewBox.baseVal;
+
+        return {
+          x: viewBox.x + (clientX - rect.left) * viewBox.width / rect.width,
+          y: viewBox.y + (clientY - rect.top) * viewBox.height / rect.height
+        };
+      }
+
+      transformPoint(localPoint) {
+        const mirroredX = this.flipX ? -localPoint.x : localPoint.x;
+        const mirroredY = localPoint.y;
+
+        const rad = this.rotation * Math.PI / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+
+        return {
+          x: this.center.x + mirroredX * cos - mirroredY * sin,
+          y: this.center.y + mirroredX * sin + mirroredY * cos
+        };
+      }
+
+      render() {
+        const scaleX = this.flipX ? -1 : 1;
+
+        this.group.setAttribute(
+          "transform",
+          `translate(${this.center.x} ${this.center.y}) rotate(${this.rotation}) scale(${scaleX} 1)`
+        );
+
+        this.updateSideStyles();
+        this.updateLabels();
+      }
+
+      updateSideStyles() {
+        for (const [key, item] of this.sideElements.entries()) {
+          if (key === this.selectedSide) {
+            item.visible.classList.add("selected");
+          } else {
+            item.visible.classList.remove("selected");
+          }
+        }
+      }
+
+      updateLabels() {
+        for (const side of this.sides) {
+          const text = this.sideLabelElements.get(side.key);
+
+          const p1 = this.points[side.from];
+          const p2 = this.points[side.to];
+
+          const mid = {
+            x: (p1.x + p2.x) / 2,
+            y: (p1.y + p2.y) / 2
+          };
+
+          const length = Math.hypot(mid.x, mid.y) || 1;
+          const offset = this.values ? 34 : 24;
+
+          const labelLocal = {
+            x: mid.x + (mid.x / length) * offset,
+            y: mid.y + (mid.y / length) * offset
+          };
+
+          const labelPoint = this.transformPoint(labelLocal);
+
+          text.setAttribute("x", labelPoint.x);
+          text.setAttribute("y", labelPoint.y);
+
+          if (this.values) {
+            text.textContent = `${side.shortName} = ${this.values[side.key].toString()}`;
+            text.classList.remove("hint");
+          } else {
+            text.textContent = side.hint;
+            text.classList.add("hint");
+          }
+        }
+
+        for (const item of this.angleLabelElements) {
+          const angle = item.angle;
+          const vertex = this.points[angle.vertex];
+          const p1 = this.points[angle.from];
+          const p2 = this.points[angle.to];
+
+          const u = normalizeVector(vectorFromTo(vertex, p1));
+          const v = normalizeVector(vectorFromTo(vertex, p2));
+
+          let bisector = normalizeVector({
+            x: u.x + v.x,
+            y: u.y + v.y
+          });
+
+          if (bisector.x === 0 && bisector.y === 0) {
+            bisector = { x: 1, y: 0 };
+          }
+
+          const distance = angle.labelDistance || 50;
+
+          const labelLocal = {
+            x: vertex.x + bisector.x * distance,
+            y: vertex.y + bisector.y * distance
+          };
+
+          const labelPoint = this.transformPoint(labelLocal);
+
+          item.text.setAttribute("x", labelPoint.x);
+          item.text.setAttribute("y", labelPoint.y);
+        }
+      }
+
+      beginNewInput(sideKey) {
+        this.values = null;
+        this.selectedSide = sideKey;
+        this.render();
+      }
+
+      clearSelection() {
+        this.selectedSide = null;
+        this.render();
+      }
+
+      setValues(sideKey, inputTerm) {
+        this.values = computeTriangleValues(this.kind, sideKey, inputTerm);
+        this.render();
+      }
+
+      toggleMirror() {
+        closeKeyboard();
+        this.flipX = !this.flipX;
+        this.render();
+      }
+    }
+
+    function computeTriangleValues(kind, sideKey, term) {
+      if (kind === "30") {
+        let a;
+
+        if (sideKey === "short") {
+          a = term;
+        }
+
+        if (sideKey === "long") {
+          a = term.divide(ROOT3);
+        }
+
+        if (sideKey === "hyp") {
+          a = term.divide(TWO);
+        }
+
+        return {
+          short: a,
+          long: a.multiply(ROOT3),
+          hyp: a.multiply(TWO)
+        };
+      }
+
+      if (kind === "45") {
+        let a;
+
+        if (sideKey === "leg1" || sideKey === "leg2") {
+          a = term;
+        }
+
+        if (sideKey === "hyp") {
+          a = term.divide(ROOT2);
+        }
+
+        return {
+          leg1: a,
+          leg2: a,
+          hyp: a.multiply(ROOT2)
+        };
+      }
+
+      throw new Error("Bilinmeyen üçgen türü.");
+    }
+
+    const triangle30 = new SpecialTriangle({
+      kind: "30",
+      svgId: "svg30",
+      initialRotation: -8,
+      points: {
+        A: { x: 0, y: 0 },
+        B: { x: 242, y: 0 },
+        C: { x: 0, y: -140 }
+      },
+      sides: [
+        {
+          key: "long",
+          from: "A",
+          to: "B",
+          cssClass: "long-side",
+          hint: "uzun",
+          shortName: "uzun",
+          fullName: "uzun dik kenar"
+        },
+        {
+          key: "short",
+          from: "A",
+          to: "C",
+          cssClass: "short-side",
+          hint: "kısa",
+          shortName: "kısa",
+          fullName: "kısa dik kenar"
+        },
+        {
+          key: "hyp",
+          from: "B",
+          to: "C",
+          cssClass: "hyp-side",
+          hint: "hip.",
+          shortName: "hip.",
+          fullName: "hipotenüs"
+        }
+      ],
+      angles: [
+        {
+          vertex: "A",
+          from: "B",
+          to: "C",
+          right: true,
+          size: 24
+        },
+        {
+          vertex: "B",
+          from: "A",
+          to: "C",
+          text: "30°",
+          radius: 32,
+          labelDistance: 68
+        },
+        {
+          vertex: "C",
+          from: "B",
+          to: "A",
+          text: "60°",
+          radius: 30,
+          labelDistance: 50
+        }
+      ]
+    });
+
+    const triangle45 = new SpecialTriangle({
+      kind: "45",
+      svgId: "svg45",
+      initialRotation: 10,
+      points: {
+        A: { x: 0, y: 0 },
+        B: { x: 180, y: 0 },
+        C: { x: 0, y: -180 }
+      },
+      sides: [
+        {
+          key: "leg1",
+          from: "A",
+          to: "B",
+          cssClass: "long-side",
+          hint: "dik",
+          shortName: "dik",
+          fullName: "dik kenar"
+        },
+        {
+          key: "leg2",
+          from: "A",
+          to: "C",
+          cssClass: "short-side",
+          hint: "dik",
+          shortName: "dik",
+          fullName: "dik kenar"
+        },
+        {
+          key: "hyp",
+          from: "B",
+          to: "C",
+          cssClass: "hyp-side",
+          hint: "hip.",
+          shortName: "hip.",
+          fullName: "hipotenüs"
+        }
+      ],
+      angles: [
+        {
+          vertex: "A",
+          from: "B",
+          to: "C",
+          right: true,
+          size: 24
+        },
+        {
+          vertex: "B",
+          from: "A",
+          to: "C",
+          text: "45°",
+          radius: 31,
+          labelDistance: 50
+        },
+        {
+          vertex: "C",
+          from: "B",
+          to: "A",
+          text: "45°",
+          radius: 31,
+          labelDistance: 50
+        }
+      ]
+    });
+
+    const keyboard = document.getElementById("miniKeyboard");
+    const keyboardInput = document.getElementById("keyboardInput");
+    const keyboardTitle = document.getElementById("keyboardTitle");
+    const keyboardError = document.getElementById("keyboardError");
+
+    let activeEdit = null;
+
+    function openKeyboard(triangle, sideKey, clientX, clientY) {
+      activeEdit = { triangle, sideKey };
+
+      const side = triangle.sides.find(s => s.key === sideKey);
+
+      triangle.beginNewInput(sideKey);
+
+      keyboardTitle.textContent = side.fullName;
+      keyboardInput.value = "";
+      keyboardError.classList.remove("show");
+      keyboard.classList.remove("hidden");
+
+      positionKeyboard(clientX, clientY);
+
+      setTimeout(() => keyboardInput.focus(), 0);
+    }
+
+    function positionKeyboard(clientX, clientY) {
+      const gap = 10;
+
+      keyboard.style.left = `${clientX + gap}px`;
+      keyboard.style.top = `${clientY + gap}px`;
+
+      const rect = keyboard.getBoundingClientRect();
+
+      let left = clientX + gap;
+      let top = clientY + gap;
+
+      if (left + rect.width > window.innerWidth - 8) {
+        left = clientX - rect.width - gap;
+      }
+
+      if (top + rect.height > window.innerHeight - 8) {
+        top = clientY - rect.height - gap;
+      }
+
+      if (left < 8) left = 8;
+      if (top < 8) top = 8;
+
+      keyboard.style.left = `${left}px`;
+      keyboard.style.top = `${top}px`;
+    }
+
+    function closeKeyboard() {
+      if (activeEdit && activeEdit.triangle) {
+        activeEdit.triangle.clearSelection();
+      }
+
+      keyboard.classList.add("hidden");
+      keyboardError.classList.remove("show");
+      activeEdit = null;
+    }
+
+    function insertAtCursor(text) {
+      const start = keyboardInput.selectionStart;
+      const end = keyboardInput.selectionEnd;
+      const value = keyboardInput.value;
+
+      keyboardInput.value = value.slice(0, start) + text + value.slice(end);
+
+      const nextPos = start + text.length;
+
+      keyboardInput.focus();
+      keyboardInput.setSelectionRange(nextPos, nextPos);
+    }
+
+    function backspaceAtCursor() {
+      const start = keyboardInput.selectionStart;
+      const end = keyboardInput.selectionEnd;
+      const value = keyboardInput.value;
+
+      if (start !== end) {
+        keyboardInput.value = value.slice(0, start) + value.slice(end);
+        keyboardInput.setSelectionRange(start, start);
+      } else if (start > 0) {
+        keyboardInput.value = value.slice(0, start - 1) + value.slice(start);
+        keyboardInput.setSelectionRange(start - 1, start - 1);
+      }
+
+      keyboardInput.focus();
+    }
+
+    function commitKeyboardValue() {
+      if (!activeEdit) return;
+
+      try {
+        const term = parseExpression(keyboardInput.value);
+
+        activeEdit.triangle.setValues(activeEdit.sideKey, term);
+
+        closeKeyboard();
+      } catch (error) {
+        keyboardError.textContent = error.message || "Bu değer anlaşılamadı.";
+        keyboardError.classList.add("show");
+        keyboardInput.focus();
+      }
+    }
+
+    keyboard.addEventListener("pointerdown", event => {
+      event.stopPropagation();
+    });
+
+    keyboard.addEventListener("click", event => {
+      const button = event.target.closest("button");
+
+      if (!button) return;
+
+      const insert = button.getAttribute("data-insert");
+      const action = button.getAttribute("data-action");
+
+      if (insert !== null) {
+        keyboardError.classList.remove("show");
+        insertAtCursor(insert);
+      }
+
+      if (action === "backspace") {
+        keyboardError.classList.remove("show");
+        backspaceAtCursor();
+      }
+
+      if (action === "clear") {
+        keyboardError.classList.remove("show");
+        keyboardInput.value = "";
+        keyboardInput.focus();
+      }
+
+      if (action === "ok") {
+        commitKeyboardValue();
+      }
+    });
+
+    keyboardInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        commitKeyboardValue();
+      }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeKeyboard();
+      }
+    });
+
+    document.addEventListener("pointerdown", event => {
+      if (!keyboard.classList.contains("hidden") && !keyboard.contains(event.target)) {
+        const isSvgClick = event.target.closest && event.target.closest("svg");
+
+        if (!isSvgClick) {
+          closeKeyboard();
+        }
+      }
+    });
+
+    document.getElementById("mirror30").addEventListener("click", () => {
+      triangle30.toggleMirror();
+    });
+
+    document.getElementById("mirror45").addEventListener("click", () => {
+      triangle45.toggleMirror();
+    });
+  </script>
+</body>
+</html>
