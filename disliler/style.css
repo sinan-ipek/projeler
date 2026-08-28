@@ -1,0 +1,434 @@
+:root {
+      --bg: #f6f8fc;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #697386;
+      --line: #dce2ec;
+      --gear-1: #4f78d1;
+      --gear-1-dark: #2e55aa;
+      --gear-2: #e69a45;
+      --gear-2-dark: #b96d1f;
+      --accent: #2d6cdf;
+      --success: #16845b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 36px);
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      margin: 10px 0 22px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 310px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(32, 46, 76, 0.08);
+    }
+
+    .controls {
+      padding: 20px;
+    }
+
+    .control-group + .control-group {
+      margin-top: 22px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+    }
+
+    .control-title,
+    .marker-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 9px;
+      font-weight: 700;
+    }
+
+    .marker-title + .marker-title {
+      margin-top: 15px;
+    }
+
+    .badge {
+      min-width: 54px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      background: #eef3ff;
+      color: #244a9a;
+    }
+
+    .badge.orange {
+      background: #fff2e4;
+      color: #9b5515;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    #marker2Offset {
+      accent-color: var(--gear-2-dark);
+    }
+
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    button {
+      min-height: 42px;
+      border: 1px solid #cfd7e5;
+      border-radius: 11px;
+      padding: 9px 12px;
+      font: inherit;
+      font-weight: 700;
+      color: var(--text);
+      background: #fff;
+      cursor: pointer;
+      transition:
+        transform 120ms ease,
+        background 120ms ease,
+        border-color 120ms ease;
+    }
+
+    button:hover {
+      background: #f3f6fb;
+      border-color: #aebbd0;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.primary {
+      color: #fff;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    button.primary:hover {
+      background: #245fca;
+    }
+
+    .wide {
+      grid-column: 1 / -1;
+    }
+
+    .hint {
+      margin: 13px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .stage-panel {
+      overflow: hidden;
+    }
+
+    .stage-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .stage-wrap {
+      position: relative;
+      min-height: 470px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(68, 104, 166, 0.08), transparent 46%),
+        linear-gradient(#ffffff, #fbfcff);
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 470px;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .gear-root {
+      cursor: grab;
+    }
+
+    .gear-root:active {
+      cursor: grabbing;
+    }
+
+    .gear-shape {
+      stroke-width: 2.5;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .pitch-circle {
+      fill: none;
+      stroke: rgba(23, 32, 51, 0.28);
+      stroke-width: 1.2;
+      stroke-dasharray: 5 5;
+      vector-effect: non-scaling-stroke;
+      pointer-events: none;
+    }
+
+    .hub {
+      fill: #fff;
+      stroke-width: 4;
+      vector-effect: non-scaling-stroke;
+      pointer-events: none;
+    }
+
+    .angle-hand {
+      stroke: #fff;
+      stroke-width: 5;
+      stroke-linecap: round;
+      vector-effect: non-scaling-stroke;
+      pointer-events: none;
+      filter: url(#markerShadow);
+    }
+
+    .angle-dot {
+      fill: #fff;
+      stroke: rgba(23, 32, 51, 0.22);
+      stroke-width: 1.5;
+      vector-effect: non-scaling-stroke;
+      pointer-events: none;
+    }
+
+    .marker-hit {
+      stroke: transparent;
+      stroke-width: 28;
+      stroke-linecap: round;
+      pointer-events: stroke;
+      cursor: crosshair;
+    }
+
+    .marker-handle {
+      fill: #fff;
+      stroke: rgba(23, 32, 51, 0.36);
+      stroke-width: 2;
+      vector-effect: non-scaling-stroke;
+      cursor: crosshair;
+      filter: url(#markerShadow);
+    }
+
+    .marker-control:hover .marker-handle {
+      stroke: #172033;
+      stroke-width: 3;
+    }
+
+    .contact-line {
+      stroke: rgba(23, 32, 51, 0.24);
+      stroke-width: 1.5;
+      stroke-dasharray: 4 5;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .contact-point {
+      fill: #172033;
+    }
+
+    .gear-label {
+      text-anchor: middle;
+      dominant-baseline: middle;
+      font-weight: 700;
+      fill: #172033;
+      pointer-events: none;
+    }
+
+    .gear-caption {
+      text-anchor: middle;
+      fill: #526078;
+      font-size: 18px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    .turn-counter {
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .turn-counter-box {
+      fill: rgba(255, 255, 255, 0.94);
+      stroke: #d5ddea;
+      stroke-width: 1.5;
+      rx: 14;
+      ry: 14;
+      filter: url(#counterShadow);
+    }
+
+    .turn-counter-title {
+      fill: #697386;
+      font-size: 15px;
+      font-weight: 700;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .turn-counter-value {
+      fill: #172033;
+      font-size: 32px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      font-variant-numeric: tabular-nums;
+      pointer-events: none;
+    }
+
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      padding: 15px;
+      border-top: 1px solid var(--line);
+      background: #fbfcff;
+    }
+
+    .data-card {
+      min-height: 92px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: #fff;
+    }
+
+    .data-card .label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .data-card .value {
+      margin-top: 7px;
+      font-size: clamp(20px, 2.2vw, 28px);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .formula-panel {
+      margin-top: 18px;
+      padding: 20px;
+    }
+
+    .formula-title {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .formula {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      padding: 15px;
+      border-radius: 14px;
+      background: #f5f8ff;
+      font-family: "Cambria Math", "Times New Roman", serif;
+      font-size: clamp(21px, 3vw, 31px);
+    }
+
+    .formula .result {
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .explanation {
+      margin: 12px 0 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+
+      .control-group + .control-group {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: 0;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .page {
+        width: min(100% - 16px, 1180px);
+        padding-top: 14px;
+      }
+
+      .controls {
+        display: block;
+      }
+
+      .control-group + .control-group {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+      }
+
+      .stage-header {
+        flex-direction: column;
+      }
+
+      .stage-wrap,
+      svg {
+        min-height: 390px;
+        height: 390px;
+      }
+
+      .data-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
