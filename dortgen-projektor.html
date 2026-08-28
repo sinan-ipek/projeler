@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>v1.4.14 - Dörtgen Projektör</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --panel:#ffffff;
+      --line:#d8deea;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --accent:#2563eb;
+      --danger:#dc2626;
+      --green:#16a34a;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial, Helvetica, sans-serif;background:var(--bg);color:var(--text)}
+    .app{display:grid;grid-template-columns:340px 1fr;min-height:100vh}
+    .sidebar{background:var(--panel);border-right:1px solid var(--line);padding:16px;overflow:auto}
+    .sidebar h1{margin:0 0 6px;font-size:22px}
+    .version{color:var(--muted);font-size:13px;margin-bottom:16px}
+    .group{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px;background:#fff}
+    .group h2{font-size:15px;margin:0 0 10px}
+    .row{display:flex;gap:10px;align-items:center;margin:8px 0;flex-wrap:wrap}
+    label{font-size:13px;color:var(--muted)}
+    input[type="color"]{width:44px;height:34px;padding:0;border:1px solid var(--line);border-radius:8px;background:white}
+    input[type="range"]{width:100%}
+    button{border:1px solid var(--line);background:white;border-radius:10px;padding:9px 11px;cursor:pointer;font-size:14px}
+    button.active{background:var(--accent);color:white;border-color:var(--accent)}
+    button.danger{color:var(--danger);border-color:#f1b3b3}
+    .workspace{overflow:auto;padding:16px}
+    .boardWrap{position:relative;display:inline-block;transform-origin:top left;background:white;border:1px solid var(--line);border-radius:18px;box-shadow:0 6px 24px rgba(0,0,0,.08)}
+    svg{position:relative;z-index:1;display:block;width:1260px;height:780px;touch-action:none;user-select:none;-webkit-user-select:none}
+    .gridLine{stroke:#d7dde8;stroke-width:1}
+    .gridLayer{opacity:.85}
+    .panelTitle{font-size:13px;fill:#475569;font-weight:bold}
+    .quadFill{fill:rgba(37,99,235,.05);stroke:#2563eb;stroke-width:2}
+    .projectFill{fill:rgba(22,163,74,.05);stroke:var(--green);stroke-width:2}
+    .edgeHandle{stroke:transparent;stroke-width:18;fill:none;cursor:ew-resize}
+    .handle{fill:white;stroke:#111827;stroke-width:2;cursor:grab}
+    .handleHit{fill:transparent;stroke:transparent;stroke-width:0;cursor:grab}
+    .handle:active{cursor:grabbing}
+    .handleLabel{font-size:14px;font-weight:bold;fill:#111827;pointer-events:none}
+    .guide{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:5 5}
+    .strokeA,.strokeB,.shapeA,.shapeB{fill:none;stroke-linecap:round;stroke-linejoin:round}
+    .preview{opacity:.7;pointer-events:none}
+    .note{font-size:12px;color:var(--muted);line-height:1.5}
+    .imageWarpCanvas{position:absolute;left:0;top:0;width:1260px;height:780px;pointer-events:none;z-index:0;display:none;image-rendering:auto}
+    .stat{font-size:13px;color:#334155}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h1>Dörtgen Projektör</h1>
+      <div class="version">v1.4.14</div>
+
+      <div class="group">
+        <h2>Araç</h2>
+        <div class="row">
+          <button id="drawBtn" class="active">Serbest Çiz</button>
+          <button id="lineBtn">Doğru</button>
+          <button id="circleBtn">Çember</button>
+        </div>
+        <div class="row">
+          <button id="eraseBtn">Silgi</button>
+        </div>
+        <div class="note">
+          Çizim sol bölgede dışarıdan başlayabilir ve dışarıda bitebilir. Yine de yalnızca dörtgen içindeki kısım gösterilir.
+          Doğru aracı iki tıklama ile, çember aracı merkez ve yarıçap için iki tıklama ile çalışır.
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>Çizim Ayarları</h2>
+        <div class="row">
+          <label for="colorPicker">Renk</label>
+          <input id="colorPicker" type="color" value="#d946ef" />
+        </div>
+        <div class="row">
+          <label for="sizeRange">Çizgi kalınlığı</label>
+          <input id="sizeRange" type="range" min="1" max="24" step="1" value="4" />
+          <div class="stat"><span id="sizeValue">4</span> px</div>
+        </div>
+        <div class="row">
+          <label for="eraserRange">Silgi yarıçapı</label>
+          <input id="eraserRange" type="range" min="6" max="60" step="1" value="18" />
+          <div class="stat"><span id="eraserValue">18</span> px</div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>Yakınlaştırma</h2>
+        <div class="row">
+          <label for="zoomRange">Zoom</label>
+          <input id="zoomRange" type="range" min="50" max="250" step="5" value="100" />
+          <div class="stat">%<span id="zoomValue">100</span></div>
+        </div>
+      </div>
+      <div class="group">
+        <h2>Grid</h2>
+        <div class="row">
+          <button id="gridBtn">Grid</button>
+        </div>
+        <div class="row">
+          <label for="gridSizeRange">Grid aralığı</label>
+          <input id="gridSizeRange" type="range" min="10" max="80" step="2" value="25" />
+          <div class="stat"><span id="gridSizeValue">25</span> px</div>
+        </div>
+      </div>
+      <div class="group">
+        <h2>Dikdörtgene</h2>
+        <div class="row">
+          <button id="rectify1Btn">1</button>
+          <button id="rectify2Btn">2</button>
+        </div>
+      </div>
+      <div class="group">
+        <h2>Resim</h2>
+        <div class="row">
+          <button id="imageBtn">Resim yükle</button>
+          <input id="imageInput" type="file" accept="image/*" style="display:none" />
+        </div>
+        <div class="row">
+          <label for="imageScaleRange">Resim ölçeği</label>
+          <input id="imageScaleRange" type="range" min="20" max="250" step="5" value="100" />
+          <div class="stat">%<span id="imageScaleValue">100</span></div>
+        </div>
+        <div class="row">
+          <button id="imageResetBtn">Resmi ortala</button>
+          <button id="imageClearBtn" class="danger">Resmi kaldır</button>
+        </div>
+        <div class="note">
+          Yüklenen resim sol tarafta arka plana yerleşir. Resmi sürükleyerek konumunu değiştirebilirsin. Sağ tarafta görüntü, girdi dörtgeninden çıktı dörtgenine gerçek homografi ile canvas üzerinde aktarılır.
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>İşlemler</h2>
+        <div class="row">
+          <button id="undoBtn">Son nesneyi geri al</button>
+          <button id="clearBtn" class="danger">Tümünü sil</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>İpucu</h2>
+        <div class="note">
+          Sağ tarafta serbest çizgiler çizgi olarak, doğrular doğru olarak, çemberler ise genel durumda konik eğriye dönüşmüş halde çizilir.
+          Nesneler dışarıdan başlasa bile sadece dörtgenlerin içindeki bölümler görünür.
+        </div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <div id="boardWrap" class="boardWrap">
+        <canvas id="imageWarpCanvas" class="imageWarpCanvas" width="1260" height="780"></canvas>
+        <svg id="svg" viewBox="0 0 1260 780" xmlns="http://www.w3.org/2000/svg">
+          <g id="gridLayerA"></g>
+          <g id="gridLayerB"></g>
+          <defs>
+            <clipPath id="clipQuadA"><polygon id="clipPolyA"></polygon></clipPath>
+            <clipPath id="clipQuadB"><polygon id="clipPolyB"></polygon></clipPath>
+            <clipPath id="imageQuadClipB"><polygon id="imageQuadPolyB"></polygon></clipPath>
+          </defs>
+
+          <line class="guide" x1="630" y1="30" x2="630" y2="750"></line>
+          <text x="180" y="40" class="panelTitle">Kaynak dörtgen</text>
+          <text x="790" y="40" class="panelTitle">Projeksiyon dörtgeni</text>
+
+          <g id="quadAGroup">
+            <g id="imageLayerA" clip-path="url(#clipQuadA)"></g>
+            <polygon id="quadA" class="quadFill"></polygon>
+            <g id="objectsA" clip-path="url(#clipQuadA)"></g>
+            <g id="previewA" clip-path="url(#clipQuadA)"></g>
+            <g id="handlesA"></g>
+          </g>
+
+          <g id="quadBGroup">
+            <g id="imageLayerB" clip-path="url(#imageQuadClipB)"></g>
+            <polygon id="quadB" class="projectFill"></polygon>
+            <g id="objectsB" clip-path="url(#clipQuadB)"></g>
+            <g id="previewB" clip-path="url(#clipQuadB)"></g>
+            <g id="handlesB"></g>
+          </g>
+        </svg>
+      </div>
+    </main>
+  </div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+
+const state = {
+  mode: "draw",
+  color: "#d946ef",
+  size: 4,
+  eraserRadius: 18,
+  zoom: 1,
+  showGrid: false,
+  gridSize: 25,
+  image: null,
+  imageScale: 1,
+  imageBaseFit: 1,
+  imagePos: {x: 0, y: 0},
+  draggingImage: false,
+  imageElement: null,
+  hoverPoint: null,
+  draggingEdge: null,
+  draggingHandle: null,
+  drawing: false,
+  activeStroke: null,
+  tempPoints: [],
+  objects: [],
+  quadA: [
+    {x: 120, y: 120},
+    {x: 470, y: 150},
+    {x: 430, y: 540},
+    {x: 150, y: 510}
+  ],
+  quadB: [
+    {x: 740, y: 110},
+    {x: 1060, y: 165},
+    {x: 1010, y: 560},
+    {x: 760, y: 500}
+  ]
+};
+
+const svg = document.getElementById("svg");
+const boardWrap = document.getElementById("boardWrap");
+const imageWarpCanvas = document.getElementById("imageWarpCanvas");
+const imageWarpCtx = imageWarpCanvas.getContext("2d", { willReadFrequently: true });
+const quadAEl = document.getElementById("quadA");
+const quadBEl = document.getElementById("quadB");
+const clipPolyA = document.getElementById("clipPolyA");
+const clipPolyB = document.getElementById("clipPolyB");
+const objectsA = document.getElementById("objectsA");
+const objectsB = document.getElementById("objectsB");
+const previewA = document.getElementById("previewA");
+const previewB = document.getElementById("previewB");
+const handlesA = document.getElementById("handlesA");
+const handlesB = document.getElementById("handlesB");
+
+const drawBtn = document.getElementById("drawBtn");
+const lineBtn = document.getElementById("lineBtn");
+const circleBtn = document.getElementById("circleBtn");
+const eraseBtn = document.getElementById("eraseBtn");
+const colorPicker = document.getElementById("colorPicker");
+const sizeRange = document.getElementById("sizeRange");
+const eraserRange = document.getElementById("eraserRange");
+const zoomRange = document.getElementById("zoomRange");
+const sizeValue = document.getElementById("sizeValue");
+const eraserValue = document.getElementById("eraserValue");
+const zoomValue = document.getElementById("zoomValue");
+const gridBtn = document.getElementById("gridBtn");
+const gridSizeRange = document.getElementById("gridSizeRange");
+const gridSizeValue = document.getElementById("gridSizeValue");
+const rectify1Btn = document.getElementById("rectify1Btn");
+const rectify2Btn = document.getElementById("rectify2Btn");
+const gridLayerA = document.getElementById("gridLayerA");
+const gridLayerB = document.getElementById("gridLayerB");
+const imageBtn = document.getElementById("imageBtn");
+const imageInput = document.getElementById("imageInput");
+const imageScaleRange = document.getElementById("imageScaleRange");
+const imageScaleValue = document.getElementById("imageScaleValue");
+const imageResetBtn = document.getElementById("imageResetBtn");
+const imageClearBtn = document.getElementById("imageClearBtn");
+const imageLayerA = document.getElementById("imageLayerA");
+const imageLayerB = document.getElementById("imageLayerB");
+const imageQuadPolyB = document.getElementById("imageQuadPolyB");
+const undoBtn = document.getElementById("undoBtn");
+const clearBtn = document.getElementById("clearBtn");
+
+function setMode(mode){
+  state.mode = mode;
+  state.tempPoints = [];
+  state.activeStroke = null;
+  state.drawing = false;
+  state.draggingHandle = null;
+  state.draggingEdge = null;
+  state.draggingImage = false;
+  drawBtn.classList.toggle("active", mode === "draw");
+  lineBtn.classList.toggle("active", mode === "line");
+  circleBtn.classList.toggle("active", mode === "circle");
+  eraseBtn.classList.toggle("active", mode === "erase");
+  renderPreview();
+}
+
+drawBtn.onclick = () => setMode("draw");
+lineBtn.onclick = () => setMode("line");
+circleBtn.onclick = () => setMode("circle");
+eraseBtn.onclick = () => setMode("erase");
+
+colorPicker.oninput = e => state.color = e.target.value;
+sizeRange.oninput = e => { state.size = Number(e.target.value); sizeValue.textContent = state.size; renderPreview(); };
+eraserRange.oninput = e => { state.eraserRadius = Number(e.target.value); eraserValue.textContent = state.eraserRadius; };
+zoomRange.oninput = e => {
+  state.zoom = Number(e.target.value) / 100;
+  zoomValue.textContent = e.target.value;
+  boardWrap.style.transform = `scale(${state.zoom})`;
+};
+
+gridBtn.onclick = () => {
+  state.showGrid = !state.showGrid;
+  gridBtn.classList.toggle("active", state.showGrid);
+  renderGrid();
+};
+
+gridSizeRange.oninput = e => {
+  state.gridSize = Number(e.target.value);
+  gridSizeValue.textContent = state.gridSize;
+  renderGrid();
+};
+
+rectify1Btn.onclick = () => {
+  state.quadA = makeAxisAlignedRectangleFromQuad(state.quadA);
+  renderQuad();
+};
+
+rectify2Btn.onclick = () => {
+  state.quadB = makeAxisAlignedRectangleFromQuad(state.quadB);
+  renderQuad();
+};
+
+imageBtn.onclick = () => imageInput.click();
+
+imageInput.onchange = e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      state.image = {
+        src: ev.target.result,
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      };
+      state.imageElement = img;
+      state.imageScale = Number(imageScaleRange.value) / 100;
+      fitImageToLeftPanel();
+      renderQuad();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+imageScaleRange.oninput = e => {
+  state.imageScale = Number(e.target.value) / 100;
+  imageScaleValue.textContent = e.target.value;
+  renderImage();
+};
+
+imageResetBtn.onclick = () => {
+  if (!state.image) return;
+  fitImageToLeftPanel();
+  renderImage();
+};
+
+imageClearBtn.onclick = () => {
+  state.image = null;
+  state.imageElement = null;
+  state.draggingImage = false;
+  imageInput.value = "";
+  imageLayerA.innerHTML = "";
+  imageLayerB.innerHTML = "";
+  imageWarpCanvas.style.display = "none";
+  imageWarpCtx.clearRect(0, 0, imageWarpCanvas.width, imageWarpCanvas.height);
+};
+
+undoBtn.onclick = () => { state.objects.pop(); renderAll(); };
+clearBtn.onclick = () => { state.objects = []; renderAll(); };
+
+function ptsToString(pts){ return pts.map(p => `${p.x},${p.y}`).join(" "); }
+
+function clipSegmentToUnitSquare(p0, p1){
+  let t0 = 0, t1 = 1;
+  const dx = p1.x - p0.x, dy = p1.y - p0.y;
+  const checks = [
+    [-dx, p0.x],
+    [ dx, 1 - p0.x],
+    [-dy, p0.y],
+    [ dy, 1 - p0.y]
+  ];
+  for (const [p, q] of checks){
+    if (Math.abs(p) < 1e-12){
+      if (q < 0) return null;
+    } else {
+      const r = q / p;
+      if (p < 0){
+        if (r > t1) return null;
+        if (r > t0) t0 = r;
+      } else {
+        if (r < t0) return null;
+        if (r < t1) t1 = r;
+      }
+    }
+  }
+  return {
+    a: {x: p0.x + t0 * dx, y: p0.y + t0 * dy},
+    b: {x: p0.x + t1 * dx, y: p0.y + t1 * dy}
+  };
+}
+
+function buildGridSegments(step){
+  const segs = [];
+  for (let u = step; u < 1 - 1e-9; u += step){
+    segs.push([{x:u, y:0}, {x:u, y:1}]);
+  }
+  for (let v = step; v < 1 - 1e-9; v += step){
+    segs.push([{x:0, y:v}, {x:1, y:v}]);
+  }
+  return segs;
+}
+
+function renderGridLayer(layer, quad){
+  layer.innerHTML = "";
+  layer.setAttribute("class", "gridLayer");
+  if (!state.showGrid) return;
+  const unitStep = state.gridSize / 300;
+  const segs = buildGridSegments(unitStep);
+  for (const [p0, p1] of segs){
+    const a = unitToQuad(p0, quad);
+    const b = unitToQuad(p1, quad);
+    if (!a || !b) continue;
+    const line = document.createElementNS(NS, "line");
+    line.setAttribute("class", "gridLine");
+    line.setAttribute("x1", a.x);
+    line.setAttribute("y1", a.y);
+    line.setAttribute("x2", b.x);
+    line.setAttribute("y2", b.y);
+    layer.appendChild(line);
+  }
+}
+
+function renderGrid(){
+  renderGridLayer(gridLayerA, state.quadA);
+  renderGridLayer(gridLayerB, state.quadB);
+}
+
+function makeAxisAlignedRectangleFromQuad(quad){
+  const b = quadBounds(quad);
+  return [
+    {x: b.minX, y: b.minY},
+    {x: b.maxX, y: b.minY},
+    {x: b.maxX, y: b.maxY},
+    {x: b.minX, y: b.maxY}
+  ];
+}
+
+function quadBounds(quad){
+  const xs = quad.map(p => p.x), ys = quad.map(p => p.y);
+  return {
+    minX: Math.min(...xs), maxX: Math.max(...xs),
+    minY: Math.min(...ys), maxY: Math.max(...ys)
+  };
+}
+
+function fitImageToLeftPanel(){
+  if (!state.image) return;
+  const b = quadBounds(state.quadA);
+  const availW = (b.maxX - b.minX);
+  const availH = (b.maxY - b.minY);
+  const fit = Math.min(availW / state.image.width, availH / state.image.height);
+  state.imageBaseFit = fit;
+  const w = state.image.width * fit * state.imageScale;
+  const h = state.image.height * fit * state.imageScale;
+  state.imagePos = {
+    x: b.minX + (availW - w) / 2,
+    y: b.minY + (availH - h) / 2
+  };
+}
+
+function imageDisplaySize(){
+  if (!state.image) return null;
+  const scale = state.imageBaseFit * state.imageScale;
+  return {w: state.image.width * scale, h: state.image.height * scale};
+}
+
+function computeHomography(srcPts, dstPts){
+  const A = [], b = [];
+  for (let i = 0; i < 4; i++){
+    const x = srcPts[i].x, y = srcPts[i].y;
+    const u = dstPts[i].x, v = dstPts[i].y;
+    A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]);
+    b.push(u);
+    A.push([0, 0, 0, x, y, 1, -v * x, -v * y]);
+    b.push(v);
+  }
+  const h = solveLinearSystem(A, b);
+  if (!h) return null;
+  return [
+    [h[0], h[1], h[2]],
+    [h[3], h[4], h[5]],
+    [h[6], h[7], 1]
+  ];
+}
+
+function invertHomography(H){
+  const a = H[0][0], b = H[0][1], c = H[0][2];
+  const d = H[1][0], e = H[1][1], f = H[1][2];
+  const g = H[2][0], h = H[2][1], i = H[2][2];
+
+  const A = e * i - f * h;
+  const B = -(b * i - c * h);
+  const C = b * f - c * e;
+  const D = -(d * i - f * g);
+  const E = a * i - c * g;
+  const F = -(a * f - c * d);
+  const G = d * h - e * g;
+  const H2 = -(a * h - b * g);
+  const I = a * e - b * d;
+
+  const det = a * A + b * D + c * G;
+  if (Math.abs(det) < 1e-12) return null;
+
+  return [
+    [A / det, B / det, C / det],
+    [D / det, E / det, F / det],
+    [G / det, H2 / det, I / det]
+  ];
+}
+
+function applyHomographyXY(H, x, y){
+  const X = H[0][0] * x + H[0][1] * y + H[0][2];
+  const Y = H[1][0] * x + H[1][1] * y + H[1][2];
+  const W = H[2][0] * x + H[2][1] * y + H[2][2];
+  if (Math.abs(W) < 1e-12) return null;
+  return { x: X / W, y: Y / W };
+}
+
+function drawWarpedImageRight(size){
+  imageWarpCtx.clearRect(0, 0, imageWarpCanvas.width, imageWarpCanvas.height);
+  imageWarpCanvas.style.display = "none";
+  if (!state.image || !state.imageElement) return;
+
+  const srcQuadLocal = state.quadA.map(p => ({
+    x: p.x - state.imagePos.x,
+    y: p.y - state.imagePos.y
+  }));
+  const dstQuad = state.quadB.map(p => ({ x: p.x, y: p.y }));
+
+  const H = computeHomography(srcQuadLocal, dstQuad);
+  if (!H) return;
+  const Hinv = invertHomography(H);
+  if (!Hinv) return;
+
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const ss = Math.max(2, Math.ceil(dpr));
+  const outW = Math.round(1260 * ss);
+  const outH = Math.round(780 * ss);
+
+  imageWarpCanvas.width = outW;
+  imageWarpCanvas.height = outH;
+  imageWarpCanvas.style.width = '1260px';
+  imageWarpCanvas.style.height = '780px';
+
+  const off = document.createElement('canvas');
+  off.width = Math.max(1, Math.round(size.w * ss));
+  off.height = Math.max(1, Math.round(size.h * ss));
+  const offCtx = off.getContext('2d', { willReadFrequently: true });
+  offCtx.imageSmoothingEnabled = true;
+  offCtx.imageSmoothingQuality = 'high';
+  offCtx.drawImage(state.imageElement, 0, 0, off.width, off.height);
+
+  const srcData = offCtx.getImageData(0, 0, off.width, off.height);
+  const dstData = imageWarpCtx.createImageData(outW, outH);
+
+  const minX = Math.max(0, Math.floor(Math.min(...dstQuad.map(p => p.x)) * ss));
+  const maxX = Math.min(outW - 1, Math.ceil(Math.max(...dstQuad.map(p => p.x)) * ss));
+  const minY = Math.max(0, Math.floor(Math.min(...dstQuad.map(p => p.y)) * ss));
+  const maxY = Math.min(outH - 1, Math.ceil(Math.max(...dstQuad.map(p => p.y)) * ss));
+
+  function sampleBilinear(x, y){
+    const w = srcData.width, h = srcData.height, data = srcData.data;
+    if (x < 0 || y < 0 || x > w - 1 || y > h - 1) return [0, 0, 0, 0];
+    const x0 = Math.floor(x), y0 = Math.floor(y);
+    const x1 = Math.min(w - 1, x0 + 1), y1 = Math.min(h - 1, y0 + 1);
+    const tx = x - x0, ty = y - y0;
+
+    const i00 = (y0 * w + x0) * 4;
+    const i10 = (y0 * w + x1) * 4;
+    const i01 = (y1 * w + x0) * 4;
+    const i11 = (y1 * w + x1) * 4;
+    const out = [0, 0, 0, 0];
+
+    for (let k = 0; k < 4; k++){
+      const a = data[i00 + k] * (1 - tx) + data[i10 + k] * tx;
+      const b = data[i01 + k] * (1 - tx) + data[i11 + k] * tx;
+      out[k] = a * (1 - ty) + b * ty;
+    }
+    return out;
+  }
+
+  for (let y = minY; y <= maxY; y++){
+    for (let x = minX; x <= maxX; x++){
+      const px = (x + 0.5) / ss;
+      const py = (y + 0.5) / ss;
+      if (!pointInPolygon({ x: px, y: py }, dstQuad)) continue;
+      const src = applyHomographyXY(Hinv, px, py);
+      if (!src) continue;
+
+      const sx = src.x * ss;
+      const sy = src.y * ss;
+      if (sx < 0 || sy < 0 || sx > off.width - 1 || sy > off.height - 1) continue;
+
+      const rgba = sampleBilinear(sx, sy);
+      const idx = (y * outW + x) * 4;
+      dstData.data[idx] = rgba[0];
+      dstData.data[idx + 1] = rgba[1];
+      dstData.data[idx + 2] = rgba[2];
+      dstData.data[idx + 3] = rgba[3];
+    }
+  }
+
+  imageWarpCtx.putImageData(dstData, 0, 0);
+  imageWarpCanvas.style.display = "block";
+}
+
+function renderImage(){
+  imageLayerA.innerHTML = "";
+  imageLayerB.innerHTML = "";
+  imageQuadPolyB.setAttribute("points", ptsToString(state.quadB));
+  imageWarpCtx.clearRect(0, 0, imageWarpCanvas.width, imageWarpCanvas.height);
+  imageWarpCanvas.style.display = "none";
+  if (!state.image || !state.imageElement) return;
+
+  const size = imageDisplaySize();
+  if (!size) return;
+
+  const imgA = document.createElementNS(NS, "image");
+  imgA.setAttributeNS("http://www.w3.org/1999/xlink", "href", state.image.src);
+  imgA.setAttribute("href", state.image.src);
+  imgA.setAttribute("x", state.imagePos.x);
+  imgA.setAttribute("y", state.imagePos.y);
+  imgA.setAttribute("width", size.w);
+  imgA.setAttribute("height", size.h);
+  imgA.style.cursor = "move";
+  imageLayerA.appendChild(imgA);
+
+  drawWarpedImageRight(size);
+}
+
+function renderQuad(){
+  quadAEl.setAttribute("points", ptsToString(state.quadA));
+  quadBEl.setAttribute("points", ptsToString(state.quadB));
+  clipPolyA.setAttribute("points", ptsToString(state.quadA));
+  clipPolyB.setAttribute("points", ptsToString(state.quadB));
+  imageQuadPolyB.setAttribute("points", ptsToString(state.quadB));
+  renderGrid();
+  renderImage();
+  renderHandles();
+  renderAll();
+}
+
+function makeHandle(point, label, which, index){
+  const g = document.createElementNS(NS, "g");
+
+  const hit = document.createElementNS(NS, "circle");
+  hit.setAttribute("class", "handleHit");
+  hit.setAttribute("r", "14");
+  hit.setAttribute("cx", point.x);
+  hit.setAttribute("cy", point.y);
+  hit.dataset.which = which;
+  hit.dataset.index = index;
+
+  const c = document.createElementNS(NS, "circle");
+  c.setAttribute("class", "handle");
+  c.setAttribute("r", "5");
+  c.setAttribute("cx", point.x);
+  c.setAttribute("cy", point.y);
+  c.dataset.which = which;
+  c.dataset.index = index;
+
+  const t = document.createElementNS(NS, "text");
+  t.setAttribute("class", "handleLabel");
+  t.setAttribute("x", point.x + 12);
+  t.setAttribute("y", point.y - 12);
+  t.textContent = label;
+
+  g.appendChild(hit);
+  g.appendChild(c);
+  g.appendChild(t);
+  return g;
+}
+
+function makeEdgeHandle(p1, p2, which, edgeIndex){
+  const line = document.createElementNS(NS, "line");
+  line.setAttribute("class", "edgeHandle");
+  line.setAttribute("x1", p1.x);
+  line.setAttribute("y1", p1.y);
+  line.setAttribute("x2", p2.x);
+  line.setAttribute("y2", p2.y);
+  line.dataset.edgehandle = "1";
+  line.dataset.which = which;
+  line.dataset.edge = edgeIndex;
+  return line;
+}
+
+function renderHandles(){
+  handlesA.innerHTML = "";
+  handlesB.innerHTML = "";
+  const labels = ["A","B","C","D"];
+
+  for (let i = 0; i < 4; i++){
+    const j = (i + 1) % 4;
+    handlesA.appendChild(makeEdgeHandle(state.quadA[i], state.quadA[j], "A", i));
+    handlesB.appendChild(makeEdgeHandle(state.quadB[i], state.quadB[j], "B", i));
+  }
+
+  state.quadA.forEach((p,i) => handlesA.appendChild(makeHandle(p, labels[i], "A", i)));
+  state.quadB.forEach((p,i) => handlesB.appendChild(makeHandle(p, labels[i] + "'", "B", i)));
+}
+
+function linePath(points){
+  if (!points.length) return "";
+  return points.map((p,i) => `${i===0?'M':'L'} ${p.x} ${p.y}`).join(" ");
+}
+
+function pointInPolygon(pt, poly){
+  let inside = false;
+  for (let i=0, j=poly.length-1; i<poly.length; j=i++){
+    const xi = poly[i].x, yi = poly[i].y, xj = poly[j].x, yj = poly[j].y;
+    const intersect = ((yi > pt.y) !== (yj > pt.y)) &&
+      (pt.x < (xj - xi) * (pt.y - yi) / ((yj - yi) || 1e-12) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function getSvgPoint(evt){
+  const pt = svg.createSVGPoint();
+  pt.x = evt.clientX; pt.y = evt.clientY;
+  const r = pt.matrixTransform(svg.getScreenCTM().inverse());
+  return {x:r.x, y:r.y};
+}
+
+function solveLinearSystem(A, b){
+  const n = A.length;
+  const M = A.map((row, i) => row.slice().concat(b[i]));
+  for (let col = 0; col < n; col++){
+    let pivot = col;
+    for (let r = col + 1; r < n; r++) if (Math.abs(M[r][col]) > Math.abs(M[pivot][col])) pivot = r;
+    if (Math.abs(M[pivot][col]) < 1e-12) return null;
+    [M[col], M[pivot]] = [M[pivot], M[col]];
+    const div = M[col][col];
+    for (let c = col; c <= n; c++) M[col][c] /= div;
+    for (let r = 0; r < n; r++){
+      if (r === col) continue;
+      const factor = M[r][col];
+      for (let c = col; c <= n; c++) M[r][c] -= factor * M[col][c];
+    }
+  }
+  return M.map(row => row[n]);
+}
+
+function homographyFromQuadToUnit(quad){
+  const targets = [{u:0,v:0},{u:1,v:0},{u:1,v:1},{u:0,v:1}];
+  const A = [], b = [];
+  for (let i=0;i<4;i++){
+    const x = quad[i].x, y = quad[i].y, u = targets[i].u, v = targets[i].v;
+    A.push([x, y, 1, 0, 0, 0, -u*x, -u*y]); b.push(u);
+    A.push([0, 0, 0, x, y, 1, -v*x, -v*y]); b.push(v);
+  }
+  const h = solveLinearSystem(A,b);
+  if (!h) return null;
+  return [[h[0],h[1],h[2]],[h[3],h[4],h[5]],[h[6],h[7],1]];
+}
+
+function multiplyMat3Vec3(H, p){
+  const x = p.x, y = p.y;
+  const X = H[0][0]*x + H[0][1]*y + H[0][2];
+  const Y = H[1][0]*x + H[1][1]*y + H[1][2];
+  const W = H[2][0]*x + H[2][1]*y + H[2][2];
+  if (Math.abs(W) < 1e-12) return null;
+  return {x: X / W, y: Y / W};
+}
+
+function unitToQuad(unitPt, quad){
+  const [A,B,C,D] = quad;
+  const u = unitPt.x, v = unitPt.y;
+  const dx3 = A.x - B.x + C.x - D.x;
+  const dy3 = A.y - B.y + C.y - D.y;
+  if (Math.abs(dx3) < 1e-12 && Math.abs(dy3) < 1e-12){
+    return { x: A.x + (B.x-A.x)*u + (D.x-A.x)*v, y: A.y + (B.y-A.y)*u + (D.y-A.y)*v };
+  }
+  const dx1 = B.x - C.x, dx2 = D.x - C.x, dy1 = B.y - C.y, dy2 = D.y - C.y;
+  const den = dx1*dy2 - dx2*dy1;
+  if (Math.abs(den) < 1e-12) return null;
+  const g = (dx3*dy2 - dx2*dy3) / den;
+  const h = (dx1*dy3 - dx3*dy1) / den;
+  const a = B.x - A.x + g*B.x, b = D.x - A.x + h*D.x, c = A.x;
+  const d = B.y - A.y + g*B.y, e = D.y - A.y + h*D.y, f = A.y;
+  const denom = g*u + h*v + 1;
+  if (Math.abs(denom) < 1e-12) return null;
+  return { x: (a*u + b*v + c) / denom, y: (d*u + e*v + f) / denom };
+}
+
+function mapPointBetweenQuads(p, fromQuad, toQuad){
+  const Hfrom = homographyFromQuadToUnit(fromQuad);
+  if (!Hfrom) return null;
+  const uv = multiplyMat3Vec3(Hfrom, p);
+  if (!uv) return null;
+  return unitToQuad(uv, toQuad);
+}
+
+function addPointToActiveStroke(p){
+  const pts = state.activeStroke.points;
+  if (!pts.length) { pts.push(p); return; }
+  const last = pts[pts.length-1];
+  if (Math.hypot(last.x-p.x,last.y-p.y) >= 1.5) pts.push(p);
+}
+
+function distancePointToSegment(p,a,b){
+  const dx = b.x-a.x, dy = b.y-a.y;
+  if (dx===0 && dy===0) return Math.hypot(p.x-a.x, p.y-a.y);
+  const t = Math.max(0, Math.min(1, ((p.x-a.x)*dx + (p.y-a.y)*dy)/(dx*dx+dy*dy)));
+  const proj = {x:a.x+t*dx, y:a.y+t*dy};
+  return Math.hypot(p.x-proj.x, p.y-proj.y);
+}
+
+function circleHit(obj, p, radius){
+  const d = Math.hypot(p.x-obj.center.x, p.y-obj.center.y);
+  return Math.abs(d - obj.radius) <= radius + obj.size/2;
+}
+
+function polylineHit(points, p, radius, size){
+  for (let i=0;i<points.length-1;i++){
+    if (distancePointToSegment(p, points[i], points[i+1]) <= radius + size/2) return true;
+  }
+  return false;
+}
+
+function pointToSegmentDistance(p, a, b){
+  const dx = b.x - a.x, dy = b.y - a.y;
+  if (dx === 0 && dy === 0) return Math.hypot(p.x - a.x, p.y - a.y);
+  const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy)));
+  const proj = {x: a.x + t * dx, y: a.y + t * dy};
+  return Math.hypot(p.x - proj.x, p.y - proj.y);
+}
+
+function findNearbyHandle(p, threshold = 14){
+  const candidates = [
+    {which: "A", quad: state.quadA},
+    {which: "B", quad: state.quadB}
+  ];
+  let best = null;
+  for (const item of candidates){
+    for (let i = 0; i < 4; i++){
+      const hp = item.quad[i];
+      const d = Math.hypot(p.x - hp.x, p.y - hp.y);
+      if (d <= threshold && (!best || d < best.d)){
+        best = {which: item.which, index: i, d};
+      }
+    }
+  }
+  return best;
+}
+
+function findNearbyEdge(p, threshold = 10){
+  const candidates = [
+    {which: "A", quad: state.quadA},
+    {which: "B", quad: state.quadB}
+  ];
+  let best = null;
+  for (const item of candidates){
+    for (let i = 0; i < 4; i++){
+      const a = item.quad[i];
+      const b = item.quad[(i + 1) % 4];
+      const d = pointToSegmentDistance(p, a, b);
+      if (d <= threshold && (!best || d < best.d)){
+        best = {which: item.which, edge: i, d};
+      }
+    }
+  }
+  return best;
+}
+
+function edgeNormal(quad, edgeIndex){
+  const p1 = quad[edgeIndex];
+  const p2 = quad[(edgeIndex + 1) % 4];
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+  const len = Math.hypot(dx, dy) || 1;
+  return {x: -dy / len, y: dx / len};
+}
+
+function applyEdgeStretch(quad, edgeIndex, delta){
+  const p1 = edgeIndex;
+  const p2 = (edgeIndex + 1) % 4;
+  quad[p1] = {x: quad[p1].x + delta.x, y: quad[p1].y + delta.y};
+  quad[p2] = {x: quad[p2].x + delta.x, y: quad[p2].y + delta.y};
+}
+
+function objectHit(obj, p, radius){
+  if (obj.type === "stroke") return polylineHit(obj.points, p, radius, obj.size);
+  if (obj.type === "lineSegment") return polylineHit([obj.p1, obj.p2], p, radius, obj.size);
+  if (obj.type === "circle") return circleHit(obj, p, radius);
+  return false;
+}
+
+function drawPolyline(container, points, color, size, cls="shapeA"){
+  if (!points || points.length < 2) return;
+  const path = document.createElementNS(NS, "path");
+  path.setAttribute("class", cls);
+  path.setAttribute("d", linePath(points));
+  path.setAttribute("stroke", color);
+  path.setAttribute("stroke-width", size);
+  container.appendChild(path);
+}
+
+function drawCircle(container, center, radius, color, size, cls="shapeA"){
+  const c = document.createElementNS(NS, "circle");
+  c.setAttribute("class", cls);
+  c.setAttribute("cx", center.x);
+  c.setAttribute("cy", center.y);
+  c.setAttribute("r", radius);
+  c.setAttribute("stroke", color);
+  c.setAttribute("stroke-width", size);
+  container.appendChild(c);
+}
+
+function renderObjectA(container, obj, preview=false){
+  const cls = preview ? "shapeA preview" : "shapeA";
+  if (obj.type === "stroke") drawPolyline(container, obj.points, obj.color, obj.size, cls);
+  if (obj.type === "lineSegment") drawPolyline(container, [obj.p1, obj.p2], obj.color, obj.size, cls);
+  if (obj.type === "circle") drawCircle(container, obj.center, obj.radius, obj.color, obj.size, cls);
+}
+
+function sampleCirclePoints(center, radius, count=180){
+  const pts = [];
+  for (let i=0;i<=count;i++){
+    const t = i / count * Math.PI * 2;
+    pts.push({x:center.x + Math.cos(t)*radius, y:center.y + Math.sin(t)*radius});
+  }
+  return pts;
+}
+
+function renderObjectB(container, obj, preview=false){
+  const cls = preview ? "shapeB preview" : "shapeB";
+  if (obj.type === "stroke"){
+    const projected = obj.points.map(p => mapPointBetweenQuads(p, state.quadA, state.quadB)).filter(Boolean);
+    drawPolyline(container, projected, obj.color, obj.size, cls);
+  }
+  if (obj.type === "lineSegment"){
+    const p1 = mapPointBetweenQuads(obj.p1, state.quadA, state.quadB);
+    const p2 = mapPointBetweenQuads(obj.p2, state.quadA, state.quadB);
+    if (p1 && p2) drawPolyline(container, [p1, p2], obj.color, obj.size, cls);
+  }
+  if (obj.type === "circle"){
+    const sampled = sampleCirclePoints(obj.center, obj.radius, 220)
+      .map(p => mapPointBetweenQuads(p, state.quadA, state.quadB))
+      .filter(Boolean);
+    drawPolyline(container, sampled, obj.color, obj.size, cls);
+  }
+}
+
+function renderPreview(){
+  previewA.innerHTML = "";
+  previewB.innerHTML = "";
+
+  if (state.mode === "draw" && state.activeStroke && state.activeStroke.points.length >= 2){
+    renderObjectA(previewA, {type:"stroke", points:state.activeStroke.points, color:state.activeStroke.color, size:state.activeStroke.size}, true);
+    renderObjectB(previewB, {type:"stroke", points:state.activeStroke.points, color:state.activeStroke.color, size:state.activeStroke.size}, true);
+  }
+
+  if (state.mode === "line" && state.tempPoints.length === 1 && state.hoverPoint){
+    const obj = {type:"lineSegment", p1:state.tempPoints[0], p2:state.hoverPoint, color:state.color, size:state.size};
+    renderObjectA(previewA, obj, true);
+    renderObjectB(previewB, obj, true);
+  }
+
+  if (state.mode === "circle" && state.tempPoints.length === 1 && state.hoverPoint){
+    const r = Math.hypot(state.hoverPoint.x - state.tempPoints[0].x, state.hoverPoint.y - state.tempPoints[0].y);
+    const obj = {type:"circle", center:state.tempPoints[0], radius:r, color:state.color, size:state.size};
+    renderObjectA(previewA, obj, true);
+    renderObjectB(previewB, obj, true);
+  }
+}
+
+function renderAll(){
+  objectsA.innerHTML = "";
+  objectsB.innerHTML = "";
+  for (const obj of state.objects){
+    renderObjectA(objectsA, obj);
+    renderObjectB(objectsB, obj);
+  }
+  renderPreview();
+}
+
+function pointerDown(evt){
+  const p = getSvgPoint(evt);
+
+  const handle = evt.target.closest(".handle, .handleHit");
+  if (handle){
+    state.draggingHandle = { which: handle.dataset.which, index: Number(handle.dataset.index) };
+    return;
+  }
+
+  const nearbyHandle = findNearbyHandle(p, 16);
+  if (nearbyHandle){
+    state.draggingHandle = { which: nearbyHandle.which, index: nearbyHandle.index };
+    return;
+  }
+
+  if (state.mode === "draw"){
+    state.drawing = true;
+    state.activeStroke = { type:"stroke", color:state.color, size:state.size, points:[] };
+    addPointToActiveStroke(p);
+    renderPreview();
+    return;
+  }
+
+  if (state.mode === "line"){
+    state.tempPoints.push(p);
+    if (state.tempPoints.length === 2){
+      state.objects.push({type:"lineSegment", p1:state.tempPoints[0], p2:state.tempPoints[1], color:state.color, size:state.size});
+      state.tempPoints = [];
+      renderAll();
+    } else {
+      renderPreview();
+    }
+    return;
+  }
+
+  if (state.mode === "circle"){
+    state.tempPoints.push(p);
+    if (state.tempPoints.length === 2){
+      const c = state.tempPoints[0], edge = state.tempPoints[1];
+      const r = Math.hypot(edge.x-c.x, edge.y-c.y);
+      state.objects.push({type:"circle", center:c, radius:r, color:state.color, size:state.size});
+      state.tempPoints = [];
+      renderAll();
+    } else {
+      renderPreview();
+    }
+    return;
+  }
+
+  if (state.mode === "erase"){
+    for (let i = state.objects.length - 1; i >= 0; i--){
+      if (objectHit(state.objects[i], p, state.eraserRadius)){
+        state.objects.splice(i, 1);
+        renderAll();
+        break;
+      }
+    }
+  }
+}
+
+function pointerMove(evt){
+  const p = getSvgPoint(evt);
+  state.hoverPoint = p;
+
+  if (state.draggingHandle){
+    const target = state.draggingHandle.which === "A" ? state.quadA : state.quadB;
+    target[state.draggingHandle.index] = p;
+    renderQuad();
+    return;
+  }
+
+  if (state.draggingEdge){
+    const target = state.draggingEdge.which === "A" ? state.quadA : state.quadB;
+    const dx = p.x - state.draggingEdge.start.x;
+    const dy = p.y - state.draggingEdge.start.y;
+    const amount = dx * state.draggingEdge.normal.x + dy * state.draggingEdge.normal.y;
+    const delta = {x: state.draggingEdge.normal.x * amount, y: state.draggingEdge.normal.y * amount};
+    applyEdgeStretch(target, state.draggingEdge.edge, delta);
+    state.draggingEdge.start = p;
+    renderQuad();
+    return;
+  }
+
+  if (state.draggingImage){
+    state.imagePos = {x: p.x - state.draggingImage.dx, y: p.y - state.draggingImage.dy};
+    renderImage();
+    return;
+  }
+
+  if (state.drawing && state.activeStroke){
+    addPointToActiveStroke(p);
+    renderPreview();
+    return;
+  }
+
+  if (state.mode === "line" || state.mode === "circle"){
+    renderPreview();
+  }
+}
+
+function pointerUp(){
+  if (state.draggingHandle){ state.draggingHandle = null; return; }
+  if (state.draggingEdge){ state.draggingEdge = null; return; }
+  if (state.draggingImage){ state.draggingImage = false; return; }
+  if (state.drawing && state.activeStroke){
+    if (state.activeStroke.points.length >= 2) state.objects.push(state.activeStroke);
+    state.activeStroke = null;
+    state.drawing = false;
+    renderAll();
+    return;
+  }
+}
+
+svg.addEventListener("pointerdown", pointerDown);
+window.addEventListener("pointermove", pointerMove);
+window.addEventListener("pointerup", pointerUp);
+window.addEventListener("pointercancel", pointerUp);
+
+renderQuad();
+</script>
+</body>
+</html>
