@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dişlilerde Diş Sayısı ve Dönme Açısı — Evolvent Profil</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<main class="page">
+    <h1>Dişlilerde diş sayısı ile dönme açısı</h1>
+
+    <p class="subtitle">
+      Dişlilerden birini sürükleyin veya otomatik döndürmeyi başlatın.
+      Temas eden iki dişlinin dönme açıları, diş sayılarıyla ters orantılıdır.
+      Beyaz başlangıç çizgileri dişlilerden bağımsız olarak ayarlanabilir.
+      Dişler, 20° basınç açılı standart evolvent profile göre çizilir.
+    </p>
+
+    <section class="app">
+      <aside class="panel controls">
+        <div class="control-group">
+          <div class="control-title">
+            <label for="teeth1">1. dişlinin diş sayısı</label>
+            <span class="badge" id="teeth1Value">12</span>
+          </div>
+          <input id="teeth1" type="range" min="8" max="40" value="12" step="1" />
+          <div class="range-labels"><span>8</span><span>40</span></div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-title">
+            <label for="teeth2">2. dişlinin diş sayısı</label>
+            <span class="badge orange" id="teeth2Value">24</span>
+          </div>
+          <input id="teeth2" type="range" min="8" max="40" value="24" step="1" />
+          <div class="range-labels"><span>8</span><span>40</span></div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-title">
+            <label for="speed">Otomatik dönme hızı</label>
+            <span class="badge" id="speedValue">60°/sn</span>
+          </div>
+          <input id="speed" type="range" min="15" max="180" value="60" step="5" />
+          <div class="range-labels"><span>yavaş</span><span>hızlı</span></div>
+        </div>
+
+        <div class="control-group">
+          <div class="marker-title">
+            <label for="marker1Offset">1. beyaz çizginin başlangıcı</label>
+            <span class="badge" id="marker1Value">0°</span>
+          </div>
+          <input id="marker1Offset" type="range" min="0" max="359" value="0" step="1" />
+
+          <div class="marker-title">
+            <label for="marker2Offset">2. beyaz çizginin başlangıcı</label>
+            <span class="badge orange" id="marker2Value">0°</span>
+          </div>
+          <input id="marker2Offset" type="range" min="0" max="359" value="0" step="1" />
+
+          <button id="resetMarkers" class="wide" style="width:100%; margin-top:12px;">
+            Başlangıç çizgilerini sıfırla
+          </button>
+        </div>
+
+        <div class="control-group">
+          <div class="button-grid">
+            <button id="minus30">−30°</button>
+            <button id="plus30">+30°</button>
+            <button id="togglePlay" class="primary wide">Başlat</button>
+            <button id="reverse">Yönü değiştir</button>
+            <button id="reset">Açıları ve turu sıfırla</button>
+          </div>
+
+          <p class="hint">
+            Dişlinin gövdesini tutarsanız iki dişli birlikte döner.
+            Beyaz çizgiyi veya ucundaki beyaz noktayı tutarsanız yalnızca
+            o çizginin başlangıç konumu değişir.
+          </p>
+        </div>
+      </aside>
+
+      <section class="panel stage-panel">
+        <div class="stage-header">
+          <span>20° evolvent diş profili</span>
+          <span>Beyaz çizgi: bağımsız başlangıç konumu</span>
+        </div>
+
+        <div class="stage-wrap">
+          <svg id="gearSvg" viewBox="0 0 1000 520" aria-label="Birbirine temas eden iki dişli simülasyonu">
+            <defs>
+              <filter id="markerShadow" x="-40%" y="-40%" width="180%" height="180%">
+                <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#172033" flood-opacity="0.38" />
+              </filter>
+              <filter id="counterShadow" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#172033" flood-opacity="0.14" />
+              </filter>
+            </defs>
+
+            <line id="contactLine" class="contact-line" />
+            <circle id="contactPoint" class="contact-point" r="5" />
+
+            <g id="turnCounter1" class="turn-counter">
+              <rect class="turn-counter-box" x="26" y="190" width="120" height="100" />
+              <text class="turn-counter-title" x="86" y="220">Tur sayısı</text>
+              <text id="turnCount1Text" class="turn-counter-value" x="86" y="258">0</text>
+            </g>
+
+            <g id="turnCounter2" class="turn-counter">
+              <rect class="turn-counter-box" x="854" y="190" width="120" height="100" />
+              <text class="turn-counter-title" x="914" y="220">Tur sayısı</text>
+              <text id="turnCount2Text" class="turn-counter-value" x="914" y="258">0</text>
+            </g>
+
+            <g id="gear1Root" class="gear-root">
+              <circle id="gear1HitCircle" fill="transparent" />
+
+
+              <g id="gear1Rotation">
+                <path id="gear1Path" class="gear-shape" fill="var(--gear-1)" stroke="var(--gear-1-dark)" />
+                <circle id="gear1Pitch" class="pitch-circle" />
+                <circle id="gear1Hub" class="hub" r="24" stroke="var(--gear-1-dark)" />
+              </g>
+
+              <g id="gear1Marker" class="marker-control">
+                <line id="gear1MarkerHit" class="marker-hit" x1="0" y1="0" />
+                <line id="gear1Hand" class="angle-hand" x1="0" y1="0" />
+                <circle class="angle-dot" r="6" />
+                <circle id="gear1MarkerHandle" class="marker-handle" r="9" />
+              </g>
+            </g>
+
+            <g id="gear2Root" class="gear-root">
+              <circle id="gear2HitCircle" fill="transparent" />
+
+
+              <g id="gear2Rotation">
+                <path id="gear2Path" class="gear-shape" fill="var(--gear-2)" stroke="var(--gear-2-dark)" />
+                <circle id="gear2Pitch" class="pitch-circle" />
+                <circle id="gear2Hub" class="hub" r="24" stroke="var(--gear-2-dark)" />
+              </g>
+
+              <g id="gear2Marker" class="marker-control">
+                <line id="gear2MarkerHit" class="marker-hit" x1="0" y1="0" />
+                <line id="gear2Hand" class="angle-hand" x1="0" y1="0" />
+                <circle class="angle-dot" r="6" />
+                <circle id="gear2MarkerHandle" class="marker-handle" r="9" />
+              </g>
+            </g>
+
+            <text id="gear1Caption" class="gear-caption">12 diş</text>
+            <text id="gear2Caption" class="gear-caption">24 diş</text>
+          </svg>
+        </div>
+
+        <div class="data-grid">
+          <div class="data-card">
+            <div class="label">1. dişlinin açısı</div>
+            <div class="value" id="angle1Text">0,00°</div>
+          </div>
+          <div class="data-card">
+            <div class="label">2. dişlinin açısı</div>
+            <div class="value" id="angle2Text">0,00°</div>
+          </div>
+          <div class="data-card">
+            <div class="label">|θ₁| / |θ₂| oranı</div>
+            <div class="value" id="angleRatioText">2,00</div>
+          </div>
+          <div class="data-card">
+            <div class="label">Temastan geçen diş sayısı</div>
+            <div class="value" id="passedTeethText">0,00</div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="panel formula-panel">
+      <h2 class="formula-title">Ters orantı bağıntısı</h2>
+      <div class="formula">
+        <span>θ₂ = −</span>
+        <span id="fractionText">12 / 24</span>
+        <span>· θ₁</span>
+        <span>=</span>
+        <span class="result" id="formulaResult">0,00°</span>
+      </div>
+      <p class="explanation" id="explanationText">
+        İkinci dişlinin diş sayısı birinci dişlinin iki katı olduğu için,
+        ikinci dişli birinci dişlinin yarısı kadar ve ters yönde döner.
+        Diş yanakları 20° basınç açılı evolvent profile göre oluşturulmuştur.
+      </p>
+    </section>
+  </main>
+  <script src="app-core.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
