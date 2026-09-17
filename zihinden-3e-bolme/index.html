@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zihinden 3'e Bölme</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#fff 0%,#eef7ff 52%,#dcecf8 100%);color:#17304a}
+.app{width:min(900px,96vw);margin:0 auto;padding:24px 15px 50px;text-align:center}
+h1{margin:0 0 8px;font-size:clamp(25px,4vw,38px)}
+.subtitle{margin-bottom:20px;color:#66788b;font-size:16px}
+#equation{min-height:95px;display:flex;justify-content:center;align-items:center;gap:13px;font-size:clamp(31px,6vw,50px);font-weight:700;white-space:nowrap}
+#answerBox{width:105px;height:72px;display:inline-flex;justify-content:center;align-items:center;border:4px dashed #8aa6bd;border-radius:19px;background:rgba(255,255,255,.65);color:#176fbc;transition:background .3s ease,border-color .3s ease,transform .3s ease,box-shadow .3s ease}
+#answerBox.filled{border-style:solid;border-color:#2e8dd7;background:#fff;box-shadow:0 8px 20px rgba(35,126,197,.20);animation:answerBounce .55s ease}
+@keyframes answerBounce{0%{transform:scale(.65)}55%{transform:scale(1.18)}100%{transform:scale(1)}}
+#stage{position:relative;width:100%;min-height:500px;overflow:hidden;border-radius:28px;background:rgba(255,255,255,.74);box-shadow:0 12px 35px rgba(35,77,110,.12);border:1px solid rgba(70,120,160,.08)}
+.blob{position:absolute;display:flex;align-items:center;justify-content:center;user-select:none;cursor:pointer;font-weight:700;color:#133b5d;border:3px solid rgba(55,144,211,.68);background:radial-gradient(circle at 34% 28%,#fff 0%,#ddf5ff 27%,#8ed6fa 68%,#55b6e7 100%);box-shadow:inset -8px -10px 18px rgba(33,127,188,.16),inset 8px 8px 16px rgba(255,255,255,.70),0 10px 20px rgba(43,120,170,.17);transition:left .65s cubic-bezier(.18,.85,.28,1.15),top .65s cubic-bezier(.18,.85,.28,1.15),width .4s ease,height .4s ease,font-size .4s ease,transform .65s ease,opacity .4s ease,border-radius .45s ease}
+.blob:hover{filter:brightness(1.03)}
+#sourceBlob{left:50%;top:125px;width:165px;height:120px;transform:translate(-50%,-50%);border-radius:52% 48% 58% 42% / 46% 55% 45% 54%;font-size:45px;z-index:10}
+#sourceBlob:hover{transform:translate(-50%,-50%) scale(1.06)}
+#sourceBlob.breaking{animation:sourceBreak .42s ease forwards;pointer-events:none}
+@keyframes sourceBreak{0%{transform:translate(-50%,-50%) scale(1);opacity:1}45%{transform:translate(-50%,-50%) scale(1.18)}100%{transform:translate(-50%,-50%) scale(.15);opacity:0}}
+.partBlob{width:155px;height:112px;top:220px;font-size:40px;opacity:0;pointer-events:none}
+#leftBlob{left:27%;border-radius:60% 40% 52% 48% / 48% 58% 42% 52%}
+#rightBlob{left:73%;border-radius:44% 56% 61% 39% / 56% 43% 57% 44%}
+.partBlob.active{opacity:1;pointer-events:auto}
+.partBlob.divided{width:118px;height:85px;font-size:33px;border-radius:53% 47% 50% 50% / 55% 42% 58% 45%}
+.partBlob.ready{animation:readyBlob 1.2s ease-in-out infinite}
+@keyframes readyBlob{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.08)}}
+.shrinking{animation:shrinkDrop .48s ease forwards;pointer-events:none}
+@keyframes shrinkDrop{0%{transform:translate(-50%,-50%) scale(1)}35%{transform:translate(-50%,-50%) scale(1.12) rotate(3deg)}70%{transform:translate(-50%,-50%) scale(.53) rotate(-4deg)}100%{transform:translate(-50%,-50%) scale(.78)}}
+.newSmallDrop{animation:smallDropAppear .45s ease}
+@keyframes smallDropAppear{0%{transform:translate(-50%,-50%) scale(.55)}60%{transform:translate(-50%,-50%) scale(1.15)}100%{transform:translate(-50%,-50%) scale(1)}}
+#resultBlob{left:50%;top:335px;width:145px;height:105px;transform:translate(-50%,-50%) scale(.2);opacity:0;pointer-events:none;font-size:42px;border-radius:58% 42% 51% 49% / 46% 57% 43% 54%;z-index:15}
+#resultBlob.visible{opacity:1;pointer-events:auto;animation:mergeResult .62s cubic-bezier(.2,.85,.22,1.25) forwards}
+@keyframes mergeResult{0%{transform:translate(-50%,-50%) scale(.15)}55%{transform:translate(-50%,-50%) scale(1.2)}75%{transform:translate(-50%,-50%) scale(.93)}100%{transform:translate(-50%,-50%) scale(1)}}
+#resultBlob.readyToJump{animation:resultWaiting 1.15s ease-in-out infinite}
+@keyframes resultWaiting{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-56%) scale(1.05)}}
+.flyingFinal{position:fixed;z-index:9999;display:flex;align-items:center;justify-content:center;width:145px;height:105px;font-size:42px;font-weight:700;color:#133b5d;border:3px solid rgba(55,144,211,.68);background:radial-gradient(circle at 34% 28%,#fff 0%,#ddf5ff 27%,#8ed6fa 68%,#55b6e7 100%);box-shadow:0 10px 20px rgba(43,120,170,.22);border-radius:58% 42% 51% 49% / 46% 57% 43% 54%;pointer-events:none}
+#instruction{position:absolute;left:0;right:0;bottom:22px;padding:0 20px;color:#647688;font-size:17px;font-weight:600}
+.controls{display:flex;justify-content:center;gap:12px;margin-top:20px;flex-wrap:wrap}
+button{border:none;padding:12px 23px;border-radius:13px;font-size:16px;font-weight:700;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease}
+button:hover{transform:translateY(-2px)}
+#newQuestionButton{color:#fff;background:#287fd2;box-shadow:0 5px 14px rgba(40,127,210,.24)}
+#exampleButton{color:#34495c;background:#eef2f6}
+.home-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:#34495c;background:#eef2f6;padding:12px 23px;border-radius:13px;font-size:16px;font-weight:700;transition:transform .18s ease,box-shadow .18s ease}
+.home-link:hover{transform:translateY(-2px)}
+@media(max-width:600px){#equation{gap:8px}#answerBox{width:82px;height:60px}#stage{min-height:480px}#sourceBlob{width:145px;height:105px;font-size:39px}.partBlob{width:125px;height:94px;font-size:33px}#leftBlob{left:24%}#rightBlob{left:76%}.partBlob.divided{width:100px;height:76px;font-size:29px}#resultBlob{width:125px;height:92px;font-size:37px}}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>Zihinden 3'e Bölme</h1>
+<div class="subtitle">Sayıyı uygun parçalara ayır ve zihinden böl.</div>
+<div id="equation"><span id="equationNumber">165</span><span>:</span><span>3</span><span>=</span><span id="answerBox"><span id="answerText"></span></span></div>
+<div id="stage">
+<div id="sourceBlob" class="blob">165</div>
+<div id="leftBlob" class="blob partBlob">150</div>
+<div id="rightBlob" class="blob partBlob">15</div>
+<div id="resultBlob" class="blob">55</div>
+<div id="instruction">165'e tıkla.</div>
+</div>
+<div class="controls"><button id="newQuestionButton">Yeni Soru</button><button id="exampleButton">165 Örneği</button><a class="home-link" href="../index.html">Ana Sayfa</a></div>
+</div>
+<script>
+const stage=document.getElementById('stage');
+const sourceBlob=document.getElementById('sourceBlob');
+const leftBlob=document.getElementById('leftBlob');
+const rightBlob=document.getElementById('rightBlob');
+const resultBlob=document.getElementById('resultBlob');
+const equationNumber=document.getElementById('equationNumber');
+const answerBox=document.getElementById('answerBox');
+const answerText=document.getElementById('answerText');
+const instruction=document.getElementById('instruction');
+const newQuestionButton=document.getElementById('newQuestionButton');
+const exampleButton=document.getElementById('exampleButton');
+let originalNumber=165,leftNumber=150,rightNumber=15,leftResult=50,rightResult=5,finalResult=55;
+let hasSplit=false,leftDivided=false,rightDivided=false,mergeStarted=false,completed=false,busy=false;
+function calculateParts(number){let firstPart=Math.floor(number/30)*30;if(firstPart===number)firstPart-=30;return[firstPart,number-firstPart]}
+function resetPartBlob(element,value,targetLeft){element.className='blob partBlob';element.textContent=value;element.style.left=targetLeft;element.style.top='220px';element.style.opacity='0';element.style.pointerEvents='none';element.style.transform='translate(-50%, -50%)'}
+function setupQuestion(number){originalNumber=number;const parts=calculateParts(number);leftNumber=parts[0];rightNumber=parts[1];leftResult=leftNumber/3;rightResult=rightNumber/3;finalResult=originalNumber/3;hasSplit=false;leftDivided=false;rightDivided=false;mergeStarted=false;completed=false;busy=false;equationNumber.textContent=originalNumber;answerText.textContent='';answerBox.classList.remove('filled');sourceBlob.textContent=originalNumber;sourceBlob.className='blob';sourceBlob.style.opacity='1';sourceBlob.style.pointerEvents='auto';resetPartBlob(leftBlob,leftNumber,'27%');resetPartBlob(rightBlob,rightNumber,'73%');resultBlob.textContent=finalResult;resultBlob.className='blob';resultBlob.style.opacity='';resultBlob.style.pointerEvents='';instruction.textContent=originalNumber+"'e tıkla.";document.querySelectorAll('.flyingFinal').forEach(el=>el.remove())}
+function prepareFlyingPart(element){element.classList.add('active');element.style.left='50%';element.style.top='125px';element.style.opacity='1';element.style.pointerEvents='none';element.style.transform='translate(-50%, -50%) scale(.25)'}
+function splitNumber(){if(hasSplit||busy)return;hasSplit=true;busy=true;instruction.textContent='Sayı iki parçaya ayrılıyor.';sourceBlob.classList.add('breaking');prepareFlyingPart(leftBlob);prepareFlyingPart(rightBlob);requestAnimationFrame(()=>requestAnimationFrame(()=>{leftBlob.style.left='27%';leftBlob.style.top='235px';leftBlob.style.transform='translate(-50%, -50%) rotate(-7deg)';rightBlob.style.left='73%';rightBlob.style.top='235px';rightBlob.style.transform='translate(-50%, -50%) rotate(7deg)'}));setTimeout(()=>{leftBlob.style.transform='translate(-50%, -50%)';rightBlob.style.transform='translate(-50%, -50%)';leftBlob.style.pointerEvents='auto';rightBlob.style.pointerEvents='auto';busy=false;instruction.textContent='İstediğin parçaya tıkla.'},720)}
+sourceBlob.addEventListener('click',splitNumber);
+leftBlob.addEventListener('click',()=>handlePartClick('left'));
+rightBlob.addEventListener('click',()=>handlePartClick('right'));
+function handlePartClick(side){if(!hasSplit||busy||mergeStarted)return;const isLeft=side==='left';const divided=isLeft?leftDivided:rightDivided;if(!divided){divideBlob(side);return}if(leftDivided&&rightDivided){mergeDrops();return}instruction.textContent="Önce diğer parçayı da 3'e böl."}
+function divideBlob(side){busy=true;const isLeft=side==='left';const element=isLeft?leftBlob:rightBlob;const result=isLeft?leftResult:rightResult;element.classList.add('shrinking');element.style.pointerEvents='none';setTimeout(()=>{element.classList.remove('shrinking');element.classList.add('divided');element.textContent=result;element.classList.add('newSmallDrop');if(isLeft)leftDivided=true;else rightDivided=true;setTimeout(()=>{element.classList.remove('newSmallDrop');element.style.pointerEvents='auto';busy=false;checkBothDivided()},440)},470)}
+function checkBothDivided(){if(leftDivided&&rightDivided){leftBlob.classList.add('ready');rightBlob.classList.add('ready');instruction.textContent='Şimdi iki damladan birine tekrar tıkla.'}else instruction.textContent="Diğer parçayı da 3'e böl."}
+function mergeDrops(){if(mergeStarted||busy)return;mergeStarted=true;busy=true;leftBlob.classList.remove('ready');rightBlob.classList.remove('ready');leftBlob.style.pointerEvents='none';rightBlob.style.pointerEvents='none';instruction.textContent='İki sonuç birleşiyor.';leftBlob.style.left='50%';leftBlob.style.top='335px';leftBlob.style.transform='translate(-50%, -50%) scale(.72) rotate(12deg)';rightBlob.style.left='50%';rightBlob.style.top='335px';rightBlob.style.transform='translate(-50%, -50%) scale(.72) rotate(-12deg)';setTimeout(()=>{leftBlob.style.opacity='0';rightBlob.style.opacity='0';resultBlob.textContent=finalResult;resultBlob.classList.add('visible');setTimeout(()=>{resultBlob.classList.add('readyToJump');resultBlob.style.pointerEvents='auto';busy=false;instruction.textContent=finalResult+"'e tıkla."},620)},650)}
+resultBlob.addEventListener('click',moveResultToAnswer);
+function moveResultToAnswer(){if(!mergeStarted||completed||busy)return;completed=true;busy=true;resultBlob.classList.remove('readyToJump');resultBlob.style.pointerEvents='none';instruction.textContent='Sonuç yerine gidiyor.';const startRect=resultBlob.getBoundingClientRect();const endRect=answerBox.getBoundingClientRect();const flying=document.createElement('div');flying.className='flyingFinal';flying.textContent=finalResult;flying.style.left=startRect.left+'px';flying.style.top=startRect.top+'px';flying.style.width=startRect.width+'px';flying.style.height=startRect.height+'px';document.body.appendChild(flying);resultBlob.style.opacity='0';const targetWidth=endRect.width*.77,targetHeight=endRect.height*.77,endLeft=endRect.left+(endRect.width-targetWidth)/2,endTop=endRect.top+(endRect.height-targetHeight)/2,middleLeft=(startRect.left+endLeft)/2,middleTop=Math.min(startRect.top,endTop)-85;const animation=flying.animate([{left:startRect.left+'px',top:startRect.top+'px',width:startRect.width+'px',height:startRect.height+'px',transform:'rotate(0deg) scale(1)',borderRadius:'58% 42% 51% 49% / 46% 57% 43% 54%'},{offset:.22,left:(startRect.left-15)+'px',top:(startRect.top-42)+'px',transform:'rotate(-9deg) scale(.95,1.15)',borderRadius:'50% 50% 44% 56% / 62% 54% 46% 38%'},{offset:.55,left:middleLeft+'px',top:middleTop+'px',transform:'rotate(8deg) scale(1.07,.94)'},{left:endLeft+'px',top:endTop+'px',width:targetWidth+'px',height:targetHeight+'px',transform:'rotate(0deg) scale(1)',borderRadius:'50%'}],{duration:950,easing:'cubic-bezier(.26,.72,.35,1)',fill:'forwards'});animation.onfinish=()=>{flying.remove();answerText.textContent=finalResult;answerBox.classList.add('filled');instruction.textContent='İşlem tamamlandı.';busy=false}}
+newQuestionButton.addEventListener('click',()=>{let number;do{number=(Math.floor(Math.random()*80)+20)*3}while(number<60||number>297);setupQuestion(number)});
+exampleButton.addEventListener('click',()=>setupQuestion(165));
+setupQuestion(165);
+</script>
+</body>
+</html>
