@@ -125,18 +125,17 @@
         align-items: center;
         justify-content: center;
         pointer-events: none;
-        border: 3px solid rgba(55, 144, 211, .70);
+        border: none;
         border-radius: 50%;
         color: #133b5d;
         background:
-            radial-gradient(circle at 34% 27%,
-                #ffffff 0%,
-                #dff8ff 24%,
-                #91dcf8 66%,
-                #55b6e7 100%);
+            radial-gradient(circle at 42% 30%,
+                #b9ecee 0%,
+                #a8e6f3 40%,
+                #9ee2f4 70%,
+                #93dcf2 100%);
         box-shadow:
-            inset -8px -10px 18px rgba(33, 127, 188, .14),
-            inset 8px 8px 16px rgba(255, 255, 255, .66),
+            0 0 8px rgba(57, 177, 235, .55),
             0 10px 20px rgba(43, 120, 170, .22);
         font-size: 42px;
         font-weight: 700;
@@ -442,7 +441,11 @@
                         localGradientY * drop.cosine;
                 }
 
-                const alpha = smoothStep(.78, 1.07, field);
+                /*
+                    Geniş alfa geçişi keskin bir kontur oluşmasını önler.
+                    Damlanın kenarı ikinci örnekteki gibi yumuşakça erir.
+                */
+                const alpha = smoothStep(.55, 1.12, field);
 
                 if (alpha <= .002) {
                     pixels[pixelIndex] = 0;
@@ -461,28 +464,33 @@
                     -Math.abs(field - 1) * 1.8
                 );
                 const light = clamp(
-                    .68 + surfaceWeight *
-                    (-normalX * .18 - normalY * .28),
-                    .20,
-                    1
+                    .74 + surfaceWeight *
+                    (-normalX * .045 - normalY * .065),
+                    .60,
+                    .88
                 );
-                const depth = clamp((field - 1) * .34, 0, 1);
-                const edge = 1 - smoothStep(.92, 1.22, field);
+                const depth = clamp((field - 1) * .22, 0, 1);
+                const edge = 1 - smoothStep(.64, 1.20, field);
 
-                let red = 91 + light * 83 + depth * 7 - edge * 37;
-                let green = 179 + light * 55 + depth * 8 - edge * 25;
-                let blue = 226 + light * 27 + depth * 8 - edge * 5;
+                /*
+                    Renk geçişi özellikle dar tutulur. Böylece içeride
+                    parlak bir grafik gradyanı ve kenarda mavi çizgi
+                    oluşmaz; bütün damla yumuşak turkuaz kalır.
+                */
+                let red = 145 + light * 18 + depth * 3 - edge * 8;
+                let green = 208 + light * 18 + depth * 2 - edge * 2;
+                let blue = 231 + light * 16 + depth + edge * 5;
 
-                /* Sol üstten gelen küçük ve yumuşak su yansıması. */
+                /* Sol üstte çok hafif, yayvan bir su yansıması. */
                 const highlight = clamp(
-                    (-normalX - normalY) * .13 * surfaceWeight,
+                    (-normalX - normalY) * .035 * surfaceWeight,
                     0,
-                    .24
+                    .06
                 );
 
-                red += highlight * 120;
-                green += highlight * 100;
-                blue += highlight * 55;
+                red += highlight * 45;
+                green += highlight * 38;
+                blue += highlight * 22;
 
                 pixels[pixelIndex] = clamp(Math.round(red), 0, 255);
                 pixels[pixelIndex + 1] = clamp(Math.round(green), 0, 255);
@@ -549,6 +557,7 @@
         waterContext.shadowColor = "rgba(37, 125, 180, .18)";
         waterContext.shadowBlur = 10 * deviceScale;
         waterContext.shadowOffsetY = 5 * deviceScale;
+        waterContext.filter = `blur(${1.7 * deviceScale}px)`;
         waterContext.imageSmoothingEnabled = true;
         waterContext.imageSmoothingQuality = "high";
         waterContext.drawImage(
@@ -658,8 +667,8 @@
         ];
 
         /* Başlangıçta da tam olarak aynı su modeli kullanılır. */
-        drops[0].aspect = .018;
-        drops[0].rotation = -.10;
+        drops[0].aspect = 0;
+        drops[0].rotation = 0;
 
         instruction.textContent = originalNumber + "'e tıkla.";
 
@@ -740,10 +749,10 @@
             return;
         }
 
-        drops[0].aspect = .012;
-        drops[1].aspect = -.012;
-        drops[0].rotation = -.08;
-        drops[1].rotation = .08;
+        drops[0].aspect = 0;
+        drops[1].aspect = 0;
+        drops[0].rotation = 0;
+        drops[1].rotation = 0;
         floatingLabels = [];
         sceneMode = "parts";
         busy = false;
@@ -813,7 +822,7 @@
         drop.nextValue = null;
         drop.textOpacity = 1;
         drop.nextTextOpacity = 0;
-        drop.aspect = drop.side === "left" ? .01 : -.01;
+        drop.aspect = 0;
 
         if (drop.side === "left") {
             leftDivided = true;
@@ -939,7 +948,7 @@
             return;
         }
 
-        drops[0].aspect = .008;
+        drops[0].aspect = 0;
         drops[0].rotation = 0;
         sceneMode = "result";
         busy = false;
