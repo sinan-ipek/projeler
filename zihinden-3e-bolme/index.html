@@ -692,7 +692,37 @@
         simulationContext.putImageData(simulationImage, 0, 0);
     }
 
+    function getParticleCenters() {
+        const centers = {
+            all: { x: 0, y: 0, count: 0 },
+            left: { x: 0, y: 0, count: 0 },
+            right: { x: 0, y: 0, count: 0 }
+        };
+
+        for (const particle of waterParticles) {
+            centers.all.x += particle.x;
+            centers.all.y += particle.y;
+            centers.all.count += 1;
+
+            const groupCenter = centers[particle.group];
+            groupCenter.x += particle.x;
+            groupCenter.y += particle.y;
+            groupCenter.count += 1;
+        }
+
+        for (const center of Object.values(centers)) {
+            if (center.count > 0) {
+                center.x /= center.count;
+                center.y /= center.count;
+            }
+        }
+
+        return centers;
+    }
+
     function drawNumbers() {
+        const particleCenters = getParticleCenters();
+
         waterContext.save();
         waterContext.scale(deviceScale, deviceScale);
         waterContext.textAlign = "center";
@@ -701,6 +731,17 @@
 
         for (const drop of drops) {
             const fontSize = clamp(drop.radius * .58, 29, 46);
+            const centerKey =
+                drop.side === "left" || drop.side === "right"
+                    ? drop.side
+                    : "all";
+            const particleCenter = particleCenters[centerKey];
+            const numberX = particleCenter.count
+                ? particleCenter.x
+                : drop.x;
+            const numberY = particleCenter.count
+                ? particleCenter.y
+                : drop.y;
 
             waterContext.font =
                 `700 ${fontSize}px Arial, Helvetica, sans-serif`;
@@ -708,7 +749,7 @@
             if (drop.value !== null && drop.value !== undefined) {
                 waterContext.globalAlpha =
                     drop.opacity * drop.textOpacity;
-                waterContext.fillText(drop.value, drop.x, drop.y + 1);
+                waterContext.fillText(drop.value, numberX, numberY + 1);
             }
 
             if (drop.nextValue !== null && drop.nextValue !== undefined) {
@@ -716,17 +757,27 @@
                     drop.opacity * drop.nextTextOpacity;
                 waterContext.fillText(
                     drop.nextValue,
-                    drop.x,
-                    drop.y + 1
+                    numberX,
+                    numberY + 1
                 );
             }
         }
 
         for (const label of floatingLabels) {
+            const labelCenter = label.followParticles
+                ? particleCenters.all
+                : null;
+            const labelX = labelCenter && labelCenter.count
+                ? labelCenter.x
+                : label.x;
+            const labelY = labelCenter && labelCenter.count
+                ? labelCenter.y
+                : label.y;
+
             waterContext.globalAlpha = label.opacity;
             waterContext.font =
                 `700 ${label.fontSize}px Arial, Helvetica, sans-serif`;
-            waterContext.fillText(label.value, label.x, label.y);
+            waterContext.fillText(label.value, labelX, labelY);
         }
 
         waterContext.restore();
@@ -902,7 +953,8 @@
                 y: sourceY + 1,
                 value: originalNumber,
                 opacity: 1,
-                fontSize: clamp(visibleRadius * .60, 39, 45)
+                fontSize: clamp(visibleRadius * .60, 39, 45),
+                followParticles: true
             }
         ];
 
@@ -1175,7 +1227,8 @@
                 y: centerY + 1,
                 value: finalResult,
                 opacity: 0,
-                fontSize: 43
+                fontSize: 43,
+                followParticles: true
             }
         ];
 
