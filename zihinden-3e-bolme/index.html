@@ -146,12 +146,12 @@
                 </radialGradient>
                 <mask id="liquidMask" maskUnits="userSpaceOnUse" x="0" y="0" width="900" height="520">
                     <rect width="900" height="520" fill="black"/>
-                    <g id="maskBlobs" filter="url(#gooFilter)"></g>
+                    <g id="maskBlobs"></g>
                 </mask>
             </defs>
 
             <g id="liquidVisual" opacity="0">
-                <g id="shadowBlobs" filter="url(#shadowFilter)"></g>
+                <g id="shadowBlobs"></g>
                 <g mask="url(#liquidMask)">
                     <rect width="900" height="520" fill="url(#waterBase)"/>
                     <rect width="900" height="520" fill="url(#waterDepth)"/>
@@ -253,7 +253,8 @@
         constructor() {
             this.maximumBlobs=3;
             this.maskNodes=createBlobNodes(maskBlobs,this.maximumBlobs,"white");
-            this.shadowNodes=createBlobNodes(shadowBlobs,this.maximumBlobs,"#000");
+            this.shadowNodes=createBlobNodes(shadowBlobs,this.maximumBlobs,"#66737c");
+            this.shadowNodes.forEach(node=>node.setAttribute("filter","url(#highlightBlur)"));
             this.edgeNodes=createBlobNodes(edgeBlobs,this.maximumBlobs,"none");
             this.edgeNodes.forEach(node=>{
                 node.setAttribute("stroke","#6d7a83");
@@ -284,14 +285,19 @@
             for (let index=0; index<this.maximumBlobs; index++) {
                 const blob=blobs[index]||{x:0,y:0,rx:0,ry:0,angle:0,highlight:0};
                 const visible=blob.rx>.5&&blob.ry>.5;
-                const transform=`rotate(${blob.angle||0} ${blob.x} ${blob.y})`;
                 for (const node of [this.maskNodes[index],this.shadowNodes[index],this.edgeNodes[index]]) {
-                    node.setAttribute("cx",blob.x); node.setAttribute("cy",blob.y);
+                    const isShadow=node===this.shadowNodes[index];
+                    const centerX=blob.x+(isShadow?7:0);
+                    const centerY=blob.y+(isShadow?10:0);
+                    const transform=`rotate(${blob.angle||0} ${centerX} ${centerY})`;
+                    node.setAttribute("cx",centerX); node.setAttribute("cy",centerY);
                     node.setAttribute("rx",Math.max(0,blob.rx)); node.setAttribute("ry",Math.max(0,blob.ry));
                     node.setAttribute("transform",transform);
-                    const layerOpacity=node===this.edgeNodes[index]
-                        ?clamp(blob.edge??1)
-                        :1;
+                    const layerOpacity=isShadow
+                        ?.18
+                        :node===this.edgeNodes[index]
+                            ?clamp(blob.edge??1)
+                            :1;
                     node.setAttribute("opacity",visible?layerOpacity:0);
                 }
                 const highlight=this.highlightGroups[index];
