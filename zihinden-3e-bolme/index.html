@@ -6,1565 +6,608 @@
 <title>Zihinden 3'e Bölme</title>
 
 <style>
-    * {
-        box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
+    :root { color-scheme: light; --ink:#18324a; --muted:#6d7f90; --blue:#2f8fe0; }
     body {
         margin: 0;
         min-height: 100vh;
         font-family: Arial, Helvetica, sans-serif;
-        color: #17304a;
-        background:
-            radial-gradient(circle at top,
-                #ffffff 0%,
-                #eef7ff 52%,
-                #dcecf8 100%);
+        color: var(--ink);
+        background: radial-gradient(circle at 50% 0%, #fff 0%, #eef7ff 55%, #dfedf8 100%);
     }
-
-    .app {
-        width: min(900px, 96vw);
-        margin: 0 auto;
-        padding: 24px 15px 50px;
-        text-align: center;
-    }
-
-    h1 {
-        margin: 0 0 8px;
-        font-size: clamp(25px, 4vw, 38px);
-    }
-
-    .subtitle {
-        margin-bottom: 20px;
-        color: #66788b;
-        font-size: 16px;
-    }
-
+    .app { width:min(920px,96vw); margin:0 auto; padding:24px 14px 44px; text-align:center; }
+    h1 { margin:0 0 7px; font-size:clamp(26px,4vw,38px); }
+    .subtitle { margin-bottom:14px; color:var(--muted); font-size:16px; }
     #equation {
-        min-height: 95px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 13px;
-        font-size: clamp(31px, 6vw, 50px);
-        font-weight: 700;
-        white-space: nowrap;
+        min-height:94px; display:flex; align-items:center; justify-content:center;
+        gap:12px; white-space:nowrap; font-size:clamp(31px,6vw,50px); font-weight:700;
     }
-
+    #equationNumber {
+        display:inline-flex; align-items:center; justify-content:center; min-width:1.6em;
+        padding:0 .04em; border-radius:12px; cursor:pointer;
+        transition:color .18s ease,background .18s ease,transform .18s ease;
+    }
+    #equationNumber.awaiting {
+        color:#176fbc; background:rgba(66,151,220,.10);
+        animation:equationPulse 1.25s ease-in-out infinite;
+    }
+    #equationNumber:hover { transform:translateY(-1px); }
+    @keyframes equationPulse {
+        0%,100% { box-shadow:0 0 0 0 rgba(47,143,224,0); }
+        50% { box-shadow:0 0 0 7px rgba(47,143,224,.10); }
+    }
     #answerBox {
-        width: 105px;
-        height: 72px;
-        display: inline-flex;
-        justify-content: center;
-        align-items: center;
-        border: 4px dashed #8aa6bd;
-        border-radius: 19px;
-        color: #176fbc;
-        background: rgba(255, 255, 255, .65);
-        transition:
-            background .3s ease,
-            border-color .3s ease,
-            transform .3s ease,
-            box-shadow .3s ease;
+        width:108px; height:70px; display:inline-flex; align-items:center; justify-content:center;
+        border:3px dashed #93a9ba; border-radius:17px; color:#176fbc;
+        background:rgba(255,255,255,.72);
+        transition:border-color .24s ease,background .24s ease,box-shadow .24s ease;
     }
-
     #answerBox.filled {
-        border-style: solid;
-        border-color: #2e8dd7;
-        background: #ffffff;
-        box-shadow: 0 8px 20px rgba(35, 126, 197, .20);
-        animation: answerBounce .55s ease;
+        border-style:solid; border-color:#4b91c7; background:#fff;
+        box-shadow:0 7px 18px rgba(43,116,172,.16);
     }
-
-    @keyframes answerBounce {
-        0%   { transform: scale(.65); }
-        55%  { transform: scale(1.18); }
-        100% { transform: scale(1); }
-    }
-
     #stage {
-        position: relative;
-        width: 100%;
-        min-height: 500px;
-        overflow: hidden;
-        border: 1px solid rgba(70, 120, 160, .08);
-        border-radius: 28px;
-        background: rgba(255, 255, 255, .74);
-        box-shadow: 0 12px 35px rgba(35, 77, 110, .12);
+        position:relative; width:100%; height:520px; overflow:hidden;
+        border:1px solid rgba(72,111,139,.08); border-radius:28px;
+        background:radial-gradient(ellipse at 50% 35%,#fff 0%,rgba(255,255,255,.94) 60%,rgba(248,251,253,.96) 100%);
+        box-shadow:0 13px 36px rgba(35,77,110,.12);
     }
-
-    #waterCanvas {
-        position: absolute;
-        inset: 0;
-        z-index: 5;
-        width: 100%;
-        height: 100%;
-        display: block;
-        cursor: pointer;
-        touch-action: manipulation;
-        user-select: none;
+    #liquidSvg {
+        position:absolute; inset:0; width:100%; height:100%; display:block;
+        touch-action:manipulation; cursor:pointer;
     }
-
+    .drop-number {
+        fill:#173e60; font-family:Arial,Helvetica,sans-serif; font-weight:700;
+        text-anchor:middle; dominant-baseline:middle; pointer-events:none;
+        paint-order:stroke; stroke:rgba(255,255,255,.15); stroke-width:1px;
+    }
     #instruction {
-        position: absolute;
-        right: 0;
-        bottom: 22px;
-        left: 0;
-        z-index: 10;
-        padding: 0 20px;
-        pointer-events: none;
-        color: #647688;
-        font-size: 17px;
-        font-weight: 600;
+        position:absolute; left:0; right:0; bottom:21px; padding:0 18px;
+        color:#677989; font-size:17px; font-weight:600; pointer-events:none;
     }
-
-    .flyingFinalCanvas {
-        position: fixed;
-        z-index: 9999;
-        display: block;
-        pointer-events: none;
-    }
-
     .controls {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        margin-top: 20px;
-        flex-wrap: wrap;
+        display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+        gap:11px; margin-top:19px;
     }
-
-    button,
-    .home-link {
-        border: none;
-        padding: 12px 23px;
-        border-radius: 13px;
-        cursor: pointer;
-        font: 700 16px Arial, Helvetica, sans-serif;
-        transition: transform .18s ease, box-shadow .18s ease;
+    button,.home-link {
+        min-height:45px; display:inline-flex; align-items:center; justify-content:center;
+        border:0; border-radius:13px; padding:11px 22px; font:inherit;
+        font-size:16px; font-weight:700; text-decoration:none; cursor:pointer;
+        transition:transform .18s ease,box-shadow .18s ease;
     }
-
-    button:hover,
-    .home-link:hover {
-        transform: translateY(-2px);
+    button:hover,.home-link:hover { transform:translateY(-2px); }
+    #newQuestionButton { color:#fff; background:var(--blue); box-shadow:0 5px 14px rgba(40,127,210,.24); }
+    #exampleButton,.home-link { color:#40556a; background:#eef2f6; }
+    .flying-liquid {
+        position:fixed; z-index:9999; pointer-events:none; overflow:visible;
+        will-change:left,top,width,height,opacity;
     }
-
-    #newQuestionButton {
-        color: #ffffff;
-        background: #287fd2;
-        box-shadow: 0 5px 14px rgba(40, 127, 210, .24);
-    }
-
-    #exampleButton,
-    .home-link {
-        color: #34495c;
-        background: #eef2f6;
-    }
-
-    .home-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-    }
-
-    @media (max-width: 600px) {
-        #equation {
-            gap: 8px;
-        }
-
-        #answerBox {
-            width: 82px;
-            height: 60px;
-        }
-
-        #stage {
-            min-height: 480px;
-        }
+    @media (max-width:600px) {
+        .app { padding-inline:8px; }
+        #equation { gap:7px; }
+        #answerBox { width:83px; height:59px; }
+        #stage { height:485px; border-radius:23px; }
+        button,.home-link { padding-inline:17px; }
     }
 </style>
 </head>
 
 <body>
-<div class="app">
+<main class="app">
     <h1>Zihinden 3'e Bölme</h1>
+    <div class="subtitle">Sayıyı uygun parçalara ayır ve zihinden böl.</div>
 
-    <div class="subtitle">
-        Sayıyı uygun parçalara ayır ve zihinden böl.
-    </div>
-
-    <div id="equation">
-        <span id="equationNumber">165</span>
-        <span>:</span>
-        <span>3</span>
-        <span>=</span>
+    <div id="equation" aria-label="Bölme işlemi">
+        <span id="equationNumber" class="awaiting" role="button" tabindex="0">165</span>
+        <span>:</span><span id="divisorText">3</span><span>=</span>
         <span id="answerBox"><span id="answerText"></span></span>
     </div>
 
-    <div id="stage">
-        <canvas
-            id="waterCanvas"
-            role="button"
-            tabindex="0"
-            aria-label="Su damlası"
-        ></canvas>
+    <section id="stage" aria-label="Su damlası işlem alanı">
+        <svg id="liquidSvg" viewBox="0 0 900 520" preserveAspectRatio="none" role="button" tabindex="0" aria-label="Su damlası">
+            <defs>
+                <filter id="gooFilter" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="blurred"/>
+                    <feColorMatrix in="blurred" mode="matrix" result="goo"
+                        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -11"/>
+                </filter>
+                <filter id="shadowFilter" x="-30%" y="-30%" width="170%" height="180%" color-interpolation-filters="sRGB">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="blurred"/>
+                    <feColorMatrix in="blurred" mode="matrix" result="solid"
+                        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -11"/>
+                    <feGaussianBlur in="solid" stdDeviation="7" result="soft"/>
+                    <feOffset in="soft" dx="7" dy="11" result="offset"/>
+                    <feFlood flood-color="#52606a" flood-opacity=".24" result="shadowColor"/>
+                    <feComposite in="shadowColor" in2="offset" operator="in"/>
+                </filter>
+                <filter id="edgeFilter" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="blurred"/>
+                    <feColorMatrix in="blurred" mode="matrix" result="solid"
+                        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -11"/>
+                    <feMorphology in="solid" operator="dilate" radius="2.2" result="outer"/>
+                    <feMorphology in="solid" operator="erode" radius="1.15" result="inner"/>
+                    <feComposite in="outer" in2="inner" operator="out" result="ring"/>
+                    <feFlood flood-color="#687680" flood-opacity=".62" result="edgeColor"/>
+                    <feComposite in="edgeColor" in2="ring" operator="in"/>
+                </filter>
+                <filter id="highlightBlur" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur stdDeviation="1.7"/>
+                </filter>
+                <linearGradient id="waterBase" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#fdfefe" stop-opacity=".92"/>
+                    <stop offset=".34" stop-color="#e9eef1" stop-opacity=".72"/>
+                    <stop offset=".72" stop-color="#fff" stop-opacity=".48"/>
+                    <stop offset="1" stop-color="#dbe3e8" stop-opacity=".74"/>
+                </linearGradient>
+                <radialGradient id="waterDepth" cx="34%" cy="26%" r="78%">
+                    <stop offset="0" stop-color="#fff" stop-opacity=".22"/>
+                    <stop offset=".60" stop-color="#cbd5db" stop-opacity=".07"/>
+                    <stop offset="1" stop-color="#7b8992" stop-opacity=".20"/>
+                </radialGradient>
+                <mask id="liquidMask" maskUnits="userSpaceOnUse" x="0" y="0" width="900" height="520">
+                    <rect width="900" height="520" fill="black"/>
+                    <g id="maskBlobs" filter="url(#gooFilter)"></g>
+                </mask>
+            </defs>
 
-        <div id="instruction" aria-live="polite">165'e tıkla.</div>
-    </div>
+            <g id="liquidVisual" opacity="0">
+                <g id="shadowBlobs" filter="url(#shadowFilter)"></g>
+                <g mask="url(#liquidMask)">
+                    <rect width="900" height="520" fill="url(#waterBase)"/>
+                    <rect width="900" height="520" fill="url(#waterDepth)"/>
+                    <g id="highlightLayer"></g>
+                </g>
+                <g id="edgeBlobs" filter="url(#edgeFilter)"></g>
+            </g>
+            <g id="numberLayer"></g>
+        </svg>
+        <div id="instruction" aria-live="polite">İşlemdeki 165'e tıkla.</div>
+    </section>
 
     <div class="controls">
-        <button id="newQuestionButton">Yeni Soru</button>
-        <button id="exampleButton">165 Örneği</button>
+        <button id="newQuestionButton" type="button">Yeni Soru</button>
+        <button id="exampleButton" type="button">165 Örneği</button>
         <a class="home-link" href="../index.html">Ana Sayfa</a>
     </div>
-</div>
+</main>
 
 <script>
-    const stage = document.getElementById("stage");
-    const waterCanvas = document.getElementById("waterCanvas");
-    const waterContext = waterCanvas.getContext("2d", { alpha: true });
+    /*
+       TEK HIZ AYARI
+       1.00 = normal, 1.15 = %15 daha hızlı, 0.85 = %15 daha yavaş.
+    */
+    const ANIMATION_SPEED = 1.12;
+
+    const MOTION = { appear:520, split:900, divide:480, merge:980, answer:680 };
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const STAGE = {
+        width:900, height:520, sourceX:450, sourceY:155,
+        partY:245, resultY:335, leftX:270, rightX:630
+    };
+
+    const liquidSvg = document.getElementById("liquidSvg");
+    const liquidVisual = document.getElementById("liquidVisual");
+    const maskBlobs = document.getElementById("maskBlobs");
+    const shadowBlobs = document.getElementById("shadowBlobs");
+    const edgeBlobs = document.getElementById("edgeBlobs");
+    const highlightLayer = document.getElementById("highlightLayer");
+    const numberLayer = document.getElementById("numberLayer");
     const equationNumber = document.getElementById("equationNumber");
+    const divisorText = document.getElementById("divisorText");
     const answerBox = document.getElementById("answerBox");
     const answerText = document.getElementById("answerText");
     const instruction = document.getElementById("instruction");
     const newQuestionButton = document.getElementById("newQuestionButton");
     const exampleButton = document.getElementById("exampleButton");
 
-    const simulationCanvas = document.createElement("canvas");
-    const simulationContext = simulationCanvas.getContext("2d", {
-        alpha: true
-    });
-
-    let simulationImage = null;
-    let stageWidth = 1;
-    let stageHeight = 1;
-    let simulationWidth = 1;
-    let simulationHeight = 1;
-    let deviceScale = 1;
-
-    let originalNumber = 165;
-    let leftNumber = 150;
-    let rightNumber = 15;
-    let leftResult = 50;
-    let rightResult = 5;
-    let finalResult = 55;
-
-    let drops = [];
-    let floatingLabels = [];
-    let waterParticles = [];
-    let particleDensity = new Float32Array(1);
-    let particleMorph = 0;
-    let particleUnifiedScale = 1;
-    let particleGroupScale = {
-        left: 1,
-        right: 1
-    };
-    let waterOpacity = 1;
-    let sourceVisibleRadius = 72;
-    let sceneMode = "source";
-    let busy = false;
-    let completed = false;
-    let leftDivided = false;
-    let rightDivided = false;
-
     let animationFrame = 0;
     let sceneVersion = 0;
 
-    function clamp(value, minimum, maximum) {
+    function clamp(value, minimum=0, maximum=1) {
         return Math.max(minimum, Math.min(maximum, value));
     }
-
-    function lerp(start, end, amount) {
-        return start + (end - start) * amount;
-    }
-
+    function lerp(start, end, amount) { return start + (end - start) * amount; }
     function smoothStep(edge0, edge1, value) {
-        const amount = clamp((value - edge0) / (edge1 - edge0), 0, 1);
+        const amount = clamp((value - edge0) / (edge1 - edge0));
         return amount * amount * (3 - 2 * amount);
     }
-
     function easeInOutCubic(value) {
-        return value < .5
-            ? 4 * value * value * value
-            : 1 - Math.pow(-2 * value + 2, 3) / 2;
+        return value < .5 ? 4*value*value*value : 1-Math.pow(-2*value+2,3)/2;
     }
-
-    function easeOutCubic(value) {
-        return 1 - Math.pow(1 - value, 3);
+    function easeOutBack(value) {
+        const c1=1.28, c3=c1+1;
+        return 1+c3*Math.pow(value-1,3)+c1*Math.pow(value-1,2);
     }
+    function duration(name) { return MOTION[name] / ANIMATION_SPEED; }
 
-    function keyframeProgress(progress, frames) {
-        if (progress <= frames[0][0]) {
-            return frames[0][1];
-        }
-
-        for (let index = 1; index < frames.length; index++) {
-            const previous = frames[index - 1];
-            const current = frames[index];
-
-            if (progress <= current[0]) {
-                const local = smoothStep(
-                    previous[0],
-                    current[0],
-                    progress
-                );
-
-                return lerp(previous[1], current[1], local);
-            }
-        }
-
-        return frames[frames.length - 1][1];
-    }
-
-    function calculateParts(number) {
-        let firstPart = Math.floor(number / 30) * 30;
-
-        if (firstPart === number) {
-            firstPart -= 30;
-        }
-
-        return [firstPart, number - firstPart];
-    }
-
-    function createDrop(x, y, radius, value, side = "") {
-        return {
-            x,
-            y,
-            radius,
-            value,
-            side,
-            opacity: 1,
-            textOpacity: 1,
-            nextValue: null,
-            nextTextOpacity: 0,
-            aspect: 0,
-            rotation: 0,
-            brightness: 1
-        };
-    }
-
-    function resizeCanvases() {
-        const rectangle = stage.getBoundingClientRect();
-
-        stageWidth = Math.max(1, rectangle.width);
-        stageHeight = Math.max(1, rectangle.height);
-        deviceScale = Math.min(window.devicePixelRatio || 1, 2);
-
-        waterCanvas.width = Math.round(stageWidth * deviceScale);
-        waterCanvas.height = Math.round(stageHeight * deviceScale);
-
-        simulationWidth = Math.max(
-            180,
-            Math.min(300, Math.round(stageWidth * .38))
-        );
-        simulationHeight = Math.max(
-            160,
-            Math.round(simulationWidth * stageHeight / stageWidth)
-        );
-
-        simulationCanvas.width = simulationWidth;
-        simulationCanvas.height = simulationHeight;
-        simulationImage = simulationContext.createImageData(
-            simulationWidth,
-            simulationHeight
-        );
-        particleDensity = new Float32Array(
-            simulationWidth * simulationHeight
-        );
-    }
-
-    function makeDiskPoints(count, radius, phase = 0) {
-        const points = [];
-        const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-
-        for (let index = 0; index < count; index++) {
-            const radial = radius * Math.sqrt((index + .35) / count);
-            const angle = index * goldenAngle + phase;
-
-            points.push({
-                x: Math.cos(angle) * radial,
-                y: Math.sin(angle) * radial
-            });
-        }
-
-        return points;
-    }
-
-    function initializeWaterParticles(centerX, centerY, visibleRadius) {
-        const count = 48;
-        const halfCount = count / 2;
-        const unified = makeDiskPoints(count, visibleRadius * .72, .3);
-        const orderedIndices = unified
-            .map((point, index) => ({ index, x: point.x }))
-            .sort((first, second) => first.x - second.x)
-            .map(item => item.index);
-        const leftIndices = new Set(orderedIndices.slice(0, halfCount));
-        const leftTargets = makeDiskPoints(
-            halfCount,
-            visibleRadius * .60,
-            .15
-        );
-        const rightTargets = makeDiskPoints(
-            halfCount,
-            visibleRadius * .60,
-            Math.PI + .15
-        );
-        let leftTargetIndex = 0;
-        let rightTargetIndex = 0;
-
-        waterParticles = unified.map((point, index) => {
-            const group = leftIndices.has(index) ? "left" : "right";
-            const splitPoint = group === "left"
-                ? leftTargets[leftTargetIndex++]
-                : rightTargets[rightTargetIndex++];
-
-            return {
-                x: centerX + point.x,
-                y: centerY + point.y,
-                vx: 0,
-                vy: 0,
-                group,
-                unifiedX: point.x,
-                unifiedY: point.y,
-                splitX: splitPoint.x,
-                splitY: splitPoint.y
-            };
-        });
-
-        particleMorph = 0;
-        particleUnifiedScale = 1;
-        particleGroupScale.left = 1;
-        particleGroupScale.right = 1;
-        waterOpacity = 1;
-    }
-
-    function getParticleTarget(particle) {
-        if (drops.length === 1) {
-            const resultDrop = drops[0];
-
-            return {
-                x: resultDrop.x +
-                    particle.unifiedX * particleUnifiedScale,
-                y: resultDrop.y +
-                    particle.unifiedY * particleUnifiedScale
-            };
-        }
-
-        const groupDrop = drops.find(drop => {
-            return drop.side === particle.group;
-        });
-        const groupScale = particleGroupScale[particle.group];
-        const localX = lerp(
-            particle.unifiedX * particleUnifiedScale,
-            particle.splitX * groupScale,
-            particleMorph
-        );
-        const localY = lerp(
-            particle.unifiedY * particleUnifiedScale,
-            particle.splitY * groupScale,
-            particleMorph
-        );
-
-        return {
-            x: groupDrop.x + localX,
-            y: groupDrop.y + localY
-        };
-    }
-
-    function stepWaterParticles(deltaSeconds, stiffness = 108) {
-        const limitedDelta = Math.min(deltaSeconds || .016, .055);
-        const substeps = 2;
-        const step = limitedDelta / substeps;
-
-        for (let substep = 0; substep < substeps; substep++) {
-            for (const particle of waterParticles) {
-                const target = getParticleTarget(particle);
-                const accelerationX =
-                    (target.x - particle.x) * stiffness;
-                const accelerationY =
-                    (target.y - particle.y) * stiffness;
-
-                particle.vx += accelerationX * step;
-                particle.vy += accelerationY * step;
-
-                const damping = Math.exp(-11.5 * step);
-                particle.vx *= damping;
-                particle.vy *= damping;
-            }
-
-            /*
-                Yakın parçacıklar birbirinin içine giremez. Bu basınç
-                etkisi yüzeyin kusursuz iki daireye dönüşmesini engeller
-                ve kopma anında küçük, doğal düzensizlikler üretir.
-            */
-            for (let first = 0; first < waterParticles.length; first++) {
-                for (
-                    let second = first + 1;
-                    second < waterParticles.length;
-                    second++
-                ) {
-                    const firstParticle = waterParticles[first];
-                    const secondParticle = waterParticles[second];
-                    const deltaX = secondParticle.x - firstParticle.x;
-                    const deltaY = secondParticle.y - firstParticle.y;
-                    const distanceSquared =
-                        deltaX * deltaX + deltaY * deltaY;
-                    const minimumDistance = 9.5;
-
-                    if (
-                        distanceSquared <= .0001 ||
-                        distanceSquared >= minimumDistance * minimumDistance
-                    ) {
-                        continue;
-                    }
-
-                    const distance = Math.sqrt(distanceSquared);
-                    const pressure =
-                        (minimumDistance - distance) * 13 * step;
-                    const normalX = deltaX / distance;
-                    const normalY = deltaY / distance;
-
-                    firstParticle.vx -= normalX * pressure;
-                    firstParticle.vy -= normalY * pressure;
-                    secondParticle.vx += normalX * pressure;
-                    secondParticle.vy += normalY * pressure;
-                }
-            }
-
-            for (const particle of waterParticles) {
-                particle.x += particle.vx * step;
-                particle.y += particle.vy * step;
-            }
-        }
-    }
-
-    function addParticleImpulse(groups, strength = 42) {
-        const selected = waterParticles.filter(particle => {
-            return groups.includes(particle.group);
-        });
-        const centerX = selected.reduce(
-            (sum, particle) => sum + particle.x,
-            0
-        ) / selected.length;
-        const centerY = selected.reduce(
-            (sum, particle) => sum + particle.y,
-            0
-        ) / selected.length;
-
-        selected.forEach((particle, index) => {
-            const deltaX = particle.x - centerX;
-            const deltaY = particle.y - centerY;
-            const length = Math.hypot(deltaX, deltaY) || 1;
-            const unevenness = 1 + .035 * Math.sin(index * 2.31);
-
-            particle.vx +=
-                deltaX / length * strength * unevenness;
-            particle.vy +=
-                deltaY / length * strength * unevenness;
-        });
-    }
-
-    function snapParticlesToTargets(groups = null) {
-        for (const particle of waterParticles) {
-            if (groups && !groups.includes(particle.group)) {
-                continue;
-            }
-
-            const target = getParticleTarget(particle);
-            particle.x = target.x;
-            particle.y = target.y;
-            particle.vx = 0;
-            particle.vy = 0;
-        }
-    }
-
-    /*
-        Su yüzeyi tek bir daire veya iki metaball ile çizilmez.
-        Her parçacık kompakt bir yoğunluk çekirdeği bırakır. Bütün
-        çekirdeklerin ortak eş yoğunluk sınırı görünen damladır.
-    */
-    function renderWaterField() {
-        const pixels = simulationImage.data;
-        const scaleX = simulationWidth / stageWidth;
-        const scaleY = simulationHeight / stageHeight;
-        const averageScale = (scaleX + scaleY) * .5;
-        const influenceRadius = Math.max(12, 40 * averageScale);
-        const influenceSquared = influenceRadius * influenceRadius;
-
-        particleDensity.fill(0);
-
-        for (const particle of waterParticles) {
-            const centerX = particle.x * scaleX;
-            const centerY = particle.y * scaleY;
-            const minimumX = Math.max(
-                1,
-                Math.floor(centerX - influenceRadius)
-            );
-            const maximumX = Math.min(
-                simulationWidth - 2,
-                Math.ceil(centerX + influenceRadius)
-            );
-            const minimumY = Math.max(
-                1,
-                Math.floor(centerY - influenceRadius)
-            );
-            const maximumY = Math.min(
-                simulationHeight - 2,
-                Math.ceil(centerY + influenceRadius)
-            );
-
-            for (let y = minimumY; y <= maximumY; y++) {
-                const deltaY = y - centerY;
-
-                for (let x = minimumX; x <= maximumX; x++) {
-                    const deltaX = x - centerX;
-                    const distanceSquared =
-                        deltaX * deltaX + deltaY * deltaY;
-
-                    if (distanceSquared >= influenceSquared) {
-                        continue;
-                    }
-
-                    const normalized =
-                        1 - distanceSquared / influenceSquared;
-                    const contribution =
-                        normalized * normalized * normalized;
-
-                    particleDensity[y * simulationWidth + x] +=
-                        contribution;
-                }
-            }
-        }
-
-        let pixelIndex = 0;
-
-        for (let y = 0; y < simulationHeight; y++) {
-            for (let x = 0; x < simulationWidth; x++) {
-                const densityIndex = y * simulationWidth + x;
-                const density = particleDensity[densityIndex];
-                const alpha =
-                    smoothStep(.50, .76, density) * waterOpacity;
-
-                if (alpha <= .002) {
-                    pixels[pixelIndex] = 0;
-                    pixels[pixelIndex + 1] = 0;
-                    pixels[pixelIndex + 2] = 0;
-                    pixels[pixelIndex + 3] = 0;
-                    pixelIndex += 4;
-                    continue;
-                }
-
-                /*
-                    Yoğunluk, rengin merkezde çok hafif derinleşmesi
-                    için yeterlidir. Her pikselde yüzey normali ve üstel
-                    ışık hesabı yapmak özellikle telefonda gereksiz bir
-                    gecikme oluşturuyordu.
-                */
-                const depth = smoothStep(.55, 1.18, density);
-
-                pixels[pixelIndex] = Math.round(157 - depth * 7);
-                pixels[pixelIndex + 1] = Math.round(222 - depth * 5);
-                pixels[pixelIndex + 2] = Math.round(241 - depth * 3);
-                pixels[pixelIndex + 3] = Math.round(alpha * 248);
-                pixelIndex += 4;
-            }
-        }
-
-        simulationContext.putImageData(simulationImage, 0, 0);
-    }
-
-    function getParticleCenters() {
-        const centers = {
-            all: { x: 0, y: 0, count: 0 },
-            left: { x: 0, y: 0, count: 0 },
-            right: { x: 0, y: 0, count: 0 }
-        };
-
-        for (const particle of waterParticles) {
-            centers.all.x += particle.x;
-            centers.all.y += particle.y;
-            centers.all.count += 1;
-
-            const groupCenter = centers[particle.group];
-            groupCenter.x += particle.x;
-            groupCenter.y += particle.y;
-            groupCenter.count += 1;
-        }
-
-        for (const center of Object.values(centers)) {
-            if (center.count > 0) {
-                center.x /= center.count;
-                center.y /= center.count;
-            }
-        }
-
-        return centers;
-    }
-
-    function drawNumbers() {
-        const particleCenters = getParticleCenters();
-
-        waterContext.save();
-        waterContext.scale(deviceScale, deviceScale);
-        waterContext.textAlign = "center";
-        waterContext.textBaseline = "middle";
-        waterContext.fillStyle = "#133b5d";
-
-        for (const drop of drops) {
-            const fontSize = clamp(drop.radius * .58, 29, 46);
-            const centerKey =
-                drop.side === "left" || drop.side === "right"
-                    ? drop.side
-                    : "all";
-            const particleCenter = particleCenters[centerKey];
-            const numberX = particleCenter.count
-                ? particleCenter.x
-                : drop.x;
-            const numberY = particleCenter.count
-                ? particleCenter.y
-                : drop.y;
-
-            waterContext.font =
-                `700 ${fontSize}px Arial, Helvetica, sans-serif`;
-
-            if (drop.value !== null && drop.value !== undefined) {
-                waterContext.globalAlpha =
-                    drop.opacity * drop.textOpacity;
-                waterContext.fillText(drop.value, numberX, numberY + 1);
-            }
-
-            if (drop.nextValue !== null && drop.nextValue !== undefined) {
-                waterContext.globalAlpha =
-                    drop.opacity * drop.nextTextOpacity;
-                waterContext.fillText(
-                    drop.nextValue,
-                    numberX,
-                    numberY + 1
-                );
-            }
-        }
-
-        for (const label of floatingLabels) {
-            const labelCenter = label.followParticles
-                ? particleCenters.all
-                : null;
-            const labelX = labelCenter && labelCenter.count
-                ? labelCenter.x
-                : label.x;
-            const labelY = labelCenter && labelCenter.count
-                ? labelCenter.y
-                : label.y;
-
-            waterContext.globalAlpha = label.opacity;
-            waterContext.font =
-                `700 ${label.fontSize}px Arial, Helvetica, sans-serif`;
-            waterContext.fillText(label.value, labelX, labelY);
-        }
-
-        waterContext.restore();
-    }
-
-    function renderScene() {
-        renderWaterField();
-
-        waterContext.clearRect(
-            0,
-            0,
-            waterCanvas.width,
-            waterCanvas.height
-        );
-
-        waterContext.save();
-        waterContext.shadowColor = "rgba(37, 125, 180, .18)";
-        waterContext.shadowBlur = 10 * deviceScale;
-        waterContext.shadowOffsetY = 5 * deviceScale;
-        waterContext.filter = `blur(${1.7 * deviceScale}px)`;
-        waterContext.imageSmoothingEnabled = true;
-        waterContext.imageSmoothingQuality = "high";
-        waterContext.drawImage(
-            simulationCanvas,
-            0,
-            0,
-            waterCanvas.width,
-            waterCanvas.height
-        );
-        waterContext.restore();
-
-        drawNumbers();
-    }
-
-    function animate(duration, update, version = sceneVersion) {
+    function tween(name, update, version=sceneVersion) {
         return new Promise(resolve => {
-            const startTime = performance.now();
-            let previousTime = startTime;
-
+            const start = performance.now();
             cancelAnimationFrame(animationFrame);
-
             function frame(now) {
-                if (version !== sceneVersion) {
-                    resolve(false);
-                    return;
-                }
-
-                const rawProgress = clamp(
-                    (now - startTime) / duration,
-                    0,
-                    1
-                );
-                const deltaSeconds = Math.min(
-                    (now - previousTime) / 1000,
-                    .034
-                );
-                previousTime = now;
-
-                update(rawProgress, deltaSeconds);
-                renderScene();
-
-                if (rawProgress < 1) {
-                    animationFrame = requestAnimationFrame(frame);
-                }
-                else {
-                    animationFrame = 0;
-                    resolve(true);
-                }
+                if (version !== sceneVersion) { resolve(false); return; }
+                const progress = clamp((now-start)/duration(name));
+                update(progress);
+                if (progress < 1) animationFrame = requestAnimationFrame(frame);
+                else { animationFrame=0; resolve(true); }
             }
-
             animationFrame = requestAnimationFrame(frame);
         });
     }
 
-    async function touchRipple(drop, strength = .072) {
-        const version = sceneVersion;
-        const groups = drop.side === "left" || drop.side === "right"
-            ? [drop.side]
-            : ["left", "right"];
-
-        addParticleImpulse(groups, 12 + strength * 75);
-
-        const finished = await animate(220, (progress, deltaSeconds) => {
-            stepWaterParticles(deltaSeconds, 112);
-        }, version);
-
-        if (finished) {
-            renderScene();
+    function svgElement(tag, attributes={}) {
+        const element = document.createElementNS(SVG_NS, tag);
+        for (const [name,value] of Object.entries(attributes)) element.setAttribute(name,value);
+        return element;
+    }
+    function createBlobNodes(parent, count, fill) {
+        const nodes=[];
+        for (let index=0; index<count; index++) {
+            const ellipse=svgElement("ellipse",{cx:0,cy:0,rx:0,ry:0,fill});
+            parent.appendChild(ellipse); nodes.push(ellipse);
         }
-
-        return finished;
+        return nodes;
     }
 
-    async function touchRippleGroup(group, strength = .072) {
-        const version = sceneVersion;
-        const groups = [...new Set(group.map(drop => drop.side))]
-            .filter(side => side === "left" || side === "right");
-
-        addParticleImpulse(groups, 13 + strength * 80);
-
-        const finished = await animate(240, (progress, deltaSeconds) => {
-            stepWaterParticles(deltaSeconds, 110);
-        }, version);
-
-        if (finished) {
-            renderScene();
-        }
-
-        return finished;
-    }
-
-    function setupQuestion(number) {
-        sceneVersion += 1;
-        cancelAnimationFrame(animationFrame);
-        animationFrame = 0;
-
-        originalNumber = number;
-
-        const parts = calculateParts(number);
-        leftNumber = parts[0];
-        rightNumber = parts[1];
-        leftResult = leftNumber / 3;
-        rightResult = rightNumber / 3;
-        finalResult = originalNumber / 3;
-
-        busy = false;
-        completed = false;
-        leftDivided = false;
-        rightDivided = false;
-        sceneMode = "source";
-        floatingLabels = [];
-
-        equationNumber.textContent = originalNumber;
-        answerText.textContent = "";
-        answerBox.classList.remove("filled");
-
-        const sourceX = stageWidth / 2;
-        const sourceY = 125;
-        const visibleRadius = stageWidth < 500 ? 67 : 72;
-        sourceVisibleRadius = visibleRadius;
-        const halfMassRadius =
-            visibleRadius / Math.pow(2, .25);
-
-        /*
-            Damla en baştan itibaren aynı iki su kütlesinden oluşur.
-            Kütlelerin merkezleri tam çakıştığı için dışarıdan tek bir
-            yuvarlak damla görünür. Bölünmede yeni şekil yaratılmaz;
-            bu iki mevcut merkez birbirinden uzaklaşır.
-        */
-        drops = [
-            createDrop(
-                sourceX,
-                sourceY,
-                halfMassRadius,
-                leftNumber,
-                "left"
-            ),
-            createDrop(
-                sourceX,
-                sourceY,
-                halfMassRadius,
-                rightNumber,
-                "right"
-            )
-        ];
-
-        drops[0].textOpacity = 0;
-        drops[1].textOpacity = 0;
-
-        floatingLabels = [
-            {
-                x: sourceX,
-                y: sourceY + 1,
-                value: originalNumber,
-                opacity: 1,
-                fontSize: clamp(visibleRadius * .60, 39, 45),
-                followParticles: true
+    class LayeredWaterDropEngine {
+        constructor() {
+            this.maximumBlobs=3;
+            this.maskNodes=createBlobNodes(maskBlobs,this.maximumBlobs,"white");
+            this.shadowNodes=createBlobNodes(shadowBlobs,this.maximumBlobs,"#000");
+            this.edgeNodes=createBlobNodes(edgeBlobs,this.maximumBlobs,"white");
+            this.highlightGroups=[];
+            this.numberNodes=new Map();
+            for (let index=0; index<this.maximumBlobs; index++) {
+                this.highlightGroups.push(this.createHighlightGroup());
             }
-        ];
-
-        initializeWaterParticles(
-            sourceX,
-            sourceY,
-            visibleRadius
-        );
-
-        instruction.textContent = originalNumber + "'e tıkla.";
-
-        document.querySelectorAll(".flyingFinalCanvas").forEach(element => {
-            element.remove();
-        });
-
-        renderScene();
-    }
-
-    async function splitNumber() {
-        if (busy || sceneMode !== "source") {
-            return;
         }
-
-        busy = true;
-        const version = sceneVersion;
-        const leftDrop = drops[0];
-        const rightDrop = drops[1];
-
-        instruction.textContent = "Damla titreşiyor.";
-        addParticleImpulse(["left", "right"], 18);
-
-        const sourceX = leftDrop.x;
-        const sourceY = leftDrop.y;
-        const leftTargetX = stageWidth * (stageWidth < 500 ? .25 : .27);
-        const rightTargetX = stageWidth * (stageWidth < 500 ? .75 : .73);
-        const targetY = 235;
-
-        let splitKickApplied = false;
-
-        const separated = await animate(900, (progress, deltaSeconds) => {
-            const splitProgress = clamp(
-                (progress - .12) / .88,
-                0,
-                1
+        createHighlightGroup() {
+            const group=svgElement("g",{opacity:0});
+            group.append(
+                svgElement("path",{
+                    d:"M -35 -15 C -28 -39, 3 -48, 28 -31 C 10 -33, -7 -26, -22 -7 C -28 2, -34 -2, -35 -15 Z",
+                    fill:"white",opacity:".62",filter:"url(#highlightBlur)"
+                }),
+                svgElement("ellipse",{
+                    cx:34,cy:10,rx:7,ry:13,fill:"white",opacity:".72",filter:"url(#highlightBlur)"
+                })
             );
-
-            /*
-                Kısa dokunma tepkisi ve ayrılma aynı animasyonun
-                parçalarıdır; arada bekleme yoktur.
-            */
-            const separation = keyframeProgress(splitProgress, [
-                [0, 0],
-                [.24, .17],
-                [.48, .31],
-                [.64, .39],
-                [.76, .50],
-                [1, 1]
-            ]);
-            const verticalMovement = keyframeProgress(splitProgress, [
-                [0, 0],
-                [.48, .28],
-                [.76, .62],
-                [1, 1]
-            ]);
-            const textArrival = smoothStep(.54, .82, splitProgress);
-            const sourceFade = 1 - smoothStep(.30, .62, splitProgress);
-            const afterPinch = Math.max(0, splitProgress - .64);
-            const wobble = splitProgress < .64
-                ? .008 * Math.sin(splitProgress * Math.PI * 2)
-                : .024 * Math.exp(-8 * afterPinch) *
-                    Math.sin(afterPinch * Math.PI * 6);
-
-            leftDrop.x = lerp(sourceX, leftTargetX, separation);
-            rightDrop.x = lerp(sourceX, rightTargetX, separation);
-            leftDrop.y = lerp(sourceY, targetY, verticalMovement);
-            rightDrop.y = lerp(sourceY, targetY, verticalMovement);
-            leftDrop.aspect = wobble;
-            rightDrop.aspect = wobble;
-            leftDrop.rotation = 0;
-            rightDrop.rotation = 0;
-            leftDrop.textOpacity = textArrival;
-            rightDrop.textOpacity = textArrival;
-            floatingLabels[0].opacity = sourceFade;
-            particleMorph = smoothStep(.08, .82, splitProgress);
-
-            if (!splitKickApplied && splitProgress >= .64) {
-                splitKickApplied = true;
-
-                waterParticles.forEach((particle, index) => {
-                    particle.vx += particle.group === "left" ? -7 : 7;
-                    particle.vy += Math.sin(index * 1.71) * 1.1;
-                });
-            }
-
-            stepWaterParticles(deltaSeconds, 112);
-
-            if (progress < .12) {
-                instruction.textContent = "Damla titreşiyor.";
-            }
-            else if (splitProgress < .43) {
-                instruction.textContent =
-                    "Damla iki yana doğru uzuyor.";
-            }
-            else if (splitProgress < .68) {
-                instruction.textContent =
-                    "Ortadaki su boynu inceliyor.";
-            }
-            else {
-                instruction.textContent =
-                    "İki damla birbirinden ayrılıyor.";
-            }
-        }, version);
-
-        if (!separated || version !== sceneVersion) {
-            return;
+            highlightLayer.appendChild(group); return group;
         }
-
-        particleMorph = 1;
-
-        leftDrop.aspect = 0;
-        rightDrop.aspect = 0;
-        leftDrop.rotation = 0;
-        rightDrop.rotation = 0;
-        snapParticlesToTargets();
-        floatingLabels = [];
-        sceneMode = "parts";
-        busy = false;
-        instruction.textContent = "İstediğin parçaya tıkla.";
-        renderScene();
-    }
-
-    async function divideDrop(index) {
-        if (busy || sceneMode !== "parts") {
-            return;
-        }
-
-        const drop = drops[index];
-        const alreadyDivided = drop.side === "left"
-            ? leftDivided
-            : rightDivided;
-
-        if (alreadyDivided) {
-            if (leftDivided && rightDivided) {
-                mergeDrops(index);
-            }
-            else {
-                instruction.textContent =
-                    "Önce diğer parçayı da 3'e böl.";
-            }
-
-            return;
-        }
-
-        busy = true;
-        const version = sceneVersion;
-        const result = drop.side === "left"
-            ? leftResult
-            : rightResult;
-        const startRadius = drop.radius;
-        const targetRadius = startRadius * .90;
-        const startParticleScale = particleGroupScale[drop.side];
-        const targetParticleScale = startParticleScale * .90;
-
-        instruction.textContent = "Damla titreşiyor.";
-        addParticleImpulse([drop.side], 16);
-
-        drop.nextValue = result;
-        drop.nextTextOpacity = 0;
-
-        const divided = await animate(400, (progress, deltaSeconds) => {
-            const changeProgress = clamp(
-                (progress - .18) / .82,
-                0,
-                1
-            );
-            const movement = easeInOutCubic(changeProgress);
-
-            drop.radius = lerp(startRadius, targetRadius, movement);
-            drop.textOpacity =
-                1 - smoothStep(.12, .62, changeProgress);
-            drop.nextTextOpacity =
-                smoothStep(.38, .88, changeProgress);
-            particleGroupScale[drop.side] = lerp(
-                startParticleScale,
-                targetParticleScale,
-                movement
-            );
-            stepWaterParticles(deltaSeconds, 114);
-
-            instruction.textContent = progress < .18
-                ? "Damla titreşiyor."
-                : "Damla küçülüyor.";
-        }, version);
-
-        if (!divided || version !== sceneVersion) {
-            return;
-        }
-
-        drop.radius = targetRadius;
-        drop.value = result;
-        drop.nextValue = null;
-        drop.textOpacity = 1;
-        drop.nextTextOpacity = 0;
-        drop.aspect = 0;
-        particleGroupScale[drop.side] = targetParticleScale;
-        snapParticlesToTargets([drop.side]);
-
-        if (drop.side === "left") {
-            leftDivided = true;
-        }
-        else {
-            rightDivided = true;
-        }
-
-        busy = false;
-
-        if (leftDivided && rightDivided) {
-            instruction.textContent =
-                "Şimdi iki damladan birine tekrar tıkla.";
-        }
-        else {
-            instruction.textContent = "Diğer parçayı da 3'e böl.";
-        }
-
-        renderScene();
-    }
-
-    async function mergeDrops(clickedIndex) {
-        if (
-            busy ||
-            sceneMode !== "parts" ||
-            !leftDivided ||
-            !rightDivided
-        ) {
-            return;
-        }
-
-        busy = true;
-        sceneMode = "merging";
-        const version = sceneVersion;
-
-        instruction.textContent = "Damla titreşiyor.";
-        addParticleImpulse([drops[clickedIndex].side], 15);
-
-        const leftDrop = drops.find(drop => drop.side === "left");
-        const rightDrop = drops.find(drop => drop.side === "right");
-        const leftStart = { x: leftDrop.x, y: leftDrop.y };
-        const rightStart = { x: rightDrop.x, y: rightDrop.y };
-        const baseRadius = (leftDrop.radius + rightDrop.radius) / 2;
-        const centerX = stageWidth / 2;
-        const centerY = 335;
-        const resultRadius = baseRadius * Math.SQRT2;
-        const resultUnifiedScale =
-            resultRadius / sourceVisibleRadius;
-
-        floatingLabels = [
-            {
-                x: centerX,
-                y: centerY + 1,
-                value: finalResult,
-                opacity: 0,
-                fontSize: 43,
-                followParticles: true
-            }
-        ];
-
-        let contactImpulseApplied = false;
-
-        const merged = await animate(900, (progress, deltaSeconds) => {
-            const mergeProgress = clamp(
-                (progress - .12) / .88,
-                0,
-                1
-            );
-
-            /*
-                Yaklaşma hızlı başlar; temas, köprü ve fıstık evreleri
-                daha yavaş geçer. Böylece birleşme üst üste binme gibi
-                değil, yüzey gerilimiyle kaynaşma gibi görünür.
-            */
-            const movement = keyframeProgress(mergeProgress, [
-                [0, 0],
-                [.40, .55],
-                [.60, .70],
-                [.76, .82],
-                [.90, .94],
-                [1, 1]
-            ]);
-            const coalescence = smoothStep(.58, 1, mergeProgress);
-            const radiusGrowth =
-                1 +
-                (Math.pow(2, .25) - 1) * coalescence;
-            const afterContact = Math.max(0, mergeProgress - .60);
-            const oscillation = mergeProgress < .60
-                ? .006 * Math.sin(mergeProgress * Math.PI * 2)
-                : .045 * Math.exp(-8 * afterContact) *
-                    Math.sin(afterContact * Math.PI * 5);
-
-            leftDrop.x = lerp(leftStart.x, centerX, movement);
-            rightDrop.x = lerp(rightStart.x, centerX, movement);
-            leftDrop.y = lerp(leftStart.y, centerY, movement);
-            rightDrop.y = lerp(rightStart.y, centerY, movement);
-            leftDrop.radius = baseRadius * radiusGrowth;
-            rightDrop.radius = baseRadius * radiusGrowth;
-            leftDrop.aspect = oscillation;
-            rightDrop.aspect = oscillation;
-            leftDrop.rotation = 0;
-            rightDrop.rotation = 0;
-            leftDrop.textOpacity =
-                1 - smoothStep(.56, .78, mergeProgress);
-            rightDrop.textOpacity =
-                1 - smoothStep(.56, .78, mergeProgress);
-            floatingLabels[0].opacity =
-                smoothStep(.72, .94, mergeProgress);
-            particleMorph =
-                1 - smoothStep(.52, .96, mergeProgress);
-            particleUnifiedScale = lerp(
-                1,
-                resultUnifiedScale,
-                smoothStep(.62, 1, mergeProgress)
-            );
-
-            if (!contactImpulseApplied && mergeProgress >= .61) {
-                contactImpulseApplied = true;
-
-                waterParticles.forEach((particle, index) => {
-                    particle.vx += particle.group === "left" ? 5 : -5;
-                    particle.vy += Math.cos(index * 1.37) * .9;
-                });
-            }
-
-            stepWaterParticles(deltaSeconds, 116);
-
-            if (progress < .12) {
-                instruction.textContent = "Damla titreşiyor.";
-            }
-            else if (mergeProgress < .50) {
-                instruction.textContent =
-                    "İki damla birbirine yaklaşıyor.";
-            }
-            else if (mergeProgress < .68) {
-                instruction.textContent =
-                    "Temas noktasında su köprüsü oluşuyor.";
-            }
-            else if (mergeProgress < .86) {
-                instruction.textContent =
-                    "İki damla tek yüzeyde kaynaşıyor.";
-            }
-            else {
-                instruction.textContent =
-                    "Yeni damla yuvarlaklaşıyor.";
-            }
-        }, version);
-
-        if (!merged || version !== sceneVersion) {
-            return;
-        }
-
-        drops = [
-            createDrop(
-                centerX,
-                centerY,
-                resultRadius,
-                finalResult,
-                "result"
-            )
-        ];
-        drops[0].aspect = 0;
-        floatingLabels = [];
-        particleMorph = 0;
-        particleUnifiedScale = resultUnifiedScale;
-
-        drops[0].aspect = 0;
-        drops[0].rotation = 0;
-        snapParticlesToTargets();
-        sceneMode = "result";
-        busy = false;
-        instruction.textContent = finalResult + "'e tıkla.";
-        renderScene();
-    }
-
-    function moveResultToAnswer() {
-        if (
-            busy ||
-            completed ||
-            sceneMode !== "result" ||
-            drops.length !== 1
-        ) {
-            return;
-        }
-
-        completed = true;
-        busy = true;
-        const resultDrop = drops[0];
-        const stageRectangle = stage.getBoundingClientRect();
-        const endRectangle = answerBox.getBoundingClientRect();
-        const diameter = resultDrop.radius * 2;
-        const cropPadding = 24;
-        const cropSize = diameter + cropPadding * 2;
-        const startLeft =
-            stageRectangle.left + resultDrop.x - cropSize / 2;
-        const startTop =
-            stageRectangle.top + resultDrop.y - cropSize / 2;
-
-        instruction.textContent = "Sonuç yerine gidiyor.";
-
-        /*
-            Yeni bir CSS baloncuğu çizilmez. Mevcut su damlasının
-            canvas üzerindeki gerçek pikselleri kırpılıp kopyalanır.
-            Böylece sıçrama sırasında bile stil değişemez.
-        */
-        const flying = document.createElement("canvas");
-        flying.className = "flyingFinalCanvas";
-        flying.width = Math.round(cropSize * deviceScale);
-        flying.height = Math.round(cropSize * deviceScale);
-        flying.style.left = startLeft + "px";
-        flying.style.top = startTop + "px";
-        flying.style.width = cropSize + "px";
-        flying.style.height = cropSize + "px";
-
-        const flyingContext = flying.getContext("2d", { alpha: true });
-        const sourceLeft =
-            (resultDrop.x - cropSize / 2) * deviceScale;
-        const sourceTop =
-            (resultDrop.y - cropSize / 2) * deviceScale;
-
-        flyingContext.drawImage(
-            waterCanvas,
-            sourceLeft,
-            sourceTop,
-            cropSize * deviceScale,
-            cropSize * deviceScale,
-            0,
-            0,
-            flying.width,
-            flying.height
-        );
-
-        document.body.appendChild(flying);
-
-        resultDrop.opacity = 0;
-        waterOpacity = 0;
-        renderScene();
-
-        const targetWidth = endRectangle.width * .94;
-        const targetHeight = endRectangle.height * .94;
-        const endLeft =
-            endRectangle.left + (endRectangle.width - targetWidth) / 2;
-        const endTop =
-            endRectangle.top + (endRectangle.height - targetHeight) / 2;
-        const middleLeft = (startLeft + endLeft) / 2;
-        const middleTop = Math.min(startTop, endTop) - 85;
-
-        const animation = flying.animate(
-            [
-                {
-                    left: startLeft + "px",
-                    top: startTop + "px",
-                    width: cropSize + "px",
-                    height: cropSize + "px",
-                    transform: "rotate(0deg) scale(1)",
-                    opacity: 1
-                },
-                {
-                    offset: .22,
-                    left: (startLeft - 15) + "px",
-                    top: (startTop - 42) + "px",
-                    transform: "rotate(-7deg) scale(.96, 1.10)"
-                },
-                {
-                    offset: .55,
-                    left: middleLeft + "px",
-                    top: middleTop + "px",
-                    transform: "rotate(7deg) scale(1.05, .96)"
-                },
-                {
-                    left: endLeft + "px",
-                    top: endTop + "px",
-                    width: targetWidth + "px",
-                    height: targetHeight + "px",
-                    transform: "rotate(0deg) scale(1)",
-                    opacity: 1
+        setVisible(opacity) { liquidVisual.setAttribute("opacity",clamp(opacity)); }
+        renderBlobs(blobs) {
+            for (let index=0; index<this.maximumBlobs; index++) {
+                const blob=blobs[index]||{x:0,y:0,rx:0,ry:0,angle:0,highlight:0};
+                const visible=blob.rx>.5&&blob.ry>.5;
+                const transform=`rotate(${blob.angle||0} ${blob.x} ${blob.y})`;
+                for (const node of [this.maskNodes[index],this.shadowNodes[index],this.edgeNodes[index]]) {
+                    node.setAttribute("cx",blob.x); node.setAttribute("cy",blob.y);
+                    node.setAttribute("rx",Math.max(0,blob.rx)); node.setAttribute("ry",Math.max(0,blob.ry));
+                    node.setAttribute("transform",transform); node.setAttribute("opacity",visible?1:0);
                 }
-            ],
-            {
-                duration: 700,
-                easing: "cubic-bezier(.26, .72, .35, 1)",
-                fill: "forwards"
+                const highlight=this.highlightGroups[index];
+                highlight.setAttribute("transform",`translate(${blob.x} ${blob.y}) rotate(${blob.angle||0}) scale(${blob.rx/72} ${blob.ry/68})`);
+                highlight.setAttribute("opacity",visible?clamp(blob.highlight??1):0);
             }
-        );
-
-        animation.onfinish = () => {
-            flying.remove();
-            answerText.textContent = finalResult;
-            answerBox.classList.add("filled");
-            instruction.textContent = "İşlem tamamlandı.";
-            busy = false;
-        };
+        }
+        setNumber(key,value,x,y,opacity=1,size=42) {
+            let node=this.numberNodes.get(key);
+            if (!node) {
+                node=svgElement("text",{class:"drop-number"});
+                numberLayer.appendChild(node); this.numberNodes.set(key,node);
+            }
+            node.textContent=value; node.setAttribute("x",x); node.setAttribute("y",y+2);
+            node.setAttribute("opacity",clamp(opacity)); node.setAttribute("font-size",size);
+        }
+        hideNumbersExcept(keys) {
+            for (const [key,node] of this.numberNodes) if (!keys.includes(key)) node.setAttribute("opacity",0);
+        }
+        clear() { this.renderBlobs([]); this.setVisible(0); this.hideNumbersExcept([]); }
+        singleBlob(x,y,radius,options={}) {
+            return {
+                x,y,rx:radius*(options.scaleX??1),ry:radius*.94*(options.scaleY??1),
+                angle:options.angle??0,highlight:options.highlight??1
+            };
+        }
     }
 
-    function findTouchedDrop(x, y) {
-        let closestIndex = -1;
-        let closestDistance = Infinity;
-
-        drops.forEach((drop, index) => {
-            if (drop.opacity <= .05) {
+    class DivisionWaterScene {
+        constructor(divisor=3) {
+            this.divisor=divisor; this.water=new LayeredWaterDropEngine();
+            this.state="equation"; this.busy=false;
+            this.original=165; this.leftValue=150; this.rightValue=15;
+            this.leftResult=50; this.rightResult=5; this.result=55;
+            this.leftDivided=false; this.rightDivided=false;
+            this.partRadius={left:65,right:62};
+        }
+        decompose(number) {
+            let first=Math.floor(number/(this.divisor*10))*(this.divisor*10);
+            if (first===number) first-=this.divisor*10;
+            return [first,number-first];
+        }
+        radiusForValue(value,base=64) {
+            const gentleFactor=clamp(.96+Math.log10(Math.max(2,value))*.025,.97,1.045);
+            return base*gentleFactor;
+        }
+        setup(number) {
+            sceneVersion+=1; cancelAnimationFrame(animationFrame); animationFrame=0;
+            this.original=number; [this.leftValue,this.rightValue]=this.decompose(number);
+            this.leftResult=this.leftValue/this.divisor;
+            this.rightResult=this.rightValue/this.divisor;
+            this.result=number/this.divisor;
+            this.leftDivided=false; this.rightDivided=false;
+            this.partRadius.left=this.radiusForValue(this.leftValue);
+            this.partRadius.right=this.radiusForValue(this.rightValue);
+            this.state="equation"; this.busy=false;
+            equationNumber.textContent=number; equationNumber.classList.add("awaiting");
+            divisorText.textContent=this.divisor; answerText.textContent="";
+            answerBox.classList.remove("filled");
+            instruction.textContent=`İşlemdeki ${number}'e tıkla.`;
+            this.water.clear();
+            document.querySelectorAll(".flying-liquid").forEach(node=>node.remove());
+        }
+        async createSourceDrop() {
+            if (this.busy||this.state!=="equation") return;
+            this.busy=true; this.state="appearing";
+            equationNumber.classList.remove("awaiting");
+            instruction.textContent="Su damlası oluşuyor.";
+            const version=sceneVersion;
+            const radius=this.radiusForValue(this.original,72);
+            this.water.setVisible(1);
+            this.water.setNumber("source",this.original,STAGE.sourceX,STAGE.sourceY,0,44);
+            const finished=await tween("appear",progress=>{
+                const grow=easeOutBack(progress), scale=Math.max(0,grow);
+                const ripple=1+.025*Math.sin(progress*Math.PI*2)*(1-progress);
+                this.water.renderBlobs([
+                    this.water.singleBlob(STAGE.sourceX,STAGE.sourceY,radius*scale,{
+                        scaleX:ripple,scaleY:2-ripple,highlight:smoothStep(.12,.60,progress)
+                    })
+                ]);
+                this.water.setVisible(smoothStep(0,.46,progress));
+                this.water.setNumber("source",this.original,STAGE.sourceX,STAGE.sourceY,smoothStep(.30,.78,progress),44);
+            },version);
+            if (!finished||version!==sceneVersion) return;
+            this.water.renderBlobs([this.water.singleBlob(STAGE.sourceX,STAGE.sourceY,radius)]);
+            this.water.setNumber("source",this.original,STAGE.sourceX,STAGE.sourceY,1,44);
+            this.state="source"; this.busy=false;
+            instruction.textContent=`${this.original}'e tıkla.`;
+        }
+        async split() {
+            if (this.busy||this.state!=="source") return;
+            this.busy=true; this.state="splitting";
+            instruction.textContent="Damla iki parçaya ayrılıyor.";
+            const version=sceneVersion;
+            const sourceRadius=this.radiusForValue(this.original,72);
+            this.water.setNumber("left",this.leftValue,STAGE.sourceX,STAGE.sourceY,0,39);
+            this.water.setNumber("right",this.rightValue,STAGE.sourceX,STAGE.sourceY,0,39);
+            const finished=await tween("split",progress=>{
+                const movement=easeInOutCubic(progress);
+                const lobesGrow=smoothStep(0,.42,progress);
+                const bridgeShrink=1-smoothStep(.16,.92,progress);
+                const leftX=lerp(STAGE.sourceX,STAGE.leftX,movement);
+                const rightX=lerp(STAGE.sourceX,STAGE.rightX,movement);
+                const y=lerp(STAGE.sourceY,STAGE.partY,movement);
+                const ripple=.025*Math.sin(progress*Math.PI*2)*(1-progress);
+                this.water.renderBlobs([
+                    this.water.singleBlob(leftX,y,lerp(9,this.partRadius.left,lobesGrow),{
+                        scaleX:1+ripple,scaleY:1-ripple,angle:-4*movement,highlight:lobesGrow
+                    }),
+                    this.water.singleBlob(rightX,y,lerp(9,this.partRadius.right,lobesGrow),{
+                        scaleX:1-ripple,scaleY:1+ripple,angle:4*movement,highlight:lobesGrow
+                    }),
+                    this.water.singleBlob(STAGE.sourceX,lerp(STAGE.sourceY,STAGE.partY,movement),sourceRadius*bridgeShrink,{
+                        scaleX:lerp(1,.24,smoothStep(.22,.82,progress)),
+                        scaleY:lerp(1,.55,smoothStep(.22,.82,progress)),highlight:bridgeShrink
+                    })
+                ]);
+                const sourceOpacity=1-smoothStep(.12,.46,progress);
+                const partOpacity=smoothStep(.30,.72,progress);
+                this.water.setNumber("source",this.original,STAGE.sourceX,lerp(STAGE.sourceY,STAGE.partY,movement),sourceOpacity,44);
+                this.water.setNumber("left",this.leftValue,leftX,y,partOpacity,39);
+                this.water.setNumber("right",this.rightValue,rightX,y,partOpacity,39);
+            },version);
+            if (!finished||version!==sceneVersion) return;
+            this.renderParts(); this.state="parts"; this.busy=false;
+            instruction.textContent="İstediğin parçaya tıkla.";
+        }
+        renderParts() {
+            this.water.renderBlobs([
+                this.water.singleBlob(STAGE.leftX,STAGE.partY,this.partRadius.left,{angle:-3}),
+                this.water.singleBlob(STAGE.rightX,STAGE.partY,this.partRadius.right,{angle:3})
+            ]);
+            this.water.setNumber("left",this.leftDivided?this.leftResult:this.leftValue,STAGE.leftX,STAGE.partY,1,39);
+            this.water.setNumber("right",this.rightDivided?this.rightResult:this.rightValue,STAGE.rightX,STAGE.partY,1,39);
+            this.water.hideNumbersExcept(["left","right"]);
+        }
+        async divide(side) {
+            if (this.busy||this.state!=="parts") return;
+            const isLeft=side==="left";
+            const alreadyDivided=isLeft?this.leftDivided:this.rightDivided;
+            if (alreadyDivided) {
+                if (this.leftDivided&&this.rightDivided) this.merge();
+                else instruction.textContent="Önce diğer parçayı da 3'e böl.";
                 return;
             }
-
-            const distance = Math.hypot(x - drop.x, y - drop.y);
-            const hitRadius = Math.max(drop.radius * 1.18, 48);
-
-            if (distance <= hitRadius && distance < closestDistance) {
-                closestIndex = index;
-                closestDistance = distance;
+            this.busy=true;
+            const version=sceneVersion;
+            const x=isLeft?STAGE.leftX:STAGE.rightX;
+            const startValue=isLeft?this.leftValue:this.rightValue;
+            const endValue=isLeft?this.leftResult:this.rightResult;
+            const originalRadius=this.partRadius[side];
+            const targetRadius=originalRadius*.94;
+            const otherSide=isLeft?"right":"left";
+            this.water.setNumber(`${side}Next`,endValue,x,STAGE.partY,0,39);
+            instruction.textContent=`${startValue}, 3'e bölünüyor.`;
+            const finished=await tween("divide",progress=>{
+                const change=easeInOutCubic(progress);
+                const ripple=.035*Math.sin(progress*Math.PI*2)*(1-progress);
+                const currentRadius=lerp(originalRadius,targetRadius,change);
+                const leftRadius=side==="left"?currentRadius:this.partRadius.left;
+                const rightRadius=side==="right"?currentRadius:this.partRadius.right;
+                this.water.renderBlobs([
+                    this.water.singleBlob(STAGE.leftX,STAGE.partY,leftRadius,{
+                        angle:-3,scaleX:side==="left"?1+ripple:1,scaleY:side==="left"?1-ripple:1
+                    }),
+                    this.water.singleBlob(STAGE.rightX,STAGE.partY,rightRadius,{
+                        angle:3,scaleX:side==="right"?1+ripple:1,scaleY:side==="right"?1-ripple:1
+                    })
+                ]);
+                this.water.setNumber(side,startValue,x,STAGE.partY,1-smoothStep(.16,.62,progress),39);
+                this.water.setNumber(`${side}Next`,endValue,x,STAGE.partY,smoothStep(.38,.84,progress),39);
+                const otherX=otherSide==="left"?STAGE.leftX:STAGE.rightX;
+                const otherValue=otherSide==="left"
+                    ?(this.leftDivided?this.leftResult:this.leftValue)
+                    :(this.rightDivided?this.rightResult:this.rightValue);
+                this.water.setNumber(otherSide,otherValue,otherX,STAGE.partY,1,39);
+            },version);
+            if (!finished||version!==sceneVersion) return;
+            this.partRadius[side]=targetRadius;
+            if (isLeft) this.leftDivided=true; else this.rightDivided=true;
+            this.renderParts(); this.busy=false;
+            instruction.textContent=this.leftDivided&&this.rightDivided
+                ?"Şimdi iki damladan birine tekrar tıkla."
+                :"Diğer parçayı da 3'e böl.";
+        }
+        async merge() {
+            if (this.busy||this.state!=="parts"||!this.leftDivided||!this.rightDivided) return;
+            this.busy=true; this.state="merging";
+            const version=sceneVersion;
+            const leftStartRadius=this.partRadius.left;
+            const rightStartRadius=this.partRadius.right;
+            const resultRadius=this.radiusForValue(this.result,72);
+            this.water.setNumber("result",this.result,STAGE.sourceX,STAGE.resultY,0,43);
+            instruction.textContent="İki sonuç birleşiyor.";
+            const finished=await tween("merge",progress=>{
+                const movement=easeInOutCubic(progress);
+                const leftX=lerp(STAGE.leftX,STAGE.sourceX-17,movement);
+                const rightX=lerp(STAGE.rightX,STAGE.sourceX+17,movement);
+                const y=lerp(STAGE.partY,STAGE.resultY,movement);
+                const resultGrow=smoothStep(.54,1,progress);
+                const lobeShrink=1-smoothStep(.66,1,progress);
+                const contactBridge=smoothStep(.38,.62,progress)*(1-smoothStep(.72,1,progress));
+                this.water.renderBlobs([
+                    this.water.singleBlob(leftX,y,leftStartRadius*lobeShrink,{
+                        scaleX:lerp(1,.82,resultGrow),scaleY:lerp(1,1.08,resultGrow),
+                        angle:lerp(-3,0,movement),highlight:lobeShrink
+                    }),
+                    this.water.singleBlob(rightX,y,rightStartRadius*lobeShrink,{
+                        scaleX:lerp(1,.82,resultGrow),scaleY:lerp(1,1.08,resultGrow),
+                        angle:lerp(3,0,movement),highlight:lobeShrink
+                    }),
+                    this.water.singleBlob(STAGE.sourceX,y,Math.max(10*contactBridge,resultRadius*resultGrow),{
+                        scaleX:lerp(.30,1,resultGrow),scaleY:lerp(.70,1,resultGrow),highlight:resultGrow
+                    })
+                ]);
+                const oldOpacity=1-smoothStep(.36,.72,progress);
+                const resultOpacity=smoothStep(.62,.91,progress);
+                this.water.setNumber("left",this.leftResult,leftX,y,oldOpacity,39);
+                this.water.setNumber("right",this.rightResult,rightX,y,oldOpacity,39);
+                this.water.setNumber("result",this.result,STAGE.sourceX,y,resultOpacity,43);
+            },version);
+            if (!finished||version!==sceneVersion) return;
+            this.water.renderBlobs([this.water.singleBlob(STAGE.sourceX,STAGE.resultY,resultRadius)]);
+            this.water.setNumber("result",this.result,STAGE.sourceX,STAGE.resultY,1,43);
+            this.water.hideNumbersExcept(["result"]);
+            this.state="result"; this.busy=false;
+            instruction.textContent=`${this.result}'e tıkla.`;
+        }
+        createFlyingDrop(value) {
+            const wrapper=document.createElement("div");
+            wrapper.className="flying-liquid";
+            wrapper.innerHTML=`
+                <svg viewBox="0 0 160 140" width="100%" height="100%" overflow="visible" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="flyWater" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stop-color="#fff" stop-opacity=".94"/>
+                            <stop offset=".40" stop-color="#e8edf0" stop-opacity=".74"/>
+                            <stop offset=".75" stop-color="#fff" stop-opacity=".54"/>
+                            <stop offset="1" stop-color="#d5dee3" stop-opacity=".78"/>
+                        </linearGradient>
+                        <filter id="flyShadow" x="-30%" y="-30%" width="170%" height="180%"><feGaussianBlur stdDeviation="5"/></filter>
+                    </defs>
+                    <ellipse cx="86" cy="82" rx="58" ry="47" fill="#596873" opacity=".20" filter="url(#flyShadow)"/>
+                    <ellipse cx="78" cy="67" rx="59" ry="55" fill="url(#flyWater)" stroke="#71808a" stroke-opacity=".62" stroke-width="2.4"/>
+                    <path d="M43 49 C50 27 79 17 102 30 C79 29 61 37 50 55 C46 61 41 58 43 49Z" fill="white" opacity=".62"/>
+                    <ellipse cx="118" cy="65" rx="6" ry="11" fill="white" opacity=".72"/>
+                    <text x="78" y="72" text-anchor="middle" dominant-baseline="middle" fill="#173e60" font-family="Arial,Helvetica,sans-serif" font-size="37" font-weight="700">${value}</text>
+                </svg>`;
+            document.body.appendChild(wrapper); return wrapper;
+        }
+        async moveResultToAnswer() {
+            if (this.busy||this.state!=="result") return;
+            this.busy=true; this.state="answering";
+            instruction.textContent="Sonuç yerine gidiyor.";
+            const svgRect=liquidSvg.getBoundingClientRect();
+            const answerRect=answerBox.getBoundingClientRect();
+            const scaleX=svgRect.width/STAGE.width, scaleY=svgRect.height/STAGE.height;
+            const radius=this.radiusForValue(this.result,72);
+            const startWidth=radius*2.35*scaleX, startHeight=radius*2.15*scaleY;
+            const startCenterX=svgRect.left+STAGE.sourceX*scaleX;
+            const startCenterY=svgRect.top+STAGE.resultY*scaleY;
+            const endWidth=answerRect.width*.92, endHeight=answerRect.height*.92;
+            const endLeft=answerRect.left+(answerRect.width-endWidth)/2;
+            const endTop=answerRect.top+(answerRect.height-endHeight)/2;
+            const flying=this.createFlyingDrop(this.result);
+            flying.style.left=`${startCenterX-startWidth/2}px`;
+            flying.style.top=`${startCenterY-startHeight/2}px`;
+            flying.style.width=`${startWidth}px`; flying.style.height=`${startHeight}px`;
+            this.water.setVisible(0); this.water.hideNumbersExcept([]);
+            const animation=flying.animate([
+                {left:flying.style.left,top:flying.style.top,width:flying.style.width,height:flying.style.height},
+                {left:`${endLeft}px`,top:`${endTop}px`,width:`${endWidth}px`,height:`${endHeight}px`}
+            ],{
+                duration:duration("answer"),easing:"cubic-bezier(.32,.70,.36,1)",fill:"forwards"
+            });
+            animation.onfinish=()=>{
+                flying.remove(); answerText.textContent=this.result;
+                answerBox.classList.add("filled"); instruction.textContent="İşlem tamamlandı.";
+                this.busy=false; this.state="completed";
+            };
+        }
+        handleStagePoint(x,y) {
+            if (this.busy) return;
+            if (this.state==="source") {
+                if (Math.hypot(x-STAGE.sourceX,y-STAGE.sourceY)<92) this.split();
+                return;
             }
-        });
-
-        return closestIndex;
-    }
-
-    function handleCanvasActivation(clientX, clientY) {
-        if (busy) {
-            return;
-        }
-
-        const rectangle = waterCanvas.getBoundingClientRect();
-        const x = clientX - rectangle.left;
-        const y = clientY - rectangle.top;
-        const touchedIndex = findTouchedDrop(x, y);
-
-        if (touchedIndex < 0) {
-            return;
-        }
-
-        if (sceneMode === "source") {
-            splitNumber();
-        }
-        else if (sceneMode === "parts") {
-            divideDrop(touchedIndex);
-        }
-        else if (sceneMode === "result") {
-            moveResultToAnswer();
+            if (this.state==="parts") {
+                const leftDistance=Math.hypot(x-STAGE.leftX,y-STAGE.partY);
+                const rightDistance=Math.hypot(x-STAGE.rightX,y-STAGE.partY);
+                if (leftDistance<90) this.divide("left");
+                else if (rightDistance<90) this.divide("right");
+                return;
+            }
+            if (this.state==="result"&&Math.hypot(x-STAGE.sourceX,y-STAGE.resultY)<95) {
+                this.moveResultToAnswer();
+            }
         }
     }
 
-    waterCanvas.addEventListener("pointerdown", event => {
-        handleCanvasActivation(event.clientX, event.clientY);
+    const scene=new DivisionWaterScene(3);
+    function activateEquation() { scene.createSourceDrop(); }
+    equationNumber.addEventListener("click",activateEquation);
+    equationNumber.addEventListener("keydown",event=>{
+        if (event.key==="Enter"||event.key===" ") { event.preventDefault(); activateEquation(); }
     });
-
-    waterCanvas.addEventListener("keydown", event => {
-        if (event.key !== "Enter" && event.key !== " ") {
-            return;
-        }
-
+    liquidSvg.addEventListener("pointerdown",event=>{
+        const point=liquidSvg.createSVGPoint(); point.x=event.clientX; point.y=event.clientY;
+        const local=point.matrixTransform(liquidSvg.getScreenCTM().inverse());
+        scene.handleStagePoint(local.x,local.y);
+    });
+    liquidSvg.addEventListener("keydown",event=>{
+        if (event.key!=="Enter"&&event.key!==" ") return;
         event.preventDefault();
-
-        if (busy) {
-            return;
-        }
-
-        if (sceneMode === "source") {
-            splitNumber();
-        }
-        else if (sceneMode === "result") {
-            moveResultToAnswer();
-        }
+        if (scene.state==="source") scene.split();
+        else if (scene.state==="result") scene.moveResultToAnswer();
     });
-
-    newQuestionButton.addEventListener("click", () => {
+    newQuestionButton.addEventListener("click",()=>{
         let number;
-
-        do {
-            number = (Math.floor(Math.random() * 80) + 20) * 3;
-        }
-        while (number < 60 || number > 297);
-
-        setupQuestion(number);
+        do { number=(Math.floor(Math.random()*80)+20)*3; }
+        while (number<60||number>297);
+        scene.setup(number);
     });
-
-    exampleButton.addEventListener("click", () => {
-        setupQuestion(165);
-    });
-
-    window.addEventListener("resize", () => {
-        const previousWidth = stageWidth;
-        const previousHeight = stageHeight;
-
-        resizeCanvases();
-
-        if (previousWidth > 1 && previousHeight > 1) {
-            const horizontalRatio = stageWidth / previousWidth;
-            const verticalRatio = stageHeight / previousHeight;
-
-            drops.forEach(drop => {
-                drop.x *= horizontalRatio;
-                drop.y *= verticalRatio;
-                drop.radius *= Math.sqrt(
-                    horizontalRatio * verticalRatio
-                );
-            });
-
-            floatingLabels.forEach(label => {
-                label.x *= horizontalRatio;
-                label.y *= verticalRatio;
-            });
-
-            const localScale = Math.sqrt(
-                horizontalRatio * verticalRatio
-            );
-
-            waterParticles.forEach(particle => {
-                particle.x *= horizontalRatio;
-                particle.y *= verticalRatio;
-                particle.vx *= horizontalRatio;
-                particle.vy *= verticalRatio;
-                particle.unifiedX *= localScale;
-                particle.unifiedY *= localScale;
-                particle.splitX *= localScale;
-                particle.splitY *= localScale;
-            });
-
-            sourceVisibleRadius *= localScale;
-        }
-
-        renderScene();
-    });
-
-    resizeCanvases();
-    setupQuestion(165);
+    exampleButton.addEventListener("click",()=>scene.setup(165));
+    scene.setup(165);
 </script>
 </body>
 </html>
