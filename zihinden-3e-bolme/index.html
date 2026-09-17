@@ -354,7 +354,7 @@
 
         simulationWidth = Math.max(
             220,
-            Math.min(480, Math.round(stageWidth * .58))
+            Math.min(400, Math.round(stageWidth * .52))
         );
         simulationHeight = Math.max(
             240,
@@ -470,8 +470,8 @@
         };
     }
 
-    function stepWaterParticles(deltaSeconds, stiffness = 78) {
-        const limitedDelta = Math.min(deltaSeconds || .016, .034);
+    function stepWaterParticles(deltaSeconds, stiffness = 108) {
+        const limitedDelta = Math.min(deltaSeconds || .016, .055);
         const substeps = 2;
         const step = limitedDelta / substeps;
 
@@ -486,7 +486,7 @@
                 particle.vx += accelerationX * step;
                 particle.vy += accelerationY * step;
 
-                const damping = Math.exp(-7.2 * step);
+                const damping = Math.exp(-11.5 * step);
                 particle.vx *= damping;
                 particle.vy *= damping;
             }
@@ -519,7 +519,7 @@
 
                     const distance = Math.sqrt(distanceSquared);
                     const pressure =
-                        (minimumDistance - distance) * 18 * step;
+                        (minimumDistance - distance) * 13 * step;
                     const normalX = deltaX / distance;
                     const normalY = deltaY / distance;
 
@@ -554,13 +554,27 @@
             const deltaX = particle.x - centerX;
             const deltaY = particle.y - centerY;
             const length = Math.hypot(deltaX, deltaY) || 1;
-            const unevenness = 1 + .10 * Math.sin(index * 2.31);
+            const unevenness = 1 + .035 * Math.sin(index * 2.31);
 
             particle.vx +=
                 deltaX / length * strength * unevenness;
             particle.vy +=
                 deltaY / length * strength * unevenness;
         });
+    }
+
+    function snapParticlesToTargets(groups = null) {
+        for (const particle of waterParticles) {
+            if (groups && !groups.includes(particle.group)) {
+                continue;
+            }
+
+            const target = getParticleTarget(particle);
+            particle.x = target.x;
+            particle.y = target.y;
+            particle.vx = 0;
+            particle.vy = 0;
+        }
     }
 
     /*
@@ -858,10 +872,10 @@
             ? [drop.side]
             : ["left", "right"];
 
-        addParticleImpulse(groups, 30 + strength * 150);
+        addParticleImpulse(groups, 12 + strength * 75);
 
-        const finished = await animate(520, (progress, deltaSeconds) => {
-            stepWaterParticles(deltaSeconds, 68);
+        const finished = await animate(220, (progress, deltaSeconds) => {
+            stepWaterParticles(deltaSeconds, 112);
         }, version);
 
         if (finished) {
@@ -876,10 +890,10 @@
         const groups = [...new Set(group.map(drop => drop.side))]
             .filter(side => side === "left" || side === "right");
 
-        addParticleImpulse(groups, 30 + strength * 165);
+        addParticleImpulse(groups, 13 + strength * 80);
 
-        const finished = await animate(560, (progress, deltaSeconds) => {
-            stepWaterParticles(deltaSeconds, 66);
+        const finished = await animate(240, (progress, deltaSeconds) => {
+            stepWaterParticles(deltaSeconds, 110);
         }, version);
 
         if (finished) {
@@ -1002,7 +1016,7 @@
 
         let splitKickApplied = false;
 
-        const separated = await animate(1750, (progress, deltaSeconds) => {
+        const separated = await animate(900, (progress, deltaSeconds) => {
             /*
                 Eşik çevresindeki hareket özellikle yavaşlatılır:
                 önce ovalleşme, sonra iki lob, ardından ince boyun ve
@@ -1026,9 +1040,9 @@
             const sourceFade = 1 - smoothStep(.30, .62, progress);
             const afterPinch = Math.max(0, progress - .64);
             const wobble = progress < .64
-                ? .018 * Math.sin(progress * Math.PI * 3)
-                : .070 * Math.exp(-5.2 * afterPinch) *
-                    Math.sin(afterPinch * Math.PI * 9);
+                ? .008 * Math.sin(progress * Math.PI * 2)
+                : .024 * Math.exp(-8 * afterPinch) *
+                    Math.sin(afterPinch * Math.PI * 6);
 
             leftDrop.x = lerp(sourceX, leftTargetX, separation);
             rightDrop.x = lerp(sourceX, rightTargetX, separation);
@@ -1047,12 +1061,12 @@
                 splitKickApplied = true;
 
                 waterParticles.forEach((particle, index) => {
-                    particle.vx += particle.group === "left" ? -18 : 18;
-                    particle.vy += Math.sin(index * 1.71) * 3.2;
+                    particle.vx += particle.group === "left" ? -7 : 7;
+                    particle.vy += Math.sin(index * 1.71) * 1.1;
                 });
             }
 
-            stepWaterParticles(deltaSeconds, 72);
+            stepWaterParticles(deltaSeconds, 112);
 
             if (progress < .43) {
                 instruction.textContent =
@@ -1075,9 +1089,9 @@
         particleMorph = 1;
 
         const splitSettled = await animate(
-            520,
+            180,
             (progress, deltaSeconds) => {
-                stepWaterParticles(deltaSeconds, 74);
+                stepWaterParticles(deltaSeconds, 118);
             },
             version
         );
@@ -1090,6 +1104,7 @@
         rightDrop.aspect = 0;
         leftDrop.rotation = 0;
         rightDrop.rotation = 0;
+        snapParticlesToTargets();
         floatingLabels = [];
         sceneMode = "parts";
         busy = false;
@@ -1140,7 +1155,7 @@
         drop.nextValue = result;
         drop.nextTextOpacity = 0;
 
-        const divided = await animate(720, (progress, deltaSeconds) => {
+        const divided = await animate(360, (progress, deltaSeconds) => {
             const movement = easeInOutCubic(progress);
 
             drop.radius = lerp(startRadius, targetRadius, movement);
@@ -1151,7 +1166,7 @@
                 targetParticleScale,
                 movement
             );
-            stepWaterParticles(deltaSeconds, 72);
+            stepWaterParticles(deltaSeconds, 114);
         }, version);
 
         if (!divided || version !== sceneVersion) {
@@ -1165,6 +1180,7 @@
         drop.nextTextOpacity = 0;
         drop.aspect = 0;
         particleGroupScale[drop.side] = targetParticleScale;
+        snapParticlesToTargets([drop.side]);
 
         if (drop.side === "left") {
             leftDivided = true;
@@ -1234,7 +1250,7 @@
 
         let contactImpulseApplied = false;
 
-        const merged = await animate(2300, (progress, deltaSeconds) => {
+        const merged = await animate(1050, (progress, deltaSeconds) => {
             /*
                 Yaklaşma hızlı başlar; temas, köprü ve fıstık evreleri
                 daha yavaş geçer. Böylece birleşme üst üste binme gibi
@@ -1254,9 +1270,9 @@
                 (Math.pow(2, .25) - 1) * coalescence;
             const afterContact = Math.max(0, progress - .60);
             const oscillation = progress < .60
-                ? .018 * Math.sin(progress * Math.PI * 3)
-                : .16 * Math.exp(-4.2 * afterContact) *
-                    Math.sin(afterContact * Math.PI * 7);
+                ? .006 * Math.sin(progress * Math.PI * 2)
+                : .045 * Math.exp(-8 * afterContact) *
+                    Math.sin(afterContact * Math.PI * 5);
 
             leftDrop.x = lerp(leftStart.x, centerX, movement);
             rightDrop.x = lerp(rightStart.x, centerX, movement);
@@ -1285,12 +1301,12 @@
                 contactImpulseApplied = true;
 
                 waterParticles.forEach((particle, index) => {
-                    particle.vx += particle.group === "left" ? 13 : -13;
-                    particle.vy += Math.cos(index * 1.37) * 2.8;
+                    particle.vx += particle.group === "left" ? 5 : -5;
+                    particle.vy += Math.cos(index * 1.37) * .9;
                 });
             }
 
-            stepWaterParticles(deltaSeconds, 76);
+            stepWaterParticles(deltaSeconds, 116);
 
             if (progress < .50) {
                 instruction.textContent =
@@ -1329,10 +1345,10 @@
         particleUnifiedScale = resultUnifiedScale;
 
         /* Birleşme sonrası yüzey gerilimi birkaç kez sönümlenir. */
-        addParticleImpulse(["left", "right"], 22);
+        addParticleImpulse(["left", "right"], 6);
 
-        const settled = await animate(1100, (progress, deltaSeconds) => {
-            stepWaterParticles(deltaSeconds, 70);
+        const settled = await animate(280, (progress, deltaSeconds) => {
+            stepWaterParticles(deltaSeconds, 118);
         }, version);
 
         if (!settled || version !== sceneVersion) {
@@ -1341,6 +1357,7 @@
 
         drops[0].aspect = 0;
         drops[0].rotation = 0;
+        snapParticlesToTargets();
         sceneMode = "result";
         busy = false;
         instruction.textContent = finalResult + "'e tıkla.";
@@ -1451,7 +1468,7 @@
                 }
             ],
             {
-                duration: 950,
+                duration: 700,
                 easing: "cubic-bezier(.26, .72, .35, 1)",
                 fill: "forwards"
             }
