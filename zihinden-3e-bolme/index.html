@@ -250,6 +250,16 @@
 
     let drops = [];
     let floatingLabels = [];
+    let waterParticles = [];
+    let particleDensity = new Float32Array(1);
+    let particleMorph = 0;
+    let particleUnifiedScale = 1;
+    let particleGroupScale = {
+        left: 1,
+        right: 1
+    };
+    let waterOpacity = 1;
+    let sourceVisibleRadius = 72;
     let sceneMode = "source";
     let busy = false;
     let completed = false;
@@ -357,102 +367,268 @@
             simulationWidth,
             simulationHeight
         );
+        particleDensity = new Float32Array(
+            simulationWidth * simulationHeight
+        );
+    }
+
+    function makeDiskPoints(count, radius, phase = 0) {
+        const points = [];
+        const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+
+        for (let index = 0; index < count; index++) {
+            const radial = radius * Math.sqrt((index + .35) / count);
+            const angle = index * goldenAngle + phase;
+
+            points.push({
+                x: Math.cos(angle) * radial,
+                y: Math.sin(angle) * radial
+            });
+        }
+
+        return points;
+    }
+
+    function initializeWaterParticles(centerX, centerY, visibleRadius) {
+        const count = 48;
+        const halfCount = count / 2;
+        const unified = makeDiskPoints(count, visibleRadius * .72, .3);
+        const orderedIndices = unified
+            .map((point, index) => ({ index, x: point.x }))
+            .sort((first, second) => first.x - second.x)
+            .map(item => item.index);
+        const leftIndices = new Set(orderedIndices.slice(0, halfCount));
+        const leftTargets = makeDiskPoints(
+            halfCount,
+            visibleRadius * .60,
+            .15
+        );
+        const rightTargets = makeDiskPoints(
+            halfCount,
+            visibleRadius * .60,
+            Math.PI + .15
+        );
+        let leftTargetIndex = 0;
+        let rightTargetIndex = 0;
+
+        waterParticles = unified.map((point, index) => {
+            const group = leftIndices.has(index) ? "left" : "right";
+            const splitPoint = group === "left"
+                ? leftTargets[leftTargetIndex++]
+                : rightTargets[rightTargetIndex++];
+
+            return {
+                x: centerX + point.x,
+                y: centerY + point.y,
+                vx: 0,
+                vy: 0,
+                group,
+                unifiedX: point.x,
+                unifiedY: point.y,
+                splitX: splitPoint.x,
+                splitY: splitPoint.y
+            };
+        });
+
+        particleMorph = 0;
+        particleUnifiedScale = 1;
+        particleGroupScale.left = 1;
+        particleGroupScale.right = 1;
+        waterOpacity = 1;
+    }
+
+    function getParticleTarget(particle) {
+        if (drops.length === 1) {
+            const resultDrop = drops[0];
+
+            return {
+                x: resultDrop.x +
+                    particle.unifiedX * particleUnifiedScale,
+                y: resultDrop.y +
+                    particle.unifiedY * particleUnifiedScale
+            };
+        }
+
+        const groupDrop = drops.find(drop => {
+            return drop.side === particle.group;
+        });
+        const groupScale = particleGroupScale[particle.group];
+        const localX = lerp(
+            particle.unifiedX * particleUnifiedScale,
+            particle.splitX * groupScale,
+            particleMorph
+        );
+        const localY = lerp(
+            particle.unifiedY * particleUnifiedScale,
+            particle.splitY * groupScale,
+            particleMorph
+        );
+
+        return {
+            x: groupDrop.x + localX,
+            y: groupDrop.y + localY
+        };
+    }
+
+    function stepWaterParticles(deltaSeconds, stiffness = 78) {
+        const limitedDelta = Math.min(deltaSeconds || .016, .034);
+        const substeps = 2;
+        const step = limitedDelta / substeps;
+
+        for (let substep = 0; substep < substeps; substep++) {
+            for (const particle of waterParticles) {
+                const target = getParticleTarget(particle);
+                const accelerationX =
+                    (target.x - particle.x) * stiffness;
+                const accelerationY =
+                    (target.y - particle.y) * stiffness;
+
+                particle.vx += accelerationX * step;
+                particle.vy += accelerationY * step;
+
+                const damping = Math.exp(-7.2 * step);
+                particle.vx *= damping;
+                particle.vy *= damping;
+            }
+
+            /*
+                Yakın parçacıklar birbirinin içine giremez. Bu basınç
+                etkisi yüzeyin kusursuz iki daireye dönüşmesini engeller
+                ve kopma anında küçük, doğal düzensizlikler üretir.
+            */
+            for (let first = 0; first < waterParticles.length; first++) {
+                for (
+                    let second = first + 1;
+                    second < waterParticles.length;
+                    second++
+                ) {
+                    const firstParticle = waterParticles[first];
+                    const secondParticle = waterParticles[second];
+                    const deltaX = secondParticle.x - firstParticle.x;
+                    const deltaY = secondParticle.y - firstParticle.y;
+                    const distanceSquared =
+                        deltaX * deltaX + deltaY * deltaY;
+                    const minimumDistance = 9.5;
+
+                    if (
+                        distanceSquared <= .0001 ||
+                        distanceSquared >= minimumDistance * minimumDistance
+                    ) {
+                        continue;
+                    }
+
+                    const distance = Math.sqrt(distanceSquared);
+                    const pressure =
+                        (minimumDistance - distance) * 18 * step;
+                    const normalX = deltaX / distance;
+                    const normalY = deltaY / distance;
+
+                    firstParticle.vx -= normalX * pressure;
+                    firstParticle.vy -= normalY * pressure;
+                    secondParticle.vx += normalX * pressure;
+                    secondParticle.vy += normalY * pressure;
+                }
+            }
+
+            for (const particle of waterParticles) {
+                particle.x += particle.vx * step;
+                particle.y += particle.vy * step;
+            }
+        }
+    }
+
+    function addParticleImpulse(groups, strength = 42) {
+        const selected = waterParticles.filter(particle => {
+            return groups.includes(particle.group);
+        });
+        const centerX = selected.reduce(
+            (sum, particle) => sum + particle.x,
+            0
+        ) / selected.length;
+        const centerY = selected.reduce(
+            (sum, particle) => sum + particle.y,
+            0
+        ) / selected.length;
+
+        selected.forEach((particle, index) => {
+            const deltaX = particle.x - centerX;
+            const deltaY = particle.y - centerY;
+            const length = Math.hypot(deltaX, deltaY) || 1;
+            const unevenness = 1 + .10 * Math.sin(index * 2.31);
+
+            particle.vx +=
+                deltaX / length * strength * unevenness;
+            particle.vy +=
+                deltaY / length * strength * unevenness;
+        });
     }
 
     /*
-        Her damlanın su yüzeyi, örtük bir alanla tanımlanır:
-
-                      r⁴
-        F(x, y) = Σ ─────────────
-                    (d² + ε)²
-
-        F = 1 çizgisi görünen damla yüzeyidir. İki damlanın alanları
-        birbirine değdiğinde aradaki boyun kendiliğinden oluşur.
-
-        aspect değişkeni sönümlü salınım yapar. Yatay ölçek e^aspect,
-        dikey ölçek e^-aspect seçildiğinden ikisinin çarpımı daima 1'dir;
-        yani titreşim sırasında damlanın alanı korunur.
+        Su yüzeyi tek bir daire veya iki metaball ile çizilmez.
+        Her parçacık kompakt bir yoğunluk çekirdeği bırakır. Bütün
+        çekirdeklerin ortak eş yoğunluk sınırı görünen damladır.
     */
     function renderWaterField() {
         const pixels = simulationImage.data;
         const scaleX = simulationWidth / stageWidth;
         const scaleY = simulationHeight / stageHeight;
-        const preparedDrops = drops
-            .filter(drop => drop.opacity > .002)
-            .map(drop => {
-                const radius =
-                    drop.radius * (scaleX + scaleY) * .5;
-                const radiusSquared = radius * radius;
-                const horizontalScale = Math.exp(drop.aspect);
+        const averageScale = (scaleX + scaleY) * .5;
+        const influenceRadius = Math.max(12, 40 * averageScale);
+        const influenceSquared = influenceRadius * influenceRadius;
 
-                return {
-                    centerX: drop.x * scaleX,
-                    centerY: drop.y * scaleY,
-                    radiusSquared,
-                    radiusFourth: radiusSquared * radiusSquared,
-                    horizontalScale,
-                    verticalScale: 1 / horizontalScale,
-                    cosine: Math.cos(drop.rotation),
-                    sine: Math.sin(drop.rotation),
-                    opacity: drop.opacity
-                };
-            });
+        particleDensity.fill(0);
+
+        for (const particle of waterParticles) {
+            const centerX = particle.x * scaleX;
+            const centerY = particle.y * scaleY;
+            const minimumX = Math.max(
+                1,
+                Math.floor(centerX - influenceRadius)
+            );
+            const maximumX = Math.min(
+                simulationWidth - 2,
+                Math.ceil(centerX + influenceRadius)
+            );
+            const minimumY = Math.max(
+                1,
+                Math.floor(centerY - influenceRadius)
+            );
+            const maximumY = Math.min(
+                simulationHeight - 2,
+                Math.ceil(centerY + influenceRadius)
+            );
+
+            for (let y = minimumY; y <= maximumY; y++) {
+                const deltaY = y - centerY;
+
+                for (let x = minimumX; x <= maximumX; x++) {
+                    const deltaX = x - centerX;
+                    const distanceSquared =
+                        deltaX * deltaX + deltaY * deltaY;
+
+                    if (distanceSquared >= influenceSquared) {
+                        continue;
+                    }
+
+                    const normalized =
+                        1 - distanceSquared / influenceSquared;
+                    const contribution =
+                        normalized * normalized * normalized;
+
+                    particleDensity[y * simulationWidth + x] +=
+                        contribution;
+                }
+            }
+        }
+
         let pixelIndex = 0;
 
         for (let y = 0; y < simulationHeight; y++) {
             for (let x = 0; x < simulationWidth; x++) {
-                let field = 0;
-                let gradientX = 0;
-                let gradientY = 0;
-
-                for (const drop of preparedDrops) {
-                    const deltaX = x - drop.centerX;
-                    const deltaY = y - drop.centerY;
-                    const rotatedX =
-                        deltaX * drop.cosine + deltaY * drop.sine;
-                    const rotatedY =
-                        -deltaX * drop.sine + deltaY * drop.cosine;
-                    const localX = rotatedX / drop.horizontalScale;
-                    const localY = rotatedY / drop.verticalScale;
-
-                    /* Uzak piksellerde pahalı hesabı atla. */
-                    if (
-                        localX * localX + localY * localY >
-                        drop.radiusSquared * 9
-                    ) {
-                        continue;
-                    }
-
-                    const distanceSquared =
-                        localX * localX + localY * localY + 7;
-                    const distanceFourth =
-                        distanceSquared * distanceSquared;
-                    const distanceSixth =
-                        distanceFourth * distanceSquared;
-
-                    field +=
-                        drop.opacity * drop.radiusFourth / distanceFourth;
-
-                    const localGradientX =
-                        -4 * drop.opacity * drop.radiusFourth * localX /
-                        (drop.horizontalScale * distanceSixth);
-                    const localGradientY =
-                        -4 * drop.opacity * drop.radiusFourth * localY /
-                        (drop.verticalScale * distanceSixth);
-
-                    gradientX +=
-                        localGradientX * drop.cosine -
-                        localGradientY * drop.sine;
-                    gradientY +=
-                        localGradientX * drop.sine +
-                        localGradientY * drop.cosine;
-                }
-
-                /*
-                    Geniş alfa geçişi keskin bir kontur oluşmasını önler.
-                    Damlanın kenarı ikinci örnekteki gibi yumuşakça erir.
-                */
-                const alpha = smoothStep(.55, 1.12, field);
+                const densityIndex = y * simulationWidth + x;
+                const density = particleDensity[densityIndex];
+                const alpha =
+                    smoothStep(.50, .76, density) * waterOpacity;
 
                 if (alpha <= .002) {
                     pixels[pixelIndex] = 0;
@@ -463,12 +639,26 @@
                     continue;
                 }
 
+                const left = x > 0
+                    ? particleDensity[densityIndex - 1]
+                    : density;
+                const right = x < simulationWidth - 1
+                    ? particleDensity[densityIndex + 1]
+                    : density;
+                const above = y > 0
+                    ? particleDensity[densityIndex - simulationWidth]
+                    : density;
+                const below = y < simulationHeight - 1
+                    ? particleDensity[densityIndex + simulationWidth]
+                    : density;
+                const gradientX = right - left;
+                const gradientY = below - above;
                 const gradientLength =
                     Math.hypot(gradientX, gradientY) || 1;
                 const normalX = gradientX / gradientLength;
                 const normalY = gradientY / gradientLength;
                 const surfaceWeight = Math.exp(
-                    -Math.abs(field - 1) * 1.8
+                    -Math.abs(density - .63) * 4.2
                 );
                 const light = clamp(
                     .74 + surfaceWeight *
@@ -476,32 +666,24 @@
                     .60,
                     .88
                 );
-                const depth = clamp((field - 1) * .22, 0, 1);
-                const edge = 1 - smoothStep(.64, 1.20, field);
+                const depth = clamp((density - .65) * .12, 0, 1);
+                const edge = 1 - smoothStep(.42, .88, density);
 
-                /*
-                    Renk geçişi özellikle dar tutulur. Böylece içeride
-                    parlak bir grafik gradyanı ve kenarda mavi çizgi
-                    oluşmaz; bütün damla yumuşak turkuaz kalır.
-                */
-                let red = 145 + light * 18 + depth * 3 - edge * 8;
-                let green = 208 + light * 18 + depth * 2 - edge * 2;
-                let blue = 231 + light * 16 + depth + edge * 5;
-
-                /* Sol üstte çok hafif, yayvan bir su yansıması. */
-                const highlight = clamp(
-                    (-normalX - normalY) * .035 * surfaceWeight,
+                pixels[pixelIndex] = clamp(
+                    Math.round(145 + light * 18 + depth * 3 - edge * 8),
                     0,
-                    .06
+                    255
                 );
-
-                red += highlight * 45;
-                green += highlight * 38;
-                blue += highlight * 22;
-
-                pixels[pixelIndex] = clamp(Math.round(red), 0, 255);
-                pixels[pixelIndex + 1] = clamp(Math.round(green), 0, 255);
-                pixels[pixelIndex + 2] = clamp(Math.round(blue), 0, 255);
+                pixels[pixelIndex + 1] = clamp(
+                    Math.round(208 + light * 18 + depth * 2 - edge * 2),
+                    0,
+                    255
+                );
+                pixels[pixelIndex + 2] = clamp(
+                    Math.round(231 + light * 16 + depth + edge * 5),
+                    0,
+                    255
+                );
                 pixels[pixelIndex + 3] = Math.round(alpha * 248);
                 pixelIndex += 4;
             }
@@ -582,6 +764,7 @@
     function animate(duration, update, version = sceneVersion) {
         return new Promise(resolve => {
             const startTime = performance.now();
+            let previousTime = startTime;
 
             cancelAnimationFrame(animationFrame);
 
@@ -596,8 +779,13 @@
                     0,
                     1
                 );
+                const deltaSeconds = Math.min(
+                    (now - previousTime) / 1000,
+                    .034
+                );
+                previousTime = now;
 
-                update(rawProgress);
+                update(rawProgress, deltaSeconds);
                 renderScene();
 
                 if (rawProgress < 1) {
@@ -615,23 +803,17 @@
 
     async function touchRipple(drop, strength = .072) {
         const version = sceneVersion;
-        const originalAspect = drop.aspect;
-        const originalRotation = drop.rotation;
+        const groups = drop.side === "left" || drop.side === "right"
+            ? [drop.side]
+            : ["left", "right"];
 
-        const finished = await animate(360, progress => {
-            const envelope = Math.exp(-2.7 * progress);
+        addParticleImpulse(groups, 30 + strength * 150);
 
-            drop.aspect =
-                originalAspect +
-                strength * envelope * Math.sin(progress * Math.PI * 5);
-            drop.rotation =
-                originalRotation +
-                .035 * envelope * Math.sin(progress * Math.PI * 4);
+        const finished = await animate(520, (progress, deltaSeconds) => {
+            stepWaterParticles(deltaSeconds, 68);
         }, version);
 
         if (finished) {
-            drop.aspect = originalAspect;
-            drop.rotation = originalRotation;
             renderScene();
         }
 
@@ -640,33 +822,16 @@
 
     async function touchRippleGroup(group, strength = .072) {
         const version = sceneVersion;
-        const originalStates = group.map(drop => ({
-            aspect: drop.aspect,
-            rotation: drop.rotation
-        }));
+        const groups = [...new Set(group.map(drop => drop.side))]
+            .filter(side => side === "left" || side === "right");
 
-        const finished = await animate(440, progress => {
-            const envelope = Math.exp(-2.9 * progress);
-            const ripple =
-                strength * envelope *
-                Math.sin(progress * Math.PI * 5.2);
-            const smallTurn =
-                .025 * envelope *
-                Math.sin(progress * Math.PI * 4);
+        addParticleImpulse(groups, 30 + strength * 165);
 
-            group.forEach((drop, index) => {
-                drop.aspect =
-                    originalStates[index].aspect + ripple;
-                drop.rotation =
-                    originalStates[index].rotation + smallTurn;
-            });
+        const finished = await animate(560, (progress, deltaSeconds) => {
+            stepWaterParticles(deltaSeconds, 66);
         }, version);
 
         if (finished) {
-            group.forEach((drop, index) => {
-                drop.aspect = originalStates[index].aspect;
-                drop.rotation = originalStates[index].rotation;
-            });
             renderScene();
         }
 
@@ -701,6 +866,7 @@
         const sourceX = stageWidth / 2;
         const sourceY = 125;
         const visibleRadius = stageWidth < 500 ? 67 : 72;
+        sourceVisibleRadius = visibleRadius;
         const halfMassRadius =
             visibleRadius / Math.pow(2, .25);
 
@@ -740,6 +906,12 @@
             }
         ];
 
+        initializeWaterParticles(
+            sourceX,
+            sourceY,
+            visibleRadius
+        );
+
         instruction.textContent = originalNumber + "'e tıkla.";
 
         document.querySelectorAll(".flyingFinalCanvas").forEach(element => {
@@ -776,7 +948,9 @@
         const rightTargetX = stageWidth * (stageWidth < 500 ? .75 : .73);
         const targetY = 235;
 
-        const separated = await animate(1550, progress => {
+        let splitKickApplied = false;
+
+        const separated = await animate(1750, (progress, deltaSeconds) => {
             /*
                 Eşik çevresindeki hareket özellikle yavaşlatılır:
                 önce ovalleşme, sonra iki lob, ardından ince boyun ve
@@ -815,6 +989,18 @@
             leftDrop.textOpacity = textArrival;
             rightDrop.textOpacity = textArrival;
             floatingLabels[0].opacity = sourceFade;
+            particleMorph = smoothStep(.08, .82, progress);
+
+            if (!splitKickApplied && progress >= .64) {
+                splitKickApplied = true;
+
+                waterParticles.forEach((particle, index) => {
+                    particle.vx += particle.group === "left" ? -18 : 18;
+                    particle.vy += Math.sin(index * 1.71) * 3.2;
+                });
+            }
+
+            stepWaterParticles(deltaSeconds, 72);
 
             if (progress < .43) {
                 instruction.textContent =
@@ -831,6 +1017,20 @@
         }, version);
 
         if (!separated || version !== sceneVersion) {
+            return;
+        }
+
+        particleMorph = 1;
+
+        const splitSettled = await animate(
+            520,
+            (progress, deltaSeconds) => {
+                stepWaterParticles(deltaSeconds, 74);
+            },
+            version
+        );
+
+        if (!splitSettled || version !== sceneVersion) {
             return;
         }
 
@@ -874,6 +1074,8 @@
             : rightResult;
         const startRadius = drop.radius;
         const targetRadius = startRadius * .90;
+        const startParticleScale = particleGroupScale[drop.side];
+        const targetParticleScale = startParticleScale * .90;
 
         instruction.textContent = "Damla titreşiyor.";
 
@@ -886,16 +1088,18 @@
         drop.nextValue = result;
         drop.nextTextOpacity = 0;
 
-        const divided = await animate(610, progress => {
+        const divided = await animate(720, (progress, deltaSeconds) => {
             const movement = easeInOutCubic(progress);
-            const oscillation =
-                .052 * Math.exp(-2.4 * progress) *
-                Math.sin(progress * Math.PI * 5);
 
             drop.radius = lerp(startRadius, targetRadius, movement);
-            drop.aspect = oscillation;
             drop.textOpacity = 1 - smoothStep(.12, .62, progress);
             drop.nextTextOpacity = smoothStep(.38, .88, progress);
+            particleGroupScale[drop.side] = lerp(
+                startParticleScale,
+                targetParticleScale,
+                movement
+            );
+            stepWaterParticles(deltaSeconds, 72);
         }, version);
 
         if (!divided || version !== sceneVersion) {
@@ -908,6 +1112,7 @@
         drop.textOpacity = 1;
         drop.nextTextOpacity = 0;
         drop.aspect = 0;
+        particleGroupScale[drop.side] = targetParticleScale;
 
         if (drop.side === "left") {
             leftDivided = true;
@@ -960,6 +1165,9 @@
         const baseRadius = (leftDrop.radius + rightDrop.radius) / 2;
         const centerX = stageWidth / 2;
         const centerY = 335;
+        const resultRadius = baseRadius * Math.SQRT2;
+        const resultUnifiedScale =
+            resultRadius / sourceVisibleRadius;
 
         floatingLabels = [
             {
@@ -971,7 +1179,9 @@
             }
         ];
 
-        const merged = await animate(2150, progress => {
+        let contactImpulseApplied = false;
+
+        const merged = await animate(2300, (progress, deltaSeconds) => {
             /*
                 Yaklaşma hızlı başlar; temas, köprü ve fıstık evreleri
                 daha yavaş geçer. Böylece birleşme üst üste binme gibi
@@ -1011,6 +1221,23 @@
                 1 - smoothStep(.56, .78, progress);
             floatingLabels[0].opacity =
                 smoothStep(.72, .94, progress);
+            particleMorph = 1 - smoothStep(.52, .96, progress);
+            particleUnifiedScale = lerp(
+                1,
+                resultUnifiedScale,
+                smoothStep(.62, 1, progress)
+            );
+
+            if (!contactImpulseApplied && progress >= .61) {
+                contactImpulseApplied = true;
+
+                waterParticles.forEach((particle, index) => {
+                    particle.vx += particle.group === "left" ? 13 : -13;
+                    particle.vy += Math.cos(index * 1.37) * 2.8;
+                });
+            }
+
+            stepWaterParticles(deltaSeconds, 76);
 
             if (progress < .50) {
                 instruction.textContent =
@@ -1034,8 +1261,6 @@
             return;
         }
 
-        const resultRadius = baseRadius * Math.SQRT2;
-
         drops = [
             createDrop(
                 centerX,
@@ -1045,17 +1270,16 @@
                 "result"
             )
         ];
-        drops[0].aspect = .075;
+        drops[0].aspect = 0;
         floatingLabels = [];
+        particleMorph = 0;
+        particleUnifiedScale = resultUnifiedScale;
 
         /* Birleşme sonrası yüzey gerilimi birkaç kez sönümlenir. */
-        const settled = await animate(880, progress => {
-            drops[0].aspect =
-                .075 * Math.exp(-3.4 * progress) *
-                Math.cos(progress * Math.PI * 5);
-            drops[0].rotation =
-                .025 * Math.exp(-3 * progress) *
-                Math.sin(progress * Math.PI * 4);
+        addParticleImpulse(["left", "right"], 22);
+
+        const settled = await animate(1100, (progress, deltaSeconds) => {
+            stepWaterParticles(deltaSeconds, 70);
         }, version);
 
         if (!settled || version !== sceneVersion) {
@@ -1130,6 +1354,7 @@
         document.body.appendChild(flying);
 
         resultDrop.opacity = 0;
+        waterOpacity = 0;
         renderScene();
 
         const targetWidth = endRectangle.width * .94;
@@ -1294,6 +1519,23 @@
                 label.x *= horizontalRatio;
                 label.y *= verticalRatio;
             });
+
+            const localScale = Math.sqrt(
+                horizontalRatio * verticalRatio
+            );
+
+            waterParticles.forEach(particle => {
+                particle.x *= horizontalRatio;
+                particle.y *= verticalRatio;
+                particle.vx *= horizontalRatio;
+                particle.vy *= verticalRatio;
+                particle.unifiedX *= localScale;
+                particle.unifiedY *= localScale;
+                particle.splitX *= localScale;
+                particle.splitY *= localScale;
+            });
+
+            sourceVisibleRadius *= localScale;
         }
 
         renderScene();
