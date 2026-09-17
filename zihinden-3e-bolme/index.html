@@ -118,27 +118,11 @@
         font-weight: 600;
     }
 
-    .flyingFinal {
+    .flyingFinalCanvas {
         position: fixed;
         z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: block;
         pointer-events: none;
-        border: none;
-        border-radius: 50%;
-        color: #133b5d;
-        background:
-            radial-gradient(circle at 42% 30%,
-                #b9ecee 0%,
-                #a8e6f3 40%,
-                #9ee2f4 70%,
-                #93dcf2 100%);
-        box-shadow:
-            0 0 8px rgba(57, 177, 235, .55),
-            0 10px 20px rgba(43, 120, 170, .22);
-        font-size: 42px;
-        font-weight: 700;
     }
 
     .controls {
@@ -336,8 +320,8 @@
         waterCanvas.height = Math.round(stageHeight * deviceScale);
 
         simulationWidth = Math.max(
-            240,
-            Math.min(620, Math.round(stageWidth * .72))
+            220,
+            Math.min(480, Math.round(stageWidth * .58))
         );
         simulationHeight = Math.max(
             240,
@@ -672,7 +656,7 @@
 
         instruction.textContent = originalNumber + "'e tıkla.";
 
-        document.querySelectorAll(".flyingFinal").forEach(element => {
+        document.querySelectorAll(".flyingFinalCanvas").forEach(element => {
             element.remove();
         });
 
@@ -972,27 +956,54 @@
         const stageRectangle = stage.getBoundingClientRect();
         const endRectangle = answerBox.getBoundingClientRect();
         const diameter = resultDrop.radius * 2;
+        const cropPadding = 24;
+        const cropSize = diameter + cropPadding * 2;
         const startLeft =
-            stageRectangle.left + resultDrop.x - diameter / 2;
+            stageRectangle.left + resultDrop.x - cropSize / 2;
         const startTop =
-            stageRectangle.top + resultDrop.y - diameter / 2;
+            stageRectangle.top + resultDrop.y - cropSize / 2;
 
         instruction.textContent = "Sonuç yerine gidiyor.";
 
-        const flying = document.createElement("div");
-        flying.className = "flyingFinal";
-        flying.textContent = finalResult;
+        /*
+            Yeni bir CSS baloncuğu çizilmez. Mevcut su damlasının
+            canvas üzerindeki gerçek pikselleri kırpılıp kopyalanır.
+            Böylece sıçrama sırasında bile stil değişemez.
+        */
+        const flying = document.createElement("canvas");
+        flying.className = "flyingFinalCanvas";
+        flying.width = Math.round(cropSize * deviceScale);
+        flying.height = Math.round(cropSize * deviceScale);
         flying.style.left = startLeft + "px";
         flying.style.top = startTop + "px";
-        flying.style.width = diameter + "px";
-        flying.style.height = diameter + "px";
+        flying.style.width = cropSize + "px";
+        flying.style.height = cropSize + "px";
+
+        const flyingContext = flying.getContext("2d", { alpha: true });
+        const sourceLeft =
+            (resultDrop.x - cropSize / 2) * deviceScale;
+        const sourceTop =
+            (resultDrop.y - cropSize / 2) * deviceScale;
+
+        flyingContext.drawImage(
+            waterCanvas,
+            sourceLeft,
+            sourceTop,
+            cropSize * deviceScale,
+            cropSize * deviceScale,
+            0,
+            0,
+            flying.width,
+            flying.height
+        );
+
         document.body.appendChild(flying);
 
         resultDrop.opacity = 0;
         renderScene();
 
-        const targetWidth = endRectangle.width * .77;
-        const targetHeight = endRectangle.height * .77;
+        const targetWidth = endRectangle.width * .94;
+        const targetHeight = endRectangle.height * .94;
         const endLeft =
             endRectangle.left + (endRectangle.width - targetWidth) / 2;
         const endTop =
@@ -1005,24 +1016,22 @@
                 {
                     left: startLeft + "px",
                     top: startTop + "px",
-                    width: diameter + "px",
-                    height: diameter + "px",
+                    width: cropSize + "px",
+                    height: cropSize + "px",
                     transform: "rotate(0deg) scale(1)",
-                    borderRadius: "50%"
+                    opacity: 1
                 },
                 {
                     offset: .22,
                     left: (startLeft - 15) + "px",
                     top: (startTop - 42) + "px",
-                    transform: "rotate(-9deg) scale(.95, 1.15)",
-                    borderRadius:
-                        "50% 50% 44% 56% / 62% 54% 46% 38%"
+                    transform: "rotate(-7deg) scale(.96, 1.10)"
                 },
                 {
                     offset: .55,
                     left: middleLeft + "px",
                     top: middleTop + "px",
-                    transform: "rotate(8deg) scale(1.07, .94)"
+                    transform: "rotate(7deg) scale(1.05, .96)"
                 },
                 {
                     left: endLeft + "px",
@@ -1030,7 +1039,7 @@
                     width: targetWidth + "px",
                     height: targetHeight + "px",
                     transform: "rotate(0deg) scale(1)",
-                    borderRadius: "50%"
+                    opacity: 1
                 }
             ],
             {
