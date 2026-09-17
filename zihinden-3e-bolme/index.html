@@ -86,7 +86,7 @@
         .app { padding-inline:8px; }
         #equation { gap:7px; }
         #answerBox { width:83px; height:59px; }
-        #stage { height:485px; border-radius:23px; }
+        #stage { height:360px; border-radius:23px; }
         button,.home-link { padding-inline:17px; }
     }
 </style>
@@ -104,7 +104,7 @@
     </div>
 
     <section id="stage" aria-label="Su damlası işlem alanı">
-        <svg id="liquidSvg" viewBox="0 0 900 520" preserveAspectRatio="none" role="button" tabindex="0" aria-label="Su damlası">
+        <svg id="liquidSvg" viewBox="0 0 900 520" preserveAspectRatio="xMidYMid meet" role="button" tabindex="0" aria-label="Su damlası">
             <defs>
                 <filter id="gooFilter" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
                     <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="blurred"/>
@@ -558,13 +558,17 @@
             if (this.busy||this.state!=="result") return;
             this.busy=true; this.state="answering";
             instruction.textContent="Sonuç yerine gidiyor.";
-            const svgRect=liquidSvg.getBoundingClientRect();
             const answerRect=answerBox.getBoundingClientRect();
-            const scaleX=svgRect.width/STAGE.width, scaleY=svgRect.height/STAGE.height;
             const radius=this.radiusForValue(this.result,72);
-            const startWidth=radius*2.35*scaleX, startHeight=radius*2.15*scaleY;
-            const startCenterX=svgRect.left+STAGE.sourceX*scaleX;
-            const startCenterY=svgRect.top+STAGE.resultY*scaleY;
+            const matrix=liquidSvg.getScreenCTM();
+            const centerPoint=liquidSvg.createSVGPoint();
+            centerPoint.x=STAGE.sourceX;
+            centerPoint.y=STAGE.resultY;
+            const screenCenter=centerPoint.matrixTransform(matrix);
+            const startWidth=radius*2.35*Math.abs(matrix.a);
+            const startHeight=radius*2.15*Math.abs(matrix.d);
+            const startCenterX=screenCenter.x;
+            const startCenterY=screenCenter.y;
             const endWidth=answerRect.width*.92, endHeight=answerRect.height*.92;
             const endLeft=answerRect.left+(answerRect.width-endWidth)/2;
             const endTop=answerRect.top+(answerRect.height-endHeight)/2;
