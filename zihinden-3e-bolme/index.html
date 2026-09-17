@@ -282,6 +282,29 @@
         return 1 - Math.pow(1 - value, 3);
     }
 
+    function keyframeProgress(progress, frames) {
+        if (progress <= frames[0][0]) {
+            return frames[0][1];
+        }
+
+        for (let index = 1; index < frames.length; index++) {
+            const previous = frames[index - 1];
+            const current = frames[index];
+
+            if (progress <= current[0]) {
+                const local = smoothStep(
+                    previous[0],
+                    current[0],
+                    progress
+                );
+
+                return lerp(previous[1], current[1], local);
+            }
+        }
+
+        return frames[frames.length - 1][1];
+    }
+
     function calculateParts(number) {
         let firstPart = Math.floor(number / 30) * 30;
 
@@ -615,6 +638,41 @@
         return finished;
     }
 
+    async function touchRippleGroup(group, strength = .072) {
+        const version = sceneVersion;
+        const originalStates = group.map(drop => ({
+            aspect: drop.aspect,
+            rotation: drop.rotation
+        }));
+
+        const finished = await animate(440, progress => {
+            const envelope = Math.exp(-2.9 * progress);
+            const ripple =
+                strength * envelope *
+                Math.sin(progress * Math.PI * 5.2);
+            const smallTurn =
+                .025 * envelope *
+                Math.sin(progress * Math.PI * 4);
+
+            group.forEach((drop, index) => {
+                drop.aspect =
+                    originalStates[index].aspect + ripple;
+                drop.rotation =
+                    originalStates[index].rotation + smallTurn;
+            });
+        }, version);
+
+        if (finished) {
+            group.forEach((drop, index) => {
+                drop.aspect = originalStates[index].aspect;
+                drop.rotation = originalStates[index].rotation;
+            });
+            renderScene();
+        }
+
+        return finished;
+    }
+
     function setupQuestion(number) {
         sceneVersion += 1;
         cancelAnimationFrame(animationFrame);
@@ -640,19 +698,47 @@
         answerText.textContent = "";
         answerBox.classList.remove("filled");
 
+        const sourceX = stageWidth / 2;
+        const sourceY = 125;
+        const visibleRadius = stageWidth < 500 ? 67 : 72;
+        const halfMassRadius =
+            visibleRadius / Math.pow(2, .25);
+
+        /*
+            Damla en baştan itibaren aynı iki su kütlesinden oluşur.
+            Kütlelerin merkezleri tam çakıştığı için dışarıdan tek bir
+            yuvarlak damla görünür. Bölünmede yeni şekil yaratılmaz;
+            bu iki mevcut merkez birbirinden uzaklaşır.
+        */
         drops = [
             createDrop(
-                stageWidth / 2,
-                125,
-                stageWidth < 500 ? 67 : 72,
-                originalNumber,
-                "source"
+                sourceX,
+                sourceY,
+                halfMassRadius,
+                leftNumber,
+                "left"
+            ),
+            createDrop(
+                sourceX,
+                sourceY,
+                halfMassRadius,
+                rightNumber,
+                "right"
             )
         ];
 
-        /* Başlangıçta da tam olarak aynı su modeli kullanılır. */
-        drops[0].aspect = 0;
-        drops[0].rotation = 0;
+        drops[0].textOpacity = 0;
+        drops[1].textOpacity = 0;
+
+        floatingLabels = [
+            {
+                x: sourceX,
+                y: sourceY + 1,
+                value: originalNumber,
+                opacity: 1,
+                fontSize: clamp(visibleRadius * .60, 39, 45)
+            }
+        ];
 
         instruction.textContent = originalNumber + "'e tıkla.";
 
@@ -670,73 +756,88 @@
 
         busy = true;
         const version = sceneVersion;
-        const source = drops[0];
+        const leftDrop = drops[0];
+        const rightDrop = drops[1];
 
         instruction.textContent = "Damla titreşiyor.";
 
         /* Önce dokunulan gerçek bir su damlası gibi hafifçe dalgalanır. */
-        const touched = await touchRipple(source, .075);
+        const touched = await touchRippleGroup(drops, .070);
 
         if (!touched || version !== sceneVersion) {
             return;
         }
 
-        instruction.textContent = "Sayı iki parçaya ayrılıyor.";
+        instruction.textContent = "Damla iki yana doğru uzuyor.";
 
-        const sourceX = source.x;
-        const sourceY = source.y;
-        const childRadius = source.radius / Math.pow(2, .25);
+        const sourceX = leftDrop.x;
+        const sourceY = leftDrop.y;
         const leftTargetX = stageWidth * (stageWidth < 500 ? .25 : .27);
         const rightTargetX = stageWidth * (stageWidth < 500 ? .75 : .73);
         const targetY = 235;
 
-        drops = [
-            createDrop(sourceX, sourceY, childRadius, leftNumber, "left"),
-            createDrop(sourceX, sourceY, childRadius, rightNumber, "right")
-        ];
+        const separated = await animate(1550, progress => {
+            /*
+                Eşik çevresindeki hareket özellikle yavaşlatılır:
+                önce ovalleşme, sonra iki lob, ardından ince boyun ve
+                en son kopma açıkça görülebilsin.
+            */
+            const separation = keyframeProgress(progress, [
+                [0, 0],
+                [.24, .17],
+                [.48, .31],
+                [.64, .39],
+                [.76, .50],
+                [1, 1]
+            ]);
+            const verticalMovement = keyframeProgress(progress, [
+                [0, 0],
+                [.48, .28],
+                [.76, .62],
+                [1, 1]
+            ]);
+            const textArrival = smoothStep(.54, .82, progress);
+            const sourceFade = 1 - smoothStep(.30, .62, progress);
+            const afterPinch = Math.max(0, progress - .64);
+            const wobble = progress < .64
+                ? .018 * Math.sin(progress * Math.PI * 3)
+                : .070 * Math.exp(-5.2 * afterPinch) *
+                    Math.sin(afterPinch * Math.PI * 9);
 
-        drops[0].textOpacity = 0;
-        drops[1].textOpacity = 0;
-
-        floatingLabels = [
-            {
-                x: sourceX,
-                y: sourceY,
-                value: originalNumber,
-                opacity: 1,
-                fontSize: 43
-            }
-        ];
-
-        const separated = await animate(920, progress => {
-            const movement = easeInOutCubic(progress);
-            const textArrival = smoothStep(.18, .55, progress);
-            const sourceFade = 1 - smoothStep(.06, .34, progress);
-            const wobble =
-                .052 * Math.exp(-2.2 * progress) *
-                Math.sin(progress * Math.PI * 4.5);
-
-            drops[0].x = lerp(sourceX, leftTargetX, movement);
-            drops[1].x = lerp(sourceX, rightTargetX, movement);
-            drops[0].y = lerp(sourceY, targetY, movement);
-            drops[1].y = lerp(sourceY, targetY, movement);
-            drops[0].aspect = wobble;
-            drops[1].aspect = -wobble;
-            drops[0].rotation = -.10 * movement;
-            drops[1].rotation = .10 * movement;
-            drops[0].textOpacity = textArrival;
-            drops[1].textOpacity = textArrival;
+            leftDrop.x = lerp(sourceX, leftTargetX, separation);
+            rightDrop.x = lerp(sourceX, rightTargetX, separation);
+            leftDrop.y = lerp(sourceY, targetY, verticalMovement);
+            rightDrop.y = lerp(sourceY, targetY, verticalMovement);
+            leftDrop.aspect = wobble;
+            rightDrop.aspect = wobble;
+            leftDrop.rotation = 0;
+            rightDrop.rotation = 0;
+            leftDrop.textOpacity = textArrival;
+            rightDrop.textOpacity = textArrival;
             floatingLabels[0].opacity = sourceFade;
+
+            if (progress < .43) {
+                instruction.textContent =
+                    "Damla iki yana doğru uzuyor.";
+            }
+            else if (progress < .68) {
+                instruction.textContent =
+                    "Ortadaki su boynu inceliyor.";
+            }
+            else {
+                instruction.textContent =
+                    "İki damla birbirinden ayrılıyor.";
+            }
         }, version);
 
         if (!separated || version !== sceneVersion) {
             return;
         }
 
-        drops[0].aspect = 0;
-        drops[1].aspect = 0;
-        drops[0].rotation = 0;
-        drops[1].rotation = 0;
+        leftDrop.aspect = 0;
+        rightDrop.aspect = 0;
+        leftDrop.rotation = 0;
+        rightDrop.rotation = 0;
         floatingLabels = [];
         sceneMode = "parts";
         busy = false;
@@ -870,17 +971,29 @@
             }
         ];
 
-        const merged = await animate(1900, progress => {
-            const movement = easeInOutCubic(progress);
-            const coalescence = smoothStep(.35, 1, progress);
+        const merged = await animate(2150, progress => {
+            /*
+                Yaklaşma hızlı başlar; temas, köprü ve fıstık evreleri
+                daha yavaş geçer. Böylece birleşme üst üste binme gibi
+                değil, yüzey gerilimiyle kaynaşma gibi görünür.
+            */
+            const movement = keyframeProgress(progress, [
+                [0, 0],
+                [.40, .55],
+                [.60, .70],
+                [.76, .82],
+                [.90, .94],
+                [1, 1]
+            ]);
+            const coalescence = smoothStep(.58, 1, progress);
             const radiusGrowth =
                 1 +
                 (Math.pow(2, .25) - 1) * coalescence;
-            const afterContact = Math.max(0, progress - .42);
-            const oscillation = progress < .42
-                ? .025 * Math.sin(progress * Math.PI * 3)
-                : .19 * Math.exp(-3.2 * afterContact) *
-                    Math.sin(afterContact * Math.PI * 8);
+            const afterContact = Math.max(0, progress - .60);
+            const oscillation = progress < .60
+                ? .018 * Math.sin(progress * Math.PI * 3)
+                : .16 * Math.exp(-4.2 * afterContact) *
+                    Math.sin(afterContact * Math.PI * 7);
 
             leftDrop.x = lerp(leftStart.x, centerX, movement);
             rightDrop.x = lerp(rightStart.x, centerX, movement);
@@ -893,11 +1006,28 @@
             leftDrop.rotation = 0;
             rightDrop.rotation = 0;
             leftDrop.textOpacity =
-                1 - smoothStep(.35, .68, progress);
+                1 - smoothStep(.56, .78, progress);
             rightDrop.textOpacity =
-                1 - smoothStep(.35, .68, progress);
+                1 - smoothStep(.56, .78, progress);
             floatingLabels[0].opacity =
-                smoothStep(.63, .90, progress);
+                smoothStep(.72, .94, progress);
+
+            if (progress < .50) {
+                instruction.textContent =
+                    "İki damla birbirine yaklaşıyor.";
+            }
+            else if (progress < .68) {
+                instruction.textContent =
+                    "Temas noktasında su köprüsü oluşuyor.";
+            }
+            else if (progress < .86) {
+                instruction.textContent =
+                    "İki damla tek yüzeyde kaynaşıyor.";
+            }
+            else {
+                instruction.textContent =
+                    "Yeni damla yuvarlaklaşıyor.";
+            }
         }, version);
 
         if (!merged || version !== sceneVersion) {
