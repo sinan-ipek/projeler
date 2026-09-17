@@ -353,11 +353,11 @@
         waterCanvas.height = Math.round(stageHeight * deviceScale);
 
         simulationWidth = Math.max(
-            220,
-            Math.min(400, Math.round(stageWidth * .52))
+            180,
+            Math.min(300, Math.round(stageWidth * .38))
         );
         simulationHeight = Math.max(
-            240,
+            160,
             Math.round(simulationWidth * stageHeight / stageWidth)
         );
 
@@ -653,51 +653,17 @@
                     continue;
                 }
 
-                const left = x > 0
-                    ? particleDensity[densityIndex - 1]
-                    : density;
-                const right = x < simulationWidth - 1
-                    ? particleDensity[densityIndex + 1]
-                    : density;
-                const above = y > 0
-                    ? particleDensity[densityIndex - simulationWidth]
-                    : density;
-                const below = y < simulationHeight - 1
-                    ? particleDensity[densityIndex + simulationWidth]
-                    : density;
-                const gradientX = right - left;
-                const gradientY = below - above;
-                const gradientLength =
-                    Math.hypot(gradientX, gradientY) || 1;
-                const normalX = gradientX / gradientLength;
-                const normalY = gradientY / gradientLength;
-                const surfaceWeight = Math.exp(
-                    -Math.abs(density - .63) * 4.2
-                );
-                const light = clamp(
-                    .74 + surfaceWeight *
-                    (-normalX * .045 - normalY * .065),
-                    .60,
-                    .88
-                );
-                const depth = clamp((density - .65) * .12, 0, 1);
-                const edge = 1 - smoothStep(.42, .88, density);
+                /*
+                    Yoğunluk, rengin merkezde çok hafif derinleşmesi
+                    için yeterlidir. Her pikselde yüzey normali ve üstel
+                    ışık hesabı yapmak özellikle telefonda gereksiz bir
+                    gecikme oluşturuyordu.
+                */
+                const depth = smoothStep(.55, 1.18, density);
 
-                pixels[pixelIndex] = clamp(
-                    Math.round(145 + light * 18 + depth * 3 - edge * 8),
-                    0,
-                    255
-                );
-                pixels[pixelIndex + 1] = clamp(
-                    Math.round(208 + light * 18 + depth * 2 - edge * 2),
-                    0,
-                    255
-                );
-                pixels[pixelIndex + 2] = clamp(
-                    Math.round(231 + light * 16 + depth + edge * 5),
-                    0,
-                    255
-                );
+                pixels[pixelIndex] = Math.round(157 - depth * 7);
+                pixels[pixelIndex + 1] = Math.round(222 - depth * 5);
+                pixels[pixelIndex + 2] = Math.round(241 - depth * 3);
                 pixels[pixelIndex + 3] = Math.round(alpha * 248);
                 pixelIndex += 4;
             }
