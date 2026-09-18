@@ -1,715 +1,450 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Ortak Çarpan Parantezi (a) – Adım Adım Etkileşim</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Ortak Çarpan</title>
 <style>
-  :root{
-    --bg:#0b0c0f; --fg:#e7e9ee; --muted:#a7adba;
-    --card:#141822; --border:#232637; --accent:#4f8cff; --err:#ff6b6b;
-    --sep:#ffd166; /* + / − için sarı */
-  }
-  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  .wrap{max-width:1000px;margin:auto;padding:22px}
-  h1{font-size:20px;margin:0 0 10px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
-  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  input[type="text"]{flex:1;min-width:260px;background:transparent;border:1px solid var(--border);color:var(--fg);border-radius:12px;padding:10px 12px}
-  button{border:1px solid var(--border);background:#10131b;color:var(--fg);padding:10px 12px;border-radius:12px;cursor:pointer}
-  .muted{color:var(--muted);font-size:13px}
-  .stage{min-height:200px;padding:14px;border-radius:14px;border:1px dashed var(--border);position:relative;overflow:hidden}
-  .topFactors{min-height:34px;margin-bottom:8px;text-align:center}
-  .exprLine{min-height:48px}
-  .token{display:inline-block;margin:0 2px}
-  .dot{opacity:.95; display:inline-block; min-width:.6ch; text-align:center}
-  .sep{color:var(--sep); font-weight:700} /* + / − ayraçları */
-  .common{color:#ff5b5b;font-weight:800}
-  .big{font-size:20px}
-  .paren{display:inline-block;transform-origin:left center}
-  .paren.right{transform-origin:right center}
-  .hidden{display:none}
-  .center{text-align:center}
-  .error{color:#fff;background:#9b1c1c;border:1px solid #b52a2a;padding:8px 10px;border-radius:10px;margin-top:8px}
-  .stepBadge{font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:999px}
-  .animLayer{position:absolute; inset:0; pointer-events:none; overflow:visible; z-index:2}
-  .flying{position:absolute; will-change:transform,opacity}
-  .ghost{display:inline-block; visibility:hidden}
-  .expandable{cursor:pointer; position:relative}
-  .expandable::after{content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px; background:linear-gradient(90deg,var(--accent),transparent); opacity:.0; transition:opacity .2s}
-  .expandable:hover::after{opacity:.8}
-  .blocked{opacity:.55; cursor:not-allowed}
-  .term{display:inline-block}
-  /* Parantez önünde sabit boşluk; Step 7'de gereksiz oynamayı engeller */
-  .prefix{ display:inline-block; margin-right:10px; }
+:root{
+  --bg:#f3f5f8;--panel:#fff;--text:#182033;--muted:#7b8495;--border:#dfe4eb;
+  --blue:#2864dc;--blue-light:#edf4ff;--red:#d93643;--red-light:#fff0f2;
+  --green:#16885b;--green-light:#e9f8f1;--purple:#7352d4;--purple-light:#f2eeff;
+  --shadow:0 18px 50px rgba(30,45,70,.08);
+  --math-font:"Cambria Math","STIX Two Math","Times New Roman",serif;
+  --math-size:clamp(28px,4vw,42px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent!important}
+html,body{margin:0;min-height:100%}
+body{padding:24px 14px 50px;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;user-select:none;-webkit-user-select:none;overscroll-behavior:none}
+button,.factor-group,.atom,.outside-factor,.drag-handle,.factor-drag-handle,.operator{-webkit-tap-highlight-color:transparent!important;touch-action:manipulation}
+button{font:inherit}
+.app{width:min(1160px,100%);margin:auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:15px}
+.title h1{margin:0;font-size:clamp(23px,3vw,32px);letter-spacing:-.035em}
+.title p{margin:5px 0 0;color:var(--muted);font-size:13px}
+.controls{display:flex;flex-wrap:wrap;gap:8px}
+button{padding:10px 15px;border:1px solid var(--border);border-radius:11px;background:#fff;color:var(--text);font-size:14px;font-weight:750;cursor:pointer;transition:.14s ease}
+button:hover{background:#f7f9fc} button:active{transform:scale(.97)}
+button.active{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 5px 15px rgba(40,100,220,.22)}
+#newBtn{background:#192235;color:#fff;border-color:#192235}
+.board{min-height:550px;padding:21px 20px 25px;overflow:visible;background:var(--panel);border:1px solid var(--border);border-radius:23px;box-shadow:var(--shadow)}
+.info-row{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:7px;margin-bottom:20px}
+.info-pill{padding:7px 11px;border-radius:999px;background:#f5f7fa;color:#687285;font-size:11px;font-weight:750}.info-pill strong{color:#394359}
+.expression-area{min-height:310px;display:flex;justify-content:center;align-items:center;padding:60px 3px 34px;overflow:visible}
+#expression{width:100%;display:flex;justify-content:center;align-items:center;overflow:visible}
+.math-expression{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;overflow:visible;font-family:var(--math-font);font-size:var(--math-size);font-weight:400;font-style:normal;line-height:1;color:var(--text)}
+.math-expression .terms,.math-expression .term-unit,.math-expression .term-body,.math-expression .factor-group-wrap,.math-expression .factor-group,.math-expression .atom,.math-expression .outside,.math-expression .outside-factor-wrap,.math-expression .outside-factor,.math-expression .operator{font-family:inherit;font-size:1em;font-weight:400;font-style:normal;line-height:1}
+.math-expression sup{position:relative;top:-.58em;vertical-align:baseline;margin-left:.03em;font-family:inherit;font-size:.55em;font-weight:400;line-height:0}
+.outside{position:relative;display:inline-flex;justify-content:center;align-items:center;flex-wrap:wrap;margin-right:.08em;color:var(--text)}
+.outside.collapsed{padding:.12em .08em;border-radius:.18em;cursor:pointer}.outside.collapsed:hover{background:var(--purple-light)}
+.outside-factor-wrap{position:relative;display:inline-flex;justify-content:center;align-items:center;padding:0;margin:0;overflow:visible}
+.outside-factor{display:inline-flex;justify-content:center;align-items:center;min-width:.55em;height:1.2em;padding:0 .07em;border-radius:.16em;color:var(--text);cursor:pointer}.outside-factor:hover{background:var(--purple-light)}
+.parenthesized{display:inline-flex;justify-content:center;align-items:center}.paren{display:inline-flex;justify-content:center;align-items:center;height:1.25em;margin:0 .05em;font-family:var(--math-font);font-size:1.43em;font-weight:300;line-height:1}
+.terms{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;overflow:visible}.term-unit{position:relative;display:inline-flex;justify-content:center;align-items:center;overflow:visible;border-radius:.25em}.term-unit.dragging{opacity:.32}.term-body{position:relative;display:inline-flex;justify-content:center;align-items:center;padding:0;margin:0;overflow:visible}
+.drag-handle{position:absolute;left:50%;top:-22px;transform:translateX(-50%);z-index:50;display:flex;justify-content:center;align-items:center;width:25px;height:16px;padding:0;border-radius:5px;font-family:Arial,sans-serif;font-size:11px;line-height:1;color:#b5bdc9;opacity:0;cursor:grab}.term-unit:hover>.term-body>.drag-handle{opacity:.9}.drag-handle:hover{background:#f0f3f7;color:#657089}
+.operator{display:inline-flex;justify-content:center;align-items:center;align-self:center;flex:0 0 auto;height:1.2em;padding:0;margin:0;line-height:1;text-align:center;color:var(--text)}.operator.add-sub{width:.95em;margin:0 .05em}.operator.multiply{width:.42em;margin:0 .015em}
+.operator.term-product-dot{cursor:pointer;border-radius:.15em;transition:.13s ease}.operator.term-product-dot:hover{background:var(--blue-light);color:var(--blue)}
+.operator.like-term-operation{cursor:pointer;border-radius:.17em;transition:.14s ease}.operator.like-term-operation:hover{background:var(--green-light);color:var(--green)}.operator.like-term-operation:active{transform:scale(.88)}
+.factor-group-wrap{position:relative;display:inline-flex;justify-content:center;align-items:center;padding:0;margin:0;overflow:visible;border-radius:.2em}.factor-group{position:relative;display:inline-flex;justify-content:center;align-items:center;height:1.2em;padding:0;margin:0;border-radius:.18em}.factor-group.collapsed{padding:0 .08em;cursor:pointer}.factor-group.collapsed:hover{background:var(--blue-light)}.factor-group.expanded{padding:0 .08em;background:#f7f9fc;box-shadow:inset 0 0 0 1px #e5e9ef}.factor-group.singleton{padding:0 .04em}
+.factor-drag-handle{position:absolute;left:50%;top:-17px;transform:translateX(-50%);z-index:60;display:flex;justify-content:center;align-items:center;width:22px;height:14px;padding:0;margin:0;border-radius:5px;font-family:Arial,sans-serif;font-size:10px;line-height:1;color:#b9c0cb;opacity:0;cursor:grab}.factor-group-wrap:hover .factor-drag-handle,.outside-factor-wrap:hover .factor-drag-handle{opacity:.9}.factor-drag-handle:hover{background:#edf1f6;color:#56627a}
+.atom{display:inline-flex;justify-content:center;align-items:center;min-width:.52em;height:1.2em;padding:0 .06em;margin:0;border-radius:.16em;color:var(--text);cursor:pointer}.atom:hover{background:var(--blue-light);color:var(--blue)}.atom.polynomial-factor{padding:0 .035em}.atom.ready-common{color:var(--red)}.atom.ready-common:hover{background:var(--red-light);color:var(--red)}
+.instruction{width:min(860px,100%);min-height:82px;margin:5px auto 0;padding:14px 18px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:#f8fafc;border:1px solid #edf0f4;border-radius:15px}#instructionMain{font-size:15px;font-weight:800}#instructionSub{margin-top:5px;color:var(--muted);font-size:12px;line-height:1.5}
+.success{display:none;justify-content:center;align-items:center;gap:9px;margin-top:17px;color:var(--green);font-size:17px;font-weight:850}.success.show{display:flex}.success-icon{width:30px;height:30px;display:flex;justify-content:center;align-items:center;border-radius:50%;background:#dcf5e8}
+.flying-factor{position:fixed;z-index:10000;pointer-events:none;display:flex;justify-content:center;align-items:center;padding:0 .08em;border-radius:8px;background:#fff;color:var(--red);font-family:var(--math-font);font-size:var(--math-size);font-weight:400;line-height:1;will-change:transform,color}
+@media(max-width:650px){:root{--math-size:27px}body{padding:8px 6px 35px}.board{padding:15px 8px 22px;border-radius:18px}.title h1{font-size:22px}.title p{font-size:11px}button{padding:9px 11px;font-size:13px}.expression-area{min-height:330px;padding:58px 0 20px}.drag-handle,.factor-drag-handle{opacity:.5}}
 </style>
 </head>
 <body>
-
-<!-- HOME BUTTON -->
-<div style="
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  z-index: 1000;
-">
-  <a href="../index.html" style="
-    text-decoration: none;
-    background: white;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 14px;
-    color: black;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  ">
-    ← Home
-  </a>
-</div>
-
-<div class="wrap">
-  <h1>Ortak Çarpan Parantezi (a) – Adım Adım Etkileşim</h1>
-
-  <div class="card" style="margin-bottom:12px">
-    <div class="row">
-      <input id="inp" type="text" placeholder="Örn: 6x+2y  |  6x^2+3x^3  |  2xyz-xyz">
-      <button id="btnDemo1" type="button">Örnek 1</button>
-      <button id="btnDemo2" type="button">Örnek 2</button>
-      <button id="btnDemo3" type="button">Örnek 3</button>
-      <button id="btnBuild" type="button">Adımları Hazırla</button>
+<div class="app">
+  <div class="topbar">
+    <div class="title"><h1>Ortak Çarpan</h1><p>Çarpanları aç, ortak olanları çıkar, benzer terimleri topla.</p></div>
+    <div class="controls">
+      <button id="simpleBtn" class="active" type="button">Basit</button>
+      <button id="advancedBtn" type="button">Gelişmiş</button>
+      <button id="newBtn" type="button">Yeni Örnek</button>
     </div>
-    <div class="muted">
-      <b>Adım 1:</b> Tek hamlede <b>6x→6·x</b> ve (varsa) <b>xy→x·y</b> ayrımları.<br/>
-      <b>Adım 2:</b> Sayıları aç (6 → 2·3).  <b>Adım 3:</b> Üsleri aç (x² → x·x).<br/>
-      Devamı: ortakları vurgula → yukarı çıkar → <u>parantez (yavaş kapanma)</u> → ortak öne iner → harfler kaynaşır (xx → x²) → noktalar sönükleşir.
-    </div>
-    <div id="err" class="error hidden"></div>
   </div>
-
-  <div class="card">
-    <div class="row" style="justify-content:space-between;margin-bottom:8px">
-      <div><span class="stepBadge" id="stepBadge">Adım 0/0</span></div>
-      <div class="row">
-        <button id="btnPrev" type="button">⟵ Geri</button>
-        <button id="btnNext" type="button">İleri ⟶</button>
-        <button id="btnPlay" type="button">Oynat ▶</button>
-        <button id="btnReset" type="button">Sıfırla</button>
-      </div>
+  <div class="board">
+    <div class="info-row">
+      <div class="info-pill"><strong>Kırmızı:</strong> dışarı çıkmaya hazır</div>
+      <div class="info-pill"><strong>+ / −:</strong> benzer terimleri topla</div>
+      <div class="info-pill"><strong>· :</strong> çarpımı kapat</div>
+      <div class="info-pill"><strong>↔:</strong> çarpan sırası</div>
+      <div class="info-pill"><strong>⠿:</strong> terim sırası</div>
     </div>
-
-    <div class="stage" id="stage">
-      <div id="top" class="topFactors"></div>
-      <div id="line" class="exprLine big center"></div>
-      <div id="animLayer" class="animLayer"></div>
-    </div>
-
-    <div class="muted" style="margin-top:8px" id="caption"></div>
+    <div class="expression-area"><div id="expression"></div></div>
+    <div class="instruction"><div id="instructionMain"></div><div id="instructionSub"></div></div>
+    <div id="success" class="success"><div class="success-icon">✓</div><div>İşlem tamamlandı.</div></div>
   </div>
 </div>
-
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-/* ==== Süreler ==== */
-const DUR = { lift: 850, group: 800, parenOpen: 1100, insideGather: 950, fade: 450, split: 650, letters: 600, merge: 650 };
+"use strict";
 
-/* ==== Yardımcılar ==== */
-const $=id=>document.getElementById(id);
-const stage=$("stage"), animLayer=$("animLayer");
-const supToCaret=s=>s.replace(/⁰/g,"^0").replace(/¹/g,"^1").replace(/²/g,"^2").replace(/³/g,"^3").replace(/⁴/g,"^4").replace(/⁵/g,"^5").replace(/⁶/g,"^6").replace(/⁷/g,"^7").replace(/⁸/g,"^8").replace(/⁹/g,"^9");
-const toSup=n=>String(n).replace(/0/g,"⁰").replace(/1/g,"¹").replace(/2/g,"²").replace(/3/g,"³").replace(/4/g,"⁴").replace(/5/g,"⁵").replace(/6/g,"⁶").replace(/7/g,"⁷").replace(/8/g,"⁸").replace(/9/g,"⁹");
-const normalize=s=>supToCaret(s).replace(/[…·*×]/g,"").replace(/−/g,"-").replace(/\s+/g,"");
-function err(msg){const e=$("err");e.textContent=msg;e.classList.remove("hidden");}
-function clearErr(){$("err").classList.add("hidden");}
-function sp(t,cls=""){const el=document.createElement("span");el.textContent=t;if(cls)el.className=cls;return el;}
-function dot(){return sp("·","dot token");}
+const POLYNOMIAL_FACTORS=[
+  {key:"x2_plus_1",html:"(x<sup>2</sup>+1)"},
+  {key:"one_minus_2z",html:"(1−2z)"},
+  {key:"x_plus_y",html:"(x+y)"},
+  {key:"a_minus_b",html:"(a−b)"},
+  {key:"m_plus_2n",html:"(m+2n)"},
+  {key:"p2_minus_1",html:"(p<sup>2</sup>−1)"},
+  {key:"a_plus_2",html:"(a+2)"},
+  {key:"y_minus_3",html:"(y−3)"}
+];
 
-/* === Zorunlu çarpım noktası ekleyici === */
-function ensureMulDots(){
-  const line = $("line");
-  line.querySelectorAll(".term").forEach(term=>{
-    let lastTokenEl=null;
-    const kids = Array.from(term.childNodes);
-    for(let i=0;i<kids.length;i++){
-      const node = kids[i];
-      if(node.nodeType===1 && node.classList?.contains("token")){
-        const isDot = node.classList.contains("dot");
-        if(lastTokenEl && !lastTokenEl.classList.contains("dot") && !isDot){
-          let between=node.previousSibling, hasDot=false;
-          while(between && between!==lastTokenEl){
-            if(between.nodeType===1 && between.classList?.contains("dot")) { hasDot=true; break; }
-            between=between.previousSibling;
-          }
-          if(!hasDot){
-            const d=dot(); d.style.opacity="0"; term.insertBefore(d,node);
-            d.animate([{opacity:0},{opacity:1}],
-                      {duration:240,easing:"cubic-bezier(.2,.8,.2,1)",fill:"forwards"});
-          }
-        }
-        lastTokenEl = node;
-      }
-    }
-  });
-}
+function uid(prefix="id"){return prefix+"_"+Math.random().toString(36).slice(2,9)+"_"+Date.now().toString(36).slice(-5)}
+function randomChoice(a){return a[Math.floor(Math.random()*a.length)]}
+function shuffle(a){const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c}
+function primeFactors(n){n=Math.abs(Math.trunc(n));if(n<=1)return[];const r=[];let d=2;while(d*d<=n){while(n%d===0){r.push(d);n/=d}d++}if(n>1)r.push(n);return r}
+function simplifyRadical(n){let outside=1,inside=n;for(let k=Math.floor(Math.sqrt(n));k>=2;k--){const s=k*k;if(n%s===0){outside=k;inside=n/s;break}}return{outside,inside}}
+function makeNumberAtom(value){return{id:uid("atom"),type:"number",value:Number(value)}}
+function makeVariableAtom(symbol){return{id:uid("atom"),type:"variable",symbol}}
+function makeRadicalAtom(radicand){return{id:uid("atom"),type:"radical",radicand:Number(radicand)}}
+function makePolynomialAtom(template){return{id:uid("atom"),type:"polynomial",key:template.key,html:template.html}}
+function makeGroup(atoms){return{id:uid("group"),expanded:false,atoms}}
+function makeNumberGroup(value){value=Number(value);if(value===0)return makeGroup([makeNumberAtom(0)]);let atoms=primeFactors(value).map(makeNumberAtom);if(!atoms.length)atoms=[makeNumberAtom(1)];return makeGroup(atoms)}
+function makeVariableGroup(symbol,exponent=1){const atoms=[];for(let i=0;i<exponent;i++)atoms.push(makeVariableAtom(symbol));return makeGroup(atoms)}
+function makeRadicalGroup(radicand){const s=simplifyRadical(radicand),atoms=[];if(s.outside>1)primeFactors(s.outside).forEach(v=>atoms.push(makeNumberAtom(v)));if(s.inside>1)atoms.push(makeRadicalAtom(s.inside));return makeGroup(atoms)}
+function makePolynomialGroup(template){return makeGroup([makePolynomialAtom(template)])}
 
-/* ==== Ayrıştırma ==== */
-function parseExpression(input){
-  const s=normalize(input);
-  if(!s) throw new Error("İfade boş.");
-  if(/[^0-9a-zA-Z+\-^]/.test(s)) throw new Error("Sadece rakam, harf, +, -, ^ kullanılabilir.");
-  const pieces=s.match(/([+\-]?[^+\-]+)/g);
-  if(!pieces || pieces.length<2) throw new Error("En az iki terim + ya da − ile ayrılmalı.");
-  return pieces.map(parseTerm);
-}
-function parseTerm(t){
-  let rest=t, sign=1;
-  if(rest[0]=='-'){sign=-1;rest=rest.slice(1);} else if(rest[0]=='+'){rest=rest.slice(1);}
-  let coeff=1; const m=rest.match(/^\d+/); if(m){coeff=parseInt(m[0],10); rest=rest.slice(m[0].length);}
-  const vars={}; if(rest){const re=/([a-zA-Z])(\^(\d+))?/g; let k; while((k=re.exec(rest))!==null){const v=k[1]; const p=k[3]?parseInt(k[3],10):1; vars[v]=(vars[v]||0)+p;}}
-  const factors=[]; if(sign<0) factors.push("−1");
-  if(coeff!==1){let n=coeff; for(let p=2;p*p<=n;p++){while(n%p===0){factors.push(String(p)); n/=p;}} if(n>1) factors.push(String(n));}
-  Object.keys(vars).sort().forEach(v=>{for(let i=0;i<vars[v];i++) factors.push(v);});
-  if(!factors.length) factors.push("1");
-  return {raw:t, sign, coeff, vars, factors};
-}
-function multisetIntersection(list){
-  const count=a=>{const m=new Map(); for(const x of a){m.set(x,(m.get(x)||0)+1);} return m;};
-  const maps=list.map(count); const keys=Array.from(new Set(list.flat())); const out=new Map();
-  for(const k of keys){let mn=Infinity; for(const m of maps){mn=Math.min(mn,m.get(k)||0);} if(mn>0) out.set(k,mn);}
-  return out;
-}
-function divideByCommon(term, common){
-  const need=new Map(common); const rest=[];
-  for(const f of term.factors){const c=need.get(f)||0; if(c>0) need.set(f,c-1); else rest.push(f);}
-  let sign=1,num=1; const vars={};
-  for(const f of rest){ if(f==="−1"){sign*=-1;continue;} if(/^\d+$/.test(f)) num*=parseInt(f,10); else vars[f]=(vars[f]||0)+1; }
-  const varStr=Object.keys(vars).sort().map(v=>vars[v]===1?v:v+toSup(vars[v])).join("");
-  const coef=(num!==1 || !varStr)? String(num):""; const signStr=sign<0?"−":"";
-  return (signStr+coef+varStr)||"1";
-}
-function factorsToPretty(factors){
-  let sign=1,num=1; const vars={};
-  for(const f of factors){ if(f==="−1"){sign*=-1;continue;} if(/^\d+$/.test(f)) num*=parseInt(f,10); else vars[f]=(vars[f]||0)+1; }
-  const varStr=Object.keys(vars).sort().map(v=>vars[v]===1?v:v+toSup(vars[v])).join("");
-  const coef=(num!==1 || !varStr)? String(num):""; const signStr=sign<0?"−":"";
-  return (signStr+coef+varStr)||"1";
-}
-/* İşaretsiz yazım: sadece Adım 1’in ilk gösterimi için */
-function factorsToPrettyUnsigned(factors){
-  let num=1; const vars={};
-  for(const f of factors){ if(f==="−1") continue; if(/^\d+$/.test(f)) num*=parseInt(f,10); else vars[f]=(vars[f]||0)+1; }
-  const varStr=Object.keys(vars).sort().map(v=>vars[v]===1?v:v+toSup(vars[v])).join("");
-  const coef=(num!==1 || !varStr)? String(num):"";
-  return (coef+varStr)||"1";
-}
-function primeFactors(n){const out=[];let x=n;for(let p=2;p*p<=x;p++){while(x%p===0){out.push(String(p));x/=p;}} if(x>1) out.push(String(x));return out;}
-function canSplitNumber(n){return primeFactors(n).length>1;}
+class CommonFactorEngine{
+  constructor(){
+    this.mode="simple";this.terms=[];this.outsideAtoms=[];this.outsideCollapsed=false;this.done=false;this.firstSimpleExample=true;this.animationDuration=330;this.changedGroupIds=new Set();
+    this.draggedTermId=null;this.draggedGroupId=null;this.draggedGroupTermId=null;this.draggedOutsideId=null;
+    this.dom={expression:document.getElementById("expression"),simpleBtn:document.getElementById("simpleBtn"),advancedBtn:document.getElementById("advancedBtn"),newBtn:document.getElementById("newBtn"),instructionMain:document.getElementById("instructionMain"),instructionSub:document.getElementById("instructionSub"),success:document.getElementById("success")};
+    this.bindControls();this.newProblem();
+  }
 
-/* ==== Satırı token olarak kur ==== */
-function buildLetterLine(parsed){
-  const line=$("line"); line.innerHTML="";
-  parsed.forEach((t,i)=>{
-    if(i>0) line.appendChild(sp(t.sign<0 ? " − " : " + ","token sep"));
-    if(i===0 && t.sign<0) line.appendChild(sp("−","token sep"));
-    const term=document.createElement("span"); term.className="term"; term.dataset.sep="0"; term.dataset.sepNum="0";
-    const n=Math.abs(t.coeff); if(n>1) term.appendChild(sp(String(n),"token numToken"));
-    Object.keys(t.vars).sort().forEach(v=>{
-      const p=t.vars[v];
-      term.appendChild(sp(p>1? (v+toSup(p)) : v,"token varChunk"));
+  bindControls(){
+    this.dom.simpleBtn.addEventListener("click",()=>{if(this.mode==="simple")return;this.mode="simple";this.dom.simpleBtn.classList.add("active");this.dom.advancedBtn.classList.remove("active");this.newProblem()});
+    this.dom.advancedBtn.addEventListener("click",()=>{if(this.mode==="advanced")return;this.mode="advanced";this.dom.advancedBtn.classList.add("active");this.dom.simpleBtn.classList.remove("active");this.newProblem()});
+    this.dom.newBtn.addEventListener("click",()=>this.newProblem());
+  }
+
+  newProblem(){
+    this.outsideAtoms=[];this.outsideCollapsed=false;this.done=false;this.changedGroupIds.clear();
+    if(this.mode==="simple"){
+      if(this.firstSimpleExample){this.terms=this.createFixedExample();this.firstSimpleExample=false}else this.terms=this.generateSimpleProblem();
+    }else this.terms=this.generateAdvancedProblem();
+    this.updateDoneState();this.render();
+  }
+
+  makeTerm(sign,groups,id=null){return{id:id||uid("term"),sign:sign<0?-1:1,groups,explicitProduct:false}}
+  createFixedExample(){return[
+    this.makeTerm(1,[makeNumberGroup(12),makeVariableGroup("x",2),makeVariableGroup("y",1)]),
+    this.makeTerm(-1,[makeNumberGroup(16),makeVariableGroup("x",1),makeVariableGroup("y",2)]),
+    this.makeTerm(1,[makeNumberGroup(8),makeVariableGroup("x",1),makeVariableGroup("y",1)])
+  ]}
+
+  generateSimpleProblem(){
+    const c=randomChoice([2,3,4,5,6]), residuals=randomChoice([[2,3,5],[2,5,7],[3,4,5],[3,5,7],[4,5,7],[2,3,7]]), symbols=["x","y","a","b","m","n"], commonVar=randomChoice(symbols), commonExp=randomChoice([1,1,1,2]), extras=shuffle([0,randomChoice([0,1,2]),randomChoice([0,1])]);
+    return [0,1,2].map(i=>{
+      const groups=[makeNumberGroup(c*residuals[i]),makeVariableGroup(commonVar,commonExp+extras[i])];
+      if(Math.random()<.55)groups.push(makeVariableGroup(["p","q","z"][i],randomChoice([1,1,2])));
+      return this.makeTerm(i===0?1:(Math.random()<.5?-1:1),groups);
     });
-    if(term.childNodes.length===0) term.appendChild(sp("1","token"));
-    line.appendChild(term);
-  });
-}
-
-/* ==== 6x→6·x ve xy→x·y (tek hamle) ==== */
-async function separateNumVarInTerm(term){
-  if(!term || term.dataset.sepNum==="1") return false;
-  const num=term.querySelector(':scope > .numToken');
-  const firstVar=term.querySelector(':scope > .varChunk');
-  if(!num || !firstVar){ term.dataset.sepNum="1"; return false; }
-  if(firstVar.previousElementSibling && firstVar.previousElementSibling.classList.contains('dot')){
-    term.dataset.sepNum="1"; return false;
   }
-  const pre=firstVar.getBoundingClientRect();
-  const d=dot(); d.style.opacity="0"; d.style.transform="scale(0.6)";
-  firstVar.before(d);
-  await new Promise(r=>requestAnimationFrame(r));
-  const post=firstVar.getBoundingClientRect();
-  const dx=pre.left-post.left, dy=pre.top-post.top;
-  const ease="cubic-bezier(.2,.8,.2,1)";
-  const move=firstVar.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:"translate(0,0)"}],
-                              {duration:DUR.letters, easing:ease, fill:"forwards"}).finished;
-  const fade=d.animate([{opacity:0, transform:"scale(0.6)"},{opacity:1, transform:"scale(1)"}],
-                       {duration:Math.max(280,DUR.letters*0.75), easing:ease, fill:"forwards"}).finished;
-  await Promise.all([move,fade]);
-  term.dataset.sepNum="1";
-  return true;
-}
-async function separateLettersInTerm(term){
-  if(!term || term.dataset.sep==="1") return false;
-  const vars=[...term.querySelectorAll(":scope > .varChunk")];
-  if(vars.length<2){ term.dataset.sep="1"; return false; }
-  const preRects=new Map(vars.map(v=>[v,v.getBoundingClientRect()]));
-  for(let i=vars.length-1;i>=1;i--){ const d=dot(); d.style.opacity="0"; d.style.transform="scale(0.6)"; vars[i].before(d); }
-  await new Promise(r=>requestAnimationFrame(r));
-  const ease="cubic-bezier(.2,.8,.2,1)";
-  const moves=vars.map(v=>{
-    const post=v.getBoundingClientRect(), pre=preRects.get(v);
-    const dx=pre.left-post.left, dy=pre.top-post.top;
-    return v.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:"translate(0,0)"}],
-                     {duration:DUR.letters,easing:ease,fill:"forwards"}).finished;
-  });
-  const dots=[...term.querySelectorAll(":scope > .dot")];
-  dots.forEach((d,i)=> d.animate([{opacity:0,transform:"scale(0.6)"},{opacity:1,transform:"scale(1)"}],
-                                 {duration:Math.max(240,DUR.letters*0.8),delay:i*40,easing:ease,fill:"forwards"}));
-  await Promise.all(moves);
-  term.dataset.sep="1";
-  return true;
-}
 
-/* ==== Adım 2/3 için işaretleme ==== */
-function markNumberExpandablesInPlace(){
-  const line=$("line");
-  [...line.querySelectorAll('.term > .numToken')].forEach(el=>{
-    const n=parseInt(el.textContent,10);
-    if(n>1 && canSplitNumber(n)){ el.classList.add("expandable"); el.dataset.kind="num"; el.dataset.value=String(n); }
-  });
-}
-function markPowerExpandablesInPlace(){
-  const vars=[...$("line").querySelectorAll('.term > .varChunk')];
-  vars.forEach(el=>{
-    const m=el.textContent.match(/^([a-zA-Z])(.+)$/);
-    if(m){
-      const letter=m[1], sup=m[2];
-      const p=supToCaret(sup).replace("^","");
-      const k=parseInt(p||"1",10);
-      if(k>1){ el.classList.add("expandable"); el.dataset.kind="var"; el.dataset.value=letter; el.dataset.pow=String(k); }
-    }
-  });
-}
-
-/* ==== Çarpanlara ayırma (içerden doğma) ==== */
-async function splitToken(token, allowKind){
-  if(!token || !token.classList.contains("expandable")) return false;
-  const kind=token.dataset.kind; if(allowKind && kind!==allowKind) return false;
-
-  let children=[];
-  if(kind==="num"){
-    const n=parseInt(token.dataset.value,10);
-    const pf=primeFactors(n); if(pf.length<=1){ token.classList.remove("expandable"); return false; }
-    children=pf;
-  }else if(kind==="var"){
-    const v=token.dataset.value; const p=parseInt(token.dataset.pow,10); if(p<=1) return false;
-    children=Array.from({length:p}, ()=>v);
-  }else return false;
-
-  const parentRect=token.getBoundingClientRect();
-  const cx=parentRect.left+parentRect.width/2, cy=parentRect.top+parentRect.height/2;
-
-  const frag=document.createDocumentFragment();
-  const childEls=[], dotEls=[];
-  children.forEach((txt,i)=>{
-    const s=sp(txt,"token"); s.style.display="inline-block"; s.style.visibility="hidden";
-    frag.appendChild(s); childEls.push(s);
-    if(i<children.length-1){ const d=dot(); d.style.display="inline-block"; d.style.visibility="hidden"; frag.appendChild(d); dotEls.push(d); }
-  });
-  token.replaceWith(frag);
-
-  const all=[...childEls,...dotEls];
-  all.forEach(el=>{
-    const r=el.getBoundingClientRect();
-    const tx=cx-(r.left+r.width/2), ty=cy-(r.top+r.height/2);
-    el.style.visibility="visible";
-    el.style.transform=`translate(${tx}px,${ty}px) scale(${el.classList.contains("dot")?0.6:0.92})`;
-    el.style.opacity="0"; el.style.willChange="transform,opacity";
-  });
-  await new Promise(r=>requestAnimationFrame(r));
-  const ease="cubic-bezier(.2,.8,.2,1)";
-  const a1=childEls.map(el=> el.animate(
-      [{transform:el.style.transform,opacity:0},
-       {transform:"translate(0,0) scale(1)",opacity:1}],
-      {duration:DUR.split,easing:ease,fill:"forwards"}).finished);
-  const a2=dotEls.map(el=> el.animate(
-      [{transform:el.style.transform,opacity:0},
-       {transform:"translate(0,0) scale(1)",opacity:1}],
-      {duration:Math.max(240,DUR.split*0.85),easing:ease,fill:"forwards"}).finished);
-  await Promise.all([...a1,...a2]);
-
-  // zincirleme açılmalar için tekrar işaretle
-  childEls.forEach(el=>{
-    const t=el.textContent;
-    if(/^\d+$/.test(t)){ const n=parseInt(t,10); if(canSplitNumber(n)){ el.classList.add("expandable"); el.dataset.kind="num"; el.dataset.value=String(n); } }
-  });
-
-  // her split sonrasında noktaları doğrula
-  ensureMulDots();
-  return true;
-}
-
-/* ==== Ortak, parantez, kaynaştırma ==== */
-function renderFactorRow(container,factors,markMap=null,appendOne=false){
-  const row=document.createElement("span");
-  const marks=markMap?new Map(markMap):null;
-  factors.forEach((f,i)=>{
-    const mark=marks&&(marks.get(f)||0)>0;
-    row.appendChild(sp(f,"token"+(mark?" common":"")));
-    if(mark){ marks.set(f,marks.get(f)-1); }
-    if(i<factors.length-1) row.appendChild(dot());
-  });
-  if(appendOne){ row.appendChild(dot()); row.appendChild(sp("1","token")); }
-  container.appendChild(row);
-}
-const toSupUI=n=>String(n).replace(/0/g,"⁰").replace(/1/g,"¹").replace(/2/g,"²").replace(/3/g,"³").replace(/4/g,"⁴").replace(/5/g,"⁵").replace(/6/g,"⁶").replace(/7/g,"⁷").replace(/8/g,"⁸").replace(/9/g,"⁹");
-function classifyToken(t){
-  if(t.classList.contains('dot')) return {type:'dot',value:'·',node:t};
-  const tx=t.textContent;
-  if(/^\d+$/.test(tx)) return {type:'num',value:tx,node:t};
-  if(/^[a-zA-Z]$/.test(tx)) return {type:'var',value:tx,node:t};
-  return {type:'other',value:tx,node:t};
-}
-function findVarRun(holder){
-  const tokens=[...holder.querySelectorAll(':scope > .token')];
-  for(let i=0;i<tokens.length;i++){
-    const a=classifyToken(tokens[i]); if(a.type!=='var') continue;
-    let vars=[a.node], dots=[]; let j=i+1;
-    while(j<tokens.length){
-      const d=classifyToken(tokens[j]); if(d.type!=='dot') break;
-      const v=classifyToken(tokens[j+1]||{}); if(v.type!=='var'||v.value!==a.value) break;
-      dots.push(d.node); vars.push(v.node); j+=2;
-    }
-    if(vars.length>=2) return {letter:a.value, vars, dots};
+  generateAdvancedProblem(){
+    const symbols=["x","y","a","b","m","n","p"], commonVar=randomChoice(symbols), commonExp=randomChoice([1,1,2,2,3]), c=randomChoice([2,3,4,6]), residuals=randomChoice([[2,3,5],[3,4,5],[2,5,7],[3,5,7]]), extras=shuffle([0,randomChoice([0,1,2]),randomChoice([0,1])]), commonPoly=randomChoice(POLYNOMIAL_FACTORS), polyCommon=Math.random()<.72, others=shuffle(POLYNOMIAL_FACTORS.filter(p=>p.key!==commonPoly.key)), useRad=Math.random()<.55, rad=randomChoice([2,3,5,7]);
+    return [0,1,2].map(i=>{
+      const groups=[makeNumberGroup(c*residuals[i]),makeVariableGroup(commonVar,commonExp+extras[i])];
+      if(useRad)groups.push(makeRadicalGroup(rad));
+      groups.push(makePolynomialGroup(polyCommon?commonPoly:others[i]));
+      if(Math.random()<.35){const p=symbols.filter(s=>s!==commonVar);groups.push(makeVariableGroup(randomChoice(p),randomChoice([1,2])))}
+      return this.makeTerm(i===0?1:(Math.random()<.5?-1:1),groups);
+    });
   }
-  return null;
-}
-async function animateVarRunMerge(holder,run){
-  const stageRect=stage.getBoundingClientRect();
-  const varRects=run.vars.map(n=>n.getBoundingClientRect());
-  const clones=run.vars.map((n,i)=>{
-    const c=sp(n.textContent,'token flying common');
-    c.style.left=(varRects[i].left-stageRect.left)+"px";
-    c.style.top =(varRects[i].top -stageRect.top )+"px";
-    animLayer.appendChild(c);
-    n.style.opacity=0; return c;
-  });
-  await Promise.all(run.dots.map((d,i)=>
-    d.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(0.7)'}],
-      {duration:240+60*i,easing:'ease-in',fill:'forwards'}).finished
-  ));
-  run.dots.forEach(d=>d.remove());
-  const k=run.vars.length;
-  const newTok=sp(run.letter+toSupUI(k),'token common');
-  newTok.style.opacity=0; newTok.style.transform='scale(0.85)';
-  run.vars[0].replaceWith(newTok);
-  for(let i=1;i<run.vars.length;i++) run.vars[i].remove();
-  await new Promise(r=>requestAnimationFrame(r));
-  const targetRect=newTok.getBoundingClientRect();
-  const tcx=targetRect.left+targetRect.width/2, tcy=targetRect.top+targetRect.height/2;
-  const promises=clones.map(c=>{
-    const cr=c.getBoundingClientRect();
-    const ccx=cr.left+cr.width/2, ccy=cr.top+cr.height/2;
-    const dx=tcx-ccx, dy=tcy-ccy;
-    return c.animate(
-      [{transform:'translate(0,0) scale(1)'},
-       {transform:`translate(${dx*0.9}px,${dy*0.9}px) scale(1.05)`,offset:.75,easing:'cubic-bezier(.2,.8,.2,1)'},
-       {transform:`translate(${dx}px,${dy}px) scale(0.7)`,opacity:0}],
-      {duration:DUR.merge,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'}
-    ).finished;
-  });
-  const appear=newTok.animate(
-    [{opacity:0,transform:'scale(0.85)'},{opacity:1,transform:'scale(1)'}],
-    {duration:Math.max(260,DUR.merge*0.55),easing:'ease-out',delay:DUR.merge*0.45,fill:"forwards"}
-  ).finished;
-  await Promise.all([...promises,appear]);
-  clones.forEach(c=>c.remove());
-}
 
-/* ==== Adım akışı ==== */
-let currentExpandMode=null;
-function buildSteps(parsed){
-  const top=$("top");
-  const common=multisetIntersection(parsed.map(t=>t.factors));
+  atomKey(atom){
+    if(atom.type==="number")return "number:"+atom.value;
+    if(atom.type==="variable")return "variable:"+atom.symbol;
+    if(atom.type==="radical")return "radical:"+atom.radicand;
+    if(atom.type==="polynomial")return "polynomial:"+atom.key;
+    return atom.id;
+  }
 
-  // ADIM 1
-  let clickBound=false;
-  const s1={
-    caption:"Adım 1 — 6x→6·x ve xy→x·y ayrımları tek hamlede.",
-    make(){
-      top.innerHTML="";
-      // Başlangıç satırı: işaret ayraçta, terimler işaretsiz yazılır
-      const lineEl=$("line"); lineEl.innerHTML="";
-      parsed.forEach((t,i)=>{
-        if(i>0) lineEl.appendChild(sp(t.sign<0 ? " − " : " + ","token sep"));
-        if(i===0 && t.sign<0) lineEl.appendChild(sp("−","token sep"));
-        lineEl.appendChild(sp(factorsToPrettyUnsigned(t.factors),"token"));
-      });
-      // Tıklamayla tek tek ayırma (İleri basmadan)
-      if(!clickBound){
-        $("line").addEventListener("click",async (e)=>{
-          const term=e.target.closest(".term"); if(!term) return;
-          await separateNumVarInTerm(term); await separateLettersInTerm(term); ensureMulDots();
-        });
-        clickBound=true;
+  /*
+    Kritik düzeltme: görünüş ile state her işlemden sonra senkronlanır.
+    Görünürde açık olmayan hiçbir şey tamamlanmayı engelleyemez.
+  */
+  normalizeVisualState(){
+    for(const term of this.terms){
+      for(const group of term.groups){
+        if(group.atoms.length<=1)group.expanded=false;
       }
-    },
-    async onNext(){
-      buildLetterLine(parsed);
-      await new Promise(r=>requestAnimationFrame(r));
-      const terms=[...$("line").querySelectorAll(".term")];
-      await Promise.all(terms.map(t=>separateNumVarInTerm(t)));
-      await Promise.all(terms.map(t=>separateLettersInTerm(t)));
-      ensureMulDots();
-      return true;
+      if(term.groups.length<=1)term.explicitProduct=false;
     }
-  };
+    if(this.outsideAtoms.length<=1)this.outsideCollapsed=true;
+  }
 
-  // ADIM 2
-  let splitClickBound=false;
-  const s2={caption:"Adım 2 — Sayıları aç (6 → 2·3).", make(){
-    currentExpandMode="num";
-    markNumberExpandablesInPlace();
-    $("line").querySelectorAll('.expandable[data-kind="var"]').forEach(el=>el.classList.add("blocked"));
-    if(!splitClickBound){
-      $("line").addEventListener("click", async (ev)=>{
-        const t=ev.target.closest(".expandable"); if(!t) return;
-        await splitToken(t,currentExpandMode); // split sonunda ensureMulDots çağrılıyor
-      });
-      splitClickBound=true;
+  getTermAtomCounts(term){
+    const counts=new Map();
+    for(const group of term.groups)for(const atom of group.atoms){
+      const key=this.atomKey(atom);
+      if(key==="number:1")continue;
+      counts.set(key,(counts.get(key)||0)+1);
     }
-  }, async onNext(){
-    const line=$("line");
-    const nums=[...line.querySelectorAll('.expandable[data-kind="num"]')]
-      .filter(el=>{
-        const n=parseInt(el.dataset.value,10);
-        if(!Number.isFinite(n)||n<=1) return false;
-        const pf=(function(x){const out=[];let y=x;for(let p=2;p*p<=y;p++){while(y%p===0){out.push(String(p));y/=p;}} if(y>1) out.push(String(y));return out;})(n);
-        return pf.length>1;
-      });
-    if(nums.length===0){ ensureMulDots(); return true; }
-    await Promise.all(nums.map(el=>splitToken(el,"num")));
-    ensureMulDots();
+    return counts;
+  }
+
+  getCommonCounts(){
+    if(this.terms.length<2)return new Map();
+    const maps=this.terms.map(t=>this.getTermAtomCounts(t)), result=new Map();
+    for(const [key,first] of maps[0]){
+      let min=first,ok=true;
+      for(let i=1;i<maps.length;i++){const count=maps[i].get(key)||0;if(count===0){ok=false;break}min=Math.min(min,count)}
+      if(ok&&min>0)result.set(key,min);
+    }
+    return result;
+  }
+  hasCommonFactors(){return this.getCommonCounts().size>0}
+
+  getVisibleAtomsForKey(term,key){
+    const out=[];
+    for(const group of term.groups){
+      if(group.atoms.length>1&&!group.expanded)continue;
+      for(const atom of group.atoms)if(this.atomKey(atom)===key)out.push({atom,group});
+    }
+    return out;
+  }
+
+  getReadyCommonMap(){
+    const ready=new Map();
+    for(const [key,count] of this.getCommonCounts()){
+      if(this.terms.every(t=>this.getVisibleAtomsForKey(t,key).length>=count))ready.set(key,count);
+    }
+    return ready;
+  }
+
+  getReadyAtomIds(){
+    const ids=new Set();
+    for(const [key,count] of this.getReadyCommonMap()){
+      for(const term of this.terms){
+        const visible=this.getVisibleAtomsForKey(term,key);
+        for(let i=0;i<count&&visible[i];i++)ids.add(visible[i].atom.id);
+      }
+    }
+    return ids;
+  }
+  isAtomReady(id){return this.getReadyAtomIds().has(id)}
+
+  hasExpandedGroups(){return this.terms.some(t=>t.groups.some(g=>g.atoms.length>1&&g.expanded))}
+
+  /*
+    DÜZELTME: explicitProduct tek başına yeterli değil.
+    Nokta ancak 2+ grup olduğunda görünür. Dolayısıyla sadece gerçekten
+    ekranda açık çarpım varsa true döner.
+  */
+  hasExplicitProducts(){return this.terms.some(t=>t.explicitProduct&&t.groups.length>1)}
+  allInnerProductsClosed(){return !this.hasExpandedGroups()&&!this.hasExplicitProducts()}
+
+  normalizeTerm(term){
+    let coefficient=term.sign;const variables=new Map(),radicals=new Map(),polynomials=new Map(),polynomialHTML=new Map();
+    for(const group of term.groups)for(const atom of group.atoms){
+      if(atom.type==="number")coefficient*=atom.value;
+      else if(atom.type==="variable")variables.set(atom.symbol,(variables.get(atom.symbol)||0)+1);
+      else if(atom.type==="radical")radicals.set(atom.radicand,(radicals.get(atom.radicand)||0)+1);
+      else if(atom.type==="polynomial"){polynomials.set(atom.key,(polynomials.get(atom.key)||0)+1);polynomialHTML.set(atom.key,atom.html)}
+    }
+    for(const [r,count] of [...radicals]){const pairs=Math.floor(count/2);if(pairs)coefficient*=Math.pow(r,pairs);const left=count%2;if(left)radicals.set(r,left);else radicals.delete(r)}
+    const sig=[
+      ...[...variables].sort((a,b)=>a[0].localeCompare(b[0])).map(([s,e])=>`v:${s}^${e}`),
+      ...[...radicals].sort((a,b)=>Number(a[0])-Number(b[0])).map(([r,c])=>`r:${r}^${c}`),
+      ...[...polynomials].sort((a,b)=>a[0].localeCompare(b[0])).map(([k,c])=>`p:${k}^${c}`)
+    ].join("|");
+    return{coefficient,variables,radicals,polynomials,polynomialHTML,signature:sig};
+  }
+
+  areLikeTerms(a,b){return !!a&&!!b&&this.normalizeTerm(a).signature===this.normalizeTerm(b).signature}
+  hasLikeTerms(){for(let i=0;i<this.terms.length;i++)for(let j=i+1;j<this.terms.length;j++)if(this.areLikeTerms(this.terms[i],this.terms[j]))return true;return false}
+  hasAdjacentLikeTerms(){for(let i=1;i<this.terms.length;i++)if(this.areLikeTerms(this.terms[i-1],this.terms[i]))return true;return false}
+
+  buildTermFromNormalized(n,coefficient,preserveId=null){
+    if(coefficient===0)return this.makeTerm(1,[makeNumberGroup(0)],preserveId);
+    const sign=coefficient<0?-1:1,abs=Math.abs(coefficient),groups=[],symbolic=n.variables.size||n.radicals.size||n.polynomials.size;
+    if(abs!==1||!symbolic)groups.push(makeNumberGroup(abs));
+    for(const [s,e] of [...n.variables].sort((a,b)=>a[0].localeCompare(b[0])))groups.push(makeVariableGroup(s,e));
+    for(const [r,c] of [...n.radicals].sort((a,b)=>Number(a[0])-Number(b[0])))for(let i=0;i<c;i++)groups.push(makeGroup([makeRadicalAtom(r)]));
+    for(const [k,c] of [...n.polynomials].sort((a,b)=>a[0].localeCompare(b[0]))){const html=n.polynomialHTML.get(k)||`(${k})`;for(let i=0;i<c;i++)groups.push(makePolynomialGroup({key:k,html}))}
+    return this.makeTerm(sign,groups,preserveId);
+  }
+
+  combineAdjacentLikeTerms(leftId,rightId){
+    if(this.hasCommonFactors())return;
+    const li=this.terms.findIndex(t=>t.id===leftId),ri=this.terms.findIndex(t=>t.id===rightId);if(li<0||ri!==li+1)return;
+    const left=this.terms[li],right=this.terms[ri];if(!this.areLikeTerms(left,right))return;
+    const n=this.normalizeTerm(left),sum=n.coefficient+this.normalizeTerm(right).coefficient,old=this.capturePositions();
+    if(sum===0){this.terms.splice(li,2);if(!this.terms.length)this.terms.push(this.makeTerm(1,[makeNumberGroup(0)],left.id))}
+    else this.terms.splice(li,2,this.buildTermFromNormalized(n,sum,left.id));
+    this.updateDoneState();this.render();this.runFlip(old);
+  }
+
+  openGroup(termId,groupId){
+    if(this.done)return;const term=this.getTerm(termId);if(!term)return;const group=term.groups.find(g=>g.id===groupId);if(!group||group.atoms.length<=1)return;
+    group.expanded=true;term.explicitProduct=term.groups.length>1;this.updateDoneState();this.renderWithFlip();
+  }
+
+  closeTermProduct(termId){
+    const term=this.getTerm(termId);if(!term)return;for(const g of term.groups)g.expanded=false;term.explicitProduct=false;this.updateDoneState();this.renderWithFlip();
+  }
+
+  clickTermAtom(termId,groupId,atomId){
+    if(this.done)return;const term=this.getTerm(termId);if(!term)return;const group=term.groups.find(g=>g.id===groupId);if(!group)return;const atom=group.atoms.find(a=>a.id===atomId);if(!atom)return;
+    if(this.isAtomReady(atomId)){this.extractReadyFactor(termId,groupId,atomId);return}
+    if(group.atoms.length>1&&group.expanded){group.expanded=false;this.updateDoneState();this.renderWithFlip();return}
+    if(term.explicitProduct&&term.groups.length>1){this.closeTermProduct(termId);return}
+    this.bump(`[data-atom-id="${atomId}"]`);
+  }
+
+  extractReadyFactor(sourceTermId,sourceGroupId,sourceAtomId){
+    if(!this.isAtomReady(sourceAtomId))return;const sourceTerm=this.getTerm(sourceTermId);if(!sourceTerm)return;const sourceGroup=sourceTerm.groups.find(g=>g.id===sourceGroupId);if(!sourceGroup)return;const sourceAtom=sourceGroup.atoms.find(a=>a.id===sourceAtomId);if(!sourceAtom)return;
+    const el=document.querySelector(`[data-atom-id="${sourceAtomId}"]`),sourceRect=el?el.getBoundingClientRect():null,key=this.atomKey(sourceAtom);
+    for(const term of this.terms){this.removeOneVisibleFactor(term,key,term.id===sourceTermId?sourceAtomId:null);term.explicitProduct=term.groups.length>1}
+    const outside=this.cloneAtom(sourceAtom);outside.id=uid("outside");this.outsideAtoms.push(outside);this.outsideCollapsed=this.outsideAtoms.length<=1;this.updateDoneState();this.renderWithFlip();
+    if(sourceRect)requestAnimationFrame(()=>{const target=document.querySelector(`[data-outside-id="${outside.id}"]`);if(!target)return;const paren=document.querySelector(".parenthesized");this.flyFactorCurved(sourceRect,target.getBoundingClientRect(),paren?paren.getBoundingClientRect():null,this.atomHTML(outside))});
+  }
+
+  removeOneVisibleFactor(term,key,preferredId=null){
+    let group=null,index=-1;
+    if(preferredId){for(const g of term.groups){const i=g.atoms.findIndex(a=>a.id===preferredId);if(i>=0){group=g;index=i;break}}}
+    if(!group){for(const g of term.groups){if(g.atoms.length>1&&!g.expanded)continue;const i=g.atoms.findIndex(a=>this.atomKey(a)===key);if(i>=0){group=g;index=i;break}}}
+    if(!group||index<0)return false;
+    group.atoms.splice(index,1);this.changedGroupIds.add(group.id);
+    if(group.atoms.length===0){const gi=term.groups.findIndex(g=>g.id===group.id);if(gi>=0)term.groups.splice(gi,1)}
+    else if(group.atoms.length===1)group.expanded=false;
+    if(term.groups.length<=1)term.explicitProduct=false;
     return true;
-  }};
-
-  // ADIM 3
-  const s3={caption:"Adım 3 — Üsleri aç (x² → x·x).", make(){
-    currentExpandMode="var";
-    markPowerExpandablesInPlace();
-    $("line").querySelectorAll('.expandable[data-kind="num"]').forEach(el=>el.classList.add("blocked"));
-    $("line").querySelectorAll('.expandable[data-kind="var"]').forEach(el=>el.classList.remove("blocked"));
-    ensureMulDots();
-  }, async onNext(){
-    const vars=[...$("line").querySelectorAll('.expandable[data-kind="var"]')];
-    if(vars.length===0){ ensureMulDots(); return true; }
-    await Promise.all(vars.map(el=>splitToken(el,"var")));
-    ensureMulDots();
-    return true;
-  }};
-
-  // ADIM 4
-  const s4={caption:"Ortak çarpan(lar) kırmızı-kalın vurgulanır. Tam ortak terimde sonda ·1 gösterilir.", make(){
-    currentExpandMode=null; top.innerHTML=""; const line=$("line"); line.innerHTML="";
-    parsed.forEach((t,i)=>{
-      if(i>0) line.appendChild(sp(" + ","token sep"));
-      const rem=divideByCommon(t,common);
-      const appendOne=(rem==="1");
-      renderFactorRow(line,t.factors,common,appendOne);
-    });
-  }};
-
-  // ADIM 5
-  const s5={caption:"Ortak çarpanlar yukarı çıkar ve birleşir.", async make(){
-    s4.make();
-    top.innerHTML="";
-    const group=document.createElement("span"); group.id="mergedGroup"; group.className="big"; top.appendChild(group);
-
-    const slotsByFactor=new Map();
-    common.forEach((cnt,f)=>{
-      const arr=[];
-      for(let i=0;i<cnt;i++){
-        const slot=sp(f,"token common"); slot.style.opacity="0";
-        group.appendChild(slot); if(i<cnt-1) group.appendChild(dot());
-        arr.push(slot);
-      }
-      slotsByFactor.set(f,arr);
-      group.appendChild(document.createTextNode(" "));
-    });
-
-    const commons=[...$("line").querySelectorAll(".common")];
-    const stageRect=$("stage").getBoundingClientRect();
-    const byFactor=new Map();
-    for(const el of commons){ const k=el.textContent; if(!byFactor.has(k)) byFactor.set(k,[]); byFactor.get(k).push(el); }
-
-    const jobs=[];
-    byFactor.forEach((els,f)=>{
-      const slots=slotsByFactor.get(f)||[];
-      els.forEach((el,j)=>{
-        const target=slots[Math.min(j,slots.length-1)];
-        const from=el.getBoundingClientRect(), to=target.getBoundingClientRect();
-        const fly=sp(f,"token common flying");
-        fly.style.left=(from.left-stageRect.left)+"px"; fly.style.top=(from.top-stageRect.top)+"px";
-        animLayer.appendChild(fly);
-        el.style.opacity=".18";
-        const dx=(to.left-from.left), dy=(to.top-from.top);
-        const anim = fly.animate(
-          [{transform:"translate(0,0)"},
-           {transform:"translate(0,6px) scale(0.98)", offset:.12, easing:"cubic-bezier(.45,0,.55,1)"},
-           {transform:`translate(${dx}px,${dy}px)`}],
-          {duration:DUR.lift, delay:j*110, easing:"cubic-bezier(.2,.8,.2,1)", fill:"forwards"}
-        );
-        const fadeIn=target.animate([{opacity:0},{opacity:1}],
-          {duration:380,delay:j*110+DUR.lift*0.55,fill:"forwards",easing:"ease-out"});
-        const onFinish=anim.finished.then(()=>{
-          if(j>=slots.length){
-            target.animate([{transform:"scale(1)"},{transform:"scale(1.06)"},{transform:"scale(1)"}],
-                           {duration:300,easing:"ease-out"});
-            fly.animate([{opacity:1,transform:`translate(${dx}px,${dy}px) scale(1)`},
-                         {opacity:0,transform:`translate(${dx}px,${dy}px) scale(0.7)`}],
-                        {duration:260,easing:"ease-in",fill:"forwards"}).finished.then(()=>fly.remove());
-          }else{ fly.remove(); }
-        });
-        jobs.push(Promise.all([fadeIn.finished,onFinish]));
-      });
-    });
-    await Promise.all(jobs);
-  }};
-
-  // ADIM 6
-  const s6={caption:"Kalan terimler paranteze alınır (parantezler yavaşça yaklaşır; içerisi toparlanır).", async make(){
-    ensureMergedGroup(common);
-    const remainders=parsed.map(t=>divideByCommon(t,common));
-
-    const L=sp("(","paren"), R=sp(")","paren right"), inner=sp("","big");
-    const line=$("line"); line.innerHTML=""; line.appendChild(L); line.appendChild(inner); line.appendChild(R);
-
-    // Parantez içini token’larla (sarı +/−) oluştur
-    inner.innerHTML="";
-    remainders.forEach((r,i)=>{
-      const neg=r.startsWith("−")||r.startsWith("-");
-      const core=neg?r.slice(1):r;
-      if(i===0){
-        if(neg) inner.appendChild(sp("−","token sep"));
-      }else{
-        inner.appendChild(sp(neg?" − ":" + ","token sep"));
-      }
-      inner.appendChild(sp(core,"token"));
-    });
-
-    const ease="cubic-bezier(.2,.8,.2,1)";
-    L.style.opacity="0"; L.style.transform="translateX(-36px) scale(0.9,0.85)";
-    R.style.opacity="0"; R.style.transform="translateX(36px) scale(0.9,0.85)";
-    inner.style.letterSpacing="0.28em"; inner.style.filter="blur(1.2px)"; inner.style.opacity="0.85"; inner.style.transform="scale(1.04)";
-    await new Promise(r=>requestAnimationFrame(r));
-    const aL=L.animate([{opacity:0,transform:"translateX(-36px) scale(0.9,0.85)"},{opacity:1,transform:"translateX(0px) scale(1,1)"}],{duration:DUR.parenOpen,easing:ease,fill:"forwards"}).finished;
-    const aR=R.animate([{opacity:0,transform:"translateX(36px) scale(0.9,0.85)"},{opacity:1,transform:"translateX(0px) scale(1,1)"}],{duration:DUR.parenOpen,easing:ease,fill:"forwards"}).finished;
-    const aT=inner.animate([{letterSpacing:"0.28em",filter:"blur(1.2px)",opacity:.85,transform:"scale(1.04)"},{letterSpacing:"0em",filter:"blur(0px)",opacity:1,transform:"scale(1)"}],{duration:DUR.insideGather,easing:ease,fill:"forwards",delay:80}).finished;
-    await Promise.all([aL,aR,aT]);
-  }};
-
-  // ADIM 7
-  const s7={caption:"Ortak çarpan yukarıdan, parantezin önüne iner.", async make(){
-    const line=$("line"); const group=$("mergedGroup"); if(!group) return;
-    const fromRect=group.getBoundingClientRect(); const stageRect=stage.getBoundingClientRect();
-    const preSlot=document.createElement("span"); preSlot.id="preSlot"; preSlot.style.display="inline-block"; preSlot.style.verticalAlign="baseline";
-    preSlot.style.width=fromRect.width+"px"; preSlot.style.height=fromRect.height+"px"; line.prepend(preSlot);
-    const toRect=preSlot.getBoundingClientRect();
-    const ghost=document.createElement("span"); ghost.className="ghost"; ghost.style.width=fromRect.width+"px"; ghost.style.height=fromRect.height+"px"; group.replaceWith(ghost);
-    group.classList.add("flying"); group.style.left=(fromRect.left-stageRect.left)+"px"; group.style.top=(fromRect.top-stageRect.top)+"px"; animLayer.appendChild(group);
-    const dx=(toRect.left-fromRect.left), dy=(toRect.top-fromRect.top);
-    await group.animate([{transform:"translate(0,0)"},
-                         {transform:"translate(8px,0) scale(0.995)",offset:.1,easing:"cubic-bezier(.4,0,.6,1)"},
-                         {transform:`translate(${dx}px,${dy}px)`}],
-                        {duration:DUR.group,easing:"cubic-bezier(.2,.8,.2,1)",fill:"forwards"}).finished;
-
-    // SABİT yerleşim: ekstra boşluk token'ı eklemiyoruz; CSS ile sabit boşluk
-    const holder=document.createElement("span");
-    holder.id="prefixHolder";
-    holder.className="prefix";
-    while(group.firstChild) holder.appendChild(group.firstChild);
-    preSlot.replaceWith(holder);
-
-    group.remove(); ghost.remove();
-  }};
-
-  // ADIM 8
-  const s8={caption:"Harfler kaynaşır (xx → x²). Noktalar sönükleşir.", async make(){
-    const holder=$("prefixHolder");
-    if(holder){
-      let run; 
-      while((run=findVarRun(holder))){
-        await animateVarRunMerge(holder,run);
-        await new Promise(r=>setTimeout(r,120));
-      }
-      [...holder.querySelectorAll(".dot")].forEach((d,i)=>
-        d.animate([{opacity:1},{opacity:.08}],
-                  {duration:DUR.fade,delay:i*20,fill:"forwards",easing:"ease-out"}));
-      [...holder.querySelectorAll(".token")].forEach(t=> t.classList.add("common"));
-      // holder.innerHTML yeniden yazılmıyor → reflow yok
-    }
-  }};
-
-  const s9={caption:"Bitti.", make(){}};
-
-  return [s1,s2,s3,s4,s5,s6,s7,s8,s9];
-
-  function ensureMergedGroup(commonMap){
-    let group=$("mergedGroup"); if(group) return group;
-    const merged=[]; commonMap.forEach((c,f)=>{ for(let i=0;i<c;i++) merged.push(f); });
-    const top=$("top"); top.innerHTML="";
-    group=document.createElement("span"); group.id="mergedGroup"; group.className="big";
-    merged.forEach((f,i)=>{ group.appendChild(sp(f,"token common")); if(i<merged.length-1) group.appendChild(dot()); });
-    top.appendChild(group);
-    return group;
   }
+
+  clickOutsideFactor(){if(!this.outsideAtoms.length)return;this.outsideCollapsed=true;this.updateDoneState();this.renderWithFlip()}
+  openOutsideProduct(){if(this.outsideAtoms.length<=1)return;this.outsideCollapsed=false;this.updateDoneState();this.renderWithFlip()}
+
+  /*
+    Tamamlanma artık GÖRÜNEN duruma göre karar verir.
+    normalizeVisualState stale/ görünmez state'i temizler.
+  */
+  updateDoneState(){
+    this.normalizeVisualState();
+    this.done=!this.hasCommonFactors()&&!this.hasLikeTerms()&&this.allInnerProductsClosed()&&this.outsideAtoms.length>0&&this.outsideCollapsed;
+  }
+
+  getTerm(id){return this.terms.find(t=>t.id===id)}
+  cloneAtom(atom){return JSON.parse(JSON.stringify(atom))}
+
+  summarizeAtoms(atoms){
+    if(!atoms.length)return"1";let number=1;const vars=new Map(),order=[],rad=new Map(),radOrder=[],polys=[];
+    for(const atom of atoms){
+      if(atom.type==="number")number*=atom.value;
+      else if(atom.type==="variable"){if(!vars.has(atom.symbol)){vars.set(atom.symbol,0);order.push(atom.symbol)}vars.set(atom.symbol,vars.get(atom.symbol)+1)}
+      else if(atom.type==="radical"){if(!rad.has(atom.radicand)){rad.set(atom.radicand,0);radOrder.push(atom.radicand)}rad.set(atom.radicand,rad.get(atom.radicand)+1)}
+      else if(atom.type==="polynomial")polys.push(atom);
+    }
+    const leftover=[];for(const r of radOrder){const c=rad.get(r),pairs=Math.floor(c/2);if(pairs)number*=Math.pow(r,pairs);if(c%2)leftover.push(r)}
+    let html="";const symbolic=order.length||leftover.length||polys.length;if(number!==1||!symbolic)html+=String(number);
+    for(const s of order){const e=vars.get(s);html+=s;if(e>1)html+=`<sup>${e}</sup>`}
+    for(const r of leftover)html+="√"+r;for(const p of polys)html+=p.html;return html;
+  }
+
+  atomHTML(atom){if(atom.type==="number")return String(atom.value);if(atom.type==="variable")return atom.symbol;if(atom.type==="radical")return "√"+atom.radicand;if(atom.type==="polynomial")return atom.html;return"?"}
+
+  render(){
+    this.normalizeVisualState();
+    this.dom.expression.innerHTML="";const readyIds=this.getReadyAtomIds(),root=document.createElement("div");root.className="math-expression";
+    if(this.outsideAtoms.length){
+      if(this.outsideCollapsed){const outside=document.createElement("span");outside.className="outside collapsed";outside.dataset.animId="outside-product";outside.innerHTML=this.summarizeAtoms(this.outsideAtoms);root.appendChild(outside)}
+      else{
+        const outside=document.createElement("span");outside.className="outside";outside.dataset.animId="outside-product";
+        this.outsideAtoms.forEach((atom,i)=>{if(i)outside.appendChild(this.createMultiply());const wrap=document.createElement("span");wrap.className="outside-factor-wrap";wrap.dataset.outsideId=atom.id;const handle=this.createFactorDragHandle();handle.dataset.dragOutside=atom.id;wrap.appendChild(handle);const f=document.createElement("span");f.className="outside-factor"+(atom.type==="polynomial"?" polynomial-factor":"");f.dataset.outsideId=atom.id;f.dataset.animId="outside_"+atom.id;f.innerHTML=this.atomHTML(atom);wrap.appendChild(f);outside.appendChild(wrap)});root.appendChild(outside);
+      }
+    }
+    const terms=document.createElement("div");terms.className="terms";this.renderTerms(terms,readyIds);
+    if(this.outsideAtoms.length){const p=document.createElement("span");p.className="parenthesized";const l=document.createElement("span"),r=document.createElement("span");l.className=r.className="paren";l.textContent="(";r.textContent=")";p.append(l,terms,r);root.appendChild(p)}else root.appendChild(terms);
+    this.dom.expression.appendChild(root);this.renderInstruction();this.bindMathEvents();this.bindTermDrag();this.bindGroupDrag();this.bindOutsideDrag();this.animateChangedGroups();this.dom.success.classList.toggle("show",this.done);
+  }
+
+  renderTerms(container,readyIds){
+    const commonExists=this.hasCommonFactors();
+    this.terms.forEach((term,index)=>{
+      const unit=document.createElement("span");unit.className="term-unit";unit.dataset.termId=term.id;unit.dataset.animId="term_"+term.id;
+      if(index===0){if(term.sign<0)unit.appendChild(this.createAddSub("−"))}
+      else{const prev=this.terms[index-1],can=!commonExists&&this.areLikeTerms(prev,term);unit.appendChild(this.createAddSub(term.sign<0?"−":"+",can?prev.id:null,can?term.id:null))}
+      const body=document.createElement("span");body.className="term-body";const h=document.createElement("span");h.className="drag-handle";h.textContent="⠿";h.draggable=true;h.dataset.termDrag=term.id;body.appendChild(h);
+      if(!term.groups.length){const one=document.createElement("span");one.className="factor-group singleton";one.textContent="1";body.appendChild(one)}
+      else term.groups.forEach((group,gi)=>{if(gi>0&&term.explicitProduct)body.appendChild(this.createTermMultiply(term.id));body.appendChild(this.renderGroup(term,group,readyIds))});
+      unit.appendChild(body);container.appendChild(unit);
+    });
+  }
+
+  renderGroup(term,group,readyIds){
+    const wrap=document.createElement("span");wrap.className="factor-group-wrap";wrap.dataset.termId=term.id;wrap.dataset.groupId=group.id;const handle=this.createFactorDragHandle();handle.dataset.dragGroup=group.id;handle.dataset.dragTerm=term.id;wrap.appendChild(handle);
+    const box=document.createElement("span");box.dataset.groupId=group.id;box.dataset.termId=term.id;box.dataset.animId="group_"+group.id;
+    if(group.atoms.length>1&&group.expanded){box.className="factor-group expanded";group.atoms.forEach((atom,i)=>{if(i)box.appendChild(this.createMultiply());box.appendChild(this.createTermAtom(term,group,atom,readyIds))})}
+    else if(group.atoms.length===1){box.className="factor-group singleton";box.appendChild(this.createTermAtom(term,group,group.atoms[0],readyIds))}
+    else{box.className="factor-group collapsed";box.innerHTML=this.summarizeAtoms(group.atoms)}
+    wrap.appendChild(box);return wrap;
+  }
+
+  createTermAtom(term,group,atom,readyIds){const e=document.createElement("span");e.className="atom"+(atom.type==="polynomial"?" polynomial-factor":"")+(readyIds.has(atom.id)?" ready-common":"");e.dataset.atomId=atom.id;e.dataset.groupId=group.id;e.dataset.termId=term.id;e.dataset.animId="atom_"+atom.id;e.innerHTML=this.atomHTML(atom);return e}
+  createAddSub(text,left=null,right=null){const e=document.createElement("span");e.className="operator add-sub";e.textContent=text;if(left&&right){e.classList.add("like-term-operation");e.dataset.combineLeft=left;e.dataset.combineRight=right}return e}
+  createMultiply(){const e=document.createElement("span");e.className="operator multiply";e.textContent="·";return e}
+  createTermMultiply(termId){const e=this.createMultiply();e.classList.add("term-product-dot");e.dataset.termProduct=termId;return e}
+  createFactorDragHandle(){const h=document.createElement("span");h.className="factor-drag-handle";h.textContent="↔";h.draggable=true;h.addEventListener("click",e=>e.stopPropagation());h.addEventListener("mousedown",e=>e.stopPropagation());return h}
+
+  renderInstruction(){
+    const ready=this.getReadyCommonMap();let main="",sub="";
+    if(this.done){main="Tamamlandı.";sub="Görünürde açık hiçbir çarpım, benzer terim veya ortak çarpan kalmadı."}
+    else if(ready.size){main="Kırmızı çarpanlar dışarı çıkmaya hazır.";sub="Kırmızı ortak çarpana tıklarsan parantezin üstünden kavis çizerek dışarı çıkar."}
+    else if(this.hasCommonFactors()){main="Ortak çarpanları aç.";sub="Ortak çarpanın gerekli bütün kopyaları açıldığında kırmızı olur."}
+    else if(this.hasLikeTerms()){if(this.hasAdjacentLikeTerms()){main="Yan yana benzer terimler var.";sub="Aralarındaki + veya − işaretine tıklayarak gerekli işlemi yap."}else{main="Benzer terimler var.";sub="⠿ ile benzer terimleri yan yana getir; sonra aralarındaki işlem işaretine tıkla."}}
+    else if(this.hasExpandedGroups()){main="Açılmış çarpan gruplarını kapat.";sub="2·3 gibi açık bir gruptaki çarpana tıklayarak grubu kapat."}
+    else if(this.hasExplicitProducts()){main="Çarpma noktasıyla açık kalan terimleri kapat.";sub="Örneğin 3·x → 3x."}
+    else if(this.outsideAtoms.length&&!this.outsideCollapsed){main="Parantezin önündeki çarpanları kapat.";sub="Dışarıdaki bir çarpana tıklayarak çarpımı toparla."}
+    else{main="İşlem henüz tamamlanmadı.";sub="Açık kalan işlemleri kontrol et."}
+    this.dom.instructionMain.textContent=main;this.dom.instructionSub.textContent=sub;
+  }
+
+  bindMathEvents(){
+    document.querySelectorAll(".factor-group.collapsed[data-group-id]").forEach(e=>e.addEventListener("click",ev=>{ev.stopPropagation();this.openGroup(e.dataset.termId,e.dataset.groupId)}));
+    document.querySelectorAll(".atom[data-atom-id]").forEach(e=>e.addEventListener("click",ev=>{ev.stopPropagation();this.clickTermAtom(e.dataset.termId,e.dataset.groupId,e.dataset.atomId)}));
+    document.querySelectorAll("[data-term-product]").forEach(e=>e.addEventListener("click",ev=>{ev.stopPropagation();this.closeTermProduct(e.dataset.termProduct)}));
+    document.querySelectorAll("[data-combine-left][data-combine-right]").forEach(e=>e.addEventListener("click",ev=>{ev.stopPropagation();this.combineAdjacentLikeTerms(e.dataset.combineLeft,e.dataset.combineRight)}));
+    document.querySelectorAll(".outside-factor").forEach(e=>e.addEventListener("click",ev=>{ev.stopPropagation();this.clickOutsideFactor()}));
+    const closed=document.querySelector(".outside.collapsed");if(closed)closed.addEventListener("click",()=>this.openOutsideProduct());
+  }
+
+  bindTermDrag(){
+    document.querySelectorAll("[data-term-drag]").forEach(h=>{h.addEventListener("dragstart",e=>{this.draggedTermId=h.dataset.termDrag;e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",this.draggedTermId)});h.addEventListener("dragend",()=>this.draggedTermId=null)});
+    document.querySelectorAll(".term-unit").forEach(target=>{target.addEventListener("dragover",e=>{if(this.draggedTermId)e.preventDefault()});target.addEventListener("drop",e=>{if(!this.draggedTermId)return;e.preventDefault();const id=target.dataset.termId;if(id===this.draggedTermId)return;const r=target.getBoundingClientRect();this.moveTerm(this.draggedTermId,id,e.clientX<r.left+r.width/2)})});
+  }
+
+  bindGroupDrag(){
+    document.querySelectorAll("[data-drag-group]").forEach(h=>{h.addEventListener("dragstart",e=>{e.stopPropagation();this.draggedGroupId=h.dataset.dragGroup;this.draggedGroupTermId=h.dataset.dragTerm});h.addEventListener("dragend",()=>{this.draggedGroupId=null;this.draggedGroupTermId=null})});
+    document.querySelectorAll(".factor-group-wrap").forEach(target=>{target.addEventListener("dragover",e=>{if(this.draggedGroupId&&target.dataset.termId===this.draggedGroupTermId)e.preventDefault()});target.addEventListener("drop",e=>{if(!this.draggedGroupId||target.dataset.termId!==this.draggedGroupTermId)return;e.preventDefault();e.stopPropagation();const id=target.dataset.groupId;if(id===this.draggedGroupId)return;const r=target.getBoundingClientRect();this.moveGroup(this.draggedGroupTermId,this.draggedGroupId,id,e.clientX<r.left+r.width/2)})});
+  }
+
+  bindOutsideDrag(){
+    if(this.outsideCollapsed)return;
+    document.querySelectorAll("[data-drag-outside]").forEach(h=>{h.addEventListener("dragstart",e=>{e.stopPropagation();this.draggedOutsideId=h.dataset.dragOutside});h.addEventListener("dragend",()=>this.draggedOutsideId=null)});
+    document.querySelectorAll(".outside-factor-wrap").forEach(target=>{target.addEventListener("dragover",e=>{if(this.draggedOutsideId)e.preventDefault()});target.addEventListener("drop",e=>{if(!this.draggedOutsideId)return;e.preventDefault();e.stopPropagation();const id=target.dataset.outsideId;if(id===this.draggedOutsideId)return;const r=target.getBoundingClientRect();this.moveOutsideFactor(this.draggedOutsideId,id,e.clientX<r.left+r.width/2)})});
+  }
+
+  moveTerm(sourceId,targetId,before){const old=this.capturePositions(),si=this.terms.findIndex(t=>t.id===sourceId);if(si<0)return;const [m]=this.terms.splice(si,1),ti=this.terms.findIndex(t=>t.id===targetId),at=before?ti:ti+1;this.terms.splice(at,0,m);this.updateDoneState();this.render();this.runFlip(old)}
+  moveGroup(termId,sourceId,targetId,before){const term=this.getTerm(termId);if(!term)return;const old=this.capturePositions(),si=term.groups.findIndex(g=>g.id===sourceId);if(si<0)return;const [m]=term.groups.splice(si,1),ti=term.groups.findIndex(g=>g.id===targetId),at=before?ti:ti+1;term.groups.splice(at,0,m);term.explicitProduct=term.groups.length>1;this.updateDoneState();this.render();this.runFlip(old)}
+  moveOutsideFactor(sourceId,targetId,before){const old=this.capturePositions(),si=this.outsideAtoms.findIndex(a=>a.id===sourceId);if(si<0)return;const [m]=this.outsideAtoms.splice(si,1),ti=this.outsideAtoms.findIndex(a=>a.id===targetId),at=before?ti:ti+1;this.outsideAtoms.splice(at,0,m);this.outsideCollapsed=this.outsideAtoms.length<=1;this.updateDoneState();this.render();this.runFlip(old)}
+
+  renderWithFlip(){const old=this.capturePositions();this.render();this.runFlip(old)}
+  capturePositions(){const map=new Map();document.querySelectorAll("[data-anim-id]").forEach(e=>map.set(e.dataset.animId,e.getBoundingClientRect()));return map}
+  runFlip(old){document.querySelectorAll("[data-anim-id]").forEach(e=>{const a=old.get(e.dataset.animId);if(!a)return;const b=e.getBoundingClientRect(),dx=a.left-b.left,dy=a.top-b.top;if(Math.abs(dx)<.5&&Math.abs(dy)<.5)return;e.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:"translate(0,0)"}],{duration:this.animationDuration,easing:"cubic-bezier(.22,.82,.28,1)"})})}
+  animateChangedGroups(){for(const id of this.changedGroupIds){const e=document.querySelector(`[data-group-id="${id}"]`);if(e)e.animate([{opacity:.42,transform:"scale(.88)"},{opacity:1,transform:"scale(1)"}],{duration:300,easing:"cubic-bezier(.2,.8,.25,1)"})}this.changedGroupIds.clear()}
+
+  flyFactorCurved(from,to,paren,html){
+    const flyer=document.createElement("div");flyer.className="flying-factor";flyer.innerHTML=html;document.body.appendChild(flyer);let fr=flyer.getBoundingClientRect();const sx=from.left+from.width/2,sy=from.top+from.height/2;flyer.style.left=(sx-fr.width/2)+"px";flyer.style.top=(sy-fr.height/2)+"px";const tx=to.left+to.width/2,ty=to.top+to.height/2,dx=tx-sx,dy=ty-sy;let obstacle=Math.min(from.top,to.top);if(paren)obstacle=Math.min(obstacle,paren.top);const apex=obstacle-Math.max(52,from.height*1.4),rel=apex-sy,a=2*dy-4*rel,b=4*rel-dy,frames=[],steps=16;for(let i=0;i<=steps;i++){const t=i/steps;frames.push({offset:t,transform:`translate(${dx*t}px,${a*t*t+b*t}px)`,color:t>.78?"#182033":"#d93643"})}const anim=flyer.animate(frames,{duration:520,easing:"linear",fill:"forwards"});anim.onfinish=()=>flyer.remove();
+  }
+
+  bump(selector){const e=document.querySelector(selector);if(!e)return;e.animate([{transform:"translateX(0)"},{transform:"translateX(-4px)"},{transform:"translateX(4px)"},{transform:"translateX(-2px)"},{transform:"translateX(0)"}],{duration:220,easing:"ease-out"})}
 }
 
-/* ==== UI ==== */
-const stepBadge=$("stepBadge"), caption=$("caption");
-const btnPrev=$("btnPrev"), btnNext=$("btnNext"), btnPlay=$("btnPlay"), btnReset=$("btnReset");
-let steps=[], idx=0, auto=null;
-
-function setSteps(arr){ steps=arr; idx=0; updateStep(); }
-async function updateStep(){
-  if(!steps.length){ stepBadge.textContent="Adım 0/0"; caption.textContent=""; return; }
-  $("animLayer").innerHTML="";
-  const res=steps[idx].make(); if(res && typeof res.then==="function"){ await res; }
-  stepBadge.textContent=`Adım ${idx+1}/${steps.length}`;
-  caption.textContent=steps[idx].caption;
-}
-btnPrev.onclick=()=>{ if(idx>0){ idx--; updateStep(); } };
-btnNext.onclick=async ()=>{
-  if(!steps.length) return;
-  const cur=steps[idx];
-  if(cur.onNext){ const ok=await cur.onNext(); if(!ok) return; }
-  if(idx<steps.length-1){ idx++; await updateStep(); }
-};
-btnPlay.onclick=async ()=>{
-  if(auto){ clearInterval(auto); auto=null; btnPlay.textContent="Oynat ▶"; return; }
-  btnPlay.textContent="Durdur ⏸";
-  auto=setInterval(async ()=>{
-    if(steps[idx]?.onNext){ const ok=await steps[idx].onNext(); if(!ok) return; }
-    if(idx<steps.length-1){ idx++; await updateStep(); }
-    else { clearInterval(auto); auto=null; btnPlay.textContent="Oynat ▶"; }
-  }, 1200);
-};
-btnReset.onclick=()=>{ if(steps.length){ idx=0; updateStep(); } };
-
-function run(input){
-  try{ clearErr(); const parsed=parseExpression(input); setSteps(buildSteps(parsed)); }
-  catch(e){ err(e.message); }
-}
-
-/* ==== Butonlar & açılış ==== */
-$("btnBuild").onclick = ()=> run($("inp").value);
-$("btnDemo1").onclick = ()=>{ $("inp").value="6x+2y"; run("6x+2y"); };
-$("btnDemo2").onclick = ()=>{ $("inp").value="6x^2+3x^3"; run("6x^2+3x^3"); };
-$("btnDemo3").onclick = ()=>{ $("inp").value="2xyz-xyz"; run("2xyz-xyz"); };
-
-$("inp").value="6x+2y"; run("6x+2y");
-
-window.addEventListener("keydown",(e)=>{
-  if(e.ctrlKey && e.key==="Enter"){ e.preventDefault(); btnNext.click(); }
-  if(e.shiftKey && e.key==="Enter"){ e.preventDefault(); btnPrev.click(); }
-});
-});
+const engine=new CommonFactorEngine();
 </script>
 </body>
 </html>
