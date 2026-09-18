@@ -19,9 +19,9 @@ body{padding:24px 14px 50px;background:var(--bg);color:var(--text);font-family:I
 button,.factor-group,.atom,.outside-factor,.drag-handle,.factor-drag-handle,.operator{-webkit-tap-highlight-color:transparent!important;touch-action:manipulation}
 button{font:inherit}
 .app{width:min(1160px,100%);margin:auto}
-.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:15px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
 .title h1{margin:0;font-size:clamp(23px,3vw,32px);letter-spacing:-.035em}
-.title p{margin:5px 0 0;color:var(--muted);font-size:13px}
+.title p{display:none}
 .controls{display:flex;flex-wrap:wrap;gap:8px}
 button{padding:10px 15px;border:1px solid var(--border);border-radius:11px;background:#fff;color:var(--text);font-size:14px;font-weight:750;cursor:pointer;transition:.14s ease}
 button:hover{background:#f7f9fc} button:active{transform:scale(.97)}
@@ -46,10 +46,10 @@ button.active{background:var(--blue);border-color:var(--blue);color:#fff;box-sha
 }
 .home-btn:hover{background:#f7f9fc}
 .home-btn:active{transform:scale(.97)}
-.board{min-height:550px;padding:21px 20px 25px;overflow:visible;background:var(--panel);border:1px solid var(--border);border-radius:23px;box-shadow:var(--shadow)}
-.info-row{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:7px;margin-bottom:20px}
+.board{min-height:0;padding:10px 20px 18px;overflow:visible;background:var(--panel);border:1px solid var(--border);border-radius:23px;box-shadow:var(--shadow)}
+.info-row{display:none}
 .info-pill{padding:7px 11px;border-radius:999px;background:#f5f7fa;color:#687285;font-size:11px;font-weight:750}.info-pill strong{color:#394359}
-.expression-area{min-height:310px;display:flex;justify-content:center;align-items:center;padding:60px 3px 34px;overflow:visible}
+.expression-area{min-height:220px;display:flex;justify-content:center;align-items:center;padding:24px 3px 22px;overflow:visible}
 #expression{width:100%;display:flex;justify-content:center;align-items:center;overflow:visible}
 .math-expression{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;overflow:visible;font-family:var(--math-font);font-size:var(--math-size);font-weight:400;font-style:normal;line-height:1;color:var(--text)}
 .math-expression .terms,.math-expression .term-unit,.math-expression .term-body,.math-expression .factor-group-wrap,.math-expression .factor-group,.math-expression .atom,.math-expression .outside,.math-expression .outside-factor-wrap,.math-expression .outside-factor,.math-expression .operator{font-family:inherit;font-size:1em;font-weight:400;font-style:normal;line-height:1}
@@ -67,16 +67,16 @@ button.active{background:var(--blue);border-color:var(--blue);color:#fff;box-sha
 .factor-group-wrap{position:relative;display:inline-flex;justify-content:center;align-items:center;padding:0;margin:0;overflow:visible;border-radius:.2em}.factor-group{position:relative;display:inline-flex;justify-content:center;align-items:center;height:1.2em;padding:0;margin:0;border-radius:.18em}.factor-group.collapsed{padding:0 .08em;cursor:pointer}.factor-group.collapsed:hover{background:var(--blue-light)}.factor-group.expanded{padding:0 .08em;background:#f7f9fc;box-shadow:inset 0 0 0 1px #e5e9ef}.factor-group.singleton{padding:0 .04em}
 .factor-drag-handle{position:absolute;left:50%;top:-17px;transform:translateX(-50%);z-index:60;display:flex;justify-content:center;align-items:center;width:22px;height:14px;padding:0;margin:0;border-radius:5px;font-family:Arial,sans-serif;font-size:10px;line-height:1;color:#b9c0cb;opacity:0;cursor:grab}.factor-group-wrap:hover .factor-drag-handle,.outside-factor-wrap:hover .factor-drag-handle{opacity:.9}.factor-drag-handle:hover{background:#edf1f6;color:#56627a}
 .atom{display:inline-flex;justify-content:center;align-items:center;min-width:.52em;height:1.2em;padding:0 .06em;margin:0;border-radius:.16em;color:var(--text);cursor:pointer}.atom:hover{background:var(--blue-light);color:var(--blue)}.atom.polynomial-factor{padding:0 .035em}.atom.ready-common{color:var(--red)}.atom.ready-common:hover{background:var(--red-light);color:var(--red)}
-.instruction{width:min(860px,100%);min-height:82px;margin:5px auto 0;padding:14px 18px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:#f8fafc;border:1px solid #edf0f4;border-radius:15px}#instructionMain{font-size:15px;font-weight:800}#instructionSub{margin-top:5px;color:var(--muted);font-size:12px;line-height:1.5}
+.instruction{display:none}#instructionMain{font-size:15px;font-weight:800}#instructionSub{margin-top:5px;color:var(--muted);font-size:12px;line-height:1.5}
 .success{display:none;justify-content:center;align-items:center;gap:9px;margin-top:17px;color:var(--green);font-size:17px;font-weight:850}.success.show{display:flex}.success-icon{width:30px;height:30px;display:flex;justify-content:center;align-items:center;border-radius:50%;background:#dcf5e8}
 .flying-factor{position:fixed;z-index:10000;pointer-events:none;display:flex;justify-content:center;align-items:center;padding:0 .08em;border-radius:8px;background:#fff;color:var(--red);font-family:var(--math-font);font-size:var(--math-size);font-weight:400;line-height:1;will-change:transform,color}
-@media(max-width:650px){:root{--math-size:27px}body{padding:8px 6px 35px}.board{padding:15px 8px 22px;border-radius:18px}.title h1{font-size:22px}.title p{font-size:11px}button,.home-btn{padding:9px 11px;font-size:13px}.expression-area{min-height:330px;padding:58px 0 20px}.drag-handle,.factor-drag-handle{opacity:.5}}
+@media(max-width:650px){:root{--math-size:27px}body{padding:8px 6px 35px}.board{padding:15px 8px 22px;border-radius:18px}.title h1{font-size:22px}.title p{font-size:11px}button,.home-btn{padding:9px 11px;font-size:13px}.expression-area{min-height:210px;padding:22px 0 18px}.drag-handle,.factor-drag-handle{opacity:.5}}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topbar">
-    <div class="title"><h1>Ortak Çarpan</h1><p>Çarpanları aç, ortak olanları çıkar, benzer terimleri topla.</p></div>
+    <div class="title"><h1>Ortak Çarpan</h1></div>
     <div class="controls">
       <a id="homeBtn" class="home-btn" href="../index.html" aria-label="Projeler ana sayfası">⌂ Home</a>
       <button id="simpleBtn" class="active" type="button">Basit</button>
@@ -85,13 +85,6 @@ button.active{background:var(--blue);border-color:var(--blue);color:#fff;box-sha
     </div>
   </div>
   <div class="board">
-    <div class="info-row">
-      <div class="info-pill"><strong>Kırmızı:</strong> dışarı çıkmaya hazır</div>
-      <div class="info-pill"><strong>+ / −:</strong> benzer terimleri topla</div>
-      <div class="info-pill"><strong>· :</strong> çarpımı kapat</div>
-      <div class="info-pill"><strong>↔:</strong> çarpan sırası</div>
-      <div class="info-pill"><strong>⠿:</strong> terim sırası</div>
-    </div>
     <div class="expression-area"><div id="expression"></div></div>
     <div class="instruction"><div id="instructionMain"></div><div id="instructionSub"></div></div>
     <div id="success" class="success"><div class="success-icon">✓</div><div>İşlem tamamlandı.</div></div>
