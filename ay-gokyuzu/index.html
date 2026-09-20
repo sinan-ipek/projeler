@@ -203,6 +203,38 @@ input[type="range"] {
 
     box-shadow:
         0 8px 25px rgba(0,0,0,0.28);
+
+    cursor: pointer;
+
+    transform: scale(1);
+
+    transform-origin: top center;
+
+    transition:
+        transform 0.20s ease,
+        box-shadow 0.20s ease,
+        background 0.20s ease;
+
+    position: relative;
+
+    z-index: 1;
+
+    user-select: none;
+}
+
+.flagCard:hover {
+    background: rgba(16,31,52,0.94);
+}
+
+.flagCard.expanded {
+    transform: scale(2.35);
+
+    z-index: 100;
+
+    background: rgba(8,18,32,0.98);
+
+    box-shadow:
+        0 16px 46px rgba(0,0,0,0.52);
 }
 
 .flagImageBox {
@@ -595,6 +627,10 @@ input[type="range"] {
         padding: 4px 3px;
     }
 
+    .flagCard.expanded {
+        transform: scale(2.05);
+    }
+
     .flagImageBox {
         width: 40px;
         height: 26px;
@@ -669,6 +705,10 @@ input[type="range"] {
 
     .flagCard {
         width: 44px;
+    }
+
+    .flagCard.expanded {
+        transform: scale(1.85);
     }
 
     .flagImageBox {
@@ -1430,6 +1470,18 @@ const nearestMoonName =
     );
 
 
+const currentCountryCard =
+    document.getElementById(
+        "currentCountryCard"
+    );
+
+
+const nearestMoonFlagCard =
+    document.getElementById(
+        "nearestMoonFlagCard"
+    );
+
+
 /* ============================================================
    BAYRAK GÖRSEL YÖNETİMİ
    ============================================================ */
@@ -1513,6 +1565,70 @@ installFlagHandlers(
 installFlagHandlers(
     nearestMoonFlag,
     nearestMoonEmoji
+);
+
+
+/* ============================================================
+   BAYRAK KARTLARINI TIKLAYARAK BÜYÜT / KÜÇÜLT
+   ============================================================ */
+
+function toggleFlagCard(
+    card
+) {
+
+    const shouldExpand =
+        !card.classList.contains(
+            "expanded"
+        );
+
+
+    /*
+        Aynı anda yalnızca bir bayrak büyük kalır.
+        Aynı bayrağa tekrar tıklanırsa küçülür.
+    */
+
+    currentCountryCard.classList.remove(
+        "expanded"
+    );
+
+
+    nearestMoonFlagCard.classList.remove(
+        "expanded"
+    );
+
+
+    if (
+        shouldExpand
+    ) {
+
+        card.classList.add(
+            "expanded"
+        );
+    }
+}
+
+
+currentCountryCard.addEventListener(
+    "click",
+
+    () => {
+
+        toggleFlagCard(
+            currentCountryCard
+        );
+    }
+);
+
+
+nearestMoonFlagCard.addEventListener(
+    "click",
+
+    () => {
+
+        toggleFlagCard(
+            nearestMoonFlagCard
+        );
+    }
 );
 
 
