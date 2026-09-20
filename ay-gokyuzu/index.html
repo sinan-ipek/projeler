@@ -13,41 +13,41 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:system-ui,
 #app{position:relative;width:100vw;height:100vh}
 #homeBtn{position:absolute;left:18px;top:18px;z-index:50;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#fff;background:rgba(8,18,32,.88);border:1px solid rgba(255,255,255,.18);box-shadow:0 8px 24px rgba(0,0,0,.3);font-size:22px;backdrop-filter:blur(10px)}
 #homeBtn:hover{background:rgba(24,45,70,.95)}
-#datePanel{position:absolute;top:18px;left:50%;transform:translateX(-50%);display:flex;gap:22px;padding:14px 22px;border-radius:18px;background:rgba(8,18,32,.82);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 35px rgba(0,0,0,.35);z-index:20}
+#datePanel{position:absolute;top:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;padding:12px 18px;border-radius:18px;background:rgba(8,18,32,.82);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 35px rgba(0,0,0,.35);z-index:20}
 .dateControl{width:180px}
 .dateHeader{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px}
 .dateTitle{font-size:12px;opacity:.68;letter-spacing:.08em;text-transform:uppercase}
 .dateValue{font-size:20px;font-weight:650}
 input[type=range]{width:100%;cursor:pointer}
-#moonPanel{position:absolute;left:28px;top:126px;width:min(46vw,610px);height:min(67vh,620px);min-width:420px;min-height:430px;border-radius:24px;overflow:hidden;background:#02050a;border:1px solid rgba(255,255,255,.17);box-shadow:0 18px 65px rgba(0,0,0,.48);z-index:5}
+#moonPanel{position:absolute;left:28px;top:126px;width:min(50vw,650px);height:min(67vh,620px);min-width:420px;min-height:430px;border-radius:24px;overflow:hidden;background:#02050a;border:1px solid rgba(255,255,255,.17);box-shadow:0 18px 65px rgba(0,0,0,.48);z-index:5}
 #moonCanvas{width:100%;height:100%;display:block}
 #moonPanelTitle{position:absolute;left:18px;top:15px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.68);pointer-events:none}
 #moonInfo{position:absolute;left:18px;bottom:19px;padding:10px 13px;border-radius:12px;background:rgba(0,0,0,.42);backdrop-filter:blur(7px);font-size:13px;line-height:1.55;color:rgba(255,255,255,.89);pointer-events:none}
 #moonStatus{position:absolute;right:18px;bottom:19px;padding:8px 12px;border-radius:999px;background:rgba(0,0,0,.42);font-size:12px;pointer-events:none}
-#globeBox{position:absolute;right:25px;top:120px;width:360px;height:410px;border-radius:24px;background:linear-gradient(160deg,rgba(18,36,58,.92),rgba(4,11,21,.92));border:1px solid rgba(255,255,255,.15);box-shadow:0 18px 65px rgba(0,0,0,.42);overflow:hidden;z-index:10}
+#globeBox{position:absolute;left:calc(28px + min(50vw,650px) + 24px);right:auto;top:126px;width:360px;height:410px;border-radius:24px;background:linear-gradient(160deg,rgba(18,36,58,.92),rgba(4,11,21,.92));border:1px solid rgba(255,255,255,.15);box-shadow:0 18px 65px rgba(0,0,0,.42);overflow:hidden;z-index:10}
 #globeTitle{position:absolute;top:15px;left:18px;z-index:3;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.68);pointer-events:none}
 #globeHint{position:absolute;top:36px;left:18px;z-index:3;font-size:11px;color:rgba(255,255,255,.45);pointer-events:none}
 #globeCanvas{display:block;width:100%;height:350px;cursor:grab;touch-action:none}
 #locationInfo{position:absolute;left:16px;right:16px;bottom:15px;display:flex;justify-content:space-between;gap:10px;font-size:12px;color:rgba(255,255,255,.78)}
 .coord{font-variant-numeric:tabular-nums}
-#flagPanel{position:absolute;width:126px;height:100px;padding:9px;border-radius:14px;background:linear-gradient(150deg,rgba(16,30,48,.94),rgba(4,11,20,.94));border:1px solid rgba(255,255,255,.15);box-shadow:0 10px 26px rgba(0,0,0,.30);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:12}
-#flagImageBox{width:76px;height:50px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:5px;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.10)}
+#flagPanel{position:relative;width:92px;height:66px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:0 0 auto}
+#flagImageBox{width:58px;height:38px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:4px;background:rgba(0,0,0,.16)}
 #flagImage{display:none;width:100%;height:100%;object-fit:contain}
-#flagEmoji{display:none;font-size:39px;line-height:1}
-#flagCountry{width:100%;overflow:hidden;text-align:center;white-space:nowrap;text-overflow:ellipsis;font-size:12px;font-weight:600;color:rgba(255,255,255,.92)}
+#flagEmoji{display:none;font-size:31px;line-height:1}
+#flagCountry{width:100%;overflow:hidden;text-align:center;white-space:nowrap;text-overflow:ellipsis;font-size:11px;font-weight:600;color:rgba(255,255,255,.92)}
 #mainTitle{position:absolute;left:30px;bottom:25px;font-size:17px;font-weight:450;color:rgba(255,255,255,.68);z-index:3}
 #timeNotice{position:absolute;right:28px;bottom:25px;font-size:11px;color:rgba(255,255,255,.42);text-align:right;z-index:3}
 @media(max-width:950px){
  #homeBtn{left:10px;top:10px;width:40px;height:40px;font-size:19px}
- #datePanel{width:calc(100% - 64px);left:calc(50% + 22px);top:10px;gap:10px;padding:10px}
+ #datePanel{width:calc(100% - 64px);left:calc(50% + 22px);top:10px;gap:7px;padding:8px 9px}
  .dateControl{flex:1;width:auto;min-width:0}
  .dateValue{font-size:15px}
  .dateTitle{font-size:10px}
  #moonPanel{left:10px;top:105px;width:calc(100% - 20px);min-width:0;height:52vh}
- #globeBox{right:10px;top:auto;bottom:10px;width:230px;height:270px}
+ #globeBox{left:auto;right:10px;top:auto;bottom:10px;width:230px;height:270px}
  #globeCanvas{height:220px}
- #flagPanel{width:108px;height:87px;padding:7px}
- #flagImageBox{width:65px;height:42px}
+ #flagPanel{width:66px;height:54px;padding:0}
+ #flagImageBox{width:48px;height:31px}
  #flagCountry{font-size:11px}
  #mainTitle,#timeNotice{display:none}
 }
@@ -61,6 +61,11 @@ input[type=range]{width:100%;cursor:pointer}
   <div class="dateControl"><div class="dateHeader"><span class="dateTitle">Yıl</span><span class="dateValue" id="yearValue">2026</span></div><input id="yearSlider" type="range" min="1900" max="2100" value="2026" step="1"></div>
   <div class="dateControl"><div class="dateHeader"><span class="dateTitle">Ay</span><span class="dateValue" id="monthValue">Eylül</span></div><input id="monthSlider" type="range" min="1" max="12" value="9" step="1"></div>
   <div class="dateControl"><div class="dateHeader"><span class="dateTitle">Gün</span><span class="dateValue" id="dayValue">20</span></div><input id="daySlider" type="range" min="1" max="30" value="20" step="1"></div>
+
+  <div id="flagPanel">
+  <div id="flagImageBox"><img id="flagImage" alt=""><div id="flagEmoji">🌙</div></div>
+  <div id="flagCountry">Türkiye</div>
+</div>
 </div>
 
 <div id="moonPanel">
@@ -70,10 +75,7 @@ input[type=range]{width:100%;cursor:pointer}
   <div id="moonStatus"></div>
 </div>
 
-<div id="flagPanel">
-  <div id="flagImageBox"><img id="flagImage" alt=""><div id="flagEmoji">🌙</div></div>
-  <div id="flagCountry">Türkiye</div>
-</div>
+
 
 <div id="globeBox">
   <div id="globeTitle">Gözlem Konumu</div>
@@ -122,32 +124,14 @@ let moonPhotoReady=false;
 moonPhoto.onload=()=>{moonPhotoReady=true;updateMoon()};
 moonPhoto.onerror=()=>{moonPhotoReady=false;updateMoon()};
 
-const app=document.getElementById("app");
 const yearSlider=document.getElementById("yearSlider"),monthSlider=document.getElementById("monthSlider"),daySlider=document.getElementById("daySlider");
 const yearValue=document.getElementById("yearValue"),monthValue=document.getElementById("monthValue"),dayValue=document.getElementById("dayValue");
 const latText=document.getElementById("latText"),lonText=document.getElementById("lonText");
-const moonPanel=document.getElementById("moonPanel"),moonCanvas=document.getElementById("moonCanvas"),moonCtx=moonCanvas.getContext("2d");
-const globeBox=document.getElementById("globeBox"),globeCanvas=document.getElementById("globeCanvas"),globeCtx=globeCanvas.getContext("2d");
+const moonCanvas=document.getElementById("moonCanvas"),moonCtx=moonCanvas.getContext("2d");
+const globeCanvas=document.getElementById("globeCanvas"),globeCtx=globeCanvas.getContext("2d");
 const moonInfo=document.getElementById("moonInfo"),moonStatus=document.getElementById("moonStatus");
 const flagPanel=document.getElementById("flagPanel"),flagImage=document.getElementById("flagImage"),flagEmoji=document.getElementById("flagEmoji"),flagCountry=document.getElementById("flagCountry");
 
-function positionFlagPanel(){
- const appRect=app.getBoundingClientRect(),moonRect=moonPanel.getBoundingClientRect(),globeRect=globeBox.getBoundingClientRect(),flagRect=flagPanel.getBoundingClientRect();
- if(window.innerWidth>950){
-   const leftBoundary=moonRect.right-appRect.left,rightBoundary=globeRect.left-appRect.left,gapWidth=rightBoundary-leftBoundary;
-   let x=leftBoundary+gapWidth/2-flagRect.width/2;
-   const minX=leftBoundary+8,maxX=rightBoundary-flagRect.width-8;
-   if(maxX>=minX)x=Math.max(minX,Math.min(maxX,x));
-   const overlapTop=Math.max(moonRect.top,globeRect.top)-appRect.top,overlapBottom=Math.min(moonRect.bottom,globeRect.bottom)-appRect.top;
-   let y=(overlapBottom>overlapTop)?overlapTop+(overlapBottom-overlapTop)/2-flagRect.height/2:300;
-   flagPanel.style.left=x+"px";flagPanel.style.top=y+"px";
- }else{
-   let y=(moonRect.bottom+globeRect.top)/2-appRect.top-flagRect.height/2;
-   let x=(window.innerWidth-flagRect.width)/2;
-   x=Math.max(8,Math.min(window.innerWidth-flagRect.width-8,x));
-   flagPanel.style.left=x+"px";flagPanel.style.top=y+"px";
- }
-}
 flagImage.addEventListener("load",()=>{flagImage.style.display="block";flagEmoji.style.display="none"});
 flagImage.addEventListener("error",()=>{flagImage.style.display="none";flagEmoji.style.display="block"});
 
@@ -371,12 +355,11 @@ async function loadWorld(){
  }catch(error){console.warn("Dünya haritası yüklenemedi:",error);drawGlobe();updateFlagForLocation()}
 }
 
-window.addEventListener("resize",()=>{stars=[];drawGlobe();updateMoon();requestAnimationFrame(positionFlagPanel)});
+window.addEventListener("resize",()=>{stars=[];drawGlobe();updateMoon()});
 function initialize(){
  yearSlider.value=2026;monthSlider.value=9;daySlider.value=20;
  latText.textContent=formatLatitude(selectedLat);lonText.textContent=formatLongitude(selectedLon);
  updateDateControls();drawGlobe();updateFlagForLocation();loadWorld();
- requestAnimationFrame(()=>requestAnimationFrame(positionFlagPanel));
 }
 initialize();
 </script>
