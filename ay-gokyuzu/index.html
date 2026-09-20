@@ -4,364 +4,4785 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Ay Gökyüzü Simülasyonu</title>
+
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js"></script>
+
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 40% 30%,#14223a 0%,#070d18 45%,#02050b 100%);color:#fff}
-#app{position:relative;width:100vw;height:100vh}
-#homeBtn{position:absolute;left:18px;top:18px;z-index:50;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#fff;background:rgba(8,18,32,.88);border:1px solid rgba(255,255,255,.18);box-shadow:0 8px 24px rgba(0,0,0,.3);font-size:22px;backdrop-filter:blur(10px)}
-#homeBtn:hover{background:rgba(24,45,70,.95)}
-#datePanel{position:absolute;top:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;padding:12px 18px;border-radius:18px;background:rgba(8,18,32,.82);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 35px rgba(0,0,0,.35);z-index:20}
-.dateControl{width:180px}
-.dateHeader{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px}
-.dateTitle{font-size:12px;opacity:.68;letter-spacing:.08em;text-transform:uppercase}
-.dateValue{font-size:20px;font-weight:650}
-input[type=range]{width:100%;cursor:pointer}
-#moonPanel{position:absolute;left:28px;top:126px;width:min(50vw,650px);height:min(67vh,620px);min-width:420px;min-height:430px;border-radius:24px;overflow:hidden;background:#02050a;border:1px solid rgba(255,255,255,.17);box-shadow:0 18px 65px rgba(0,0,0,.48);z-index:5}
-#moonCanvas{width:100%;height:100%;display:block}
-#moonPanelTitle{position:absolute;left:18px;top:15px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.68);pointer-events:none}
-#moonInfo{position:absolute;left:18px;bottom:19px;padding:10px 13px;border-radius:12px;background:rgba(0,0,0,.42);backdrop-filter:blur(7px);font-size:13px;line-height:1.55;color:rgba(255,255,255,.89);pointer-events:none}
-#moonStatus{position:absolute;right:18px;bottom:19px;padding:8px 12px;border-radius:999px;background:rgba(0,0,0,.42);font-size:12px;pointer-events:none}
-#globeBox{position:absolute;left:calc(28px + min(50vw,650px) + 24px);right:auto;top:126px;width:360px;height:410px;border-radius:24px;background:linear-gradient(160deg,rgba(18,36,58,.92),rgba(4,11,21,.92));border:1px solid rgba(255,255,255,.15);box-shadow:0 18px 65px rgba(0,0,0,.42);overflow:hidden;z-index:10}
-#globeTitle{position:absolute;top:15px;left:18px;z-index:3;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.68);pointer-events:none}
-#globeHint{position:absolute;top:36px;left:18px;z-index:3;font-size:11px;color:rgba(255,255,255,.45);pointer-events:none}
-#globeCanvas{display:block;width:100%;height:350px;cursor:grab;touch-action:none}
-#locationInfo{position:absolute;left:16px;right:16px;bottom:15px;display:flex;justify-content:space-between;gap:10px;font-size:12px;color:rgba(255,255,255,.78)}
-.coord{font-variant-numeric:tabular-nums}
-#flagPanel{position:relative;width:92px;height:66px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:0 0 auto}
-#flagImageBox{width:58px;height:38px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:4px;background:rgba(0,0,0,.16)}
-#flagImage{display:none;width:100%;height:100%;object-fit:contain}
-#flagEmoji{display:none;font-size:31px;line-height:1}
-#flagCountry{width:100%;overflow:hidden;text-align:center;white-space:nowrap;text-overflow:ellipsis;font-size:11px;font-weight:600;color:rgba(255,255,255,.92)}
-#mainTitle{position:absolute;left:30px;bottom:25px;font-size:17px;font-weight:450;color:rgba(255,255,255,.68);z-index:3}
-#timeNotice{position:absolute;right:28px;bottom:25px;font-size:11px;color:rgba(255,255,255,.42);text-align:right;z-index:3}
-@media(max-width:950px){
- #homeBtn{left:10px;top:10px;width:40px;height:40px;font-size:19px}
- #datePanel{width:calc(100% - 64px);left:calc(50% + 22px);top:10px;gap:7px;padding:8px 9px}
- .dateControl{flex:1;width:auto;min-width:0}
- .dateValue{font-size:15px}
- .dateTitle{font-size:10px}
- #moonPanel{left:10px;top:105px;width:calc(100% - 20px);min-width:0;height:52vh}
- #globeBox{left:auto;right:10px;top:auto;bottom:10px;width:230px;height:270px}
- #globeCanvas{height:220px}
- #flagPanel{width:66px;height:54px;padding:0}
- #flagImageBox{width:48px;height:31px}
- #flagCountry{font-size:11px}
- #mainTitle,#timeNotice{display:none}
+* {
+    box-sizing: border-box;
 }
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    background:
+        radial-gradient(
+            circle at 40% 30%,
+            #14223a 0%,
+            #070d18 45%,
+            #02050b 100%
+        );
+
+    color: white;
+}
+
+#app {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+
+/* =========================================================
+   HOME
+   ========================================================= */
+
+#homeBtn {
+    position: absolute;
+
+    left: 18px;
+    top: 18px;
+
+    z-index: 50;
+
+    width: 46px;
+    height: 46px;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    text-decoration: none;
+
+    color: white;
+
+    background: rgba(8,18,32,0.88);
+
+    border: 1px solid rgba(255,255,255,0.18);
+
+    box-shadow:
+        0 8px 24px rgba(0,0,0,0.30);
+
+    backdrop-filter: blur(10px);
+
+    font-size: 22px;
+}
+
+#homeBtn:hover {
+    background: rgba(24,45,70,0.95);
+}
+
+
+/* =========================================================
+   ÜST KONTROLLER
+   ========================================================= */
+
+#topControls {
+    position: absolute;
+
+    top: 18px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    display: flex;
+    align-items: stretch;
+
+    gap: 10px;
+
+    z-index: 20;
+}
+
+
+/* =========================================================
+   TARİH PANELİ
+   ========================================================= */
+
+#datePanel {
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+
+    padding: 12px 18px;
+
+    border-radius: 18px;
+
+    background: rgba(8,18,32,0.82);
+
+    backdrop-filter: blur(12px);
+
+    border: 1px solid rgba(255,255,255,0.16);
+
+    box-shadow:
+        0 10px 35px rgba(0,0,0,0.35);
+}
+
+.dateControl {
+    width: 172px;
+}
+
+.dateHeader {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+
+    margin-bottom: 7px;
+}
+
+.dateTitle {
+    font-size: 12px;
+
+    opacity: 0.68;
+
+    letter-spacing: 0.08em;
+
+    text-transform: uppercase;
+}
+
+.dateValue {
+    font-size: 20px;
+
+    font-weight: 650;
+}
+
+input[type="range"] {
+    width: 100%;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   İKİ KÜÇÜK BAYRAK
+   ========================================================= */
+
+#topFlags {
+    display: flex;
+    align-items: stretch;
+
+    gap: 7px;
+}
+
+.flagCard {
+    width: 74px;
+    height: 76px;
+
+    padding: 7px 5px 5px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 4px;
+
+    border-radius: 13px;
+
+    background: rgba(8,18,32,0.82);
+
+    backdrop-filter: blur(12px);
+
+    border: 1px solid rgba(255,255,255,0.15);
+
+    box-shadow:
+        0 8px 25px rgba(0,0,0,0.28);
+}
+
+.flagImageBox {
+    width: 50px;
+    height: 33px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border-radius: 4px;
+
+    background: rgba(0,0,0,0.20);
+}
+
+.flagImage {
+    display: none;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+}
+
+.flagEmoji {
+    display: none;
+
+    font-size: 28px;
+
+    line-height: 1;
+}
+
+.flagCountry {
+    width: 100%;
+
+    overflow: hidden;
+
+    text-align: center;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+
+    font-size: 9.5px;
+
+    line-height: 1.1;
+
+    font-weight: 600;
+
+    color: rgba(255,255,255,0.92);
+}
+
+
+/* =========================================================
+   AY + DÜNYA ORTAK ALANI
+   ========================================================= */
+
+#workspace {
+    position: absolute;
+
+    top: 126px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    width: min(
+        calc(100vw - 56px),
+        1022px
+    );
+
+    display: flex;
+    align-items: flex-start;
+
+    gap: 12px;
+
+    z-index: 5;
+}
+
+
+/* =========================================================
+   AY PANELİ
+   ========================================================= */
+
+#moonPanel {
+    position: relative;
+
+    flex: 1 1 auto;
+
+    min-width: 0;
+
+    height: min(67vh,620px);
+
+    min-height: 430px;
+
+    border-radius: 24px;
+
+    overflow: hidden;
+
+    background: #02050a;
+
+    border: 1px solid rgba(255,255,255,0.17);
+
+    box-shadow:
+        0 18px 65px rgba(0,0,0,0.48);
+}
+
+#moonCanvas {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+}
+
+#moonPanelTitle {
+    position: absolute;
+
+    left: 18px;
+    top: 15px;
+
+    font-size: 13px;
+
+    letter-spacing: 0.08em;
+
+    text-transform: uppercase;
+
+    color: rgba(255,255,255,0.68);
+
+    pointer-events: none;
+}
+
+#moonInfo {
+    position: absolute;
+
+    left: 18px;
+    bottom: 19px;
+
+    padding: 10px 13px;
+
+    border-radius: 12px;
+
+    background: rgba(0,0,0,0.42);
+
+    backdrop-filter: blur(7px);
+
+    font-size: 13px;
+
+    line-height: 1.55;
+
+    color: rgba(255,255,255,0.89);
+
+    pointer-events: none;
+}
+
+#moonStatus {
+    position: absolute;
+
+    right: 18px;
+    bottom: 19px;
+
+    padding: 8px 12px;
+
+    border-radius: 999px;
+
+    background: rgba(0,0,0,0.42);
+
+    font-size: 12px;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   DÜNYA PANELİ
+   ========================================================= */
+
+#globeBox {
+    position: relative;
+
+    flex: 0 0 360px;
+
+    width: 360px;
+    height: 410px;
+
+    border-radius: 24px;
+
+    background:
+        linear-gradient(
+            160deg,
+            rgba(18,36,58,0.92),
+            rgba(4,11,21,0.92)
+        );
+
+    border: 1px solid rgba(255,255,255,0.15);
+
+    box-shadow:
+        0 18px 65px rgba(0,0,0,0.42);
+
+    overflow: hidden;
+}
+
+#globeTitle {
+    position: absolute;
+
+    top: 15px;
+    left: 18px;
+
+    z-index: 3;
+
+    font-size: 13px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.08em;
+
+    color: rgba(255,255,255,0.68);
+
+    pointer-events: none;
+}
+
+#globeHint {
+    position: absolute;
+
+    top: 36px;
+    left: 18px;
+
+    z-index: 3;
+
+    font-size: 11px;
+
+    color: rgba(255,255,255,0.45);
+
+    pointer-events: none;
+}
+
+#globeCanvas {
+    display: block;
+
+    width: 100%;
+    height: 350px;
+
+    cursor: grab;
+
+    touch-action: none;
+}
+
+#globeCanvas:active {
+    cursor: grabbing;
+}
+
+#locationInfo {
+    position: absolute;
+
+    left: 16px;
+    right: 16px;
+    bottom: 15px;
+
+    display: flex;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    font-size: 12px;
+
+    color: rgba(255,255,255,0.78);
+}
+
+.coord {
+    font-variant-numeric: tabular-nums;
+}
+
+
+/* =========================================================
+   ALT YAZILAR
+   ========================================================= */
+
+#mainTitle {
+    position: absolute;
+
+    left: 30px;
+    bottom: 25px;
+
+    font-size: 17px;
+
+    font-weight: 450;
+
+    color: rgba(255,255,255,0.68);
+
+    z-index: 3;
+}
+
+#timeNotice {
+    position: absolute;
+
+    right: 28px;
+    bottom: 25px;
+
+    font-size: 11px;
+
+    color: rgba(255,255,255,0.42);
+
+    text-align: right;
+
+    z-index: 3;
+}
+
+
+/* =========================================================
+   ORTA GENİŞLİK
+   ========================================================= */
+
+@media (max-width: 1120px) {
+
+    .dateControl {
+        width: 142px;
+    }
+
+    #workspace {
+        width: calc(100vw - 36px);
+    }
+
+    #globeBox {
+        flex-basis: 330px;
+
+        width: 330px;
+    }
+}
+
+
+/* =========================================================
+   MOBİL / DAR EKRAN
+   ========================================================= */
+
+@media (max-width: 820px) {
+
+    #homeBtn {
+        left: 10px;
+        top: 10px;
+
+        width: 40px;
+        height: 40px;
+
+        font-size: 19px;
+    }
+
+    #topControls {
+        top: 10px;
+        left: 58px;
+        right: 8px;
+
+        transform: none;
+
+        gap: 5px;
+    }
+
+    #datePanel {
+        flex: 1;
+
+        min-width: 0;
+
+        gap: 5px;
+
+        padding: 8px 8px;
+    }
+
+    .dateControl {
+        flex: 1;
+
+        width: auto;
+        min-width: 0;
+    }
+
+    .dateValue {
+        font-size: 14px;
+    }
+
+    .dateTitle {
+        font-size: 9px;
+    }
+
+    #topFlags {
+        gap: 4px;
+    }
+
+    .flagCard {
+        width: 52px;
+        height: 61px;
+
+        padding: 4px 3px;
+    }
+
+    .flagImageBox {
+        width: 40px;
+        height: 26px;
+    }
+
+    .flagCountry {
+        font-size: 8px;
+    }
+
+    #workspace {
+        top: 105px;
+
+        width: calc(100vw - 20px);
+
+        gap: 8px;
+    }
+
+    #moonPanel {
+        min-height: 360px;
+
+        height: 52vh;
+    }
+
+    #globeBox {
+        flex-basis: 250px;
+
+        width: 250px;
+        height: 300px;
+    }
+
+    #globeCanvas {
+        height: 250px;
+    }
+
+    #locationInfo {
+        left: 10px;
+        right: 10px;
+
+        font-size: 10px;
+    }
+
+    #mainTitle,
+    #timeNotice {
+        display: none;
+    }
+}
+
+
+@media (max-width: 620px) {
+
+    #topControls {
+        right: 5px;
+    }
+
+    #datePanel {
+        gap: 3px;
+
+        padding: 7px 5px;
+    }
+
+    .dateHeader {
+        margin-bottom: 3px;
+    }
+
+    .dateValue {
+        font-size: 12px;
+    }
+
+    .dateTitle {
+        font-size: 8px;
+    }
+
+    .flagCard {
+        width: 44px;
+    }
+
+    .flagImageBox {
+        width: 35px;
+        height: 23px;
+    }
+
+    .flagCountry {
+        font-size: 7px;
+    }
+
+    #workspace {
+        display: block;
+
+        top: 98px;
+    }
+
+    #moonPanel {
+        width: 100%;
+
+        height: 48vh;
+
+        min-height: 330px;
+    }
+
+    #globeBox {
+        position: absolute;
+
+        right: 0;
+        top: calc(48vh + 8px);
+
+        width: 220px;
+        height: 260px;
+    }
+
+    #globeCanvas {
+        height: 212px;
+    }
+}
+
 </style>
 </head>
+
 <body>
+
 <div id="app">
-<a id="homeBtn" href="../index.html" title="Projeler ana sayfası" aria-label="Projeler ana sayfasına dön">⌂</a>
 
-<div id="datePanel">
-  <div class="dateControl"><div class="dateHeader"><span class="dateTitle">Yıl</span><span class="dateValue" id="yearValue">2026</span></div><input id="yearSlider" type="range" min="1900" max="2100" value="2026" step="1"></div>
-  <div class="dateControl"><div class="dateHeader"><span class="dateTitle">Ay</span><span class="dateValue" id="monthValue">Eylül</span></div><input id="monthSlider" type="range" min="1" max="12" value="9" step="1"></div>
-  <div class="dateControl"><div class="dateHeader"><span class="dateTitle">Gün</span><span class="dateValue" id="dayValue">20</span></div><input id="daySlider" type="range" min="1" max="30" value="20" step="1"></div>
+    <a
+        id="homeBtn"
+        href="../index.html"
+        title="Projeler ana sayfası"
+        aria-label="Projeler ana sayfasına dön"
+    >
+        ⌂
+    </a>
 
-  <div id="flagPanel">
-  <div id="flagImageBox"><img id="flagImage" alt=""><div id="flagEmoji">🌙</div></div>
-  <div id="flagCountry">Türkiye</div>
+
+    <!-- =====================================================
+         ÜST KONTROLLER
+         ===================================================== -->
+
+    <div id="topControls">
+
+        <div id="datePanel">
+
+            <div class="dateControl">
+
+                <div class="dateHeader">
+
+                    <span class="dateTitle">
+                        Yıl
+                    </span>
+
+                    <span
+                        class="dateValue"
+                        id="yearValue">
+                        2026
+                    </span>
+
+                </div>
+
+                <input
+                    id="yearSlider"
+                    type="range"
+                    min="1900"
+                    max="2100"
+                    value="2026"
+                    step="1"
+                >
+
+            </div>
+
+
+            <div class="dateControl">
+
+                <div class="dateHeader">
+
+                    <span class="dateTitle">
+                        Ay
+                    </span>
+
+                    <span
+                        class="dateValue"
+                        id="monthValue">
+                        Eylül
+                    </span>
+
+                </div>
+
+                <input
+                    id="monthSlider"
+                    type="range"
+                    min="1"
+                    max="12"
+                    value="9"
+                    step="1"
+                >
+
+            </div>
+
+
+            <div class="dateControl">
+
+                <div class="dateHeader">
+
+                    <span class="dateTitle">
+                        Gün
+                    </span>
+
+                    <span
+                        class="dateValue"
+                        id="dayValue">
+                        20
+                    </span>
+
+                </div>
+
+                <input
+                    id="daySlider"
+                    type="range"
+                    min="1"
+                    max="30"
+                    value="20"
+                    step="1"
+                >
+
+            </div>
+
+        </div>
+
+
+        <!--
+            1. Bayrak:
+            Kırmızı noktanın bulunduğu ülke.
+
+            2. Bayrak:
+            En yakın Ay/hilal sembollü bayrak.
+        -->
+
+        <div id="topFlags">
+
+            <div
+                class="flagCard"
+                id="currentCountryCard"
+                title="Kırmızı noktanın bulunduğu ülke"
+            >
+
+                <div class="flagImageBox">
+
+                    <img
+                        class="flagImage"
+                        id="currentCountryFlag"
+                        alt=""
+                    >
+
+                    <div
+                        class="flagEmoji"
+                        id="currentCountryEmoji">
+                        🇩🇪
+                    </div>
+
+                </div>
+
+                <div
+                    class="flagCountry"
+                    id="currentCountryName">
+                    Almanya
+                </div>
+
+            </div>
+
+
+            <div
+                class="flagCard"
+                id="nearestMoonFlagCard"
+                title="En yakın Ay veya hilal sembollü ülke bayrağı"
+            >
+
+                <div class="flagImageBox">
+
+                    <img
+                        class="flagImage"
+                        id="nearestMoonFlag"
+                        alt=""
+                    >
+
+                    <div
+                        class="flagEmoji"
+                        id="nearestMoonEmoji">
+                        🇹🇷
+                    </div>
+
+                </div>
+
+                <div
+                    class="flagCountry"
+                    id="nearestMoonName">
+                    Türkiye
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         AY VE DÜNYA
+         ===================================================== -->
+
+    <div id="workspace">
+
+        <div id="moonPanel">
+
+            <canvas id="moonCanvas"></canvas>
+
+            <div id="moonPanelTitle">
+                Seçilen konumdan gökyüzü
+            </div>
+
+            <div id="moonInfo"></div>
+
+            <div id="moonStatus"></div>
+
+        </div>
+
+
+        <div id="globeBox">
+
+            <div id="globeTitle">
+                Gözlem Konumu
+            </div>
+
+            <div id="globeHint">
+                Kırmızı noktayı sürükle · Küreyi boş yerden çevir
+            </div>
+
+            <canvas id="globeCanvas"></canvas>
+
+            <div id="locationInfo">
+
+                <span>
+                    Enlem:
+                    <b
+                        class="coord"
+                        id="latText">
+                        51.17° K
+                    </b>
+                </span>
+
+                <span>
+                    Boylam:
+                    <b
+                        class="coord"
+                        id="lonText">
+                        10.45° D
+                    </b>
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div id="mainTitle">
+        Ay · Dünya · Tarih
+    </div>
+
+
+    <div id="timeNotice">
+        Gökyüzü konumu yaklaşık<br>
+        yerel güneş saati 22:00 için hesaplanır.
+    </div>
+
 </div>
-</div>
 
-<div id="moonPanel">
-  <canvas id="moonCanvas"></canvas>
-  <div id="moonPanelTitle">Seçilen konumdan gökyüzü</div>
-  <div id="moonInfo"></div>
-  <div id="moonStatus"></div>
-</div>
-
-
-
-<div id="globeBox">
-  <div id="globeTitle">Gözlem Konumu</div>
-  <div id="globeHint">Kırmızı noktayı sürükle · Küreyi boş yerden çevir</div>
-  <canvas id="globeCanvas"></canvas>
-  <div id="locationInfo">
-    <span>Enlem: <b class="coord" id="latText">51.17° K</b></span>
-    <span>Boylam: <b class="coord" id="lonText">10.45° D</b></span>
-  </div>
-</div>
-
-<div id="mainTitle">Ay · Dünya · Tarih</div>
-<div id="timeNotice">Gökyüzü konumu yaklaşık<br>yerel güneş saati 22:00 için hesaplanır.</div>
-</div>
 
 <script>
-const DEG=Math.PI/180,RAD=180/Math.PI,EARTH_RADIUS_KM=6371.0088;
-const monthNames=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
-let selectedLat=51.1657,selectedLon=10.4515;
 
-const lunarFlagCountries=[
-{name:"Türkiye",code:"tr",n3:792,center:[35.24,39.06]},
-{name:"Cezayir",code:"dz",n3:12,center:[2.63,28.16]},
-{name:"Tunus",code:"tn",n3:788,center:[9.54,34.12]},
-{name:"Libya",code:"ly",n3:434,center:[17.23,26.34]},
-{name:"Moritanya",code:"mr",n3:478,center:[-10.33,20.26]},
-{name:"Pakistan",code:"pk",n3:586,center:[69.35,30.38]},
-{name:"Maldivler",code:"mv",n3:462,center:[73.22,3.20]},
-{name:"Malezya",code:"my",n3:458,center:[102.0,4.2]},
-{name:"Singapur",code:"sg",n3:702,center:[103.82,1.35]},
-{name:"Brunei",code:"bn",n3:96,center:[114.72,4.54]},
-{name:"Azerbaycan",code:"az",n3:31,center:[47.58,40.39]},
-{name:"Türkmenistan",code:"tm",n3:795,center:[59.56,39.12]},
-{name:"Özbekistan",code:"uz",n3:860,center:[64.59,41.38]},
-{name:"Komorlar",code:"km",n3:174,center:[43.87,-11.88]},
-{name:"Nepal",code:"np",n3:524,center:[84.12,28.39]},
-{name:"Palau",code:"pw",n3:585,center:[134.58,7.51]},
-{name:"Moğolistan",code:"mn",n3:496,center:[103.85,46.86]}
+/* ============================================================
+   GENEL
+   ============================================================ */
+
+const DEG =
+    Math.PI / 180;
+
+
+const RAD =
+    180 / Math.PI;
+
+
+const EARTH_RADIUS_KM =
+    6371.0088;
+
+
+const monthNames = [
+    "Ocak",
+    "Şubat",
+    "Mart",
+    "Nisan",
+    "Mayıs",
+    "Haziran",
+    "Temmuz",
+    "Ağustos",
+    "Eylül",
+    "Ekim",
+    "Kasım",
+    "Aralık"
 ];
-let preparedFlagCountries=[],currentFlagCode=null;
 
-const moonPhoto=new Image();
-moonPhoto.crossOrigin="anonymous";
-moonPhoto.src="https://upload.wikimedia.org/wikipedia/commons/2/2d/Full_Moon_%2815984763045%29.jpg";
-let moonPhotoReady=false;
-moonPhoto.onload=()=>{moonPhotoReady=true;updateMoon()};
-moonPhoto.onerror=()=>{moonPhotoReady=false;updateMoon()};
 
-const yearSlider=document.getElementById("yearSlider"),monthSlider=document.getElementById("monthSlider"),daySlider=document.getElementById("daySlider");
-const yearValue=document.getElementById("yearValue"),monthValue=document.getElementById("monthValue"),dayValue=document.getElementById("dayValue");
-const latText=document.getElementById("latText"),lonText=document.getElementById("lonText");
-const moonCanvas=document.getElementById("moonCanvas"),moonCtx=moonCanvas.getContext("2d");
-const globeCanvas=document.getElementById("globeCanvas"),globeCtx=globeCanvas.getContext("2d");
-const moonInfo=document.getElementById("moonInfo"),moonStatus=document.getElementById("moonStatus");
-const flagPanel=document.getElementById("flagPanel"),flagImage=document.getElementById("flagImage"),flagEmoji=document.getElementById("flagEmoji"),flagCountry=document.getElementById("flagCountry");
+let selectedLat =
+    51.1657;
 
-flagImage.addEventListener("load",()=>{flagImage.style.display="block";flagEmoji.style.display="none"});
-flagImage.addEventListener("error",()=>{flagImage.style.display="none";flagEmoji.style.display="block"});
 
-function daysInMonth(y,m){return new Date(y,m,0).getDate()}
-function updateDateControls(){
- const y=+yearSlider.value,m=+monthSlider.value;let d=+daySlider.value,max=daysInMonth(y,m);
- daySlider.max=max;if(d>max){d=max;daySlider.value=max}
- yearValue.textContent=y;monthValue.textContent=monthNames[m-1];dayValue.textContent=d;updateMoon();
-}
-yearSlider.addEventListener("input",updateDateControls);
-monthSlider.addEventListener("input",updateDateControls);
-daySlider.addEventListener("input",updateDateControls);
+let selectedLon =
+    10.4515;
 
-function getSelectedDate(){
- const y=+yearSlider.value,m=+monthSlider.value,d=+daySlider.value;
- const utcHours=22-selectedLon/15;
- return new Date(Date.UTC(y,m-1,d,0,0,0)+utcHours*3600000);
-}
-function getPhaseName(p){
- if(p<.03||p>.97)return"Yeniay";
- if(p<.22)return"Büyüyen hilal";
- if(p<.28)return"İlk dördün";
- if(p<.47)return"Büyüyen şişkin Ay";
- if(p<.53)return"Dolunay";
- if(p<.72)return"Küçülen şişkin Ay";
- if(p<.78)return"Son dördün";
- return"Küçülen hilal";
-}
-function normalizeDegrees(v){v%=360;return v<0?v+360:v}
-function getCompassDirection(a){return["K","KD","D","GD","G","GB","B","KB"][Math.round(a/45)%8]}
-function resizeCanvas(canvas,ctx){
- const r=canvas.getBoundingClientRect(),ratio=Math.min(devicePixelRatio||1,2);
- canvas.width=Math.round(r.width*ratio);canvas.height=Math.round(r.height*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);
- return{width:r.width,height:r.height};
+
+/* ============================================================
+   AY / HİLAL SEMBOLLÜ BAYRAKLAR
+   ============================================================ */
+
+const lunarFlagCountries = [
+
+    {
+        name: "Türkiye",
+        code: "tr",
+        n3: 792,
+        center: [35.24,39.06]
+    },
+
+    {
+        name: "Cezayir",
+        code: "dz",
+        n3: 12,
+        center: [2.63,28.16]
+    },
+
+    {
+        name: "Tunus",
+        code: "tn",
+        n3: 788,
+        center: [9.54,34.12]
+    },
+
+    {
+        name: "Libya",
+        code: "ly",
+        n3: 434,
+        center: [17.23,26.34]
+    },
+
+    {
+        name: "Moritanya",
+        code: "mr",
+        n3: 478,
+        center: [-10.33,20.26]
+    },
+
+    {
+        name: "Pakistan",
+        code: "pk",
+        n3: 586,
+        center: [69.35,30.38]
+    },
+
+    {
+        name: "Maldivler",
+        code: "mv",
+        n3: 462,
+        center: [73.22,3.20]
+    },
+
+    {
+        name: "Malezya",
+        code: "my",
+        n3: 458,
+        center: [102.0,4.2]
+    },
+
+    {
+        name: "Singapur",
+        code: "sg",
+        n3: 702,
+        center: [103.82,1.35]
+    },
+
+    {
+        name: "Brunei",
+        code: "bn",
+        n3: 96,
+        center: [114.72,4.54]
+    },
+
+    {
+        name: "Azerbaycan",
+        code: "az",
+        n3: 31,
+        center: [47.58,40.39]
+    },
+
+    {
+        name: "Türkmenistan",
+        code: "tm",
+        n3: 795,
+        center: [59.56,39.12]
+    },
+
+    {
+        name: "Özbekistan",
+        code: "uz",
+        n3: 860,
+        center: [64.59,41.38]
+    },
+
+    {
+        name: "Komorlar",
+        code: "km",
+        n3: 174,
+        center: [43.87,-11.88]
+    },
+
+    {
+        name: "Nepal",
+        code: "np",
+        n3: 524,
+        center: [84.12,28.39]
+    },
+
+    {
+        name: "Palau",
+        code: "pw",
+        n3: 585,
+        center: [134.58,7.51]
+    },
+
+    {
+        name: "Moğolistan",
+        code: "mn",
+        n3: 496,
+        center: [103.85,46.86]
+    }
+
+];
+
+
+let preparedFlagCountries =
+    [];
+
+
+/* ============================================================
+   ÜLKE METAVERİSİ
+   ============================================================ */
+
+/*
+    world-atlas ülke geometrisini ISO sayısal
+    kodla verir.
+
+    Bayrak göstermek için bunun alpha-2
+    ülke koduna çevrilmesi gerekir.
+
+    Önce bazı temel ülkeler için yerel
+    yedek veri bulunuyor.
+
+    Sonra REST Countries servisinden tüm
+    ülkelerin kodları yükleniyor.
+*/
+
+const countryMetaByNumeric =
+    new Map();
+
+
+const fallbackCountryMeta = [
+
+    [276,"de","Almanya"],
+
+    [792,"tr","Türkiye"],
+    [12,"dz","Cezayir"],
+    [788,"tn","Tunus"],
+    [434,"ly","Libya"],
+    [478,"mr","Moritanya"],
+    [586,"pk","Pakistan"],
+    [462,"mv","Maldivler"],
+    [458,"my","Malezya"],
+    [702,"sg","Singapur"],
+    [96,"bn","Brunei"],
+    [31,"az","Azerbaycan"],
+    [795,"tm","Türkmenistan"],
+    [860,"uz","Özbekistan"],
+    [174,"km","Komorlar"],
+    [524,"np","Nepal"],
+    [585,"pw","Palau"],
+    [496,"mn","Moğolistan"],
+
+    [250,"fr","Fransa"],
+    [380,"it","İtalya"],
+    [724,"es","İspanya"],
+    [620,"pt","Portekiz"],
+    [826,"gb","Birleşik Krallık"],
+    [528,"nl","Hollanda"],
+    [56,"be","Belçika"],
+    [756,"ch","İsviçre"],
+    [40,"at","Avusturya"],
+    [616,"pl","Polonya"],
+    [203,"cz","Çekya"],
+    [300,"gr","Yunanistan"],
+    [100,"bg","Bulgaristan"],
+    [642,"ro","Romanya"],
+    [804,"ua","Ukrayna"],
+    [643,"ru","Rusya"],
+
+    [504,"ma","Fas"],
+    [818,"eg","Mısır"],
+    [710,"za","Güney Afrika"],
+    [566,"ng","Nijerya"],
+    [231,"et","Etiyopya"],
+    [404,"ke","Kenya"],
+
+    [682,"sa","Suudi Arabistan"],
+    [364,"ir","İran"],
+    [368,"iq","Irak"],
+    [760,"sy","Suriye"],
+    [400,"jo","Ürdün"],
+    [376,"il","İsrail"],
+    [422,"lb","Lübnan"],
+
+    [356,"in","Hindistan"],
+    [156,"cn","Çin"],
+    [392,"jp","Japonya"],
+    [410,"kr","Güney Kore"],
+    [360,"id","Endonezya"],
+    [764,"th","Tayland"],
+    [704,"vn","Vietnam"],
+    [608,"ph","Filipinler"],
+    [36,"au","Avustralya"],
+    [554,"nz","Yeni Zelanda"],
+
+    [840,"us","ABD"],
+    [124,"ca","Kanada"],
+    [484,"mx","Meksika"],
+    [76,"br","Brezilya"],
+    [32,"ar","Arjantin"],
+    [152,"cl","Şili"],
+    [604,"pe","Peru"],
+    [170,"co","Kolombiya"]
+
+];
+
+
+for (
+    const item
+    of
+    fallbackCountryMeta
+) {
+
+    countryMetaByNumeric.set(
+        item[0],
+        {
+            code:
+                item[1],
+
+            name:
+                item[2],
+
+            flagUrl:
+                null
+        }
+    );
 }
 
-let stars=[];
-function randomSeeded(n){const x=Math.sin(n*12.9898+78.233)*43758.5453;return x-Math.floor(x)}
-function createStars(w,h){
- stars=[];const count=Math.floor(w*h/1700);
- for(let i=0;i<count;i++)stars.push({x:randomSeeded(i*5+1)*w,y:randomSeeded(i*5+2)*h*.83,r:.25+randomSeeded(i*5+3)*1.05,a:.2+randomSeeded(i*5+4)*.55});
+
+/* ============================================================
+   GERÇEK AY FOTOĞRAFI
+   ============================================================ */
+
+const moonPhoto =
+    new Image();
+
+
+moonPhoto.crossOrigin =
+    "anonymous";
+
+
+moonPhoto.src =
+    "https://upload.wikimedia.org/wikipedia/commons/2/2d/Full_Moon_%2815984763045%29.jpg";
+
+
+let moonPhotoReady =
+    false;
+
+
+moonPhoto.onload =
+    function() {
+
+        moonPhotoReady =
+            true;
+
+
+        updateMoon();
+    };
+
+
+moonPhoto.onerror =
+    function() {
+
+        moonPhotoReady =
+            false;
+
+
+        updateMoon();
+    };
+
+
+/* ============================================================
+   DOM
+   ============================================================ */
+
+const yearSlider =
+    document.getElementById(
+        "yearSlider"
+    );
+
+
+const monthSlider =
+    document.getElementById(
+        "monthSlider"
+    );
+
+
+const daySlider =
+    document.getElementById(
+        "daySlider"
+    );
+
+
+const yearValue =
+    document.getElementById(
+        "yearValue"
+    );
+
+
+const monthValue =
+    document.getElementById(
+        "monthValue"
+    );
+
+
+const dayValue =
+    document.getElementById(
+        "dayValue"
+    );
+
+
+const latText =
+    document.getElementById(
+        "latText"
+    );
+
+
+const lonText =
+    document.getElementById(
+        "lonText"
+    );
+
+
+const moonCanvas =
+    document.getElementById(
+        "moonCanvas"
+    );
+
+
+const moonCtx =
+    moonCanvas.getContext(
+        "2d"
+    );
+
+
+const globeCanvas =
+    document.getElementById(
+        "globeCanvas"
+    );
+
+
+const globeCtx =
+    globeCanvas.getContext(
+        "2d"
+    );
+
+
+const moonInfo =
+    document.getElementById(
+        "moonInfo"
+    );
+
+
+const moonStatus =
+    document.getElementById(
+        "moonStatus"
+    );
+
+
+const currentCountryFlag =
+    document.getElementById(
+        "currentCountryFlag"
+    );
+
+
+const currentCountryEmoji =
+    document.getElementById(
+        "currentCountryEmoji"
+    );
+
+
+const currentCountryName =
+    document.getElementById(
+        "currentCountryName"
+    );
+
+
+const nearestMoonFlag =
+    document.getElementById(
+        "nearestMoonFlag"
+    );
+
+
+const nearestMoonEmoji =
+    document.getElementById(
+        "nearestMoonEmoji"
+    );
+
+
+const nearestMoonName =
+    document.getElementById(
+        "nearestMoonName"
+    );
+
+
+/* ============================================================
+   BAYRAK GÖRSEL YÖNETİMİ
+   ============================================================ */
+
+function countryCodeToEmoji(
+    code
+) {
+
+    if (
+        !code
+    ) {
+
+        return "🏳️";
+    }
+
+
+    let result =
+        "";
+
+
+    for (
+        const char
+        of
+        code.toUpperCase()
+    ) {
+
+        result +=
+            String.fromCodePoint(
+                127397 +
+                char.charCodeAt(0)
+            );
+    }
+
+
+    return result;
 }
 
-const phaseCanvas=document.createElement("canvas"),phaseCtx=phaseCanvas.getContext("2d");
-function smoothstep(e0,e1,x){let t=(x-e0)/(e1-e0);t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}
-function createPhaseShadow(size,fraction,orientation){
- phaseCanvas.width=size;phaseCanvas.height=size;
- const image=phaseCtx.createImageData(size,size),data=image.data;
- const sunZ=2*fraction-1,projectedSun=Math.sqrt(Math.max(0,1-sunZ*sunZ)),sunX=Math.sin(orientation)*projectedSun,sunY=Math.cos(orientation)*projectedSun,center=size/2,radius=size*.49;
- for(let py=0;py<size;py++)for(let px=0;px<size;px++){
-   const i=(py*size+px)*4,x=(px-center)/radius,y=-(py-center)/radius,r2=x*x+y*y;
-   if(r2>1){data[i+3]=0;continue}
-   const z=Math.sqrt(Math.max(0,1-r2)),dot=x*sunX+y*sunY+z*sunZ,lit=smoothstep(-.018,.018,dot),pos=Math.max(0,dot),limb=Math.pow(1-z,1.5);
-   let light=.025+(1-pos)*.15+limb*.09,op=.955*(1-lit)+light*lit;op=Math.max(0,Math.min(.98,op));
-   data[i]=0;data[i+1]=2;data[i+2]=7;data[i+3]=Math.round(op*255);
- }
- phaseCtx.putImageData(image,0,0);
+
+function installFlagHandlers(
+    image,
+    emoji
+) {
+
+    image.addEventListener(
+        "load",
+
+        () => {
+
+            image.style.display =
+                "block";
+
+
+            emoji.style.display =
+                "none";
+        }
+    );
+
+
+    image.addEventListener(
+        "error",
+
+        () => {
+
+            image.style.display =
+                "none";
+
+
+            emoji.style.display =
+                "block";
+        }
+    );
 }
 
-function drawMoonDisc(ctx,x,y,diameter,data){
- const r=diameter/2;
- if(data.altitudeDeg>=0){
-   const halo=ctx.createRadialGradient(x,y,r*.55,x,y,r*1.5);halo.addColorStop(0,"rgba(210,225,255,.08)");halo.addColorStop(1,"rgba(210,225,255,0)");
-   ctx.fillStyle=halo;ctx.beginPath();ctx.arc(x,y,r*1.5,0,Math.PI*2);ctx.fill();
- }
- ctx.save();if(data.altitudeDeg<0)ctx.globalAlpha=.25;
- ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();ctx.translate(x,y);ctx.rotate(data.textureRotation);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
- if(moonPhotoReady){
-   const sw=moonPhoto.naturalWidth,sh=moonPhoto.naturalHeight,min=Math.min(sw,sh),crop=min*.84,sx=(sw-crop)/2,sy=(sh-crop)/2;
-   ctx.filter="grayscale(70%) contrast(1.10) brightness(.96)";
-   ctx.drawImage(moonPhoto,sx,sy,crop,crop,-r,-r,diameter,diameter);ctx.filter="none";
- }else{
-   const g=ctx.createRadialGradient(-r*.25,-r*.25,r*.1,0,0,r);g.addColorStop(0,"#eeeeea");g.addColorStop(1,"#aaa9a4");ctx.fillStyle=g;ctx.fillRect(-r,-r,diameter,diameter);
- }
- ctx.restore();
- const phaseSize=Math.max(300,Math.floor(diameter*3));createPhaseShadow(phaseSize,data.illumination.fraction,data.brightSideOrientation);
- ctx.save();if(data.altitudeDeg<0)ctx.globalAlpha=.25;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";ctx.drawImage(phaseCanvas,x-r,y-r,diameter,diameter);
- ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.strokeStyle="rgba(220,230,235,.16)";ctx.lineWidth=.7;ctx.stroke();ctx.restore();
+
+installFlagHandlers(
+    currentCountryFlag,
+    currentCountryEmoji
+);
+
+
+installFlagHandlers(
+    nearestMoonFlag,
+    nearestMoonEmoji
+);
+
+
+function showFlag(
+    image,
+    emoji,
+    nameElement,
+    country
+) {
+
+    if (
+        !country
+    ) {
+
+        return;
+    }
+
+
+    const code =
+        country.code
+        ?
+        country.code.toLowerCase()
+        :
+        null;
+
+
+    nameElement.textContent =
+        country.name ||
+        "Ülke";
+
+
+    emoji.textContent =
+        countryCodeToEmoji(
+            code
+        );
+
+
+    image.style.display =
+        "none";
+
+
+    emoji.style.display =
+        "block";
+
+
+    if (
+        code
+    ) {
+
+        image.alt =
+            country.name +
+            " bayrağı";
+
+
+        image.src =
+            country.flagUrl ||
+            (
+                "https://flagcdn.com/w160/"
+                +
+                code
+                +
+                ".png"
+            );
+    }
 }
 
-function drawSky(width,height,data){
- const ctx=moonCtx;ctx.clearRect(0,0,width,height);
- const sky=ctx.createLinearGradient(0,0,0,height);sky.addColorStop(0,"#01030a");sky.addColorStop(.62,"#061426");sky.addColorStop(.82,"#10233a");sky.addColorStop(1,"#090b0e");ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
- for(const s of stars){ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${s.a})`;ctx.fill()}
- const horizonY=height*.82,hg=ctx.createLinearGradient(0,horizonY-60,0,horizonY+20);hg.addColorStop(0,"rgba(90,130,175,0)");hg.addColorStop(.7,"rgba(90,130,175,.08)");hg.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=hg;ctx.fillRect(0,horizonY-60,width,80);
- ctx.beginPath();ctx.moveTo(0,horizonY+9);for(let i=0;i<=17;i++){const x=width*i/17,y=horizonY+5+Math.sin(i*1.81)*3+Math.sin(i*.71)*5;ctx.lineTo(x,y)}ctx.lineTo(width,height);ctx.lineTo(0,height);ctx.closePath();ctx.fillStyle="#050609";ctx.fill();
- ctx.beginPath();ctx.moveTo(0,horizonY);ctx.lineTo(width,horizonY);ctx.strokeStyle="rgba(255,255,255,.12)";ctx.lineWidth=1;ctx.stroke();
- ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="12px system-ui";ctx.fillStyle="rgba(255,255,255,.55)";
- for(const c of[{az:0,text:"K"},{az:90,text:"D"},{az:180,text:"G"},{az:270,text:"B"}]){const x=c.az/360*width;ctx.fillText(c.text,x,horizonY+27);if(c.az===0)ctx.fillText("K",width-1,horizonY+27)}
- const altitude=data.altitudeDeg,azimuth=data.azimuthDeg,moonX=azimuth/360*width;
- let moonY=altitude>=0?horizonY-altitude/90*(horizonY-80):horizonY+Math.min(60,Math.abs(altitude)*2.2);
- const moonDiameter=Math.min(width,height)*.205;drawMoonDisc(ctx,moonX,moonY,moonDiameter,data);
- ctx.beginPath();ctx.moveTo(moonX,horizonY-5);ctx.lineTo(moonX,horizonY+5);ctx.strokeStyle="rgba(255,255,255,.38)";ctx.stroke();
- if(altitude<0){ctx.textAlign="center";ctx.font="13px system-ui";ctx.fillStyle="rgba(255,255,255,.45)";ctx.fillText("Ay bu saatte ufkun altında",width/2,horizonY-18)}
+
+/* ============================================================
+   TARİH
+   ============================================================ */
+
+function daysInMonth(
+    year,
+    month
+) {
+
+    return new Date(
+        year,
+        month,
+        0
+    ).getDate();
 }
 
-function updateMoon(){
- if(typeof SunCalc==="undefined")return;
- const date=getSelectedDate(),pos=SunCalc.getMoonPosition(date,selectedLat,selectedLon),ill=SunCalc.getMoonIllumination(date);
- const altitudeDeg=pos.altitude*RAD,azimuthDeg=normalizeDegrees(pos.azimuth*RAD+180),brightSideOrientation=ill.angle-pos.parallacticAngle,textureRotation=-pos.parallacticAngle;
- const size=resizeCanvas(moonCanvas,moonCtx);
- if(!stars.length||stars._width!==size.width||stars._height!==size.height){createStars(size.width,size.height);stars._width=size.width;stars._height=size.height}
- drawSky(size.width,size.height,{altitudeDeg,azimuthDeg,illumination:ill,brightSideOrientation,textureRotation});
- moonInfo.innerHTML=`<strong>${getPhaseName(ill.phase)}</strong><br>Aydınlık: ${Math.round(ill.fraction*100)}%<br>Yükseklik: ${altitudeDeg.toFixed(1)}°<br>Azimut: ${azimuthDeg.toFixed(1)}° (${getCompassDirection(azimuthDeg)})`;
- moonStatus.textContent=altitudeDeg>=0?"Ufkun üzerinde":"Ufkun altında";moonStatus.style.color=altitudeDeg>=0?"#dfeaff":"#9aa4b3";
+
+function updateDateControls() {
+
+    const year =
+        Number(
+            yearSlider.value
+        );
+
+
+    const month =
+        Number(
+            monthSlider.value
+        );
+
+
+    let day =
+        Number(
+            daySlider.value
+        );
+
+
+    const maxDay =
+        daysInMonth(
+            year,
+            month
+        );
+
+
+    daySlider.max =
+        maxDay;
+
+
+    if (
+        day >
+        maxDay
+    ) {
+
+        day =
+            maxDay;
+
+
+        daySlider.value =
+            maxDay;
+    }
+
+
+    yearValue.textContent =
+        year;
+
+
+    monthValue.textContent =
+        monthNames[
+            month - 1
+        ];
+
+
+    dayValue.textContent =
+        day;
+
+
+    updateMoon();
 }
 
-let worldLand=null,worldCountries=[];
-const projection=d3.geoOrthographic().precision(.3).clipAngle(90),geoPath=d3.geoPath(projection,globeCtx);
-let globeRotation=[-selectedLon,-selectedLat,0];projection.rotate(globeRotation);
 
-function getGlobeGeometry(){
- const r=globeCanvas.getBoundingClientRect(),radius=Math.min(r.width,r.height)*.40;
- return{width:r.width,height:r.height,radius,cx:r.width/2,cy:r.height/2+15};
-}
-function getMarkerScreenPosition(){
- const p=projection([selectedLon,selectedLat]);if(!p)return null;
- const center=[-globeRotation[0],-globeRotation[1]],visible=d3.geoDistance([selectedLon,selectedLat],center)<Math.PI/2;
- return visible?{x:p[0],y:p[1]}:null;
-}
-function isPointerOnMarker(x,y){
- const m=getMarkerScreenPosition();if(!m)return false;const dx=x-m.x,dy=y-m.y;return dx*dx+dy*dy<=17*17;
-}
-let pointerMode=null,markerDragging=false,globeDragging=false,dragStartRotation=null,dragStartPointer=null;
+yearSlider.addEventListener(
+    "input",
+    updateDateControls
+);
 
-function drawGlobe(){
- const size=resizeCanvas(globeCanvas,globeCtx),w=size.width,h=size.height,r=Math.min(w,h)*.40;
- projection.translate([w/2,h/2+15]).scale(r).rotate(globeRotation);
- globeCtx.clearRect(0,0,w,h);
- globeCtx.beginPath();globeCtx.arc(w/2+7,h/2+25,r+5,0,Math.PI*2);globeCtx.fillStyle="rgba(0,0,0,.35)";globeCtx.fill();
- globeCtx.beginPath();geoPath({type:"Sphere"});
- const ocean=globeCtx.createRadialGradient(w/2-r*.35,h/2-r*.35,r*.12,w/2,h/2,r*1.2);ocean.addColorStop(0,"#318ad0");ocean.addColorStop(.55,"#10518c");ocean.addColorStop(1,"#031d35");globeCtx.fillStyle=ocean;globeCtx.fill();
- globeCtx.beginPath();geoPath(d3.geoGraticule10());globeCtx.strokeStyle="rgba(255,255,255,.10)";globeCtx.lineWidth=.7;globeCtx.stroke();
- if(worldLand){globeCtx.beginPath();geoPath(worldLand);globeCtx.fillStyle="#668a5b";globeCtx.fill();globeCtx.strokeStyle="rgba(210,235,200,.50)";globeCtx.lineWidth=.5;globeCtx.stroke()}
- globeCtx.beginPath();geoPath({type:"Sphere"});globeCtx.strokeStyle="rgba(170,215,255,.62)";globeCtx.lineWidth=1.3;globeCtx.stroke();
- const m=getMarkerScreenPosition();if(m){
-   globeCtx.beginPath();globeCtx.arc(m.x,m.y,11,0,Math.PI*2);globeCtx.fillStyle=markerDragging?"rgba(255,90,90,.32)":"rgba(255,70,70,.20)";globeCtx.fill();
-   globeCtx.beginPath();globeCtx.arc(m.x,m.y,markerDragging?6.2:5.2,0,Math.PI*2);globeCtx.fillStyle="#ff3f45";globeCtx.fill();globeCtx.strokeStyle="rgba(255,255,255,.95)";globeCtx.lineWidth=1.5;globeCtx.stroke();
-   globeCtx.beginPath();globeCtx.arc(m.x-1.5,m.y-1.5,1.3,0,Math.PI*2);globeCtx.fillStyle="rgba(255,255,255,.75)";globeCtx.fill();
- }
-}
 
-function geoDistanceKm(a,b){return d3.geoDistance(a,b)*EARTH_RADIUS_KM}
-function getGeometryRings(feature){
- if(!feature||!feature.geometry)return[];
- if(feature.geometry.type==="Polygon")return feature.geometry.coordinates;
- if(feature.geometry.type==="MultiPolygon")return feature.geometry.coordinates.flat();
- return[];
-}
-function densifyRing(ring){
- const out=[],maxStep=1.5*DEG;
- for(let i=0;i<ring.length-1;i++){const a=ring[i],b=ring[i+1],pieces=Math.max(1,Math.ceil(d3.geoDistance(a,b)/maxStep)),interp=d3.geoInterpolate(a,b);for(let j=0;j<pieces;j++)out.push(interp(j/pieces))}
- if(ring.length)out.push(ring[ring.length-1]);return out;
-}
-function prepareFlagCountryGeometries(){
- preparedFlagCountries=[];
- for(const info of lunarFlagCountries){
-   const feature=worldCountries.find(c=>Number(c.id)===info.n3),item={...info,feature:feature||null,samples:[]};
-   if(feature)for(const ring of getGeometryRings(feature))item.samples.push(...densifyRing(ring));
-   preparedFlagCountries.push(item);
- }
-}
-function distanceToFlagCountry(country,point){
- if(country.feature&&d3.geoContains(country.feature,point))return 0;
- if(country.samples&&country.samples.length){let min=Infinity;for(const s of country.samples){const d=geoDistanceKm(point,s);if(d<min)min=d}return min}
- return geoDistanceKm(point,country.center);
-}
-function findNearestFlagCountry(){
- const point=[selectedLon,selectedLat],candidates=preparedFlagCountries.length?preparedFlagCountries:lunarFlagCountries;
- let nearest=null,min=Infinity;
- for(const c of candidates){const d=distanceToFlagCountry(c,point);if(d<min){min=d;nearest=c}}
- return nearest;
-}
-function countryCodeToEmoji(code){
- let out="";for(const c of code.toUpperCase())out+=String.fromCodePoint(127397+c.charCodeAt(0));return out;
-}
-function updateFlagForLocation(){
- const country=findNearestFlagCountry();if(!country||currentFlagCode===country.code)return;
- currentFlagCode=country.code;flagCountry.textContent=country.name;flagImage.style.display="none";flagEmoji.style.display="none";flagEmoji.textContent=countryCodeToEmoji(country.code);
- flagImage.alt=country.name+" bayrağı";flagImage.src="https://flagcdn.com/w320/"+country.code+".png";
+monthSlider.addEventListener(
+    "input",
+    updateDateControls
+);
+
+
+daySlider.addEventListener(
+    "input",
+    updateDateControls
+);
+
+
+/* ============================================================
+   SEÇİLİ TARİH
+   ============================================================ */
+
+function getSelectedDate() {
+
+    const year =
+        Number(
+            yearSlider.value
+        );
+
+
+    const month =
+        Number(
+            monthSlider.value
+        );
+
+
+    const day =
+        Number(
+            daySlider.value
+        );
+
+
+    const utcHours =
+        22 -
+        selectedLon / 15;
+
+
+    return new Date(
+        Date.UTC(
+            year,
+            month - 1,
+            day,
+            0,
+            0,
+            0
+        )
+        +
+        utcHours *
+        3600000
+    );
 }
 
-function getPointerPosition(e){const r=globeCanvas.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]}
-function moveMarkerToPointer(x,y){
- const g=getGlobeGeometry(),dx=x-g.cx,dy=y-g.cy;if(dx*dx+dy*dy>g.radius*g.radius)return;
- const c=projection.invert([x,y]);if(!c)return;selectedLon=c[0];selectedLat=Math.max(-90,Math.min(90,c[1]));
- while(selectedLon>180)selectedLon-=360;while(selectedLon<-180)selectedLon+=360;
- latText.textContent=formatLatitude(selectedLat);lonText.textContent=formatLongitude(selectedLon);drawGlobe();updateMoon();updateFlagForLocation();
-}
-globeCanvas.addEventListener("pointerdown",e=>{
- const p=getPointerPosition(e);globeCanvas.setPointerCapture(e.pointerId);
- if(isPointerOnMarker(p[0],p[1])){pointerMode="marker";markerDragging=true;globeDragging=false;globeCanvas.style.cursor="grabbing";drawGlobe();return}
- pointerMode="globe";markerDragging=false;globeDragging=true;dragStartPointer=p;dragStartRotation=[...globeRotation];globeCanvas.style.cursor="grabbing";
-});
-globeCanvas.addEventListener("pointermove",e=>{
- const p=getPointerPosition(e);
- if(pointerMode==="marker"&&markerDragging){moveMarkerToPointer(p[0],p[1]);return}
- if(pointerMode==="globe"&&globeDragging&&dragStartPointer&&dragStartRotation){
-   const dx=p[0]-dragStartPointer[0],dy=p[1]-dragStartPointer[1];
-   globeRotation[0]=dragStartRotation[0]+dx*.35;globeRotation[1]=Math.max(-89,Math.min(89,dragStartRotation[1]-dy*.35));drawGlobe();return;
- }
- globeCanvas.style.cursor=isPointerOnMarker(p[0],p[1])?"pointer":"grab";
-});
-function finishPointerInteraction(e){
- if(e&&globeCanvas.hasPointerCapture(e.pointerId))globeCanvas.releasePointerCapture(e.pointerId);
- pointerMode=null;markerDragging=false;globeDragging=false;dragStartPointer=null;dragStartRotation=null;globeCanvas.style.cursor="grab";drawGlobe();
-}
-globeCanvas.addEventListener("pointerup",finishPointerInteraction);
-globeCanvas.addEventListener("pointercancel",finishPointerInteraction);
-globeCanvas.addEventListener("pointerleave",()=>{if(!markerDragging&&!globeDragging)globeCanvas.style.cursor="grab"});
 
-function formatLatitude(v){return Math.abs(v).toFixed(2)+"° "+(v>=0?"K":"G")}
-function formatLongitude(v){return Math.abs(v).toFixed(2)+"° "+(v>=0?"D":"B")}
+/* ============================================================
+   AY EVRESİ
+   ============================================================ */
 
-async function loadWorld(){
- try{
-   const world=await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
-   worldLand=topojson.feature(world,world.objects.land);
-   worldCountries=topojson.feature(world,world.objects.countries).features;
-   prepareFlagCountryGeometries();drawGlobe();updateFlagForLocation();
- }catch(error){console.warn("Dünya haritası yüklenemedi:",error);drawGlobe();updateFlagForLocation()}
+function getPhaseName(
+    phase
+) {
+
+    if (
+        phase < 0.03 ||
+        phase > 0.97
+    ) {
+
+        return "Yeniay";
+    }
+
+
+    if (
+        phase < 0.22
+    ) {
+
+        return "Büyüyen hilal";
+    }
+
+
+    if (
+        phase < 0.28
+    ) {
+
+        return "İlk dördün";
+    }
+
+
+    if (
+        phase < 0.47
+    ) {
+
+        return "Büyüyen şişkin Ay";
+    }
+
+
+    if (
+        phase < 0.53
+    ) {
+
+        return "Dolunay";
+    }
+
+
+    if (
+        phase < 0.72
+    ) {
+
+        return "Küçülen şişkin Ay";
+    }
+
+
+    if (
+        phase < 0.78
+    ) {
+
+        return "Son dördün";
+    }
+
+
+    return "Küçülen hilal";
 }
 
-window.addEventListener("resize",()=>{stars=[];drawGlobe();updateMoon()});
-function initialize(){
- yearSlider.value=2026;monthSlider.value=9;daySlider.value=20;
- latText.textContent=formatLatitude(selectedLat);lonText.textContent=formatLongitude(selectedLon);
- updateDateControls();drawGlobe();updateFlagForLocation();loadWorld();
+
+/* ============================================================
+   AÇILAR
+   ============================================================ */
+
+function normalizeDegrees(
+    value
+) {
+
+    value %=
+        360;
+
+
+    if (
+        value < 0
+    ) {
+
+        value +=
+            360;
+    }
+
+
+    return value;
 }
+
+
+function getCompassDirection(
+    angle
+) {
+
+    const directions = [
+        "K",
+        "KD",
+        "D",
+        "GD",
+        "G",
+        "GB",
+        "B",
+        "KB"
+    ];
+
+
+    return directions[
+        Math.round(
+            angle / 45
+        ) % 8
+    ];
+}
+
+
+/* ============================================================
+   CANVAS
+   ============================================================ */
+
+function resizeCanvas(
+    canvas,
+    context
+) {
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+
+    const ratio =
+        Math.min(
+            window.devicePixelRatio ||
+            1,
+            2
+        );
+
+
+    canvas.width =
+        Math.round(
+            rect.width *
+            ratio
+        );
+
+
+    canvas.height =
+        Math.round(
+            rect.height *
+            ratio
+        );
+
+
+    context.setTransform(
+        ratio,
+        0,
+        0,
+        ratio,
+        0,
+        0
+    );
+
+
+    return {
+        width:
+            rect.width,
+
+        height:
+            rect.height
+    };
+}
+
+
+/* ============================================================
+   YILDIZLAR
+   ============================================================ */
+
+let stars =
+    [];
+
+
+function randomSeeded(
+    n
+) {
+
+    const x =
+        Math.sin(
+            n * 12.9898 +
+            78.233
+        )
+        *
+        43758.5453;
+
+
+    return (
+        x -
+        Math.floor(x)
+    );
+}
+
+
+function createStars(
+    width,
+    height
+) {
+
+    stars =
+        [];
+
+
+    const count =
+        Math.floor(
+            width *
+            height /
+            1700
+        );
+
+
+    for (
+        let i = 0;
+        i < count;
+        i++
+    ) {
+
+        stars.push(
+            {
+                x:
+                    randomSeeded(
+                        i * 5 + 1
+                    )
+                    *
+                    width,
+
+                y:
+                    randomSeeded(
+                        i * 5 + 2
+                    )
+                    *
+                    height
+                    *
+                    0.83,
+
+                r:
+                    0.25
+                    +
+                    randomSeeded(
+                        i * 5 + 3
+                    )
+                    *
+                    1.05,
+
+                a:
+                    0.2
+                    +
+                    randomSeeded(
+                        i * 5 + 4
+                    )
+                    *
+                    0.55
+            }
+        );
+    }
+}
+
+
+/* ============================================================
+   AY EVRE MASKESİ
+   ============================================================ */
+
+const phaseCanvas =
+    document.createElement(
+        "canvas"
+    );
+
+
+const phaseCtx =
+    phaseCanvas.getContext(
+        "2d"
+    );
+
+
+function smoothstep(
+    edge0,
+    edge1,
+    x
+) {
+
+    let t =
+        (
+            x -
+            edge0
+        )
+        /
+        (
+            edge1 -
+            edge0
+        );
+
+
+    t =
+        Math.max(
+            0,
+            Math.min(
+                1,
+                t
+            )
+        );
+
+
+    return (
+        t *
+        t *
+        (
+            3 -
+            2 * t
+        )
+    );
+}
+
+
+function createPhaseShadow(
+    size,
+    fraction,
+    orientation
+) {
+
+    phaseCanvas.width =
+        size;
+
+
+    phaseCanvas.height =
+        size;
+
+
+    const image =
+        phaseCtx.createImageData(
+            size,
+            size
+        );
+
+
+    const data =
+        image.data;
+
+
+    const sunZ =
+        2 *
+        fraction
+        -
+        1;
+
+
+    const projectedSun =
+        Math.sqrt(
+            Math.max(
+                0,
+                1 -
+                sunZ *
+                sunZ
+            )
+        );
+
+
+    const sunX =
+        Math.sin(
+            orientation
+        )
+        *
+        projectedSun;
+
+
+    const sunY =
+        Math.cos(
+            orientation
+        )
+        *
+        projectedSun;
+
+
+    const center =
+        size / 2;
+
+
+    const radius =
+        size * 0.49;
+
+
+    for (
+        let py = 0;
+        py < size;
+        py++
+    ) {
+
+        for (
+            let px = 0;
+            px < size;
+            px++
+        ) {
+
+            const index =
+                (
+                    py *
+                    size +
+                    px
+                )
+                *
+                4;
+
+
+            const x =
+                (
+                    px -
+                    center
+                )
+                /
+                radius;
+
+
+            const y =
+                -(
+                    py -
+                    center
+                )
+                /
+                radius;
+
+
+            const r2 =
+                x *
+                x +
+                y *
+                y;
+
+
+            if (
+                r2 > 1
+            ) {
+
+                data[
+                    index + 3
+                ] =
+                    0;
+
+
+                continue;
+            }
+
+
+            const z =
+                Math.sqrt(
+                    Math.max(
+                        0,
+                        1 -
+                        r2
+                    )
+                );
+
+
+            const dot =
+                x *
+                sunX +
+                y *
+                sunY +
+                z *
+                sunZ;
+
+
+            const illuminated =
+                smoothstep(
+                    -0.018,
+                    0.018,
+                    dot
+                );
+
+
+            const positiveDot =
+                Math.max(
+                    0,
+                    dot
+                );
+
+
+            const limb =
+                Math.pow(
+                    1 -
+                    z,
+                    1.5
+                );
+
+
+            let lightSideOpacity =
+                0.025
+                +
+                (
+                    1 -
+                    positiveDot
+                )
+                *
+                0.15
+                +
+                limb *
+                0.09;
+
+
+            let opacity =
+                0.955
+                *
+                (
+                    1 -
+                    illuminated
+                )
+                +
+                lightSideOpacity
+                *
+                illuminated;
+
+
+            opacity =
+                Math.max(
+                    0,
+                    Math.min(
+                        0.98,
+                        opacity
+                    )
+                );
+
+
+            data[index] =
+                0;
+
+
+            data[
+                index + 1
+            ] =
+                2;
+
+
+            data[
+                index + 2
+            ] =
+                7;
+
+
+            data[
+                index + 3
+            ] =
+                Math.round(
+                    opacity *
+                    255
+                );
+        }
+    }
+
+
+    phaseCtx.putImageData(
+        image,
+        0,
+        0
+    );
+}
+
+
+/* ============================================================
+   AY DİSKİ
+   ============================================================ */
+
+function drawMoonDisc(
+    context,
+    x,
+    y,
+    diameter,
+    data
+) {
+
+    const radius =
+        diameter / 2;
+
+
+    if (
+        data.altitudeDeg >= 0
+    ) {
+
+        const halo =
+            context.createRadialGradient(
+                x,
+                y,
+                radius * 0.55,
+
+                x,
+                y,
+                radius * 1.5
+            );
+
+
+        halo.addColorStop(
+            0,
+            "rgba(210,225,255,0.08)"
+        );
+
+
+        halo.addColorStop(
+            1,
+            "rgba(210,225,255,0)"
+        );
+
+
+        context.fillStyle =
+            halo;
+
+
+        context.beginPath();
+
+
+        context.arc(
+            x,
+            y,
+            radius * 1.5,
+            0,
+            Math.PI * 2
+        );
+
+
+        context.fill();
+    }
+
+
+    context.save();
+
+
+    if (
+        data.altitudeDeg < 0
+    ) {
+
+        context.globalAlpha =
+            0.25;
+    }
+
+
+    context.beginPath();
+
+
+    context.arc(
+        x,
+        y,
+        radius,
+        0,
+        Math.PI * 2
+    );
+
+
+    context.clip();
+
+
+    context.translate(
+        x,
+        y
+    );
+
+
+    context.rotate(
+        data.textureRotation
+    );
+
+
+    context.imageSmoothingEnabled =
+        true;
+
+
+    context.imageSmoothingQuality =
+        "high";
+
+
+    if (
+        moonPhotoReady
+    ) {
+
+        const sourceWidth =
+            moonPhoto.naturalWidth;
+
+
+        const sourceHeight =
+            moonPhoto.naturalHeight;
+
+
+        const minSide =
+            Math.min(
+                sourceWidth,
+                sourceHeight
+            );
+
+
+        const cropSize =
+            minSide * 0.84;
+
+
+        const sourceX =
+            (
+                sourceWidth -
+                cropSize
+            )
+            /
+            2;
+
+
+        const sourceY =
+            (
+                sourceHeight -
+                cropSize
+            )
+            /
+            2;
+
+
+        context.filter =
+            "grayscale(70%) contrast(1.10) brightness(0.96)";
+
+
+        context.drawImage(
+            moonPhoto,
+
+            sourceX,
+            sourceY,
+            cropSize,
+            cropSize,
+
+            -radius,
+            -radius,
+
+            diameter,
+            diameter
+        );
+
+
+        context.filter =
+            "none";
+
+    } else {
+
+        const fallback =
+            context.createRadialGradient(
+                -radius * 0.25,
+                -radius * 0.25,
+                radius * 0.1,
+
+                0,
+                0,
+                radius
+            );
+
+
+        fallback.addColorStop(
+            0,
+            "#eeeeea"
+        );
+
+
+        fallback.addColorStop(
+            1,
+            "#aaa9a4"
+        );
+
+
+        context.fillStyle =
+            fallback;
+
+
+        context.fillRect(
+            -radius,
+            -radius,
+            diameter,
+            diameter
+        );
+    }
+
+
+    context.restore();
+
+
+    const phaseSize =
+        Math.max(
+            300,
+            Math.floor(
+                diameter * 3
+            )
+        );
+
+
+    createPhaseShadow(
+        phaseSize,
+        data.illumination.fraction,
+        data.brightSideOrientation
+    );
+
+
+    context.save();
+
+
+    if (
+        data.altitudeDeg < 0
+    ) {
+
+        context.globalAlpha =
+            0.25;
+    }
+
+
+    context.imageSmoothingEnabled =
+        true;
+
+
+    context.imageSmoothingQuality =
+        "high";
+
+
+    context.drawImage(
+        phaseCanvas,
+
+        x -
+        radius,
+
+        y -
+        radius,
+
+        diameter,
+        diameter
+    );
+
+
+    context.beginPath();
+
+
+    context.arc(
+        x,
+        y,
+        radius,
+        0,
+        Math.PI * 2
+    );
+
+
+    context.strokeStyle =
+        "rgba(220,230,235,0.16)";
+
+
+    context.lineWidth =
+        0.7;
+
+
+    context.stroke();
+
+
+    context.restore();
+}
+
+
+/* ============================================================
+   GÖKYÜZÜ
+   ============================================================ */
+
+function drawSky(
+    width,
+    height,
+    data
+) {
+
+    const context =
+        moonCtx;
+
+
+    context.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    const sky =
+        context.createLinearGradient(
+            0,
+            0,
+            0,
+            height
+        );
+
+
+    sky.addColorStop(
+        0,
+        "#01030a"
+    );
+
+
+    sky.addColorStop(
+        0.62,
+        "#061426"
+    );
+
+
+    sky.addColorStop(
+        0.82,
+        "#10233a"
+    );
+
+
+    sky.addColorStop(
+        1,
+        "#090b0e"
+    );
+
+
+    context.fillStyle =
+        sky;
+
+
+    context.fillRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    for (
+        const star
+        of
+        stars
+    ) {
+
+        context.beginPath();
+
+
+        context.arc(
+            star.x,
+            star.y,
+            star.r,
+            0,
+            Math.PI * 2
+        );
+
+
+        context.fillStyle =
+            `rgba(255,255,255,${star.a})`;
+
+
+        context.fill();
+    }
+
+
+    const horizonY =
+        height * 0.82;
+
+
+    const horizonGlow =
+        context.createLinearGradient(
+            0,
+            horizonY - 60,
+            0,
+            horizonY + 20
+        );
+
+
+    horizonGlow.addColorStop(
+        0,
+        "rgba(90,130,175,0)"
+    );
+
+
+    horizonGlow.addColorStop(
+        0.7,
+        "rgba(90,130,175,0.08)"
+    );
+
+
+    horizonGlow.addColorStop(
+        1,
+        "rgba(0,0,0,0)"
+    );
+
+
+    context.fillStyle =
+        horizonGlow;
+
+
+    context.fillRect(
+        0,
+        horizonY - 60,
+        width,
+        80
+    );
+
+
+    context.beginPath();
+
+
+    context.moveTo(
+        0,
+        horizonY + 9
+    );
+
+
+    for (
+        let i = 0;
+        i <= 17;
+        i++
+    ) {
+
+        const x =
+            width *
+            i /
+            17;
+
+
+        const y =
+            horizonY
+            +
+            5
+            +
+            Math.sin(
+                i * 1.81
+            )
+            *
+            3
+            +
+            Math.sin(
+                i * 0.71
+            )
+            *
+            5;
+
+
+        context.lineTo(
+            x,
+            y
+        );
+    }
+
+
+    context.lineTo(
+        width,
+        height
+    );
+
+
+    context.lineTo(
+        0,
+        height
+    );
+
+
+    context.closePath();
+
+
+    context.fillStyle =
+        "#050609";
+
+
+    context.fill();
+
+
+    context.beginPath();
+
+
+    context.moveTo(
+        0,
+        horizonY
+    );
+
+
+    context.lineTo(
+        width,
+        horizonY
+    );
+
+
+    context.strokeStyle =
+        "rgba(255,255,255,0.12)";
+
+
+    context.lineWidth =
+        1;
+
+
+    context.stroke();
+
+
+    context.textAlign =
+        "center";
+
+
+    context.textBaseline =
+        "middle";
+
+
+    context.font =
+        "12px system-ui";
+
+
+    context.fillStyle =
+        "rgba(255,255,255,0.55)";
+
+
+    const compass = [
+
+        {
+            az:
+                0,
+
+            text:
+                "K"
+        },
+
+        {
+            az:
+                90,
+
+            text:
+                "D"
+        },
+
+        {
+            az:
+                180,
+
+            text:
+                "G"
+        },
+
+        {
+            az:
+                270,
+
+            text:
+                "B"
+        }
+
+    ];
+
+
+    for (
+        const item
+        of
+        compass
+    ) {
+
+        const x =
+            item.az /
+            360 *
+            width;
+
+
+        context.fillText(
+            item.text,
+            x,
+            horizonY + 27
+        );
+
+
+        if (
+            item.az === 0
+        ) {
+
+            context.fillText(
+                "K",
+                width - 1,
+                horizonY + 27
+            );
+        }
+    }
+
+
+    const altitude =
+        data.altitudeDeg;
+
+
+    const azimuth =
+        data.azimuthDeg;
+
+
+    const moonX =
+        azimuth /
+        360 *
+        width;
+
+
+    let moonY;
+
+
+    if (
+        altitude >= 0
+    ) {
+
+        moonY =
+            horizonY
+            -
+            altitude /
+            90
+            *
+            (
+                horizonY -
+                80
+            );
+
+    } else {
+
+        moonY =
+            horizonY
+            +
+            Math.min(
+                60,
+                Math.abs(
+                    altitude
+                )
+                *
+                2.2
+            );
+    }
+
+
+    const moonDiameter =
+        Math.min(
+            width,
+            height
+        )
+        *
+        0.205;
+
+
+    drawMoonDisc(
+        context,
+        moonX,
+        moonY,
+        moonDiameter,
+        data
+    );
+
+
+    context.beginPath();
+
+
+    context.moveTo(
+        moonX,
+        horizonY - 5
+    );
+
+
+    context.lineTo(
+        moonX,
+        horizonY + 5
+    );
+
+
+    context.strokeStyle =
+        "rgba(255,255,255,0.38)";
+
+
+    context.stroke();
+
+
+    if (
+        altitude < 0
+    ) {
+
+        context.textAlign =
+            "center";
+
+
+        context.font =
+            "13px system-ui";
+
+
+        context.fillStyle =
+            "rgba(255,255,255,0.45)";
+
+
+        context.fillText(
+            "Ay bu saatte ufkun altında",
+            width / 2,
+            horizonY - 18
+        );
+    }
+}
+
+
+/* ============================================================
+   AY HESABI
+   ============================================================ */
+
+function updateMoon() {
+
+    if (
+        typeof SunCalc ===
+        "undefined"
+    ) {
+
+        return;
+    }
+
+
+    const date =
+        getSelectedDate();
+
+
+    const position =
+        SunCalc.getMoonPosition(
+            date,
+            selectedLat,
+            selectedLon
+        );
+
+
+    const illumination =
+        SunCalc.getMoonIllumination(
+            date
+        );
+
+
+    const altitudeDeg =
+        position.altitude *
+        RAD;
+
+
+    const azimuthDeg =
+        normalizeDegrees(
+            position.azimuth *
+            RAD +
+            180
+        );
+
+
+    const brightSideOrientation =
+        illumination.angle
+        -
+        position.parallacticAngle;
+
+
+    const textureRotation =
+        -position.parallacticAngle;
+
+
+    const size =
+        resizeCanvas(
+            moonCanvas,
+            moonCtx
+        );
+
+
+    if (
+        stars.length === 0
+        ||
+        stars._width !== size.width
+        ||
+        stars._height !== size.height
+    ) {
+
+        createStars(
+            size.width,
+            size.height
+        );
+
+
+        stars._width =
+            size.width;
+
+
+        stars._height =
+            size.height;
+    }
+
+
+    drawSky(
+        size.width,
+        size.height,
+        {
+            altitudeDeg:
+                altitudeDeg,
+
+            azimuthDeg:
+                azimuthDeg,
+
+            illumination:
+                illumination,
+
+            brightSideOrientation:
+                brightSideOrientation,
+
+            textureRotation:
+                textureRotation
+        }
+    );
+
+
+    moonInfo.innerHTML =
+        `
+        <strong>${getPhaseName(illumination.phase)}</strong><br>
+        Aydınlık: ${Math.round(illumination.fraction * 100)}%<br>
+        Yükseklik: ${altitudeDeg.toFixed(1)}°<br>
+        Azimut: ${azimuthDeg.toFixed(1)}°
+        (${getCompassDirection(azimuthDeg)})
+        `;
+
+
+    moonStatus.textContent =
+        altitudeDeg >= 0
+        ?
+        "Ufkun üzerinde"
+        :
+        "Ufkun altında";
+
+
+    moonStatus.style.color =
+        altitudeDeg >= 0
+        ?
+        "#dfeaff"
+        :
+        "#9aa4b3";
+}
+
+
+/* ============================================================
+   DÜNYA
+   ============================================================ */
+
+let worldLand =
+    null;
+
+
+let worldCountries =
+    [];
+
+
+const projection =
+    d3
+    .geoOrthographic()
+    .precision(
+        0.3
+    )
+    .clipAngle(
+        90
+    );
+
+
+const geoPath =
+    d3.geoPath(
+        projection,
+        globeCtx
+    );
+
+
+let globeRotation = [
+    -selectedLon,
+    -selectedLat,
+    0
+];
+
+
+projection.rotate(
+    globeRotation
+);
+
+
+/* ============================================================
+   DÜNYA GEOMETRİSİ
+   ============================================================ */
+
+function getGlobeGeometry() {
+
+    const rect =
+        globeCanvas.getBoundingClientRect();
+
+
+    const radius =
+        Math.min(
+            rect.width,
+            rect.height
+        )
+        *
+        0.40;
+
+
+    return {
+        width:
+            rect.width,
+
+        height:
+            rect.height,
+
+        radius:
+            radius,
+
+        cx:
+            rect.width / 2,
+
+        cy:
+            rect.height / 2 + 15
+    };
+}
+
+
+function getMarkerScreenPosition() {
+
+    const point =
+        projection(
+            [
+                selectedLon,
+                selectedLat
+            ]
+        );
+
+
+    if (
+        !point
+    ) {
+
+        return null;
+    }
+
+
+    const center = [
+        -globeRotation[0],
+        -globeRotation[1]
+    ];
+
+
+    const visible =
+        d3.geoDistance(
+            [
+                selectedLon,
+                selectedLat
+            ],
+            center
+        )
+        <
+        Math.PI / 2;
+
+
+    if (
+        !visible
+    ) {
+
+        return null;
+    }
+
+
+    return {
+        x:
+            point[0],
+
+        y:
+            point[1]
+    };
+}
+
+
+function isPointerOnMarker(
+    x,
+    y
+) {
+
+    const marker =
+        getMarkerScreenPosition();
+
+
+    if (
+        !marker
+    ) {
+
+        return false;
+    }
+
+
+    const dx =
+        x -
+        marker.x;
+
+
+    const dy =
+        y -
+        marker.y;
+
+
+    return (
+        dx *
+        dx
+        +
+        dy *
+        dy
+        <=
+        17 *
+        17
+    );
+}
+
+
+/* ============================================================
+   POINTER DURUMU
+   ============================================================ */
+
+let pointerMode =
+    null;
+
+
+let markerDragging =
+    false;
+
+
+let globeDragging =
+    false;
+
+
+let dragStartRotation =
+    null;
+
+
+let dragStartPointer =
+    null;
+
+
+/* ============================================================
+   DÜNYAYI ÇİZ
+   ============================================================ */
+
+function drawGlobe() {
+
+    const size =
+        resizeCanvas(
+            globeCanvas,
+            globeCtx
+        );
+
+
+    const width =
+        size.width;
+
+
+    const height =
+        size.height;
+
+
+    const radius =
+        Math.min(
+            width,
+            height
+        )
+        *
+        0.40;
+
+
+    projection
+        .translate(
+            [
+                width / 2,
+                height / 2 + 15
+            ]
+        )
+        .scale(
+            radius
+        )
+        .rotate(
+            globeRotation
+        );
+
+
+    globeCtx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    globeCtx.beginPath();
+
+
+    globeCtx.arc(
+        width / 2 + 7,
+        height / 2 + 25,
+        radius + 5,
+        0,
+        Math.PI * 2
+    );
+
+
+    globeCtx.fillStyle =
+        "rgba(0,0,0,0.35)";
+
+
+    globeCtx.fill();
+
+
+    globeCtx.beginPath();
+
+
+    geoPath(
+        {
+            type:
+                "Sphere"
+        }
+    );
+
+
+    const ocean =
+        globeCtx.createRadialGradient(
+            width / 2 -
+            radius * 0.35,
+
+            height / 2 -
+            radius * 0.35,
+
+            radius * 0.12,
+
+            width / 2,
+
+            height / 2,
+
+            radius * 1.2
+        );
+
+
+    ocean.addColorStop(
+        0,
+        "#318ad0"
+    );
+
+
+    ocean.addColorStop(
+        0.55,
+        "#10518c"
+    );
+
+
+    ocean.addColorStop(
+        1,
+        "#031d35"
+    );
+
+
+    globeCtx.fillStyle =
+        ocean;
+
+
+    globeCtx.fill();
+
+
+    globeCtx.beginPath();
+
+
+    geoPath(
+        d3.geoGraticule10()
+    );
+
+
+    globeCtx.strokeStyle =
+        "rgba(255,255,255,0.10)";
+
+
+    globeCtx.lineWidth =
+        0.7;
+
+
+    globeCtx.stroke();
+
+
+    if (
+        worldLand
+    ) {
+
+        globeCtx.beginPath();
+
+
+        geoPath(
+            worldLand
+        );
+
+
+        globeCtx.fillStyle =
+            "#668a5b";
+
+
+        globeCtx.fill();
+
+
+        globeCtx.strokeStyle =
+            "rgba(210,235,200,0.50)";
+
+
+        globeCtx.lineWidth =
+            0.5;
+
+
+        globeCtx.stroke();
+    }
+
+
+    globeCtx.beginPath();
+
+
+    geoPath(
+        {
+            type:
+                "Sphere"
+        }
+    );
+
+
+    globeCtx.strokeStyle =
+        "rgba(170,215,255,0.62)";
+
+
+    globeCtx.lineWidth =
+        1.3;
+
+
+    globeCtx.stroke();
+
+
+    const marker =
+        getMarkerScreenPosition();
+
+
+    if (
+        marker
+    ) {
+
+        globeCtx.beginPath();
+
+
+        globeCtx.arc(
+            marker.x,
+            marker.y,
+            11,
+            0,
+            Math.PI * 2
+        );
+
+
+        globeCtx.fillStyle =
+            markerDragging
+            ?
+            "rgba(255,90,90,0.32)"
+            :
+            "rgba(255,70,70,0.20)";
+
+
+        globeCtx.fill();
+
+
+        globeCtx.beginPath();
+
+
+        globeCtx.arc(
+            marker.x,
+            marker.y,
+
+            markerDragging
+            ?
+            6.2
+            :
+            5.2,
+
+            0,
+            Math.PI * 2
+        );
+
+
+        globeCtx.fillStyle =
+            "#ff3f45";
+
+
+        globeCtx.fill();
+
+
+        globeCtx.strokeStyle =
+            "rgba(255,255,255,0.95)";
+
+
+        globeCtx.lineWidth =
+            1.5;
+
+
+        globeCtx.stroke();
+
+
+        globeCtx.beginPath();
+
+
+        globeCtx.arc(
+            marker.x - 1.5,
+            marker.y - 1.5,
+            1.3,
+            0,
+            Math.PI * 2
+        );
+
+
+        globeCtx.fillStyle =
+            "rgba(255,255,255,0.75)";
+
+
+        globeCtx.fill();
+    }
+}
+
+
+/* ============================================================
+   COĞRAFİ UZAKLIK
+   ============================================================ */
+
+function geoDistanceKm(
+    a,
+    b
+) {
+
+    return (
+        d3.geoDistance(
+            a,
+            b
+        )
+        *
+        EARTH_RADIUS_KM
+    );
+}
+
+
+/* ============================================================
+   ÜLKE GEOMETRİLERİ
+   ============================================================ */
+
+function getGeometryRings(
+    feature
+) {
+
+    if (
+        !feature ||
+        !feature.geometry
+    ) {
+
+        return [];
+    }
+
+
+    if (
+        feature.geometry.type ===
+        "Polygon"
+    ) {
+
+        return feature.geometry.coordinates;
+    }
+
+
+    if (
+        feature.geometry.type ===
+        "MultiPolygon"
+    ) {
+
+        return feature.geometry.coordinates.flat();
+    }
+
+
+    return [];
+}
+
+
+function densifyRing(
+    ring
+) {
+
+    const samples =
+        [];
+
+
+    const maxStep =
+        1.5 * DEG;
+
+
+    for (
+        let i = 0;
+        i < ring.length - 1;
+        i++
+    ) {
+
+        const a =
+            ring[i];
+
+
+        const b =
+            ring[
+                i + 1
+            ];
+
+
+        const pieces =
+            Math.max(
+                1,
+                Math.ceil(
+                    d3.geoDistance(
+                        a,
+                        b
+                    )
+                    /
+                    maxStep
+                )
+            );
+
+
+        const interpolate =
+            d3.geoInterpolate(
+                a,
+                b
+            );
+
+
+        for (
+            let j = 0;
+            j < pieces;
+            j++
+        ) {
+
+            samples.push(
+                interpolate(
+                    j /
+                    pieces
+                )
+            );
+        }
+    }
+
+
+    if (
+        ring.length
+    ) {
+
+        samples.push(
+            ring[
+                ring.length - 1
+            ]
+        );
+    }
+
+
+    return samples;
+}
+
+
+function prepareFlagCountryGeometries() {
+
+    preparedFlagCountries =
+        [];
+
+
+    for (
+        const info
+        of
+        lunarFlagCountries
+    ) {
+
+        const feature =
+            worldCountries.find(
+                country =>
+                    Number(
+                        country.id
+                    )
+                    ===
+                    info.n3
+            );
+
+
+        const item = {
+            ...info,
+
+            feature:
+                feature ||
+                null,
+
+            samples:
+                []
+        };
+
+
+        if (
+            feature
+        ) {
+
+            for (
+                const ring
+                of
+                getGeometryRings(
+                    feature
+                )
+            ) {
+
+                item.samples.push(
+                    ...densifyRing(
+                        ring
+                    )
+                );
+            }
+        }
+
+
+        preparedFlagCountries.push(
+            item
+        );
+    }
+}
+
+
+/* ============================================================
+   EN YAKIN AY/HİLAL BAYRAĞI
+   ============================================================ */
+
+function distanceToFlagCountry(
+    country,
+    point
+) {
+
+    if (
+        country.feature
+        &&
+        d3.geoContains(
+            country.feature,
+            point
+        )
+    ) {
+
+        return 0;
+    }
+
+
+    if (
+        country.samples
+        &&
+        country.samples.length
+    ) {
+
+        let minimum =
+            Infinity;
+
+
+        for (
+            const sample
+            of
+            country.samples
+        ) {
+
+            const distance =
+                geoDistanceKm(
+                    point,
+                    sample
+                );
+
+
+            if (
+                distance <
+                minimum
+            ) {
+
+                minimum =
+                    distance;
+            }
+        }
+
+
+        return minimum;
+    }
+
+
+    return geoDistanceKm(
+        point,
+        country.center
+    );
+}
+
+
+function findNearestLunarFlagCountry() {
+
+    const point = [
+        selectedLon,
+        selectedLat
+    ];
+
+
+    const candidates =
+        preparedFlagCountries.length
+        ?
+        preparedFlagCountries
+        :
+        lunarFlagCountries;
+
+
+    let nearest =
+        null;
+
+
+    let nearestDistance =
+        Infinity;
+
+
+    for (
+        const country
+        of
+        candidates
+    ) {
+
+        const distance =
+            distanceToFlagCountry(
+                country,
+                point
+            );
+
+
+        if (
+            distance <
+            nearestDistance
+        ) {
+
+            nearestDistance =
+                distance;
+
+
+            nearest =
+                country;
+        }
+    }
+
+
+    return nearest;
+}
+
+
+/* ============================================================
+   KIRMIZI NOKTANIN BULUNDUĞU ÜLKE
+   ============================================================ */
+
+function findCurrentCountryFeature() {
+
+    if (
+        !worldCountries.length
+    ) {
+
+        return null;
+    }
+
+
+    const point = [
+        selectedLon,
+        selectedLat
+    ];
+
+
+    for (
+        const country
+        of
+        worldCountries
+    ) {
+
+        if (
+            d3.geoContains(
+                country,
+                point
+            )
+        ) {
+
+            return country;
+        }
+    }
+
+
+    return null;
+}
+
+
+/* ============================================================
+   BAYRAKLARI GÜNCELLE
+   ============================================================ */
+
+let currentShownCountryId =
+    null;
+
+
+let currentShownLunarCode =
+    null;
+
+
+function updateCurrentCountryFlag() {
+
+    const feature =
+        findCurrentCountryFeature();
+
+
+    /*
+        Deniz üzerindeyken önceki ülke
+        görünür kalır.
+
+        Yeni bir kara ülkesine girildiğinde
+        birinci bayrak değişir.
+    */
+
+    if (
+        !feature
+    ) {
+
+        return;
+    }
+
+
+    const numericCode =
+        Number(
+            feature.id
+        );
+
+
+    if (
+        currentShownCountryId ===
+        numericCode
+    ) {
+
+        return;
+    }
+
+
+    currentShownCountryId =
+        numericCode;
+
+
+    const meta =
+        countryMetaByNumeric.get(
+            numericCode
+        );
+
+
+    const country = {
+        name:
+            meta?.name
+            ||
+            feature.properties?.name
+            ||
+            "Ülke",
+
+        code:
+            meta?.code
+            ||
+            null,
+
+        flagUrl:
+            meta?.flagUrl
+            ||
+            null
+    };
+
+
+    showFlag(
+        currentCountryFlag,
+        currentCountryEmoji,
+        currentCountryName,
+        country
+    );
+}
+
+
+function updateNearestLunarFlag() {
+
+    const country =
+        findNearestLunarFlagCountry();
+
+
+    if (
+        !country
+    ) {
+
+        return;
+    }
+
+
+    if (
+        currentShownLunarCode ===
+        country.code
+    ) {
+
+        return;
+    }
+
+
+    currentShownLunarCode =
+        country.code;
+
+
+    showFlag(
+        nearestMoonFlag,
+        nearestMoonEmoji,
+        nearestMoonName,
+        country
+    );
+}
+
+
+function updateFlagsForLocation() {
+
+    updateCurrentCountryFlag();
+
+    updateNearestLunarFlag();
+}
+
+
+/* ============================================================
+   TÜM ÜLKE KODLARINI YÜKLE
+   ============================================================ */
+
+async function loadCountryMetadata() {
+
+    try {
+
+        const countries =
+            await d3.json(
+                "https://restcountries.com/v3.1/all?fields=name,translations,cca2,ccn3,flags"
+            );
+
+
+        for (
+            const country
+            of
+            countries
+        ) {
+
+            if (
+                !country.ccn3
+                ||
+                !country.cca2
+            ) {
+
+                continue;
+            }
+
+
+            const numericCode =
+                Number(
+                    country.ccn3
+                );
+
+
+            const turkishName =
+                country.translations
+                ?.tur
+                ?.common;
+
+
+            countryMetaByNumeric.set(
+                numericCode,
+                {
+                    code:
+                        country.cca2.toLowerCase(),
+
+                    name:
+                        turkishName
+                        ||
+                        country.name?.common
+                        ||
+                        "Ülke",
+
+                    flagUrl:
+                        country.flags?.png
+                        ||
+                        country.flags?.svg
+                        ||
+                        null
+                }
+            );
+        }
+
+
+        /*
+            Metadata geldikten sonra
+            mevcut ülkeyi yeni Türkçe ad ve
+            bayrak URL'siyle tekrar çiz.
+        */
+
+        currentShownCountryId =
+            null;
+
+
+        updateCurrentCountryFlag();
+
+    } catch (
+        error
+    ) {
+
+        console.warn(
+            "Ülke kodları yüklenemedi:",
+            error
+        );
+    }
+}
+
+
+/* ============================================================
+   POINTER
+   ============================================================ */
+
+function getPointerPosition(
+    event
+) {
+
+    const rect =
+        globeCanvas.getBoundingClientRect();
+
+
+    return [
+        event.clientX -
+        rect.left,
+
+        event.clientY -
+        rect.top
+    ];
+}
+
+
+function moveMarkerToPointer(
+    x,
+    y
+) {
+
+    const globe =
+        getGlobeGeometry();
+
+
+    const dx =
+        x -
+        globe.cx;
+
+
+    const dy =
+        y -
+        globe.cy;
+
+
+    if (
+        dx *
+        dx
+        +
+        dy *
+        dy
+        >
+        globe.radius *
+        globe.radius
+    ) {
+
+        return;
+    }
+
+
+    const coordinates =
+        projection.invert(
+            [
+                x,
+                y
+            ]
+        );
+
+
+    if (
+        !coordinates
+    ) {
+
+        return;
+    }
+
+
+    selectedLon =
+        coordinates[0];
+
+
+    selectedLat =
+        Math.max(
+            -90,
+            Math.min(
+                90,
+                coordinates[1]
+            )
+        );
+
+
+    while (
+        selectedLon > 180
+    ) {
+
+        selectedLon -=
+            360;
+    }
+
+
+    while (
+        selectedLon < -180
+    ) {
+
+        selectedLon +=
+            360;
+    }
+
+
+    latText.textContent =
+        formatLatitude(
+            selectedLat
+        );
+
+
+    lonText.textContent =
+        formatLongitude(
+            selectedLon
+        );
+
+
+    drawGlobe();
+
+    updateMoon();
+
+    updateFlagsForLocation();
+}
+
+
+globeCanvas.addEventListener(
+    "pointerdown",
+
+    event => {
+
+        const pointer =
+            getPointerPosition(
+                event
+            );
+
+
+        globeCanvas.setPointerCapture(
+            event.pointerId
+        );
+
+
+        if (
+            isPointerOnMarker(
+                pointer[0],
+                pointer[1]
+            )
+        ) {
+
+            pointerMode =
+                "marker";
+
+
+            markerDragging =
+                true;
+
+
+            globeDragging =
+                false;
+
+
+            globeCanvas.style.cursor =
+                "grabbing";
+
+
+            drawGlobe();
+
+
+            return;
+        }
+
+
+        pointerMode =
+            "globe";
+
+
+        markerDragging =
+            false;
+
+
+        globeDragging =
+            true;
+
+
+        dragStartPointer =
+            pointer;
+
+
+        dragStartRotation = [
+            ...globeRotation
+        ];
+
+
+        globeCanvas.style.cursor =
+            "grabbing";
+    }
+);
+
+
+globeCanvas.addEventListener(
+    "pointermove",
+
+    event => {
+
+        const pointer =
+            getPointerPosition(
+                event
+            );
+
+
+        if (
+            pointerMode ===
+            "marker"
+            &&
+            markerDragging
+        ) {
+
+            moveMarkerToPointer(
+                pointer[0],
+                pointer[1]
+            );
+
+
+            return;
+        }
+
+
+        if (
+            pointerMode ===
+            "globe"
+            &&
+            globeDragging
+            &&
+            dragStartPointer
+            &&
+            dragStartRotation
+        ) {
+
+            const dx =
+                pointer[0]
+                -
+                dragStartPointer[0];
+
+
+            const dy =
+                pointer[1]
+                -
+                dragStartPointer[1];
+
+
+            globeRotation[0] =
+                dragStartRotation[0]
+                +
+                dx *
+                0.35;
+
+
+            globeRotation[1] =
+                Math.max(
+                    -89,
+                    Math.min(
+                        89,
+
+                        dragStartRotation[1]
+                        -
+                        dy *
+                        0.35
+                    )
+                );
+
+
+            drawGlobe();
+
+
+            return;
+        }
+
+
+        globeCanvas.style.cursor =
+            isPointerOnMarker(
+                pointer[0],
+                pointer[1]
+            )
+            ?
+            "pointer"
+            :
+            "grab";
+    }
+);
+
+
+function finishPointerInteraction(
+    event
+) {
+
+    if (
+        event
+        &&
+        globeCanvas.hasPointerCapture(
+            event.pointerId
+        )
+    ) {
+
+        globeCanvas.releasePointerCapture(
+            event.pointerId
+        );
+    }
+
+
+    pointerMode =
+        null;
+
+
+    markerDragging =
+        false;
+
+
+    globeDragging =
+        false;
+
+
+    dragStartPointer =
+        null;
+
+
+    dragStartRotation =
+        null;
+
+
+    globeCanvas.style.cursor =
+        "grab";
+
+
+    drawGlobe();
+}
+
+
+globeCanvas.addEventListener(
+    "pointerup",
+    finishPointerInteraction
+);
+
+
+globeCanvas.addEventListener(
+    "pointercancel",
+    finishPointerInteraction
+);
+
+
+globeCanvas.addEventListener(
+    "pointerleave",
+
+    () => {
+
+        if (
+            !markerDragging
+            &&
+            !globeDragging
+        ) {
+
+            globeCanvas.style.cursor =
+                "grab";
+        }
+    }
+);
+
+
+/* ============================================================
+   KOORDİNAT YAZILARI
+   ============================================================ */
+
+function formatLatitude(
+    value
+) {
+
+    return (
+        Math.abs(
+            value
+        ).toFixed(
+            2
+        )
+        +
+        "° "
+        +
+        (
+            value >= 0
+            ?
+            "K"
+            :
+            "G"
+        )
+    );
+}
+
+
+function formatLongitude(
+    value
+) {
+
+    return (
+        Math.abs(
+            value
+        ).toFixed(
+            2
+        )
+        +
+        "° "
+        +
+        (
+            value >= 0
+            ?
+            "D"
+            :
+            "B"
+        )
+    );
+}
+
+
+/* ============================================================
+   DÜNYA VERİSİ
+   ============================================================ */
+
+async function loadWorld() {
+
+    try {
+
+        const world =
+            await d3.json(
+                "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
+            );
+
+
+        worldLand =
+            topojson.feature(
+                world,
+                world.objects.land
+            );
+
+
+        worldCountries =
+            topojson.feature(
+                world,
+                world.objects.countries
+            ).features;
+
+
+        prepareFlagCountryGeometries();
+
+
+        drawGlobe();
+
+
+        /*
+            Dünya verisi gelince kırmızı
+            noktanın bulunduğu gerçek ülke
+            hesaplanabilir.
+        */
+
+        updateFlagsForLocation();
+
+    } catch (
+        error
+    ) {
+
+        console.warn(
+            "Dünya haritası yüklenemedi:",
+            error
+        );
+
+
+        drawGlobe();
+
+
+        updateNearestLunarFlag();
+    }
+}
+
+
+/* ============================================================
+   RESIZE
+   ============================================================ */
+
+window.addEventListener(
+    "resize",
+
+    () => {
+
+        stars =
+            [];
+
+
+        drawGlobe();
+
+
+        updateMoon();
+    }
+);
+
+
+/* ============================================================
+   BAŞLANGIÇ
+   ============================================================ */
+
+function initialize() {
+
+    yearSlider.value =
+        2026;
+
+
+    monthSlider.value =
+        9;
+
+
+    daySlider.value =
+        20;
+
+
+    latText.textContent =
+        formatLatitude(
+            selectedLat
+        );
+
+
+    lonText.textContent =
+        formatLongitude(
+            selectedLon
+        );
+
+
+    /*
+        İlk karede:
+        Almanya + en yakın Ay/hilal bayrağı.
+    */
+
+    showFlag(
+        currentCountryFlag,
+        currentCountryEmoji,
+        currentCountryName,
+        {
+            name:
+                "Almanya",
+
+            code:
+                "de"
+        }
+    );
+
+
+    updateDateControls();
+
+
+    drawGlobe();
+
+
+    updateNearestLunarFlag();
+
+
+    loadWorld();
+
+
+    loadCountryMetadata();
+}
+
+
 initialize();
+
 </script>
+
 </body>
 </html>
