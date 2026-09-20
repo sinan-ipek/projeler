@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ay Gökyüzü Simülasyonu</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 40% 30%,#14223a 0%,#070d18 45%,#02050b 100%);color:#fff}
+#app{position:relative;width:100vw;height:100vh}
+#homeBtn{position:absolute;left:18px;top:18px;z-index:50;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#fff;background:rgba(8,18,32,.88);border:1px solid rgba(255,255,255,.18);box-shadow:0 8px 24px rgba(0,0,0,.3);font-size:22px;backdrop-filter:blur(10px)}
+#homeBtn:hover{background:rgba(24,45,70,.95)}
+#datePanel{position:absolute;top:18px;left:50%;transform:translateX(-50%);display:flex;gap:22px;padding:14px 22px;border-radius:18px;background:rgba(8,18,32,.82);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 35px rgba(0,0,0,.35);z-index:20}
+.dateControl{width:180px}
+.dateHeader{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px}
+.dateTitle{font-size:12px;opacity:.68;letter-spacing:.08em;text-transform:uppercase}
+.dateValue{font-size:20px;font-weight:650}
+input[type=range]{width:100%;cursor:pointer}
+#moonPanel{position:absolute;left:28px;top:126px;width:min(46vw,610px);height:min(67vh,620px);min-width:420px;min-height:430px;border-radius:24px;overflow:hidden;background:#02050a;border:1px solid rgba(255,255,255,.17);box-shadow:0 18px 65px rgba(0,0,0,.48);z-index:5}
+#moonCanvas{width:100%;height:100%;display:block}
+#moonPanelTitle{position:absolute;left:18px;top:15px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.68);pointer-events:none}
+#moonInfo{position:absolute;left:18px;bottom:19px;padding:10px 13px;border-radius:12px;background:rgba(0,0,0,.42);backdrop-filter:blur(7px);font-size:13px;line-height:1.55;color:rgba(255,255,255,.89);pointer-events:none}
+#moonStatus{position:absolute;right:18px;bottom:19px;padding:8px 12px;border-radius:999px;background:rgba(0,0,0,.42);font-size:12px;pointer-events:none}
+#globeBox{position:absolute;right:25px;top:120px;width:360px;height:410px;border-radius:24px;background:linear-gradient(160deg,rgba(18,36,58,.92),rgba(4,11,21,.92));border:1px solid rgba(255,255,255,.15);box-shadow:0 18px 65px rgba(0,0,0,.42);overflow:hidden;z-index:10}
+#globeTitle{position:absolute;top:15px;left:18px;z-index:3;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.68);pointer-events:none}
+#globeHint{position:absolute;top:36px;left:18px;z-index:3;font-size:11px;color:rgba(255,255,255,.45);pointer-events:none}
+#globeCanvas{display:block;width:100%;height:350px;cursor:grab;touch-action:none}
+#locationInfo{position:absolute;left:16px;right:16px;bottom:15px;display:flex;justify-content:space-between;gap:10px;font-size:12px;color:rgba(255,255,255,.78)}
+.coord{font-variant-numeric:tabular-nums}
+#flagPanel{position:absolute;width:126px;height:100px;padding:9px;border-radius:14px;background:linear-gradient(150deg,rgba(16,30,48,.94),rgba(4,11,20,.94));border:1px solid rgba(255,255,255,.15);box-shadow:0 10px 26px rgba(0,0,0,.30);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:12}
+#flagImageBox{width:76px;height:50px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:5px;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.10)}
+#flagImage{display:none;width:100%;height:100%;object-fit:contain}
+#flagEmoji{display:none;font-size:39px;line-height:1}
+#flagCountry{width:100%;overflow:hidden;text-align:center;white-space:nowrap;text-overflow:ellipsis;font-size:12px;font-weight:600;color:rgba(255,255,255,.92)}
+#mainTitle{position:absolute;left:30px;bottom:25px;font-size:17px;font-weight:450;color:rgba(255,255,255,.68);z-index:3}
+#timeNotice{position:absolute;right:28px;bottom:25px;font-size:11px;color:rgba(255,255,255,.42);text-align:right;z-index:3}
+@media(max-width:950px){
+ #homeBtn{left:10px;top:10px;width:40px;height:40px;font-size:19px}
+ #datePanel{width:calc(100% - 64px);left:calc(50% + 22px);top:10px;gap:10px;padding:10px}
+ .dateControl{flex:1;width:auto;min-width:0}
+ .dateValue{font-size:15px}
+ .dateTitle{font-size:10px}
+ #moonPanel{left:10px;top:105px;width:calc(100% - 20px);min-width:0;height:52vh}
+ #globeBox{right:10px;top:auto;bottom:10px;width:230px;height:270px}
+ #globeCanvas{height:220px}
+ #flagPanel{width:108px;height:87px;padding:7px}
+ #flagImageBox{width:65px;height:42px}
+ #flagCountry{font-size:11px}
+ #mainTitle,#timeNotice{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<a id="homeBtn" href="../index.html" title="Projeler ana sayfası" aria-label="Projeler ana sayfasına dön">⌂</a>
+
+<div id="datePanel">
+  <div class="dateControl"><div class="dateHeader"><span class="dateTitle">Yıl</span><span class="dateValue" id="yearValue">2026</span></div><input id="yearSlider" type="range" min="1900" max="2100" value="2026" step="1"></div>
+  <div class="dateControl"><div class="dateHeader"><span class="dateTitle">Ay</span><span class="dateValue" id="monthValue">Eylül</span></div><input id="monthSlider" type="range" min="1" max="12" value="9" step="1"></div>
+  <div class="dateControl"><div class="dateHeader"><span class="dateTitle">Gün</span><span class="dateValue" id="dayValue">20</span></div><input id="daySlider" type="range" min="1" max="30" value="20" step="1"></div>
+</div>
+
+<div id="moonPanel">
+  <canvas id="moonCanvas"></canvas>
+  <div id="moonPanelTitle">Seçilen konumdan gökyüzü</div>
+  <div id="moonInfo"></div>
+  <div id="moonStatus"></div>
+</div>
+
+<div id="flagPanel">
+  <div id="flagImageBox"><img id="flagImage" alt=""><div id="flagEmoji">🌙</div></div>
+  <div id="flagCountry">Türkiye</div>
+</div>
+
+<div id="globeBox">
+  <div id="globeTitle">Gözlem Konumu</div>
+  <div id="globeHint">Kırmızı noktayı sürükle · Küreyi boş yerden çevir</div>
+  <canvas id="globeCanvas"></canvas>
+  <div id="locationInfo">
+    <span>Enlem: <b class="coord" id="latText">51.17° K</b></span>
+    <span>Boylam: <b class="coord" id="lonText">10.45° D</b></span>
+  </div>
+</div>
+
+<div id="mainTitle">Ay · Dünya · Tarih</div>
+<div id="timeNotice">Gökyüzü konumu yaklaşık<br>yerel güneş saati 22:00 için hesaplanır.</div>
+</div>
+
+<script>
+const DEG=Math.PI/180,RAD=180/Math.PI,EARTH_RADIUS_KM=6371.0088;
+const monthNames=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+let selectedLat=51.1657,selectedLon=10.4515;
+
+const lunarFlagCountries=[
+{name:"Türkiye",code:"tr",n3:792,center:[35.24,39.06]},
+{name:"Cezayir",code:"dz",n3:12,center:[2.63,28.16]},
+{name:"Tunus",code:"tn",n3:788,center:[9.54,34.12]},
+{name:"Libya",code:"ly",n3:434,center:[17.23,26.34]},
+{name:"Moritanya",code:"mr",n3:478,center:[-10.33,20.26]},
+{name:"Pakistan",code:"pk",n3:586,center:[69.35,30.38]},
+{name:"Maldivler",code:"mv",n3:462,center:[73.22,3.20]},
+{name:"Malezya",code:"my",n3:458,center:[102.0,4.2]},
+{name:"Singapur",code:"sg",n3:702,center:[103.82,1.35]},
+{name:"Brunei",code:"bn",n3:96,center:[114.72,4.54]},
+{name:"Azerbaycan",code:"az",n3:31,center:[47.58,40.39]},
+{name:"Türkmenistan",code:"tm",n3:795,center:[59.56,39.12]},
+{name:"Özbekistan",code:"uz",n3:860,center:[64.59,41.38]},
+{name:"Komorlar",code:"km",n3:174,center:[43.87,-11.88]},
+{name:"Nepal",code:"np",n3:524,center:[84.12,28.39]},
+{name:"Palau",code:"pw",n3:585,center:[134.58,7.51]},
+{name:"Moğolistan",code:"mn",n3:496,center:[103.85,46.86]}
+];
+let preparedFlagCountries=[],currentFlagCode=null;
+
+const moonPhoto=new Image();
+moonPhoto.crossOrigin="anonymous";
+moonPhoto.src="https://upload.wikimedia.org/wikipedia/commons/2/2d/Full_Moon_%2815984763045%29.jpg";
+let moonPhotoReady=false;
+moonPhoto.onload=()=>{moonPhotoReady=true;updateMoon()};
+moonPhoto.onerror=()=>{moonPhotoReady=false;updateMoon()};
+
+const app=document.getElementById("app");
+const yearSlider=document.getElementById("yearSlider"),monthSlider=document.getElementById("monthSlider"),daySlider=document.getElementById("daySlider");
+const yearValue=document.getElementById("yearValue"),monthValue=document.getElementById("monthValue"),dayValue=document.getElementById("dayValue");
+const latText=document.getElementById("latText"),lonText=document.getElementById("lonText");
+const moonPanel=document.getElementById("moonPanel"),moonCanvas=document.getElementById("moonCanvas"),moonCtx=moonCanvas.getContext("2d");
+const globeBox=document.getElementById("globeBox"),globeCanvas=document.getElementById("globeCanvas"),globeCtx=globeCanvas.getContext("2d");
+const moonInfo=document.getElementById("moonInfo"),moonStatus=document.getElementById("moonStatus");
+const flagPanel=document.getElementById("flagPanel"),flagImage=document.getElementById("flagImage"),flagEmoji=document.getElementById("flagEmoji"),flagCountry=document.getElementById("flagCountry");
+
+function positionFlagPanel(){
+ const appRect=app.getBoundingClientRect(),moonRect=moonPanel.getBoundingClientRect(),globeRect=globeBox.getBoundingClientRect(),flagRect=flagPanel.getBoundingClientRect();
+ if(window.innerWidth>950){
+   const leftBoundary=moonRect.right-appRect.left,rightBoundary=globeRect.left-appRect.left,gapWidth=rightBoundary-leftBoundary;
+   let x=leftBoundary+gapWidth/2-flagRect.width/2;
+   const minX=leftBoundary+8,maxX=rightBoundary-flagRect.width-8;
+   if(maxX>=minX)x=Math.max(minX,Math.min(maxX,x));
+   const overlapTop=Math.max(moonRect.top,globeRect.top)-appRect.top,overlapBottom=Math.min(moonRect.bottom,globeRect.bottom)-appRect.top;
+   let y=(overlapBottom>overlapTop)?overlapTop+(overlapBottom-overlapTop)/2-flagRect.height/2:300;
+   flagPanel.style.left=x+"px";flagPanel.style.top=y+"px";
+ }else{
+   let y=(moonRect.bottom+globeRect.top)/2-appRect.top-flagRect.height/2;
+   let x=(window.innerWidth-flagRect.width)/2;
+   x=Math.max(8,Math.min(window.innerWidth-flagRect.width-8,x));
+   flagPanel.style.left=x+"px";flagPanel.style.top=y+"px";
+ }
+}
+flagImage.addEventListener("load",()=>{flagImage.style.display="block";flagEmoji.style.display="none"});
+flagImage.addEventListener("error",()=>{flagImage.style.display="none";flagEmoji.style.display="block"});
+
+function daysInMonth(y,m){return new Date(y,m,0).getDate()}
+function updateDateControls(){
+ const y=+yearSlider.value,m=+monthSlider.value;let d=+daySlider.value,max=daysInMonth(y,m);
+ daySlider.max=max;if(d>max){d=max;daySlider.value=max}
+ yearValue.textContent=y;monthValue.textContent=monthNames[m-1];dayValue.textContent=d;updateMoon();
+}
+yearSlider.addEventListener("input",updateDateControls);
+monthSlider.addEventListener("input",updateDateControls);
+daySlider.addEventListener("input",updateDateControls);
+
+function getSelectedDate(){
+ const y=+yearSlider.value,m=+monthSlider.value,d=+daySlider.value;
+ const utcHours=22-selectedLon/15;
+ return new Date(Date.UTC(y,m-1,d,0,0,0)+utcHours*3600000);
+}
+function getPhaseName(p){
+ if(p<.03||p>.97)return"Yeniay";
+ if(p<.22)return"Büyüyen hilal";
+ if(p<.28)return"İlk dördün";
+ if(p<.47)return"Büyüyen şişkin Ay";
+ if(p<.53)return"Dolunay";
+ if(p<.72)return"Küçülen şişkin Ay";
+ if(p<.78)return"Son dördün";
+ return"Küçülen hilal";
+}
+function normalizeDegrees(v){v%=360;return v<0?v+360:v}
+function getCompassDirection(a){return["K","KD","D","GD","G","GB","B","KB"][Math.round(a/45)%8]}
+function resizeCanvas(canvas,ctx){
+ const r=canvas.getBoundingClientRect(),ratio=Math.min(devicePixelRatio||1,2);
+ canvas.width=Math.round(r.width*ratio);canvas.height=Math.round(r.height*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);
+ return{width:r.width,height:r.height};
+}
+
+let stars=[];
+function randomSeeded(n){const x=Math.sin(n*12.9898+78.233)*43758.5453;return x-Math.floor(x)}
+function createStars(w,h){
+ stars=[];const count=Math.floor(w*h/1700);
+ for(let i=0;i<count;i++)stars.push({x:randomSeeded(i*5+1)*w,y:randomSeeded(i*5+2)*h*.83,r:.25+randomSeeded(i*5+3)*1.05,a:.2+randomSeeded(i*5+4)*.55});
+}
+
+const phaseCanvas=document.createElement("canvas"),phaseCtx=phaseCanvas.getContext("2d");
+function smoothstep(e0,e1,x){let t=(x-e0)/(e1-e0);t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}
+function createPhaseShadow(size,fraction,orientation){
+ phaseCanvas.width=size;phaseCanvas.height=size;
+ const image=phaseCtx.createImageData(size,size),data=image.data;
+ const sunZ=2*fraction-1,projectedSun=Math.sqrt(Math.max(0,1-sunZ*sunZ)),sunX=Math.sin(orientation)*projectedSun,sunY=Math.cos(orientation)*projectedSun,center=size/2,radius=size*.49;
+ for(let py=0;py<size;py++)for(let px=0;px<size;px++){
+   const i=(py*size+px)*4,x=(px-center)/radius,y=-(py-center)/radius,r2=x*x+y*y;
+   if(r2>1){data[i+3]=0;continue}
+   const z=Math.sqrt(Math.max(0,1-r2)),dot=x*sunX+y*sunY+z*sunZ,lit=smoothstep(-.018,.018,dot),pos=Math.max(0,dot),limb=Math.pow(1-z,1.5);
+   let light=.025+(1-pos)*.15+limb*.09,op=.955*(1-lit)+light*lit;op=Math.max(0,Math.min(.98,op));
+   data[i]=0;data[i+1]=2;data[i+2]=7;data[i+3]=Math.round(op*255);
+ }
+ phaseCtx.putImageData(image,0,0);
+}
+
+function drawMoonDisc(ctx,x,y,diameter,data){
+ const r=diameter/2;
+ if(data.altitudeDeg>=0){
+   const halo=ctx.createRadialGradient(x,y,r*.55,x,y,r*1.5);halo.addColorStop(0,"rgba(210,225,255,.08)");halo.addColorStop(1,"rgba(210,225,255,0)");
+   ctx.fillStyle=halo;ctx.beginPath();ctx.arc(x,y,r*1.5,0,Math.PI*2);ctx.fill();
+ }
+ ctx.save();if(data.altitudeDeg<0)ctx.globalAlpha=.25;
+ ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();ctx.translate(x,y);ctx.rotate(data.textureRotation);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
+ if(moonPhotoReady){
+   const sw=moonPhoto.naturalWidth,sh=moonPhoto.naturalHeight,min=Math.min(sw,sh),crop=min*.84,sx=(sw-crop)/2,sy=(sh-crop)/2;
+   ctx.filter="grayscale(70%) contrast(1.10) brightness(.96)";
+   ctx.drawImage(moonPhoto,sx,sy,crop,crop,-r,-r,diameter,diameter);ctx.filter="none";
+ }else{
+   const g=ctx.createRadialGradient(-r*.25,-r*.25,r*.1,0,0,r);g.addColorStop(0,"#eeeeea");g.addColorStop(1,"#aaa9a4");ctx.fillStyle=g;ctx.fillRect(-r,-r,diameter,diameter);
+ }
+ ctx.restore();
+ const phaseSize=Math.max(300,Math.floor(diameter*3));createPhaseShadow(phaseSize,data.illumination.fraction,data.brightSideOrientation);
+ ctx.save();if(data.altitudeDeg<0)ctx.globalAlpha=.25;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";ctx.drawImage(phaseCanvas,x-r,y-r,diameter,diameter);
+ ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.strokeStyle="rgba(220,230,235,.16)";ctx.lineWidth=.7;ctx.stroke();ctx.restore();
+}
+
+function drawSky(width,height,data){
+ const ctx=moonCtx;ctx.clearRect(0,0,width,height);
+ const sky=ctx.createLinearGradient(0,0,0,height);sky.addColorStop(0,"#01030a");sky.addColorStop(.62,"#061426");sky.addColorStop(.82,"#10233a");sky.addColorStop(1,"#090b0e");ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
+ for(const s of stars){ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${s.a})`;ctx.fill()}
+ const horizonY=height*.82,hg=ctx.createLinearGradient(0,horizonY-60,0,horizonY+20);hg.addColorStop(0,"rgba(90,130,175,0)");hg.addColorStop(.7,"rgba(90,130,175,.08)");hg.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=hg;ctx.fillRect(0,horizonY-60,width,80);
+ ctx.beginPath();ctx.moveTo(0,horizonY+9);for(let i=0;i<=17;i++){const x=width*i/17,y=horizonY+5+Math.sin(i*1.81)*3+Math.sin(i*.71)*5;ctx.lineTo(x,y)}ctx.lineTo(width,height);ctx.lineTo(0,height);ctx.closePath();ctx.fillStyle="#050609";ctx.fill();
+ ctx.beginPath();ctx.moveTo(0,horizonY);ctx.lineTo(width,horizonY);ctx.strokeStyle="rgba(255,255,255,.12)";ctx.lineWidth=1;ctx.stroke();
+ ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="12px system-ui";ctx.fillStyle="rgba(255,255,255,.55)";
+ for(const c of[{az:0,text:"K"},{az:90,text:"D"},{az:180,text:"G"},{az:270,text:"B"}]){const x=c.az/360*width;ctx.fillText(c.text,x,horizonY+27);if(c.az===0)ctx.fillText("K",width-1,horizonY+27)}
+ const altitude=data.altitudeDeg,azimuth=data.azimuthDeg,moonX=azimuth/360*width;
+ let moonY=altitude>=0?horizonY-altitude/90*(horizonY-80):horizonY+Math.min(60,Math.abs(altitude)*2.2);
+ const moonDiameter=Math.min(width,height)*.205;drawMoonDisc(ctx,moonX,moonY,moonDiameter,data);
+ ctx.beginPath();ctx.moveTo(moonX,horizonY-5);ctx.lineTo(moonX,horizonY+5);ctx.strokeStyle="rgba(255,255,255,.38)";ctx.stroke();
+ if(altitude<0){ctx.textAlign="center";ctx.font="13px system-ui";ctx.fillStyle="rgba(255,255,255,.45)";ctx.fillText("Ay bu saatte ufkun altında",width/2,horizonY-18)}
+}
+
+function updateMoon(){
+ if(typeof SunCalc==="undefined")return;
+ const date=getSelectedDate(),pos=SunCalc.getMoonPosition(date,selectedLat,selectedLon),ill=SunCalc.getMoonIllumination(date);
+ const altitudeDeg=pos.altitude*RAD,azimuthDeg=normalizeDegrees(pos.azimuth*RAD+180),brightSideOrientation=ill.angle-pos.parallacticAngle,textureRotation=-pos.parallacticAngle;
+ const size=resizeCanvas(moonCanvas,moonCtx);
+ if(!stars.length||stars._width!==size.width||stars._height!==size.height){createStars(size.width,size.height);stars._width=size.width;stars._height=size.height}
+ drawSky(size.width,size.height,{altitudeDeg,azimuthDeg,illumination:ill,brightSideOrientation,textureRotation});
+ moonInfo.innerHTML=`<strong>${getPhaseName(ill.phase)}</strong><br>Aydınlık: ${Math.round(ill.fraction*100)}%<br>Yükseklik: ${altitudeDeg.toFixed(1)}°<br>Azimut: ${azimuthDeg.toFixed(1)}° (${getCompassDirection(azimuthDeg)})`;
+ moonStatus.textContent=altitudeDeg>=0?"Ufkun üzerinde":"Ufkun altında";moonStatus.style.color=altitudeDeg>=0?"#dfeaff":"#9aa4b3";
+}
+
+let worldLand=null,worldCountries=[];
+const projection=d3.geoOrthographic().precision(.3).clipAngle(90),geoPath=d3.geoPath(projection,globeCtx);
+let globeRotation=[-selectedLon,-selectedLat,0];projection.rotate(globeRotation);
+
+function getGlobeGeometry(){
+ const r=globeCanvas.getBoundingClientRect(),radius=Math.min(r.width,r.height)*.40;
+ return{width:r.width,height:r.height,radius,cx:r.width/2,cy:r.height/2+15};
+}
+function getMarkerScreenPosition(){
+ const p=projection([selectedLon,selectedLat]);if(!p)return null;
+ const center=[-globeRotation[0],-globeRotation[1]],visible=d3.geoDistance([selectedLon,selectedLat],center)<Math.PI/2;
+ return visible?{x:p[0],y:p[1]}:null;
+}
+function isPointerOnMarker(x,y){
+ const m=getMarkerScreenPosition();if(!m)return false;const dx=x-m.x,dy=y-m.y;return dx*dx+dy*dy<=17*17;
+}
+let pointerMode=null,markerDragging=false,globeDragging=false,dragStartRotation=null,dragStartPointer=null;
+
+function drawGlobe(){
+ const size=resizeCanvas(globeCanvas,globeCtx),w=size.width,h=size.height,r=Math.min(w,h)*.40;
+ projection.translate([w/2,h/2+15]).scale(r).rotate(globeRotation);
+ globeCtx.clearRect(0,0,w,h);
+ globeCtx.beginPath();globeCtx.arc(w/2+7,h/2+25,r+5,0,Math.PI*2);globeCtx.fillStyle="rgba(0,0,0,.35)";globeCtx.fill();
+ globeCtx.beginPath();geoPath({type:"Sphere"});
+ const ocean=globeCtx.createRadialGradient(w/2-r*.35,h/2-r*.35,r*.12,w/2,h/2,r*1.2);ocean.addColorStop(0,"#318ad0");ocean.addColorStop(.55,"#10518c");ocean.addColorStop(1,"#031d35");globeCtx.fillStyle=ocean;globeCtx.fill();
+ globeCtx.beginPath();geoPath(d3.geoGraticule10());globeCtx.strokeStyle="rgba(255,255,255,.10)";globeCtx.lineWidth=.7;globeCtx.stroke();
+ if(worldLand){globeCtx.beginPath();geoPath(worldLand);globeCtx.fillStyle="#668a5b";globeCtx.fill();globeCtx.strokeStyle="rgba(210,235,200,.50)";globeCtx.lineWidth=.5;globeCtx.stroke()}
+ globeCtx.beginPath();geoPath({type:"Sphere"});globeCtx.strokeStyle="rgba(170,215,255,.62)";globeCtx.lineWidth=1.3;globeCtx.stroke();
+ const m=getMarkerScreenPosition();if(m){
+   globeCtx.beginPath();globeCtx.arc(m.x,m.y,11,0,Math.PI*2);globeCtx.fillStyle=markerDragging?"rgba(255,90,90,.32)":"rgba(255,70,70,.20)";globeCtx.fill();
+   globeCtx.beginPath();globeCtx.arc(m.x,m.y,markerDragging?6.2:5.2,0,Math.PI*2);globeCtx.fillStyle="#ff3f45";globeCtx.fill();globeCtx.strokeStyle="rgba(255,255,255,.95)";globeCtx.lineWidth=1.5;globeCtx.stroke();
+   globeCtx.beginPath();globeCtx.arc(m.x-1.5,m.y-1.5,1.3,0,Math.PI*2);globeCtx.fillStyle="rgba(255,255,255,.75)";globeCtx.fill();
+ }
+}
+
+function geoDistanceKm(a,b){return d3.geoDistance(a,b)*EARTH_RADIUS_KM}
+function getGeometryRings(feature){
+ if(!feature||!feature.geometry)return[];
+ if(feature.geometry.type==="Polygon")return feature.geometry.coordinates;
+ if(feature.geometry.type==="MultiPolygon")return feature.geometry.coordinates.flat();
+ return[];
+}
+function densifyRing(ring){
+ const out=[],maxStep=1.5*DEG;
+ for(let i=0;i<ring.length-1;i++){const a=ring[i],b=ring[i+1],pieces=Math.max(1,Math.ceil(d3.geoDistance(a,b)/maxStep)),interp=d3.geoInterpolate(a,b);for(let j=0;j<pieces;j++)out.push(interp(j/pieces))}
+ if(ring.length)out.push(ring[ring.length-1]);return out;
+}
+function prepareFlagCountryGeometries(){
+ preparedFlagCountries=[];
+ for(const info of lunarFlagCountries){
+   const feature=worldCountries.find(c=>Number(c.id)===info.n3),item={...info,feature:feature||null,samples:[]};
+   if(feature)for(const ring of getGeometryRings(feature))item.samples.push(...densifyRing(ring));
+   preparedFlagCountries.push(item);
+ }
+}
+function distanceToFlagCountry(country,point){
+ if(country.feature&&d3.geoContains(country.feature,point))return 0;
+ if(country.samples&&country.samples.length){let min=Infinity;for(const s of country.samples){const d=geoDistanceKm(point,s);if(d<min)min=d}return min}
+ return geoDistanceKm(point,country.center);
+}
+function findNearestFlagCountry(){
+ const point=[selectedLon,selectedLat],candidates=preparedFlagCountries.length?preparedFlagCountries:lunarFlagCountries;
+ let nearest=null,min=Infinity;
+ for(const c of candidates){const d=distanceToFlagCountry(c,point);if(d<min){min=d;nearest=c}}
+ return nearest;
+}
+function countryCodeToEmoji(code){
+ let out="";for(const c of code.toUpperCase())out+=String.fromCodePoint(127397+c.charCodeAt(0));return out;
+}
+function updateFlagForLocation(){
+ const country=findNearestFlagCountry();if(!country||currentFlagCode===country.code)return;
+ currentFlagCode=country.code;flagCountry.textContent=country.name;flagImage.style.display="none";flagEmoji.style.display="none";flagEmoji.textContent=countryCodeToEmoji(country.code);
+ flagImage.alt=country.name+" bayrağı";flagImage.src="https://flagcdn.com/w320/"+country.code+".png";
+}
+
+function getPointerPosition(e){const r=globeCanvas.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]}
+function moveMarkerToPointer(x,y){
+ const g=getGlobeGeometry(),dx=x-g.cx,dy=y-g.cy;if(dx*dx+dy*dy>g.radius*g.radius)return;
+ const c=projection.invert([x,y]);if(!c)return;selectedLon=c[0];selectedLat=Math.max(-90,Math.min(90,c[1]));
+ while(selectedLon>180)selectedLon-=360;while(selectedLon<-180)selectedLon+=360;
+ latText.textContent=formatLatitude(selectedLat);lonText.textContent=formatLongitude(selectedLon);drawGlobe();updateMoon();updateFlagForLocation();
+}
+globeCanvas.addEventListener("pointerdown",e=>{
+ const p=getPointerPosition(e);globeCanvas.setPointerCapture(e.pointerId);
+ if(isPointerOnMarker(p[0],p[1])){pointerMode="marker";markerDragging=true;globeDragging=false;globeCanvas.style.cursor="grabbing";drawGlobe();return}
+ pointerMode="globe";markerDragging=false;globeDragging=true;dragStartPointer=p;dragStartRotation=[...globeRotation];globeCanvas.style.cursor="grabbing";
+});
+globeCanvas.addEventListener("pointermove",e=>{
+ const p=getPointerPosition(e);
+ if(pointerMode==="marker"&&markerDragging){moveMarkerToPointer(p[0],p[1]);return}
+ if(pointerMode==="globe"&&globeDragging&&dragStartPointer&&dragStartRotation){
+   const dx=p[0]-dragStartPointer[0],dy=p[1]-dragStartPointer[1];
+   globeRotation[0]=dragStartRotation[0]+dx*.35;globeRotation[1]=Math.max(-89,Math.min(89,dragStartRotation[1]-dy*.35));drawGlobe();return;
+ }
+ globeCanvas.style.cursor=isPointerOnMarker(p[0],p[1])?"pointer":"grab";
+});
+function finishPointerInteraction(e){
+ if(e&&globeCanvas.hasPointerCapture(e.pointerId))globeCanvas.releasePointerCapture(e.pointerId);
+ pointerMode=null;markerDragging=false;globeDragging=false;dragStartPointer=null;dragStartRotation=null;globeCanvas.style.cursor="grab";drawGlobe();
+}
+globeCanvas.addEventListener("pointerup",finishPointerInteraction);
+globeCanvas.addEventListener("pointercancel",finishPointerInteraction);
+globeCanvas.addEventListener("pointerleave",()=>{if(!markerDragging&&!globeDragging)globeCanvas.style.cursor="grab"});
+
+function formatLatitude(v){return Math.abs(v).toFixed(2)+"° "+(v>=0?"K":"G")}
+function formatLongitude(v){return Math.abs(v).toFixed(2)+"° "+(v>=0?"D":"B")}
+
+async function loadWorld(){
+ try{
+   const world=await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
+   worldLand=topojson.feature(world,world.objects.land);
+   worldCountries=topojson.feature(world,world.objects.countries).features;
+   prepareFlagCountryGeometries();drawGlobe();updateFlagForLocation();
+ }catch(error){console.warn("Dünya haritası yüklenemedi:",error);drawGlobe();updateFlagForLocation()}
+}
+
+window.addEventListener("resize",()=>{stars=[];drawGlobe();updateMoon();requestAnimationFrame(positionFlagPanel)});
+function initialize(){
+ yearSlider.value=2026;monthSlider.value=9;daySlider.value=20;
+ latText.textContent=formatLatitude(selectedLat);lonText.textContent=formatLongitude(selectedLon);
+ updateDateControls();drawGlobe();updateFlagForLocation();loadWorld();
+ requestAnimationFrame(()=>requestAnimationFrame(positionFlagPanel));
+}
+initialize();
+</script>
+</body>
+</html>
