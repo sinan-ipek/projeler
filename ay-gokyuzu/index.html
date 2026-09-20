@@ -3819,13 +3819,33 @@ function prepareFlagCountryGeometries() {
                 null,
 
             samples:
-                []
+                [],
+
+            minLat:
+                info.center[1],
+
+            maxLat:
+                info.center[1]
         };
 
 
         if (
             feature
         ) {
+
+            const bounds =
+                d3.geoBounds(
+                    feature
+                );
+
+
+            item.minLat =
+                bounds[0][1];
+
+
+            item.maxLat =
+                bounds[1][1];
+
 
             for (
                 const ring
@@ -3918,6 +3938,68 @@ function distanceToFlagCountry(
 }
 
 
+function verticalDistanceToFlagCountry(
+    country,
+    latitude
+) {
+
+    const minLat =
+        Number.isFinite(
+            country.minLat
+        )
+        ?
+        country.minLat
+        :
+        country.center[1];
+
+
+    const maxLat =
+        Number.isFinite(
+            country.maxLat
+        )
+        ?
+        country.maxLat
+        :
+        country.center[1];
+
+
+    /*
+        Öncelikli ölçüt yalnızca dikey uzaklık:
+        yani gözlem noktasının enleminin,
+        ülkenin kapladığı enlem aralığına uzaklığı.
+
+        Enlem ülkenin kuzey-güney aralığının
+        içindeyse dikey uzaklık 0 kabul edilir.
+    */
+
+    if (
+        latitude >= minLat
+        &&
+        latitude <= maxLat
+    ) {
+
+        return 0;
+    }
+
+
+    if (
+        latitude < minLat
+    ) {
+
+        return (
+            minLat -
+            latitude
+        );
+    }
+
+
+    return (
+        latitude -
+        maxLat
+    );
+}
+
+
 function findNearestLunarFlagCountry() {
 
     const point = [
@@ -3938,8 +4020,26 @@ function findNearestLunarFlagCountry() {
         null;
 
 
-    let nearestDistance =
+    let nearestVerticalDistance =
         Infinity;
+
+
+    let nearestRealDistance =
+        Infinity;
+
+
+    /*
+        Birinci ölçüt:
+        yalnızca kuzey-güney yönündeki
+        dikey uzaklık (enlem farkı).
+
+        Birden fazla ülkenin dikey uzaklığı
+        aynıysa ikinci ölçüt olarak gerçek
+        coğrafi uzaklık kullanılır.
+    */
+
+    const EPSILON =
+        1e-9;
 
 
     for (
@@ -3948,20 +4048,56 @@ function findNearestLunarFlagCountry() {
         candidates
     ) {
 
-        const distance =
+        const verticalDistance =
+            verticalDistanceToFlagCountry(
+                country,
+                selectedLat
+            );
+
+
+        const realDistance =
             distanceToFlagCountry(
                 country,
                 point
             );
 
 
+        const verticallyCloser =
+            verticalDistance
+            <
+            nearestVerticalDistance
+            -
+            EPSILON;
+
+
+        const sameVerticalDistance =
+            Math.abs(
+                verticalDistance
+                -
+                nearestVerticalDistance
+            )
+            <=
+            EPSILON;
+
+
         if (
-            distance <
-            nearestDistance
+            verticallyCloser
+            ||
+            (
+                sameVerticalDistance
+                &&
+                realDistance
+                <
+                nearestRealDistance
+            )
         ) {
 
-            nearestDistance =
-                distance;
+            nearestVerticalDistance =
+                verticalDistance;
+
+
+            nearestRealDistance =
+                realDistance;
 
 
             nearest =
