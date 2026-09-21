@@ -8,7 +8,6 @@
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
 
 <style>
 * {
@@ -1332,9 +1331,6 @@ moonPhoto.onload =
             true;
 
 
-        prepareMoonSourceTexture();
-
-
         updateMoon();
     };
 
@@ -2109,778 +2105,6 @@ function createStars(
 
 
 /* ============================================================
-   AY YÜZEYİ + OPTİK LİBRASYON
-   ============================================================ */
-
-/*
-    Mevcut gerçek dolunay fotoğrafını "ortalama Dünya'ya bakan yüz"
-    olarak kabul ediyoruz.
-
-    Astronomy Engine'in verdiği sub-Earth librasyon boylamı (elon)
-    ve enlemi (elat) ile Ay küresine bakış yönünü değiştiriyoruz.
-
-    Böylece kraterler ve maria, sadece düzlemsel olarak kaydırılmak
-    yerine küresel geometriye göre küçük miktarlarda sağa-sola ve
-    yukarı-aşağı salınıyor.
-*/
-
-const moonSourceCanvas =
-    document.createElement(
-        "canvas"
-    );
-
-
-const moonSourceCtx =
-    moonSourceCanvas.getContext(
-        "2d",
-        {
-            willReadFrequently:
-                true
-        }
-    );
-
-
-const librationCanvas =
-    document.createElement(
-        "canvas"
-    );
-
-
-const librationCtx =
-    librationCanvas.getContext(
-        "2d"
-    );
-
-
-let moonSourceImageData =
-    null;
-
-
-let moonSourceTextureReady =
-    false;
-
-
-const MOON_SOURCE_SIZE =
-    720;
-
-
-function prepareMoonSourceTexture() {
-
-    moonSourceTextureReady =
-        false;
-
-
-    moonSourceImageData =
-        null;
-
-
-    if (
-        !moonPhotoReady
-        ||
-        !moonPhoto.naturalWidth
-        ||
-        !moonPhoto.naturalHeight
-    ) {
-
-        return;
-    }
-
-
-    moonSourceCanvas.width =
-        MOON_SOURCE_SIZE;
-
-
-    moonSourceCanvas.height =
-        MOON_SOURCE_SIZE;
-
-
-    const sourceWidth =
-        moonPhoto.naturalWidth;
-
-
-    const sourceHeight =
-        moonPhoto.naturalHeight;
-
-
-    const minSide =
-        Math.min(
-            sourceWidth,
-            sourceHeight
-        );
-
-
-    /*
-        Eski çizimde kullandığımız kadrajı koruyoruz.
-    */
-
-    const cropSize =
-        minSide *
-        0.84;
-
-
-    const sourceX =
-        (
-            sourceWidth -
-            cropSize
-        )
-        /
-        2;
-
-
-    const sourceY =
-        (
-            sourceHeight -
-            cropSize
-        )
-        /
-        2;
-
-
-    moonSourceCtx.clearRect(
-        0,
-        0,
-        MOON_SOURCE_SIZE,
-        MOON_SOURCE_SIZE
-    );
-
-
-    moonSourceCtx.drawImage(
-        moonPhoto,
-
-        sourceX,
-        sourceY,
-        cropSize,
-        cropSize,
-
-        0,
-        0,
-        MOON_SOURCE_SIZE,
-        MOON_SOURCE_SIZE
-    );
-
-
-    try {
-
-        moonSourceImageData =
-            moonSourceCtx.getImageData(
-                0,
-                0,
-                MOON_SOURCE_SIZE,
-                MOON_SOURCE_SIZE
-            );
-
-
-        moonSourceTextureReady =
-            true;
-
-    } catch (
-        error
-    ) {
-
-        /*
-            Uzak sunucu piksel okumaya izin vermezse
-            uygulama bozulmasın; eski düz fotoğraf çizimine döner.
-        */
-
-        moonSourceTextureReady =
-            false;
-
-
-        moonSourceImageData =
-            null;
-
-
-        console.warn(
-            "Ay fotoğrafından librasyon dokusu okunamadı:",
-            error
-        );
-    }
-}
-
-
-function sampleMoonSourceBilinear(
-    x,
-    y,
-    target,
-    targetIndex
-) {
-
-    const source =
-        moonSourceImageData.data;
-
-
-    const size =
-        MOON_SOURCE_SIZE;
-
-
-    x =
-        Math.max(
-            0,
-            Math.min(
-                size - 1.001,
-                x
-            )
-        );
-
-
-    y =
-        Math.max(
-            0,
-            Math.min(
-                size - 1.001,
-                y
-            )
-        );
-
-
-    const x0 =
-        Math.floor(
-            x
-        );
-
-
-    const y0 =
-        Math.floor(
-            y
-        );
-
-
-    const x1 =
-        Math.min(
-            size - 1,
-            x0 + 1
-        );
-
-
-    const y1 =
-        Math.min(
-            size - 1,
-            y0 + 1
-        );
-
-
-    const fx =
-        x -
-        x0;
-
-
-    const fy =
-        y -
-        y0;
-
-
-    const i00 =
-        (
-            y0 *
-            size +
-            x0
-        )
-        *
-        4;
-
-
-    const i10 =
-        (
-            y0 *
-            size +
-            x1
-        )
-        *
-        4;
-
-
-    const i01 =
-        (
-            y1 *
-            size +
-            x0
-        )
-        *
-        4;
-
-
-    const i11 =
-        (
-            y1 *
-            size +
-            x1
-        )
-        *
-        4;
-
-
-    for (
-        let channel = 0;
-        channel < 4;
-        channel++
-    ) {
-
-        const top =
-            source[
-                i00 +
-                channel
-            ]
-            *
-            (
-                1 -
-                fx
-            )
-            +
-            source[
-                i10 +
-                channel
-            ]
-            *
-            fx;
-
-
-        const bottom =
-            source[
-                i01 +
-                channel
-            ]
-            *
-            (
-                1 -
-                fx
-            )
-            +
-            source[
-                i11 +
-                channel
-            ]
-            *
-            fx;
-
-
-        target[
-            targetIndex +
-            channel
-        ] =
-            Math.round(
-                top *
-                (
-                    1 -
-                    fy
-                )
-                +
-                bottom *
-                fy
-            );
-    }
-}
-
-
-function createLibratedMoonTexture(
-    size,
-    librationLongitudeDeg,
-    librationLatitudeDeg
-) {
-
-    if (
-        !moonSourceTextureReady
-        ||
-        !moonSourceImageData
-    ) {
-
-        return false;
-    }
-
-
-    librationCanvas.width =
-        size;
-
-
-    librationCanvas.height =
-        size;
-
-
-    const output =
-        librationCtx.createImageData(
-            size,
-            size
-        );
-
-
-    const target =
-        output.data;
-
-
-    const lon =
-        librationLongitudeDeg *
-        DEG;
-
-
-    const lat =
-        librationLatitudeDeg *
-        DEG;
-
-
-    const sinLon =
-        Math.sin(
-            lon
-        );
-
-
-    const cosLon =
-        Math.cos(
-            lon
-        );
-
-
-    const sinLat =
-        Math.sin(
-            lat
-        );
-
-
-    const cosLat =
-        Math.cos(
-            lat
-        );
-
-
-    /*
-        Kürenin Ay-sabit koordinat sistemi:
-
-        X : selenografik doğu-batı ekseni
-        Y : Ay'ın kuzeyi
-        Z : ortalama Dünya'ya bakan yüz
-
-        view  = Ay merkezinden Dünya'ya bakış yönü
-        east  = ekranda sağ yön
-        north = ekranda yukarı yön
-    */
-
-    const viewX =
-        cosLat *
-        sinLon;
-
-
-    const viewY =
-        sinLat;
-
-
-    const viewZ =
-        cosLat *
-        cosLon;
-
-
-    const eastX =
-        cosLon;
-
-
-    const eastY =
-        0;
-
-
-    const eastZ =
-        -sinLon;
-
-
-    const northX =
-        -sinLat *
-        sinLon;
-
-
-    const northY =
-        cosLat;
-
-
-    const northZ =
-        -sinLat *
-        cosLon;
-
-
-    const center =
-        size /
-        2;
-
-
-    const radius =
-        size *
-        0.495;
-
-
-    for (
-        let py = 0;
-        py < size;
-        py++
-    ) {
-
-        const screenY =
-            -(
-                py +
-                0.5 -
-                center
-            )
-            /
-            radius;
-
-
-        for (
-            let px = 0;
-            px < size;
-            px++
-        ) {
-
-            const screenX =
-                (
-                    px +
-                    0.5 -
-                    center
-                )
-                /
-                radius;
-
-
-            const r2 =
-                screenX *
-                screenX
-                +
-                screenY *
-                screenY;
-
-
-            const targetIndex =
-                (
-                    py *
-                    size +
-                    px
-                )
-                *
-                4;
-
-
-            if (
-                r2 >
-                1
-            ) {
-
-                target[
-                    targetIndex +
-                    3
-                ] =
-                    0;
-
-
-                continue;
-            }
-
-
-            const screenZ =
-                Math.sqrt(
-                    Math.max(
-                        0,
-                        1 -
-                        r2
-                    )
-                );
-
-
-            /*
-                Görünen disk pikselini Ay'ın sabit küresindeki
-                bir yüzey noktasına dönüştürüyoruz.
-            */
-
-            const surfaceX =
-                screenX *
-                eastX
-                +
-                screenY *
-                northX
-                +
-                screenZ *
-                viewX;
-
-
-            const surfaceY =
-                screenX *
-                eastY
-                +
-                screenY *
-                northY
-                +
-                screenZ *
-                viewY;
-
-
-            const surfaceZ =
-                screenX *
-                eastZ
-                +
-                screenY *
-                northZ
-                +
-                screenZ *
-                viewZ;
-
-
-            /*
-                Kaynak fotoğraf ortalama önden görünüş olduğu için
-                ortografik izdüşümde X ve Y koordinatlarını kullanıyoruz.
-
-                Libration çok küçük açılarla sınırlı olduğundan,
-                görünür hâle gelen çok ince uzak-yüz kenarında aynı
-                izdüşüm koordinatı kaynak fotoğrafın kenarından örneklenir.
-            */
-
-            let sourceDiskX =
-                surfaceX;
-
-
-            let sourceDiskY =
-                surfaceY;
-
-
-            const sourceR2 =
-                sourceDiskX *
-                sourceDiskX
-                +
-                sourceDiskY *
-                sourceDiskY;
-
-
-            if (
-                sourceR2 >
-                0.9995
-            ) {
-
-                const sourceScale =
-                    Math.sqrt(
-                        0.9995 /
-                        sourceR2
-                    );
-
-
-                sourceDiskX *=
-                    sourceScale;
-
-
-                sourceDiskY *=
-                    sourceScale;
-            }
-
-
-            const sourceX =
-                (
-                    sourceDiskX *
-                    0.5
-                    +
-                    0.5
-                )
-                *
-                (
-                    MOON_SOURCE_SIZE -
-                    1
-                );
-
-
-            const sourceY =
-                (
-                    0.5
-                    -
-                    sourceDiskY *
-                    0.5
-                )
-                *
-                (
-                    MOON_SOURCE_SIZE -
-                    1
-                );
-
-
-            sampleMoonSourceBilinear(
-                sourceX,
-                sourceY,
-                target,
-                targetIndex
-            );
-
-
-            /*
-                Küre kenarında çok hafif bir geometrik kararma;
-                yüzeyin küreselliğini korur.
-            */
-
-            const limbShade =
-                0.90
-                +
-                0.10 *
-                screenZ;
-
-
-            target[
-                targetIndex
-            ] =
-                Math.round(
-                    target[
-                        targetIndex
-                    ]
-                    *
-                    limbShade
-                );
-
-
-            target[
-                targetIndex +
-                1
-            ] =
-                Math.round(
-                    target[
-                        targetIndex +
-                        1
-                    ]
-                    *
-                    limbShade
-                );
-
-
-            target[
-                targetIndex +
-                2
-            ] =
-                Math.round(
-                    target[
-                        targetIndex +
-                        2
-                    ]
-                    *
-                    limbShade
-                );
-
-
-            target[
-                targetIndex +
-                3
-            ] =
-                255;
-
-
-            /*
-                surfaceZ değişkeni bilinçli olarak hesaplanıyor:
-                küresel dönüşümün üçüncü bileşenini açıkça koruyoruz.
-                Kaynak tek bir yakın-yüz fotoğrafı olduğundan renk
-                örneklemesinde yalnızca izdüşüm X/Y'si kullanılabiliyor.
-            */
-
-            void surfaceZ;
-        }
-    }
-
-
-    librationCtx.putImageData(
-        output,
-        0,
-        0
-    );
-
-
-    return true;
-}
-
-
-/* ============================================================
    AY EVRE MASKESİ
    ============================================================ */
 
@@ -3291,102 +2515,61 @@ function drawMoonDisc(
         moonPhotoReady
     ) {
 
-        const textureSize =
-            Math.max(
-                340,
-                Math.floor(
-                    diameter *
-                    2.7
-                )
+        const sourceWidth =
+            moonPhoto.naturalWidth;
+
+
+        const sourceHeight =
+            moonPhoto.naturalHeight;
+
+
+        const minSide =
+            Math.min(
+                sourceWidth,
+                sourceHeight
             );
 
 
-        const librationRendered =
-            createLibratedMoonTexture(
-                textureSize,
-                data.librationLongitudeDeg,
-                data.librationLatitudeDeg
-            );
+        const cropSize =
+            minSide * 0.84;
+
+
+        const sourceX =
+            (
+                sourceWidth -
+                cropSize
+            )
+            /
+            2;
+
+
+        const sourceY =
+            (
+                sourceHeight -
+                cropSize
+            )
+            /
+            2;
 
 
         context.filter =
-            "grayscale(70%) contrast(1.13) brightness(0.96)";
+            "grayscale(70%) contrast(1.10) brightness(0.96)";
 
 
-        if (
-            librationRendered
-        ) {
+        context.drawImage(
+            moonPhoto,
 
-            context.drawImage(
-                librationCanvas,
+            sourceX,
+            sourceY,
+            cropSize,
+            cropSize,
 
-                -radius,
-                -radius,
+            -radius,
+            -radius,
 
-                diameter,
-                diameter
-            );
-
-        } else {
-
-            /*
-                Piksel erişimi mümkün değilse eski düz fotoğraf
-                çizimi yedek olarak çalışmaya devam eder.
-            */
-
-            const sourceWidth =
-                moonPhoto.naturalWidth;
-
-
-            const sourceHeight =
-                moonPhoto.naturalHeight;
-
-
-            const minSide =
-                Math.min(
-                    sourceWidth,
-                    sourceHeight
-                );
-
-
-            const cropSize =
-                minSide *
-                0.84;
-
-
-            const sourceX =
-                (
-                    sourceWidth -
-                    cropSize
-                )
-                /
-                2;
-
-
-            const sourceY =
-                (
-                    sourceHeight -
-                    cropSize
-                )
-                /
-                2;
-
-
-            context.drawImage(
-                moonPhoto,
-
-                sourceX,
-                sourceY,
-                cropSize,
-                cropSize,
-
-                -radius,
-                -radius,
-
-                diameter,
-                diameter
-            );
-        }
+            diameter,
+            diameter
+        );
 
 
         context.filter =
@@ -3995,57 +3178,6 @@ function updateMoon() {
         -position.parallacticAngle;
 
 
-    /*
-        Astronomy Engine Ay'ın Dünya'dan görülen librasyonunu
-        iki dik bileşen olarak verir:
-
-        elon : selenografik boylam librasyonu
-        elat : selenografik enlem librasyonu
-    */
-
-    let librationLongitudeDeg =
-        0;
-
-
-    let librationLatitudeDeg =
-        0;
-
-
-    if (
-        typeof Astronomy !==
-        "undefined"
-        &&
-        typeof Astronomy.Libration ===
-        "function"
-    ) {
-
-        try {
-
-            const libration =
-                Astronomy.Libration(
-                    date
-                );
-
-
-            librationLongitudeDeg =
-                libration.elon;
-
-
-            librationLatitudeDeg =
-                libration.elat;
-
-        } catch (
-            error
-        ) {
-
-            console.warn(
-                "Ay librasyonu hesaplanamadı:",
-                error
-            );
-        }
-    }
-
-
     const size =
         resizeCanvas(
             moonCanvas,
@@ -4093,13 +3225,7 @@ function updateMoon() {
                 brightSideOrientation,
 
             textureRotation:
-                textureRotation,
-
-            librationLongitudeDeg:
-                librationLongitudeDeg,
-
-            librationLatitudeDeg:
-                librationLatitudeDeg
+                textureRotation
         }
     );
 
@@ -4110,10 +3236,7 @@ function updateMoon() {
         Aydınlık: ${Math.round(illumination.fraction * 100)}%<br>
         Yükseklik: ${altitudeDeg.toFixed(1)}°<br>
         Azimut: ${azimuthDeg.toFixed(1)}°
-        (${getCompassDirection(azimuthDeg)})<br>
-        Librasyon:
-        λ ${librationLongitudeDeg >= 0 ? "+" : ""}${librationLongitudeDeg.toFixed(1)}°,
-        β ${librationLatitudeDeg >= 0 ? "+" : ""}${librationLatitudeDeg.toFixed(1)}°
+        (${getCompassDirection(azimuthDeg)})
         `;
 
 
