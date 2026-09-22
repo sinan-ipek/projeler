@@ -27,6 +27,8 @@ button{padding:10px 15px;border:1px solid var(--border);border-radius:11px;backg
 button:hover{background:#f7f9fc} button:active{transform:scale(.97)}
 button.active{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 5px 15px rgba(40,100,220,.22)}
 #newBtn{background:#192235;color:#fff;border-color:#192235}
+#tidyBtn{background:#16885b;color:#fff;border-color:#16885b}
+#tidyBtn:disabled{background:#eef1f4;color:#9aa3b2;border-color:#dfe4eb;opacity:1;cursor:not-allowed;box-shadow:none;transform:none}
 .home-btn{
   display:inline-flex;
   align-items:center;
@@ -82,6 +84,7 @@ button.active{background:var(--blue);border-color:var(--blue);color:#fff;box-sha
       <button id="simpleBtn" class="active" type="button">Basit</button>
       <button id="advancedBtn" type="button">Gelişmiş</button>
       <button id="newBtn" type="button">Yeni Örnek</button>
+      <button id="tidyBtn" type="button" disabled>Toparla</button>
     </div>
   </div>
   <div class="board">
@@ -123,7 +126,7 @@ class CommonFactorEngine{
   constructor(){
     this.mode="simple";this.terms=[];this.outsideAtoms=[];this.outsideCollapsed=false;this.done=false;this.firstSimpleExample=true;this.animationDuration=330;this.changedGroupIds=new Set();
     this.draggedTermId=null;this.draggedGroupId=null;this.draggedGroupTermId=null;this.draggedOutsideId=null;
-    this.dom={expression:document.getElementById("expression"),simpleBtn:document.getElementById("simpleBtn"),advancedBtn:document.getElementById("advancedBtn"),newBtn:document.getElementById("newBtn"),instructionMain:document.getElementById("instructionMain"),instructionSub:document.getElementById("instructionSub"),success:document.getElementById("success")};
+    this.dom={expression:document.getElementById("expression"),simpleBtn:document.getElementById("simpleBtn"),advancedBtn:document.getElementById("advancedBtn"),newBtn:document.getElementById("newBtn"),tidyBtn:document.getElementById("tidyBtn"),instructionMain:document.getElementById("instructionMain"),instructionSub:document.getElementById("instructionSub"),success:document.getElementById("success")};
     this.bindControls();this.newProblem();
   }
 
@@ -131,6 +134,7 @@ class CommonFactorEngine{
     this.dom.simpleBtn.addEventListener("click",()=>{if(this.mode==="simple")return;this.mode="simple";this.dom.simpleBtn.classList.add("active");this.dom.advancedBtn.classList.remove("active");this.newProblem()});
     this.dom.advancedBtn.addEventListener("click",()=>{if(this.mode==="advanced")return;this.mode="advanced";this.dom.advancedBtn.classList.add("active");this.dom.simpleBtn.classList.remove("active");this.newProblem()});
     this.dom.newBtn.addEventListener("click",()=>this.newProblem());
+    this.dom.tidyBtn.addEventListener("click",()=>this.tidyAndFinalize());
   }
 
   newProblem(){
@@ -333,6 +337,48 @@ class CommonFactorEngine{
   openOutsideProduct(){if(this.outsideAtoms.length<=1)return;this.outsideCollapsed=false;this.updateDoneState();this.renderWithFlip()}
 
   /*
+    Toparla düğmesi yalnız SON AŞAMADA aktif olur.
+
+    Son aşama:
+    - dışarı alınacak ortak çarpan kalmamış
+    - toplanabilecek benzer terim kalmamış
+    - parantez önünde en az bir çarpan oluşmuş
+
+    Açık çarpımların / açık grupların kalması normaldir;
+    Toparla bunların hepsini tek seferde kapatır.
+  */
+  canTidyAndFinalize(){
+    return (
+      this.outsideAtoms.length>0
+      &&
+      !this.hasCommonFactors()
+      &&
+      !this.hasLikeTerms()
+      &&
+      !this.done
+    );
+  }
+
+  tidyAndFinalize(){
+    if(!this.canTidyAndFinalize())return;
+
+    const old=this.capturePositions();
+
+    for(const term of this.terms){
+      for(const group of term.groups){
+        group.expanded=false;
+      }
+      term.explicitProduct=false;
+    }
+
+    this.outsideCollapsed=true;
+
+    this.updateDoneState();
+    this.render();
+    this.runFlip(old);
+  }
+
+  /*
     Tamamlanma artık GÖRÜNEN duruma göre karar verir.
     normalizeVisualState stale/ görünmez state'i temizler.
   */
@@ -372,7 +418,7 @@ class CommonFactorEngine{
     }
     const terms=document.createElement("div");terms.className="terms";this.renderTerms(terms,readyIds);
     if(this.outsideAtoms.length){const p=document.createElement("span");p.className="parenthesized";const l=document.createElement("span"),r=document.createElement("span");l.className=r.className="paren";l.textContent="(";r.textContent=")";p.append(l,terms,r);root.appendChild(p)}else root.appendChild(terms);
-    this.dom.expression.appendChild(root);this.renderInstruction();this.bindMathEvents();this.bindTermDrag();this.bindGroupDrag();this.bindOutsideDrag();this.animateChangedGroups();this.dom.success.classList.toggle("show",this.done);
+    this.dom.expression.appendChild(root);this.renderInstruction();this.bindMathEvents();this.bindTermDrag();this.bindGroupDrag();this.bindOutsideDrag();this.animateChangedGroups();this.dom.tidyBtn.disabled=!this.canTidyAndFinalize();this.dom.success.classList.toggle("show",this.done);
   }
 
   renderTerms(container,readyIds){
