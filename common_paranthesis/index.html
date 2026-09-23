@@ -403,6 +403,7 @@ class CommonFactorEngine{
 
     const sourceElement=document.querySelector(`[data-atom-id="${sourceAtomId}"]`);
     const sourceRect=sourceElement?sourceElement.getBoundingClientRect():null;
+    const oldPositions=this.capturePositions();
     const key=this.atomKey(sourceAtom);
 
     /*
@@ -456,14 +457,28 @@ class CommonFactorEngine{
     this.pendingOutsideId=sourceRect?outside.id:null;
 
     this.updateDoneState();
-    this.renderWithFlip();
+
+    /*
+      Önce yeni düzeni çiziyoruz. Yeni faktör görünmezdir ama
+      fiziksel olarak kendi slotunu işgal eder.
+    */
+    this.render();
 
     if(!sourceRect){
       this.pendingOutsideId=null;
+      this.runFlip(oldPositions);
       return;
     }
 
     requestAnimationFrame(()=>{
+      /*
+        İç taraftaki normal FLIP animasyonları kısa sürer.
+        Dış faktörler ve parantez ise uçuş boyunca ayrı animasyonla
+        kayarak yeni faktöre yer açar.
+      */
+      this.runFlip(oldPositions,this.animationDuration,true);
+      this.runOutsideLandingShift(oldPositions,440,55);
+
       const newTarget=document.querySelector(
         `[data-outside-id="${outside.id}"].outside-factor`
       );
@@ -625,7 +640,7 @@ class CommonFactorEngine{
       }
     }
     const terms=document.createElement("div");terms.className="terms";this.renderTerms(terms,readyIds);
-    if(this.outsideAtoms.length){const p=document.createElement("span");p.className="parenthesized";const l=document.createElement("span"),r=document.createElement("span");l.className=r.className="paren";l.textContent="(";r.textContent=")";p.append(l,terms,r);root.appendChild(p)}else root.appendChild(terms);
+    if(this.outsideAtoms.length){const p=document.createElement("span");p.className="parenthesized";p.dataset.animId="parenthesized";const l=document.createElement("span"),r=document.createElement("span");l.className=r.className="paren";l.textContent="(";r.textContent=")";p.append(l,terms,r);root.appendChild(p)}else root.appendChild(terms);
     this.dom.expression.appendChild(root);this.renderInstruction();this.bindMathEvents();this.bindTermDrag();this.bindGroupDrag();this.bindOutsideDrag();this.animateChangedGroups();this.dom.tidyArea.classList.toggle("show",this.canTidyAndFinalize());this.dom.success.classList.toggle("show",this.done);
   }
 
@@ -700,8 +715,110 @@ class CommonFactorEngine{
   moveOutsideFactor(sourceId,targetId,before){const old=this.capturePositions(),si=this.outsideAtoms.findIndex(a=>a.id===sourceId);if(si<0)return;const [m]=this.outsideAtoms.splice(si,1),ti=this.outsideAtoms.findIndex(a=>a.id===targetId),at=before?ti:ti+1;this.outsideAtoms.splice(at,0,m);this.outsideCollapsed=this.outsideAtoms.length<=1;this.updateDoneState();this.render();this.runFlip(old)}
 
   renderWithFlip(){const old=this.capturePositions();this.render();this.runFlip(old)}
+
+  /*
+    YENİ DIŞ ÇARPAN UÇARKEN YER AÇMA
+
+    Örnek:
+      dışarıda 2 var, içeriden 3 geliyor.
+
+    Yeni 3'ün görünmez hedef slotu oluşturulduktan sonra:
+      - 2 hafifçe sola kayar,
+      - parantezli ifade gerekiyorsa hafifçe sağa kayar,
+      - arada 3'ün düşeceği boşluk açılır.
+
+    Bu hareket uçuşla aynı anda gerçekleşir; yani boşluk uçuş
+    başlamadan bir anda oluşmaz.
+  */
+  runOutsideLandingShift(oldPositions,duration=440,delay=55){
+    const elements=[
+      ...document.querySelectorAll(".outside-factor[data-anim-id]"),
+      ...document.querySelectorAll('[data-anim-id="parenthesized"]')
+    ];
+
+    for(const element of elements){
+      const id=element.dataset.animId;
+      const oldRect=oldPositions.get(id);
+
+      if(!oldRect)continue;
+
+      /*
+        Uçmakta olan yeni faktör görünmez hedef olarak DOM'da yer
+        tutar; onu hareket ettirmiyoruz. Yalnız eski elemanlar kayar.
+      */
+      if(
+        this.pendingOutsideId
+        &&
+        id==="outside_"+this.pendingOutsideId
+      ){
+        continue;
+      }
+
+      const newRect=element.getBoundingClientRect();
+
+      const dx=oldRect.left-newRect.left;
+      const dy=oldRect.top-newRect.top;
+
+      if(Math.abs(dx)<.5&&Math.abs(dy)<.5)continue;
+
+      element.animate(
+        [
+          {
+            transform:`translate(${dx}px,${dy}px)`
+          },
+          {
+            transform:"translate(0,0)"
+          }
+        ],
+        {
+          duration,
+          delay,
+          easing:"cubic-bezier(.22,.78,.25,1)",
+          fill:"both"
+        }
+      );
+    }
+  }
   capturePositions(){const map=new Map();document.querySelectorAll("[data-anim-id]").forEach(e=>map.set(e.dataset.animId,e.getBoundingClientRect()));return map}
-  runFlip(old){document.querySelectorAll("[data-anim-id]").forEach(e=>{const a=old.get(e.dataset.animId);if(!a)return;const b=e.getBoundingClientRect(),dx=a.left-b.left,dy=a.top-b.top;if(Math.abs(dx)<.5&&Math.abs(dy)<.5)return;e.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:"translate(0,0)"}],{duration:this.animationDuration,easing:"cubic-bezier(.22,.82,.28,1)"})})}
+  runFlip(old,duration=this.animationDuration,skipLanding=false){
+    document.querySelectorAll("[data-anim-id]").forEach(e=>{
+      const id=e.dataset.animId;
+
+      if(
+        skipLanding
+        &&
+        (
+          id==="parenthesized"
+          ||
+          id==="outside-product"
+          ||
+          id.startsWith("outside_")
+        )
+      ){
+        return;
+      }
+
+      const a=old.get(id);
+      if(!a)return;
+
+      const b=e.getBoundingClientRect();
+      const dx=a.left-b.left;
+      const dy=a.top-b.top;
+
+      if(Math.abs(dx)<.5&&Math.abs(dy)<.5)return;
+
+      e.animate(
+        [
+          {transform:`translate(${dx}px,${dy}px)`},
+          {transform:"translate(0,0)"}
+        ],
+        {
+          duration,
+          easing:"cubic-bezier(.22,.82,.28,1)"
+        }
+      );
+    });
+  }
   animateChangedGroups(){for(const id of this.changedGroupIds){const e=document.querySelector(`[data-group-id="${id}"]`);if(e)e.animate([{opacity:.42,transform:"scale(.88)"},{opacity:1,transform:"scale(1)"}],{duration:300,easing:"cubic-bezier(.2,.8,.25,1)"})}this.changedGroupIds.clear()}
 
   flyFactorCurved(from,to,paren,html,onFinish=null){
