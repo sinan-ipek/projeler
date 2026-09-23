@@ -3452,6 +3452,187 @@ function appendPointValueDisplay(
   }
 
 
+  /*
+    BASİT / BİLEŞİK KESİR
+
+    raw veya reduced gösterimde payda 1 değilse "/" kullanılmaz.
+    Pay üstte, payda altta ve aralarında yatay kesir çizgisi vardır.
+  */
+  if(
+    point.format === 'raw'
+    ||
+    point.format === 'reduced'
+  ){
+
+    const data =
+      fractionData(
+        point.value
+      );
+
+
+    const numerator =
+      point.format === 'raw'
+      ?
+      data.rawNum
+      :
+      data.num;
+
+
+    const denominator =
+      point.format === 'raw'
+      ?
+      data.rawDen
+      :
+      data.den;
+
+
+    /*
+      Reduced biçimde payda 1 ise artık kesir değildir;
+      normal tam sayı olarak tek satırda gösterilir.
+    */
+    if(
+      denominator !== 1
+    ){
+
+      const prefix =
+        svgEl(
+          'text',
+          {
+            x:startX,
+            y:centerY,
+            fill:point.color,
+            class:'mixed-whole-text',
+            'text-anchor':'start'
+          }
+        );
+
+
+      prefix.textContent =
+        '=';
+
+
+      group.appendChild(
+        prefix
+      );
+
+
+      const prefixWidth =
+        estimateTextWidth(
+          '='
+        );
+
+
+      const numeratorText =
+        String(
+          numerator
+        );
+
+
+      const denominatorText =
+        String(
+          denominator
+        );
+
+
+      const fractionWidth =
+        Math.max(
+          13,
+          Math.max(
+            numeratorText.length,
+            denominatorText.length
+          )
+          *
+          7
+          +
+          4
+        );
+
+
+      const fractionCenterX =
+        startX
+        +
+        prefixWidth
+        +
+        4
+        +
+        fractionWidth / 2;
+
+
+      const numeratorEl =
+        svgEl(
+          'text',
+          {
+            x:fractionCenterX,
+            y:centerY - 8,
+            fill:point.color,
+            class:'mixed-frac-text'
+          }
+        );
+
+
+      numeratorEl.textContent =
+        numeratorText;
+
+
+      group.appendChild(
+        numeratorEl
+      );
+
+
+      const bar =
+        svgEl(
+          'line',
+          {
+            x1:
+              fractionCenterX
+              -
+              fractionWidth / 2,
+
+            y1:centerY,
+
+            x2:
+              fractionCenterX
+              +
+              fractionWidth / 2,
+
+            y2:centerY,
+            stroke:point.color,
+            class:'mixed-frac-bar'
+          }
+        );
+
+
+      group.appendChild(
+        bar
+      );
+
+
+      const denominatorEl =
+        svgEl(
+          'text',
+          {
+            x:fractionCenterX,
+            y:centerY + 9,
+            fill:point.color,
+            class:'mixed-frac-text'
+          }
+        );
+
+
+      denominatorEl.textContent =
+        denominatorText;
+
+
+      group.appendChild(
+        denominatorEl
+      );
+
+
+      return;
+    }
+  }
+
+
   const value =
     svgEl(
       'text',
