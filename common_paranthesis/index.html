@@ -129,7 +129,7 @@ function makePolynomialGroup(template){return makeGroup([makePolynomialAtom(temp
 class CommonFactorEngine{
   constructor(){
     this.mode="simple";this.terms=[];this.outsideAtoms=[];this.outsideCollapsed=false;this.done=false;this.firstSimpleExample=true;this.animationDuration=330;this.changedGroupIds=new Set();
-    this.draggedTermId=null;this.draggedGroupId=null;this.draggedGroupTermId=null;this.draggedOutsideId=null;
+    this.draggedTermId=null;this.draggedGroupId=null;this.draggedGroupTermId=null;this.draggedOutsideId=null;this.pendingOutsideId=null;
     this.dom={expression:document.getElementById("expression"),simpleBtn:document.getElementById("simpleBtn"),advancedBtn:document.getElementById("advancedBtn"),newBtn:document.getElementById("newBtn"),tidyBtn:document.getElementById("tidyBtn"),tidyArea:document.getElementById("tidyArea"),instructionMain:document.getElementById("instructionMain"),instructionSub:document.getElementById("instructionSub"),success:document.getElementById("success")};
     this.bindControls();this.newProblem();
   }
@@ -195,7 +195,7 @@ class CommonFactorEngine{
       }
       if(term.groups.length<=1)term.explicitProduct=false;
     }
-    if(this.outsideAtoms.length<=1)this.outsideCollapsed=true;
+    if(this.outsideAtoms.length===0)this.outsideCollapsed=false;
   }
 
   getTermAtomCounts(term){
@@ -317,12 +317,216 @@ class CommonFactorEngine{
     this.bump(`[data-atom-id="${atomId}"]`);
   }
 
+  /*
+    DIŞARI ÇIKAN ÇARPANLARIN DÜŞÜŞ DÜZENİ
+
+    Bu sıra, özellikle uçuşun bittiği noktayı belirlemek içindir.
+
+    1. Sayılar önce gelir ve küçükten büyüğe sıralanır.
+    2. Harfler sonra gelir ve alfabetik sıralanır.
+    3. Kökler daha sonra gelir.
+    4. Parantezli cebirsel faktörler en sona gelir.
+
+    Aynı faktör yeniden çıkarsa yeni faktör kendi ayrı yerine
+    uçmaz; mevcut kardeş faktörün tam üstüne düşer.
+  */
+  outsideLandingRank(atom){
+    if(atom.type==="number")return 0;
+    if(atom.type==="variable")return 1;
+    if(atom.type==="radical")return 2;
+    if(atom.type==="polynomial")return 3;
+    return 4;
+  }
+
+  compareOutsideLandingAtoms(a,b){
+    const rankA=this.outsideLandingRank(a);
+    const rankB=this.outsideLandingRank(b);
+
+    if(rankA!==rankB)return rankA-rankB;
+
+    if(a.type==="number"){
+      return Number(a.value)-Number(b.value);
+    }
+
+    if(a.type==="variable"){
+      return String(a.symbol).localeCompare(String(b.symbol),"tr");
+    }
+
+    if(a.type==="radical"){
+      return Number(a.radicand)-Number(b.radicand);
+    }
+
+    if(a.type==="polynomial"){
+      return String(a.key).localeCompare(String(b.key),"tr");
+    }
+
+    return 0;
+  }
+
+  getOutsideLandingInsertIndex(atom){
+    /*
+      Eşit faktörlerin SONRASINA yerleştiriyoruz.
+      Böylece 2,2,3 ya da x,x,y gibi kümeler bozulmuyor.
+    */
+    for(let i=0;i<this.outsideAtoms.length;i++){
+      if(this.compareOutsideLandingAtoms(atom,this.outsideAtoms[i])<0){
+        return i;
+      }
+    }
+
+    return this.outsideAtoms.length;
+  }
+
+  getLastOutsideSiblingId(atom){
+    const key=this.atomKey(atom);
+
+    for(let i=this.outsideAtoms.length-1;i>=0;i--){
+      if(this.atomKey(this.outsideAtoms[i])===key){
+        return this.outsideAtoms[i].id;
+      }
+    }
+
+    return null;
+  }
+
   extractReadyFactor(sourceTermId,sourceGroupId,sourceAtomId){
-    if(!this.isAtomReady(sourceAtomId))return;const sourceTerm=this.getTerm(sourceTermId);if(!sourceTerm)return;const sourceGroup=sourceTerm.groups.find(g=>g.id===sourceGroupId);if(!sourceGroup)return;const sourceAtom=sourceGroup.atoms.find(a=>a.id===sourceAtomId);if(!sourceAtom)return;
-    const el=document.querySelector(`[data-atom-id="${sourceAtomId}"]`),sourceRect=el?el.getBoundingClientRect():null,key=this.atomKey(sourceAtom);
-    for(const term of this.terms){this.removeOneVisibleFactor(term,key,term.id===sourceTermId?sourceAtomId:null);term.explicitProduct=term.groups.length>1}
-    const outside=this.cloneAtom(sourceAtom);outside.id=uid("outside");this.outsideAtoms.push(outside);this.outsideCollapsed=this.outsideAtoms.length<=1;this.updateDoneState();this.renderWithFlip();
-    if(sourceRect)requestAnimationFrame(()=>{const target=document.querySelector(`[data-outside-id="${outside.id}"]`);if(!target)return;const paren=document.querySelector(".parenthesized");this.flyFactorCurved(sourceRect,target.getBoundingClientRect(),paren?paren.getBoundingClientRect():null,this.atomHTML(outside))});
+    if(!this.isAtomReady(sourceAtomId))return;
+
+    const sourceTerm=this.getTerm(sourceTermId);
+    if(!sourceTerm)return;
+
+    const sourceGroup=sourceTerm.groups.find(g=>g.id===sourceGroupId);
+    if(!sourceGroup)return;
+
+    const sourceAtom=sourceGroup.atoms.find(a=>a.id===sourceAtomId);
+    if(!sourceAtom)return;
+
+    const sourceElement=document.querySelector(`[data-atom-id="${sourceAtomId}"]`);
+    const sourceRect=sourceElement?sourceElement.getBoundingClientRect():null;
+    const key=this.atomKey(sourceAtom);
+
+    /*
+      Yeni faktör dışarı eklenmeden ÖNCE aynı faktörden
+      mevcut mu diye bakıyoruz.
+
+      Varsa uçuş hedefi yeni slot değil, kardeş faktör olacak.
+    */
+    const siblingId=this.getLastOutsideSiblingId(sourceAtom);
+
+    /*
+      Farklı bir faktörse düşeceği sıra burada hesaplanıyor.
+
+      Örnek:
+      mevcut: 2, x, y
+      gelen 3  -> 2'nin sağı, x'in solu
+      gelen 1  -> 2'nin solu
+      gelen b  -> sayılardan sonra, x/y alfabetik konumuna
+    */
+    const insertIndex=this.getOutsideLandingInsertIndex(sourceAtom);
+
+    for(const term of this.terms){
+      this.removeOneVisibleFactor(
+        term,
+        key,
+        term.id===sourceTermId?sourceAtomId:null
+      );
+
+      term.explicitProduct=term.groups.length>1;
+    }
+
+    const outside=this.cloneAtom(sourceAtom);
+    outside.id=uid("outside");
+
+    /*
+      push yerine hesaplanan yere ekliyoruz.
+      Bu, farklı faktörlerin farklı düşüş noktaları oluşturmasını sağlar.
+    */
+    this.outsideAtoms.splice(insertIndex,0,outside);
+
+    /*
+      Faktörler uçuş devam ederken açık görünür.
+      Final toplama Toparla ile yapılır.
+    */
+    this.outsideCollapsed=false;
+
+    /*
+      Uçan kopya varken hedefte ikinci bir kopya görünmesin.
+      Yeni faktör DOM'da yer kaplar ama uçuş bitene kadar görünmez.
+    */
+    this.pendingOutsideId=sourceRect?outside.id:null;
+
+    this.updateDoneState();
+    this.renderWithFlip();
+
+    if(!sourceRect){
+      this.pendingOutsideId=null;
+      return;
+    }
+
+    requestAnimationFrame(()=>{
+      const newTarget=document.querySelector(
+        `[data-outside-id="${outside.id}"].outside-factor`
+      );
+
+      if(!newTarget){
+        this.pendingOutsideId=null;
+        return;
+      }
+
+      /*
+        AYNI FAKTÖR:
+        Yeni faktör, mevcut kardeş faktörün tam üstüne düşer.
+
+        FARKLI FAKTÖR:
+        Yeni faktör, sıralama kuralıyla kendisi için açılan
+        farklı slota düşer.
+
+        İLK FAKTÖR:
+        siblingId yoktur ve newTarget zaten parantezin
+        hemen önündeki ilk slottur.
+      */
+      let landingTarget=newTarget;
+
+      if(siblingId){
+        const sibling=document.querySelector(
+          `[data-outside-id="${siblingId}"].outside-factor`
+        );
+
+        if(sibling){
+          landingTarget=sibling;
+        }
+      }
+
+      const paren=document.querySelector(".parenthesized");
+
+      this.flyFactorCurved(
+        sourceRect,
+        landingTarget.getBoundingClientRect(),
+        paren?paren.getBoundingClientRect():null,
+        this.atomHTML(outside),
+        ()=>{
+          const actual=document.querySelector(
+            `[data-outside-id="${outside.id}"].outside-factor`
+          );
+
+          if(actual){
+            actual.style.visibility="";
+            actual.animate(
+              [
+                {opacity:0,transform:"scale(.82)"},
+                {opacity:1,transform:"scale(1)"}
+              ],
+              {
+                duration:180,
+                easing:"cubic-bezier(.2,.8,.25,1)"
+              }
+            );
+          }
+
+          this.pendingOutsideId=null;
+        }
+      );
+    });
   }
 
   removeOneVisibleFactor(term,key,preferredId=null){
@@ -417,7 +621,7 @@ class CommonFactorEngine{
       if(this.outsideCollapsed){const outside=document.createElement("span");outside.className="outside collapsed";outside.dataset.animId="outside-product";outside.innerHTML=this.summarizeAtoms(this.outsideAtoms);root.appendChild(outside)}
       else{
         const outside=document.createElement("span");outside.className="outside";outside.dataset.animId="outside-product";
-        this.outsideAtoms.forEach((atom,i)=>{if(i)outside.appendChild(this.createMultiply());const wrap=document.createElement("span");wrap.className="outside-factor-wrap";wrap.dataset.outsideId=atom.id;const handle=this.createFactorDragHandle();handle.dataset.dragOutside=atom.id;wrap.appendChild(handle);const f=document.createElement("span");f.className="outside-factor"+(atom.type==="polynomial"?" polynomial-factor":"");f.dataset.outsideId=atom.id;f.dataset.animId="outside_"+atom.id;f.innerHTML=this.atomHTML(atom);wrap.appendChild(f);outside.appendChild(wrap)});root.appendChild(outside);
+        this.outsideAtoms.forEach((atom,i)=>{if(i)outside.appendChild(this.createMultiply());const wrap=document.createElement("span");wrap.className="outside-factor-wrap";wrap.dataset.outsideId=atom.id;const handle=this.createFactorDragHandle();handle.dataset.dragOutside=atom.id;wrap.appendChild(handle);const f=document.createElement("span");f.className="outside-factor"+(atom.type==="polynomial"?" polynomial-factor":"");f.dataset.outsideId=atom.id;f.dataset.animId="outside_"+atom.id;if(atom.id===this.pendingOutsideId)f.style.visibility="hidden";f.innerHTML=this.atomHTML(atom);wrap.appendChild(f);outside.appendChild(wrap)});root.appendChild(outside);
       }
     }
     const terms=document.createElement("div");terms.className="terms";this.renderTerms(terms,readyIds);
@@ -500,8 +704,8 @@ class CommonFactorEngine{
   runFlip(old){document.querySelectorAll("[data-anim-id]").forEach(e=>{const a=old.get(e.dataset.animId);if(!a)return;const b=e.getBoundingClientRect(),dx=a.left-b.left,dy=a.top-b.top;if(Math.abs(dx)<.5&&Math.abs(dy)<.5)return;e.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:"translate(0,0)"}],{duration:this.animationDuration,easing:"cubic-bezier(.22,.82,.28,1)"})})}
   animateChangedGroups(){for(const id of this.changedGroupIds){const e=document.querySelector(`[data-group-id="${id}"]`);if(e)e.animate([{opacity:.42,transform:"scale(.88)"},{opacity:1,transform:"scale(1)"}],{duration:300,easing:"cubic-bezier(.2,.8,.25,1)"})}this.changedGroupIds.clear()}
 
-  flyFactorCurved(from,to,paren,html){
-    const flyer=document.createElement("div");flyer.className="flying-factor";flyer.innerHTML=html;document.body.appendChild(flyer);let fr=flyer.getBoundingClientRect();const sx=from.left+from.width/2,sy=from.top+from.height/2;flyer.style.left=(sx-fr.width/2)+"px";flyer.style.top=(sy-fr.height/2)+"px";const tx=to.left+to.width/2,ty=to.top+to.height/2,dx=tx-sx,dy=ty-sy;let obstacle=Math.min(from.top,to.top);if(paren)obstacle=Math.min(obstacle,paren.top);const apex=obstacle-Math.max(52,from.height*1.4),rel=apex-sy,a=2*dy-4*rel,b=4*rel-dy,frames=[],steps=16;for(let i=0;i<=steps;i++){const t=i/steps;frames.push({offset:t,transform:`translate(${dx*t}px,${a*t*t+b*t}px)`,color:t>.78?"#182033":"#d93643"})}const anim=flyer.animate(frames,{duration:520,easing:"linear",fill:"forwards"});anim.onfinish=()=>flyer.remove();
+  flyFactorCurved(from,to,paren,html,onFinish=null){
+    const flyer=document.createElement("div");flyer.className="flying-factor";flyer.innerHTML=html;document.body.appendChild(flyer);let fr=flyer.getBoundingClientRect();const sx=from.left+from.width/2,sy=from.top+from.height/2;flyer.style.left=(sx-fr.width/2)+"px";flyer.style.top=(sy-fr.height/2)+"px";const tx=to.left+to.width/2,ty=to.top+to.height/2,dx=tx-sx,dy=ty-sy;let obstacle=Math.min(from.top,to.top);if(paren)obstacle=Math.min(obstacle,paren.top);const apex=obstacle-Math.max(52,from.height*1.4),rel=apex-sy,a=2*dy-4*rel,b=4*rel-dy,frames=[],steps=16;for(let i=0;i<=steps;i++){const t=i/steps;frames.push({offset:t,transform:`translate(${dx*t}px,${a*t*t+b*t}px)`,color:t>.78?"#182033":"#d93643"})}const anim=flyer.animate(frames,{duration:520,easing:"linear",fill:"forwards"});anim.onfinish=()=>{flyer.remove();if(typeof onFinish==="function")onFinish()};
   }
 
   bump(selector){const e=document.querySelector(selector);if(!e)return;e.animate([{transform:"translateX(0)"},{transform:"translateX(-4px)"},{transform:"translateX(4px)"},{transform:"translateX(-2px)"},{transform:"translateX(0)"}],{duration:220,easing:"ease-out"})}
