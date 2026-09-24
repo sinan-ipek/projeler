@@ -144,6 +144,7 @@ svg{
 .point-dot{
   stroke:#fff;
   stroke-width:3;
+  stroke-linejoin:round;
   cursor:grab;
 }
 
@@ -154,6 +155,7 @@ svg{
 
 .point-hit{
   fill:transparent;
+  stroke:transparent;
   cursor:grab;
 }
 
@@ -161,6 +163,7 @@ svg{
   fill:none;
   stroke:#111827;
   stroke-width:1.5;
+  stroke-linejoin:round;
   stroke-dasharray:4 4;
   opacity:.25;
   pointer-events:none;
@@ -1949,7 +1952,13 @@ const RANGE_AT_B4 = 6;
 const C_MIN = -10;
 const C_MAX = 10;
 
-const DOT_R = 12;
+/*
+  NOKTA GÖSTERİMİ:
+  Noktalar artık aşağı bakan üçgen olarak gösterilir.
+  Üçgenin sivri güney köşesi tam olarak sayı doğrusu üzerindeki değeri gösterir.
+*/
+const TRI_HALF_W = 12;
+const TRI_HEIGHT = 24;
 
 /*
   YENİ KURAL:
@@ -3809,6 +3818,23 @@ function renderGrid(){
    NOKTA KÜMELERİ
 ========================================================= */
 
+function trianglePoints(
+  x,
+  halfWidth = TRI_HALF_W,
+  height = TRI_HEIGHT
+){
+
+  return (
+    `${x-halfWidth},${AXIS_Y-height} `
+    +
+    `${x+halfWidth},${AXIS_Y-height} `
+    +
+    `${x},${AXIS_Y}`
+  );
+
+}
+
+
 function clusterMap(){
 
   const map =
@@ -5045,16 +5071,15 @@ function renderPoints(){
       pointLayer.appendChild(
 
         svgEl(
-          'circle',
+          'polygon',
           {
 
-            cx:x,
-
-            cy:
-              AXIS_Y,
-
-            r:
-              DOT_R + 6,
+            points:
+              trianglePoints(
+                x,
+                TRI_HALF_W + 6,
+                TRI_HEIGHT + 8
+              ),
 
             class:
               'cluster-ring'
@@ -5069,16 +5094,15 @@ function renderPoints(){
 
     const hit =
       svgEl(
-        'circle',
+        'polygon',
         {
 
-          cx:x,
-
-          cy:
-            AXIS_Y,
-
-          r:
-            DOT_R + 9,
+          points:
+            trianglePoints(
+              x,
+              TRI_HALF_W + 10,
+              TRI_HEIGHT + 12
+            ),
 
           class:
             'point-hit'
@@ -5106,16 +5130,13 @@ function renderPoints(){
 
     const dot =
       svgEl(
-        'circle',
+        'polygon',
         {
 
-          cx:x,
-
-          cy:
-            AXIS_Y,
-
-          r:
-            DOT_R,
+          points:
+            trianglePoints(
+              x
+            ),
 
           fill:
             blended,
