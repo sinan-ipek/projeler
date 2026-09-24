@@ -91,20 +91,13 @@ body{
 svg{
   display:block;
   width:100%;
-  height:500px;
+  height:580px;
 
   user-select:none;
   -webkit-user-select:none;
   touch-action:none;
 }
 
-.hint{
-  text-align:center;
-  color:var(--muted);
-  font-size:13px;
-  line-height:1.5;
-  margin:0 12px 4px;
-}
 
 #gridLayer > :not(.empty-overlay){
   pointer-events:none;
@@ -289,10 +282,10 @@ svg{
   min-width:0;
 
   /*
-    YENİ KURAL:
-    Fader'ın yatay uzunluğu önceki sürümün %50'si.
+    a, b ve c sürgülerinin gerçek ray uzunluğu aynıdır.
   */
-  width:50%;
+  width:100%;
+  max-width:420px;
   justify-self:center;
 }
 
@@ -365,7 +358,8 @@ svg{
 */
 .slider-area{
   min-width:0;
-  width:50%;
+  width:100%;
+  max-width:420px;
   justify-self:center;
   position:relative;
 }
@@ -565,7 +559,7 @@ svg{
   }
 
   svg{
-    height:450px;
+    height:550px;
   }
 
   .slider-panel{
@@ -586,7 +580,8 @@ svg{
 
   .slider-area{
     grid-column:1;
-    width:50%;
+    width:100%;
+    max-width:300px;
     justify-self:center;
   }
 
@@ -656,17 +651,6 @@ svg{
   font-size:11px;
 }
 
-.hint .hint-pair{
-  display:block;
-  margin-bottom:5px;
-}
-
-.hint .hint-de{
-  display:block;
-  margin-top:1px;
-  color:#8a94a6;
-  font-size:11px;
-}
 
 /* =========================================================
    GLOBAL GÖSTERİM DÜĞMELERİ
@@ -674,7 +658,7 @@ svg{
 
 .global-format-bar{
   position:absolute;
-  top:40px;
+  top:24px;
   left:50%;
   transform:translateX(-50%);
   z-index:30;
@@ -735,9 +719,558 @@ svg{
   text-anchor:middle;
 }
 
+
+/* =========================================================
+   b SÜRGÜSÜ — CONTINUOUS ZOOM
+========================================================= */
+
+.zoom-panel{
+  position:absolute;
+
+  /*
+    a sürgüsünün 1–12 ölçek yazılarıyla hiçbir zaman
+    aynı dikey banda girmemesi için b kontrolünü ayrı,
+    aşağıdaki bir bölgeye yerleştiriyoruz.
+  */
+  left:80px;
+  right:80px;
+  top:398px;
+
+  padding:0;
+
+  border:none;
+  background:transparent;
+  box-shadow:none;
+
+  z-index:8;
+}
+
+.zoom-row{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+
+.zoom-title{
+  font-weight:800;
+  white-space:nowrap;
+  text-align:center;
+  line-height:1.08;
+}
+
+.zoom-title .de{
+  margin-top:4px;
+  font-size:11px;
+}
+
+.zoom-area{
+  width:100%;
+  max-width:420px;
+  min-width:0;
+
+  position:relative;
+}
+
+.zoom-area::before{
+  content:"";
+
+  position:absolute;
+  left:0;
+  right:0;
+  top:10px;
+
+  height:2px;
+  border-radius:2px;
+
+  background:#626b76;
+
+  box-shadow:
+    inset 0 1px 2px rgba(0,0,0,.55),
+    0 1px 0 rgba(255,255,255,.45);
+
+  pointer-events:none;
+}
+
+.zoom-slider{
+  width:100%;
+  height:24px;
+
+  margin:0;
+  padding:0;
+
+  background:transparent;
+  outline:none;
+
+  appearance:none;
+  -webkit-appearance:none;
+
+  cursor:pointer;
+}
+
+.zoom-slider::-webkit-slider-runnable-track{
+  height:6px;
+  border-radius:3px;
+
+  background:
+    linear-gradient(
+      to bottom,
+      #9aa3af 0%,
+      #c3cad3 22%,
+      #d9dee5 50%,
+      #b8c0ca 78%,
+      #8f98a5 100%
+    );
+
+  border:1px solid #7f8894;
+
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,.75),
+    inset 0 -1px 2px rgba(0,0,0,.18),
+    0 1px 1px rgba(255,255,255,.8);
+}
+
+.zoom-slider::-webkit-slider-thumb{
+  appearance:none;
+  -webkit-appearance:none;
+
+  width:10px;
+  height:20px;
+
+  margin-top:-8px;
+
+  border-radius:2px;
+  border:1px solid #5c6570;
+
+  background:
+    linear-gradient(
+      to right,
+      #7f8894 0%,
+      #cfd5dc 18%,
+      #f2f4f6 46%,
+      #d9dee4 68%,
+      #858e99 100%
+    );
+
+  box-shadow:
+    inset 1px 0 0 rgba(255,255,255,.75),
+    inset -1px 0 0 rgba(0,0,0,.12),
+    inset 0 9px 0 -8px #3e4650,
+    0 2px 5px rgba(0,0,0,.28);
+}
+
+.zoom-slider::-moz-range-track{
+  height:6px;
+  border-radius:3px;
+
+  background:
+    linear-gradient(
+      to bottom,
+      #9aa3af 0%,
+      #c3cad3 22%,
+      #d9dee5 50%,
+      #b8c0ca 78%,
+      #8f98a5 100%
+    );
+
+  border:1px solid #7f8894;
+}
+
+.zoom-slider::-moz-range-progress{
+  height:6px;
+  border-radius:3px;
+
+  background:
+    linear-gradient(
+      to bottom,
+      #9aa3af 0%,
+      #c3cad3 22%,
+      #d9dee5 50%,
+      #b8c0ca 78%,
+      #8f98a5 100%
+    );
+}
+
+.zoom-slider::-moz-range-thumb{
+  width:10px;
+  height:20px;
+
+  border-radius:2px;
+  border:1px solid #5c6570;
+
+  background:
+    linear-gradient(
+      to right,
+      #7f8894 0%,
+      #cfd5dc 18%,
+      #f2f4f6 46%,
+      #d9dee4 68%,
+      #858e99 100%
+    );
+
+  box-shadow:
+    inset 1px 0 0 rgba(255,255,255,.75),
+    inset -1px 0 0 rgba(0,0,0,.12),
+    inset 0 9px 0 -8px #3e4650,
+    0 2px 5px rgba(0,0,0,.28);
+}
+
+
+.zoom-end-labels{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+
+  margin-top:4px;
+
+  color:#7a8598;
+
+  font-size:9px;
+}
+
+.zoom-end-labels .end-label{
+  display:flex;
+  flex-direction:column;
+  line-height:1.05;
+}
+
+.zoom-end-labels .end-label:last-child{
+  text-align:right;
+}
+
+.zoom-end-labels .de{
+  margin-top:2px;
+  color:#9aa4b5;
+  font-size:8px;
+}
+
+@media(max-width:760px){
+
+  .zoom-panel{
+    left:26px;
+    right:26px;
+    top:382px;
+    padding:0;
+  }
+
+  .zoom-row{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:7px;
+  }
+
+  .zoom-title{
+    text-align:center;
+  }
+
+  .zoom-area{
+    width:100%;
+    min-width:0;
+    max-width:300px;
+  }
+
+}
+
+
+/* =========================================================
+   c SÜRGÜSÜ — SAYI DOĞRUSUNU SAĞA / SOLA TRANSLATE ET
+========================================================= */
+
+.translate-panel{
+  position:absolute;
+
+  left:80px;
+  right:80px;
+  top:482px;
+
+  padding:0;
+
+  border:none;
+  background:transparent;
+  box-shadow:none;
+
+  z-index:8;
+}
+
+.translate-row{
+  display:grid;
+  grid-template-columns:auto minmax(260px,1fr) auto;
+  align-items:center;
+  gap:18px;
+}
+
+.translate-title{
+  font-weight:800;
+  white-space:nowrap;
+  text-align:center;
+  line-height:1.08;
+}
+
+.translate-title .de{
+  display:block;
+  margin-top:4px;
+  color:#7a8598;
+  font-size:11px;
+  font-weight:500;
+}
+
+.translate-area{
+  width:100%;
+  max-width:420px;
+  min-width:0;
+
+  justify-self:center;
+  position:relative;
+}
+
+.translate-area::before{
+  content:"";
+
+  position:absolute;
+  left:0;
+  right:0;
+  top:10px;
+
+  height:2px;
+  border-radius:2px;
+
+  background:#626b76;
+
+  box-shadow:
+    inset 0 1px 2px rgba(0,0,0,.55),
+    0 1px 0 rgba(255,255,255,.45);
+
+  pointer-events:none;
+}
+
+.translate-slider{
+  width:100%;
+  height:24px;
+
+  margin:0;
+  padding:0;
+
+  background:transparent;
+  outline:none;
+
+  appearance:none;
+  -webkit-appearance:none;
+
+  cursor:pointer;
+}
+
+.translate-slider::-webkit-slider-runnable-track{
+  height:6px;
+  border-radius:3px;
+
+  background:
+    linear-gradient(
+      to bottom,
+      #9aa3af 0%,
+      #c3cad3 22%,
+      #d9dee5 50%,
+      #b8c0ca 78%,
+      #8f98a5 100%
+    );
+
+  border:1px solid #7f8894;
+
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,.75),
+    inset 0 -1px 2px rgba(0,0,0,.18),
+    0 1px 1px rgba(255,255,255,.8);
+}
+
+.translate-slider::-webkit-slider-thumb{
+  appearance:none;
+  -webkit-appearance:none;
+
+  width:10px;
+  height:20px;
+
+  margin-top:-8px;
+
+  border-radius:2px;
+  border:1px solid #5c6570;
+
+  background:
+    linear-gradient(
+      to right,
+      #7f8894 0%,
+      #cfd5dc 18%,
+      #f2f4f6 46%,
+      #d9dee4 68%,
+      #858e99 100%
+    );
+
+  box-shadow:
+    inset 1px 0 0 rgba(255,255,255,.75),
+    inset -1px 0 0 rgba(0,0,0,.12),
+    inset 0 9px 0 -8px #3e4650,
+    0 2px 5px rgba(0,0,0,.28);
+}
+
+.translate-slider::-moz-range-track{
+  height:6px;
+  border-radius:3px;
+
+  background:
+    linear-gradient(
+      to bottom,
+      #9aa3af 0%,
+      #c3cad3 22%,
+      #d9dee5 50%,
+      #b8c0ca 78%,
+      #8f98a5 100%
+    );
+
+  border:1px solid #7f8894;
+}
+
+.translate-slider::-moz-range-progress{
+  height:6px;
+  border-radius:3px;
+
+  background:
+    linear-gradient(
+      to bottom,
+      #9aa3af 0%,
+      #c3cad3 22%,
+      #d9dee5 50%,
+      #b8c0ca 78%,
+      #8f98a5 100%
+    );
+}
+
+.translate-slider::-moz-range-thumb{
+  width:10px;
+  height:20px;
+
+  border-radius:2px;
+  border:1px solid #5c6570;
+
+  background:
+    linear-gradient(
+      to right,
+      #7f8894 0%,
+      #cfd5dc 18%,
+      #f2f4f6 46%,
+      #d9dee4 68%,
+      #858e99 100%
+    );
+
+  box-shadow:
+    inset 1px 0 0 rgba(255,255,255,.75),
+    inset -1px 0 0 rgba(0,0,0,.12),
+    inset 0 9px 0 -8px #3e4650,
+    0 2px 5px rgba(0,0,0,.28);
+}
+
+.translate-end-labels{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+
+  margin-top:4px;
+
+  color:#7a8598;
+
+  font-size:9px;
+}
+
+.translate-end-labels .end-label{
+  display:flex;
+  flex-direction:column;
+  line-height:1.05;
+}
+
+.translate-end-labels .end-label:last-child{
+  text-align:right;
+}
+
+.translate-end-labels .de{
+  margin-top:2px;
+  color:#9aa4b5;
+  font-size:8px;
+}
+
+.origin-button{
+  min-width:68px;
+
+  border:1px solid #d7dde7;
+  border-radius:9px;
+
+  background:rgba(255,255,255,.96);
+  color:#273246;
+
+  padding:6px 9px;
+
+  font-size:11px;
+  font-weight:750;
+
+  cursor:pointer;
+
+  box-shadow:
+    0 3px 9px rgba(23,32,51,.06);
+
+  transition:
+    transform .08s ease,
+    background .12s ease;
+}
+
+.origin-button:hover{
+  background:#f7f9fc;
+}
+
+.origin-button:active{
+  transform:translateY(1px);
+}
+
+.origin-button .de{
+  font-size:8px;
+}
+
+@media(max-width:760px){
+
+  .translate-panel{
+    left:26px;
+    right:26px;
+    top:462px;
+    padding:0;
+  }
+
+  .translate-row{
+    grid-template-columns:auto minmax(190px,1fr) auto;
+    gap:9px;
+  }
+
+  .translate-title{
+    font-size:12px;
+  }
+
+  .translate-title .de{
+    font-size:9px;
+  }
+
+  .translate-area{
+    width:100%;
+    min-width:0;
+    max-width:300px;
+  }
+
+  .origin-button{
+    min-width:58px;
+    padding:5px 7px;
+    font-size:10px;
+  }
+
+}
+
 @media(max-width:760px){
   .global-format-bar{
-    top:92px;
+    top:68px;
     gap:5px;
   }
 
@@ -750,6 +1283,161 @@ svg{
   .format-button .de{
     font-size:8px;
   }
+}
+
+
+/* =========================================================
+   v24 — a / b / c ORTAK HİZALAMA
+========================================================= */
+
+/*
+  Eski başlık/ölçek yazıları artık HTML'de yoktur.
+  Üç kontrol de aynı üç sütunlu grid'i kullanır:
+      (a/b/c) | sürgü | yardımcı kontrol
+*/
+.slider-panel,
+.zoom-panel,
+.translate-panel{
+  left:80px !important;
+  right:80px !important;
+  padding:0 !important;
+}
+
+.slider-panel{ top:310px !important; }
+.zoom-panel{ top:398px !important; }
+.translate-panel{ top:482px !important; }
+
+.slider-row,
+.zoom-row,
+.translate-row{
+  display:grid !important;
+  grid-template-columns:42px 420px 270px !important;
+  align-items:center !important;
+  justify-content:center !important;
+  column-gap:18px !important;
+  row-gap:0 !important;
+  min-height:48px !important;
+}
+
+.control-letter{
+  grid-column:1;
+  text-align:right;
+
+  color:#5e687a;
+
+  font-size:15px;
+  font-weight:800;
+}
+
+.slider-area,
+.zoom-area,
+.translate-area{
+  grid-column:2 !important;
+
+  width:420px !important;
+  min-width:0 !important;
+  max-width:420px !important;
+
+  justify-self:center !important;
+  position:relative !important;
+}
+
+.control-side{
+  grid-column:3;
+
+  width:270px;
+
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+}
+
+.a-info{
+  width:270px;
+
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+}
+
+.a-info-title{
+  max-width:255px;
+
+  color:#394457;
+
+  font-size:11px;
+  font-weight:700;
+  line-height:1.15;
+}
+
+.a-info-title .de{
+  display:block;
+
+  margin-top:3px;
+
+  color:#8b95a7;
+
+  font-size:9px;
+  font-weight:500;
+}
+
+.a-info .a-badge{
+  margin-top:6px;
+}
+
+@media(max-width:760px){
+
+  .slider-panel,
+  .zoom-panel,
+  .translate-panel{
+    left:14px !important;
+    right:14px !important;
+  }
+
+  .slider-panel{ top:300px !important; }
+  .zoom-panel{ top:385px !important; }
+  .translate-panel{ top:470px !important; }
+
+  .slider-row,
+  .zoom-row,
+  .translate-row{
+    grid-template-columns:28px minmax(178px,300px) 112px !important;
+    column-gap:7px !important;
+  }
+
+  .slider-area,
+  .zoom-area,
+  .translate-area{
+    width:100% !important;
+    max-width:300px !important;
+  }
+
+  .control-letter{
+    font-size:12px;
+  }
+
+  .control-side,
+  .a-info{
+    width:112px;
+  }
+
+  .a-info-title{
+    max-width:112px;
+    font-size:8px;
+    line-height:1.12;
+  }
+
+  .a-info-title .de{
+    font-size:7px;
+  }
+
+  .a-info .a-badge{
+    min-width:56px;
+    padding:5px 7px;
+    font-size:14px;
+  }
+
 }
 
 </style>
@@ -821,9 +1509,9 @@ svg{
 
     <svg
       id="numberLine"
-      viewBox="0 0 1160 500"
+      viewBox="0 0 1160 580"
       role="img"
-      aria-label="-3 ile +3 arasında sayı doğrusu"
+      aria-label="Dinamik ölçekli sayı doğrusu / Zahlengerade mit dynamischem Maßstab"
     >
       <g id="gridLayer"></g>
       <g id="pointLayer"></g>
@@ -834,12 +1522,7 @@ svg{
 
     <div class="slider-row">
 
-      <div class="slider-title">
-        <span class="ui-text">
-          <span class="tr">İki tam sayı arası kaç eşit parça?</span>
-          <span class="de">In wie viele gleiche Teile wird eine Einheit geteilt?</span>
-        </span>
-      </div>
+      <div class="control-letter">(a)</div>
 
       <div class="slider-area">
 
@@ -851,60 +1534,103 @@ svg{
           max="12"
           step="1"
           value="4"
-          aria-label="Bölme sayısı"
+          aria-label="Bölme sayısı / Anzahl der Teilungen"
         >
-
-        <div class="slider-scale" aria-hidden="true">
-          <span>1</span>
-          <span>2</span>
-          <span>3</span>
-          <span>4</span>
-          <span>5</span>
-          <span>6</span>
-          <span>7</span>
-          <span>8</span>
-          <span>9</span>
-          <span>10</span>
-          <span>11</span>
-          <span>12</span>
-        </div>
 
       </div>
 
-      <div
-        id="aBadge"
-        class="a-badge"
-      >
-        a = 4
+      <div class="control-side">
+
+        <div class="a-info">
+
+          <div class="a-info-title">
+            <span>İki tamsayı arası kaç parçaya bölünmüş</span>
+            <span class="de">In wie viele Teile ist der Abstand zwischen zwei ganzen Zahlen unterteilt?</span>
+          </div>
+
+          <div
+            id="aBadge"
+            class="a-badge"
+          >
+            a = 4
+          </div>
+
+        </div>
+
       </div>
 
     </div>
 
   </div>
 
-    <div class="hint">
 
-      <span class="hint-pair">
-        <span>Sayı doğrusuna tıklayarak nokta ekleyin.</span>
-        <span class="hint-de">Fügen Sie durch Klicken auf die Zahlengerade einen Punkt hinzu.</span>
-      </span>
+  <div class="zoom-panel">
 
-      <span class="hint-pair">
-        <span>Noktayı veya harfini sürükleyebilirsiniz.</span>
-        <span class="hint-de">Sie können den Punkt oder seinen Buchstaben ziehen.</span>
-      </span>
+    <div class="zoom-row">
 
-      <span class="hint-pair">
-        <span>Hareket süreklidir; 1/a katlarına yaklaşınca güçlü biçimde snap olur.</span>
-        <span class="hint-de">Die Bewegung ist kontinuierlich; nahe bei Vielfachen von 1/a rastet der Punkt deutlich ein.</span>
-      </span>
+      <div class="control-letter">(b)</div>
 
-      <span class="hint-pair">
-        <span>Harfe kısa tıklamak yalnız o noktanın gösterim biçimini değiştirir.</span>
-        <span class="hint-de">Ein kurzer Klick auf den Buchstaben ändert nur die Darstellungsform dieses Punktes.</span>
-      </span>
+      <div class="zoom-area">
+
+        <input
+          id="zoomSlider"
+          class="zoom-slider"
+          type="range"
+          min="1"
+          max="6"
+          step="0.01"
+          value="2.11"
+          aria-label="Zoom"
+        >
+
+      </div>
+
+      <div class="control-side" aria-hidden="true"></div>
 
     </div>
+
+  </div>
+
+
+  <div class="translate-panel">
+
+    <div class="translate-row">
+
+      <div class="control-letter">(c)</div>
+
+      <div class="translate-area">
+
+        <input
+          id="translateSlider"
+          class="translate-slider"
+          type="range"
+          min="-10"
+          max="10"
+          step="0.01"
+          value="0"
+          aria-label="Kaydırma / Verschiebung"
+        >
+
+      </div>
+
+      <div class="control-side">
+
+        <button
+          id="originBtn"
+          class="origin-button"
+          type="button"
+        >
+          <span class="ui-text">
+            <span class="tr">Orijin</span>
+            <span class="de">Ursprung</span>
+          </span>
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
 
   </div>
 
@@ -941,6 +1667,15 @@ const slider =
 const aBadge =
   document.getElementById('aBadge');
 
+const zoomSlider =
+  document.getElementById('zoomSlider');
+
+const translateSlider =
+  document.getElementById('translateSlider');
+
+const originBtn =
+  document.getElementById('originBtn');
+
 const clearBtn =
   document.getElementById('clearBtn');
 
@@ -959,7 +1694,7 @@ const globalDecimalBtn =
 ========================================================= */
 
 const W = 1160;
-const H = 500;
+const H = 580;
 
 const LEFT = 85;
 const RIGHT = 1075;
@@ -974,8 +1709,36 @@ const AXIS_RIGHT =
 
 const AXIS_Y = 250;
 
-const MIN = -3;
-const MAX = 3;
+/*
+  v16 CHECKPOINT NOTU:
+  b sürgüsü eklenmeden önceki son düzgün çalışan sürüm v16'dır.
+
+  b sürgüsü için doğal zoom davranışı:
+    b = 1  -> ±2
+    b = 4  -> ±6
+    b = 6  -> yaklaşık ±12,48
+
+  Aradaki değişim üstel ve tamamen continuous'tur.
+*/
+const B_MIN = 1;
+const B_MAX = 6;
+
+const B_REFERENCE_LOW = 1;
+const B_REFERENCE_HIGH = 4;
+
+const RANGE_AT_B1 = 2;
+const RANGE_AT_B4 = 6;
+
+/*
+  c sürgüsü sayı doğrusunun merkez koordinatıdır.
+  Ölçeği değiştirmez; yalnız görünür pencereyi translate eder.
+*/
+/*
+  Önceki -20...+20 aralığına göre c sürgüsü artık
+  yaklaşık yarı hızda / iki kat daha hassas çalışır.
+*/
+const C_MIN = -10;
+const C_MAX = 10;
 
 const DOT_R = 12;
 
@@ -1031,6 +1794,16 @@ const SNAP_RELEASE_MAX_PX = 20;
 let divisions =
   Number(
     slider.value
+  );
+
+let zoomB =
+  Number(
+    zoomSlider.value
+  );
+
+let centerC =
+  Number(
+    translateSlider.value
   );
 
 let points = [];
@@ -1258,7 +2031,8 @@ function hslToHex(
     ]
     .map(
       value =>
-        Math.round(          (value+m)*255
+        Math.round(
+          (value+m)*255
         )
         .toString(16)
         .padStart(
@@ -1375,20 +2149,139 @@ function clamp(
 }
 
 
+function halfRangeFromB(
+  b
+){
+
+  /*
+    Üstel zoom:
+      R(1) = 2
+      R(4) = 6
+
+    Bu, zoom sürgüsünde yakın bölgede hassas,
+    uzak bölgede daha hızlı açılan doğal bir his verir.
+  */
+  const exponent =
+    (
+      b - B_REFERENCE_LOW
+    )
+    /
+    (
+      B_REFERENCE_HIGH
+      -
+      B_REFERENCE_LOW
+    );
+
+
+  return (
+    RANGE_AT_B1
+    *
+    Math.pow(
+      RANGE_AT_B4
+      /
+      RANGE_AT_B1,
+      exponent
+    )
+  );
+
+}
+
+
+function currentHalfRange(){
+
+  return halfRangeFromB(
+    zoomB
+  );
+
+}
+
+
+function currentMin(){
+
+  return (
+    centerC
+    -
+    currentHalfRange()
+  );
+
+}
+
+
+function currentMax(){
+
+  return (
+    centerC
+    +
+    currentHalfRange()
+  );
+
+}
+
+
+function isValueVisible(
+  value
+){
+
+  return (
+    value
+    >=
+    currentMin()
+    -
+    EPS
+
+    &&
+
+    value
+    <=
+    currentMax()
+    +
+    EPS
+  );
+
+}
+
+
+function formatTRDecimal(
+  value,
+  digits = 2
+){
+
+  return Number(
+    value
+  )
+  .toFixed(
+    digits
+  )
+  .replace(
+    '.',
+    ','
+  );
+
+}
+
+
 function valueToX(
   value
 ){
+
+  const min =
+    currentMin();
+
+
+  const max =
+    currentMax();
+
 
   return (
     LEFT
     +
     (
       (
-        value - MIN
+        value - min
       )
       /
       (
-        MAX - MIN
+        max - min
       )
     )
     *
@@ -1404,8 +2297,16 @@ function xToValue(
   x
 ){
 
+  const min =
+    currentMin();
+
+
+  const max =
+    currentMax();
+
+
   return (
-    MIN
+    min
     +
     (
       (
@@ -1418,7 +2319,7 @@ function xToValue(
     )
     *
     (
-      MAX - MIN
+      max - min
     )
   );
 
@@ -1555,8 +2456,8 @@ function snapToSubdivision(
 
   return clamp(
     snapped,
-    MIN,
-    MAX
+    currentMin(),
+    currentMax()
   );
 
 }
@@ -1573,7 +2474,9 @@ function subdivisionSpacingPx(){
   /
   (
     (
-      MAX - MIN
+      currentMax()
+      -
+      currentMin()
     )
     *
     divisions
@@ -1595,8 +2498,8 @@ function applySubdivisionMagnet(
   value =
     clamp(
       value,
-      MIN,
-      MAX
+      currentMin(),
+      currentMax()
     );
 
 
@@ -1677,8 +2580,8 @@ function applySubdivisionMagnet(
   const snappedValue =
     clamp(
       nearest,
-      MIN,
-      MAX
+      currentMin(),
+      currentMax()
     );
 
 
@@ -2282,6 +3185,10 @@ function setPointToGlobalFraction(
   point
 ){
 
+  /*
+    "Kesir":
+    mevcut a bölmesini koruyan ham kesir gösterimi.
+  */
   point.format =
     'raw';
 
@@ -2292,6 +3199,10 @@ function setPointToGlobalMixed(
   point
 ){
 
+  /*
+    Bileşik kesir tam sayılı kesre dönüşebiliyorsa mixed kullanılır.
+    Proper kesirler normal sade kesir, tam sayılar ise tam sayı kalır.
+  */
   if(
     hasMixedNumber(
       point.value
@@ -2423,7 +3334,8 @@ function formattedPointValue(
   );
 
 
-  switch(    point.format
+  switch(
+    point.format
   ){
 
     case 'reduced':
@@ -2471,18 +3383,11 @@ function renderGrid(){
     svgEl(
       'rect',
       {
-
         x:0,
-
         y:0,
-
         width:W,
-
         height:H,
-
-        class:
-          'empty-overlay'
-
+        class:'empty-overlay'
       }
     );
 
@@ -2499,92 +3404,94 @@ function renderGrid(){
 
 
   gridLayer.appendChild(
-
     svgEl(
       'line',
       {
-
-        x1:
-          AXIS_LEFT,
-
-        y1:
-          AXIS_Y,
-
-        x2:
-          AXIS_RIGHT,
-
-        y2:
-          AXIS_Y,
-
-        class:
-          'axis-main'
-
+        x1:AXIS_LEFT,
+        y1:AXIS_Y,
+        x2:AXIS_RIGHT,
+        y2:AXIS_Y,
+        class:'axis-main'
       }
     )
-
   );
 
 
   gridLayer.appendChild(
-
     svgEl(
       'path',
       {
-
         d:
           `M ${AXIS_LEFT} ${AXIS_Y}
            l 14 -8
            l 0 16
            z`,
-
-        fill:
-          '#263247'
-
+        fill:'#263247'
       }
     )
-
   );
 
 
   gridLayer.appendChild(
-
     svgEl(
       'path',
       {
-
         d:
           `M ${AXIS_RIGHT} ${AXIS_Y}
            l -14 -8
            l 0 16
            z`,
-
-        fill:
-          '#263247'
-
+        fill:'#263247'
       }
     )
-
   );
 
 
-  const totalSteps =
-    (
-      MAX - MIN
-    )
-    *
-    divisions;
+  /*
+    Görünür aralığa göre bütün 1/a bölme çizgilerini
+    dinamik biçimde oluştur.
+
+    b continuous olduğu için kenarlardaki sınırlar
+    tam sayıya denk gelmek zorunda değildir.
+  */
+  const min =
+    currentMin();
+
+
+  const max =
+    currentMax();
+
+
+  const firstStep =
+    Math.ceil(
+      min
+      *
+      divisions
+      -
+      1e-9
+    );
+
+
+  const lastStep =
+    Math.floor(
+      max
+      *
+      divisions
+      +
+      1e-9
+    );
 
 
   for(
-    let i = 0;
-    i <= totalSteps;
-    i++
+    let step = firstStep;
+    step <= lastStep;
+    step++
   ){
 
     const value =
-      MIN
-      +
-      i / divisions;
+      step
+      /
+      divisions;
 
 
     const x =
@@ -2606,11 +3513,9 @@ function renderGrid(){
 
 
     gridLayer.appendChild(
-
       svgEl(
         'line',
         {
-
           x1:x,
 
           y1:
@@ -2643,10 +3548,8 @@ function renderGrid(){
             'tick-major'
             :
             'tick-minor'
-
         }
       )
-
     );
 
 
@@ -2658,17 +3561,9 @@ function renderGrid(){
         svgEl(
           'text',
           {
-
             x:x,
-
-            y:
-              AXIS_Y
-              +
-              42,
-
-            class:
-              'tick-label'
-
+            y:AXIS_Y+42,
+            class:'tick-label'
           }
         );
 
@@ -2696,66 +3591,7 @@ function renderGrid(){
   }
 
 
-  const info =
-    svgEl(
-      'text',
-      {
 
-        x:
-          (
-            LEFT + RIGHT
-          )
-          /
-          2,
-
-        y:
-          49,
-
-        class:
-          'segment-label'
-
-      }
-    );
-
-
-  info.textContent =
-    `Her bir birim ${divisions} eşit parçaya bölünmüş durumda.`;
-
-
-  gridLayer.appendChild(
-    info
-  );
-
-
-  const infoDe =
-    svgEl(
-      'text',
-      {
-
-        x:
-          (
-            LEFT + RIGHT
-          )
-          /
-          2,
-
-        y:
-          64,
-
-        class:
-          'segment-label-de'
-
-      }
-    );
-
-
-  infoDe.textContent =
-    `Jede Einheit ist in ${divisions} gleich große Teile geteilt.`;
-
-
-  gridLayer.appendChild(
-    infoDe
-  );
 
 }
 
@@ -2775,6 +3611,15 @@ function clusterMap(){
     of
     points
   ){
+
+    if(
+      !isValueVisible(
+        point.value
+      )
+    ){
+      continue;
+    }
+
 
     const key =
       point.value
@@ -3246,6 +4091,12 @@ function makeLabelLayout(){
         point.id
         ===
         activeDraggedId
+
+        &&
+
+        isValueVisible(
+          point.value
+        )
     );
 
 
@@ -3255,6 +4106,12 @@ function makeLabelLayout(){
         point.id
         !==
         activeDraggedId
+
+        &&
+
+        isValueVisible(
+          point.value
+        )
     );
 
 
@@ -3454,6 +4311,7 @@ function makeLabelLayout(){
                   layout.rect.y1
                   -
                   lift,
+
                 y2:
                   layout.rect.y2
                   -
@@ -3615,6 +4473,154 @@ function makeLabelLayout(){
    DEĞERİ SVG OLARAK ÇİZ
 ========================================================= */
 
+function appendStackedFraction(
+  group,
+  {
+    prefixText,
+    numerator,
+    denominator,
+    startX,
+    centerY,
+    color
+  }
+){
+
+  const prefix =
+    svgEl(
+      'text',
+      {
+        x:startX,
+        y:centerY,
+        fill:color,
+        class:'mixed-whole-text',
+        'text-anchor':'start'
+      }
+    );
+
+
+  prefix.textContent =
+    prefixText;
+
+
+  group.appendChild(
+    prefix
+  );
+
+
+  const prefixWidth =
+    estimateTextWidth(
+      prefixText
+    );
+
+
+  const numeratorText =
+    String(
+      numerator
+    );
+
+
+  const denominatorText =
+    String(
+      denominator
+    );
+
+
+  const fractionWidth =
+    Math.max(
+      13,
+      Math.max(
+        numeratorText.length,
+        denominatorText.length
+      )
+      *
+      7
+      +
+      4
+    );
+
+
+  const fractionCenterX =
+    startX
+    +
+    prefixWidth
+    +
+    4
+    +
+    fractionWidth / 2;
+
+
+  const numeratorEl =
+    svgEl(
+      'text',
+      {
+        x:fractionCenterX,
+        y:centerY - 8,
+        fill:color,
+        class:'mixed-frac-text'
+      }
+    );
+
+
+  numeratorEl.textContent =
+    numeratorText;
+
+
+  group.appendChild(
+    numeratorEl
+  );
+
+
+  const bar =
+    svgEl(
+      'line',
+      {
+        x1:
+          fractionCenterX
+          -
+          fractionWidth / 2,
+
+        y1:centerY,
+
+        x2:
+          fractionCenterX
+          +
+          fractionWidth / 2,
+
+        y2:centerY,
+        stroke:color,
+        class:'mixed-frac-bar'
+      }
+    );
+
+
+  group.appendChild(
+    bar
+  );
+
+
+  const denominatorEl =
+    svgEl(
+      'text',
+      {
+        x:fractionCenterX,
+        y:centerY + 9,
+        fill:color,
+        class:'mixed-frac-text'
+      }
+    );
+
+
+  denominatorEl.textContent =
+    denominatorText;
+
+
+  group.appendChild(
+    denominatorEl
+  );
+
+}
+
+
 function appendPointValueDisplay(
   group,
   point,
@@ -3634,12 +4640,17 @@ function appendPointValueDisplay(
 
 
   /*
-    Tam sayılı kesir modunda "/" karakteri gösterilmez.
-    Pay üstte, payda altta ve aralarında yatay çizgi vardır.
+    TAM SAYILI KESİR
+
+    Örnek:
+        1
+    = 2 ─
+        3
+
+    "/" karakteri kullanılmaz.
   */
   if(
-    point.format ===
-    'mixed'
+    point.format === 'mixed'
     &&
     hasMixedNumber(
       point.value
@@ -3656,174 +4667,18 @@ function appendPointValueDisplay(
       );
 
 
-    const whole =
-      svgEl(
-        'text',
-        {
+    appendStackedFraction(
+      group,
+      {
+        prefixText:
+          `= ${wholeText}`,
 
-          x:
-            startX,
-
-          y:
-            centerY,
-
-          fill:
-            point.color,
-
-          class:
-            'mixed-whole-text',
-
-          'text-anchor':
-            'start'
-
-        }
-      );
-
-
-    whole.textContent =
-      `= ${wholeText}`;
-
-
-    group.appendChild(
-      whole
-    );
-
-
-    const prefixWidth =
-      estimateTextWidth(
-        `= ${wholeText}`
-      );
-
-
-    const numeratorText =
-      String(
-        numerator
-      );
-
-
-    const denominatorText =
-      String(
-        denominator
-      );
-
-
-    const fractionWidth =
-      Math.max(
-        13,
-        Math.max(
-          numeratorText.length,
-          denominatorText.length
-        )
-        *
-        7
-        +
-        4
-      );
-
-
-    const fractionCenterX =
-      startX
-      +
-      prefixWidth
-      +
-      4
-      +
-      fractionWidth / 2;
-
-
-    const numeratorEl =
-      svgEl(
-        'text',
-        {
-
-          x:
-            fractionCenterX,
-
-          y:
-            centerY - 8,
-
-          fill:
-            point.color,
-
-          class:
-            'mixed-frac-text'
-
-        }
-      );
-
-
-    numeratorEl.textContent =
-      numeratorText;
-
-
-    group.appendChild(
-      numeratorEl
-    );
-
-
-    const bar =
-      svgEl(
-        'line',
-        {
-
-          x1:
-            fractionCenterX
-            -
-            fractionWidth / 2,
-
-          y1:
-            centerY,
-
-          x2:
-            fractionCenterX
-            +
-            fractionWidth / 2,
-
-          y2:
-            centerY,
-
-          stroke:
-            point.color,
-
-          class:
-            'mixed-frac-bar'
-
-        }
-      );
-
-
-    group.appendChild(
-      bar
-    );
-
-
-    const denominatorEl =
-      svgEl(
-        'text',
-        {
-
-          x:
-            fractionCenterX,
-
-          y:
-            centerY + 9,
-
-          fill:
-            point.color,
-
-          class:
-            'mixed-frac-text'
-
-        }
-      );
-
-
-    denominatorEl.textContent =
-      denominatorText;
-
-
-    group.appendChild(
-      denominatorEl
+        numerator,
+        denominator,
+        startX,
+        centerY,
+        color:point.color
+      }
     );
 
 
@@ -3832,10 +4687,14 @@ function appendPointValueDisplay(
 
 
   /*
-    BASİT / BİLEŞİK KESİR
+    BASİT KESİR / BİLEŞİK KESİR
 
-    raw veya reduced gösterimde payda 1 değilse "/" kullanılmaz.
-    Pay üstte, payda altta ve aralarında yatay kesir çizgisi vardır.
+    raw veya reduced gösterimde payda 1 değilse artık
+    "2/3" şeklinde slash kullanılmaz.
+
+       2
+    = ─
+       3
   */
   if(
     point.format === 'raw'
@@ -3867,143 +4726,22 @@ function appendPointValueDisplay(
 
     /*
       Reduced biçimde payda 1 ise artık kesir değildir;
-      normal tam sayı olarak tek satırda gösterilir.
+      normal tam sayı olarak yazılır.
     */
     if(
       denominator !== 1
     ){
 
-      const prefix =
-        svgEl(
-          'text',
-          {
-            x:startX,
-            y:centerY,
-            fill:point.color,
-            class:'mixed-whole-text',
-            'text-anchor':'start'
-          }
-        );
-
-
-      prefix.textContent =
-        '=';
-
-
-      group.appendChild(
-        prefix
-      );
-
-
-      const prefixWidth =
-        estimateTextWidth(
-          '='
-        );
-
-
-      const numeratorText =
-        String(
-          numerator
-        );
-
-
-      const denominatorText =
-        String(
-          denominator
-        );
-
-
-      const fractionWidth =
-        Math.max(
-          13,
-          Math.max(
-            numeratorText.length,
-            denominatorText.length
-          )
-          *
-          7
-          +
-          4
-        );
-
-
-      const fractionCenterX =
-        startX
-        +
-        prefixWidth
-        +
-        4
-        +
-        fractionWidth / 2;
-
-
-      const numeratorEl =
-        svgEl(
-          'text',
-          {
-            x:fractionCenterX,
-            y:centerY - 8,
-            fill:point.color,
-            class:'mixed-frac-text'
-          }
-        );
-
-
-      numeratorEl.textContent =
-        numeratorText;
-
-
-      group.appendChild(
-        numeratorEl
-      );
-
-
-      const bar =
-        svgEl(
-          'line',
-          {
-            x1:
-              fractionCenterX
-              -
-              fractionWidth / 2,
-
-            y1:centerY,
-
-            x2:
-              fractionCenterX
-              +
-              fractionWidth / 2,
-
-            y2:centerY,
-            stroke:point.color,
-            class:'mixed-frac-bar'
-          }
-        );
-
-
-      group.appendChild(
-        bar
-      );
-
-
-      const denominatorEl =
-        svgEl(
-          'text',
-          {
-            x:fractionCenterX,
-            y:centerY + 9,
-            fill:point.color,
-            class:'mixed-frac-text'
-          }
-        );
-
-
-      denominatorEl.textContent =
-        denominatorText;
-
-
-      group.appendChild(
-        denominatorEl
+      appendStackedFraction(
+        group,
+        {
+          prefixText:'=',
+          numerator,
+          denominator,
+          startX,
+          centerY,
+          color:point.color
+        }
       );
 
 
@@ -4012,26 +4750,18 @@ function appendPointValueDisplay(
   }
 
 
+  /*
+    Tam sayı ve ondalık gösterimleri tek satır kalır.
+  */
   const value =
     svgEl(
       'text',
       {
-
-        x:
-          startX,
-
-        y:
-          centerY,
-
-        fill:
-          point.color,
-
-        class:
-          'value-text',
-
-        'text-anchor':
-          'start'
-
+        x:startX,
+        y:centerY,
+        fill:point.color,
+        class:'value-text',
+        'text-anchor':'start'
       }
     );
 
@@ -4220,6 +4950,15 @@ function renderPoints(){
     of
     points
   ){
+
+    if(
+      !isValueVisible(
+        point.value
+      )
+    ){
+      continue;
+    }
+
 
     const layout =
       labelLayout.get(
@@ -4859,6 +5598,7 @@ function onPointerMove(
         drag.pointId
     );
 
+
   if(
     !point
   ){
@@ -5051,6 +5791,107 @@ function pulseSliderSnap(){
 /* =========================================================
    KONTROLLER
 ========================================================= */
+
+translateSlider.addEventListener(
+  'input',
+  () => {
+
+    centerC =
+      clamp(
+        Number(
+          translateSlider.value
+        ),
+        C_MIN,
+        C_MAX
+      );
+
+
+    /*
+      c tamamen continuous'tur.
+      Noktaların matematiksel değerleri değişmez;
+      yalnız görüntü penceresi sağa / sola kayar.
+    */
+    if(
+      drag
+    ){
+
+      drag.snapValue =
+        null;
+
+    }
+
+
+    renderAll();
+
+  }
+);
+
+
+originBtn.addEventListener(
+  'click',
+  () => {
+
+    /*
+      Orijin:
+      zoom seviyesini değiştirmeden yalnız merkezi sıfıra getirir.
+    */
+    centerC =
+      0;
+
+
+    translateSlider.value =
+      '0';
+
+
+    if(
+      drag
+    ){
+
+      drag.snapValue =
+        null;
+
+    }
+
+
+    renderAll();
+
+  }
+);
+
+
+zoomSlider.addEventListener(
+  'input',
+  () => {
+
+    zoomB =
+      clamp(
+        Number(
+          zoomSlider.value
+        ),
+        B_MIN,
+        B_MAX
+      );
+
+
+    /*
+      b kesinlikle snapsizdir:
+      her input olayında ölçek anında ve continuous değişir.
+    */
+    if(
+      drag
+    ){
+
+      drag.snapValue =
+        null;
+
+    }
+
+
+    renderAll();
+
+  }
+);
+
 
 slider.addEventListener(
   'input',
