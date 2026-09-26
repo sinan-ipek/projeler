@@ -52,12 +52,36 @@ h1 {
   box-shadow: 0 12px 26px rgba(0,0,0,0.32);
 }
 
+.category-section {
+  margin-top: 65px;
+  padding-top: 30px;
+  border-top: 1px solid #dddddd;
+}
+
+.category-title {
+  margin: 0 0 22px 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
 @media (max-width: 900px) {
-  .grid { grid-template-columns: repeat(2, 1fr); }
+  .grid,
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 500px) {
-  .grid { grid-template-columns: 1fr; }
+  .grid,
+  .category-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 </head>
@@ -89,8 +113,15 @@ h1 {
 <a href="ay-gokyuzu/index.html" class="btn-card">Ay Gökyüzü</a>
 <a href="kesir-ondalik-sayi-dogrusu/index.html" class="btn-card">Kesir ve Ondalık Sayı Doğrusu</a>
 <a href="isaretli-toplama/index.html" class="btn-card">İşaretli Toplama</a>
-<a href="geogebra/index.html" class="btn-card">GeoGebra</a>
 </div>
+
+<div class="category-section">
+  <div class="category-title">Diğer Proje Kategorileri</div>
+  <div class="category-grid">
+    <a href="geogebra/index.html" class="btn-card">GeoGebra</a>
+  </div>
+</div>
+
 </div>
 </body>
 </html>
