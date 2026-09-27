@@ -183,6 +183,7 @@ tr:{
     ["Ay yüzeyine çift tık","Yeni daire oluştur"],
     ["Dairenin içine sol tık + sürükle","Daireyi taşı"],
     ["Dairenin çizgisine sol tık + sürükle","Yarıçapı değiştir"],
+    ["Daireyi seç + Delete","Seçili daireyi sil"],
     ["Fare tekerleği","Yakınlaştır / uzaklaştır"]
   ]
 },
@@ -203,6 +204,7 @@ en:{
     ["Double-click Moon surface","Create new circle"],
     ["Left-click + drag inside circle","Move circle"],
     ["Left-click + drag circle line","Change radius"],
+    ["Select circle + Delete","Delete selected circle"],
     ["Mouse wheel","Zoom in / out"]
   ]
 },
@@ -223,6 +225,7 @@ de:{
     ["Doppelklick auf Mondoberfläche","Neuen Kreis erstellen"],
     ["Linksklick + innerhalb des Kreises ziehen","Kreis verschieben"],
     ["Linksklick + Kreislinie ziehen","Radius ändern"],
+    ["Kreis auswählen + Delete","Ausgewählten Kreis löschen"],
     ["Mausrad","Vergrößern / verkleinern"]
   ]
 }
@@ -279,7 +282,20 @@ function closeHelp(){
 }
 helpButton.addEventListener("click",openHelp);
 helpClose.addEventListener("click",closeHelp);
-window.addEventListener("keydown",e=>{if(e.key==="Escape")closeHelp();});
+window.addEventListener("keydown",e=>{
+    if(e.key==="Escape"){
+        closeHelp();
+        return;
+    }
+    if(e.key==="Delete"){
+        const tag=(document.activeElement?.tagName||"").toLowerCase();
+        if(tag==="input"||tag==="textarea"||tag==="select")return;
+        if(selectedCircle){
+            deleteCircle(selectedCircle);
+            e.preventDefault();
+        }
+    }
+});
 
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x050505);
@@ -501,6 +517,19 @@ function restoreSavedCircles(){
     }
 }
 
+function deleteCircle(circle){
+    if(!circle)return;
+    const index=circles.indexOf(circle);
+    if(index<0)return;
+    circleGroup.remove(circle.line);
+    circle.geometry.dispose();
+    circle.material.dispose();
+    circles.splice(index,1);
+    if(activeCircle===circle)activeCircle=null;
+    if(selectedCircle===circle)selectedCircle=null;
+    saveCirclesNow();
+}
+
 function clearAllCircles(){
     for(const circle of circles){
         circleGroup.remove(circle.line);
@@ -509,6 +538,7 @@ function clearAllCircles(){
     }
     circles.length=0;
     activeCircle=null;
+    selectedCircle=null;
     try{localStorage.removeItem(CIRCLE_STORAGE_KEY)}catch{}
 }
 
@@ -745,7 +775,7 @@ function circleInteriorAt(e){
     return best?{circle:best,hit}:null;
 }
 
-let mode=null,activeCircle=null;
+let mode=null,activeCircle=null,selectedCircle=null;
 let downX=0,downY=0,lastX=0,lastY=0,moved=false;
 let inertiaX=0,inertiaY=0,lastMoveTime=performance.now();
 const DRAG_THRESHOLD=4;
@@ -786,6 +816,7 @@ renderer.domElement.addEventListener("pointerdown",e=>{
     const edgeCircle=circleAt(e);
     if(edgeCircle){
         activeCircle=edgeCircle;
+        selectedCircle=edgeCircle;
         mode="resizeCircle";
         renderer.domElement.style.cursor="ew-resize";
         e.preventDefault();
@@ -796,6 +827,7 @@ renderer.domElement.addEventListener("pointerdown",e=>{
     const inside=circleInteriorAt(e);
     if(inside){
         activeCircle=inside.circle;
+        selectedCircle=inside.circle;
         mode="moveCircle";
         circleGrabNormal=inside.hit.clone().normalize();
         circleStartCenter=activeCircle.centerNormal.clone();
@@ -805,6 +837,7 @@ renderer.domElement.addEventListener("pointerdown",e=>{
     }
 
     /* Daire dışında kalan Ay yüzeyi -> Ay'ı döndür. */
+    selectedCircle=null;
     mode="rotate";
 });
 
