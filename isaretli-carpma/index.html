@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>İşaretli Çarpma</title>
+<style>
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;font-family:Arial,sans-serif;background:#f4f5f7;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+#app{position:relative;width:100vw;height:100vh;background:radial-gradient(circle at 35% 45%,#fff 0,#fafafa 60%,#f2f3f5 100%)}
+#planeWrap{position:absolute;left:3vw;top:5vh;width:62vw;height:90vh;background:#fff;border-radius:18px;box-shadow:0 5px 18px #0000001c,inset 0 0 0 1px #00000009;overflow:hidden}
+#plane{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#operationPanel{position:absolute;left:68vw;right:2vw;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;gap:10px}
+.valueBox{width:82px;height:82px;flex:0 0 82px;display:flex;align-items:center;justify-content:center;border-radius:14px;transition:.22s}
+.boxValue{font-size:31px;font-weight:700;font-variant-numeric:tabular-nums}.operator{font-size:31px;color:#444}
+.positiveBox{background:#eaf4ff;box-shadow:0 5px 15px #0000001f,inset 0 0 0 2px #4285d4}.positiveBox .boxValue{color:#1769c2}
+.negativeBox{background:#ffecec;box-shadow:0 5px 15px #0000001f,inset 0 0 0 2px #d84a4a}.negativeBox .boxValue{color:#c42d2d}
+.zeroBox{background:#f3f3f3;box-shadow:0 5px 15px #00000017,inset 0 0 0 2px #aaa}.zeroBox .boxValue{color:#555}
+.axis{stroke:#3c4045;stroke-width:2}.cellLine{stroke-width:1;pointer-events:none}.cellLinePositive{stroke:#347fd061}.cellLineNegative{stroke:#d3484861}
+#areaRect{cursor:pointer;pointer-events:all}.unitText{font-size:14px;font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.numberHouse{cursor:grab;stroke:#fff;stroke-width:1.2;stroke-linejoin:round;filter:drop-shadow(0 1px 2px #00000047)}.housePositive{fill:#3078c7}.houseNegative{fill:#d34848}.houseZero{fill:#777}
+.houseText{fill:#fff;font-size:7px;font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+#scaleControl{position:absolute;right:22px;bottom:20px;width:150px;height:34px;display:flex;align-items:center;z-index:20}
+#scaleSlider{appearance:none;-webkit-appearance:none;width:140px;height:24px;background:transparent;cursor:pointer;outline:none}
+#scaleSlider::-webkit-slider-runnable-track{height:5px;border-radius:5px;background:#e1e3e6;box-shadow:inset 0 1px 2px #0003}
+#scaleSlider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:18px;margin-top:-6.5px;border:0;border-radius:5px;background:#fff;box-shadow:0 2px 5px #00000047,inset 0 0 0 1px #0000001a}
+.flyingUnit{position:fixed;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:13px;font-weight:700;z-index:100;pointer-events:none;box-shadow:0 2px 5px #0003}.flyPositive{color:#fff;background:#3280d6}.flyNegative{color:#fff;background:#d94a4a}
+@media(max-width:1000px){#planeWrap{left:2vw;width:60vw}#operationPanel{left:64vw;right:1vw;gap:6px}.valueBox{width:70px;height:70px;flex-basis:70px}.boxValue{font-size:27px}.operator{font-size:26px}}
+</style></head>
+<body><div id="app">
+<div id="planeWrap"><svg id="plane">
+<g><rect id="q1"/><rect id="q2"/><rect id="q3"/><rect id="q4"/></g>
+<g><rect id="areaRect"/></g><g id="cellLayer"/><g id="unitLayer"/><g id="axisLayer"/>
+<g><polygon id="aHouse" class="numberHouse"/><text id="aHouseText" class="houseText"/>
+<polygon id="bHouse" class="numberHouse"/><text id="bHouseText" class="houseText"/></g>
+</svg><div id="scaleControl"><input id="scaleSlider" type="range" min="45" max="160" step="1" value="100" aria-label="Düzlem ölçeği"></div></div>
+<div id="operationPanel"><div id="aBox" class="valueBox"><div id="aValue" class="boxValue">3</div></div><div class="operator">×</div><div id="bBox" class="valueBox"><div id="bValue" class="boxValue">2</div></div><div class="operator">=</div><div id="resultBox" class="valueBox"><div id="resultValue" class="boxValue">0</div></div></div>
+</div>
+<script>
+let a=3,b=2,counter=0,scaleFactor=1,dragging=null,animationRunning=false;
+const $=id=>document.getElementById(id),plane=$("plane"),planeWrap=$("planeWrap"),axisLayer=$("axisLayer"),cellLayer=$("cellLayer"),unitLayer=$("unitLayer"),areaRect=$("areaRect"),aHouse=$("aHouse"),bHouse=$("bHouse"),aHouseText=$("aHouseText"),bHouseText=$("bHouseText"),aBox=$("aBox"),bBox=$("bBox"),resultBox=$("resultBox"),aValue=$("aValue"),bValue=$("bValue"),resultValue=$("resultValue"),scaleSlider=$("scaleSlider");
+let W=0,H=0,originX=0,originY=0,baseStep=0,step=0;
+const NS="http://www.w3.org/2000/svg",M=28,HW=7,BODY=9,ROOF=5,DEPTH=BODY+ROOF;
+function E(t,a={}){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e}
+const mx=v=>originX+v*step,my=v=>originY-v*step,ix=x=>(x-originX)/step,iy=y=>(originY-y)/step;
+function calc(){const r=planeWrap.getBoundingClientRect();W=r.width;H=r.height;plane.setAttribute("viewBox",`0 0 ${W} ${H}`);originX=W/2;originY=H/2;baseStep=Math.min(W*.88/16,H*.88/16);step=baseStep*scaleFactor}
+const xlim=()=>Math.max(0,Math.floor((W/2-M-DEPTH)/step)),ylim=()=>Math.max(0,Math.floor((H/2-M-DEPTH)/step));
+function keep(){a=Math.max(-xlim(),Math.min(xlim(),a));b=Math.max(-ylim(),Math.min(ylim(),b))}
+function quadrants(){const P="#eaf4ff",N="#ffecec";[["q1",originX,0,W-originX,originY,P],["q2",0,0,originX,originY,N],["q3",0,originY,originX,H-originY,P],["q4",originX,originY,W-originX,H-originY,N]].forEach(([id,x,y,w,h,f])=>{const q=$(id);q.setAttribute("x",x);q.setAttribute("y",y);q.setAttribute("width",w);q.setAttribute("height",h);q.setAttribute("fill",f)})}
+function axes(){axisLayer.innerHTML="";axisLayer.append(E("line",{x1:M,y1:originY,x2:W-M,y2:originY,class:"axis"}),E("line",{x1:originX,y1:M,x2:originX,y2:H-M,class:"axis"}))}
+function rect(){const xa=mx(a),yb=my(b),p=a*b;areaRect.setAttribute("x",Math.min(originX,xa));areaRect.setAttribute("y",Math.min(originY,yb));areaRect.setAttribute("width",Math.abs(xa-originX));areaRect.setAttribute("height",Math.abs(yb-originY));areaRect.setAttribute("fill",p>0?"rgba(55,130,215,.20)":p<0?"rgba(220,70,70,.20)":"transparent");areaRect.setAttribute("stroke",p>0?"#347fd0":p<0?"#d34848":"#aaa");areaRect.setAttribute("stroke-width","2.5")}
+function grid(){cellLayer.innerHTML="";if(!a||!b)return;const c=a*b>0?"cellLine cellLinePositive":"cellLine cellLineNegative",xs=Math.min(0,a),xe=Math.max(0,a),ys=Math.min(0,b),ye=Math.max(0,b);for(let x=xs+1;x<xe;x++)cellLayer.append(E("line",{x1:mx(x),y1:my(ys),x2:mx(x),y2:my(ye),class:c}));for(let y=ys+1;y<ye;y++)cellLayer.append(E("line",{x1:mx(xs),y1:my(y),x2:mx(xe),y2:my(y),class:c}))}
+function units(){unitLayer.innerHTML="";if(!a||!b)return;const s=a*b>0?1:-1;for(let x=0;x<Math.abs(a);x++)for(let y=0;y<Math.abs(b);y++){const t=E("text",{x:mx(a>0?x+.5:-(x+.5)),y:my(b>0?y+.5:-(y+.5)),class:"unitText",fill:s>0?"#1769c2":"#c42d2d"});t.textContent=s>0?"+1":"-1";unitLayer.append(t)}}
+const pts=p=>p.map(v=>v.join(",")).join(" ");
+function vhouse(x,y,d){return d==="north"?[[x,y],[x+HW,y+ROOF],[x+HW,y+ROOF+BODY],[x-HW,y+ROOF+BODY],[x-HW,y+ROOF]]:[[x,y],[x-HW,y-ROOF],[x-HW,y-ROOF-BODY],[x+HW,y-ROOF-BODY],[x+HW,y-ROOF]]}
+function hhouse(x,y,d){return d==="east"?[[x,y],[x-ROOF,y+HW],[x-ROOF-BODY,y+HW],[x-ROOF-BODY,y-HW],[x-ROOF,y-HW]]:[[x,y],[x+ROOF,y-HW],[x+ROOF+BODY,y-HW],[x+ROOF+BODY,y+HW],[x+ROOF,y+HW]]}
+function state(el,v){el.classList.remove("housePositive","houseNegative","houseZero");el.classList.add(v>0?"housePositive":v<0?"houseNegative":"houseZero")}
+function houses(){const ax=mx(a),ay=originY,ad=b<0?"south":"north";aHouse.setAttribute("points",pts(vhouse(ax,ay,ad)));aHouseText.setAttribute("x",ax);aHouseText.setAttribute("y",ad==="north"?ay+ROOF+BODY/2:ay-ROOF-BODY/2);aHouseText.textContent=a;const bx=originX,by=my(b),bd=a<0?"west":"east";bHouse.setAttribute("points",pts(hhouse(bx,by,bd)));bHouseText.setAttribute("x",bd==="east"?bx-ROOF-BODY/2:bx+ROOF+BODY/2);bHouseText.setAttribute("y",by);bHouseText.textContent=b;state(aHouse,a);state(bHouse,b)}
+function box(el,v){el.classList.remove("positiveBox","negativeBox","zeroBox");el.classList.add(v>0?"positiveBox":v<0?"negativeBox":"zeroBox")}
+function panel(){aValue.textContent=a;bValue.textContent=b;resultValue.textContent=counter;box(aBox,a);box(bBox,b);box(resultBox,counter)}
+function render(){quadrants();axes();rect();grid();units();houses();panel()}
+scaleSlider.addEventListener("input",()=>{scaleFactor=+scaleSlider.value/100;calc();keep();counter=0;render()});
+function start(e,w){e.preventDefault();dragging=w;plane.setPointerCapture(e.pointerId)}
+aHouse.addEventListener("pointerdown",e=>start(e,"a"));bHouse.addEventListener("pointerdown",e=>start(e,"b"));
+plane.addEventListener("pointermove",e=>{if(!dragging)return;const r=plane.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(dragging==="a"){const n=Math.max(-xlim(),Math.min(xlim(),Math.round(ix(x))));if(n!==a){a=n;counter=0;render()}}else{const n=Math.max(-ylim(),Math.min(ylim(),Math.round(iy(y))));if(n!==b){b=n;counter=0;render()}}});
+plane.addEventListener("pointerup",()=>dragging=null);plane.addEventListener("pointercancel",()=>dragging=null);
+areaRect.addEventListener("click",()=>{if(!animationRunning&&a*b)animate()});
+function animate(){const us=[...unitLayer.querySelectorAll(".unitText")];if(!us.length)return;animationRunning=true;counter=0;panel();const tr=resultBox.getBoundingClientRect(),tx=tr.left+tr.width/2,ty=tr.top+tr.height/2,s=a*b>0?1:-1;let done=0;us.forEach((u,i)=>{const r=u.getBoundingClientRect(),sx=r.left+r.width/2,sy=r.top+r.height/2,f=document.createElement("div");f.className="flyingUnit "+(s>0?"flyPositive":"flyNegative");f.textContent=s>0?"+1":"-1";f.style.left=sx-13+"px";f.style.top=sy-13+"px";document.body.append(f);setTimeout(()=>{u.style.opacity=0;const an=f.animate([{transform:"translate(0,0)"},{transform:`translate(${tx-sx}px,${ty-sy}px)`}],{duration:520,easing:"cubic-bezier(.45,0,.2,1)",fill:"forwards"});an.onfinish=()=>{f.remove();counter+=s;resultValue.textContent=counter;box(resultBox,counter);if(++done===us.length)animationRunning=false}},i*70)})}
+function rebuild(){calc();keep();render()}window.addEventListener("resize",rebuild);rebuild();
+</script></body></html>
