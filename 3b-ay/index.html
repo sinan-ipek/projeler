@@ -35,6 +35,7 @@ canvas{display:block;width:100%;height:100%;outline:none}
 #circleColor{width:26px;height:22px;border:0;padding:0;background:transparent;cursor:pointer}
 #status{position:fixed;z-index:20;padding:9px 12px;border-radius:8px;background:rgba(20,20,20,.65);color:rgba(255,255,255,.82);font-size:12px;line-height:1.5;pointer-events:none;user-select:none}
 #status{right:18px;bottom:18px;transition:opacity .5s}
+#circleCount{position:fixed;left:50%;bottom:8px;transform:translateX(-50%);z-index:20;color:rgba(255,255,255,.72);font-size:10px;line-height:1;pointer-events:none;user-select:none}
 
 #lightControl{
   position:fixed;right:18px;top:18px;z-index:25;
@@ -106,6 +107,7 @@ canvas{display:block;width:100%;height:100%;outline:none}
   <div id="lightDot"></div>
 </div>
 <div id="status">NASA LRO 8K + LDEM yükleniyor…</div>
+<div id="circleCount">0</div>
 
 <script type="module">
 import * as THREE from "three";
@@ -150,6 +152,7 @@ const qualityButton=document.getElementById("qualityButton");
 const colorInput=document.getElementById("circleColor");
 const clearCirclesButton=document.getElementById("clearCirclesButton");
 const status=document.getElementById("status");
+const circleCount=document.getElementById("circleCount");
 const lightControl=document.getElementById("lightControl");
 const lightDot=document.getElementById("lightDot");
 const shadowWrap=document.getElementById("shadowWrap");
@@ -514,6 +517,7 @@ function restoreSavedCircles(){
         }
     }finally{
         restoringCircles=false;
+        updateCircleCount();
     }
 }
 
@@ -525,6 +529,7 @@ function deleteCircle(circle){
     circle.geometry.dispose();
     circle.material.dispose();
     circles.splice(index,1);
+    updateCircleCount();
     if(activeCircle===circle)activeCircle=null;
     if(selectedCircle===circle)selectedCircle=null;
     saveCirclesNow();
@@ -537,6 +542,7 @@ function clearAllCircles(){
         circle.material.dispose();
     }
     circles.length=0;
+    updateCircleCount();
     activeCircle=null;
     selectedCircle=null;
     try{localStorage.removeItem(CIRCLE_STORAGE_KEY)}catch{}
@@ -720,9 +726,12 @@ class MoonCircle{
     }
 }
 
+function updateCircleCount(){circleCount.textContent=String(circles.length);}
+
 function createCircleFromLocalPoint(localPoint){
     const circle=new MoonCircle(localPoint.clone().normalize(),DEFAULT_RADIUS,currentColor.clone());
     circles.push(circle);
+    updateCircleCount();
     scheduleCircleSave();
 }
 
