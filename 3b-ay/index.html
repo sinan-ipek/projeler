@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>3B Ay – LRO 8K + LDEM</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#050505;font-family:Arial,Helvetica,sans-serif}
+#scene{position:fixed;inset:0}
+canvas{display:block;width:100%;height:100%;outline:none}
+#toolbar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:5px;padding:5px;border-radius:9px;background:rgba(245,245,245,.92);box-shadow:0 5px 18px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.8);backdrop-filter:blur(7px)}
+.toolButton{height:30px;min-width:62px;padding:0 10px;border:1px solid #aaa;border-radius:7px;background:linear-gradient(#fff,#e8e8e8);color:#222;font-size:12px;font-weight:600;cursor:pointer;user-select:none;box-shadow:0 2px 4px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.9)}
+.toolButton:hover{background:linear-gradient(#fff,#ddd)}
+.toolButton:active{transform:translateY(1px)}
+.toolButton.off{background:#ccc;color:#777}
+#colorWrap{display:flex;align-items:center;gap:5px;height:30px;padding:0 7px;border:1px solid #aaa;border-radius:7px;background:#eee;color:#222;font-size:13px;font-weight:600}
+#circleColor{width:26px;height:22px;border:0;padding:0;background:transparent;cursor:pointer}
+#status{position:fixed;z-index:20;padding:9px 12px;border-radius:8px;background:rgba(20,20,20,.65);color:rgba(255,255,255,.82);font-size:12px;line-height:1.5;pointer-events:none;user-select:none}
+#status{right:18px;bottom:18px;transition:opacity .5s}
+
+#lightControl{
+  position:fixed;right:18px;top:18px;z-index:25;
+  width:112px;height:112px;border-radius:50%;
+  background:radial-gradient(circle at 38% 32%,#4a4a4a 0%,#242424 52%,#111 76%,#080808 100%);
+  border:1px solid rgba(255,255,255,.28);
+  box-shadow:0 5px 18px rgba(0,0,0,.45),inset 0 0 20px rgba(255,255,255,.06);
+  cursor:crosshair;user-select:none;touch-action:none;
+}
+#lightControl::after{
+  content:"IŞIK";position:absolute;left:50%;bottom:-22px;transform:translateX(-50%);
+  color:rgba(255,255,255,.72);font-size:10px;font-weight:700;letter-spacing:.9px;
+}
+#lightDot{
+  position:absolute;width:17px;height:17px;border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:#fff;
+  box-shadow:0 0 7px rgba(255,255,255,.95),0 0 15px rgba(255,255,255,.6);
+  pointer-events:none;
+}
+#lightHint{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:74px;height:74px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.12);pointer-events:none;
+}
+
+
+@media (max-width:760px){
+  #toolbar{left:8px;top:8px;transform:none;right:116px;justify-content:flex-start;flex-wrap:wrap}
+  #lightControl{width:96px;height:96px}
+}
+
+
+#shadowWrap{display:flex;align-items:center;gap:6px;height:30px;padding:0 6px;border:1px solid #aaa;border-radius:7px;background:#eee;color:#222;font-size:12px;font-weight:600}
+#shadowSlider{width:72px;accent-color:#555;cursor:pointer}
+#shadowValue{min-width:31px;text-align:right;font-size:11px;font-variant-numeric:tabular-nums}
+
+
+#displaceWrap{display:flex;align-items:center;gap:6px;height:30px;padding:0 6px;border:1px solid #aaa;border-radius:7px;background:#eee;color:#222;font-size:12px;font-weight:600}
+#displaceSlider{width:72px;accent-color:#555;cursor:pointer}
+#displaceValue{min-width:35px;text-align:right;font-size:11px;font-variant-numeric:tabular-nums}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div id="scene"></div>
+<div id="toolbar">
+  <button id="textureButton" class="toolButton">Doku</button>
+  <button id="modelButton" class="toolButton">Model</button>
+  <button id="qualityButton" class="toolButton" title="Performans modu: AUTO / DÜŞÜK / NORMAL / YÜKSEK">AUTO</button>
+  <div id="colorWrap"><input id="circleColor" type="color" value="#ff3030"></div>
+  <div id="shadowWrap" title="Ay'ın gölgede kalan kısmının aydınlığını ayarlar"><input id="shadowSlider" type="range" min="0" max="100" value="18" step="1">
+  </div>
+  <div id="displaceWrap" title="Ay yüzeyindeki geometrik kabartma miktarını ayarlar"><input id="displaceSlider" type="range" min="0" max="60" value="32" step="1">
+  </div>
+</div>
+
+<div id="lightControl" title="Işık yönünü değiştirmek için sürükle">
+  <div id="lightHint"></div>
+  <div id="lightDot"></div>
+</div>
+<div id="status">NASA LRO 8K + LDEM yükleniyor…</div>
+
+<script type="module">
+import * as THREE from "three";
+import {Line2} from "three/addons/lines/Line2.js";
+import {LineGeometry} from "three/addons/lines/LineGeometry.js";
+import {LineMaterial} from "three/addons/lines/LineMaterial.js";
+
+const MOON_RADIUS=2.25;
+const QUALITY_LEVELS={
+    low:{label:"DÜŞÜK",w:128,h:64},
+    normal:{label:"NORMAL",w:256,h:128},
+    high:{label:"YÜKSEK",w:512,h:256}
+};
+const QUALITY_ORDER=["low","normal","high"];
+let qualityMode="auto";
+let activeQuality="high";
+let qualityCooldownUntil=0;
+let fpsWindowStart=performance.now();
+let fpsFrames=0;
+let highFpsSince=0;
+const DEM_W=1024, DEM_H=512;
+const TEXTURE_URL="assets/moon.webp";
+const DEM_URL="assets/moon_dem.raw";
+const DEFAULT_RADIUS=THREE.MathUtils.degToRad(12);
+const MIN_RADIUS=THREE.MathUtils.degToRad(1);
+const MAX_RADIUS=THREE.MathUtils.degToRad(85);
+const CIRCLE_SEGMENTS=256;
+const CIRCLE_LINE_WIDTH=2.2;
+const ROTATION_SPEED=.006;
+const MAX_INERTIA_SPEED=.055;
+const MIN_INERTIA_SPEED=.00001;
+
+/* Gerçek Ay topoğrafyasını görünür kılmak için dikey ölçek büyütülür.
+   0.045 = Ay yarıçapının yaklaşık %4,5'i kadar toplam görsel kabartma aralığı.
+   Veri sıralaması ve krater/dağ ilişkisi LDEM'den gelir. */
+let RELIEF_AMPLITUDE=0.032;
+
+const container=document.getElementById("scene");
+const textureButton=document.getElementById("textureButton");
+const modelButton=document.getElementById("modelButton");
+const qualityButton=document.getElementById("qualityButton");
+const colorInput=document.getElementById("circleColor");
+const status=document.getElementById("status");
+const lightControl=document.getElementById("lightControl");
+const lightDot=document.getElementById("lightDot");
+const shadowSlider=document.getElementById("shadowSlider");
+const shadowValue=null;
+const displaceSlider=document.getElementById("displaceSlider");
+const displaceValue=null;
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x050505);
+const camera=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,.01,100);
+camera.position.set(0,0,7.4);
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+
+renderer.domElement.style.touchAction="none";
+container.appendChild(renderer.domElement);
+
+const ambientLight=new THREE.AmbientLight(0xffffff,.035);
+scene.add(ambientLight);
+const mainLight=new THREE.DirectionalLight(0xffffff,2.8);
+mainLight.position.set(4,3,5); scene.add(mainLight);
+
+/* Sağ üstteki ışık kumandası tam bir ışık yönü alanıdır.
+   Merkez = ışık kameradan gelir.
+   Kenar = ışık tam yandan gelir ve Ay yarım görünür.
+   Kenarın dış halkasına doğru sürüklemek = ışık Ay'ın arkasına geçer.
+   Böylece hilal evrelerine kadar geniş bir aydınlatma açısı elde edilir. */
+let lightX=0.46, lightY=-0.38;
+let lightZ=0.80;
+
+function updateLightFromControl(){
+    const length=Math.hypot(lightX,lightY,lightZ)||1;
+    const distance=8;
+    mainLight.position.set(
+        lightX/length*distance,
+        -lightY/length*distance,
+        lightZ/length*distance
+    );
+
+    /* Kontrol noktasının ekrandaki konumu x/y'dir.
+       Işık arkaya geçtiğinde noktanın çevresinde halka gösterilir. */
+    const displayRadius=lightZ>=0 ? 0.68 : 0.92;
+    const xyLen=Math.hypot(lightX,lightY);
+    let dx=0,dy=0;
+    if(xyLen>0.0001){
+        dx=lightX/xyLen*displayRadius*Math.sqrt(Math.max(0,1-lightZ*lightZ));
+        dy=lightY/xyLen*displayRadius*Math.sqrt(Math.max(0,1-lightZ*lightZ));
+    }
+    lightDot.style.left=((dx+1)*50)+"%";
+    lightDot.style.top=((dy+1)*50)+"%";
+    lightDot.style.boxShadow=lightZ>=0
+        ?"0 0 7px rgba(255,255,255,.95),0 0 15px rgba(255,255,255,.6)"
+        :"0 0 0 3px rgba(255,255,255,.38),0 0 12px rgba(255,255,255,.35)";
+}
+
+function setLightFromPointer(e){
+    const rect=lightControl.getBoundingClientRect();
+    let x=(e.clientX-(rect.left+rect.width/2))/(rect.width/2);
+    let y=(e.clientY-(rect.top+rect.height/2))/(rect.height/2);
+    const r=Math.hypot(x,y);
+
+    /* İç bölge: ön yarımküre.
+       r ≈ 0.68: ışık tam yandan gelir -> yarım Ay.
+       Dış halka: ışık giderek arka yarımküreye geçer. */
+    const HALF_RADIUS=0.68;
+    const MAX_RADIUS=0.94;
+    const rr=Math.min(r,MAX_RADIUS);
+
+    let azX=1,azY=0;
+    if(r>0.0001){azX=x/r;azY=y/r;}
+
+    let theta;
+    if(rr<=HALF_RADIUS){
+        theta=(rr/HALF_RADIUS)*(Math.PI/2);
+    }else{
+        theta=Math.PI/2+
+              ((rr-HALF_RADIUS)/(MAX_RADIUS-HALF_RADIUS))*(Math.PI/2*0.88);
+    }
+
+    lightX=azX*Math.sin(theta);
+    lightY=azY*Math.sin(theta);
+    lightZ=Math.cos(theta);
+
+    /* Beyaz nokta doğrudan imleci takip etsin. */
+    const px=azX*rr;
+    const py=azY*rr;
+    lightDot.style.left=((px+1)*50)+"%";
+    lightDot.style.top=((py+1)*50)+"%";
+    lightDot.style.boxShadow=lightZ>=0
+        ?"0 0 7px rgba(255,255,255,.95),0 0 15px rgba(255,255,255,.6)"
+        :"0 0 0 3px rgba(255,255,255,.38),0 0 12px rgba(255,255,255,.35)";
+
+    const length=Math.hypot(lightX,lightY,lightZ)||1;
+    const distance=8;
+    mainLight.position.set(
+        lightX/length*distance,
+        -lightY/length*distance,
+        lightZ/length*distance
+    );
+}
+
+let lightDragging=false;
+lightControl.addEventListener("pointerdown",e=>{
+    lightDragging=true;
+    lightControl.setPointerCapture(e.pointerId);
+    setLightFromPointer(e);
+    e.preventDefault();
+    e.stopPropagation();
+});
+lightControl.addEventListener("pointermove",e=>{
+    if(!lightDragging)return;
+    setLightFromPointer(e);
+    e.preventDefault();
+    e.stopPropagation();
+});
+lightControl.addEventListener("pointerup",e=>{
+    lightDragging=false;
+    try{lightControl.releasePointerCapture(e.pointerId)}catch{}
+    e.preventDefault();
+    e.stopPropagation();
+});
+lightControl.addEventListener("pointercancel",()=>lightDragging=false);
+lightControl.addEventListener("contextmenu",e=>e.preventDefault());
+updateLightFromControl();
+const fillLight=new THREE.DirectionalLight(0x8899bb,.025);
+fillLight.position.set(-4,-2,-4); scene.add(fillLight);
+
+/* GÖLGE:
+   Yalnızca dolgu/ortam ışığını değiştirir.
+   Sahne arka planı ve ana Güneş ışığı değişmez.
+   0% = gölge tarafı neredeyse tamamen siyah.
+   100% = gölge tarafında güçlü dolgu ışığı. */
+function updateShadowLighting(){
+    const s=Number(shadowSlider.value)/100;
+    ambientLight.intensity=0.002 + s*0.18;
+    fillLight.intensity=0.001 + s*0.13;
+    if(shadowValue)shadowValue.textContent=shadowSlider.value+"%";
+}
+shadowSlider.addEventListener("input",updateShadowLighting);
+updateShadowLighting();
+
+const moonRoot=new THREE.Group(); scene.add(moonRoot);
+const circleGroup=new THREE.Group(); moonRoot.add(circleGroup);
+
+const texturedMaterial=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.95,metalness:0});
+const plasterMaterial=new THREE.MeshStandardMaterial({color:0xf4f1e8,roughness:1,metalness:0});
+
+let moonGeometry=null, moonMesh=null;
+let dem=null, demMin=0, demMax=65535, demMid=32767.5;
+let textureEnabled=true, modelVisible=true;
+let currentColor=new THREE.Color(colorInput.value);
+const circles=[];
+const CIRCLE_STORAGE_KEY="sinan_ipek_3d_moon_circles_v1";
+let restoringCircles=false;
+let saveTimer=null;
+
+function circleToData(circle){
+    return {
+        centerNormal:{
+            x:circle.centerNormal.x,
+            y:circle.centerNormal.y,
+            z:circle.centerNormal.z
+        },
+        angularRadius:circle.angularRadius,
+        color:"#"+circle.material.color.getHexString()
+    };
+}
+
+function saveCirclesNow(){
+    if(restoringCircles)return;
+    try{
+        localStorage.setItem(
+            CIRCLE_STORAGE_KEY,
+            JSON.stringify(circles.map(circleToData))
+        );
+    }catch(err){
+        console.warn("Daireler kaydedilemedi:",err);
+    }
+}
+
+function scheduleCircleSave(){
+    if(restoringCircles)return;
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(saveCirclesNow,120);
+}
+
+function restoreSavedCircles(){
+    let data=null;
+    try{
+        const raw=localStorage.getItem(CIRCLE_STORAGE_KEY);
+        if(!raw)return;
+        data=JSON.parse(raw);
+    }catch(err){
+        console.warn("Kayıtlı daireler okunamadı:",err);
+        return;
+    }
+
+    if(!Array.isArray(data))return;
+
+    restoringCircles=true;
+    try{
+        for(const item of data){
+            if(!item || !item.centerNormal)continue;
+            const n=new THREE.Vector3(
+                Number(item.centerNormal.x),
+                Number(item.centerNormal.y),
+                Number(item.centerNormal.z)
+            );
+            if(!Number.isFinite(n.x)||!Number.isFinite(n.y)||!Number.isFinite(n.z)||n.lengthSq()<0.5)continue;
+
+            const radius=THREE.MathUtils.clamp(
+                Number(item.angularRadius)||DEFAULT_RADIUS,
+                MIN_RADIUS,
+                MAX_RADIUS
+            );
+            const color=(typeof item.color==="string")?item.color:circleColor.value;
+            const circle=new MoonCircle(n.normalize(),radius,color);
+            circles.push(circle);
+        }
+    }finally{
+        restoringCircles=false;
+    }
+}
+
+function clearAllCircles(){
+    for(const circle of circles){
+        circleGroup.remove(circle.line);
+        circle.geometry.dispose();
+        circle.material.dispose();
+    }
+    circles.length=0;
+    activeCircle=null;
+    try{localStorage.removeItem(CIRCLE_STORAGE_KEY)}catch{}
+}
+
+
+function directionToUV(n){
+    let phi=Math.atan2(n.z,-n.x);
+    if(phi<0) phi+=Math.PI*2;
+    const u=phi/(Math.PI*2);
+    const theta=Math.acos(THREE.MathUtils.clamp(n.y,-1,1));
+    const v=1-theta/Math.PI;
+    return {u,v};
+}
+
+function sampleDEMFromUV(u,v){
+    if(!dem) return demMid;
+    u=((u%1)+1)%1;
+    v=THREE.MathUtils.clamp(v,0,1);
+    const x=u*(DEM_W-1);
+    const y=(1-v)*(DEM_H-1);
+    const x0=Math.floor(x), y0=Math.floor(y);
+    const x1=(x0+1)%DEM_W, y1=Math.min(y0+1,DEM_H-1);
+    const tx=x-x0, ty=y-y0;
+    const a=dem[y0*DEM_W+x0], b=dem[y0*DEM_W+x1];
+    const c=dem[y1*DEM_W+x0], d=dem[y1*DEM_W+x1];
+    return THREE.MathUtils.lerp(THREE.MathUtils.lerp(a,b,tx),THREE.MathUtils.lerp(c,d,tx),ty);
+}
+
+function radiusForDirection(n){
+    if(!dem || demMax===demMin) return MOON_RADIUS;
+    const {u,v}=directionToUV(n);
+    const h=sampleDEMFromUV(u,v);
+    const normalized=(h-demMid)/(demMax-demMin);
+    return MOON_RADIUS*(1+normalized*RELIEF_AMPLITUDE);
+}
+
+function applyDisplacementToMoonGeometry(){
+    if(!moonGeometry || !dem)return;
+    const pos=moonGeometry.attributes.position;
+    const uv=moonGeometry.attributes.uv;
+    const p=new THREE.Vector3();
+
+    for(let i=0;i<pos.count;i++){
+        p.fromBufferAttribute(pos,i).normalize();
+        const h=sampleDEMFromUV(uv.getX(i),uv.getY(i));
+        const normalized=(h-demMid)/(demMax-demMin);
+        const r=MOON_RADIUS*(1+normalized*RELIEF_AMPLITUDE);
+        pos.setXYZ(i,p.x*r,p.y*r,p.z*r);
+    }
+
+    pos.needsUpdate=true;
+    moonGeometry.computeVertexNormals();
+    moonGeometry.computeBoundingSphere();
+
+    for(const c of circles)c.update();
+}
+
+function updateDisplacement(){
+    RELIEF_AMPLITUDE=Number(displaceSlider.value)/1000;
+    if(displaceValue)displaceValue.textContent=RELIEF_AMPLITUDE.toFixed(3);
+    applyDisplacementToMoonGeometry();
+}
+
+displaceSlider.addEventListener("input",updateDisplacement);
+
+function qualitySpec(level=activeQuality){
+    return QUALITY_LEVELS[level]||QUALITY_LEVELS.high;
+}
+
+function setQuality(level,{force=false}={}){
+    if(!QUALITY_LEVELS[level])return;
+    if(!force && level===activeQuality && moonGeometry)return;
+    activeQuality=level;
+    const spec=qualitySpec(level);
+    const oldGeometry=moonGeometry;
+    moonGeometry=new THREE.SphereGeometry(MOON_RADIUS,spec.w,spec.h);
+    applyDisplacementToMoonGeometry();
+    if(moonMesh){
+        moonMesh.geometry=moonGeometry;
+    }else{
+        moonMesh=new THREE.Mesh(moonGeometry,textureEnabled?texturedMaterial:plasterMaterial);
+        moonMesh.visible=modelVisible;
+        moonRoot.add(moonMesh);
+    }
+    if(oldGeometry && oldGeometry!==moonGeometry)oldGeometry.dispose();
+    qualityCooldownUntil=performance.now()+3500;
+    updateQualityButton();
+}
+
+function updateQualityButton(){
+    if(!qualityButton)return;
+    qualityButton.textContent=qualityMode==="auto"?"AUTO":QUALITY_LEVELS[qualityMode].label;
+    qualityButton.title=qualityMode==="auto"
+        ?`Otomatik performans · şu an ${QUALITY_LEVELS[activeQuality].label}`
+        :`Sabit performans: ${QUALITY_LEVELS[qualityMode].label}`;
+}
+
+function cycleQualityMode(){
+    const modes=["auto","low","normal","high"];
+    qualityMode=modes[(modes.indexOf(qualityMode)+1)%modes.length];
+    highFpsSince=0;
+    fpsWindowStart=performance.now(); fpsFrames=0;
+    if(qualityMode!=="auto")setQuality(qualityMode,{force:true});
+    updateQualityButton();
+}
+qualityButton.addEventListener("click",cycleQualityMode);
+
+function buildDisplacedMoon(){
+    setQuality(activeQuality,{force:true});
+}
+
+async function loadDEM(){
+    status.textContent="LDEM 16-bit yükleniyor…";
+    const response=await fetch(DEM_URL);
+    if(!response.ok) throw new Error(`LDEM yüklenemedi: ${response.status}`);
+    const buffer=await response.arrayBuffer();
+    if(buffer.byteLength!==DEM_W*DEM_H*2) throw new Error("LDEM veri boyutu beklenenden farklı");
+    dem=new Uint16Array(buffer);
+    demMin=65535; demMax=0;
+    for(let i=0;i<dem.length;i++){
+        if(dem[i]<demMin) demMin=dem[i];
+        if(dem[i]>demMax) demMax=dem[i];
+    }
+    demMid=(demMin+demMax)/2;
+}
+
+function loadTexture(){
+    return new Promise((resolve,reject)=>{
+        new THREE.TextureLoader().load(TEXTURE_URL,tex=>{
+            tex.colorSpace=THREE.SRGBColorSpace;
+            tex.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());
+            tex.minFilter=THREE.LinearMipmapLinearFilter;
+            tex.magFilter=THREE.LinearFilter;
+            texturedMaterial.map=tex;
+            texturedMaterial.needsUpdate=true;
+            resolve();
+        },undefined,reject);
+    });
+}
+
+class MoonCircle{
+    constructor(centerNormal,angularRadius=DEFAULT_RADIUS){
+        this.centerNormal=centerNormal.clone().normalize();
+        this.angularRadius=angularRadius;
+        this.geometry=new LineGeometry();
+        this.material=new LineMaterial({color:currentColor.getHex(),linewidth:CIRCLE_LINE_WIDTH,worldUnits:false,depthTest:true,depthWrite:false,transparent:true,opacity:1});
+        this.material.resolution.set(innerWidth,innerHeight);
+        this.line=new Line2(this.geometry,this.material);
+        this.line.userData.circle=this;
+        circleGroup.add(this.line);
+        this.update();
+    }
+    setCenter(n){this.centerNormal.copy(n).normalize();this.update();}
+    setRadius(r){this.angularRadius=THREE.MathUtils.clamp(r,MIN_RADIUS,MAX_RADIUS);this.update();}
+    setColor(c){this.material.color.copy(c);}
+    update(){
+        const n=this.centerNormal.clone().normalize();
+        const helper=Math.abs(n.y)<.9?new THREE.Vector3(0,1,0):new THREE.Vector3(1,0,0);
+        const u=new THREE.Vector3().crossVectors(helper,n).normalize();
+        const v=new THREE.Vector3().crossVectors(n,u).normalize();
+        const positions=[];
+        const cosR=Math.cos(this.angularRadius),sinR=Math.sin(this.angularRadius);
+        for(let i=0;i<=CIRCLE_SEGMENTS;i++){
+            const a=i/CIRCLE_SEGMENTS*Math.PI*2;
+            const dir=n.clone().multiplyScalar(cosR)
+                .add(u.clone().multiplyScalar(Math.cos(a)*sinR))
+                .add(v.clone().multiplyScalar(Math.sin(a)*sinR)).normalize();
+            /* Rakım sıfır: her nokta doğrudan LDEM ile tanımlanan yüzey yarıçapına oturur. */
+            const r=radiusForDirection(dir);
+            positions.push(dir.x*r,dir.y*r,dir.z*r);
+        }
+        this.geometry.dispose();
+        this.geometry=new LineGeometry();
+        this.geometry.setPositions(positions);
+        this.line.geometry=this.geometry;
+        this.line.computeLineDistances();
+    }
+}
+
+function createCircleFromLocalPoint(localPoint){
+    const circle=new MoonCircle(localPoint.clone().normalize());
+    circles.push(circle);
+    scheduleCircleSave();
+}
+
+const raycaster=new THREE.Raycaster();
+const pointer=new THREE.Vector2();
+
+function setPointer(e){
+    const r=renderer.domElement.getBoundingClientRect();
+    pointer.x=((e.clientX-r.left)/r.width)*2-1;
+    pointer.y=-((e.clientY-r.top)/r.height)*2+1;
+    raycaster.setFromCamera(pointer,camera);
+}
+
+function intersectMoon(e){
+    if(!moonMesh) return null;
+    setPointer(e);
+    const wasVisible=moonMesh.visible;
+    moonMesh.visible=true;
+    moonMesh.updateMatrixWorld(true);
+    const hits=raycaster.intersectObject(moonMesh,false);
+    moonMesh.visible=wasVisible;
+    if(!hits.length) return null;
+    return moonRoot.worldToLocal(hits[0].point.clone());
+}
+
+function circleAt(e){
+    if(!circles.length)return null;
+    setPointer(e);
+    raycaster.params.Line2={threshold:4};
+    const hits=raycaster.intersectObjects(circles.map(c=>c.line),false);
+    return hits.length?hits[0].object.userData.circle:null;
+}
+
+let mode=null,activeCircle=null;
+let downX=0,downY=0,lastX=0,lastY=0,moved=false;
+let inertiaX=0,inertiaY=0,lastMoveTime=performance.now();
+const DRAG_THRESHOLD=4;
+
+/* Çember taşırken kavrama noktasının merkeze sıçramasını engeller. */
+let circleGrabNormal=null;
+let circleStartCenter=null;
+
+function applyRotation(rx,ry){
+    const up=new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion).normalize();
+    const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion).normalize();
+    moonRoot.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(up,rx));
+    moonRoot.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(right,ry));
+    moonRoot.quaternion.normalize();
+}
+function rotateMoon(dx,dy){applyRotation(dx*ROTATION_SPEED,dy*ROTATION_SPEED);}
+
+function moveCircle(e){
+    if(!activeCircle||!circleGrabNormal||!circleStartCenter)return;
+    const hit=intersectMoon(e); if(!hit)return;
+    const current=hit.clone().normalize();
+    const q=new THREE.Quaternion().setFromUnitVectors(circleGrabNormal,current);
+    activeCircle.setCenter(circleStartCenter.clone().applyQuaternion(q).normalize());
+}
+function resizeCircle(e){
+    if(!activeCircle)return;
+    const hit=intersectMoon(e); if(!hit)return;
+    activeCircle.setRadius(activeCircle.centerNormal.angleTo(hit.clone().normalize()));
+}
+
+renderer.domElement.addEventListener("pointerdown",e=>{
+    if(e.button!==0&&e.button!==2)return;
+    renderer.domElement.setPointerCapture(e.pointerId);
+    downX=lastX=e.clientX; downY=lastY=e.clientY; moved=false; lastMoveTime=performance.now();
+    inertiaX=inertiaY=0;
+    const circle=circleAt(e);
+    if(circle){
+        activeCircle=circle;
+        const hit=intersectMoon(e);
+        if(e.button===0){
+            mode="moveCircle";
+            circleGrabNormal=hit?hit.clone().normalize():activeCircle.centerNormal.clone();
+            circleStartCenter=activeCircle.centerNormal.clone();
+            renderer.domElement.style.cursor="grabbing";
+        }else{
+            mode="resizeCircle";
+            renderer.domElement.style.cursor="ew-resize";
+        }
+        e.preventDefault(); return;
+    }
+    if(e.button===2){mode=null;return;}
+    mode="rotate";
+});
+
+renderer.domElement.addEventListener("pointermove",e=>{
+    if(!mode){renderer.domElement.style.cursor=circleAt(e)?"grab":"default";return;}
+    const now=performance.now();
+    const dt=THREE.MathUtils.clamp(now-lastMoveTime,4,50);
+    const dx=e.clientX-lastX,dy=e.clientY-lastY;
+    if(Math.hypot(e.clientX-downX,e.clientY-downY)>DRAG_THRESHOLD)moved=true;
+    if(mode==="rotate"&&moved){
+        rotateMoon(dx,dy);
+        const f=16.666/dt;
+        inertiaX=THREE.MathUtils.clamp(inertiaX*.35+dx*ROTATION_SPEED*f*.65,-MAX_INERTIA_SPEED,MAX_INERTIA_SPEED);
+        inertiaY=THREE.MathUtils.clamp(inertiaY*.35+dy*ROTATION_SPEED*f*.65,-MAX_INERTIA_SPEED,MAX_INERTIA_SPEED);
+        renderer.domElement.style.cursor="grabbing";
+    }else if(mode==="moveCircle"){moveCircle(e);inertiaX=inertiaY=0;}
+    else if(mode==="resizeCircle"){resizeCircle(e);inertiaX=inertiaY=0;}
+    lastX=e.clientX;lastY=e.clientY;lastMoveTime=now;
+});
+
+renderer.domElement.addEventListener("pointerup",e=>{
+    if(mode==="moveCircle"||mode==="resizeCircle"||(mode==="rotate"&&!moved))inertiaX=inertiaY=0;
+    mode=null;activeCircle=null;circleGrabNormal=null;circleStartCenter=null;moved=false;
+    renderer.domElement.style.cursor="default";
+    try{renderer.domElement.releasePointerCapture(e.pointerId)}catch{}
+});
+
+renderer.domElement.addEventListener("dblclick",e=>{
+    if(e.button!==0||circleAt(e))return;
+    const hit=intersectMoon(e); if(!hit)return;
+    inertiaX=inertiaY=0;
+    createCircleFromLocalPoint(hit);
+});
+
+renderer.domElement.addEventListener("pointercancel",()=>{
+    mode=null;activeCircle=null;circleGrabNormal=null;circleStartCenter=null;moved=false;
+});
+renderer.domElement.addEventListener("contextmenu",e=>e.preventDefault());
+
+renderer.domElement.addEventListener("wheel",e=>{
+    e.preventDefault();
+    const dir=new THREE.Vector3();camera.getWorldDirection(dir);
+    camera.position.addScaledVector(dir,-e.deltaY*.0025);
+    let d=THREE.MathUtils.clamp(camera.position.length(),MOON_RADIUS+.4,18);
+    camera.position.normalize().multiplyScalar(d);camera.lookAt(0,0,0);
+},{passive:false});
+
+textureButton.addEventListener("click",()=>{
+    textureEnabled=!textureEnabled;
+    if(moonMesh)moonMesh.material=textureEnabled?texturedMaterial:plasterMaterial;
+    textureButton.classList.toggle("off",!textureEnabled);
+});
+modelButton.addEventListener("click",()=>{
+    modelVisible=!modelVisible;
+    if(moonMesh)moonMesh.visible=modelVisible;
+    modelButton.classList.toggle("off",!modelVisible);
+});
+colorInput.addEventListener("input",()=>{
+    currentColor=new THREE.Color(colorInput.value);
+    circles.forEach(c=>c.setColor(currentColor));
+});
+
+window.addEventListener("resize",()=>{
+    camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+    circles.forEach(c=>c.material.resolution.set(innerWidth,innerHeight));
+});
+
+async function init(){
+    try{
+        status.textContent="LDEM 16-bit yükleniyor…";
+        await loadDEM();
+        status.textContent="Ay geometrisi oluşturuluyor…";
+        buildDisplacedMoon();
+        restoreSavedCircles();
+        status.textContent="NASA LRO 8K doku yükleniyor…";
+        await loadTexture();
+        status.textContent="NASA LRO 8K + LDEM hazır";
+        setTimeout(()=>status.style.opacity="0",1600);
+    }catch(err){
+        console.error(err);
+        status.textContent="Dosyalar yüklenemedi: "+err.message;
+        if(!moonMesh){dem=null;demMin=0;demMax=65535;demMid=32767.5;buildDisplacedMoon();restoreSavedCircles();}
+    }
+}
+function updateAutoQuality(now){
+    if(qualityMode!=="auto")return;
+    fpsFrames++;
+    const elapsed=now-fpsWindowStart;
+    if(elapsed<3000)return;
+    const fps=fpsFrames*1000/elapsed;
+    fpsFrames=0; fpsWindowStart=now;
+
+    if(now<qualityCooldownUntil)return;
+    const idx=QUALITY_ORDER.indexOf(activeQuality);
+    if(fps<27 && idx>0){
+        setQuality(QUALITY_ORDER[idx-1]);
+        highFpsSince=0;
+        return;
+    }
+    if(fps>54 && idx<QUALITY_ORDER.length-1){
+        if(!highFpsSince)highFpsSince=now;
+        if(now-highFpsSince>10000){
+            setQuality(QUALITY_ORDER[idx+1]);
+            highFpsSince=0;
+        }
+    }else{
+        highFpsSince=0;
+    }
+}
+
+function animate(now=performance.now()){
+    requestAnimationFrame(animate);
+    if(mode===null&&(Math.abs(inertiaX)>MIN_INERTIA_SPEED||Math.abs(inertiaY)>MIN_INERTIA_SPEED))applyRotation(inertiaX,inertiaY);
+    renderer.render(scene,camera);
+    updateAutoQuality(now);
+}
+init();
+animate();
+</script>
+</body>
+</html>
