@@ -14,6 +14,9 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#050505;fon
 #helpButton{position:fixed;top:56px;left:14px;z-index:30;width:38px;height:38px;border:1px solid rgba(255,255,255,.32);border-radius:9px;background:rgba(30,30,30,.72);color:#fff;font-size:20px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4);backdrop-filter:blur(6px);user-select:none}
 #helpButton:hover{background:rgba(60,60,60,.88)}
 #helpButton:active{transform:translateY(1px)}
+#languageButton{position:fixed;top:100px;left:14px;z-index:30;width:38px;height:38px;border:1px solid rgba(255,255,255,.32);border-radius:9px;background:rgba(30,30,30,.72);color:#fff;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4);backdrop-filter:blur(6px);user-select:none}
+#languageButton:hover{background:rgba(60,60,60,.88)}
+#languageButton:active{transform:translateY(1px)}
 #helpOverlay{position:fixed;inset:0;z-index:100;display:none;pointer-events:none}
 #helpOverlay.open{display:block}
 #helpPanel{position:absolute;top:58px;left:58px;width:min(360px,calc(100vw - 76px));padding:18px 20px 16px;border:1px solid #ddd;border-radius:16px;background:#fff;color:#222;box-shadow:0 12px 35px rgba(0,0,0,.22);pointer-events:auto}
@@ -82,14 +85,11 @@ canvas{display:block;width:100%;height:100%;outline:none}
 <div id="scene"></div>
 <a id="homeButton" href="../index.html" title="Projelerim ana sayfasına dön" aria-label="Ana sayfa">⌂</a>
 <button id="helpButton" type="button" title="Kullanım yardımı" aria-label="Yardım">?</button>
+<button id="languageButton" type="button" title="Dil / Language / Sprache" aria-label="Dil">TR</button>
 <div id="helpOverlay" aria-hidden="true">
   <div id="helpPanel" role="dialog" aria-modal="false" aria-labelledby="helpTitle">
     <h2 id="helpTitle">Kullanım</h2>
-    <div class="helpRow"><span class="helpKey">Ay yüzeyini sürükle</span> → Ay'ı döndür</div>
-    <div class="helpRow"><span class="helpKey">Ay yüzeyine çift tık</span> → Yeni daire oluştur</div>
-    <div class="helpRow"><span class="helpKey">Daireye sol tık + sürükle</span> → Yarıçapı değiştir</div>
-    <div class="helpRow"><span class="helpKey">Daireye sağ tık + sürükle</span> → Daireyi taşı</div>
-    <div class="helpRow"><span class="helpKey">Fare tekerleği</span> → Yakınlaştır / uzaklaştır</div>
+    <div id="helpRows"></div>
     <button id="helpClose" type="button">Kapat</button>
   </div>
 </div>
@@ -154,13 +154,119 @@ const colorInput=document.getElementById("circleColor");
 const status=document.getElementById("status");
 const lightControl=document.getElementById("lightControl");
 const lightDot=document.getElementById("lightDot");
+const shadowWrap=document.getElementById("shadowWrap");
 const shadowSlider=document.getElementById("shadowSlider");
 const shadowValue=null;
+const displaceWrap=document.getElementById("displaceWrap");
 const displaceSlider=document.getElementById("displaceSlider");
 const displaceValue=null;
 const helpButton=document.getElementById("helpButton");
 const helpOverlay=document.getElementById("helpOverlay");
 const helpClose=document.getElementById("helpClose");
+const helpRows=document.getElementById("helpRows");
+const languageButton=document.getElementById("languageButton");
+const homeButton=document.getElementById("homeButton");
+
+const I18N={
+tr:{
+  code:"TR",htmlLang:"tr",title:"3B Ay – LRO 8K + LDEM",
+  texture:"Doku",model:"Model",helpTitle:"Kullanım",close:"Kapat",
+  homeTip:"Projelerim ana sayfasına dön",helpTip:"Kullanım yardımı",
+  lightTip:"Işık yönünü değiştirmek için sürükle",
+  shadowTip:"Ay'ın gölgede kalan kısmının aydınlığını ayarlar",
+  displaceTip:"Ay yüzeyindeki geometrik kabartma miktarını ayarlar",
+  qualityAuto:"Otomatik performans · şu an {q}",qualityFixed:"Sabit performans: {q}",
+  q:{low:"DÜŞÜK",normal:"NORMAL",high:"YÜKSEK"},
+  loadingDem:"LDEM 16-bit yükleniyor…",geometry:"Ay geometrisi oluşturuluyor…",
+  loadingTexture:"NASA LRO 8K doku yükleniyor…",ready:"NASA LRO 8K + LDEM hazır",
+  loadFail:"Dosyalar yüklenemedi: ",
+  help:[
+    ["Ay yüzeyini sürükle","Ay'ı döndür"],
+    ["Ay yüzeyine çift tık","Yeni daire oluştur"],
+    ["Daireye sol tık + sürükle","Yarıçapı değiştir"],
+    ["Daireye sağ tık + sürükle","Daireyi taşı"],
+    ["Fare tekerleği","Yakınlaştır / uzaklaştır"]
+  ]
+},
+en:{
+  code:"EN",htmlLang:"en",title:"3D Moon – LRO 8K + LDEM",
+  texture:"Texture",model:"Model",helpTitle:"Controls",close:"Close",
+  homeTip:"Back to projects",helpTip:"Controls",
+  lightTip:"Drag to change light direction",
+  shadowTip:"Adjust brightness on the shadowed side of the Moon",
+  displaceTip:"Adjust visible surface relief",
+  qualityAuto:"Automatic performance · currently {q}",qualityFixed:"Fixed performance: {q}",
+  q:{low:"LOW",normal:"NORMAL",high:"HIGH"},
+  loadingDem:"Loading 16-bit LDEM…",geometry:"Building Moon geometry…",
+  loadingTexture:"Loading NASA LRO 8K texture…",ready:"NASA LRO 8K + LDEM ready",
+  loadFail:"Files could not be loaded: ",
+  help:[
+    ["Drag Moon surface","Rotate Moon"],
+    ["Double-click Moon surface","Create new circle"],
+    ["Left-click + drag circle","Change radius"],
+    ["Right-click + drag circle","Move circle"],
+    ["Mouse wheel","Zoom in / out"]
+  ]
+},
+de:{
+  code:"DE",htmlLang:"de",title:"3D-Mond – LRO 8K + LDEM",
+  texture:"Textur",model:"Modell",helpTitle:"Bedienung",close:"Schließen",
+  homeTip:"Zurück zu den Projekten",helpTip:"Bedienung",
+  lightTip:"Ziehen, um die Lichtrichtung zu ändern",
+  shadowTip:"Helligkeit der Schattenseite des Mondes einstellen",
+  displaceTip:"Sichtbares Oberflächenrelief einstellen",
+  qualityAuto:"Automatische Leistung · aktuell {q}",qualityFixed:"Feste Leistung: {q}",
+  q:{low:"NIEDRIG",normal:"NORMAL",high:"HOCH"},
+  loadingDem:"16-Bit-LDEM wird geladen…",geometry:"Mondgeometrie wird erstellt…",
+  loadingTexture:"NASA-LRO-8K-Textur wird geladen…",ready:"NASA LRO 8K + LDEM bereit",
+  loadFail:"Dateien konnten nicht geladen werden: ",
+  help:[
+    ["Mondoberfläche ziehen","Mond drehen"],
+    ["Doppelklick auf Mondoberfläche","Neuen Kreis erstellen"],
+    ["Linksklick + Kreis ziehen","Radius ändern"],
+    ["Rechtsklick + Kreis ziehen","Kreis verschieben"],
+    ["Mausrad","Vergrößern / verkleinern"]
+  ]
+}
+};
+const LANG_ORDER=["tr","en","de"];
+let currentLanguage=(()=>{
+  try{
+    const saved=localStorage.getItem("sinan_ipek_3d_moon_language");
+    return LANG_ORDER.includes(saved)?saved:"tr";
+  }catch{return "tr";}
+})();
+
+function t(){return I18N[currentLanguage];}
+function renderHelp(){
+    helpTitle.textContent=t().helpTitle;
+    helpClose.textContent=t().close;
+    helpRows.innerHTML=t().help.map(([key,value])=>
+      '<div class="helpRow"><span class="helpKey">'+key+'</span> → '+value+'</div>'
+    ).join("");
+}
+function applyLanguage(){
+    const L=t();
+    document.documentElement.lang=L.htmlLang;
+    document.title=L.title;
+    languageButton.textContent=L.code;
+    textureButton.textContent=L.texture;
+    modelButton.textContent=L.model;
+    homeButton.title=L.homeTip;
+    homeButton.setAttribute("aria-label",L.homeTip);
+    helpButton.title=L.helpTip;
+    helpButton.setAttribute("aria-label",L.helpTip);
+    lightControl.title=L.lightTip;
+    shadowWrap.title=L.shadowTip;
+    displaceWrap.title=L.displaceTip;
+    renderHelp();
+    updateQualityButton();
+}
+languageButton.addEventListener("click",()=>{
+    currentLanguage=LANG_ORDER[(LANG_ORDER.indexOf(currentLanguage)+1)%LANG_ORDER.length];
+    try{localStorage.setItem("sinan_ipek_3d_moon_language",currentLanguage)}catch{}
+    applyLanguage();
+});
 
 function openHelp(){
     helpOverlay.classList.add("open");
@@ -492,10 +598,12 @@ function setQuality(level,{force=false}={}){
 
 function updateQualityButton(){
     if(!qualityButton)return;
-    qualityButton.textContent=qualityMode==="auto"?"AUTO":QUALITY_LEVELS[qualityMode].label;
+    const L=t();
+    qualityButton.textContent=qualityMode==="auto"?"AUTO":L.q[qualityMode];
+    const q=L.q[activeQuality];
     qualityButton.title=qualityMode==="auto"
-        ?`Otomatik performans · şu an ${QUALITY_LEVELS[activeQuality].label}`
-        :`Sabit performans: ${QUALITY_LEVELS[qualityMode].label}`;
+        ?L.qualityAuto.replace("{q}",q)
+        :L.qualityFixed.replace("{q}",L.q[qualityMode]);
 }
 
 function cycleQualityMode(){
@@ -513,7 +621,7 @@ function buildDisplacedMoon(){
 }
 
 async function loadDEM(){
-    status.textContent="LDEM 16-bit yükleniyor…";
+    status.textContent=t().loadingDem;
     const response=await fetch(DEM_URL);
     if(!response.ok) throw new Error(`LDEM yüklenemedi: ${response.status}`);
     const buffer=await response.arrayBuffer();
@@ -738,18 +846,18 @@ window.addEventListener("resize",()=>{
 
 async function init(){
     try{
-        status.textContent="LDEM 16-bit yükleniyor…";
+        status.textContent=t().loadingDem;
         await loadDEM();
-        status.textContent="Ay geometrisi oluşturuluyor…";
+        status.textContent=t().geometry;
         buildDisplacedMoon();
         restoreSavedCircles();
-        status.textContent="NASA LRO 8K doku yükleniyor…";
+        status.textContent=t().loadingTexture;
         await loadTexture();
-        status.textContent="NASA LRO 8K + LDEM hazır";
+        status.textContent=t().ready;
         setTimeout(()=>status.style.opacity="0",1600);
     }catch(err){
         console.error(err);
-        status.textContent="Dosyalar yüklenemedi: "+err.message;
+        status.textContent=t().loadFail+err.message;
         if(!moonMesh){dem=null;demMin=0;demMax=65535;demMid=32767.5;buildDisplacedMoon();restoreSavedCircles();}
     }
 }
@@ -785,6 +893,7 @@ function animate(now=performance.now()){
     renderer.render(scene,camera);
     updateAutoQuality(now);
 }
+applyLanguage();
 init();
 animate();
 </script>
