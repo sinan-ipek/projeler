@@ -646,20 +646,21 @@ function loadTexture(){
 }
 
 class MoonCircle{
-    constructor(centerNormal,angularRadius=DEFAULT_RADIUS){
+    constructor(centerNormal,angularRadius=DEFAULT_RADIUS,color=currentColor){
         this.centerNormal=centerNormal.clone().normalize();
         this.angularRadius=angularRadius;
         this.geometry=new LineGeometry();
-        this.material=new LineMaterial({color:currentColor.getHex(),linewidth:CIRCLE_LINE_WIDTH,worldUnits:false,depthTest:true,depthWrite:false,transparent:true,opacity:1});
+        const circleColorValue=color instanceof THREE.Color?color:new THREE.Color(color);
+        this.material=new LineMaterial({color:circleColorValue.getHex(),linewidth:CIRCLE_LINE_WIDTH,worldUnits:false,depthTest:true,depthWrite:false,transparent:true,opacity:1});
         this.material.resolution.set(innerWidth,innerHeight);
         this.line=new Line2(this.geometry,this.material);
         this.line.userData.circle=this;
         circleGroup.add(this.line);
         this.update();
     }
-    setCenter(n){this.centerNormal.copy(n).normalize();this.update();}
-    setRadius(r){this.angularRadius=THREE.MathUtils.clamp(r,MIN_RADIUS,MAX_RADIUS);this.update();}
-    setColor(c){this.material.color.copy(c);}
+    setCenter(n){this.centerNormal.copy(n).normalize();this.update();scheduleCircleSave();}
+    setRadius(r){this.angularRadius=THREE.MathUtils.clamp(r,MIN_RADIUS,MAX_RADIUS);this.update();scheduleCircleSave();}
+    setColor(c){this.material.color.copy(c);scheduleCircleSave();}
     update(){
         const n=this.centerNormal.clone().normalize();
         const helper=Math.abs(n.y)<.9?new THREE.Vector3(0,1,0):new THREE.Vector3(1,0,0);
@@ -685,7 +686,7 @@ class MoonCircle{
 }
 
 function createCircleFromLocalPoint(localPoint){
-    const circle=new MoonCircle(localPoint.clone().normalize());
+    const circle=new MoonCircle(localPoint.clone().normalize(),DEFAULT_RADIUS,currentColor.clone());
     circles.push(circle);
     scheduleCircleSave();
 }
@@ -831,7 +832,6 @@ modelButton.addEventListener("click",()=>{
 });
 colorInput.addEventListener("input",()=>{
     currentColor=new THREE.Color(colorInput.value);
-    circles.forEach(c=>c.setColor(currentColor));
 });
 
 window.addEventListener("resize",()=>{
