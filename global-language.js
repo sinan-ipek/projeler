@@ -38,7 +38,7 @@ const TITLE={
 let lang=localStorage.getItem(KEY)||"tr"; if(!LANGS.some(x=>x[0]===lang))lang="tr";
 const oi=new WeakMap(); let lock=false;
 function li(){return LANGS.findIndex(x=>x[0]===lang)}
-function tx(s){if(lang==="tr"||!MAP[s])return s;return MAP[s][li()-1]||s}
+function tx(s){if(lang==="tr")return s;if(MAP[s])return MAP[s][li()-1]||s;for(const k in TITLE){const a=TITLE[k];if(a&&a[0]===s)return a[li()]||s}return s}
 function pkey(){const p=location.pathname.split("/").filter(Boolean),last=p[p.length-1]||"";if(last.endsWith(".html"))return p.length===1?last:(p[p.length-2]||last);return last}
 function walk(root=document.body){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{const e=n.parentElement;if(!e||/^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA|CODE|PRE)$/i.test(e.tagName)||e.closest("#globalLanguageWidget"))return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT}});let n;while(n=w.nextNode()){if(!oi.has(n))oi.set(n,n.nodeValue);const raw=oi.get(n),c=raw.trim();if(!c)continue;const v=raw.replace(c,tx(c));if(v!==n.nodeValue){lock=true;n.nodeValue=v;lock=false}}}
 function html(){return '<button class="glb"><span class="gf">'+FLAGS[lang]+'</span><span>▼</span></button><div class="glm">'+LANGS.map(([c,n])=>'<button data-l="'+c+'" class="'+(c===lang?'on':'')+'"><span class="gf">'+FLAGS[c]+'</span><span>'+n+'</span></button>').join("")+'</div>'}
