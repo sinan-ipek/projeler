@@ -36,6 +36,7 @@ canvas{display:block;width:100%;height:100%;outline:none}
 #status{position:fixed;z-index:20;padding:9px 12px;border-radius:8px;background:rgba(20,20,20,.65);color:rgba(255,255,255,.82);font-size:12px;line-height:1.5;pointer-events:none;user-select:none}
 #status{right:18px;bottom:18px;transition:opacity .5s}
 #circleCount{position:fixed;right:12px;bottom:10px;z-index:20;color:rgba(255,255,255,.72);font-size:10px;line-height:1;pointer-events:none;user-select:none}
+#selectedRadius{position:fixed;left:12px;bottom:10px;z-index:20;color:rgba(255,255,255,.78);font-size:10px;line-height:1;pointer-events:none;user-select:none;display:none}
 
 #lightControl{
   position:fixed;right:18px;top:18px;z-index:25;
@@ -108,6 +109,7 @@ canvas{display:block;width:100%;height:100%;outline:none}
 </div>
 <div id="status">NASA LRO 8K + LDEM yükleniyor…</div>
 <div id="circleCount">0</div>
+<div id="selectedRadius"></div>
 
 <script type="module">
 import * as THREE from "three";
@@ -116,6 +118,7 @@ import {LineGeometry} from "three/addons/lines/LineGeometry.js";
 import {LineMaterial} from "three/addons/lines/LineMaterial.js";
 
 const MOON_RADIUS=2.25;
+const MOON_REAL_RADIUS_KM=1737.4;
 const QUALITY_LEVELS={
     low:{label:"DÜŞÜK",w:128,h:64},
     normal:{label:"NORMAL",w:256,h:128},
@@ -153,6 +156,7 @@ const colorInput=document.getElementById("circleColor");
 const clearCirclesButton=document.getElementById("clearCirclesButton");
 const status=document.getElementById("status");
 const circleCount=document.getElementById("circleCount");
+const selectedRadius=document.getElementById("selectedRadius");
 const lightControl=document.getElementById("lightControl");
 const lightDot=document.getElementById("lightDot");
 const shadowWrap=document.getElementById("shadowWrap");
@@ -532,6 +536,7 @@ function deleteCircle(circle){
     updateCircleCount();
     if(activeCircle===circle)activeCircle=null;
     if(selectedCircle===circle)selectedCircle=null;
+    updateSelectedRadius();
     saveCirclesNow();
 }
 
@@ -545,6 +550,7 @@ function clearAllCircles(){
     updateCircleCount();
     activeCircle=null;
     selectedCircle=null;
+    updateSelectedRadius();
     try{localStorage.removeItem(CIRCLE_STORAGE_KEY)}catch{}
 }
 
@@ -728,6 +734,17 @@ class MoonCircle{
 
 function updateCircleCount(){circleCount.textContent=String(circles.length);}
 
+function updateSelectedRadius(){
+    if(!selectedCircle){
+        selectedRadius.style.display="none";
+        selectedRadius.textContent="";
+        return;
+    }
+    const km=selectedCircle.angularRadius*MOON_REAL_RADIUS_KM;
+    selectedRadius.textContent=km<10?km.toFixed(1)+" km":Math.round(km)+" km";
+    selectedRadius.style.display="block";
+}
+
 function createCircleFromLocalPoint(localPoint){
     const circle=new MoonCircle(localPoint.clone().normalize(),DEFAULT_RADIUS,currentColor.clone());
     circles.push(circle);
@@ -813,6 +830,7 @@ function resizeCircle(e){
     if(!activeCircle)return;
     const hit=intersectMoon(e); if(!hit)return;
     activeCircle.setRadius(activeCircle.centerNormal.angleTo(hit.clone().normalize()));
+    updateSelectedRadius();
 }
 
 renderer.domElement.addEventListener("pointerdown",e=>{
@@ -826,6 +844,7 @@ renderer.domElement.addEventListener("pointerdown",e=>{
     if(edgeCircle){
         activeCircle=edgeCircle;
         selectedCircle=edgeCircle;
+        updateSelectedRadius();
         mode="resizeCircle";
         renderer.domElement.style.cursor="ew-resize";
         e.preventDefault();
@@ -837,6 +856,7 @@ renderer.domElement.addEventListener("pointerdown",e=>{
     if(inside){
         activeCircle=inside.circle;
         selectedCircle=inside.circle;
+        updateSelectedRadius();
         mode="moveCircle";
         circleGrabNormal=inside.hit.clone().normalize();
         circleStartCenter=activeCircle.centerNormal.clone();
@@ -847,6 +867,7 @@ renderer.domElement.addEventListener("pointerdown",e=>{
 
     /* Daire dışında kalan Ay yüzeyi -> Ay'ı döndür. */
     selectedCircle=null;
+    updateSelectedRadius();
     mode="rotate";
 });
 
