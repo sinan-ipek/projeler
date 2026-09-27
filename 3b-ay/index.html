@@ -14,17 +14,14 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#050505;fon
 #helpButton{position:fixed;top:56px;left:14px;z-index:30;width:38px;height:38px;border:1px solid rgba(255,255,255,.32);border-radius:9px;background:rgba(30,30,30,.72);color:#fff;font-size:20px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4);backdrop-filter:blur(6px);user-select:none}
 #helpButton:hover{background:rgba(60,60,60,.88)}
 #helpButton:active{transform:translateY(1px)}
-#helpOverlay{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.58);backdrop-filter:blur(4px)}
-#helpOverlay.open{display:flex}
-#helpPanel{width:min(620px,94vw);max-height:88vh;overflow:auto;padding:22px 24px 20px;border:1px solid rgba(255,255,255,.22);border-radius:14px;background:rgba(24,24,24,.96);color:#eee;box-shadow:0 18px 55px rgba(0,0,0,.62)}
-#helpPanel h2{margin:0 0 17px;font-size:21px}
-#helpPanel h3{margin:18px 0 8px;font-size:14px;color:#fff}
-#helpPanel p{margin:7px 0;font-size:13px;line-height:1.5;color:#ddd}
-#helpPanel b{color:#fff}
-#helpPanel .helpRow{display:grid;grid-template-columns:180px 1fr;gap:12px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;line-height:1.4}
-#helpPanel .helpKey{font-weight:700;color:#fff}
-#helpClose{display:block;margin:20px 0 0 auto;height:32px;padding:0 15px;border:1px solid #aaa;border-radius:7px;background:#eee;color:#222;font-weight:700;cursor:pointer}
-@media(max-width:560px){#helpPanel .helpRow{grid-template-columns:1fr;gap:3px}}
+#helpOverlay{position:fixed;inset:0;z-index:100;display:none;pointer-events:none}
+#helpOverlay.open{display:block}
+#helpPanel{position:absolute;top:58px;left:58px;width:min(360px,calc(100vw - 76px));padding:18px 20px 16px;border:1px solid #ddd;border-radius:16px;background:#fff;color:#222;box-shadow:0 12px 35px rgba(0,0,0,.22);pointer-events:auto}
+#helpPanel h2{margin:0 0 13px;font-size:17px;color:#111}
+#helpPanel .helpRow{padding:6px 0;font-size:13px;line-height:1.45;color:#333}
+#helpPanel .helpKey{font-weight:700;color:#111}
+#helpClose{display:block;margin:12px 0 0 auto;height:28px;padding:0 12px;border:1px solid #ccc;border-radius:7px;background:#f4f4f4;color:#222;font-size:12px;font-weight:600;cursor:pointer}
+@media(max-width:560px){#helpPanel{top:102px;left:12px;width:calc(100vw - 24px)}}
 canvas{display:block;width:100%;height:100%;outline:none}
 #toolbar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:5px;padding:5px;border-radius:9px;background:rgba(245,245,245,.92);box-shadow:0 5px 18px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.8);backdrop-filter:blur(7px)}
 .toolButton{height:30px;min-width:62px;padding:0 10px;border:1px solid #aaa;border-radius:7px;background:linear-gradient(#fff,#e8e8e8);color:#222;font-size:12px;font-weight:600;cursor:pointer;user-select:none;box-shadow:0 2px 4px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.9)}
@@ -86,22 +83,13 @@ canvas{display:block;width:100%;height:100%;outline:none}
 <a id="homeButton" href="../index.html" title="Projelerim ana sayfasına dön" aria-label="Ana sayfa">⌂</a>
 <button id="helpButton" type="button" title="Kullanım yardımı" aria-label="Yardım">?</button>
 <div id="helpOverlay" aria-hidden="true">
-  <div id="helpPanel" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
-    <h2 id="helpTitle">3B Ay — Kullanım</h2>
-    <div class="helpRow"><div class="helpKey">Ay'ı döndür</div><div>Boş Ay yüzeyinde <b>sol tuşa basılı tutup sürükle.</b> Hızlı bırakıldığında Ay aynı yönde dönmeye devam eder; yeniden dokunmak dönüşü durdurur.</div></div>
-    <div class="helpRow"><div class="helpKey">Yakınlaştır / uzaklaştır</div><div><b>Fare tekerleğini</b> çevir.</div></div>
-    <div class="helpRow"><div class="helpKey">Daire oluştur</div><div>Ay yüzeyinde istediğin noktaya <b>sol tuşla çift tıkla.</b></div></div>
-    <div class="helpRow"><div class="helpKey">Daireyi taşı</div><div>Dairenin <b>çember çizgisine sol tuşla</b> bas ve sürükle.</div></div>
-    <div class="helpRow"><div class="helpKey">Dairenin boyutu</div><div>Dairenin <b>çember çizgisine sağ tuşla</b> bas ve sürükle.</div></div>
-    <h3>Üst kontroller</h3>
-    <div class="helpRow"><div class="helpKey">Doku</div><div>NASA LRO yüzey dokusunu açar/kapatır; kapalıyken sade yüzey görünür.</div></div>
-    <div class="helpRow"><div class="helpKey">Model</div><div>Ay modelini gösterir/gizler. Oluşturduğun daireler görünür kalır.</div></div>
-    <div class="helpRow"><div class="helpKey">AUTO / kalite</div><div><b>AUTO → DÜŞÜK → NORMAL → YÜKSEK</b> arasında geçer. AUTO, bilgisayarın performansına göre geometrik ayrıntıyı kendisi ayarlar.</div></div>
-    <div class="helpRow"><div class="helpKey">Renk kutusu</div><div>Dairelerin rengini değiştirir.</div></div>
-    <div class="helpRow"><div class="helpKey">İlk sürgü</div><div>Ay'ın gölgede kalan bölümündeki dolgu ışığını ayarlar. Uzay arka planının siyahlığı değişmez.</div></div>
-    <div class="helpRow"><div class="helpKey">İkinci sürgü</div><div>LDEM verisinden üretilen yüzey kabartmasının görünür miktarını ayarlar.</div></div>
-    <div class="helpRow"><div class="helpKey">Sağ üst ışık diski</div><div>Beyaz noktayı sürükleyerek ışığın yönünü değiştir. Merkezden kenara ve dış halkaya doğru hareket, dolunay görünümünden yarım Ay ve hilal görünümüne kadar ilerler.</div></div>
-    <p>Oluşturduğun daireler tarayıcıda otomatik olarak saklanır ve sayfayı yeniden açtığında geri yüklenir.</p>
+  <div id="helpPanel" role="dialog" aria-modal="false" aria-labelledby="helpTitle">
+    <h2 id="helpTitle">Kullanım</h2>
+    <div class="helpRow"><span class="helpKey">Ay yüzeyini sürükle</span> → Ay'ı döndür</div>
+    <div class="helpRow"><span class="helpKey">Ay yüzeyine çift tık</span> → Yeni daire oluştur</div>
+    <div class="helpRow"><span class="helpKey">Daireye sol tık + sürükle</span> → Yarıçapı değiştir</div>
+    <div class="helpRow"><span class="helpKey">Daireye sağ tık + sürükle</span> → Daireyi taşı</div>
+    <div class="helpRow"><span class="helpKey">Fare tekerleği</span> → Yakınlaştır / uzaklaştır</div>
     <button id="helpClose" type="button">Kapat</button>
   </div>
 </div>
@@ -184,7 +172,6 @@ function closeHelp(){
 }
 helpButton.addEventListener("click",openHelp);
 helpClose.addEventListener("click",closeHelp);
-helpOverlay.addEventListener("pointerdown",e=>{if(e.target===helpOverlay)closeHelp();});
 window.addEventListener("keydown",e=>{if(e.key==="Escape")closeHelp();});
 
 const scene=new THREE.Scene();
@@ -670,13 +657,13 @@ renderer.domElement.addEventListener("pointerdown",e=>{
         activeCircle=circle;
         const hit=intersectMoon(e);
         if(e.button===0){
+            mode="resizeCircle";
+            renderer.domElement.style.cursor="ew-resize";
+        }else{
             mode="moveCircle";
             circleGrabNormal=hit?hit.clone().normalize():activeCircle.centerNormal.clone();
             circleStartCenter=activeCircle.centerNormal.clone();
             renderer.domElement.style.cursor="grabbing";
-        }else{
-            mode="resizeCircle";
-            renderer.domElement.style.cursor="ew-resize";
         }
         e.preventDefault(); return;
     }
