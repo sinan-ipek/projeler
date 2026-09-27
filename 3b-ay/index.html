@@ -179,8 +179,8 @@ tr:{
   help:[
     ["Ay yüzeyini sürükle","Ay'ı döndür"],
     ["Ay yüzeyine çift tık","Yeni daire oluştur"],
+    ["Dairenin içine sol tık + sürükle","Daireyi taşı"],
     ["Dairenin çizgisine sol tık + sürükle","Yarıçapı değiştir"],
-    ["Dairenin çizgisine sağ tık + sürükle","Daireyi taşı"],
     ["Fare tekerleği","Yakınlaştır / uzaklaştır"]
   ]
 },
@@ -199,8 +199,8 @@ en:{
   help:[
     ["Drag Moon surface","Rotate Moon"],
     ["Double-click Moon surface","Create new circle"],
+    ["Left-click + drag inside circle","Move circle"],
     ["Left-click + drag circle line","Change radius"],
-    ["Right-click + drag circle line","Move circle"],
     ["Mouse wheel","Zoom in / out"]
   ]
 },
@@ -219,8 +219,8 @@ de:{
   help:[
     ["Mondoberfläche ziehen","Mond drehen"],
     ["Doppelklick auf Mondoberfläche","Neuen Kreis erstellen"],
+    ["Linksklick + innerhalb des Kreises ziehen","Kreis verschieben"],
     ["Linksklick + Kreislinie ziehen","Radius ändern"],
-    ["Rechtsklick + Kreislinie ziehen","Kreis verschieben"],
     ["Mausrad","Vergrößern / verkleinern"]
   ]
 }
@@ -721,6 +721,25 @@ function circleAt(e){
     return hits.length?hits[0].object.userData.circle:null;
 }
 
+/* Ay yüzeyindeki tıklamanın herhangi bir dairenin içinde olup olmadığını bulur.
+   Çember çizgisi ayrıca circleAt() ile yakalanır ve yarıçap değiştirmeye ayrılır. */
+function circleInteriorAt(e){
+    if(!circles.length)return null;
+    const hit=intersectMoon(e);
+    if(!hit)return null;
+    const n=hit.clone().normalize();
+    let best=null;
+    let bestAngle=Infinity;
+    for(const circle of circles){
+        const angle=circle.centerNormal.angleTo(n);
+        if(angle<circle.angularRadius && angle<bestAngle){
+            bestAngle=angle;
+            best=circle;
+        }
+    }
+    return best?{circle:best,hit}:null;
+}
+
 let mode=null,activeCircle=null;
 let downX=0,downY=0,lastX=0,lastY=0,moved=false;
 let inertiaX=0,inertiaY=0,lastMoveTime=performance.now();
@@ -753,31 +772,48 @@ function resizeCircle(e){
 }
 
 renderer.domElement.addEventListener("pointerdown",e=>{
-    if(e.button!==0&&e.button!==2)return;
+    if(e.button!==0)return;
     renderer.domElement.setPointerCapture(e.pointerId);
     downX=lastX=e.clientX; downY=lastY=e.clientY; moved=false; lastMoveTime=performance.now();
     inertiaX=inertiaY=0;
-    const circle=circleAt(e);
-    if(circle){
-        activeCircle=circle;
-        const hit=intersectMoon(e);
-        if(e.button===0){
-            mode="resizeCircle";
-            renderer.domElement.style.cursor="ew-resize";
-        }else{
-            mode="moveCircle";
-            circleGrabNormal=hit?hit.clone().normalize():activeCircle.centerNormal.clone();
-            circleStartCenter=activeCircle.centerNormal.clone();
-            renderer.domElement.style.cursor="grabbing";
-        }
-        e.preventDefault(); return;
+
+    /* Öncelik 1: çember çizgisi -> yarıçap değiştir. */
+    const edgeCircle=circleAt(e);
+    if(edgeCircle){
+        activeCircle=edgeCircle;
+        mode="resizeCircle";
+        renderer.domElement.style.cursor="ew-resize";
+        e.preventDefault();
+        return;
     }
-    if(e.button===2){mode=null;return;}
+
+    /* Öncelik 2: dairenin içi -> daireyi taşı. */
+    const inside=circleInteriorAt(e);
+    if(inside){
+        activeCircle=inside.circle;
+        mode="moveCircle";
+        circleGrabNormal=inside.hit.clone().normalize();
+        circleStartCenter=activeCircle.centerNormal.clone();
+        renderer.domElement.style.cursor="grabbing";
+        e.preventDefault();
+        return;
+    }
+
+    /* Daire dışında kalan Ay yüzeyi -> Ay'ı döndür. */
     mode="rotate";
 });
 
 renderer.domElement.addEventListener("pointermove",e=>{
-    if(!mode){renderer.domElement.style.cursor=circleAt(e)?"grab":"default";return;}
+    if(!mode){
+        const edge=circleAt(e);
+        if(edge){
+            renderer.domElement.style.cursor="ew-resize";
+        }else{
+            const inside=circleInteriorAt(e);
+            renderer.domElement.style.cursor=inside?"grab":"default";
+        }
+        return;
+    }
     const now=performance.now();
     const dt=THREE.MathUtils.clamp(now-lastMoveTime,4,50);
     const dx=e.clientX-lastX,dy=e.clientY-lastY;
