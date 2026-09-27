@@ -6,6 +6,7 @@
 <style>
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;font-family:Arial,sans-serif;background:#f4f5f7;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 #app{position:relative;width:100vw;height:100vh;background:radial-gradient(circle at 35% 45%,#fff 0,#fafafa 60%,#f2f3f5 100%)}
+#homeButton{position:absolute;top:16px;left:16px;z-index:200;width:42px;height:42px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:22px;color:#444;background:#fff;border-radius:10px;box-shadow:0 3px 10px #0000002b,inset 0 0 0 1px #00000012;transition:transform .15s ease,box-shadow .15s ease}#homeButton:hover{transform:translateY(-2px);box-shadow:0 6px 14px #00000038}#homeButton:active{transform:translateY(0)}
 #planeWrap{position:absolute;left:3vw;top:5vh;width:62vw;height:90vh;background:#fff;border-radius:18px;box-shadow:0 5px 18px #0000001c,inset 0 0 0 1px #00000009;overflow:hidden}
 #plane{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 #operationPanel{position:absolute;left:68vw;right:2vw;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;gap:10px}
@@ -25,7 +26,7 @@
 .flyingUnit{position:fixed;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:13px;font-weight:700;z-index:100;pointer-events:none;box-shadow:0 2px 5px #0003}.flyPositive{color:#fff;background:#3280d6}.flyNegative{color:#fff;background:#d94a4a}
 @media(max-width:1000px){#planeWrap{left:2vw;width:60vw}#operationPanel{left:64vw;right:1vw;gap:6px}.valueBox{width:70px;height:70px;flex-basis:70px}.boxValue{font-size:27px}.operator{font-size:26px}}
 </style></head>
-<body><div id="app">
+<body><div id="app"><a id="homeButton" href="../index.html" aria-label="Ana sayfa" title="Ana sayfa">⌂</a>
 <div id="planeWrap"><svg id="plane">
 <g><rect id="q1"/><rect id="q2"/><rect id="q3"/><rect id="q4"/></g>
 <g><rect id="areaRect"/></g><g id="cellLayer"/><g id="unitLayer"/><g id="axisLayer"/>
