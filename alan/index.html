@@ -224,8 +224,7 @@ function worldToScreen(x,y){
  return {x:r.left+view.tx+x*view.scale,y:r.top+view.ty+y*view.scale};
 }
 function isPanTarget(e){
-  const mode=select.value;
-  if(mode==="pen"||mode==="polygon"||mode==="free")return false;
+  if(select.value==="pen"&&!shape)return false;
   return e.target===stage||e.target===svg||e.target.id==="hint";
 }let imageMask=null,imageObjectURL=null;const imageInput=document.getElementById("imageInput");
 
@@ -620,12 +619,7 @@ function shapeDown(e){
    const u=clamp((wx*vx+wy*vy)/((vx*vx+vy*vy)||1),0,1);
    minD=Math.min(minD,Math.hypot(q.x-(a.x+u*vx),q.y-(a.y+u*vy)))
  }
- if(minD<=(shape.type==="pen"||shape.type==="polygon"?18:13)){
-   dragging={kind:"move",start:q,original:JSON.parse(JSON.stringify(shape)),freeOriginal:freePoints.map(v=>({...v}))};
-   e.currentTarget.setPointerCapture?.(e.pointerId)
- }else{
-   animateSum()
- }
+ animateSum()
 }
 stage.onpointermove=e=>{
  if(!dragging)return;const p=pt(e),dx=p.x-dragging.start.x,dy=p.y-dragging.start.y;
@@ -853,9 +847,10 @@ stage.addEventListener("pointermove",e=>{
 },true);
 function endPan(e){
   if(!panDrag||e.pointerId!==panDrag.id)return;
+  const moved=panDrag.moved;
   try{stage.releasePointerCapture(e.pointerId)}catch(_){}
   panDrag=null;stage.classList.remove("panning");
-  e.preventDefault();e.stopPropagation();
+  if(moved){e.preventDefault();e.stopPropagation()}
 }
 stage.addEventListener("pointerup",endPan,true);
 stage.addEventListener("pointercancel",endPan,true);
