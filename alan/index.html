@@ -589,7 +589,42 @@ stage.onpointermove=e=>{
    const fx=o.cx-sx*o.w/2,fy=o.cy-sy*o.h/2;shape.w=w;shape.h=h;shape.cx=fx+sx*w/2;shape.cy=fy+sy*h/2
  }else if(shape.type==="circle")shape.rx=shape.ry=Math.max(16,Math.hypot(p.x-shape.cx,p.y-shape.cy));
  else if(shape.type==="ellipse"){if(dragging.id==="rx")shape.rx=Math.max(16,Math.abs(p.x-shape.cx));else shape.ry=Math.max(16,Math.abs(p.y-shape.cy))}
- else if(shape.type==="tri")shape.pts[+dragging.id]=p;
+ else if(shape.type==="parallelogram"){
+   const i=+dragging.id,o=dragging.original.pts.map(q=>({...q}));
+   // Bir köşe taşınınca karşı köşe, köşegenlerin orta noktası korunacak biçimde
+   // güncellenir. Böylece iki karşı kenar çifti her zaman paralel kalır.
+   const opp=(i+2)%4;
+   const dxp=p.x-o[i].x,dyp=p.y-o[i].y;
+   shape.pts=o.map(q=>({...q}));
+   shape.pts[i]={x:p.x,y:p.y};
+   shape.pts[opp]={x:o[opp].x-dxp,y:o[opp].y-dyp};
+ }else if(shape.type==="rhombus"){
+   const i=+dragging.id,o=dragging.original.pts.map(q=>({...q}));
+   // Eşkenar dörtgende köşegenler birbirini dik ve ortadan keser.
+   // Sürüklenen köşe kendi köşegeni üzerinde serbesttir; diğer köşegenin
+   // yarı uzunluğu, dört kenarın eşitliği bozulmadan korunur.
+   const opp=(i+2)%4,adj1=(i+1)%4,adj2=(i+3)%4;
+   const cx=(o[i].x+o[opp].x)/2,cy=(o[i].y+o[opp].y)/2;
+   let vx=p.x-cx,vy=p.y-cy;
+   if(Math.hypot(vx,vy)<16){const ovx=o[i].x-cx,ovy=o[i].y-cy,ol=Math.hypot(ovx,ovy)||1;vx=ovx/ol*16;vy=ovy/ol*16}
+   const oldOther=Math.hypot(o[adj1].x-cx,o[adj1].y-cy);
+   const vl=Math.hypot(vx,vy)||1,px=-vy/vl,py=vx/vl;
+   shape.pts=o.map(q=>({...q}));
+   shape.pts[i]={x:cx+vx,y:cy+vy};
+   shape.pts[opp]={x:cx-vx,y:cy-vy};
+   shape.pts[adj1]={x:cx+px*oldOther,y:cy+py*oldOther};
+   shape.pts[adj2]={x:cx-px*oldOther,y:cy-py*oldOther};
+ }else if(shape.type==="trapezoid"){
+   const i=+dragging.id,o=dragging.original.pts.map(q=>({...q}));
+   // Üst (0-1) ve alt (3-2) tabanlar yatay ve paralel kalır.
+   // Bir köşe sürüklenirken aynı tabandaki diğer köşenin yüksekliği birlikte değişir.
+   shape.pts=o.map(q=>({...q}));
+   shape.pts[i]={x:p.x,y:p.y};
+   if(i===0){shape.pts[1].y=p.y}
+   else if(i===1){shape.pts[0].y=p.y}
+   else if(i===2){shape.pts[3].y=p.y}
+   else if(i===3){shape.pts[2].y=p.y}
+ } else if(shape.type==="tri")shape.pts[+dragging.id]=p;
  else if(shape.type==="rightTri"){const i=+dragging.id,o=dragging.original.pts;if(i===0){shape.pts[0]=p;shape.pts[1].x=p.x;shape.pts[2].y=p.y}else if(i===1)shape.pts[1]={x:o[0].x,y:p.y};else shape.pts[2]={x:p.x,y:o[0].y}}
  refreshTiles();resetCounters();render()
 };
