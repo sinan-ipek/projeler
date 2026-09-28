@@ -83,6 +83,9 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
 .fractionDenominator{height:25px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#333;border-top:2px solid #333;margin-top:2px;opacity:1;transform:none;transition:opacity .2s ease,height .2s ease,margin .2s ease,border-color .2s ease}
 .fractionDenominator.hidden{opacity:0;height:0;margin-top:0;border-color:transparent;overflow:hidden}
 #midUnit.ready .counterBox,#smallUnit.ready .counterBox{background:#fff0f4}
+
+/* Sarı kaplama kareleri SVG dünya koordinatlarında olduğundan zoom/pan ile birlikte ölçeklenir.
+   Sayaç animasyonu başladığında oluşturulan geçici kareler de worldToScreen ile aynı görünüm dönüşümünü kullanır. */
 </style>
 </head>
 <body>
@@ -156,6 +159,10 @@ function applyView(){
 function screenToWorld(clientX,clientY){
   const r=stage.getBoundingClientRect();
   return {x:(clientX-r.left-view.tx)/view.scale,y:(clientY-r.top-view.ty)/view.scale};
+}
+function worldToScreen(x,y){
+ const r=stage.getBoundingClientRect();
+ return {x:r.left+view.tx+x*view.scale,y:r.top+view.ty+y*view.scale};
 }
 function isPanTarget(e){
   return e.target===stage||e.target===svg||e.target.id==="hint";
@@ -604,7 +611,7 @@ async function convertCounter(level){
  unit.classList.remove("ready");
 }
 midUnit.onclick=()=>convertCounter("mid");smallUnit.onclick=()=>convertCounter("small");
-async function animateSum(){if(!shape||!tiles.length||animating)return;animating=true;resetCounters();counterBig.textContent=counterMid.textContent=counterSmall.textContent="0";const sr=stage.getBoundingClientRect(),originals=tiles.map(t=>({...t})),sleep=ms=>new Promise(r=>setTimeout(r,ms)),flying=[];for(const t of originals){const d=document.createElement("div");d.className="flyTile";d.style.transition="none";d.style.left=(sr.left+t.x)+"px";d.style.top=(sr.top+t.y)+"px";d.style.width=t.w+"px";d.style.height=t.h+"px";d.style.boxSizing="border-box";d.style.borderWidth="1px";document.body.appendChild(d);flying.push({tile:t,el:d})}void document.body.offsetWidth;svg.querySelectorAll(".tile").forEach(e=>e.style.visibility="hidden");await sleep(35);for(const o of flying)o.el.style.transition="";async function send(o,delay,level){await sleep(delay);const t=o.tile,d=o.el,target=level==="big"?counterBig:level==="mid"?counterMid:counterSmall,r=target.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2;d.classList.add("lifted");d.style.borderWidth="1px";d.style.left=(tx-t.w/2)+"px";d.style.top=(ty-t.h/2+7)+"px";await sleep(510);counterState[level]++;setCounter(level,counterState[level]);d.remove()}async function group(level){const g=flying.filter(o=>o.tile.level===level);await Promise.all(g.map((o,i)=>send(o,i*82,level)))}await group("big");await group("mid");await group("small");counterState.counted=true;if(counterState.mid)midUnit.classList.add("ready");if(counterState.small)smallUnit.classList.add("ready");for(const o of flying)if(o.el.isConnected)o.el.remove();animating=false;keepEmptyAfterCount=true;tiles=[];render()}
+async function animateSum(){if(!shape||!tiles.length||animating)return;animating=true;resetCounters();counterBig.textContent=counterMid.textContent=counterSmall.textContent="0";const sr=stage.getBoundingClientRect(),originals=tiles.map(t=>({...t})),sleep=ms=>new Promise(r=>setTimeout(r,ms)),flying=[];for(const t of originals){const d=document.createElement("div");d.className="flyTile";d.style.transition="none";const sp=worldToScreen(t.x,t.y);d.style.left=sp.x+"px";d.style.top=sp.y+"px";d.style.width=(t.w*view.scale)+"px";d.style.height=(t.h*view.scale)+"px";d.style.boxSizing="border-box";d.style.borderWidth="1px";document.body.appendChild(d);flying.push({tile:t,el:d})}void document.body.offsetWidth;svg.querySelectorAll(".tile").forEach(e=>e.style.visibility="hidden");await sleep(35);for(const o of flying)o.el.style.transition="";async function send(o,delay,level){await sleep(delay);const t=o.tile,d=o.el,target=level==="big"?counterBig:level==="mid"?counterMid:counterSmall,r=target.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2;d.classList.add("lifted");d.style.borderWidth="1px";d.style.width=t.w+"px";d.style.height=t.h+"px";d.style.left=(tx-(t.w*view.scale)/2)+"px";d.style.top=(ty-(t.h*view.scale)/2+7)+"px";await sleep(510);counterState[level]++;setCounter(level,counterState[level]);d.remove()}async function group(level){const g=flying.filter(o=>o.tile.level===level);await Promise.all(g.map((o,i)=>send(o,i*82,level)))}await group("big");await group("mid");await group("small");counterState.counted=true;if(counterState.mid)midUnit.classList.add("ready");if(counterState.small)smallUnit.classList.add("ready");for(const o of flying)if(o.el.isConnected)o.el.remove();animating=false;keepEmptyAfterCount=true;tiles=[];render()}
 /* Zoom: fare konumunu sabit tutarak yakınlaştır / uzaklaştır. */
 stage.addEventListener("wheel",e=>{
   if(animating)return;
