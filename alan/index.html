@@ -572,7 +572,20 @@ function render(){
  if(t==="polygon"&&!polygonClosed){
    el=S("polyline",{points:shape.pts.map(p=>`${p.x},${p.y}`).join(" "),class:"free-preview"});
    svg.appendChild(el);
-   shape.pts.forEach((p,i)=>{const c=S("circle",{cx:p.x,cy:p.y,r:i===0?8:6,class:"free-point"+(i===0?" start":"")});svg.appendChild(c)});
+   shape.pts.forEach((p,i)=>{
+     const c=S("circle",{cx:p.x,cy:p.y,r:i===0?9:6,class:"free-point"+(i===0?" start":"")});
+     if(i===0){
+       c.style.cursor="pointer";
+       c.onpointerdown=e=>{
+         e.preventDefault();e.stopPropagation();
+         if(polygonPoints.length<3)return;
+         polygonClosed=true;
+         shape={type:"polygon",pts:polygonPoints.map(q=>({...q}))};
+         refreshTiles();resetCounters();hint.style.opacity="0";render();
+       };
+     }
+     svg.appendChild(c)
+   });
    return
  }
  if(t==="square"||t==="rect")el=S("rect",{x:shape.cx-shape.w/2,y:shape.cy-shape.h/2,width:shape.w,height:shape.h,class:"shape"});else if(t==="image"){const im=S("image",{x:shape.cx-shape.w/2,y:shape.cy-shape.h/2,width:shape.w,height:shape.h,href:imageObjectURL||"",opacity:.20,preserveAspectRatio:"none"});im.style.pointerEvents="none";svg.appendChild(im);el=S("rect",{x:shape.cx-shape.w/2,y:shape.cy-shape.h/2,width:shape.w,height:shape.h,class:"shape"})}
