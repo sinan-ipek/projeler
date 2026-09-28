@@ -86,6 +86,18 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
 
 /* Sarı kaplama kareleri SVG dünya koordinatlarında olduğundan zoom/pan ile birlikte ölçeklenir.
    Sayaç animasyonu başladığında oluşturulan geçici kareler de worldToScreen ile aynı görünüm dönüşümünü kullanır. */
+
+/* A + 1/4 B + 1/16 C */
+.counterBox{border-radius:10px!important}
+.coefficientTerm{display:flex;align-items:center;gap:7px;padding:0;border-radius:11px;transition:filter .22s ease}
+.coefficientFraction{width:28px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;font-weight:800;font-size:16px;line-height:18px;color:#333;opacity:1;transition:opacity .2s ease,width .2s ease,margin .2s ease}
+.coefficientFraction span{display:block;text-align:center}
+.coefficientFraction span:first-child{border-bottom:2px solid #333}
+.coefficientFraction.hidden{opacity:0;width:0;overflow:hidden;margin:0}
+#midUnit.ready,#smallUnit.ready{cursor:pointer}
+#midUnit.ready .counterBox,#smallUnit.ready .counterBox{background:#fff0f4;border-color:#d8aab6}
+#midUnit.ready:hover .counterBox,#smallUnit.ready:hover .counterBox{background:#fff5f7;border-color:#cf8fa0;box-shadow:0 0 8px rgba(255,155,184,.42),0 0 18px rgba(255,183,204,.28),inset 0 0 8px rgba(255,255,255,.9)}
+.fractionUnit,.fractionWrap,.fractionDenominator{all:unset}
 </style>
 </head>
 <body>
@@ -133,12 +145,14 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
   <div class="counterRack">
  <div class="counterUnit"><div class="counterBox" id="counterBig">—</div></div>
  <span class="counterPlus">+</span>
- <div class="counterUnit clickable fractionUnit" id="midUnit">
-   <div class="fractionWrap"><div class="counterBox numerator" id="counterMid">—</div><div class="fractionDenominator" id="midDivisor">4</div></div>
+ <div class="coefficientTerm clickable" id="midUnit">
+   <div class="coefficientFraction" id="midDivisor"><span>1</span><span>4</span></div>
+   <div class="counterBox" id="counterMid">—</div>
  </div>
  <span class="counterPlus">+</span>
- <div class="counterUnit clickable fractionUnit" id="smallUnit">
-   <div class="fractionWrap"><div class="counterBox numerator" id="counterSmall">—</div><div class="fractionDenominator" id="smallDivisor">16</div></div>
+ <div class="coefficientTerm clickable" id="smallUnit">
+   <div class="coefficientFraction" id="smallDivisor"><span>1</span><span>16</span></div>
+   <div class="counterBox" id="counterSmall">—</div>
  </div>
 </div>
   <button class="btn" id="clearBtn">Sıfırla</button>
