@@ -620,7 +620,7 @@ function shapeDown(e){
    const u=clamp((wx*vx+wy*vy)/((vx*vx+vy*vy)||1),0,1);
    minD=Math.min(minD,Math.hypot(q.x-(a.x+u*vx),q.y-(a.y+u*vy)))
  }
- if(minD<=13){
+ if(minD<=(shape.type==="pen"||shape.type==="polygon"?18:13)){
    dragging={kind:"move",start:q,original:JSON.parse(JSON.stringify(shape)),freeOriginal:freePoints.map(v=>({...v}))};
    e.currentTarget.setPointerCapture?.(e.pointerId)
  }else{
@@ -632,7 +632,11 @@ stage.onpointermove=e=>{
  if(dragging.kind==="move"){
    if(shape.type==="free")freePoints=dragging.freeOriginal.map(q=>({x:q.x+dx,y:q.y+dy}));
    else if(shape.type==="square"||shape.type==="rect"||shape.type==="circle"||shape.type==="ellipse"||shape.type==="image"){shape.cx=dragging.original.cx+dx;shape.cy=dragging.original.cy+dy}
-   else shape.pts=dragging.original.pts.map(q=>({x:q.x+dx,y:q.y+dy}))
+   else {
+     shape.pts=dragging.original.pts.map(q=>({x:q.x+dx,y:q.y+dy}));
+     if(shape.type==="polygon")polygonPoints=shape.pts.map(q=>({...q}));
+     if(shape.type==="pen")penPoints=shape.pts.map(q=>({...q}));
+   }
  }else if(shape?.type==="free"){
    const i=+dragging.index;freePoints[i]={x:dragging.freeOriginal[i].x+dx,y:dragging.freeOriginal[i].y+dy}
  }else if(shape.type==="square"||shape.type==="rect"||shape.type==="image"){
@@ -686,6 +690,7 @@ stage.onpointermove=e=>{
    shape.pts=Array.from({length:n},(_,k)=>({x:cx+r*Math.cos(a+k*2*Math.PI/n),y:cy+r*Math.sin(a+k*2*Math.PI/n)}));
  }else if(shape.type==="polygon"){
    shape.pts[+dragging.id]=p;
+   polygonPoints=shape.pts.map(q=>({...q}));
  } else if(shape.type==="tri")shape.pts[+dragging.id]=p;
  else if(shape.type==="rightTri"){const i=+dragging.id,o=dragging.original.pts;if(i===0){shape.pts[0]=p;shape.pts[1].x=p.x;shape.pts[2].y=p.y}else if(i===1)shape.pts[1]={x:o[0].x,y:p.y};else shape.pts[2]={x:p.x,y:o[0].y}}
  refreshTiles();resetCounters();render()
@@ -732,7 +737,7 @@ function finishPen(){
  if(!penDrawing)return;penDrawing=false;
  if(penPoints.length>=3){
    // Çizgiyi otomatik kapat: alan hesabı için serbest çizilen sınır poligona dönüşür.
-   shape={type:"pen",pts:penPoints.map(q=>({...q}))};refreshTiles();resetCounters();hint.style.opacity="0";render()
+   shape={type:"pen",pts:penPoints.map(q=>({...q}))};penPoints=shape.pts.map(q=>({...q}));refreshTiles();resetCounters();hint.style.opacity="0";render()
  }
 }
 stage.addEventListener("pointerup",finishPen);
