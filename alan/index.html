@@ -98,6 +98,14 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
 #midUnit.ready .counterBox,#smallUnit.ready .counterBox{background:#fff0f4;border-color:#d8aab6}
 #midUnit.ready:hover .counterBox,#smallUnit.ready:hover .counterBox{background:#fff5f7;border-color:#cf8fa0;box-shadow:0 0 8px rgba(255,155,184,.42),0 0 18px rgba(255,183,204,.28),inset 0 0 8px rgba(255,255,255,.9)}
 .fractionUnit,.fractionWrap,.fractionDenominator{all:unset}
+
+.counterPlus{transition:opacity .28s ease,width .28s ease,margin .28s ease,transform .28s ease}
+.coefficientTerm,.counterUnit{transition:opacity .28s ease,transform .48s cubic-bezier(.22,.75,.22,1),width .35s ease,max-width .35s ease,margin .35s ease}
+.termGone{opacity:0!important;pointer-events:none!important;width:0!important;max-width:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
+.plusGone{opacity:0!important;width:0!important;margin:0!important;overflow:hidden!important;transform:scale(.2)}
+.mergeClone{position:fixed;z-index:2100;pointer-events:none;margin:0!important;transition:left .52s cubic-bezier(.22,.75,.22,1),top .52s cubic-bezier(.22,.75,.22,1),transform .52s cubic-bezier(.22,.75,.22,1),opacity .18s ease}
+.mergeTargetPulse{animation:mergeTargetPulse .34s ease}
+@keyframes mergeTargetPulse{0%{transform:scale(1)}48%{transform:scale(1.08);box-shadow:0 0 18px rgba(255,173,196,.55)}100%{transform:scale(1)}}
 </style>
 </head>
 <body>
@@ -144,12 +152,12 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
   <button class="btn" id="areaBtn">Alan</button>
   <div class="counterRack">
  <div class="counterUnit"><div class="counterBox" id="counterBig">—</div></div>
- <span class="counterPlus">+</span>
+ <span class="counterPlus" id="plusAB">+</span>
  <div class="coefficientTerm clickable" id="midUnit">
    <div class="coefficientFraction" id="midDivisor"><span>1</span><span>4</span></div>
    <div class="counterBox" id="counterMid">—</div>
  </div>
- <span class="counterPlus">+</span>
+ <span class="counterPlus" id="plusBC">+</span>
  <div class="coefficientTerm clickable" id="smallUnit">
    <div class="coefficientFraction" id="smallDivisor"><span>1</span><span>16</span></div>
    <div class="counterBox" id="counterSmall">—</div>
@@ -163,7 +171,7 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
 (()=>{
 "use strict";
 const NS="http://www.w3.org/2000/svg",CELL=32,MID=CELL/2,SMALL=CELL/4,EPS=1e-7;
-const svg=document.getElementById("svg"),stage=document.getElementById("stage"),select=document.getElementById("shapeSelect"),areaBtn=document.getElementById("areaBtn"),clearBtn=document.getElementById("clearBtn"),hint=document.getElementById("hint");const counterBig=document.getElementById("counterBig"),counterMid=document.getElementById("counterMid"),counterSmall=document.getElementById("counterSmall"),midUnit=document.getElementById("midUnit"),smallUnit=document.getElementById("smallUnit"),midDivisor=document.getElementById("midDivisor"),smallDivisor=document.getElementById("smallDivisor");let counterState={big:0,mid:0,small:0,counted:false,midDone:false,smallDone:false,converting:false,midStage:0,smallStage:0};
+const svg=document.getElementById("svg"),stage=document.getElementById("stage"),select=document.getElementById("shapeSelect"),areaBtn=document.getElementById("areaBtn"),clearBtn=document.getElementById("clearBtn"),hint=document.getElementById("hint");const counterBig=document.getElementById("counterBig"),counterMid=document.getElementById("counterMid"),counterSmall=document.getElementById("counterSmall"),midUnit=document.getElementById("midUnit"),smallUnit=document.getElementById("smallUnit"),midDivisor=document.getElementById("midDivisor"),smallDivisor=document.getElementById("smallDivisor"),plusAB=document.getElementById("plusAB"),plusBC=document.getElementById("plusBC");let counterState={big:0,mid:0,small:0,counted:false,midDone:false,smallDone:false,converting:false,midStage:0,smallStage:0};
 let shape=null,freePoints=[],freeClosed=false,dragging=null,tiles=[],animating=false,tileSerial=0,keepEmptyAfterCount=false;
 let view={scale:1,tx:0,ty:0},panDrag=null;
 function applyView(){
@@ -588,41 +596,75 @@ function resetCounters(){
  counterState={big:0,mid:0,small:0,counted:false,midDone:false,smallDone:false,converting:false,midStage:0,smallStage:0};
  counterBig.textContent=counterMid.textContent=counterSmall.textContent="—";
  midUnit.classList.remove("ready");smallUnit.classList.remove("ready");
- midDivisor.classList.remove("hidden");smallDivisor.classList.remove("hidden");
+ midDivisor.classList.remove("hidden");smallDivisor.classList.remove("hidden");midUnit.classList.remove("termGone");smallUnit.classList.remove("termGone");plusAB.classList.remove("plusGone");plusBC.classList.remove("plusGone");
 }
 function setCounter(level,v){const e=level==="big"?counterBig:level==="mid"?counterMid:counterSmall;e.textContent=fmt(v,3);e.classList.remove("pulse");void e.offsetWidth;e.classList.add("pulse");setTimeout(()=>e.classList.remove("pulse"),220)}
 function centerOf(e){const r=e.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}}
+async function mergeTerm(sourceUnit,sourceBox,targetBox,value,onMerged){
+ counterState.converting=true;
+ const sr=sourceUnit.getBoundingClientRect(),tr=targetBox.getBoundingClientRect();
+ const clone=sourceUnit.cloneNode(true);
+ clone.removeAttribute("id");clone.querySelectorAll("[id]").forEach(e=>e.removeAttribute("id"));
+ clone.classList.remove("ready","clickable");clone.classList.add("mergeClone");
+ clone.style.width=sr.width+"px";clone.style.maxWidth=sr.width+"px";clone.style.height=sr.height+"px";
+ clone.style.left=sr.left+"px";clone.style.top=sr.top+"px";
+ document.body.appendChild(clone);
+ sourceUnit.style.opacity="0";
+ await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+ const cr=clone.getBoundingClientRect();
+ clone.style.left=(tr.left+tr.width/2-cr.width/2)+"px";
+ clone.style.top=(tr.top+tr.height/2-cr.height/2)+"px";
+ clone.style.transform="scale(.72)";
+ await new Promise(r=>setTimeout(r,520));
+ onMerged();
+ targetBox.classList.add("mergeTargetPulse");
+ setTimeout(()=>targetBox.classList.remove("mergeTargetPulse"),360);
+ clone.style.opacity="0";clone.style.transform="scale(.35)";
+ await new Promise(r=>setTimeout(r,190));clone.remove();
+ counterState.converting=false;
+}
 async function convertCounter(level){
  if(!counterState.counted||counterState.converting)return;
  const mid=level==="mid",unit=mid?midUnit:smallUnit,src=mid?counterMid:counterSmall,den=mid?midDivisor:smallDivisor;
  const stageKey=mid?"midStage":"smallStage",doneKey=mid?"midDone":"smallDone",valueKey=mid?"mid":"small",div=mid?4:16;
  if(counterState[doneKey])return;
 
- // 1. tıklama: B/4 veya C/16 hesaplanır. Payda artık görünmez;
- // sayaç doğrudan bölünmüş değeri temsil eder.
+ // İlk tıklama: katsayı uygulanır (B/4 veya C/16), kesir katsayısı kaybolur.
  if(counterState[stageKey]===0){
-   const n=counterState[valueKey];
-   if(!n)return;
-   counterState[valueKey]=n/div;
-   src.textContent=fmt(counterState[valueKey],3);
-   den.classList.add("hidden");
-   src.classList.add("pulse");
-   setTimeout(()=>src.classList.remove("pulse"),220);
-   counterState[stageKey]=1;
-   return;
+   const n=counterState[valueKey];if(!n)return;
+   counterState[valueKey]=n/div;src.textContent=fmt(counterState[valueKey],3);
+   den.classList.add("hidden");src.classList.add("pulse");setTimeout(()=>src.classList.remove("pulse"),220);
+   counterState[stageKey]=1;return;
  }
 
- // 2. tıklama: A := A + B (veya A := A + C); kullanılan terim sıfırlanır.
  const v=counterState[valueKey];
- counterState.big+=v;
- counterBig.textContent=fmt(counterState.big,3);
- counterBig.classList.add("pulse");
- setTimeout(()=>counterBig.classList.remove("pulse"),220);
- counterState[valueKey]=0;
- src.textContent="0";
- counterState[doneKey]=true;
- counterState[stageKey]=2;
- unit.classList.remove("ready");
+ if(mid){
+   // B -> A : A := A + B
+   await mergeTerm(midUnit,counterMid,counterBig,v,()=>{
+     counterState.big+=v;counterBig.textContent=fmt(counterState.big,3);
+     counterState.mid=0;counterMid.textContent="0";counterState.midDone=true;counterState.midStage=2;
+     midUnit.classList.add("termGone");plusAB.classList.add("plusGone");midUnit.style.opacity="";
+   });
+   midUnit.classList.remove("ready");
+ }else{
+   const bExists=!counterState.midDone&&!midUnit.classList.contains("termGone");
+   if(bExists){
+     // C -> B : B := B + C
+     await mergeTerm(smallUnit,counterSmall,counterMid,v,()=>{
+       counterState.mid+=v;counterMid.textContent=fmt(counterState.mid,3);
+       counterState.small=0;counterSmall.textContent="0";counterState.smallDone=true;counterState.smallStage=2;
+       smallUnit.classList.add("termGone");plusBC.classList.add("plusGone");smallUnit.style.opacity="";
+     });
+   }else{
+     // B yoksa C -> A : A := A + C
+     await mergeTerm(smallUnit,counterSmall,counterBig,v,()=>{
+       counterState.big+=v;counterBig.textContent=fmt(counterState.big,3);
+       counterState.small=0;counterSmall.textContent="0";counterState.smallDone=true;counterState.smallStage=2;
+       smallUnit.classList.add("termGone");plusBC.classList.add("plusGone");smallUnit.style.opacity="";
+     });
+   }
+   smallUnit.classList.remove("ready");
+ }
 }
 midUnit.onclick=()=>convertCounter("mid");smallUnit.onclick=()=>convertCounter("small");
 async function animateSum(){if(!shape||!tiles.length||animating)return;animating=true;resetCounters();counterBig.textContent=counterMid.textContent=counterSmall.textContent="0";const sr=stage.getBoundingClientRect(),originals=tiles.map(t=>({...t})),sleep=ms=>new Promise(r=>setTimeout(r,ms)),flying=[];for(const t of originals){const d=document.createElement("div");d.className="flyTile";d.style.transition="none";const sp=worldToScreen(t.x,t.y);d.style.left=sp.x+"px";d.style.top=sp.y+"px";d.style.width=(t.w*view.scale)+"px";d.style.height=(t.h*view.scale)+"px";d.style.boxSizing="border-box";d.style.borderWidth="1px";document.body.appendChild(d);flying.push({tile:t,el:d})}void document.body.offsetWidth;svg.querySelectorAll(".tile").forEach(e=>e.style.visibility="hidden");await sleep(35);for(const o of flying)o.el.style.transition="";async function send(o,delay,level){await sleep(delay);const t=o.tile,d=o.el,target=level==="big"?counterBig:level==="mid"?counterMid:counterSmall,r=target.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2;d.classList.add("lifted");d.style.borderWidth="1px";d.style.width=t.w+"px";d.style.height=t.h+"px";d.style.left=(tx-(t.w*view.scale)/2)+"px";d.style.top=(ty-(t.h*view.scale)/2+7)+"px";await sleep(510);counterState[level]++;setCounter(level,counterState[level]);d.remove()}async function group(level){const g=flying.filter(o=>o.tile.level===level);await Promise.all(g.map((o,i)=>send(o,i*82,level)))}await group("big");await group("mid");await group("small");counterState.counted=true;if(counterState.mid)midUnit.classList.add("ready");if(counterState.small)smallUnit.classList.add("ready");for(const o of flying)if(o.el.isConnected)o.el.remove();animating=false;keepEmptyAfterCount=true;tiles=[];render()}
