@@ -699,6 +699,7 @@ stage.addEventListener("pointerdown",e=>{
  const p=pt(e);
  if(t==="image"){imageInput.click();return}
  if(t==="pen"){
+   if(shape?.type==="pen"&&!penDrawing)return;
    penDrawing=true;penPoints=[p];shape={type:"pen",pts:penPoints};tiles=[];resetCounters();render();
    try{stage.setPointerCapture(e.pointerId)}catch(_){}
    return
