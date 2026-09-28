@@ -432,3 +432,140 @@
         grid-template-columns: 1fr 1fr;
       }
     }
+
+
+/* === SADE ARAYUZ === */
+.subtitle,
+.stage-header,
+.controls .control-group:nth-of-type(4),
+.hint,
+#minus30,
+#plus30,
+#reverse,
+.pitch-circle,
+.contact-line,
+.contact-point,
+.data-card:nth-child(n+3),
+.formula-title,
+.explanation {
+  display: none !important;
+}
+
+.page {
+  padding-top: 62px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.app {
+  grid-template-columns: 270px 1fr;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.controls .control-group:nth-of-type(5) {
+  margin-top: 26px;
+  padding-top: 22px;
+}
+
+.button-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+#togglePlay,
+#reset {
+  grid-column: auto;
+}
+
+.data-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 0;
+  gap: 1px;
+  background: var(--line);
+}
+
+.data-card {
+  min-height: 74px;
+  border: 0;
+  border-radius: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px;
+}
+
+.data-card .label {
+  font-size: 0;
+}
+
+.data-card:nth-child(1) .label::after {
+  content: "θ₁";
+  font-size: 18px;
+}
+
+.data-card:nth-child(2) .label::after {
+  content: "θ₂";
+  font-size: 18px;
+}
+
+.data-card .value {
+  margin-top: 0;
+  font-size: 24px;
+}
+
+.formula-panel {
+  width: fit-content;
+  max-width: calc(100% - 28px);
+  margin: 18px auto 0;
+  padding: 13px 22px;
+  border-radius: 14px;
+}
+
+.formula {
+  padding: 0;
+  background: transparent;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .controls .control-group:nth-of-type(5) {
+    grid-column: 1 / -1;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .controls {
+    display: block;
+  }
+
+  .controls .control-group:nth-of-type(5) {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+
+  .data-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
