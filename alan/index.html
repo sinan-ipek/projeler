@@ -123,15 +123,6 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
 @media(max-width:760px){#tileOpacity{width:82px}.opacityControl{height:38px;padding:0 7px}}
 
 .tile,.flyTile{opacity:var(--tile-alpha,1)}
-
-.flyTile.nextTile{
-  z-index:2205!important;
-  animation:nextTileGlow .52s ease-in-out infinite alternate;
-}
-@keyframes nextTileGlow{
-  from{filter:brightness(1.05) drop-shadow(0 0 2px rgba(255,210,35,.65));box-shadow:0 0 4px 2px rgba(255,221,60,.45),inset 0 0 5px rgba(255,255,255,.7)}
-  to{filter:brightness(1.55) drop-shadow(0 0 9px rgba(255,190,0,1));box-shadow:0 0 12px 5px rgba(255,211,35,.95),0 0 24px 8px rgba(255,225,90,.5),inset 0 0 8px rgba(255,255,255,1)}
-}
 </style>
 </head>
 <body>
@@ -825,17 +816,7 @@ async function convertCounter(level){
  }
 }
 midUnit.onclick=()=>convertCounter("mid");smallUnit.onclick=()=>convertCounter("small");
-async function animateSum(){if(!shape||!tiles.length||animating)return;animating=true;resetCounters();setCounterHTML(counterBig,0);setCounterHTML(counterMid,0);setCounterHTML(counterSmall,0);const sr=stage.getBoundingClientRect(),originals=tiles.map(t=>({...t})),sleep=ms=>new Promise(r=>setTimeout(r,ms)),flying=[];for(const t of originals){const d=document.createElement("div");d.className="flyTile";d.style.transition="none";const sp=worldToScreen(t.x,t.y);d.style.left=sp.x+"px";d.style.top=sp.y+"px";d.style.width=(t.w*view.scale)+"px";d.style.height=(t.h*view.scale)+"px";d.style.boxSizing="border-box";d.style.borderWidth="1px";document.body.appendChild(d);flying.push({tile:t,el:d})}void document.body.offsetWidth;svg.querySelectorAll(".tile").forEach(e=>e.style.visibility="hidden");await sleep(35);for(const o of flying)o.el.style.transition="";async function send(o,delay,level){
- await sleep(delay);
- const t=o.tile,d=o.el;
- d.classList.add("nextTile");
- await sleep(90);
- d.classList.remove("nextTile");
- const target=level==="big"?counterBig:level==="mid"?counterMid:counterSmall,r=target.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2;
- d.classList.add("lifted");d.style.borderWidth="1px";d.style.width=t.w+"px";d.style.height=t.h+"px";
- d.style.left=(tx-(t.w*view.scale)/2)+"px";d.style.top=(ty-(t.h*view.scale)/2+7)+"px";
- await sleep(330);counterState[level]++;setCounter(level,counterState[level]);d.remove()
-}async function group(level){const g=flying.filter(o=>o.tile.level===level);await Promise.all(g.map((o,i)=>send(o,i*130,level)))}await group("big");await group("mid");await group("small");counterState.counted=true;if(counterState.mid)midUnit.classList.add("ready");if(counterState.small)smallUnit.classList.add("ready");for(const o of flying)if(o.el.isConnected)o.el.remove();animating=false;keepEmptyAfterCount=true;tiles=[];render()}
+async function animateSum(){if(!shape||!tiles.length||animating)return;animating=true;resetCounters();setCounterHTML(counterBig,0);setCounterHTML(counterMid,0);setCounterHTML(counterSmall,0);const sr=stage.getBoundingClientRect(),originals=tiles.map(t=>({...t})),sleep=ms=>new Promise(r=>setTimeout(r,ms)),flying=[];for(const t of originals){const d=document.createElement("div");d.className="flyTile";d.style.transition="none";const sp=worldToScreen(t.x,t.y);d.style.left=sp.x+"px";d.style.top=sp.y+"px";d.style.width=(t.w*view.scale)+"px";d.style.height=(t.h*view.scale)+"px";d.style.boxSizing="border-box";d.style.borderWidth="1px";document.body.appendChild(d);flying.push({tile:t,el:d})}void document.body.offsetWidth;svg.querySelectorAll(".tile").forEach(e=>e.style.visibility="hidden");await sleep(35);for(const o of flying)o.el.style.transition="";async function send(o,delay,level){await sleep(delay);const t=o.tile,d=o.el,target=level==="big"?counterBig:level==="mid"?counterMid:counterSmall,r=target.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2;d.classList.add("lifted");d.style.borderWidth="1px";d.style.width=t.w+"px";d.style.height=t.h+"px";d.style.left=(tx-(t.w*view.scale)/2)+"px";d.style.top=(ty-(t.h*view.scale)/2+7)+"px";await sleep(510);counterState[level]++;setCounter(level,counterState[level]);d.remove()}async function group(level){const g=flying.filter(o=>o.tile.level===level);await Promise.all(g.map((o,i)=>send(o,i*82,level)))}await group("big");await group("mid");await group("small");counterState.counted=true;if(counterState.mid)midUnit.classList.add("ready");if(counterState.small)smallUnit.classList.add("ready");for(const o of flying)if(o.el.isConnected)o.el.remove();animating=false;keepEmptyAfterCount=true;tiles=[];render()}
 /* Zoom: fare konumunu sabit tutarak yakınlaştır / uzaklaştır. */
 stage.addEventListener("wheel",e=>{
   if(animating)return;
