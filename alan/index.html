@@ -697,7 +697,7 @@ stage.addEventListener("pointerdown",e=>{
  const polygonStartHit=t==="polygon"&&e.target?.classList?.contains("start");
  if(e.target!==stage&&e.target!==svg&&!polygonStartHit)return;
  const p=pt(e);
- if(t==="image"){imageInput.click();return}
+ if(t==="image"){if(!shape||shape.type!=="image")imageInput.click();return}
  if(t==="pen"){
    if(shape?.type==="pen"&&!penDrawing)return;
    penDrawing=true;penPoints=[p];shape={type:"pen",pts:penPoints};tiles=[];resetCounters();render();
