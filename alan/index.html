@@ -1,1 +1,653 @@
-The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Alan</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:#222}
+button,select{font:inherit;-webkit-tap-highlight-color:transparent}
+#app{height:100%;display:flex;flex-direction:column;background:#fff}
+.bar{min-height:68px;display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border-bottom:1px solid #ddd;box-shadow:0 3px 12px #0000000d;z-index:20}
+.title{font-weight:800;font-size:20px;margin-right:8px;white-space:nowrap}
+select,.btn{height:42px;border:1px solid #c9c9c9;border-radius:11px;background:#fff;color:#222;padding:0 14px;box-shadow:0 2px 5px #0000000d;cursor:pointer}
+.btn:hover,select:hover{border-color:#999}.btn:active{transform:translateY(1px)}
+#areaBtn{font-weight:800;background:#fff4cf;border-color:#d7b85c}
+#clearBtn{margin-left:auto}
+.equation{display:flex;align-items:center;gap:10px;margin-left:4px;white-space:nowrap}
+.eq{font-size:24px;font-weight:700}
+#result{min-width:118px;height:42px;padding:0 12px;border:2px solid #555;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-variant-numeric:tabular-nums}
+#stage{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none;background:#fff}
+svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
+.shape{fill:#ffffff08;stroke:#245f9d;stroke-width:3;vector-effect:non-scaling-stroke;cursor:move}
+.free-preview{fill:none;stroke:#245f9d;stroke-width:2.2;vector-effect:non-scaling-stroke}
+.handle{fill:#fff;stroke:#245f9d;stroke-width:2;cursor:grab;vector-effect:non-scaling-stroke}
+.handle:active{cursor:grabbing}
+.free-point{fill:#fff;stroke:#245f9d;stroke-width:2;vector-effect:non-scaling-stroke}
+.free-point.start{fill:#ffe07a}
+.tile{fill:#f6d66d;stroke:#8d7a38;stroke-width:.65;vector-effect:non-scaling-stroke;pointer-events:none}
+.tile.partial{fill:#f6d66d}
+#hint{position:absolute;left:50%;top:16px;transform:translateX(-50%);padding:7px 12px;border-radius:10px;background:#ffffffee;border:1px solid #ddd;color:#666;font-size:13px;pointer-events:none;box-shadow:0 2px 8px #0000000d;transition:opacity .2s}
+.flyTile{
+ position:fixed;box-sizing:border-box;z-index:1000;background:#f6d66d;border:1px solid #8d7a38;pointer-events:none;
+ box-shadow:0 0 0 rgba(0,0,0,0);
+ transition:
+   left .48s cubic-bezier(.52,.04,1,.42),
+   top .48s cubic-bezier(.52,.04,1,.42),
+   width .34s ease,height .34s ease,
+   transform .48s cubic-bezier(.52,.04,1,.42),
+   box-shadow .18s ease,filter .18s ease,opacity .14s ease;
+}
+.flyTile.lifted{box-shadow:0 10px 13px rgba(0,0,0,.23);filter:brightness(1.025);transform:translateY(-7px)}
+.flyTile.smallPiece{transition:left .52s cubic-bezier(.25,.1,.25,1),top .52s cubic-bezier(.25,.1,.25,1),width .42s ease,height .42s ease,transform .52s ease,box-shadow .18s ease,filter .18s ease,opacity .14s ease}
+.mergeBox{position:fixed;z-index:998;border:1px dashed #8d7a38;width:32px;height:32px;pointer-events:none;transform:translate(-50%,-50%);opacity:.38}
+@media(max-width:760px){.bar{gap:6px;padding:8px;min-height:60px;flex-wrap:wrap}.title{font-size:17px}select,.btn,#result{height:38px}#clearBtn{margin-left:0}.equation{gap:6px}.eq{font-size:20px}#result{min-width:92px}}
+
+.flyTile,.flyTile.smallPiece,.flyTile.lifted{
+ border-width:1px!important;
+ border-style:solid!important;
+ border-color:#8d7a38!important;
+}
+
+.topTools{position:fixed;top:12px;right:14px;z-index:1200;display:flex;gap:8px;align-items:center}
+.toolBtn,.langBtn{width:38px;height:38px;border:1px solid #cfcfcf;border-radius:10px;background:#fff;box-shadow:0 2px 8px #0002;display:grid;place-items:center;font-size:20px;cursor:pointer}
+.langWrap{position:relative}.langMenu{display:none;position:absolute;right:0;top:44px;background:#fff;border:1px solid #ddd;border-radius:10px;box-shadow:0 8px 24px #0002;padding:6px;min-width:170px}
+.langWrap.open .langMenu{display:block}.langChoice{padding:7px 9px;border-radius:7px;cursor:pointer;white-space:nowrap}.langChoice:hover{background:#f3f3f3}
+.helpModal{display:none;position:fixed;inset:0;z-index:1500;background:#0004;align-items:center;justify-content:center}
+.helpModal.open{display:flex}.helpCard{width:min(430px,calc(100vw - 32px));background:#fff;border-radius:16px;padding:22px;box-shadow:0 18px 55px #0004}
+.helpHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.helpHead b{font-size:22px}.closeHelp{border:0;background:transparent;font-size:26px;cursor:pointer}
+.helpRow{display:flex;align-items:center;gap:18px;margin:14px 0}.sampleSq{display:inline-block;background:#f6d66d;border:1px solid #8d7a38;box-sizing:border-box;flex:0 0 auto}
+.sampleBig{width:32px;height:32px}.sampleMid{width:16px;height:16px}.sampleSmall{width:8px;height:8px}
+.helpText{line-height:1.45;color:#333}
+</style>
+</head>
+<body>
+<div class="topTools">
+ <button class="toolBtn" id="homeBtn" title="Home" aria-label="Home">⌂</button>
+ <button class="toolBtn" id="helpBtn" title="Help" aria-label="Help">?</button>
+ <div class="langWrap" id="langWrap">
+  <button class="langBtn" id="langBtn" title="Language">🇹🇷</button>
+  <div class="langMenu" id="langMenu">
+   <div class="langChoice" data-lang="tr">🇹🇷 Türkçe</div>
+   <div class="langChoice" data-lang="en">🇬🇧 English</div>
+   <div class="langChoice" data-lang="de">🇩🇪 Deutsch</div>
+   <div class="langChoice" data-lang="fr">🇫🇷 Français</div>
+   <div class="langChoice" data-lang="it">🇮🇹 Italiano</div>
+   <div class="langChoice" data-lang="es">🇪🇸 Español</div>
+   <div class="langChoice" data-lang="zh">🇨🇳 中文</div>
+   <div class="langChoice" data-lang="el">🇬🇷 Ελληνικά</div>
+  </div>
+ </div>
+</div>
+<div class="helpModal" id="helpModal">
+ <div class="helpCard">
+  <div class="helpHead"><b id="helpTitle">Alan</b><button class="closeHelp" id="closeHelp">×</button></div>
+  <div class="helpText" id="helpIntro">Bir şeklin alanı, şeklin içine sığan birim karelerin toplamıdır.</div>
+  <div class="helpRow"><span class="sampleSq sampleBig"></span><span id="helpBig">Büyük kare = 1</span></div>
+  <div class="helpRow"><span class="sampleSq sampleMid"></span><span id="helpMid">Orta kare = 1/4</span></div>
+  <div class="helpRow"><span class="sampleSq sampleSmall"></span><span id="helpSmall">Küçük kare = 1/16</span></div>
+  <div class="helpText" id="helpEnd">Alanı bulmak için karelerin değerlerini toplarız.</div>
+ </div>
+</div>
+
+<div id="app">
+ <div class="bar">
+  <div class="title">Alan</div>
+  <select id="shapeSelect">
+   <option value="square">Kare</option><option value="rect">Dikdörtgen</option>
+   <option value="rightTri">Dik Üçgen</option><option value="tri">Üçgen</option>
+   <option value="circle">Daire</option><option value="ellipse">Elips</option><option value="free">Serbest</option>
+   <option value="bunny">🐰 Tavşan</option><option value="cat">🐱 Kedi</option>
+   <option value="heart">❤️ Kalp</option><option value="star">⭐ Yıldız</option>
+   <option value="fish">🐟 Balık</option><option value="cloud">☁️ Bulut</option><option value="image">🖼️ Resim</option>
+  </select>
+  <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+  <button class="btn" id="areaBtn">Alan</button>
+  <div class="equation"><span class="eq">=</span><div id="result">—</div></div>
+  <button class="btn" id="clearBtn">Sıfırla</button>
+ </div>
+ <div id="stage"><svg id="svg"></svg><div id="hint">Çalışma alanına tıklayın.</div></div>
+</div>
+<script>
+(()=>{
+"use strict";
+const NS="http://www.w3.org/2000/svg",CELL=32,MID=CELL/2,SMALL=CELL/4,EPS=1e-7;
+const svg=document.getElementById("svg"),stage=document.getElementById("stage"),select=document.getElementById("shapeSelect"),areaBtn=document.getElementById("areaBtn"),clearBtn=document.getElementById("clearBtn"),result=document.getElementById("result"),hint=document.getElementById("hint");
+let shape=null,freePoints=[],freeClosed=false,dragging=null,tiles=[],animating=false,tileSerial=0,keepEmptyAfterCount=false;let imageMask=null,imageObjectURL=null;const imageInput=document.getElementById("imageInput");
+
+function S(t,a={}){const e=document.createElementNS(NS,t);for(const[k,v]of Object.entries(a))e.setAttribute(k,v);return e}
+function pt(e){const r=stage.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function fmt(n,d=2){if(Math.abs(n-Math.round(n))<.005)return String(Math.round(n));return n.toFixed(d).replace(/0+$/,"").replace(/\.$/,"").replace(".",",")}
+function clearSVG(){while(svg.firstChild)svg.removeChild(svg.firstChild)}
+function reset(){
+ keepEmptyAfterCount=false;if(imageObjectURL){URL.revokeObjectURL(imageObjectURL);imageObjectURL=null}imageMask=null;shape=null;freePoints=[];freeClosed=false;dragging=null;tiles=[];animating=false;result.textContent="—";clearSVG();hint.style.opacity="1";hint.textContent="Çalışma alanına tıklayın.";document.querySelectorAll(".flyTile,.mergeBox").forEach(x=>x.remove())}
+clearBtn.onclick=reset;select.onchange=()=>{reset();if(select.value==="image")imageInput.click()};
+
+
+function scaledPoints(points,p,sx=1,sy=1){
+ return points.map(([x,y])=>({x:p.x+x*sx,y:p.y+y*sy}));
+}
+function ellipseArc(cx,cy,rx,ry,a0,a1,n){
+ const a=[];
+ for(let i=0;i<=n;i++){
+   const z=a0+(a1-a0)*i/n;
+   a.push([cx+rx*Math.cos(z),cy+ry*Math.sin(z)]);
+ }
+ return a;
+}
+function funShapePoints(t,p){
+ if(t==="star"){
+   const a=[];
+   for(let i=0;i<10;i++){
+     const r=i%2?52:112,z=-Math.PI/2+i*Math.PI/5;
+     a.push([r*Math.cos(z),r*Math.sin(z)]);
+   }
+   return scaledPoints(a,p);
+ }
+ if(t==="heart"){
+   const a=[];
+   for(let i=0;i<100;i++){
+     const z=Math.PI*2*i/100;
+     const x=16*Math.pow(Math.sin(z),3);
+     const y=-(13*Math.cos(z)-5*Math.cos(2*z)-2*Math.cos(3*z)-Math.cos(4*z));
+     a.push([x*7,y*7]);
+   }
+   return scaledPoints(a,p);
+ }
+ if(t==="fish"){
+   const a=[
+    [-125,0],[-82,-58],[-18,-78],[48,-64],[96,-34],[132,-68],[118,-18],
+    [150,0],[118,18],[132,68],[96,34],[48,64],[-18,78],[-82,58]
+   ];
+   return scaledPoints(a,p,.82,.82);
+ }
+ if(t==="cat"){
+   const a=[
+    [-100,55],[-94,-30],[-82,-92],[-45,-64],[-18,-100],[0,-70],
+    [18,-100],[45,-64],[82,-92],[94,-30],[100,55],
+    [68,92],[28,108],[0,112],[-28,108],[-68,92]
+   ];
+   return scaledPoints(a,p,.9,.9);
+ }
+ if(t==="bunny"){
+   // Saat yönünde: sol kulak -> baş -> gövde -> sağ kulak.
+   const a=[
+    [-50,-32],[-72,-105],[-62,-150],[-42,-158],[-27,-137],[-24,-78],
+    [-20,-48],[-62,-34],[-88,-6],[-96,35],[-82,78],[-52,101],
+    [-20,111],[0,112],[20,111],[52,101],[82,78],[96,35],[88,-6],
+    [62,-34],[20,-48],[24,-78],[27,-137],[42,-158],[62,-150],
+    [72,-105],[50,-32],[28,-12],[0,-5],[-28,-12]
+   ];
+   return scaledPoints(a,p,.78,.72);
+ }
+ if(t==="cloud"){
+   const a=[];
+   const arcs=[
+    [-72,18,48,38,Math.PI*.85,Math.PI*1.85,14],
+    [-40,-25,52,50,Math.PI*.95,Math.PI*1.72,14],
+    [10,-48,58,58,Math.PI*1.05,Math.PI*1.82,14],
+    [62,-22,52,48,Math.PI*1.2,Math.PI*2.05,14],
+    [88,25,42,38,Math.PI*1.45,Math.PI*2.45,14],
+   ];
+   for(const q of arcs)a.push(...ellipseArc(...q));
+   a.push([70,62],[25,72],[-30,70],[-76,58],[-108,35]);
+   return scaledPoints(a,p,.95,.95);
+ }
+ return[];
+}
+function loadImageMask(file){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{try{const scale=Math.min(1,700/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.max(1,Math.round(img.naturalWidth*scale)),h=Math.max(1,Math.round(img.naturalHeight*scale)),c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d",{willReadFrequently:true});ctx.drawImage(img,0,0,w,h);const data=ctx.getImageData(0,0,w,h).data,mask=new Uint8Array(w*h);for(let i=0,j=0;i<data.length;i+=4,j++){const r=data[i],g=data[i+1],b=data[i+2],a=data[i+3];mask[j]=(a>24&&!(r>=245&&g>=245&&b>=245))?1:0}resolve({url,w,h,mask,aspect:w/h})}catch(e){URL.revokeObjectURL(url);reject(e)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Resim okunamadı"))};img.src=url})}
+function imagePixelInside(x,y){if(!shape||shape.type!=="image"||!imageMask)return false;const left=shape.cx-shape.w/2,top=shape.cy-shape.h/2,u=(x-left)/shape.w,v=(y-top)/shape.h;if(u<0||u>=1||v<0||v>=1)return false;const ix=Math.min(imageMask.w-1,Math.max(0,Math.floor(u*imageMask.w))),iy=Math.min(imageMask.h-1,Math.max(0,Math.floor(v*imageMask.h)));return imageMask.mask[iy*imageMask.w+ix]===1}
+function imageCoverage(x,y,w,n=5){let hit=0;for(let j=0;j<n;j++)for(let i=0;i<n;i++)if(imagePixelInside(x+(i+.5)*w/n,y+(j+.5)*w/n))hit++;return hit/(n*n)}
+function defaultShape(t,p){
+ const W=stage.clientWidth,H=stage.clientHeight;p.x=clamp(p.x,100,W-100);p.y=clamp(p.y,90,H-90);
+ if(t==="square")return{type:t,cx:p.x,cy:p.y,w:192,h:192};
+ if(t==="rect")return{type:t,cx:p.x,cy:p.y,w:256,h:160};
+ if(t==="rightTri")return{type:t,pts:[{x:p.x-112,y:p.y+80},{x:p.x-112,y:p.y-80},{x:p.x+112,y:p.y+80}]};
+ if(t==="tri")return{type:t,pts:[{x:p.x,y:p.y-105},{x:p.x-115,y:p.y+90},{x:p.x+115,y:p.y+90}]};
+ if(t==="circle")return{type:t,cx:p.x,cy:p.y,rx:96,ry:96};
+ if(t==="ellipse")return{type:t,cx:p.x,cy:p.y,rx:128,ry:80};
+ if(["bunny","cat","heart","star","fish","cloud"].includes(t))
+   return{type:t,pts:funShapePoints(t,p)};
+}
+imageInput.onchange=async()=>{const file=imageInput.files&&imageInput.files[0];imageInput.value="";if(!file){select.value="square";return}try{const loaded=await loadImageMask(file);if(imageObjectURL)URL.revokeObjectURL(imageObjectURL);imageObjectURL=loaded.url;imageMask=loaded;const W=stage.clientWidth,H=stage.clientHeight,maxW=Math.min(420,W*.62),maxH=Math.min(360,H*.68);let w=maxW,h=w/loaded.aspect;if(h>maxH){h=maxH;w=h*loaded.aspect}shape={type:"image",cx:W/2,cy:H/2,w,h};refreshTiles();hint.style.opacity="0";result.textContent="—";render()}catch(e){alert("Resim okunamadı.");select.value="square"}};
+function smoothClosedPolygon(P){
+ if(P.length<3)return P.slice();const out=[],steps=20,n=P.length;
+ for(let i=0;i<n;i++){const p0=P[(i-1+n)%n],p1=P[i],p2=P[(i+1)%n],p3=P[(i+2)%n];
+  for(let j=0;j<steps;j++){const t=j/steps,t2=t*t,t3=t2*t;out.push({
+   x:.5*((2*p1.x)+(-p0.x+p2.x)*t+(2*p0.x-5*p1.x+4*p2.x-p3.x)*t2+(-p0.x+3*p1.x-3*p2.x+p3.x)*t3),
+   y:.5*((2*p1.y)+(-p0.y+p2.y)*t+(2*p0.y-5*p1.y+4*p2.y-p3.y)*t2+(-p0.y+3*p1.y-3*p2.y+p3.y)*t3)
+  })}}
+ return out
+}
+function smoothPath(P,closed){
+ if(!P.length)return"";
+ if(P.length<3)return"M "+P.map((p,i)=>`${i?"L":""} ${p.x} ${p.y}`).join(" ");
+ if(closed){const q=smoothClosedPolygon(P);return"M "+q.map((p,i)=>`${i?"L":""} ${p.x} ${p.y}`).join(" ")+" Z"}
+ let d=`M ${P[0].x} ${P[0].y}`;
+ for(let i=0;i<P.length-1;i++){const p0=P[Math.max(0,i-1)],p1=P[i],p2=P[i+1],p3=P[Math.min(P.length-1,i+2)],c1={x:p1.x+(p2.x-p0.x)/6,y:p1.y+(p2.y-p0.y)/6},c2={x:p2.x-(p3.x-p1.x)/6,y:p2.y-(p3.y-p1.y)/6};d+=` C ${c1.x} ${c1.y},${c2.x} ${c2.y},${p2.x} ${p2.y}`}
+ return d
+}
+function shapePolygon(){
+ if(!shape)return[];const t=shape.type;
+ if(t==="square"||t==="rect"||t==="image"){const x=shape.cx-shape.w/2,y=shape.cy-shape.h/2;return[{x,y},{x:x+shape.w,y},{x:x+shape.w,y:y+shape.h},{x,y:y+shape.h}]}
+ if(t==="tri"||t==="rightTri"||["bunny","cat","heart","star","fish","cloud"].includes(t))return shape.pts.map(p=>({...p}));
+ if(t==="circle"||t==="ellipse"){const a=[];for(let i=0;i<200;i++){const z=i/200*Math.PI*2;a.push({x:shape.cx+shape.rx*Math.cos(z),y:shape.cy+shape.ry*Math.sin(z)})}return a}
+ if(t==="free"&&freeClosed)return smoothClosedPolygon(freePoints);
+ return[]
+}
+function pointInPolygon(p,P){let ins=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const a=P[i],b=P[j];if(((a.y>p.y)!=(b.y>p.y))&&(p.x<(b.x-a.x)*(p.y-a.y)/((b.y-a.y)||1e-12)+a.x))ins=!ins}return ins}
+function clipEdge(P,inside,inter){const o=[];if(!P.length)return o;let A=P[P.length-1],ai=inside(A);for(const B of P){const bi=inside(B);if(bi){if(!ai)o.push(inter(A,B));o.push(B)}else if(ai)o.push(inter(A,B));A=B;ai=bi}return o}
+function clipRect(P,x0,y0,x1,y1){let p=P;
+ p=clipEdge(p,q=>q.x>=x0-EPS,(a,b)=>{let t=(x0-a.x)/(b.x-a.x);return{x:x0,y:a.y+t*(b.y-a.y)}});
+ p=clipEdge(p,q=>q.x<=x1+EPS,(a,b)=>{let t=(x1-a.x)/(b.x-a.x);return{x:x1,y:a.y+t*(b.y-a.y)}});
+ p=clipEdge(p,q=>q.y>=y0-EPS,(a,b)=>{let t=(y0-a.y)/(b.y-a.y);return{x:a.x+t*(b.x-a.x),y:y0}});
+ p=clipEdge(p,q=>q.y<=y1+EPS,(a,b)=>{let t=(y1-a.y)/(b.y-a.y);return{x:a.x+t*(b.x-a.x),y:y1}});
+ return p
+}
+function polyArea(P){let s=0;for(let i=0,j=P.length-1;i<P.length;j=i++)s+=P[j].x*P[i].y-P[i].x*P[j].y;return Math.abs(s)/2}
+
+function calculateTiles(){
+ const P=shapePolygon();
+ if(P.length<3)return[];
+
+ let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+ P.forEach(p=>{
+   minX=Math.min(minX,p.x); minY=Math.min(minY,p.y);
+   maxX=Math.max(maxX,p.x); maxY=Math.max(maxY,p.y);
+ });
+
+ const out=[];
+ if(shape.type==="image"&&imageMask){const left=shape.cx-shape.w/2,top=shape.cy-shape.h/2,right=left+shape.w,bottom=top+shape.h,x0=left,y0=bottom-Math.ceil(shape.h/CELL)*CELL;for(let y=y0;y<bottom-EPS;y+=CELL)for(let x=x0;x<right-EPS;x+=CELL){const cov=imageCoverage(x,y,CELL,7);if(cov>=.985){out.push({id:"t"+(++tileSerial),x,y,w:CELL,h:CELL,v:1,level:"big",full:true});continue}if(cov<=.01)continue;for(let my=0;my<2;my++)for(let mx=0;mx<2;mx++){const xx=x+mx*MID,yy=y+my*MID,mc=imageCoverage(xx,yy,MID,5);if(mc>=.96){out.push({id:"t"+(++tileSerial),x:xx,y:yy,w:MID,h:MID,v:.25,level:"mid",full:false});continue}if(mc<=.02)continue;for(let sy=0;sy<2;sy++)for(let sx=0;sx<2;sx++){const xxx=xx+sx*SMALL,yyy=yy+sy*SMALL;if(imageCoverage(xxx,yyy,SMALL,3)>=.5)out.push({id:"t"+(++tileSerial),x:xxx,y:yyy,w:SMALL,h:SMALL,v:1/16,level:"small",full:false})}}}return out}
+ /* ---------------------------------------------------------
+    ŞEKLE BAĞLI ORİJİN
+    ---------------------------------------------------------
+    square / rect : sol-alt köşe
+    circle/ellipse: merkez
+    right         : dik açı köşesi
+    tri/free      : alan ağırlık merkezi
+
+    Grid bu orijine bağlıdır. Şekil taşındığında orijin de
+    taşındığı için kare döşemesi şekille birlikte hareket eder.
+ --------------------------------------------------------- */
+
+ function polygonCentroid(poly){
+   let A=0,Cx=0,Cy=0;
+   for(let i=0;i<poly.length;i++){
+     const a=poly[i],b=poly[(i+1)%poly.length];
+     const cross=a.x*b.y-b.x*a.y;
+     A+=cross;
+     Cx+=(a.x+b.x)*cross;
+     Cy+=(a.y+b.y)*cross;
+   }
+   A*=.5;
+
+   if(Math.abs(A)<1e-8){
+     let sx=0,sy=0;
+     poly.forEach(q=>{sx+=q.x;sy+=q.y});
+     return{x:sx/poly.length,y:sy/poly.length};
+   }
+
+   return{
+     x:Cx/(6*A),
+     y:Cy/(6*A)
+   };
+ }
+
+ function getShapeOrigin(){
+   if(!shape)return{x:0,y:0};
+
+   if(shape.type==="square" || shape.type==="rect"){
+     // Ekran koordinatlarında alt = maxY.
+     return{x:minX,y:maxY};
+   }
+
+   if(shape.type==="circle" || shape.type==="ellipse"){
+     return{x:shape.cx,y:shape.cy};
+   }
+
+   if(shape.type==="right"){
+     /* Dik üçgenin dik açılı köşesini otomatik bul.
+        Üç köşeden hangisinde iki kenarın skaler çarpımı
+        sıfıra en yakınsa orası dik köşedir. */
+     const pts=shape.pts || P.slice(0,3);
+     let best=pts[0],bestDot=Infinity;
+
+     for(let i=0;i<3;i++){
+       const a=pts[i];
+       const b=pts[(i+1)%3];
+       const c=pts[(i+2)%3];
+
+       const ux=b.x-a.x,uy=b.y-a.y;
+       const vx=c.x-a.x,vy=c.y-a.y;
+
+       const lu=Math.hypot(ux,uy)||1;
+       const lv=Math.hypot(vx,vy)||1;
+       const normalized=Math.abs((ux*vx+uy*vy)/(lu*lv));
+
+       if(normalized<bestDot){
+         bestDot=normalized;
+         best=a;
+       }
+     }
+     return{x:best.x,y:best.y};
+   }
+
+   if(shape.type==="tri" || shape.type==="free" ||
+      ["bunny","cat","heart","star","fish","cloud"].includes(shape.type)){
+     return polygonCentroid(P);
+   }
+
+   return polygonCentroid(P);
+ }
+
+ const origin=getShapeOrigin();
+
+ /* Grid çizgileri:
+    x = origin.x + n*CELL
+    y = origin.y + n*CELL
+
+    Başlangıç hücresini şeklin bounding box'ını tamamen
+    kapsayacak biçimde orijine göre hesapla. */
+ const x0=origin.x+Math.floor((minX-origin.x)/CELL)*CELL;
+ const y0=origin.y+Math.floor((minY-origin.y)/CELL)*CELL;
+ const x1=origin.x+Math.ceil((maxX-origin.x)/CELL)*CELL;
+ const y1=origin.y+Math.ceil((maxY-origin.y)/CELL)*CELL;
+
+ function insideSquare(x,y,w){
+   const inset=.6;
+   return pointInPolygon({x:x+inset,y:y+inset},P) &&
+          pointInPolygon({x:x+w-inset,y:y+inset},P) &&
+          pointInPolygon({x:x+w-inset,y:y+w-inset},P) &&
+          pointInPolygon({x:x+inset,y:y+w-inset},P);
+ }
+
+ function touchesShape(x,y,w){
+   if(pointInPolygon({x:x+w/2,y:y+w/2},P))return true;
+   const c=clipRect(P,x,y,x+w,y+w);
+   return c.length>=3 && polyArea(c)>1;
+ }
+
+ for(let y=y0;y<y1-EPS;y+=CELL){
+   for(let x=x0;x<x1-EPS;x+=CELL){
+
+     if(insideSquare(x,y,CELL)){
+       out.push({
+         id:"t"+(++tileSerial),
+         x,y,w:CELL,h:CELL,
+         v:1,level:"big",full:true
+       });
+       continue;
+     }
+
+     if(!touchesShape(x,y,CELL))continue;
+
+     /* Büyük hücrenin şekil sınırında kalan kısmını
+        dört orta kareyle çöz. */
+     for(let my=0;my<2;my++){
+       for(let mx=0;mx<2;mx++){
+         const xx=x+mx*MID;
+         const yy=y+my*MID;
+
+         if(insideSquare(xx,yy,MID)){
+           out.push({
+             id:"t"+(++tileSerial),
+             x:xx,y:yy,w:MID,h:MID,
+             v:.25,level:"mid",full:false
+           });
+           continue;
+         }
+
+         if(!touchesShape(xx,yy,MID))continue;
+
+         /* Orta hücrenin sınırda kalan kısmını
+            dört küçük kareyle çöz. */
+         for(let sy=0;sy<2;sy++){
+           for(let sx=0;sx<2;sx++){
+             const xxx=xx+sx*SMALL;
+             const yyy=yy+sy*SMALL;
+
+             if(pointInPolygon({
+               x:xxx+SMALL/2,
+               y:yyy+SMALL/2
+             },P)){
+               out.push({
+                 id:"t"+(++tileSerial),
+                 x:xxx,y:yyy,w:SMALL,h:SMALL,
+                 v:1/16,level:"small",full:false
+               });
+             }
+           }
+         }
+       }
+     }
+   }
+ }
+
+ return out;
+}
+function refreshTiles(){
+ keepEmptyAfterCount=false;
+ if(shape&&(shape.type!=="free"||freeClosed))tiles=calculateTiles();
+ else tiles=[];
+}
+
+function render(){
+ clearSVG();if(!shape&&freePoints.length===0)return;
+ if(shape?.type==="free"||freePoints.length){
+   const path=S("path",{d:smoothPath(freePoints,freeClosed),class:freeClosed?"shape":"free-preview"});
+   svg.appendChild(path);
+   if(freeClosed){path.dataset.role="shape";path.onpointerdown=shapeDown}
+   if(freeClosed)drawTiles();
+   freePoints.forEach((p,i)=>{const c=S("circle",{cx:p.x,cy:p.y,r:i===0&&!freeClosed?8:6,class:"free-point"+(i===0?" start":"")});c.dataset.index=i;c.onpointerdown=handleDown;svg.appendChild(c)});
+   return
+ }
+ let el,t=shape.type;
+ if(t==="square"||t==="rect")el=S("rect",{x:shape.cx-shape.w/2,y:shape.cy-shape.h/2,width:shape.w,height:shape.h,class:"shape"});else if(t==="image"){const im=S("image",{x:shape.cx-shape.w/2,y:shape.cy-shape.h/2,width:shape.w,height:shape.h,href:imageObjectURL||"",opacity:.20,preserveAspectRatio:"none"});im.style.pointerEvents="none";svg.appendChild(im);el=S("rect",{x:shape.cx-shape.w/2,y:shape.cy-shape.h/2,width:shape.w,height:shape.h,class:"shape"})}
+ else if(t==="circle"||t==="ellipse")el=S("ellipse",{cx:shape.cx,cy:shape.cy,rx:shape.rx,ry:shape.ry,class:"shape"});
+ else el=S("polygon",{points:shape.pts.map(p=>`${p.x},${p.y}`).join(" "),class:"shape"});
+ el.dataset.role="shape";el.onpointerdown=shapeDown;svg.appendChild(el);
+ drawTiles();drawHandles()
+}
+function drawTiles(){for(const t of tiles){const r=S("rect",{x:t.x,y:t.y,width:t.w,height:t.h,class:"tile"+(t.full?"":" partial"),"data-tile-id":t.id});svg.appendChild(r)}}
+function drawHandles(){
+ if(!shape)return;let hs=[];
+ if(shape.type==="square"||shape.type==="rect"||shape.type==="image"){const x=shape.cx-shape.w/2,y=shape.cy-shape.h/2,w=shape.w,h=shape.h;hs=[{x,y,id:"nw"},{x:x+w,y,id:"ne"},{x:x+w,y:y+h,id:"se"},{x,y:y+h,id:"sw"}]}
+ else if(shape.type==="circle")hs=[{x:shape.cx+shape.rx,y:shape.cy,id:"r"}];
+ else if(shape.type==="ellipse")hs=[{x:shape.cx+shape.rx,y:shape.cy,id:"rx"},{x:shape.cx,y:shape.cy-shape.ry,id:"ry"}];
+ else if(shape.type==="tri"||shape.type==="rightTri")hs=shape.pts.map((p,i)=>({...p,id:String(i)}));
+ hs.forEach(h=>{const c=S("circle",{cx:h.x,cy:h.y,r:7,class:"handle"});c.dataset.handle=h.id;c.onpointerdown=handleDown;svg.appendChild(c)})
+}
+function handleDown(e){
+ e.stopPropagation();
+ if(shape?.type==="free"&&!freeClosed){const i=+e.currentTarget.dataset.index;if(i===0&&freePoints.length>=3){freeClosed=true;refreshTiles();hint.style.opacity="0";render();return}}
+ dragging={kind:"handle",id:e.currentTarget.dataset.handle,index:e.currentTarget.dataset.index,start:pt(e),original:JSON.parse(JSON.stringify(shape)),freeOriginal:freePoints.map(q=>({...q}))};
+ e.currentTarget.setPointerCapture?.(e.pointerId)
+}
+function shapeDown(e){
+ if(animating)return;
+ e.stopPropagation();
+ // Kenardan tutmak = taşıma. İç bölgeye tıklamak = alan animasyonu.
+ const q=pt(e),P=shapePolygon();
+ let minD=Infinity;
+ for(let i=0,j=P.length-1;i<P.length;j=i++){
+   const a=P[j],b=P[i],vx=b.x-a.x,vy=b.y-a.y,wx=q.x-a.x,wy=q.y-a.y;
+   const u=clamp((wx*vx+wy*vy)/((vx*vx+vy*vy)||1),0,1);
+   minD=Math.min(minD,Math.hypot(q.x-(a.x+u*vx),q.y-(a.y+u*vy)))
+ }
+ if(minD<=13){
+   dragging={kind:"move",start:q,original:JSON.parse(JSON.stringify(shape)),freeOriginal:freePoints.map(v=>({...v}))};
+   e.currentTarget.setPointerCapture?.(e.pointerId)
+ }else{
+   animateSum()
+ }
+}
+stage.onpointermove=e=>{
+ if(!dragging)return;const p=pt(e),dx=p.x-dragging.start.x,dy=p.y-dragging.start.y;
+ if(dragging.kind==="move"){
+   if(shape.type==="free")freePoints=dragging.freeOriginal.map(q=>({x:q.x+dx,y:q.y+dy}));
+   else if(shape.type==="square"||shape.type==="rect"||shape.type==="circle"||shape.type==="ellipse"||shape.type==="image"){shape.cx=dragging.original.cx+dx;shape.cy=dragging.original.cy+dy}
+   else shape.pts=dragging.original.pts.map(q=>({x:q.x+dx,y:q.y+dy}))
+ }else if(shape?.type==="free"){
+   const i=+dragging.index;freePoints[i]={x:dragging.freeOriginal[i].x+dx,y:dragging.freeOriginal[i].y+dy}
+ }else if(shape.type==="square"||shape.type==="rect"||shape.type==="image"){
+   const o=dragging.original,sx=dragging.id.includes("e")?1:-1,sy=dragging.id.includes("s")?1:-1;
+   let w=Math.max(32,o.w+sx*dx),h=Math.max(32,o.h+sy*dy);
+   if(shape.type==="square"){const z=Math.max(w,h);w=h=z}if(shape.type==="image"&&imageMask){const ar=imageMask.aspect||1;if(w/h>ar)h=w/ar;else w=h*ar}
+   const fx=o.cx-sx*o.w/2,fy=o.cy-sy*o.h/2;shape.w=w;shape.h=h;shape.cx=fx+sx*w/2;shape.cy=fy+sy*h/2
+ }else if(shape.type==="circle")shape.rx=shape.ry=Math.max(16,Math.hypot(p.x-shape.cx,p.y-shape.cy));
+ else if(shape.type==="ellipse"){if(dragging.id==="rx")shape.rx=Math.max(16,Math.abs(p.x-shape.cx));else shape.ry=Math.max(16,Math.abs(p.y-shape.cy))}
+ else if(shape.type==="tri")shape.pts[+dragging.id]=p;
+ else if(shape.type==="rightTri"){const i=+dragging.id,o=dragging.original.pts;if(i===0){shape.pts[0]=p;shape.pts[1].x=p.x;shape.pts[2].y=p.y}else if(i===1)shape.pts[1]={x:o[0].x,y:p.y};else shape.pts[2]={x:p.x,y:o[0].y}}
+ refreshTiles();result.textContent="—";render()
+};
+stage.onpointerup=()=>dragging=null;stage.onpointercancel=()=>dragging=null;
+
+stage.addEventListener("pointerdown",e=>{
+ if(animating||e.target!==stage&&e.target!==svg)return;
+ const p=pt(e),t=select.value;
+ if(t==="image"){imageInput.click();return}
+ if(t==="free"){
+   if(freeClosed)return;
+   if(freePoints.length>=3&&dist(p,freePoints[0])<=14){freeClosed=true;shape={type:"free"};refreshTiles();hint.style.opacity="0";render();return}
+   freePoints.push(p);shape={type:"free"};hint.textContent=freePoints.length<3?"Noktalar ekleyin.":"Kapatmak için ilk noktaya tıklayın.";render();return
+ }
+ if(!shape){shape=defaultShape(t,p);refreshTiles();hint.style.opacity="0";render()}
+});
+areaBtn.onclick=()=>{if(shape&&!animating&&(shape.type!=="free"||freeClosed))animateSum()};
+
+async function animateSum(){
+ if(!shape||!tiles.length||animating)return;
+ animating=true;
+ result.textContent="0";
+
+ const sr=stage.getBoundingClientRect();
+ const tr=result.getBoundingClientRect();
+ const tx=tr.left+tr.width/2,ty=tr.top+tr.height/2;
+ const originals=tiles.map(t=>({...t}));
+ let count=0;
+
+ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+ function add(v){
+   count+=v;
+   result.textContent=fmt(count,3);
+ }
+
+ /* Görünen bütün karelerin animasyon kopyalarını önce TAM aynı yerde oluştur.
+    Sonra SVG kareleri gizlenir. Böylece başlangıçta yanıp sönme olmaz. */
+ const flying=[];
+ for(const t of originals){
+   const d=document.createElement("div");
+   d.className="flyTile";
+   d.style.transition="none";
+   d.style.left=(sr.left+t.x)+"px";
+   d.style.top=(sr.top+t.y)+"px";
+   d.style.width=t.w+"px";
+   d.style.height=t.h+"px";
+   d.style.boxSizing="border-box";
+   d.style.borderWidth="1px";
+   document.body.appendChild(d);
+   flying.push({tile:t,el:d});
+ }
+
+ void document.body.offsetWidth;
+ svg.querySelectorAll(".tile").forEach(el=>el.style.visibility="hidden");
+
+ await sleep(35);
+
+ // Uçuş transition'ını aç.
+ for(const o of flying)o.el.style.transition="";
+
+ async function send(o,delay){
+   await sleep(delay);
+
+   const t=o.tile,d=o.el;
+
+   // Kare büyümez, kenarlığı kalınlaşmaz.
+   // Sadece hafifçe yüzeyden kalkar ve counter'a hızlanarak gider.
+   d.classList.add("lifted");
+   d.style.borderWidth="1px";
+   d.style.left=(tx-t.w/2)+"px";
+   d.style.top=(ty-t.h/2+7)+"px";
+
+   await sleep(510);
+
+   count+=t.v;
+   result.textContent=fmt(count,3);
+   d.remove();
+ }
+
+ /* Hareket sırası kesin:
+    1) büyük kareler
+    2) orta kareler
+    3) küçük kareler.
+    Bir grup tamamen bitmeden sonraki grup başlamaz. */
+ async function sendGroup(level){
+   const group=flying.filter(o=>o.tile.level===level);
+   if(!group.length)return;
+   const jobs=group.map((o,i)=>send(o,i*82));
+   await Promise.all(jobs);
+ }
+
+ await sendGroup("big");
+ await sendGroup("mid");
+ await sendGroup("small");
+
+ const exact=shape.type==="image"?originals.reduce((sum,t)=>sum+t.v,0):polyArea(shapePolygon())/(CELL*CELL);
+ result.textContent=fmt(exact,2)+" br²";
+
+ for(const o of flying){
+   if(o.el.isConnected)o.el.remove();
+ }
+
+ /* Sayım bitti: şeklin içi boş kalır.
+    refreshTiles burada ÇAĞRILMAZ.
+    Kullanıcı şekli veya bir tutamacı hareket ettirdiğinde mevcut
+    pointermove kodundaki refreshTiles() yeniden dolgu üretir. */
+ animating=false;
+ keepEmptyAfterCount=true;
+ tiles=[];
+ render();
+}
+reset();
+})();
+
+const UI_LANGS={
+ tr:{flag:"🇹🇷",title:"Alan",help:"Alan",intro:"Bir şeklin alanı, şeklin içine sığan birim karelerin toplamıdır.",big:"Büyük kare = 1",mid:"Orta kare = 1/4",small:"Küçük kare = 1/16",end:"Alanı bulmak için karelerin değerlerini toplarız."},
+ en:{flag:"🇬🇧",title:"Area",help:"Area",intro:"The area of a shape is the sum of the unit squares that fit inside it.",big:"Large square = 1",mid:"Medium square = 1/4",small:"Small square = 1/16",end:"Add the values of the squares to find the area."},
+ de:{flag:"🇩🇪",title:"Fläche",help:"Fläche",intro:"Die Fläche einer Form ist die Summe der Einheitsquadrate in der Form.",big:"Großes Quadrat = 1",mid:"Mittleres Quadrat = 1/4",small:"Kleines Quadrat = 1/16",end:"Addiere die Werte der Quadrate, um die Fläche zu bestimmen."},
+ fr:{flag:"🇫🇷",title:"Aire",help:"Aire",intro:"L’aire d’une forme est la somme des carrés unités qu’elle contient.",big:"Grand carré = 1",mid:"Carré moyen = 1/4",small:"Petit carré = 1/16",end:"Additionne les valeurs des carrés pour trouver l’aire."},
+ it:{flag:"🇮🇹",title:"Area",help:"Area",intro:"L’area di una figura è la somma dei quadrati unitari contenuti nella figura.",big:"Quadrato grande = 1",mid:"Quadrato medio = 1/4",small:"Quadrato piccolo = 1/16",end:"Somma i valori dei quadrati per trovare l’area."},
+ es:{flag:"🇪🇸",title:"Área",help:"Área",intro:"El área de una figura es la suma de los cuadrados unitarios que contiene.",big:"Cuadrado grande = 1",mid:"Cuadrado mediano = 1/4",small:"Cuadrado pequeño = 1/16",end:"Suma los valores de los cuadrados para hallar el área."},
+ zh:{flag:"🇨🇳",title:"面积",help:"面积",intro:"图形的面积是图形内部单位正方形面积的总和。",big:"大正方形 = 1",mid:"中正方形 = 1/4",small:"小正方形 = 1/16",end:"把所有正方形的数值相加即可得到面积。"},
+ el:{flag:"🇬🇷",title:"Εμβαδόν",help:"Εμβαδόν",intro:"Το εμβαδόν ενός σχήματος είναι το άθροισμα των μοναδιαίων τετραγώνων μέσα στο σχήμα.",big:"Μεγάλο τετράγωνο = 1",mid:"Μεσαίο τετράγωνο = 1/4",small:"Μικρό τετράγωνο = 1/16",end:"Πρόσθεσε τις τιμές των τετραγώνων για να βρεις το εμβαδόν."}
+};
+function applyUILang(code){
+ const L=UI_LANGS[code]||UI_LANGS.tr;
+ localStorage.setItem("learnLanguage",code);
+ document.documentElement.lang=code;
+ document.title=L.title;
+ document.getElementById("langBtn").textContent=L.flag;
+ document.getElementById("helpTitle").textContent=L.help;
+ document.getElementById("helpIntro").textContent=L.intro;
+ document.getElementById("helpBig").textContent=L.big;
+ document.getElementById("helpMid").textContent=L.mid;
+ document.getElementById("helpSmall").textContent=L.small;
+ document.getElementById("helpEnd").textContent=L.end;
+}
+document.getElementById("homeBtn").onclick=()=>location.href="../index.html";
+document.getElementById("helpBtn").onclick=()=>document.getElementById("helpModal").classList.add("open");
+document.getElementById("closeHelp").onclick=()=>document.getElementById("helpModal").classList.remove("open");
+document.getElementById("helpModal").onclick=e=>{if(e.target.id==="helpModal")e.currentTarget.classList.remove("open")};
+document.getElementById("langBtn").onclick=e=>{e.stopPropagation();document.getElementById("langWrap").classList.toggle("open")};
+document.querySelectorAll(".langChoice").forEach(x=>x.onclick=()=>{applyUILang(x.dataset.lang);document.getElementById("langWrap").classList.remove("open")});
+document.addEventListener("click",()=>document.getElementById("langWrap").classList.remove("open"));
+window.addEventListener("storage",e=>{if(e.key==="learnLanguage")applyUILang(e.newValue||"tr")});
+applyUILang(localStorage.getItem("learnLanguage")||"tr");
+
+</script>
+</body>
+</html>
