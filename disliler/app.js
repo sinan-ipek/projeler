@@ -113,7 +113,9 @@ function syncAnglesFromGear1() {
 
     function setPlaying(value) {
       state.playing = value;
-      togglePlayButton.textContent = state.playing ? "Durdur" : "Başlat";
+      togglePlayButton.textContent = state.playing ? "⏸" : "▶";
+      togglePlayButton.setAttribute("aria-label", state.playing ? "Durdur" : "Başlat");
+      togglePlayButton.setAttribute("title", state.playing ? "Durdur" : "Başlat");
       state.lastFrameTime = null;
     }
 
