@@ -116,6 +116,13 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
 .counterBox{display:flex!important;align-items:center!important;justify-content:center!important}
 .counterNumber,.counterUnitText{display:inline-block!important;vertical-align:baseline!important;line-height:1!important}
 .counterUnitText{align-self:center!important;margin-left:7px!important;transform:none!important;position:static!important}
+
+.opacityControl{display:flex;align-items:center;gap:7px;height:42px;padding:0 9px;border:1px solid #d4d4d4;border-radius:11px;background:#fff}
+.opacityIcon{font-size:18px;color:#777;line-height:1}
+#tileOpacity{width:105px;accent-color:#d0aa32;cursor:pointer}
+@media(max-width:760px){#tileOpacity{width:82px}.opacityControl{height:38px;padding:0 7px}}
+
+.tile,.flyTile{opacity:var(--tile-alpha,1)}
 </style>
 </head>
 <body>
@@ -176,6 +183,10 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
    <div class="counterBox" id="counterSmall">—</div>
  </div>
 </div>
+  <div class="opacityControl" title="Sarı karelerin saydamlığı">
+    <span class="opacityIcon">◩</span>
+    <input id="tileOpacity" type="range" min="0" max="100" value="100" aria-label="Saydamlık">
+  </div>
   <button class="btn" id="clearBtn">Sıfırla</button>
  </div>
  <div id="stage"><svg id="svg"></svg><div id="hint">Çalışma alanına tıklayın.</div></div>
@@ -184,7 +195,16 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
 (()=>{
 "use strict";
 const NS="http://www.w3.org/2000/svg",CELL=32,MID=CELL/2,SMALL=CELL/4,EPS=1e-7;
-const svg=document.getElementById("svg"),stage=document.getElementById("stage"),select=document.getElementById("shapeSelect"),areaBtn=document.getElementById("areaBtn"),clearBtn=document.getElementById("clearBtn"),hint=document.getElementById("hint");const counterBig=document.getElementById("counterBig"),counterMid=document.getElementById("counterMid"),counterSmall=document.getElementById("counterSmall"),midUnit=document.getElementById("midUnit"),smallUnit=document.getElementById("smallUnit"),midDivisor=document.getElementById("midDivisor"),smallDivisor=document.getElementById("smallDivisor"),plusAB=document.getElementById("plusAB"),plusBC=document.getElementById("plusBC");let counterState={big:0,mid:0,small:0,counted:false,midDone:false,smallDone:false,converting:false,midStage:0,smallStage:0};
+const svg=document.getElementById("svg"),stage=document.getElementById("stage"),select=document.getElementById("shapeSelect"),areaBtn=document.getElementById("areaBtn"),clearBtn=document.getElementById("clearBtn"),hint=document.getElementById("hint");const tileOpacity=document.getElementById("tileOpacity");const counterBig=document.getElementById("counterBig"),counterMid=document.getElementById("counterMid"),counterSmall=document.getElementById("counterSmall"),midUnit=document.getElementById("midUnit"),smallUnit=document.getElementById("smallUnit"),midDivisor=document.getElementById("midDivisor"),smallDivisor=document.getElementById("smallDivisor"),plusAB=document.getElementById("plusAB"),plusBC=document.getElementById("plusBC");
+let tileAlpha=1;
+function applyTileOpacity(){
+ tileAlpha=Math.max(0,Math.min(1,(+tileOpacity.value||0)/100));
+ document.documentElement.style.setProperty("--tile-alpha",tileAlpha);
+ document.querySelectorAll(".tile,.flyTile").forEach(el=>el.style.opacity=tileAlpha);
+}
+tileOpacity.addEventListener("input",applyTileOpacity);
+applyTileOpacity();
+let counterState={big:0,mid:0,small:0,counted:false,midDone:false,smallDone:false,converting:false,midStage:0,smallStage:0};
 let shape=null,freePoints=[],freeClosed=false,dragging=null,tiles=[],animating=false,tileSerial=0,keepEmptyAfterCount=false;
 let view={scale:1,tx:0,ty:0},panDrag=null;
 function applyView(){
@@ -541,7 +561,7 @@ function render(){
  el.dataset.role="shape";el.onpointerdown=shapeDown;svg.appendChild(el);
  drawTiles();drawHandles()
 }
-function drawTiles(){for(const t of tiles){const r=S("rect",{x:t.x,y:t.y,width:t.w,height:t.h,class:"tile"+(t.full?"":" partial"),"data-tile-id":t.id});svg.appendChild(r)}}
+function drawTiles(){for(const t of tiles){const r=S("rect",{x:t.x,y:t.y,width:t.w,height:t.h,class:"tile"+(t.full?"":" partial"),"data-tile-id":t.id,opacity:tileAlpha});svg.appendChild(r)}}
 function drawHandles(){
  if(!shape)return;let hs=[];
  if(shape.type==="square"||shape.type==="rect"||shape.type==="image"){const x=shape.cx-shape.w/2,y=shape.cy-shape.h/2,w=shape.w,h=shape.h;hs=[{x,y,id:"nw"},{x:x+w,y,id:"ne"},{x:x+w,y:y+h,id:"se"},{x,y:y+h,id:"sw"}]}
