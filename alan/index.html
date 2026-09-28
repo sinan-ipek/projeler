@@ -693,8 +693,11 @@ stage.onpointermove=e=>{
 stage.onpointerup=()=>dragging=null;stage.onpointercancel=()=>dragging=null;
 
 stage.addEventListener("pointerdown",e=>{
- if(animating||e.target!==stage&&e.target!==svg)return;
- const p=pt(e),t=select.value;
+ if(animating)return;
+ const t=select.value;
+ const polygonStartHit=t==="polygon"&&e.target?.classList?.contains("start");
+ if(e.target!==stage&&e.target!==svg&&!polygonStartHit)return;
+ const p=pt(e);
  if(t==="image"){imageInput.click();return}
  if(t==="pen"){
    penDrawing=true;penPoints=[p];shape={type:"pen",pts:penPoints};tiles=[];resetCounters();render();
