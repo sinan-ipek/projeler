@@ -152,6 +152,9 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
   <div class="title">Alan</div>
   <select id="shapeSelect">
    <option value="square">Kare</option><option value="rect">Dikdörtgen</option>
+   <option value="parallelogram">Paralelkenar</option>
+   <option value="rhombus">Eşkenar dörtgen</option>
+   <option value="trapezoid">Yamuk</option>
    <option value="rightTri">Dik Üçgen</option><option value="tri">Üçgen</option>
    <option value="circle">Daire</option><option value="ellipse">Elips</option><option value="free">Serbest</option>
    <option value="bunny">🐰 Tavşan</option><option value="cat">🐱 Kedi</option>
@@ -289,6 +292,9 @@ function defaultShape(t,p){
  const W=stage.clientWidth,H=stage.clientHeight;p.x=clamp(p.x,100,W-100);p.y=clamp(p.y,90,H-90);
  if(t==="square")return{type:t,cx:p.x,cy:p.y,w:192,h:192};
  if(t==="rect")return{type:t,cx:p.x,cy:p.y,w:256,h:160};
+ if(t==="parallelogram")return{type:t,pts:[{x:p.x-115,y:p.y-70},{x:p.x+75,y:p.y-70},{x:p.x+115,y:p.y+70},{x:p.x-75,y:p.y+70}]};
+ if(t==="rhombus")return{type:t,pts:[{x:p.x,y:p.y-95},{x:p.x+125,y:p.y},{x:p.x,y:p.y+95},{x:p.x-125,y:p.y}]};
+ if(t==="trapezoid")return{type:t,pts:[{x:p.x-75,y:p.y-75},{x:p.x+75,y:p.y-75},{x:p.x+125,y:p.y+75},{x:p.x-125,y:p.y+75}]};
  if(t==="rightTri")return{type:t,pts:[{x:p.x-112,y:p.y+80},{x:p.x-112,y:p.y-80},{x:p.x+112,y:p.y+80}]};
  if(t==="tri")return{type:t,pts:[{x:p.x,y:p.y-105},{x:p.x-115,y:p.y+90},{x:p.x+115,y:p.y+90}]};
  if(t==="circle")return{type:t,cx:p.x,cy:p.y,rx:96,ry:96};
@@ -317,7 +323,7 @@ function smoothPath(P,closed){
 function shapePolygon(){
  if(!shape)return[];const t=shape.type;
  if(t==="square"||t==="rect"||t==="image"){const x=shape.cx-shape.w/2,y=shape.cy-shape.h/2;return[{x,y},{x:x+shape.w,y},{x:x+shape.w,y:y+shape.h},{x,y:y+shape.h}]}
- if(t==="tri"||t==="rightTri"||["bunny","cat","heart","star","fish","cloud"].includes(t))return shape.pts.map(p=>({...p}));
+ if(t==="tri"||t==="rightTri"||t==="parallelogram"||t==="rhombus"||t==="trapezoid"||["bunny","cat","heart","star","fish","cloud"].includes(t))return shape.pts.map(p=>({...p}));
  if(t==="circle"||t==="ellipse"){const a=[];for(let i=0;i<200;i++){const z=i/200*Math.PI*2;a.push({x:shape.cx+shape.rx*Math.cos(z),y:shape.cy+shape.ry*Math.sin(z)})}return a}
  if(t==="free"&&freeClosed)return smoothClosedPolygon(freePoints);
  return[]
@@ -541,7 +547,7 @@ function drawHandles(){
  if(shape.type==="square"||shape.type==="rect"||shape.type==="image"){const x=shape.cx-shape.w/2,y=shape.cy-shape.h/2,w=shape.w,h=shape.h;hs=[{x,y,id:"nw"},{x:x+w,y,id:"ne"},{x:x+w,y:y+h,id:"se"},{x,y:y+h,id:"sw"}]}
  else if(shape.type==="circle")hs=[{x:shape.cx+shape.rx,y:shape.cy,id:"r"}];
  else if(shape.type==="ellipse")hs=[{x:shape.cx+shape.rx,y:shape.cy,id:"rx"},{x:shape.cx,y:shape.cy-shape.ry,id:"ry"}];
- else if(shape.type==="tri"||shape.type==="rightTri")hs=shape.pts.map((p,i)=>({...p,id:String(i)}));
+ else if(shape.type==="tri"||shape.type==="rightTri"||shape.type==="parallelogram"||shape.type==="rhombus"||shape.type==="trapezoid")hs=shape.pts.map((p,i)=>({...p,id:String(i)}));
  hs.forEach(h=>{const c=S("circle",{cx:h.x,cy:h.y,r:7,class:"handle"});c.dataset.handle=h.id;c.onpointerdown=handleDown;svg.appendChild(c)})
 }
 function handleDown(e){
