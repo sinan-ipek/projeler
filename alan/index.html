@@ -829,13 +829,13 @@ async function animateSum(){if(!shape||!tiles.length||animating)return;animating
  await sleep(delay);
  const t=o.tile,d=o.el;
  d.classList.add("nextTile");
- await sleep(260);
+ await sleep(120);
  d.classList.remove("nextTile");
  const target=level==="big"?counterBig:level==="mid"?counterMid:counterSmall,r=target.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2;
  d.classList.add("lifted");d.style.borderWidth="1px";d.style.width=t.w+"px";d.style.height=t.h+"px";
  d.style.left=(tx-(t.w*view.scale)/2)+"px";d.style.top=(ty-(t.h*view.scale)/2+7)+"px";
- await sleep(510);counterState[level]++;setCounter(level,counterState[level]);d.remove()
-}async function group(level){const g=flying.filter(o=>o.tile.level===level);await Promise.all(g.map((o,i)=>send(o,i*342,level)))}await group("big");await group("mid");await group("small");counterState.counted=true;if(counterState.mid)midUnit.classList.add("ready");if(counterState.small)smallUnit.classList.add("ready");for(const o of flying)if(o.el.isConnected)o.el.remove();animating=false;keepEmptyAfterCount=true;tiles=[];render()}
+ await sleep(390);counterState[level]++;setCounter(level,counterState[level]);d.remove()
+}async function group(level){const g=flying.filter(o=>o.tile.level===level);await Promise.all(g.map((o,i)=>send(o,i*165,level)))}await group("big");await group("mid");await group("small");counterState.counted=true;if(counterState.mid)midUnit.classList.add("ready");if(counterState.small)smallUnit.classList.add("ready");for(const o of flying)if(o.el.isConnected)o.el.remove();animating=false;keepEmptyAfterCount=true;tiles=[];render()}
 /* Zoom: fare konumunu sabit tutarak yakınlaştır / uzaklaştır. */
 stage.addEventListener("wheel",e=>{
   if(animating)return;
