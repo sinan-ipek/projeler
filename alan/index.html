@@ -639,13 +639,20 @@ stage.onpointermove=e=>{
  else if(shape.type==="ellipse"){if(dragging.id==="rx")shape.rx=Math.max(16,Math.abs(p.x-shape.cx));else shape.ry=Math.max(16,Math.abs(p.y-shape.cy))}
  else if(shape.type==="parallelogram"){
    const i=+dragging.id,o=dragging.original.pts.map(q=>({...q}));
-   // Bir köşe taşınınca karşı köşe, köşegenlerin orta noktası korunacak biçimde
-   // güncellenir. Böylece iki karşı kenar çifti her zaman paralel kalır.
-   const opp=(i+2)%4;
-   const dxp=p.x-o[i].x,dyp=p.y-o[i].y;
+   // Nokta sırası: D(0), C(1), B(2), A(3).
+   // Sürüklenen köşe yeni konumuna gider; karşı köşe sabit kalır.
+   // Diğer gerekli köşe paralelkenar bağıntısına göre otomatik taşınır.
    shape.pts=o.map(q=>({...q}));
    shape.pts[i]={x:p.x,y:p.y};
-   shape.pts[opp]={x:o[opp].x-dxp,y:o[opp].y-dyp};
+   if(i===2){ // B -> B': A ve D sabit, C otomatik
+     shape.pts[1]={x:o[0].x+p.x-o[3].x,y:o[0].y+p.y-o[3].y};
+   }else if(i===1){ // C -> C': A ve B sabit, D otomatik
+     shape.pts[0]={x:o[3].x+p.x-o[2].x,y:o[3].y+p.y-o[2].y};
+   }else if(i===3){ // A -> A': B ve C sabit, D otomatik
+     shape.pts[0]={x:p.x+o[1].x-o[2].x,y:p.y+o[1].y-o[2].y};
+   }else if(i===0){ // D -> D': A ve C sabit, B otomatik
+     shape.pts[2]={x:o[3].x+o[1].x-p.x,y:o[3].y+o[1].y-p.y};
+   }
  }else if(shape.type==="rhombus"){
    const i=+dragging.id,o=dragging.original.pts.map(q=>({...q}));
    // Eşkenar dörtgende köşegenler birbirini dik ve ortadan keser.
