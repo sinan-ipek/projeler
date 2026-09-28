@@ -109,7 +109,7 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
 
 .counterRack{align-items:center!important}
 .counterUnit{padding-bottom:0!important}
-</style>
+.counterBox{min-width:104px!important;padding-left:12px!important;padding-right:12px!important}</style>
 </head>
 <body>
 <div class="topTools">
@@ -595,13 +595,14 @@ stage.addEventListener("pointerdown",e=>{
 });
 areaBtn.onclick=()=>{if(shape&&!animating&&(shape.type!=="free"||freeClosed))animateSum()};
 
+function counterText(v){return fmt(v,3)+" br²"}
 function resetCounters(){
  counterState={big:0,mid:0,small:0,counted:false,midDone:false,smallDone:false,converting:false,midStage:0,smallStage:0};
  counterBig.textContent=counterMid.textContent=counterSmall.textContent="—";
  midUnit.classList.remove("ready");smallUnit.classList.remove("ready");
  midDivisor.classList.remove("hidden");smallDivisor.classList.remove("hidden");midUnit.classList.remove("termGone");smallUnit.classList.remove("termGone");plusAB.classList.remove("plusGone");plusBC.classList.remove("plusGone");
 }
-function setCounter(level,v){const e=level==="big"?counterBig:level==="mid"?counterMid:counterSmall;e.textContent=fmt(v,3);e.classList.remove("pulse");void e.offsetWidth;e.classList.add("pulse");setTimeout(()=>e.classList.remove("pulse"),220)}
+function setCounter(level,v){const e=level==="big"?counterBig:level==="mid"?counterMid:counterSmall;e.textContent=counterText(v);e.classList.remove("pulse");void e.offsetWidth;e.classList.add("pulse");setTimeout(()=>e.classList.remove("pulse"),220)}
 function centerOf(e){const r=e.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}}
 async function mergeTerm(sourceUnit,sourceBox,targetBox,value,onMerged){
  counterState.converting=true;
@@ -635,7 +636,7 @@ async function convertCounter(level){
  // İlk tıklama: katsayı uygulanır (B/4 veya C/16), kesir katsayısı kaybolur.
  if(counterState[stageKey]===0){
    const n=counterState[valueKey];if(!n)return;
-   counterState[valueKey]=n/div;src.textContent=fmt(counterState[valueKey],3);
+   counterState[valueKey]=n/div;src.textContent=counterText(counterState[valueKey]);
    den.classList.add("hidden");src.classList.add("pulse");setTimeout(()=>src.classList.remove("pulse"),220);
    counterState[stageKey]=1;return;
  }
@@ -644,8 +645,8 @@ async function convertCounter(level){
  if(mid){
    // B -> A : A := A + B
    await mergeTerm(midUnit,counterMid,counterBig,v,()=>{
-     counterState.big+=v;counterBig.textContent=fmt(counterState.big,3);
-     counterState.mid=0;counterMid.textContent="0";counterState.midDone=true;counterState.midStage=2;
+     counterState.big+=v;counterBig.textContent=counterText(counterState.big);
+     counterState.mid=0;counterMid.textContent=counterText(0);counterState.midDone=true;counterState.midStage=2;
      midUnit.classList.add("termGone");plusAB.classList.add("plusGone");midUnit.style.opacity="";
    });
    midUnit.classList.remove("ready");
@@ -654,15 +655,15 @@ async function convertCounter(level){
    if(bExists){
      // C -> B : B := B + C
      await mergeTerm(smallUnit,counterSmall,counterMid,v,()=>{
-       counterState.mid+=v;counterMid.textContent=fmt(counterState.mid,3);
-       counterState.small=0;counterSmall.textContent="0";counterState.smallDone=true;counterState.smallStage=2;
+       counterState.mid+=v;counterMid.textContent=counterText(counterState.mid);
+       counterState.small=0;counterSmall.textContent=counterText(0);counterState.smallDone=true;counterState.smallStage=2;
        smallUnit.classList.add("termGone");plusBC.classList.add("plusGone");smallUnit.style.opacity="";
      });
    }else{
      // B yoksa C -> A : A := A + C
      await mergeTerm(smallUnit,counterSmall,counterBig,v,()=>{
-       counterState.big+=v;counterBig.textContent=fmt(counterState.big,3);
-       counterState.small=0;counterSmall.textContent="0";counterState.smallDone=true;counterState.smallStage=2;
+       counterState.big+=v;counterBig.textContent=counterText(counterState.big);
+       counterState.small=0;counterSmall.textContent=counterText(0);counterState.smallDone=true;counterState.smallStage=2;
        smallUnit.classList.add("termGone");plusBC.classList.add("plusGone");smallUnit.style.opacity="";
      });
    }
@@ -670,7 +671,7 @@ async function convertCounter(level){
  }
 }
 midUnit.onclick=()=>convertCounter("mid");smallUnit.onclick=()=>convertCounter("small");
-async function animateSum(){if(!shape||!tiles.length||animating)return;animating=true;resetCounters();counterBig.textContent=counterMid.textContent=counterSmall.textContent="0";const sr=stage.getBoundingClientRect(),originals=tiles.map(t=>({...t})),sleep=ms=>new Promise(r=>setTimeout(r,ms)),flying=[];for(const t of originals){const d=document.createElement("div");d.className="flyTile";d.style.transition="none";const sp=worldToScreen(t.x,t.y);d.style.left=sp.x+"px";d.style.top=sp.y+"px";d.style.width=(t.w*view.scale)+"px";d.style.height=(t.h*view.scale)+"px";d.style.boxSizing="border-box";d.style.borderWidth="1px";document.body.appendChild(d);flying.push({tile:t,el:d})}void document.body.offsetWidth;svg.querySelectorAll(".tile").forEach(e=>e.style.visibility="hidden");await sleep(35);for(const o of flying)o.el.style.transition="";async function send(o,delay,level){await sleep(delay);const t=o.tile,d=o.el,target=level==="big"?counterBig:level==="mid"?counterMid:counterSmall,r=target.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2;d.classList.add("lifted");d.style.borderWidth="1px";d.style.width=t.w+"px";d.style.height=t.h+"px";d.style.left=(tx-(t.w*view.scale)/2)+"px";d.style.top=(ty-(t.h*view.scale)/2+7)+"px";await sleep(510);counterState[level]++;setCounter(level,counterState[level]);d.remove()}async function group(level){const g=flying.filter(o=>o.tile.level===level);await Promise.all(g.map((o,i)=>send(o,i*82,level)))}await group("big");await group("mid");await group("small");counterState.counted=true;if(counterState.mid)midUnit.classList.add("ready");if(counterState.small)smallUnit.classList.add("ready");for(const o of flying)if(o.el.isConnected)o.el.remove();animating=false;keepEmptyAfterCount=true;tiles=[];render()}
+async function animateSum(){if(!shape||!tiles.length||animating)return;animating=true;resetCounters();counterBig.textContent=counterMid.textContent=counterSmall.textContent=counterText(0);const sr=stage.getBoundingClientRect(),originals=tiles.map(t=>({...t})),sleep=ms=>new Promise(r=>setTimeout(r,ms)),flying=[];for(const t of originals){const d=document.createElement("div");d.className="flyTile";d.style.transition="none";const sp=worldToScreen(t.x,t.y);d.style.left=sp.x+"px";d.style.top=sp.y+"px";d.style.width=(t.w*view.scale)+"px";d.style.height=(t.h*view.scale)+"px";d.style.boxSizing="border-box";d.style.borderWidth="1px";document.body.appendChild(d);flying.push({tile:t,el:d})}void document.body.offsetWidth;svg.querySelectorAll(".tile").forEach(e=>e.style.visibility="hidden");await sleep(35);for(const o of flying)o.el.style.transition="";async function send(o,delay,level){await sleep(delay);const t=o.tile,d=o.el,target=level==="big"?counterBig:level==="mid"?counterMid:counterSmall,r=target.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2;d.classList.add("lifted");d.style.borderWidth="1px";d.style.width=t.w+"px";d.style.height=t.h+"px";d.style.left=(tx-(t.w*view.scale)/2)+"px";d.style.top=(ty-(t.h*view.scale)/2+7)+"px";await sleep(510);counterState[level]++;setCounter(level,counterState[level]);d.remove()}async function group(level){const g=flying.filter(o=>o.tile.level===level);await Promise.all(g.map((o,i)=>send(o,i*82,level)))}await group("big");await group("mid");await group("small");counterState.counted=true;if(counterState.mid)midUnit.classList.add("ready");if(counterState.small)smallUnit.classList.add("ready");for(const o of flying)if(o.el.isConnected)o.el.remove();animating=false;keepEmptyAfterCount=true;tiles=[];render()}
 /* Zoom: fare konumunu sabit tutarak yakınlaştır / uzaklaştır. */
 stage.addEventListener("wheel",e=>{
   if(animating)return;
