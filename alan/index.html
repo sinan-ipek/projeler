@@ -60,7 +60,7 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
 .helpRow{display:flex;align-items:center;gap:18px;margin:14px 0}.sampleSq{display:inline-block;background:#f6d66d;border:1px solid #8d7a38;box-sizing:border-box;flex:0 0 auto}
 .sampleBig{width:32px;height:32px}.sampleMid{width:16px;height:16px}.sampleSmall{width:8px;height:8px}
 .helpText{line-height:1.45;color:#333}
-</style>
+.counterRack{display:flex;align-items:center;gap:8px;margin-left:4px}.counterUnit{display:flex;align-items:center;gap:5px;padding:4px 6px;border-radius:11px;transition:transform .22s ease,background .22s ease,box-shadow .22s ease}.counterUnit.ready{cursor:pointer;background:#fff9e5;box-shadow:0 0 0 1px #dfc56d inset}.counterUnit.ready:hover{transform:translateY(-2px);box-shadow:0 5px 14px #0002}.counterSample{display:block;background:#f6d66d;border:1px solid #8d7a38;box-sizing:border-box}.bigSample{width:24px;height:24px}.midSample{width:14px;height:14px}.smallSample{width:8px;height:8px}.counterBox{min-width:64px;height:38px;border:1.5px solid #555;border-radius:9px;background:#fff;display:grid;place-items:center;padding:0 8px;font-weight:800;font-variant-numeric:tabular-nums;transition:.22s}.counterBox.pulse{transform:scale(1.08);background:#fff6cf;box-shadow:0 5px 15px #0002}.transferValue{position:fixed;z-index:1800;transform:translate(-50%,-50%);padding:5px 9px;border-radius:9px;background:#fff6cf;border:1px solid #d1b24c;box-shadow:0 7px 18px #0003;font-weight:900;pointer-events:none;transition:left .62s cubic-bezier(.45,.05,.85,.45),top .62s cubic-bezier(.45,.05,.85,.45),transform .62s ease,opacity .18s ease}@media(max-width:900px){.counterRack{order:5;width:100%;justify-content:center}.counterBox{min-width:52px}}</style>
 </head>
 <body>
 <div class="topTools">
@@ -104,7 +104,7 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
   </select>
   <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
   <button class="btn" id="areaBtn">Alan</button>
-  <div class="equation"><span class="eq">=</span><div id="result">—</div></div>
+  <div class="counterRack"><div class="counterUnit"><span class="counterSample bigSample"></span><div class="counterBox" id="counterBig">—</div></div><div class="counterUnit clickable" id="midUnit"><span class="counterSample midSample"></span><div class="counterBox" id="counterMid">—</div><b>:4</b></div><div class="counterUnit clickable" id="smallUnit"><span class="counterSample smallSample"></span><div class="counterBox" id="counterSmall">—</div><b>:16</b></div></div>
   <button class="btn" id="clearBtn">Sıfırla</button>
  </div>
  <div id="stage"><svg id="svg"></svg><div id="hint">Çalışma alanına tıklayın.</div></div>
@@ -113,7 +113,7 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
 (()=>{
 "use strict";
 const NS="http://www.w3.org/2000/svg",CELL=32,MID=CELL/2,SMALL=CELL/4,EPS=1e-7;
-const svg=document.getElementById("svg"),stage=document.getElementById("stage"),select=document.getElementById("shapeSelect"),areaBtn=document.getElementById("areaBtn"),clearBtn=document.getElementById("clearBtn"),result=document.getElementById("result"),hint=document.getElementById("hint");
+const svg=document.getElementById("svg"),stage=document.getElementById("stage"),select=document.getElementById("shapeSelect"),areaBtn=document.getElementById("areaBtn"),clearBtn=document.getElementById("clearBtn"),hint=document.getElementById("hint");const counterBig=document.getElementById("counterBig"),counterMid=document.getElementById("counterMid"),counterSmall=document.getElementById("counterSmall"),midUnit=document.getElementById("midUnit"),smallUnit=document.getElementById("smallUnit");let counterState={big:0,mid:0,small:0,counted:false,midDone:false,smallDone:false,converting:false};
 let shape=null,freePoints=[],freeClosed=false,dragging=null,tiles=[],animating=false,tileSerial=0,keepEmptyAfterCount=false;let imageMask=null,imageObjectURL=null;const imageInput=document.getElementById("imageInput");
 
 function S(t,a={}){const e=document.createElementNS(NS,t);for(const[k,v]of Object.entries(a))e.setAttribute(k,v);return e}
@@ -123,7 +123,7 @@ function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
 function fmt(n,d=2){if(Math.abs(n-Math.round(n))<.005)return String(Math.round(n));return n.toFixed(d).replace(/0+$/,"").replace(/\.$/,"").replace(".",",")}
 function clearSVG(){while(svg.firstChild)svg.removeChild(svg.firstChild)}
 function reset(){
- keepEmptyAfterCount=false;if(imageObjectURL){URL.revokeObjectURL(imageObjectURL);imageObjectURL=null}imageMask=null;shape=null;freePoints=[];freeClosed=false;dragging=null;tiles=[];animating=false;result.textContent="—";clearSVG();hint.style.opacity="1";hint.textContent="Çalışma alanına tıklayın.";document.querySelectorAll(".flyTile,.mergeBox").forEach(x=>x.remove())}
+ keepEmptyAfterCount=false;if(imageObjectURL){URL.revokeObjectURL(imageObjectURL);imageObjectURL=null}imageMask=null;shape=null;freePoints=[];freeClosed=false;dragging=null;tiles=[];animating=false;resetCounters();clearSVG();hint.style.opacity="1";hint.textContent="Çalışma alanına tıklayın.";document.querySelectorAll(".flyTile,.mergeBox").forEach(x=>x.remove())}
 clearBtn.onclick=reset;select.onchange=()=>{reset();if(select.value==="image")imageInput.click()};
 
 
@@ -212,7 +212,7 @@ function defaultShape(t,p){
  if(["bunny","cat","heart","star","fish","cloud"].includes(t))
    return{type:t,pts:funShapePoints(t,p)};
 }
-imageInput.onchange=async()=>{const file=imageInput.files&&imageInput.files[0];imageInput.value="";if(!file){select.value="square";return}try{const loaded=await loadImageMask(file);if(imageObjectURL)URL.revokeObjectURL(imageObjectURL);imageObjectURL=loaded.url;imageMask=loaded;const W=stage.clientWidth,H=stage.clientHeight,maxW=Math.min(420,W*.62),maxH=Math.min(360,H*.68);let w=maxW,h=w/loaded.aspect;if(h>maxH){h=maxH;w=h*loaded.aspect}shape={type:"image",cx:W/2,cy:H/2,w,h};refreshTiles();hint.style.opacity="0";result.textContent="—";render()}catch(e){alert("Resim okunamadı.");select.value="square"}};
+imageInput.onchange=async()=>{const file=imageInput.files&&imageInput.files[0];imageInput.value="";if(!file){select.value="square";return}try{const loaded=await loadImageMask(file);if(imageObjectURL)URL.revokeObjectURL(imageObjectURL);imageObjectURL=loaded.url;imageMask=loaded;const W=stage.clientWidth,H=stage.clientHeight,maxW=Math.min(420,W*.62),maxH=Math.min(360,H*.68);let w=maxW,h=w/loaded.aspect;if(h>maxH){h=maxH;w=h*loaded.aspect}shape={type:"image",cx:W/2,cy:H/2,w,h};refreshTiles();hint.style.opacity="0";resetCounters();render()}catch(e){alert("Resim okunamadı.");select.value="square"}};
 function smoothClosedPolygon(P){
  if(P.length<3)return P.slice();const out=[],steps=20,n=P.length;
  for(let i=0;i<n;i++){const p0=P[(i-1+n)%n],p1=P[i],p2=P[(i+1)%n],p3=P[(i+2)%n];
@@ -501,7 +501,7 @@ stage.onpointermove=e=>{
  else if(shape.type==="ellipse"){if(dragging.id==="rx")shape.rx=Math.max(16,Math.abs(p.x-shape.cx));else shape.ry=Math.max(16,Math.abs(p.y-shape.cy))}
  else if(shape.type==="tri")shape.pts[+dragging.id]=p;
  else if(shape.type==="rightTri"){const i=+dragging.id,o=dragging.original.pts;if(i===0){shape.pts[0]=p;shape.pts[1].x=p.x;shape.pts[2].y=p.y}else if(i===1)shape.pts[1]={x:o[0].x,y:p.y};else shape.pts[2]={x:p.x,y:o[0].y}}
- refreshTiles();result.textContent="—";render()
+ refreshTiles();resetCounters();render()
 };
 stage.onpointerup=()=>dragging=null;stage.onpointercancel=()=>dragging=null;
 
@@ -518,100 +518,12 @@ stage.addEventListener("pointerdown",e=>{
 });
 areaBtn.onclick=()=>{if(shape&&!animating&&(shape.type!=="free"||freeClosed))animateSum()};
 
-async function animateSum(){
- if(!shape||!tiles.length||animating)return;
- animating=true;
- result.textContent="0";
-
- const sr=stage.getBoundingClientRect();
- const tr=result.getBoundingClientRect();
- const tx=tr.left+tr.width/2,ty=tr.top+tr.height/2;
- const originals=tiles.map(t=>({...t}));
- let count=0;
-
- const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-
- function add(v){
-   count+=v;
-   result.textContent=fmt(count,3);
- }
-
- /* Görünen bütün karelerin animasyon kopyalarını önce TAM aynı yerde oluştur.
-    Sonra SVG kareleri gizlenir. Böylece başlangıçta yanıp sönme olmaz. */
- const flying=[];
- for(const t of originals){
-   const d=document.createElement("div");
-   d.className="flyTile";
-   d.style.transition="none";
-   d.style.left=(sr.left+t.x)+"px";
-   d.style.top=(sr.top+t.y)+"px";
-   d.style.width=t.w+"px";
-   d.style.height=t.h+"px";
-   d.style.boxSizing="border-box";
-   d.style.borderWidth="1px";
-   document.body.appendChild(d);
-   flying.push({tile:t,el:d});
- }
-
- void document.body.offsetWidth;
- svg.querySelectorAll(".tile").forEach(el=>el.style.visibility="hidden");
-
- await sleep(35);
-
- // Uçuş transition'ını aç.
- for(const o of flying)o.el.style.transition="";
-
- async function send(o,delay){
-   await sleep(delay);
-
-   const t=o.tile,d=o.el;
-
-   // Kare büyümez, kenarlığı kalınlaşmaz.
-   // Sadece hafifçe yüzeyden kalkar ve counter'a hızlanarak gider.
-   d.classList.add("lifted");
-   d.style.borderWidth="1px";
-   d.style.left=(tx-t.w/2)+"px";
-   d.style.top=(ty-t.h/2+7)+"px";
-
-   await sleep(510);
-
-   count+=t.v;
-   result.textContent=fmt(count,3);
-   d.remove();
- }
-
- /* Hareket sırası kesin:
-    1) büyük kareler
-    2) orta kareler
-    3) küçük kareler.
-    Bir grup tamamen bitmeden sonraki grup başlamaz. */
- async function sendGroup(level){
-   const group=flying.filter(o=>o.tile.level===level);
-   if(!group.length)return;
-   const jobs=group.map((o,i)=>send(o,i*82));
-   await Promise.all(jobs);
- }
-
- await sendGroup("big");
- await sendGroup("mid");
- await sendGroup("small");
-
- const exact=shape.type==="image"?originals.reduce((sum,t)=>sum+t.v,0):polyArea(shapePolygon())/(CELL*CELL);
- result.textContent=fmt(exact,2)+" br²";
-
- for(const o of flying){
-   if(o.el.isConnected)o.el.remove();
- }
-
- /* Sayım bitti: şeklin içi boş kalır.
-    refreshTiles burada ÇAĞRILMAZ.
-    Kullanıcı şekli veya bir tutamacı hareket ettirdiğinde mevcut
-    pointermove kodundaki refreshTiles() yeniden dolgu üretir. */
- animating=false;
- keepEmptyAfterCount=true;
- tiles=[];
- render();
-}
+function resetCounters(){counterState={big:0,mid:0,small:0,counted:false,midDone:false,smallDone:false,converting:false};counterBig.textContent=counterMid.textContent=counterSmall.textContent="—";midUnit.classList.remove("ready");smallUnit.classList.remove("ready")}
+function setCounter(level,v){const e=level==="big"?counterBig:level==="mid"?counterMid:counterSmall;e.textContent=fmt(v,3);e.classList.remove("pulse");void e.offsetWidth;e.classList.add("pulse");setTimeout(()=>e.classList.remove("pulse"),220)}
+function centerOf(e){const r=e.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}}
+async function convertCounter(level){if(!counterState.counted||counterState.converting)return;const mid=level==="mid",unit=mid?midUnit:smallUnit,src=mid?counterMid:counterSmall,done=mid?"midDone":"smallDone",n=mid?counterState.mid:counterState.small,div=mid?4:16;if(counterState[done]||!n)return;counterState.converting=true;unit.classList.remove("ready");const v=n/div;src.classList.add("pulse");await new Promise(r=>setTimeout(r,260));src.textContent=fmt(v,3);await new Promise(r=>setTimeout(r,300));const A=centerOf(src),B=centerOf(counterBig),f=document.createElement("div");f.className="transferValue";f.textContent=fmt(v,3);f.style.left=A.x+"px";f.style.top=A.y+"px";document.body.appendChild(f);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));f.style.left=B.x+"px";f.style.top=B.y+"px";f.style.transform="translate(-50%,-50%) scale(.82)";await new Promise(r=>setTimeout(r,650));counterState.big+=v;setCounter("big",counterState.big);f.style.opacity="0";setTimeout(()=>f.remove(),180);src.textContent="0";src.classList.remove("pulse");counterState[done]=true;counterState.converting=false}
+midUnit.onclick=()=>convertCounter("mid");smallUnit.onclick=()=>convertCounter("small");
+async function animateSum(){if(!shape||!tiles.length||animating)return;animating=true;resetCounters();counterBig.textContent=counterMid.textContent=counterSmall.textContent="0";const sr=stage.getBoundingClientRect(),originals=tiles.map(t=>({...t})),sleep=ms=>new Promise(r=>setTimeout(r,ms)),flying=[];for(const t of originals){const d=document.createElement("div");d.className="flyTile";d.style.transition="none";d.style.left=(sr.left+t.x)+"px";d.style.top=(sr.top+t.y)+"px";d.style.width=t.w+"px";d.style.height=t.h+"px";d.style.boxSizing="border-box";d.style.borderWidth="1px";document.body.appendChild(d);flying.push({tile:t,el:d})}void document.body.offsetWidth;svg.querySelectorAll(".tile").forEach(e=>e.style.visibility="hidden");await sleep(35);for(const o of flying)o.el.style.transition="";async function send(o,delay,level){await sleep(delay);const t=o.tile,d=o.el,target=level==="big"?counterBig:level==="mid"?counterMid:counterSmall,r=target.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2;d.classList.add("lifted");d.style.borderWidth="1px";d.style.left=(tx-t.w/2)+"px";d.style.top=(ty-t.h/2+7)+"px";await sleep(510);counterState[level]++;setCounter(level,counterState[level]);d.remove()}async function group(level){const g=flying.filter(o=>o.tile.level===level);await Promise.all(g.map((o,i)=>send(o,i*82,level)))}await group("big");await group("mid");await group("small");counterState.counted=true;if(counterState.mid)midUnit.classList.add("ready");if(counterState.small)smallUnit.classList.add("ready");for(const o of flying)if(o.el.isConnected)o.el.remove();animating=false;keepEmptyAfterCount=true;tiles=[];render()}
 reset();
 })();
 
