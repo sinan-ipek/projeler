@@ -22,7 +22,7 @@
     .unit-label { font-size: 1.2em; font-weight: bold; margin-right: 10px; width: 50px; }
     .unit-input { flex: 1; padding: 8px; border: 2px solid #006064; border-radius: 8px; font-size: 1em; transition: border-color 0.3s, background 0.3s; min-width: 0; }
     .unit-input:focus { outline: none; border-color: #004d40; background: #e0f2f1; }
-    .area-wrapper { display: grid; grid-template-columns: auto auto; grid-template-rows: repeat(7, auto); column-gap: 80px; row-gap: 8px; align-items: center; }
+    .area-wrapper { display: grid; grid-template-columns: auto 80px auto; grid-template-rows: repeat(7, auto); column-gap: 0; row-gap: 8px; align-items: center; }
     .volume-wrapper { display: grid; grid-template-columns: auto 80px auto; grid-template-rows: repeat(10, auto); column-gap: 0; row-gap: 8px; align-items: center; }
     .volume-wrapper .unit-row { margin-bottom: 0; }
     .volume-connector { grid-row: 5; grid-column: 2; font-size: 2em; color: #ff6f00; align-self: center; justify-self: center; pointer-events: none; }
@@ -103,7 +103,7 @@
       <div class="unit-row" data-unit="dam²" draggable="true" style="grid-row:3; grid-column:1;">
         <span class="unit-label">dam²</span><input class="unit-input" type="text" inputmode="decimal" />
       </div>
-      <div class="connector" style="grid-row:3; grid-column:1/3;">⇄</div>
+      <div class="connector" style="grid-row:3; grid-column:2;">⇄</div>
       <div class="unit-row" data-unit="m²" draggable="true" style="grid-row:4; grid-column:1;">
         <span class="unit-label">m²</span><input class="unit-input" type="text" inputmode="decimal" />
       </div>
@@ -187,6 +187,22 @@
         const coeffText = Number(coefficient.toPrecision(10)).toString();
         return coeffText + '×10' + toSuperscriptExponent(exp);
       }
+      function toPlainDecimal(value) {
+        const s = String(value);
+        if (!/[eE]/.test(s)) return s;
+        const parts = s.toLowerCase().split('e');
+        const mantissa = parts[0];
+        const exp = parseInt(parts[1], 10);
+        const sign = mantissa.startsWith('-') ? '-' : '';
+        const unsigned = mantissa.replace(/^[-+]/, '');
+        const digits = unsigned.replace('.', '');
+        const dot = unsigned.indexOf('.');
+        const intDigits = dot === -1 ? unsigned.length : dot;
+        const newPos = intDigits + exp;
+        if (newPos <= 0) return sign + '0.' + '0'.repeat(-newPos) + digits;
+        if (newPos >= digits.length) return sign + digits + '0'.repeat(newPos - digits.length);
+        return sign + digits.slice(0, newPos) + '.' + digits.slice(newPos);
+      }
       function parseDisplayedNumber(value) {
         const s = String(value).trim().replace(',', '.');
         const m = s.match(/^([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*[×x]\s*10([⁻⁺⁰¹²³⁴⁵⁶⁷⁸⁹]+)$/);
@@ -259,7 +275,7 @@
                 str = String(result);
               } else {
                 // 12 anlamlı basamak: küçük değerler kaybolmaz, gereksiz sıfırlar görünmez.
-                str = Number(result.toPrecision(12)).toString();
+                str = toPlainDecimal(Number(result.toPrecision(12)));
               }
             }
             input.value = str;
