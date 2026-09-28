@@ -334,7 +334,18 @@ const TITLE={
 let lang=localStorage.getItem(KEY)||"tr"; if(!LANGS.some(x=>x[0]===lang))lang="tr";
 const oi=new WeakMap(); let lock=false;
 function li(){return LANGS.findIndex(x=>x[0]===lang)}
-function tx(s){if(ALT[s])return ALT[s][li()]||s;if(lang==="tr")return s;if(MAP[s])return MAP[s][li()-1]||s;for(const k in TITLE){const a=TITLE[k];if(a&&a[0]===s)return a[li()]||s}return s}
+function dyn(s){
+ if(lang==="tr")return null; const i=li()-1;
+ let m=s.match(/^İşlemdeki (.+)'e tıkla\.$/);if(m){const v=m[1],a=[`Click ${v} in the operation.`,`Klicke in der Aufgabe auf ${v}.`,`Cliquez sur ${v} dans l’opération.`,`Fai clic su ${v} nell’operazione.`,`Haz clic en ${v} en la operación.`,`点击算式中的 ${v}。`,`Κάνε κλικ στο ${v} της πράξης.`];return a[i]}
+ m=s.match(/^(.+)'e tıkla\.$/);if(m){const v=m[1],a=[`Click ${v}.`,`Klicke auf ${v}.`,`Cliquez sur ${v}.`,`Fai clic su ${v}.`,`Haz clic en ${v}.`,`点击 ${v}。`,`Κάνε κλικ στο ${v}.`];return a[i]}
+ m=s.match(/^(.+), 3'e bölünüyor\.$/);if(m){const v=m[1],a=[`${v} is being divided by 3.`,`${v} wird durch 3 geteilt.`,`${v} est divisé par 3.`,`${v} viene diviso per 3.`,`${v} se divide entre 3.`,`${v} 正在除以 3。`,`Το ${v} διαιρείται με το 3.`];return a[i]}
+ m=s.match(/^İki tamsayı arası (\d+) parçaya bölünmüş\.$/);if(m){const n=m[1],a=[`The interval between two integers is divided into ${n} parts.`,`Der Abstand zwischen zwei ganzen Zahlen ist in ${n} Teile unterteilt.`,`L’intervalle entre deux entiers est divisé en ${n} parties.`,`L’intervallo tra due interi è diviso in ${n} parti.`,`El intervalo entre dos enteros está dividido en ${n} partes.`,`两个整数之间被分成 ${n} 份。`,`Το διάστημα μεταξύ δύο ακεραίων χωρίζεται σε ${n} μέρη.`];return a[i]}
+ m=s.match(/^(\d+) diş$/);if(m){const n=m[1],a=[`${n} teeth`,`${n} Zähne`,`${n} dents`,`${n} denti`,`${n} dientes`,`${n} 齿`,`${n} δόντια`];return a[i]}
+ m=s.match(/^Aydınlık:\s*(.+)$/);if(m){const v=m[1],a=[`Illumination: ${v}`,`Beleuchtung: ${v}`,`Illumination : ${v}`,`Illuminazione: ${v}`,`Iluminación: ${v}`,`照明：${v}`,`Φωτισμός: ${v}`];return a[i]}
+ m=s.match(/^Yükseklik:\s*(.+)$/);if(m){const v=m[1],a=[`Altitude: ${v}`,`Höhe: ${v}`,`Altitude : ${v}`,`Altitudine: ${v}`,`Altitud: ${v}`,`高度：${v}`,`Ύψος: ${v}`];return a[i]}
+ return null
+}
+function tx(s){if(ALT[s])return ALT[s][li()]||s;if(lang==="tr")return s;if(MAP[s])return MAP[s][li()-1]||s;const d=dyn(s);if(d)return d;for(const k in TITLE){const a=TITLE[k];if(a&&a[0]===s)return a[li()]||s}return s}
 function pkey(){const p=location.pathname.split("/").filter(Boolean),last=p[p.length-1]||"";if(last.endsWith(".html"))return p.length===1?last:(p[p.length-2]||last);return last}
 function walk(root=document.body){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{const e=n.parentElement;if(!e||/^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA|CODE|PRE)$/i.test(e.tagName)||e.closest("#globalLanguageWidget"))return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT}});let n;while(n=w.nextNode()){if(!oi.has(n))oi.set(n,n.nodeValue);const raw=oi.get(n),c=raw.trim();if(!c)continue;const v=raw.replace(c,tx(c));if(v!==n.nodeValue){lock=true;n.nodeValue=v;lock=false}}}
 function html(){return '<button class="glb"><span class="gf">'+FLAGS[lang]+'</span><span>▼</span></button><div class="glm">'+LANGS.map(([c,n])=>'<button data-l="'+c+'" class="'+(c===lang?'on':'')+'"><span class="gf">'+FLAGS[c]+'</span><span>'+n+'</span></button>').join("")+'</div>'}
