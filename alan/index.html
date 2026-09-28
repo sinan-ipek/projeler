@@ -163,7 +163,10 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
    <option value="rhombus">Eşkenar dörtgen</option>
    <option value="trapezoid">Yamuk</option>
    <option value="rightTri">Dik Üçgen</option><option value="tri">Üçgen</option>
-   <option value="circle">Daire</option><option value="ellipse">Elips</option><option value="free">Serbest</option>
+   <option value="circle">Daire</option><option value="ellipse">Elips</option>
+   <option value="pentagon">Beşgen</option><option value="hexagon">Altıgen</option>
+   <option value="polygon">Çokgen</option><option value="pen">Kalem</option>
+   <option value="free">Serbest</option>
    <option value="bunny">🐰 Tavşan</option><option value="cat">🐱 Kedi</option>
    <option value="heart">❤️ Kalp</option><option value="star">⭐ Yıldız</option>
    <option value="fish">🐟 Balık</option><option value="cloud">☁️ Bulut</option><option value="image">🖼️ Resim</option>
@@ -231,7 +234,7 @@ function fmt(n,d=2){if(Math.abs(n-Math.round(n))<.005)return String(Math.round(n
 function clearSVG(){while(svg.firstChild)svg.removeChild(svg.firstChild)}
 function reset(){
  keepEmptyAfterCount=false;if(imageObjectURL){URL.revokeObjectURL(imageObjectURL);imageObjectURL=null}imageMask=null;shape=null;freePoints=[];freeClosed=false;dragging=null;tiles=[];animating=false;resetCounters();clearSVG();hint.style.opacity="1";hint.textContent="Çalışma alanına tıklayın.";document.querySelectorAll(".flyTile,.mergeBox").forEach(x=>x.remove())}
-clearBtn.onclick=reset;select.onchange=()=>{reset();if(select.value==="image")imageInput.click()};
+clearBtn.onclick=reset;select.onchange=()=>{penDrawing=false;penPoints=[];polygonPoints=[];reset();if(select.value==="image")imageInput.click()};
 
 
 function scaledPoints(points,p,sx=1,sy=1){
@@ -315,6 +318,10 @@ function defaultShape(t,p){
  if(t==="parallelogram")return{type:t,pts:[{x:p.x-115,y:p.y-70},{x:p.x+75,y:p.y-70},{x:p.x+115,y:p.y+70},{x:p.x-75,y:p.y+70}]};
  if(t==="rhombus")return{type:t,pts:[{x:p.x,y:p.y-95},{x:p.x+125,y:p.y},{x:p.x,y:p.y+95},{x:p.x-125,y:p.y}]};
  if(t==="trapezoid")return{type:t,pts:[{x:p.x-75,y:p.y-75},{x:p.x+75,y:p.y-75},{x:p.x+125,y:p.y+75},{x:p.x-125,y:p.y+75}]};
+ if(t==="pentagon"||t==="hexagon"){
+  const n=t==="pentagon"?5:6,r=t==="pentagon"?115:125;
+  return{type:t,cx:p.x,cy:p.y,r,angle:-Math.PI/2,pts:Array.from({length:n},(_,i)=>({x:p.x+r*Math.cos(-Math.PI/2+i*2*Math.PI/n),y:p.y+r*Math.sin(-Math.PI/2+i*2*Math.PI/n)}))};
+ }
  if(t==="rightTri")return{type:t,pts:[{x:p.x-112,y:p.y+80},{x:p.x-112,y:p.y-80},{x:p.x+112,y:p.y+80}]};
  if(t==="tri")return{type:t,pts:[{x:p.x,y:p.y-105},{x:p.x-115,y:p.y+90},{x:p.x+115,y:p.y+90}]};
  if(t==="circle")return{type:t,cx:p.x,cy:p.y,rx:96,ry:96};
@@ -567,7 +574,7 @@ function drawHandles(){
  if(shape.type==="square"||shape.type==="rect"||shape.type==="image"){const x=shape.cx-shape.w/2,y=shape.cy-shape.h/2,w=shape.w,h=shape.h;hs=[{x,y,id:"nw"},{x:x+w,y,id:"ne"},{x:x+w,y:y+h,id:"se"},{x,y:y+h,id:"sw"}]}
  else if(shape.type==="circle")hs=[{x:shape.cx+shape.rx,y:shape.cy,id:"r"}];
  else if(shape.type==="ellipse")hs=[{x:shape.cx+shape.rx,y:shape.cy,id:"rx"},{x:shape.cx,y:shape.cy-shape.ry,id:"ry"}];
- else if(shape.type==="tri"||shape.type==="rightTri"||shape.type==="parallelogram"||shape.type==="rhombus"||shape.type==="trapezoid")hs=shape.pts.map((p,i)=>({...p,id:String(i)}));
+ else if(shape.type==="tri"||shape.type==="rightTri"||shape.type==="parallelogram"||shape.type==="rhombus"||shape.type==="trapezoid"||shape.type==="pentagon"||shape.type==="hexagon"||shape.type==="polygon"||shape.type==="pen")hs=shape.pts.map((p,i)=>({...p,id:String(i)}));
  hs.forEach(h=>{const c=S("circle",{cx:h.x,cy:h.y,r:7,class:"handle"});c.dataset.handle=h.id;c.onpointerdown=handleDown;svg.appendChild(c)})
 }
 function handleDown(e){
@@ -644,6 +651,15 @@ stage.onpointermove=e=>{
    else if(i===1){shape.pts[0].y=p.y}
    else if(i===2){shape.pts[3].y=p.y}
    else if(i===3){shape.pts[2].y=p.y}
+ } else if(shape.type==="pentagon"||shape.type==="hexagon"){
+   const o=dragging.original,n=shape.type==="pentagon"?5:6,i=+dragging.id;
+   const cx=o.cx??o.pts.reduce((a,q)=>a+q.x,0)/n,cy=o.cy??o.pts.reduce((a,q)=>a+q.y,0)/n;
+   const r=Math.max(24,Math.hypot(p.x-cx,p.y-cy));
+   const a=Math.atan2(p.y-cy,p.x-cx)-i*2*Math.PI/n;
+   shape.cx=cx;shape.cy=cy;shape.r=r;shape.angle=a;
+   shape.pts=Array.from({length:n},(_,k)=>({x:cx+r*Math.cos(a+k*2*Math.PI/n),y:cy+r*Math.sin(a+k*2*Math.PI/n)}));
+ }else if(shape.type==="polygon"){
+   shape.pts[+dragging.id]=p;
  } else if(shape.type==="tri")shape.pts[+dragging.id]=p;
  else if(shape.type==="rightTri"){const i=+dragging.id,o=dragging.original.pts;if(i===0){shape.pts[0]=p;shape.pts[1].x=p.x;shape.pts[2].y=p.y}else if(i===1)shape.pts[1]={x:o[0].x,y:p.y};else shape.pts[2]={x:p.x,y:o[0].y}}
  refreshTiles();resetCounters();render()
@@ -654,6 +670,16 @@ stage.addEventListener("pointerdown",e=>{
  if(animating||e.target!==stage&&e.target!==svg)return;
  const p=pt(e),t=select.value;
  if(t==="image"){imageInput.click();return}
+ if(t==="pen"){
+   penDrawing=true;penPoints=[p];shape={type:"pen",pts:penPoints};tiles=[];resetCounters();render();
+   try{stage.setPointerCapture(e.pointerId)}catch(_){}
+   return
+ }
+ if(t==="polygon"){
+   if(shape?.type!=="polygon"){polygonPoints=[p];shape={type:"polygon",pts:polygonPoints};hint.textContent="Köşeleri tıklayın; ilk noktaya tıklayarak kapatın.";render();return}
+   if(polygonPoints.length>=3&&dist(p,polygonPoints[0])<=14){shape.pts=polygonPoints.map(q=>({...q}));refreshTiles();resetCounters();hint.style.opacity="0";render();return}
+   polygonPoints.push(p);shape.pts=polygonPoints;render();return
+ }
  if(t==="free"){
    if(freeClosed)return;
    if(freePoints.length>=3&&dist(p,freePoints[0])<=14){freeClosed=true;shape={type:"free"};refreshTiles();hint.style.opacity="0";render();return}
@@ -661,6 +687,20 @@ stage.addEventListener("pointerdown",e=>{
  }
  if(!shape){shape=defaultShape(t,p);refreshTiles();hint.style.opacity="0";render()}
 });
+stage.addEventListener("pointermove",e=>{
+ if(!penDrawing||select.value!=="pen")return;
+ const p=pt(e),last=penPoints[penPoints.length-1];
+ if(!last||dist(p,last)>=3){penPoints.push(p);shape={type:"pen",pts:penPoints};render()}
+});
+function finishPen(){
+ if(!penDrawing)return;penDrawing=false;
+ if(penPoints.length>=3){
+   // Çizgiyi otomatik kapat: alan hesabı için serbest çizilen sınır poligona dönüşür.
+   shape={type:"pen",pts:penPoints.map(q=>({...q}))};refreshTiles();resetCounters();hint.style.opacity="0";render()
+ }
+}
+stage.addEventListener("pointerup",finishPen);
+stage.addEventListener("pointercancel",finishPen);
 areaBtn.onclick=()=>{if(shape&&!animating&&(shape.type!=="free"||freeClosed))animateSum()};
 
 function counterText(v){return fmt(v,3)}
