@@ -209,6 +209,7 @@ tileOpacity.addEventListener("input",applyTileOpacity);
 applyTileOpacity();
 let counterState={big:0,mid:0,small:0,counted:false,midDone:false,smallDone:false,converting:false,midStage:0,smallStage:0};
 let shape=null,freePoints=[],freeClosed=false,dragging=null,tiles=[],animating=false,tileSerial=0,keepEmptyAfterCount=false;
+let penDrawing=false,penPoints=[],polygonPoints=[],polygonClosed=false;
 let view={scale:1,tx:0,ty:0},panDrag=null;
 function applyView(){
   svg.style.transformOrigin="0 0";
@@ -223,6 +224,8 @@ function worldToScreen(x,y){
  return {x:r.left+view.tx+x*view.scale,y:r.top+view.ty+y*view.scale};
 }
 function isPanTarget(e){
+  const mode=select.value;
+  if(mode==="pen"||mode==="polygon"||mode==="free")return false;
   return e.target===stage||e.target===svg||e.target.id==="hint";
 }let imageMask=null,imageObjectURL=null;const imageInput=document.getElementById("imageInput");
 
@@ -233,8 +236,8 @@ function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
 function fmt(n,d=2){if(Math.abs(n-Math.round(n))<.005)return String(Math.round(n));return n.toFixed(d).replace(/0+$/,"").replace(/\.$/,"").replace(".",",")}
 function clearSVG(){while(svg.firstChild)svg.removeChild(svg.firstChild)}
 function reset(){
- keepEmptyAfterCount=false;if(imageObjectURL){URL.revokeObjectURL(imageObjectURL);imageObjectURL=null}imageMask=null;shape=null;freePoints=[];freeClosed=false;dragging=null;tiles=[];animating=false;resetCounters();clearSVG();hint.style.opacity="1";hint.textContent="Çalışma alanına tıklayın.";document.querySelectorAll(".flyTile,.mergeBox").forEach(x=>x.remove())}
-clearBtn.onclick=reset;select.onchange=()=>{penDrawing=false;penPoints=[];polygonPoints=[];reset();if(select.value==="image")imageInput.click()};
+ keepEmptyAfterCount=false;if(imageObjectURL){URL.revokeObjectURL(imageObjectURL);imageObjectURL=null}imageMask=null;shape=null;freePoints=[];freeClosed=false;penDrawing=false;penPoints=[];polygonPoints=[];polygonClosed=false;dragging=null;tiles=[];animating=false;resetCounters();clearSVG();hint.style.opacity="1";hint.textContent="Çalışma alanına tıklayın.";document.querySelectorAll(".flyTile,.mergeBox").forEach(x=>x.remove())}
+clearBtn.onclick=reset;select.onchange=()=>{reset();if(select.value==="image")imageInput.click()};
 
 
 function scaledPoints(points,p,sx=1,sy=1){
@@ -350,7 +353,7 @@ function smoothPath(P,closed){
 function shapePolygon(){
  if(!shape)return[];const t=shape.type;
  if(t==="square"||t==="rect"||t==="image"){const x=shape.cx-shape.w/2,y=shape.cy-shape.h/2;return[{x,y},{x:x+shape.w,y},{x:x+shape.w,y:y+shape.h},{x,y:y+shape.h}]}
- if(t==="tri"||t==="rightTri"||t==="parallelogram"||t==="rhombus"||t==="trapezoid"||["bunny","cat","heart","star","fish","cloud"].includes(t))return shape.pts.map(p=>({...p}));
+ if(t==="tri"||t==="rightTri"||t==="parallelogram"||t==="rhombus"||t==="trapezoid"||t==="pentagon"||t==="hexagon"||t==="pen"||(t==="polygon"&&polygonClosed)||["bunny","cat","heart","star","fish","cloud"].includes(t))return shape.pts.map(p=>({...p}));
  if(t==="circle"||t==="ellipse"){const a=[];for(let i=0;i<200;i++){const z=i/200*Math.PI*2;a.push({x:shape.cx+shape.rx*Math.cos(z),y:shape.cy+shape.ry*Math.sin(z)})}return a}
  if(t==="free"&&freeClosed)return smoothClosedPolygon(freePoints);
  return[]
@@ -562,6 +565,16 @@ function render(){
    return
  }
  let el,t=shape.type;
+ if(t==="pen"&&penDrawing){
+   el=S("polyline",{points:shape.pts.map(p=>`${p.x},${p.y}`).join(" "),class:"free-preview"});
+   svg.appendChild(el);return
+ }
+ if(t==="polygon"&&!polygonClosed){
+   el=S("polyline",{points:shape.pts.map(p=>`${p.x},${p.y}`).join(" "),class:"free-preview"});
+   svg.appendChild(el);
+   shape.pts.forEach((p,i)=>{const c=S("circle",{cx:p.x,cy:p.y,r:i===0?8:6,class:"free-point"+(i===0?" start":"")});svg.appendChild(c)});
+   return
+ }
  if(t==="square"||t==="rect")el=S("rect",{x:shape.cx-shape.w/2,y:shape.cy-shape.h/2,width:shape.w,height:shape.h,class:"shape"});else if(t==="image"){const im=S("image",{x:shape.cx-shape.w/2,y:shape.cy-shape.h/2,width:shape.w,height:shape.h,href:imageObjectURL||"",opacity:.20,preserveAspectRatio:"none"});im.style.pointerEvents="none";svg.appendChild(im);el=S("rect",{x:shape.cx-shape.w/2,y:shape.cy-shape.h/2,width:shape.w,height:shape.h,class:"shape"})}
  else if(t==="circle"||t==="ellipse")el=S("ellipse",{cx:shape.cx,cy:shape.cy,rx:shape.rx,ry:shape.ry,class:"shape"});
  else el=S("polygon",{points:shape.pts.map(p=>`${p.x},${p.y}`).join(" "),class:"shape"});
@@ -574,7 +587,7 @@ function drawHandles(){
  if(shape.type==="square"||shape.type==="rect"||shape.type==="image"){const x=shape.cx-shape.w/2,y=shape.cy-shape.h/2,w=shape.w,h=shape.h;hs=[{x,y,id:"nw"},{x:x+w,y,id:"ne"},{x:x+w,y:y+h,id:"se"},{x,y:y+h,id:"sw"}]}
  else if(shape.type==="circle")hs=[{x:shape.cx+shape.rx,y:shape.cy,id:"r"}];
  else if(shape.type==="ellipse")hs=[{x:shape.cx+shape.rx,y:shape.cy,id:"rx"},{x:shape.cx,y:shape.cy-shape.ry,id:"ry"}];
- else if(shape.type==="tri"||shape.type==="rightTri"||shape.type==="parallelogram"||shape.type==="rhombus"||shape.type==="trapezoid"||shape.type==="pentagon"||shape.type==="hexagon"||shape.type==="polygon"||shape.type==="pen")hs=shape.pts.map((p,i)=>({...p,id:String(i)}));
+ else if(shape.type==="tri"||shape.type==="rightTri"||shape.type==="parallelogram"||shape.type==="rhombus"||shape.type==="trapezoid"||shape.type==="pentagon"||shape.type==="hexagon"||(shape.type==="polygon"&&polygonClosed))hs=shape.pts.map((p,i)=>({...p,id:String(i)}));
  hs.forEach(h=>{const c=S("circle",{cx:h.x,cy:h.y,r:7,class:"handle"});c.dataset.handle=h.id;c.onpointerdown=handleDown;svg.appendChild(c)})
 }
 function handleDown(e){
@@ -676,8 +689,15 @@ stage.addEventListener("pointerdown",e=>{
    return
  }
  if(t==="polygon"){
-   if(shape?.type!=="polygon"){polygonPoints=[p];shape={type:"polygon",pts:polygonPoints};hint.textContent="Köşeleri tıklayın; ilk noktaya tıklayarak kapatın.";render();return}
-   if(polygonPoints.length>=3&&dist(p,polygonPoints[0])<=14){shape.pts=polygonPoints.map(q=>({...q}));refreshTiles();resetCounters();hint.style.opacity="0";render();return}
+   if(polygonClosed)return;
+   if(shape?.type!=="polygon"){
+     polygonPoints=[p];polygonClosed=false;shape={type:"polygon",pts:polygonPoints};
+     hint.style.opacity="1";hint.textContent="Köşeleri tıklayın; ilk noktaya tıklayarak kapatın.";render();return
+   }
+   if(polygonPoints.length>=3&&dist(p,polygonPoints[0])<=14){
+     polygonClosed=true;shape={type:"polygon",pts:polygonPoints.map(q=>({...q}))};
+     refreshTiles();resetCounters();hint.style.opacity="0";render();return
+   }
    polygonPoints.push(p);shape.pts=polygonPoints;render();return
  }
  if(t==="free"){
@@ -701,7 +721,7 @@ function finishPen(){
 }
 stage.addEventListener("pointerup",finishPen);
 stage.addEventListener("pointercancel",finishPen);
-areaBtn.onclick=()=>{if(shape&&!animating&&(shape.type!=="free"||freeClosed))animateSum()};
+areaBtn.onclick=()=>{if(shape&&!animating&&(shape.type!=="free"||freeClosed)&&(shape.type!=="polygon"||polygonClosed)&&!(shape.type==="pen"&&penDrawing))animateSum()};
 
 function counterText(v){return fmt(v,3)}
 function setCounterHTML(el,v){
