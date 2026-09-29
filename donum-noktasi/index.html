@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dönüm Noktası</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:#222}
+body{padding:20px}.app{max-width:1100px;margin:0 auto}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+select,button{height:42px;border:1px solid #cfcfcf;border-radius:10px;background:#fff;padding:0 13px;font:inherit;color:#222}
+button{cursor:pointer}.layout{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:start}
+.stage{background:#efefef;border:1px solid #d0d0d0;border-radius:12px;padding:8px;min-width:0}
+svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px solid #d0d0d0;border-radius:12px;background:#fff;padding:16px}
+.info small{color:#777}.state{font-size:20px;font-weight:650;margin:4px 0 8px}.formula{font-size:18px;margin-bottom:10px}.explain{font-size:14px;line-height:1.55;color:#444}.foot{margin-top:10px;color:#777;font-size:13px}
+.wp-glow{opacity:0;transform-box:fill-box;transform-origin:center;pointer-events:none}.wp-glow.active{animation:wpGlow 850ms ease-out}
+.wp-ray{stroke:#ffb347;stroke-width:2.2;stroke-linecap:round;opacity:0}.wp-rays.active .wp-ray{animation:wpRay 760ms ease-out}
+.wp-rays.active .wp-ray:nth-child(2n){animation-delay:35ms}.wp-rays.active .wp-ray:nth-child(3n){animation-delay:70ms}
+@keyframes wpGlow{0%{opacity:0;transform:scale(.35)}18%{opacity:.9;transform:scale(1)}55%{opacity:.45;transform:scale(1.7)}100%{opacity:0;transform:scale(2.25)}}
+@keyframes wpRay{0%{opacity:0;stroke-dasharray:0 40}18%{opacity:.95;stroke-dasharray:16 40}100%{opacity:0;stroke-dasharray:0 40;stroke-dashoffset:-28}}
+@media(max-width:760px){body{padding:10px}.layout{grid-template-columns:1fr}.info{padding:12px}}
+@media(prefers-reduced-motion:reduce){.wp-glow.active,.wp-rays.active .wp-ray{animation:none;opacity:.45}}
+</style>
+</head>
+<body>
+<div class="app" id="curve-turn-demo">
+  <div class="toolbar">
+    <select id="curveType" aria-label="Fonksiyon seç">
+      <option value="cup">Sol kıvrım: f(x)=x²</option>
+      <option value="cap">Sağ kıvrım: f(x)=−x²</option>
+      <option value="cubic">Kıvrım değişimi: f(x)=x³</option>
+      <option value="negcubic">Kıvrım değişimi: f(x)=−x³</option>
+      <option value="sin">f(x)=sin(x)</option>
+      <option value="cubicWave">f(x)=0,18(x³−3x)</option>
+      <option value="quartic">f(x)=0,08x⁴−0,7x²</option>
+      <option value="quintic">f(x)=0,012(x⁵−5x³)</option>
+      <option value="rational">f(x)=x/(1+x²)</option>
+    </select>
+    <button type="button" id="resetBtn">↺ Sıfırla</button>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <svg id="graph" viewBox="0 0 760 430" aria-label="Sağ ve sol kıvrım etkileşimli grafiği">
+        <defs>
+          <marker id="tinyArrow" markerWidth="5" markerHeight="5" refX="4.2" refY="2.5" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L5,2.5 L0,5 Z" fill="#ff8a3d"/>
+          </marker>
+          <filter id="noteShadow" x="-40%" y="-40%" width="180%" height="180%">
+            <feDropShadow dx="0" dy="1.5" stdDeviation="1.8" flood-color="#704850" flood-opacity=".18"/>
+          </filter>
+        </defs>
+
+        <path id="curve" d="" fill="none" stroke="#ff70ad" stroke-width="5" stroke-linecap="round"/>
+
+        <line x1="45" y1="215" x2="715" y2="215" stroke="#666" stroke-width="1.7"/>
+        <line x1="380" y1="28" x2="380" y2="400" stroke="#666" stroke-width="1.7"/>
+        <text x="720" y="207" fill="#555" font-size="16" font-style="italic">x</text>
+        <text x="391" y="45" fill="#555" font-size="16" font-style="italic">y</text>
+
+        <g id="snapFx" pointer-events="none">
+          <circle id="glow" class="wp-glow" cx="380" cy="215" r="18" fill="none" stroke="#ffb347" stroke-width="4"/>
+          <g id="rays" class="wp-rays">
+            <line class="wp-ray"/><line class="wp-ray"/><line class="wp-ray"/><line class="wp-ray"/>
+            <line class="wp-ray"/><line class="wp-ray"/><line class="wp-ray"/><line class="wp-ray"/>
+          </g>
+        </g>
+
+        <line id="normalArrow" x1="0" y1="0" x2="0" y2="0" stroke="#ff8a3d" stroke-width="2.5" stroke-linecap="round" marker-end="url(#tinyArrow)"/>
+
+        <g id="warningCallout" style="display:none" pointer-events="none">
+          <line id="warningStem" stroke="#cda1aa" stroke-width=".9"/>
+          <rect id="warningBox" width="76" height="43" rx="3.5" fill="#fff1f4" stroke="#d9adb6" stroke-width=".95" filter="url(#noteShadow)"/>
+          <text id="warningText" fill="#76565d" font-size="8.6" font-weight="400" text-anchor="middle">
+            <tspan>Grafiği her zaman</tspan><tspan>sağa doğru</tspan><tspan>izlemelisin.</tspan>
+          </text>
+        </g>
+
+        <circle id="pointHalo" r="15" fill="transparent" stroke="#cfcfcf" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <circle id="point" r="8.5" fill="#5d9cff" style="cursor:grab"/>
+      </svg>
+    </div>
+
+    <aside class="info">
+      <small>Bulunduğu yerde</small>
+      <div id="stateLabel" class="state">Sol kıvrım</div>
+      <div id="formula" class="formula">f''(x) &gt; 0</div>
+      <div id="explain" class="explain">Küçük ok, tanjanta dik durur ve kıvrım yönünü gösterir.</div>
+    </aside>
+  </div>
+  <div class="foot">Noktayı eğri üzerinde istediğin gibi sürükleyebilirsin.</div>
+</div>
+
+<script>
+(()=>{
+const root=document.getElementById('curve-turn-demo');
+const svg=root.querySelector('#graph'),curve=root.querySelector('#curve'),point=root.querySelector('#point'),pointHalo=root.querySelector('#pointHalo'),normalArrow=root.querySelector('#normalArrow'),curveType=root.querySelector('#curveType'),resetBtn=root.querySelector('#resetBtn'),stateLabel=root.querySelector('#stateLabel'),formula=root.querySelector('#formula'),explain=root.querySelector('#explain'),glow=root.querySelector('#glow'),rays=root.querySelector('#rays'),warningCallout=root.querySelector('#warningCallout'),warningStem=root.querySelector('#warningStem'),warningBox=root.querySelector('#warningBox'),warningText=root.querySelector('#warningText');
+const cx=380,cy=215,sx=95,sy=42,xMin=-3.1,xMax=3.1,snapPx=5,noteW=76,noteH=43;
+let xValue=-2.5,dragging=false,warningVisible=false,warningTimer=null,activeSnapRoot=null,inflectionPoints=[];
+
+function f(t,x){
+ if(t==='cup')return .32*x*x-2;
+ if(t==='cap')return-.32*x*x+2;
+ if(t==='cubic')return .105*x*x*x;
+ if(t==='negcubic')return-.105*x*x*x;
+ if(t==='sin')return 1.8*Math.sin(x);
+ if(t==='cubicWave')return .18*(x*x*x-3*x);
+ if(t==='quartic')return .08*x*x*x*x-.7*x*x+1;
+ if(t==='quintic')return .012*(x*x*x*x*x-5*x*x*x);
+ if(t==='rational')return 3*x/(1+x*x);
+ return 0;
+}
+function d1(t,x){
+ if(t==='cup')return .64*x;
+ if(t==='cap')return-.64*x;
+ if(t==='cubic')return .315*x*x;
+ if(t==='negcubic')return-.315*x*x;
+ if(t==='sin')return 1.8*Math.cos(x);
+ if(t==='cubicWave')return .54*(x*x-1);
+ if(t==='quartic')return .32*x*x*x-1.4*x;
+ if(t==='quintic')return .06*x*x*x*x-.18*x*x;
+ if(t==='rational')return 3*(1-x*x)/Math.pow(1+x*x,2);
+ return 0;
+}
+function d2(t,x){
+ if(t==='cup')return .64;
+ if(t==='cap')return-.64;
+ if(t==='cubic')return .63*x;
+ if(t==='negcubic')return-.63*x;
+ if(t==='sin')return-1.8*Math.sin(x);
+ if(t==='cubicWave')return 1.08*x;
+ if(t==='quartic')return .96*x*x-1.4;
+ if(t==='quintic')return .24*x*x*x-.36*x;
+ if(t==='rational')return 6*x*(x*x-3)/Math.pow(1+x*x,3);
+ return 0;
+}
+const toSvg=(x,y)=>[cx+sx*x,cy-sy*y],xFromSvg=X=>(X-cx)/sx,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function clientToSvg(clientX,clientY){const p=svg.createSVGPoint();p.x=clientX;p.y=clientY;const m=svg.getScreenCTM();return m?p.matrixTransform(m.inverse()):{x:0,y:0}}
+
+function isInflectionPoint(type,x){const e=.01,l=d2(type,x-e),r=d2(type,x+e);return Number.isFinite(l)&&Number.isFinite(r)&&l*r<0}
+function findInflectionPoints(type){
+ const roots=[],steps=1600;let px=xMin,py=d2(type,px);
+ for(let i=1;i<=steps;i++){
+  const x=xMin+(xMax-xMin)*i/steps,y=d2(type,x);
+  if(Number.isFinite(py)&&Number.isFinite(y)){
+   if(Math.abs(py)<1e-8&&isInflectionPoint(type,px))roots.push(px);
+   else if(py*y<0){
+    let a=px,b=x;
+    for(let k=0;k<28;k++){const m=(a+b)/2;if(d2(type,a)*d2(type,m)<=0)b=m;else a=m}
+    const r=(a+b)/2;if(isInflectionPoint(type,r))roots.push(r);
+   }
+  }
+  px=x;py=y;
+ }
+ const unique=[];for(const r of roots)if(!unique.some(u=>Math.abs(u-r)<.02))unique.push(r);
+ return unique;
+}
+function updateInflectionPoints(){inflectionPoints=findInflectionPoints(curveType.value)}
+
+function positionSnapFx(x,y){
+ const [px,py]=toSvg(x,y);glow.setAttribute('cx',px);glow.setAttribute('cy',py);
+ const defs=[[0,-31,0,-56],[22,-22,40,-40],[31,0,57,0],[22,22,40,40],[0,31,0,56],[-22,22,-40,40],[-31,0,-57,0],[-22,-22,-40,-40]];
+ rays.querySelectorAll('.wp-ray').forEach((ray,i)=>{const r=defs[i];ray.setAttribute('x1',px+r[0]);ray.setAttribute('y1',py+r[1]);ray.setAttribute('x2',px+r[2]);ray.setAttribute('y2',py+r[3])});
+}
+function fireSnapAnimation(x,y){positionSnapFx(x,y);glow.classList.remove('active');rays.classList.remove('active');void glow.getBoundingClientRect();glow.classList.add('active');rays.classList.add('active');setTimeout(()=>{glow.classList.remove('active');rays.classList.remove('active')},900)}
+
+function placeWarning(px,py){
+ let bx=px+18,by=py+14;if(bx+noteW>720)bx=px-noteW-18;if(by+noteH>400)by=py-noteH-18;bx=clamp(bx,48,720-noteW);by=clamp(by,34,400-noteH);
+ warningBox.setAttribute('x',bx);warningBox.setAttribute('y',by);
+ const tx=bx+noteW/2,ty=by+11;warningText.setAttribute('x',tx);warningText.setAttribute('y',ty);
+ warningText.querySelectorAll('tspan').forEach((s,i)=>{s.setAttribute('x',tx);s.setAttribute('dy',i===0?0:10)});
+ let ax=bx,ay=by+noteH/2;if(px>bx+noteW){ax=bx+noteW}else if(py<by){ax=bx+noteW/2;ay=by}else if(py>by+noteH){ax=bx+noteW/2;ay=by+noteH}
+ const dx=px-ax,dy=py-ay,L=Math.hypot(dx,dy)||1;warningStem.setAttribute('x1',ax);warningStem.setAttribute('y1',ay);warningStem.setAttribute('x2',px-dx/L*11);warningStem.setAttribute('y2',py-dy/L*11);
+}
+function showWarning(px,py){warningVisible=true;warningCallout.style.display='';placeWarning(px,py);clearTimeout(warningTimer);warningTimer=setTimeout(()=>{warningVisible=false;warningCallout.style.display='none'},1350)}
+function hideWarning(){warningVisible=false;clearTimeout(warningTimer);warningCallout.style.display='none'}
+
+function drawCurve(){
+ const t=curveType.value;let d='';
+ for(let i=0;i<=260;i++){const x=xMin+(xMax-xMin)*i/260,[X,Y]=toSvg(x,f(t,x));d+=(i===0?'M ':' L ')+X.toFixed(2)+' '+Y.toFixed(2)}
+ curve.setAttribute('d',d);updateInflectionPoints();updateVisuals(true);
+}
+function updateVisuals(showArrow){
+ const t=curveType.value,curv=d2(t,xValue),[px,py]=toSvg(xValue,f(t,xValue));
+ point.setAttribute('cx',px);point.setAttribute('cy',py);pointHalo.setAttribute('cx',px);pointHalo.setAttribute('cy',py);normalArrow.style.display=showArrow?'':'none';
+ if(showArrow){
+  const axv=clamp(xValue+.28,xMin,xMax),[ax,ay]=toSvg(axv,f(t,axv)),slope=d1(t,axv),ac=d2(t,axv);let tx=sx,ty=-sy*slope,L=Math.hypot(tx,ty)||1;tx/=L;ty/=L;
+  const lnx=ty,lny=-tx,nx=ac>=0?lnx:-lnx,ny=ac>=0?lny:-lny,off=15,len=25,sx0=ax+nx*off,sy0=ay+ny*off;
+  normalArrow.setAttribute('x1',sx0);normalArrow.setAttribute('y1',sy0);normalArrow.setAttribute('x2',sx0+nx*len);normalArrow.setAttribute('y2',sy0+ny*len);
+ }
+ if(warningVisible)placeWarning(px,py);
+ const near=inflectionPoints.some(r=>Math.abs(r-xValue)<.012);
+ if(near){stateLabel.textContent='Kıvrım değişimi (Wendepunkt)';formula.innerHTML="f''(x) = 0";explain.textContent='Tam burada kıvrım yönü değişir.'}
+ else if(curv>0){stateLabel.textContent='Sol kıvrım (Linkskrümmung)';formula.innerHTML="f''(x) &gt; 0";explain.textContent='Ok, sağa doğru ilerlerken dönüşün sol tarafa olduğunu gösterir.'}
+ else if(curv<0){stateLabel.textContent='Sağ kıvrım (Rechtskrümmung)';formula.innerHTML="f''(x) &lt; 0";explain.textContent='Ok, sağa doğru ilerlerken dönüşün sağ tarafa olduğunu gösterir.'}
+ else{stateLabel.textContent='Kıvrım';formula.innerHTML="f''(x) = 0";explain.textContent='Burada ikinci türev sıfırdır.'}
+}
+function beginDrag(e){dragging=true;point.style.cursor='grabbing';point.setPointerCapture?.(e.pointerId)}
+function drag(e){
+ if(!dragging)return;const p=clientToSvg(e.clientX,e.clientY);let newX=clamp(xFromSvg(p.x),xMin,xMax);const movingLeft=newX<xValue-.002,movingRight=newX>xValue+.002;
+ let snapRoot=null,best=Infinity;for(const r of inflectionPoints){const dist=Math.abs((cx+sx*newX)-(cx+sx*r));if(dist<=snapPx&&dist<best){best=dist;snapRoot=r}}
+ if(snapRoot!==null){newX=snapRoot;if(activeSnapRoot===null||Math.abs(activeSnapRoot-snapRoot)>.01){activeSnapRoot=snapRoot;fireSnapAnimation(snapRoot,f(curveType.value,snapRoot))}}
+ else if(activeSnapRoot!==null&&Math.abs((cx+sx*newX)-(cx+sx*activeSnapRoot))>snapPx+4)activeSnapRoot=null;
+ xValue=newX;const [px,py]=toSvg(xValue,f(curveType.value,xValue));
+ if(movingLeft){showWarning(px,py);updateVisuals(false)}else if(movingRight){hideWarning();updateVisuals(true)}else updateVisuals(normalArrow.style.display!=='none');
+}
+function endDrag(e){dragging=false;point.style.cursor='grab';try{point.releasePointerCapture?.(e.pointerId)}catch(_){}}
+point.addEventListener('pointerdown',beginDrag);svg.addEventListener('pointermove',drag);svg.addEventListener('pointerup',endDrag);svg.addEventListener('pointercancel',endDrag);
+curveType.addEventListener('change',()=>{xValue=-2.5;activeSnapRoot=null;hideWarning();drawCurve()});resetBtn.addEventListener('click',()=>{xValue=-2.5;activeSnapRoot=null;hideWarning();updateVisuals(true)});
+drawCurve();
+})();
+</script>
+<script src="../global-language.js"></script>
+</body>
+</html>
