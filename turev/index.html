@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Türev Adım Adım v12</title>
+<title>Türev Adım Adım v13</title>
 <style>
   :root{
     --bg:#ffffff;
@@ -899,16 +899,13 @@ function derivativeOneStep(n){
     return {node:N.sub(N.deriv(n.a),N.deriv(n.b)), rule:"Fark kuralı"};
 
   if(n.t==="mul"){
-    // Basit polinom/sabit türevleri gereksiz yere açık bırakılmaz.
-    // Örn. (x·e^u)' -> e^u + x(e^u)'
-    //      (4x²·e^u)' -> 8x e^u + 4x²(e^u)'
-    const da=derivativeCompact(n.a);
-    const db=derivativeCompact(n.b);
-
+    // Çarpım kuralı bir öğretim adımı olarak eksiksiz gösterilir:
+    // (2x·e^u)' -> (2x)'e^u + 2x(e^u)'
+    // Basit türevler ancak kendi türev işaretlerine tıklanınca alınır.
     return {
       node:N.add(
-        N.mul(da, clone(n.b)),
-        N.mul(clone(n.a), db)
+        N.mul(N.deriv(clone(n.a)), clone(n.b)),
+        N.mul(clone(n.a), N.deriv(clone(n.b)))
       ),
       rule:"Çarpım kuralı"
     };
