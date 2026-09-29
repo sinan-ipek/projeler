@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Türev Adım Adım v22</title>
+<title>Türev Adım Adım v23</title>
 <style>
   :root{
     --bg:#ffffff;
@@ -836,6 +836,24 @@ function polynomialMapOf(n){
     return out;
   }
 
+  if(n.t==="mul"){
+    const A=polynomialMapOf(n.a);
+    const B=polynomialMapOf(n.b);
+    if(!A || !B) return null;
+
+    const out=new Map();
+    for(const [pa,ca] of A){
+      for(const [pb,cb] of B){
+        const p=pa+pb;
+        out.set(p,(out.get(p)||0)+ca*cb);
+      }
+    }
+    for(const [p,c] of [...out]){
+      if(Math.abs(c)<1e-12) out.delete(p);
+    }
+    return out;
+  }
+
   return null;
 }
 
@@ -1453,6 +1471,18 @@ function applyCommonFactor(order,factorId){
   }else{
       row.factorInside=canonicalize(row.factorInside);
     row.ast=canonicalize(N.mul(clone(row.factorOutside),clone(row.factorInside)));
+
+    // Ortak çarpan alma bittikten sonra içeride kalan basit polinom
+    // çarpımlarını da aç ve benzer terimleri topla.
+    // Örn. x(x-2)+(2x-2) -> x²-2
+    if(row.factorInside){
+      const poly=polynomialMapOf(row.factorInside);
+      if(poly){
+        row.factorInside=canonicalize(polynomialAstFromMap(poly));
+        row.ast=canonicalize(N.mul(clone(row.factorOutside),clone(row.factorInside)));
+      }
+    }
+
     row.factorExpanded=[];
     row.revealCount=0;
     row.factorClickable=false;
