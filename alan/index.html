@@ -28,6 +28,9 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
 .free-point.start{fill:#ffe07a}
 .tile{fill:#f6d66d;stroke:#8d7a38;stroke-width:.65;vector-effect:non-scaling-stroke;pointer-events:none}
 .tile.partial{fill:#f6d66d}
+.tile.tile-big{stroke-width:1.05}
+.tile.tile-mid{stroke-width:.72}
+.tile.tile-small{stroke-width:.42}
 #hint{position:absolute;left:50%;top:16px;transform:translateX(-50%);padding:7px 12px;border-radius:10px;background:#ffffffee;border:1px solid #ddd;color:#666;font-size:13px;pointer-events:none;box-shadow:0 2px 8px #0000000d;transition:opacity .2s}
 .flyTile{
  position:fixed;box-sizing:border-box;z-index:1000;background:#f6d66d;border:1px solid #8d7a38;pointer-events:none;
@@ -45,10 +48,12 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
 @media(max-width:760px){.bar{gap:6px;padding:8px;min-height:60px;flex-wrap:wrap}.title{font-size:17px}select,.btn,#result{height:38px}#clearBtn{margin-left:0}.equation{gap:6px}.eq{font-size:20px}#result{min-width:92px}}
 
 .flyTile,.flyTile.smallPiece,.flyTile.lifted{
- border-width:1px!important;
  border-style:solid!important;
  border-color:#8d7a38!important;
 }
+.flyTile-big{border-width:1.4px!important}
+.flyTile-mid{border-width:.9px!important}
+.flyTile-small{border-width:.55px!important}
 
 .topTools{position:fixed;top:12px;right:14px;z-index:1200;display:flex;gap:8px;align-items:center}
 .toolBtn,.langBtn{width:38px;height:38px;border:1px solid #cfcfcf;border-radius:10px;background:#fff;box-shadow:0 2px 8px #0002;display:grid;place-items:center;font-size:20px;cursor:pointer}
@@ -169,7 +174,7 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
    <option value="free">Serbest</option><option value="image">🖼️ Resim</option>
   </select>
   <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
-  <button class="btn" id="areaBtn">Alan</button>
+  <button class="btn" id="areaBtn">Say</button>
   <div class="counterRack">
  <div class="counterUnit"><div class="counterBox" id="counterBig">—</div></div>
  <span class="counterPlus" id="plusAB">+</span>
@@ -590,7 +595,7 @@ function render(){
  el.dataset.role="shape";el.onpointerdown=shapeDown;svg.appendChild(el);
  drawTiles();drawHandles()
 }
-function drawTiles(){for(const t of tiles){const r=S("rect",{x:t.x,y:t.y,width:t.w,height:t.h,class:"tile"+(t.full?"":" partial"),"data-tile-id":t.id,opacity:tileAlpha});svg.appendChild(r)}}
+function drawTiles(){for(const t of tiles){const r=S("rect",{x:t.x,y:t.y,width:t.w,height:t.h,class:"tile tile-"+t.level+(t.full?"":" partial"),"data-tile-id":t.id,opacity:tileAlpha});svg.appendChild(r)}}
 function drawHandles(){
  if(!shape)return;let hs=[];
  if(shape.type==="square"||shape.type==="rect"||shape.type==="image"){const x=shape.cx-shape.w/2,y=shape.cy-shape.h/2,w=shape.w,h=shape.h;hs=[{x,y,id:"nw"},{x:x+w,y,id:"ne"},{x:x+w,y:y+h,id:"se"},{x,y:y+h,id:"sw"}]}
@@ -823,7 +828,54 @@ async function convertCounter(level){
  }
 }
 midUnit.onclick=()=>convertCounter("mid");smallUnit.onclick=()=>convertCounter("small");
-async function animateSum(){if(!shape||!tiles.length||animating)return;animating=true;resetCounters();setCounterHTML(counterBig,0);setCounterHTML(counterMid,0);setCounterHTML(counterSmall,0);const sr=stage.getBoundingClientRect(),originals=tiles.map(t=>({...t})),sleep=ms=>new Promise(r=>setTimeout(r,ms)),flying=[];for(const t of originals){const d=document.createElement("div");d.className="flyTile";d.style.transition="none";const sp=worldToScreen(t.x,t.y);d.style.left=sp.x+"px";d.style.top=sp.y+"px";d.style.width=(t.w*view.scale)+"px";d.style.height=(t.h*view.scale)+"px";d.style.boxSizing="border-box";d.style.borderWidth="1px";document.body.appendChild(d);flying.push({tile:t,el:d})}void document.body.offsetWidth;svg.querySelectorAll(".tile").forEach(e=>e.style.visibility="hidden");await sleep(35);for(const o of flying)o.el.style.transition="";async function send(o,delay,level){await sleep(delay);const t=o.tile,d=o.el,target=level==="big"?counterBig:level==="mid"?counterMid:counterSmall,r=target.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2;d.classList.add("lifted");d.style.borderWidth="1px";d.style.width=t.w+"px";d.style.height=t.h+"px";d.style.left=(tx-(t.w*view.scale)/2)+"px";d.style.top=(ty-(t.h*view.scale)/2+7)+"px";await sleep(510);counterState[level]++;setCounter(level,counterState[level]);d.remove()}async function group(level){const g=flying.filter(o=>o.tile.level===level);await Promise.all(g.map((o,i)=>send(o,i*82,level)))}await group("big");await group("mid");await group("small");counterState.counted=true;if(counterState.mid)midUnit.classList.add("ready");if(counterState.small)smallUnit.classList.add("ready");for(const o of flying)if(o.el.isConnected)o.el.remove();animating=false;keepEmptyAfterCount=true;tiles=[];render()}
+async function animateSum(){
+ if(!shape||!tiles.length||animating)return;
+ animating=true;resetCounters();
+ setCounterHTML(counterBig,0);setCounterHTML(counterMid,0);setCounterHTML(counterSmall,0);
+ const originals=tiles.map(t=>({...t})),sleep=ms=>new Promise(r=>setTimeout(r,ms)),flying=[];
+ for(const t of originals){
+   const d=document.createElement("div");
+   d.className="flyTile flyTile-"+t.level;
+   d.style.transition="none";
+   const sp=worldToScreen(t.x,t.y);
+   const fw=t.w*view.scale,fh=t.h*view.scale;
+   d.style.left=sp.x+"px";d.style.top=sp.y+"px";
+   d.style.width=fw+"px";d.style.height=fh+"px";
+   d.style.boxSizing="border-box";
+   d.style.borderWidth=(t.level==="big"?"1.4px":t.level==="mid"?".9px":".55px");
+   document.body.appendChild(d);
+   flying.push({tile:t,el:d,fw,fh});
+ }
+ void document.body.offsetWidth;
+ svg.querySelectorAll(".tile").forEach(e=>e.style.visibility="hidden");
+ await sleep(35);
+ for(const o of flying)o.el.style.transition="";
+ async function send(o,delay,level){
+   await sleep(delay);
+   const t=o.tile,d=o.el,target=level==="big"?counterBig:level==="mid"?counterMid:counterSmall;
+   const r=target.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2;
+   d.classList.add("lifted");
+   // Boyut değişmez: şeklin içindeki ekranda görünen boyutuyla sayaca gider.
+   d.style.width=o.fw+"px";d.style.height=o.fh+"px";
+   d.style.left=(tx-o.fw/2)+"px";d.style.top=(ty-o.fh/2+7)+"px";
+   const travel=level==="big"?480:level==="mid"?390:300;
+   await sleep(travel);
+   counterState[level]++;setCounter(level,counterState[level]);d.remove();
+ }
+ async function group(level){
+   const g=flying.filter(o=>o.tile.level===level);
+   const gap=level==="big"?82:level==="mid"?58:34;
+   await Promise.all(g.map((o,i)=>send(o,i*gap,level)));
+ }
+ await group("big");
+ await group("mid");
+ await group("small");
+ counterState.counted=true;
+ if(counterState.mid)midUnit.classList.add("ready");
+ if(counterState.small)smallUnit.classList.add("ready");
+ for(const o of flying)if(o.el.isConnected)o.el.remove();
+ animating=false;keepEmptyAfterCount=true;tiles=[];render();
+}
 /* Zoom: fare konumunu sabit tutarak yakınlaştır / uzaklaştır. */
 stage.addEventListener("wheel",e=>{
   if(animating)return;
@@ -866,14 +918,14 @@ reset();
 })();
 
 const UI_LANGS={
- tr:{flag:"🇹🇷",title:"Alan",help:"Alan",intro:"Bir şeklin alanı, şeklin içine sığan birim karelerin toplamıdır.",big:"Büyük kare = 1",mid:"Orta kare = 1/4",small:"Küçük kare = 1/16",end:"Alanı bulmak için karelerin değerlerini toplarız."},
- en:{flag:"🇬🇧",title:"Area",help:"Area",intro:"The area of a shape is the sum of the unit squares that fit inside it.",big:"Large square = 1",mid:"Medium square = 1/4",small:"Small square = 1/16",end:"Add the values of the squares to find the area."},
- de:{flag:"🇩🇪",title:"Fläche",help:"Fläche",intro:"Die Fläche einer Form ist die Summe der Einheitsquadrate in der Form.",big:"Großes Quadrat = 1",mid:"Mittleres Quadrat = 1/4",small:"Kleines Quadrat = 1/16",end:"Addiere die Werte der Quadrate, um die Fläche zu bestimmen."},
- fr:{flag:"🇫🇷",title:"Aire",help:"Aire",intro:"L’aire d’une forme est la somme des carrés unités qu’elle contient.",big:"Grand carré = 1",mid:"Carré moyen = 1/4",small:"Petit carré = 1/16",end:"Additionne les valeurs des carrés pour trouver l’aire."},
- it:{flag:"🇮🇹",title:"Area",help:"Area",intro:"L’area di una figura è la somma dei quadrati unitari contenuti nella figura.",big:"Quadrato grande = 1",mid:"Quadrato medio = 1/4",small:"Quadrato piccolo = 1/16",end:"Somma i valori dei quadrati per trovare l’area."},
- es:{flag:"🇪🇸",title:"Área",help:"Área",intro:"El área de una figura es la suma de los cuadrados unitarios que contiene.",big:"Cuadrado grande = 1",mid:"Cuadrado mediano = 1/4",small:"Cuadrado pequeño = 1/16",end:"Suma los valores de los cuadrados para hallar el área."},
- zh:{flag:"🇨🇳",title:"面积",help:"面积",intro:"图形的面积是图形内部单位正方形面积的总和。",big:"大正方形 = 1",mid:"中正方形 = 1/4",small:"小正方形 = 1/16",end:"把所有正方形的数值相加即可得到面积。"},
- el:{flag:"🇬🇷",title:"Εμβαδόν",help:"Εμβαδόν",intro:"Το εμβαδόν ενός σχήματος είναι το άθροισμα των μοναδιαίων τετραγώνων μέσα στο σχήμα.",big:"Μεγάλο τετράγωνο = 1",mid:"Μεσαίο τετράγωνο = 1/4",small:"Μικρό τετράγωνο = 1/16",end:"Πρόσθεσε τις τιμές των τετραγώνων για να βρεις το εμβαδόν."}
+ tr:{flag:"🇹🇷",title:"Alan",help:"Alan",count:"Say",intro:"Bir şeklin alanı, şeklin içine sığan birim karelerin toplamıdır.",big:"Büyük kare = 1",mid:"Orta kare = 1/4",small:"Küçük kare = 1/16",end:"Alanı bulmak için karelerin değerlerini toplarız."},
+ en:{flag:"🇬🇧",title:"Area",help:"Area",count:"Count",intro:"The area of a shape is the sum of the unit squares that fit inside it.",big:"Large square = 1",mid:"Medium square = 1/4",small:"Small square = 1/16",end:"Add the values of the squares to find the area."},
+ de:{flag:"🇩🇪",title:"Fläche",help:"Fläche",count:"Zählen",intro:"Die Fläche einer Form ist die Summe der Einheitsquadrate in der Form.",big:"Großes Quadrat = 1",mid:"Mittleres Quadrat = 1/4",small:"Kleines Quadrat = 1/16",end:"Addiere die Werte der Quadrate, um die Fläche zu bestimmen."},
+ fr:{flag:"🇫🇷",title:"Aire",help:"Aire",count:"Compter",intro:"L’aire d’une forme est la somme des carrés unités qu’elle contient.",big:"Grand carré = 1",mid:"Carré moyen = 1/4",small:"Petit carré = 1/16",end:"Additionne les valeurs des carrés pour trouver l’aire."},
+ it:{flag:"🇮🇹",title:"Area",help:"Area",count:"Conta",intro:"L’area di una figura è la somma dei quadrati unitari contenuti nella figura.",big:"Quadrato grande = 1",mid:"Quadrato medio = 1/4",small:"Quadrato piccolo = 1/16",end:"Somma i valori dei quadrati per trovare l’area."},
+ es:{flag:"🇪🇸",title:"Área",help:"Área",count:"Contar",intro:"El área de una figura es la suma de los cuadrados unitarios que contiene.",big:"Cuadrado grande = 1",mid:"Cuadrado mediano = 1/4",small:"Cuadrado pequeño = 1/16",end:"Suma los valores de los cuadrados para hallar el área."},
+ zh:{flag:"🇨🇳",title:"面积",help:"面积",count:"计数",intro:"图形的面积是图形内部单位正方形面积的总和。",big:"大正方形 = 1",mid:"中正方形 = 1/4",small:"小正方形 = 1/16",end:"把所有正方形的数值相加即可得到面积。"},
+ el:{flag:"🇬🇷",title:"Εμβαδόν",help:"Εμβαδόν",count:"Μέτρηση",intro:"Το εμβαδόν ενός σχήματος είναι το άθροισμα των μοναδιαίων τετραγώνων μέσα στο σχήμα.",big:"Μεγάλο τετράγωνο = 1",mid:"Μεσαίο τετράγωνο = 1/4",small:"Μικρό τετράγωνο = 1/16",end:"Πρόσθεσε τις τιμές των τετραγώνων για να βρεις το εμβαδόν."}
 };
 function applyUILang(code){
  const L=UI_LANGS[code]||UI_LANGS.tr;
@@ -882,6 +934,7 @@ function applyUILang(code){
  document.title=L.title;
  document.getElementById("langBtn").textContent=L.flag;
  document.getElementById("helpTitle").textContent=L.help;
+ document.getElementById("areaBtn").textContent=L.count||"Say";
  document.getElementById("helpIntro").textContent=L.intro;
  document.getElementById("helpBig").textContent=L.big;
  document.getElementById("helpMid").textContent=L.mid;
