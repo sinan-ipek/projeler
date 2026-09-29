@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Türev Adım Adım v14</title>
+<title>Türev Adım Adım v15</title>
 <style>
   :root{
     --bg:#ffffff;
@@ -213,6 +213,23 @@
     display:inline-block;
     white-space:nowrap;
   }
+  .factor-term-expand{
+    display:inline-block;
+    white-space:nowrap;
+    cursor:pointer;
+    padding:1px 4px;
+    border-radius:6px;
+    transition:background .15s ease, outline-color .15s ease;
+    outline:1px solid transparent;
+  }
+  .factor-term-expand:hover{
+    background:#f5f5f5;
+    outline-color:#d4d4d8;
+  }
+  .factor-term-expanded{
+    display:inline-block;
+    white-space:nowrap;
+  }
   .factor-dot{
     color:#777;
     padding:0 2px;
@@ -230,6 +247,17 @@
   }
   .common-factor:hover{
     transform:translateY(-1px);
+  }
+  .common-factor.revealed{
+    animation:factorReveal .38s ease both;
+  }
+  .common-factor.locked{
+    cursor:default;
+    pointer-events:none;
+  }
+  @keyframes factorReveal{
+    from{opacity:0;transform:translateY(3px) scale(.96)}
+    to{opacity:1;transform:translateY(0) scale(1)}
   }
   .cf0{color:#b45309;background:#fff7ed}
   .cf1{color:#1d4ed8;background:#eff6ff}
@@ -692,12 +720,23 @@ function canonicalOrder(n){
 
   if(n.t==="add"){
     let terms=flattenAdd(n,[]).map(canonicalOrder);
-    terms.sort((u,v)=>{
+
+    // Ayrı duran sabitleri de birleştir: 2x² + 1 + 2 -> 2x² + 3
+    let numericSum=0;
+    const nonNumeric=[];
+    for(const t of terms){
+      if(isNum(t)) numericSum+=t.v;
+      else nonNumeric.push(t);
+    }
+
+    nonNumeric.sort((u,v)=>{
       const d=termRank(u)-termRank(v);
       if(d!==0) return d;
       return JSON.stringify(u).localeCompare(JSON.stringify(v));
     });
-    return buildAdd(terms);
+
+    if(numericSum!==0 || nonNumeric.length===0) nonNumeric.push(N.num(numericSum));
+    return buildAdd(nonNumeric);
   }
 
   return n;
@@ -1131,6 +1170,19 @@ function rebuildTermFromParts(p){
   return canonicalize(buildMul(fs));
 }
 
+function primeFactorsInt(n){
+  n=Math.abs(Math.trunc(n));
+  const out=[];
+  if(n<2) return out;
+  let d=2;
+  while(d*d<=n){
+    while(n%d===0){ out.push(d); n/=d; }
+    d+=(d===2?1:2);
+  }
+  if(n>1) out.push(n);
+  return out;
+}
+
 function commonFactorSpecs(ast){
   const terms=flattenAdd(ast,[]);
   if(terms.length<2) return [];
@@ -1138,18 +1190,20 @@ function commonFactorSpecs(ast){
   const parts=terms.map(decomposeTermForFactor);
   const specs=[];
 
-  // Ortak sayısal katsayı (yalnız tam sayılarda).
+  // Ortak sayısal katsayıyı asal çarpanlar halinde göster.
   if(parts.every(p=>Number.isInteger(p.coeff) && p.coeff!==0)){
     let g=Math.abs(parts[0].coeff);
     for(let i=1;i<parts.length;i++) g=gcdInt(g,parts[i].coeff);
-    if(g>1) specs.push({id:"num:"+g,type:"num",value:g,node:N.num(g)});
+    const primes=primeFactorsInt(g);
+    primes.forEach((q,i)=>{
+      specs.push({id:"num:"+q+":"+i,type:"num",value:q,node:N.num(q)});
+    });
   }
 
-  // Ortak x kuvveti.
+  // x^k ortaksa k tane ayrı x göster.
   const minX=Math.min(...parts.map(p=>p.xPower));
-  if(minX>0){
-    const node=minX===1 ? N.x() : N.pow(N.x(),N.num(minX));
-    specs.push({id:"x:"+minX,type:"x",power:minX,node});
+  for(let i=0;i<minX;i++){
+    specs.push({id:"x:1:"+i,type:"x",power:1,node:N.x()});
   }
 
   // Yapısal olarak tamamen aynı ortak faktörler (e^u, sin(u), parantez vb).
@@ -1192,6 +1246,75 @@ function prepareFactorStage(row){
   row.factorInside=clone(row.ast);
   row.commonFactors=commonFactorSpecs(row.factorInside);
   row.factorPending=row.commonFactors.length>0;
+  row.factorExpanded=[];
+  row.revealCount=0;
+  row.factorClickable=false;
+
+  if(row.factorPending){
+    const terms=flattenAdd(row.factorInside,[]);
+    row.factorExpanded=terms.map(()=>false);
+  }
+}
+
+let factorAnimationToken=0;
+
+function allFactorTermsExpanded(row){
+  return row.factorExpanded && row.factorExpanded.length>0 && row.factorExpanded.every(Boolean);
+}
+
+function expandFactorTerm(order,index){
+  const row=rows.find(r=>r.order===order);
+  if(!row || !row.factorPending || row.factorExpanded[index]) return;
+
+  snapshotState();
+  row.factorExpanded[index]=true;
+
+  if(allFactorTermsExpanded(row)){
+    lastRule="Ortak çarpanlar gösterilecek";
+    setHint("Bütün terimler çarpanlarına ayrıldı. Şimdi ortak çarpanlar belirginleşecek.");
+    setStatus("Ortak çarpanlar aranıyor.","warn");
+    render();
+    scheduleCommonFactorReveal(order);
+  }else{
+    lastRule="Terimler çarpanlarına ayrılacak";
+    setHint("Diğer terimlere de tıklayarak onları çarpanlarına ayırın.");
+    setStatus("Terimleri çarpanlarına ayırma aşaması.","warn");
+    render();
+  }
+}
+
+function scheduleCommonFactorReveal(order){
+  const token=++factorAnimationToken;
+  const row=rows.find(r=>r.order===order);
+  if(!row) return;
+
+  row.revealCount=0;
+  row.factorClickable=false;
+  render();
+
+  const step=190;
+  const firstDelay=420;
+
+  row.commonFactors.forEach((_,i)=>{
+    setTimeout(()=>{
+      if(token!==factorAnimationToken) return;
+      const live=rows.find(r=>r.order===order);
+      if(!live || !live.factorPending) return;
+      live.revealCount=i+1;
+      render();
+    }, firstDelay+i*step);
+  });
+
+  setTimeout(()=>{
+    if(token!==factorAnimationToken) return;
+    const live=rows.find(r=>r.order===order);
+    if(!live || !live.factorPending) return;
+    live.factorClickable=true;
+    lastRule="Ortak çarpanlar seçilecek";
+    setHint("Aynı renkte görünen ortak çarpanlardan birine tıklayın.");
+    setStatus("Ortak çarpanlar seçilebilir.","warn");
+    render();
+  }, firstDelay+row.commonFactors.length*step+220);
 }
 
 function applyCommonFactor(order,factorId){
@@ -1210,17 +1333,28 @@ function applyCommonFactor(order,factorId){
     ? canonicalize(N.mul(row.factorOutside,clone(spec.node)))
     : canonicalize(clone(spec.node));
 
+  row.factorInside=canonicalize(row.factorInside);
   row.ast=canonicalize(N.mul(clone(row.factorOutside),clone(row.factorInside)));
   row.commonFactors=commonFactorSpecs(row.factorInside);
   row.factorPending=row.commonFactors.length>0;
 
   if(row.factorPending){
+    const termsNow=flattenAdd(row.factorInside,[]);
+    row.factorExpanded=termsNow.map(()=>true);
+    row.revealCount=row.commonFactors.length;
+    row.factorClickable=true;
     lastRule="Diğer ortak çarpanlar seçilecek";
     setHint("Seçtiğiniz ortak çarpan parantezin önüne alındı. Renkli kalan ortak çarpanlara da tıklayın.");
     setStatus("Ortak çarpan alma devam ediyor.","warn");
   }else{
+    factorAnimationToken++;
+    row.factorInside=canonicalize(row.factorInside);
+    row.ast=canonicalize(N.mul(clone(row.factorOutside),clone(row.factorInside)));
+    row.factorExpanded=[];
+    row.revealCount=0;
+    row.factorClickable=false;
     lastRule="Bir sonraki türev alınacak";
-    setHint(`Ortak çarpan alma tamamlandı. Şimdi <strong>${lhsLabel(order)}</strong> üzerine tıklayarak bir sonraki türeve geçebilirsiniz.`);
+    setHint(`Ortak çarpan alma ve son sadeleştirme tamamlandı. Şimdi <strong>${lhsLabel(order)}</strong> üzerine tıklayarak bir sonraki türeve geçebilirsiniz.`);
     setStatus("İfade tamamen düzenlendi ve yeni türeve hazır.","good");
   }
   render();
@@ -1230,40 +1364,70 @@ function renderPlainFactor(n){
   return renderNode(n,[],0);
 }
 
-function renderFactoringTerm(term,specs){
+function factorPiecesForExpandedTerm(term){
   const p=decomposeTermForFactor(term);
   const pieces=[];
-  let coeff=p.coeff;
-  let xPower=p.xPower;
-  const rest=p.rest.map(clone);
 
-  for(let i=0;i<specs.length;i++){
-    const sp=specs[i];
-    const cls="cf"+(i%6);
+  if(Number.isInteger(p.coeff)){
+    if(p.coeff<0) pieces.push({node:N.num(-1),kind:"num",value:-1});
+    const primes=primeFactorsInt(Math.abs(p.coeff));
+    if(primes.length){
+      primes.forEach(q=>pieces.push({node:N.num(q),kind:"num",value:q}));
+    }else if(Math.abs(p.coeff)!==1 || (p.xPower===0 && p.rest.length===0)){
+      pieces.push({node:N.num(Math.abs(p.coeff)),kind:"num",value:Math.abs(p.coeff)});
+    }
+  }else{
+    pieces.push({node:N.num(p.coeff),kind:"num",value:p.coeff});
+  }
 
-    if(sp.type==="num" && Number.isInteger(coeff) && coeff%sp.value===0){
-      pieces.push(`<span class="common-factor ${cls}" data-factor-id="${escapeHtmlAttr(sp.id)}">${sp.value}</span>`);
-      coeff/=sp.value;
-    }else if(sp.type==="x" && xPower>=sp.power){
-      pieces.push(`<span class="common-factor ${cls}" data-factor-id="${escapeHtmlAttr(sp.id)}">${renderPlainFactor(sp.node)}</span>`);
-      xPower-=sp.power;
-    }else if(sp.type==="ast"){
-      const idx=rest.findIndex(r=>factorKey(r)===sp.key);
-      if(idx>=0){
-        pieces.push(`<span class="common-factor ${cls}" data-factor-id="${escapeHtmlAttr(sp.id)}">${renderPlainFactor(rest[idx])}</span>`);
-        rest.splice(idx,1);
+  for(let i=0;i<p.xPower;i++) pieces.push({node:N.x(),kind:"x"});
+  for(const r of p.rest) pieces.push({node:clone(r),kind:"ast",key:factorKey(r)});
+  return pieces;
+}
+
+function matchSpecToPiece(spec,piece){
+  if(spec.type==="num") return piece.kind==="num" && piece.value===spec.value;
+  if(spec.type==="x") return piece.kind==="x";
+  if(spec.type==="ast") return piece.kind==="ast" && piece.key===spec.key;
+  return false;
+}
+
+function renderExpandedFactoringTerm(term,row){
+  const pieces=factorPiecesForExpandedTerm(term);
+  const used=new Set();
+  const html=[];
+
+  for(const piece of pieces){
+    let specIndex=-1;
+    for(let i=0;i<row.commonFactors.length;i++){
+      if(used.has(i)) continue;
+      if(matchSpecToPiece(row.commonFactors[i],piece)){
+        specIndex=i;
+        used.add(i);
+        break;
       }
+    }
+
+    const raw=renderPlainFactor(piece.node);
+
+    if(specIndex>=0 && specIndex<row.revealCount){
+      const sp=row.commonFactors[specIndex];
+      const cls="cf"+(specIndex%6);
+      const locked=row.factorClickable ? "" : " locked";
+      html.push(`<span class="common-factor revealed ${cls}${locked}" data-factor-id="${escapeHtmlAttr(sp.id)}">${raw}</span>`);
+    }else{
+      html.push(raw);
     }
   }
 
-  if(coeff!==1 || (pieces.length===0 && xPower===0 && rest.length===0)){
-    pieces.push(renderPlainFactor(N.num(coeff)));
-  }
-  if(xPower===1) pieces.push("x");
-  else if(xPower>1) pieces.push(renderPlainFactor(N.pow(N.x(),N.num(xPower))));
-  for(const r of rest) pieces.push(renderPlainFactor(r));
+  return `<span class="factor-term-expanded">${html.join('<span class="factor-dot">·</span>')}</span>`;
+}
 
-  return `<span class="factor-term">${pieces.join('<span class="factor-dot">·</span>')}</span>`;
+function renderFactoringTerm(term,row,index){
+  if(!row.factorExpanded || !row.factorExpanded[index]){
+    return `<span class="factor-term-expand" data-term-index="${index}" title="Çarpanlarına ayır">${renderNode(term,[],0)}</span>`;
+  }
+  return renderExpandedFactoringTerm(term,row);
 }
 
 function escapeHtmlAttr(v){
@@ -1271,9 +1435,8 @@ function escapeHtmlAttr(v){
 }
 
 function renderFactorStage(row){
-  const specs=row.commonFactors||[];
   const terms=flattenAdd(row.factorInside,[]);
-  const inside=terms.map(t=>renderFactoringTerm(t,specs)).join(" + ");
+  const inside=terms.map((t,i)=>renderFactoringTerm(t,row,i)).join(" + ");
   const outside=row.factorOutside ? renderNode(row.factorOutside,[],2) : "";
   return `<span class="factor-stage">${outside ? outside : ""}<span class="factor-paren">${outside ? "(" : ""}${inside}${outside ? ")" : ""}</span></span>`;
 }
@@ -1293,6 +1456,7 @@ function snapshotState(){
 
 function restoreState(){
   if(!history.length) return;
+  factorAnimationToken++;
   const state=JSON.parse(history.pop());
   rows=state.rows;
   currentOrder=state.currentOrder;
@@ -1323,6 +1487,7 @@ function canonicalize(ast){
 
 function startNewFunction(){
   try{
+    factorAnimationToken++;
     let ast=normalizeExp(parse(document.getElementById("input").value));
     ast=canonicalize(ast);
     sourceAST=clone(ast);
@@ -1411,9 +1576,9 @@ function normalizeRow(order){
   prepareFactorStage(row);
 
   if(row.factorPending){
-    lastRule="Ortak çarpanlar seçilecek";
-    setHint("Terimler ayrıştırıldı. Aynı renkte görünen ortak çarpanlardan birine tıklayın.");
-    setStatus("Ortak çarpan alma aşaması.","warn");
+    lastRule="Terimler çarpanlarına ayrılacak";
+    setHint("Ortak çarpanları görebilmek için terimlere tek tek tıklayın.");
+    setStatus("Terimleri çarpanlarına ayırma aşaması.","warn");
   }else{
     lastRule="Bir sonraki türev alınacak";
     setHint(`İfade düzenlendi. Şimdi <strong>${lhsLabel(order)}</strong> üzerine tıklayarak bir sonraki türeve geçebilirsiniz.`);
@@ -1472,10 +1637,18 @@ function render(){
   stage.querySelectorAll(".expr").forEach(expr=>{
     const order=Number(expr.dataset.order);
 
+    expr.querySelectorAll(".factor-term-expand").forEach(el=>{
+      el.addEventListener("click",(ev)=>{
+        ev.stopPropagation();
+        expandFactorTerm(order,Number(el.dataset.termIndex));
+      });
+    });
+
     expr.querySelectorAll(".common-factor").forEach(el=>{
       el.addEventListener("click",(ev)=>{
         ev.stopPropagation();
-        applyCommonFactor(order,el.dataset.factorId);
+        const row=rows.find(r=>r.order===order);
+        if(row && row.factorClickable) applyCommonFactor(order,el.dataset.factorId);
       });
     });
 
