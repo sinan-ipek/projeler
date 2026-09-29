@@ -188,7 +188,7 @@ function updateVisuals(showArrow){
  const t=curveType.value,curv=d2(t,xValue),[px,py]=toSvg(xValue,f(t,xValue));
  point.setAttribute('cx',px);point.setAttribute('cy',py);pointHalo.setAttribute('cx',px);pointHalo.setAttribute('cy',py);normalArrow.style.display=showArrow?'':'none';
  if(showArrow){
-  const axv=clamp(xValue+.28,xMin,xMax),[ax,ay]=toSvg(axv,f(t,axv)),slope=d1(t,axv),ac=d2(t,axv);let tx=sx,ty=-sy*slope,L=Math.hypot(tx,ty)||1;tx/=L;ty/=L;
+  const axv=clamp(xValue+.20,xMin,xMax),[ax,ay]=toSvg(axv,f(t,axv)),slope=d1(t,xValue),ac=d2(t,xValue);let tx=sx,ty=-sy*slope,L=Math.hypot(tx,ty)||1;tx/=L;ty/=L;
   const lnx=ty,lny=-tx,nx=ac>=0?lnx:-lnx,ny=ac>=0?lny:-lny,off=15,len=25,sx0=ax+nx*off,sy0=ay+ny*off;
   normalArrow.setAttribute('x1',sx0);normalArrow.setAttribute('y1',sy0);normalArrow.setAttribute('x2',sx0+nx*len);normalArrow.setAttribute('y2',sy0+ny*len);
  }
