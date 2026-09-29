@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Türev Adım Adım v21</title>
+<title>Türev Adım Adım v22</title>
 <style>
   :root{
     --bg:#ffffff;
@@ -705,25 +705,31 @@ function canonicalOrder(n){
     return buildMul(out);
   }
 
-  if(n.t==="add"){
-    let terms=flattenAdd(n,[]).map(canonicalOrder);
+  if(n.t==="add" || n.t==="sub"){
+    // Tamamen polinom olan toplam/farklarda benzer terimleri eksiksiz topla.
+    // Örn. (2x-4)+(x²-4x)+4 -> x²-2x
+    const poly=polynomialMapOf(n);
+    if(poly) return polynomialAstFromMap(poly);
 
-    // Ayrı duran sabitleri de birleştir: 2x² + 1 + 2 -> 2x² + 3
-    let numericSum=0;
-    const nonNumeric=[];
-    for(const t of terms){
-      if(isNum(t)) numericSum+=t.v;
-      else nonNumeric.push(t);
+    if(n.t==="add"){
+      let terms=flattenAdd(n,[]).map(canonicalOrder);
+
+      let numericSum=0;
+      const nonNumeric=[];
+      for(const t of terms){
+        if(isNum(t)) numericSum+=t.v;
+        else nonNumeric.push(t);
+      }
+
+      nonNumeric.sort((u,v)=>{
+        const d=termRank(u)-termRank(v);
+        if(d!==0) return d;
+        return JSON.stringify(u).localeCompare(JSON.stringify(v));
+      });
+
+      if(numericSum!==0 || nonNumeric.length===0) nonNumeric.push(N.num(numericSum));
+      return buildAdd(nonNumeric);
     }
-
-    nonNumeric.sort((u,v)=>{
-      const d=termRank(u)-termRank(v);
-      if(d!==0) return d;
-      return JSON.stringify(u).localeCompare(JSON.stringify(v));
-    });
-
-    if(numericSum!==0 || nonNumeric.length===0) nonNumeric.push(N.num(numericSum));
-    return buildAdd(nonNumeric);
   }
 
   return n;
@@ -792,6 +798,81 @@ function derivativeOfSimpleMonomial(n){
   if(newC===1) return xPart;
   if(newC===-1) return N.mul(N.num(-1),xPart);
   return N.mul(N.num(newC),xPart);
+}
+
+
+function polynomialMapOf(n){
+  if(!n) return null;
+
+  if(n.t==="num"){
+    return new Map([[0,n.v]]);
+  }
+
+  if(n.t==="x"){
+    return new Map([[1,1]]);
+  }
+
+  if(n.t==="pow" && n.a && n.a.t==="x" && isNum(n.b) && Number.isInteger(n.b.v) && n.b.v>=0){
+    return new Map([[n.b.v,1]]);
+  }
+
+  const mono=simpleMonomialInfo(n);
+  if(mono && Number.isInteger(mono.n) && mono.n>=0){
+    return new Map([[mono.n,mono.c]]);
+  }
+
+  if(n.t==="add" || n.t==="sub"){
+    const A=polynomialMapOf(n.a);
+    const B=polynomialMapOf(n.b);
+    if(!A || !B) return null;
+
+    const out=new Map(A);
+    for(const [p,c] of B){
+      out.set(p,(out.get(p)||0)+(n.t==="add" ? c : -c));
+    }
+    for(const [p,c] of [...out]){
+      if(Math.abs(c)<1e-12) out.delete(p);
+    }
+    return out;
+  }
+
+  return null;
+}
+
+function positiveMonomialAst(coeff,power){
+  if(power===0) return N.num(coeff);
+
+  const xPart=power===1 ? N.x() : N.pow(N.x(),N.num(power));
+  if(coeff===1) return xPart;
+  return N.mul(N.num(coeff),xPart);
+}
+
+function polynomialAstFromMap(map){
+  const entries=[...map.entries()]
+    .filter(([,c])=>Math.abs(c)>=1e-12)
+    .sort((a,b)=>b[0]-a[0]);
+
+  if(!entries.length) return N.num(0);
+
+  let result=null;
+
+  for(const [power,coeff] of entries){
+    const abs=Math.abs(coeff);
+    const term=positiveMonomialAst(abs,power);
+
+    if(result===null){
+      result = coeff<0 ? N.mul(N.num(-1),term) : term;
+    }else{
+      result = coeff<0 ? N.sub(result,term) : N.add(result,term);
+    }
+  }
+
+  return result;
+}
+
+function collectSimplePolynomial(n){
+  const map=polynomialMapOf(n);
+  return map ? polynomialAstFromMap(map) : n;
 }
 
 function isSimplePolynomial(n){
@@ -1131,6 +1212,23 @@ function renderNode(n, path=[], parentPrec=0){
 
 /* ---------------- Ortak çarpan öğretim aşaması ---------------- */
 
+function flattenSignedTerms(n,sign=1,out=[]){
+  if(!n) return out;
+
+  if(n.t==="add"){
+    flattenSignedTerms(n.a,sign,out);
+    flattenSignedTerms(n.b,sign,out);
+  }else if(n.t==="sub"){
+    flattenSignedTerms(n.a,sign,out);
+    flattenSignedTerms(n.b,-sign,out);
+  }else{
+    let term=clone(n);
+    if(sign<0) term=canonicalize(N.mul(N.num(-1),term));
+    out.push(term);
+  }
+  return out;
+}
+
 function gcdInt(a,b){
   a=Math.abs(Math.trunc(a)); b=Math.abs(Math.trunc(b));
   while(b){ const t=a%b; a=b; b=t; }
@@ -1184,7 +1282,7 @@ function primeFactorsInt(n){
 }
 
 function commonFactorSpecs(ast){
-  const terms=flattenAdd(ast,[]);
+  const terms=flattenSignedTerms(ast,1,[]);
   if(terms.length<2) return [];
 
   const parts=terms.map(decomposeTermForFactor);
@@ -1250,17 +1348,46 @@ function removeOneCommonFactor(term,spec){
   return rebuildTermFromParts(p);
 }
 
+function findFactorableSumInsideProduct(ast){
+  // Önce ifadenin kendisi toplam/fark mı?
+  const own=commonFactorSpecs(ast);
+  if(own.length>0){
+    return {outside:null,inside:clone(ast),specs:own};
+  }
+
+  // Değilse çarpımın faktörleri içinde ortak çarpanlı bir toplam/fark ara.
+  const fs=flattenMul(clone(ast),[]);
+  for(let i=0;i<fs.length;i++){
+    const candidate=fs[i];
+    if(candidate && (candidate.t==="add" || candidate.t==="sub")){
+      const specs=commonFactorSpecs(candidate);
+      if(specs.length>0){
+        const outsideFactors=fs.filter((_,j)=>j!==i);
+        return {
+          outside: outsideFactors.length ? canonicalize(buildMul(outsideFactors)) : null,
+          inside: clone(candidate),
+          specs
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
 function prepareFactorStage(row){
-  row.factorOutside=null;
-  row.factorInside=clone(row.ast);
-  row.commonFactors=commonFactorSpecs(row.factorInside);
+  const target=findFactorableSumInsideProduct(row.ast);
+
+  row.factorOutside=target ? target.outside : null;
+  row.factorInside=target ? target.inside : clone(row.ast);
+  row.commonFactors=target ? target.specs : [];
   row.factorPending=row.commonFactors.length>0;
   row.factorExpanded=[];
   row.revealCount=0;
   row.factorClickable=false;
 
   if(row.factorPending){
-    const terms=flattenAdd(row.factorInside,[]);
+    const terms=flattenSignedTerms(row.factorInside,1,[]);
     row.factorExpanded=terms.map(()=>false);
   }
 }
@@ -1299,12 +1426,11 @@ function applyCommonFactor(order,factorId){
 
   snapshotState();
 
-  const terms=flattenAdd(clone(row.factorInside),[]);
+  const terms=flattenSignedTerms(clone(row.factorInside),1,[]);
   const reduced=terms.map(t=>removeOneCommonFactor(t,spec));
 
   // Önce içeriyi kur, sonra dış çarpanı ekle. Ortak olmayan hiçbir faktör silinmez.
-  row.factorInside=buildAdd(reduced);
-  row.factorInside=canonicalize(row.factorInside);
+  row.factorInside=canonicalize(buildAdd(reduced));
 
   row.factorOutside=row.factorOutside
     ? canonicalize(N.mul(clone(row.factorOutside),clone(spec.node)))
@@ -1317,7 +1443,7 @@ function applyCommonFactor(order,factorId){
   row.factorPending=row.commonFactors.length>0;
 
   if(row.factorPending){
-    const termsNow=flattenAdd(row.factorInside,[]);
+    const termsNow=flattenSignedTerms(row.factorInside,1,[]);
     row.factorExpanded=termsNow.map(()=>true);
     row.revealCount=row.commonFactors.length;
     row.factorClickable=true;
@@ -1423,8 +1549,28 @@ function escapeHtmlAttr(v){
 }
 
 function renderFactorStage(row){
-  const terms=flattenAdd(row.factorInside,[]);
-  const inside=terms.map((t,i)=>renderFactoringTerm(t,row,i)).join(" + ");
+  const terms=flattenSignedTerms(row.factorInside,1,[]);
+  const rendered=[];
+
+  terms.forEach((t,i)=>{
+    const p=decomposeTermForFactor(t);
+    const negative=p.coeff<0;
+
+    if(negative){
+      p.coeff=Math.abs(p.coeff);
+      t=rebuildTermFromParts(p);
+    }
+
+    const body=renderFactoringTerm(t,row,i);
+
+    if(i===0){
+      rendered.push((negative ? "−" : "")+body);
+    }else{
+      rendered.push((negative ? " − " : " + ")+body);
+    }
+  });
+
+  const inside=rendered.join("");
   const outside=row.factorOutside ? renderNode(row.factorOutside,[],2) : "";
   return `<span class="factor-stage">${outside ? outside : ""}<span class="factor-paren">${outside ? "(" : ""}${inside}${outside ? ")" : ""}</span></span>`;
 }
