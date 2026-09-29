@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Türev Adım Adım v16</title>
+<title>Türev Adım Adım v17</title>
 <style>
   :root{
     --bg:#ffffff;
@@ -1214,16 +1214,25 @@ function commonFactorSpecs(ast){
 }
 
 function removeOneCommonFactor(term,spec){
+  // Terimi gerçek çarpan listesine ayır; yalnız seçilen ortak çarpanın
+  // TAM BİR KOPYASINI kaldır. Diğer faktörlere dokunma.
   const p=decomposeTermForFactor(term);
 
   if(spec.type==="num"){
-    p.coeff/=spec.value;
+    if(Number.isInteger(p.coeff) && p.coeff%spec.value===0){
+      p.coeff/=spec.value;
+    }
   }else if(spec.type==="x"){
-    p.xPower-=spec.power;
+    if(p.xPower>=spec.power){
+      p.xPower-=spec.power;
+    }
   }else if(spec.type==="ast"){
     const idx=p.rest.findIndex(r=>factorKey(r)===spec.key);
-    if(idx>=0) p.rest.splice(idx,1);
+    if(idx>=0){
+      p.rest.splice(idx,1);
+    }
   }
+
   return rebuildTermFromParts(p);
 }
 
@@ -1280,15 +1289,20 @@ function applyCommonFactor(order,factorId){
 
   snapshotState();
 
-  const terms=flattenAdd(row.factorInside,[]);
+  const terms=flattenAdd(clone(row.factorInside),[]);
   const reduced=terms.map(t=>removeOneCommonFactor(t,spec));
-  row.factorInside=canonicalize(buildAdd(reduced));
+
+  // Önce içeriyi kur, sonra dış çarpanı ekle. Ortak olmayan hiçbir faktör silinmez.
+  row.factorInside=buildAdd(reduced);
+  row.factorInside=canonicalize(row.factorInside);
+
   row.factorOutside=row.factorOutside
-    ? canonicalize(N.mul(row.factorOutside,clone(spec.node)))
+    ? canonicalize(N.mul(clone(row.factorOutside),clone(spec.node)))
     : canonicalize(clone(spec.node));
 
-  row.factorInside=canonicalize(row.factorInside);
   row.ast=canonicalize(N.mul(clone(row.factorOutside),clone(row.factorInside)));
+
+  // Her seçimden sonra ortaklıkları sıfırdan hesapla; eski renk/spec bilgisi kalmasın.
   row.commonFactors=commonFactorSpecs(row.factorInside);
   row.factorPending=row.commonFactors.length>0;
 
@@ -1352,6 +1366,8 @@ function renderExpandedFactoringTerm(term,row){
 
   for(const piece of pieces){
     let specIndex=-1;
+
+    // Bu terim içinde her ortak spec yalnızca bir kez eşleşebilir.
     for(let i=0;i<row.commonFactors.length;i++){
       if(used.has(i)) continue;
       if(matchSpecToPiece(row.commonFactors[i],piece)){
