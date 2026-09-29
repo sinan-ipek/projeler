@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Türev Adım Adım v19</title>
+<title>Türev Adım Adım v20</title>
 <style>
   :root{
     --bg:#ffffff;
@@ -1080,12 +1080,25 @@ function renderNode(n, path=[], parentPrec=0){
     const left=renderNode(n.a,[...path,"a"],p);
     const right=renderNode(n.b,[...path,"b"],p);
 
-    // Standart cebir yazımı:
-    // 3 · x -> 3x, 3x · e^(...) -> 3xe^(...)
-    // Sayı-sayı arasında nokta korunur; diğer doğal çarpımlarda kaldırılır.
-    const aNum = n.a && n.a.t==="num";
-    const bNum = n.b && n.b.t==="num";
-    const needDot = aNum && bNum;
+    // Çarpma işaretini yalnız gerektiğinde göster.
+    // Özellikle 2·4x hiçbir zaman "24x" gibi görünmemeli.
+    function startsWithNumericFactor(m){
+      if(!m) return false;
+      if(m.t==="num") return true;
+      if(m.t==="mul") return startsWithNumericFactor(m.a);
+      return false;
+    }
+    function endsWithNumericFactor(m){
+      if(!m) return false;
+      if(m.t==="num") return true;
+      if(m.t==="mul") return endsWithNumericFactor(m.b);
+      return false;
+    }
+
+    const needDot =
+      (endsWithNumericFactor(n.a) && startsWithNumericFactor(n.b)) ||
+      (n.a && n.a.t==="num" && n.b && n.b.t==="num");
+
     h = left + (needDot ? " · " : "") + right;
   } else if(n.t==="div"){
     h=`<span class="frac"><span class="num">${renderNode(n.a,[...path,"a"],0)}</span><span class="den">${renderNode(n.b,[...path,"b"],0)}</span></span>`;
@@ -1249,10 +1262,6 @@ function prepareFactorStage(row){
     const terms=flattenAdd(row.factorInside,[]);
     row.factorExpanded=terms.map(()=>false);
   }
-}
-
-function allFactorTermsExpanded(row){
-  return row.factorExpanded && row.factorExpanded.length>0 && row.factorExpanded.every(Boolean);
 }
 
 function allFactorTermsExpanded(row){
