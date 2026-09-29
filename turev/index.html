@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Türev Adım Adım v13</title>
+<title>Türev Adım Adım v14</title>
 <style>
   :root{
     --bg:#ffffff;
@@ -768,6 +768,45 @@ function derivativeOfSimpleMonomial(n){
   return N.mul(N.num(newC),xPart);
 }
 
+function isSimplePolynomial(n){
+  if(!n) return false;
+  if(n.t==="num") return true;
+  if(simpleMonomialInfo(n)) return true;
+  if(n.t==="add" || n.t==="sub"){
+    return isSimplePolynomial(n.a) && isSimplePolynomial(n.b);
+  }
+  return false;
+}
+
+function derivativeOfSimplePolynomial(n){
+  if(!isSimplePolynomial(n)) return null;
+
+  if(n.t==="num") return N.num(0);
+
+  const mono=derivativeOfSimpleMonomial(n);
+  if(mono) return simplifyDeep(mono);
+
+  if(n.t==="add"){
+    return simplifyDeep(
+      N.add(
+        derivativeOfSimplePolynomial(n.a),
+        derivativeOfSimplePolynomial(n.b)
+      )
+    );
+  }
+
+  if(n.t==="sub"){
+    return simplifyDeep(
+      N.sub(
+        derivativeOfSimplePolynomial(n.a),
+        derivativeOfSimplePolynomial(n.b)
+      )
+    );
+  }
+
+  return null;
+}
+
 function extractConstantCoefficient(n){
   // Sabit katsayıyı yalnızca gerçekten TEK bir ifadenin katsayısıysa ayır.
   //
@@ -825,6 +864,7 @@ function ruleForArg(n){
   if(n.t==="num" || n.t==="const") return "Sabitin türevi alınacak";
 
   if(simpleMonomialInfo(n)) return "Polinom teriminin türevi alınacak";
+  if(isSimplePolynomial(n)) return "Polinomun türevi alınacak";
 
   const constantMultiple=extractConstantCoefficient(n);
   if(constantMultiple) return "Sabit katsayı dışarı alınacak";
@@ -880,6 +920,13 @@ function derivativeOneStep(n){
   const simplePolyDerivative = derivativeOfSimpleMonomial(n);
   if(simplePolyDerivative)
     return {node:simplifyDeep(simplePolyDerivative), rule:"Polinom teriminin türevi"};
+
+  // Yalnız basit polinom terimlerinden oluşan toplam/farklar tek adımda alınır:
+  // (2x²+1)' -> 4x
+  // (3x³-5x+7)' -> 9x²-5
+  const simplePolynomialDerivative = derivativeOfSimplePolynomial(n);
+  if(simplePolynomialDerivative)
+    return {node:simplePolynomialDerivative, rule:"Polinomun türevi"};
 
   // c·u biçiminde, c sabitse:
   // (2e^(x²))' -> 2(e^(x²))'
