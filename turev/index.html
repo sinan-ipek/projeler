@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Türev Adım Adım v17</title>
+<title>Türev Adım Adım v18</title>
 <style>
   :root{
     --bg:#ffffff;
@@ -1331,6 +1331,16 @@ function renderPlainFactor(n){
   return renderNode(n,[],0);
 }
 
+function renderFactorAtom(n){
+  // Toplam/fark yapıları çarpan içinde atomik kalmalı:
+  // 4x(2x²+1)e^(x²) -> 2·2·x·(2x²+1)·e^(x²)
+  const html=renderNode(n,[],0);
+  if(n && (n.t==="add" || n.t==="sub")){
+    return `(${html})`;
+  }
+  return html;
+}
+
 function factorPiecesForExpandedTerm(term){
   const p=decomposeTermForFactor(term);
   const pieces=[];
@@ -1377,7 +1387,7 @@ function renderExpandedFactoringTerm(term,row){
       }
     }
 
-    const raw=renderPlainFactor(piece.node);
+    const raw=renderFactorAtom(piece.node);
 
     if(specIndex>=0 && specIndex<row.revealCount){
       const sp=row.commonFactors[specIndex];
