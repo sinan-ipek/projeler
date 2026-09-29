@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Türev Adım Adım v11</title>
+<title>Türev Adım Adım v12</title>
 <style>
   :root{
     --bg:#ffffff;
@@ -33,6 +33,28 @@
     align-items:center;
     flex-wrap:wrap;
     margin-bottom:24px;
+  }
+  .undo-btn{
+    width:42px;
+    height:42px;
+    padding:0;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid #c9cdd3;
+    border-radius:10px;
+    background:#fff;
+    color:#222;
+    font-size:22px;
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+  }
+  .undo-btn:disabled{
+    opacity:.35;
+    cursor:default;
+    box-shadow:none;
+  }
+  .undo-btn:not(:disabled):hover{
+    background:#f4f4f5;
   }
   .home-btn{
     margin-left:auto;
@@ -318,6 +340,7 @@
     <input id="input" value="e^(x^2)" spellcheck="false" />
     <button id="startBtn">Başlat</button>
     <button id="resetBtn">Sıfırla</button>
+    <button id="undoBtn" class="undo-btn" type="button" aria-label="Geri al" title="Son adımı geri al" disabled>↶</button>
     <a class="home-btn" href="../index.html" aria-label="Ana sayfa" title="Ana sayfa">⌂</a>
   </div>
 
@@ -1134,6 +1157,8 @@ function applyCommonFactor(order,factorId){
   const spec=row.commonFactors.find(x=>x.id===factorId);
   if(!spec) return;
 
+  snapshotState();
+
   const terms=flattenAdd(row.factorInside,[]);
   const reduced=terms.map(t=>removeOneCommonFactor(t,spec));
   row.factorInside=canonicalize(buildAdd(reduced));
@@ -1214,6 +1239,30 @@ let rows=[];
 let currentOrder=0;
 let lastRule="";
 let sourceAST=null;
+let history=[];
+
+function snapshotState(){
+  history.push(JSON.stringify({rows,currentOrder,lastRule}));
+  if(history.length>100) history.shift();
+  updateUndoButton();
+}
+
+function restoreState(){
+  if(!history.length) return;
+  const state=JSON.parse(history.pop());
+  rows=state.rows;
+  currentOrder=state.currentOrder;
+  lastRule=state.lastRule;
+  updateUndoButton();
+  setHint("Son adım geri alındı. Aynı adımı yeniden deneyebilirsiniz.");
+  setStatus("");
+  render();
+}
+
+function updateUndoButton(){
+  const b=document.getElementById("undoBtn");
+  if(b) b.disabled=history.length===0;
+}
 
 function lhsLabel(order){
   if(order===0) return "f(x)";
@@ -1234,8 +1283,10 @@ function startNewFunction(){
     ast=canonicalize(ast);
     sourceAST=clone(ast);
     currentOrder=0;
+    history=[];
     rows=[{order:0,ast:clone(ast),mode:"result",normalized:true,factorPending:false,commonFactors:[]}];
     lastRule="";
+    updateUndoButton();
     setHint("Önce <strong>f(x)</strong> üzerine tıklayın.");
     setStatus("");
     render();
@@ -1265,6 +1316,8 @@ function beginNextDerivative(order){
   const next=order+1;
   if(rows.some(r=>r.order===next)) return;
 
+  snapshotState();
+
   rows.push({
     order:next,
     ast:N.deriv(clone(row.ast)),
@@ -1287,6 +1340,7 @@ function clickDerivative(order,pathStr){
   if(!target || target.t!=="deriv") return;
 
   const step=derivativeOneStep(target.arg);
+  snapshotState();
   row.ast=setAt(row.ast,path,step.node);
   row.normalized=false;
 
@@ -1307,6 +1361,7 @@ function normalizeRow(order){
   const row=rows.find(r=>r.order===order);
   if(!row || !expressionFinished(row.ast) || row.normalized) return;
 
+  snapshotState();
   row.ast=canonicalize(row.ast);
   row.normalized=true;
   prepareFactorStage(row);
@@ -1399,6 +1454,7 @@ function setStatus(s,kind=""){
 /* ---------------- UI ---------------- */
 document.getElementById("startBtn").addEventListener("click",startNewFunction);
 document.getElementById("resetBtn").addEventListener("click",startNewFunction);
+document.getElementById("undoBtn").addEventListener("click",restoreState);
 document.getElementById("input").addEventListener("keydown",e=>{
   if(e.key==="Enter") startNewFunction();
 });
