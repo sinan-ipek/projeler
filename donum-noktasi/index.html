@@ -11,7 +11,7 @@ select,button,.homeBtn{height:42px;border:1px solid #cfcfcf;border-radius:10px;b
 button{cursor:pointer}.layout{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:start}
 .stage{background:#efefef;border:1px solid #d0d0d0;border-radius:12px;padding:8px;min-width:0}
 svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px solid #d0d0d0;border-radius:12px;background:#fff;padding:16px}
-.info small{color:#777}.state{font-size:20px;font-weight:650;margin:4px 0 8px}.formula{font-size:18px;margin-bottom:10px}.explain{font-size:14px;line-height:1.55;color:#444}.foot{margin-top:10px;color:#777;font-size:13px}
+.info small{color:#777}.state{font-size:20px;font-weight:650;margin:4px 0 8px}.formula{font-size:18px;margin-bottom:10px}.explain{font-size:14px;line-height:1.55;color:#444}.foot{margin-top:10px;color:#777;font-size:13px}.yScaleControl{height:42px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid #cfcfcf;border-radius:10px;background:#fff;color:#555;font-size:13px}.yScaleControl input{width:120px;accent-color:#888}.yScaleValue{min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
 .wp-glow{opacity:0;transform-box:fill-box;transform-origin:center;pointer-events:none}.wp-glow.active{animation:wpGlow 850ms ease-out}
 .wp-ray{stroke:#ffb347;stroke-width:2.2;stroke-linecap:round;opacity:0}.wp-rays.active .wp-ray{animation:wpRay 760ms ease-out}
 .wp-rays.active .wp-ray:nth-child(2n){animation-delay:35ms}.wp-rays.active .wp-ray:nth-child(3n){animation-delay:70ms}
@@ -37,6 +37,10 @@ svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px soli
       <option value="rational">f(x)=x/(1+x²)</option>
     </select>
     <button type="button" id="resetBtn">↺ Sıfırla</button>
+    <label class="yScaleControl" for="yScale">y ölçeği
+      <input id="yScale" type="range" min="18" max="90" step="1" value="42" aria-label="Y ekseni ölçeği">
+      <span id="yScaleValue" class="yScaleValue">1.00×</span>
+    </label>
   </div>
 
   <div class="layout">
@@ -94,8 +98,8 @@ svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px soli
 <script>
 (()=>{
 const root=document.getElementById('curve-turn-demo');
-const svg=root.querySelector('#graph'),curve=root.querySelector('#curve'),point=root.querySelector('#point'),pointHalo=root.querySelector('#pointHalo'),normalArrow=root.querySelector('#normalArrow'),curveType=root.querySelector('#curveType'),resetBtn=root.querySelector('#resetBtn'),stateLabel=root.querySelector('#stateLabel'),formula=root.querySelector('#formula'),explain=root.querySelector('#explain'),glow=root.querySelector('#glow'),rays=root.querySelector('#rays'),warningCallout=root.querySelector('#warningCallout'),warningStem=root.querySelector('#warningStem'),warningBox=root.querySelector('#warningBox'),warningText=root.querySelector('#warningText');
-const cx=380,cy=215,sx=95,sy=42,xMin=-3.1,xMax=3.1,snapPx=5,noteW=76,noteH=43;
+const svg=root.querySelector('#graph'),curve=root.querySelector('#curve'),point=root.querySelector('#point'),pointHalo=root.querySelector('#pointHalo'),normalArrow=root.querySelector('#normalArrow'),curveType=root.querySelector('#curveType'),resetBtn=root.querySelector('#resetBtn'),yScale=root.querySelector('#yScale'),yScaleValue=root.querySelector('#yScaleValue'),stateLabel=root.querySelector('#stateLabel'),formula=root.querySelector('#formula'),explain=root.querySelector('#explain'),glow=root.querySelector('#glow'),rays=root.querySelector('#rays'),warningCallout=root.querySelector('#warningCallout'),warningStem=root.querySelector('#warningStem'),warningBox=root.querySelector('#warningBox'),warningText=root.querySelector('#warningText');
+const cx=380,cy=215,sx=95,xMin=-3.1,xMax=3.1,snapPx=5,noteW=76,noteH=43;let sy=42;
 let xValue=-2.5,dragging=false,warningVisible=false,warningTimer=null,activeSnapRoot=null,inflectionPoints=[];
 
 function f(t,x){
@@ -206,7 +210,9 @@ function drag(e){
 }
 function endDrag(e){dragging=false;point.style.cursor='grab';try{point.releasePointerCapture?.(e.pointerId)}catch(_){}}
 point.addEventListener('pointerdown',beginDrag);svg.addEventListener('pointermove',drag);svg.addEventListener('pointerup',endDrag);svg.addEventListener('pointercancel',endDrag);
-curveType.addEventListener('change',()=>{xValue=-2.5;activeSnapRoot=null;hideWarning();drawCurve()});resetBtn.addEventListener('click',()=>{xValue=-2.5;activeSnapRoot=null;hideWarning();updateVisuals(true)});
+curveType.addEventListener('change',()=>{xValue=-2.5;activeSnapRoot=null;hideWarning();drawCurve()});
+yScale.addEventListener('input',()=>{sy=Number(yScale.value);yScaleValue.textContent=(sy/42).toFixed(2)+'×';drawCurve()});
+resetBtn.addEventListener('click',()=>{xValue=-2.5;activeSnapRoot=null;hideWarning();sy=42;yScale.value='42';yScaleValue.textContent='1.00×';drawCurve()});
 drawCurve();
 })();
 </script>
