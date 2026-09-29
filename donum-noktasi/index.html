@@ -7,8 +7,8 @@
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:#222}
 body{padding:20px}.app{max-width:1100px;margin:0 auto}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-select,button,.homeBtn{height:42px;border:1px solid #cfcfcf;border-radius:10px;background:#fff;padding:0 13px;font:inherit;color:#222}.homeBtn{width:42px;padding:0;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:20px;line-height:1}
-button{cursor:pointer}.layout{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:start}
+select,button,.homeBtn,.functionInput{height:42px;border:1px solid #cfcfcf;border-radius:10px;background:#fff;padding:0 13px;font:inherit;color:#222}.homeBtn{width:42px;padding:0;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:20px;line-height:1}
+button{cursor:pointer}.functionInput{width:250px;min-width:180px;outline:none}.functionInput:focus{border-color:#888}.functionInput.invalid{border-color:#c66;background:#fff7f7}.layout{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:start}
 .stage{background:#efefef;border:1px solid #d0d0d0;border-radius:12px;padding:8px;min-width:0}
 svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px solid #d0d0d0;border-radius:12px;background:#fff;padding:16px}
 .info small{color:#777}.state{font-size:20px;font-weight:650;margin:4px 0 8px}.formula{font-size:18px;margin-bottom:10px}.explain{font-size:14px;line-height:1.55;color:#444}.foot{margin-top:10px;color:#777;font-size:13px}.yScaleControl{height:42px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid #cfcfcf;border-radius:10px;background:#fff;color:#555;font-size:13px}.yScaleControl input{width:120px;accent-color:#888}.yScaleValue{min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
@@ -35,11 +35,14 @@ svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px soli
       <option value="quartic">f(x)=0,08x⁴−0,7x²</option>
       <option value="quintic">f(x)=0,012(x⁵−5x³)</option>
       <option value="rational">f(x)=x/(1+x²)</option>
+      <option value="custom" id="customOption" hidden>Özel fonksiyon</option>
     </select>
+    <input id="functionInput" class="functionInput" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="f(x)  ör. sin(x)+x^2/3" aria-label="Fonksiyon gir">
+    <button type="button" id="drawBtn">Çiz</button>
     <button type="button" id="resetBtn">↺ Sıfırla</button>
     <label class="yScaleControl" for="yScale">y ölçeği
-      <input id="yScale" type="range" min="18" max="90" step="1" value="42" aria-label="Y ekseni ölçeği">
-      <span id="yScaleValue" class="yScaleValue">1.00×</span>
+      <input id="yScale" type="range" min="1" max="4" step="0.1" value="1" aria-label="Y ekseni ölçeği">
+      <span id="yScaleValue" class="yScaleValue">1.0×</span>
     </label>
   </div>
 
@@ -75,7 +78,7 @@ svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px soli
         <g id="warningCallout" style="display:none" pointer-events="none">
           <line id="warningStem" stroke="#cda1aa" stroke-width=".9"/>
           <rect id="warningBox" width="52" height="24" rx="3.5" fill="#fff1f4" stroke="#d9adb6" stroke-width=".95" filter="url(#noteShadow)"/>
-          <text id="warningText" fill="#76565d" font-size="9" font-weight="400" text-anchor="middle">
+          <text id="warningText" fill="#76565d" font-size="8.6" font-weight="400" text-anchor="middle" dominant-baseline="middle">
             <tspan>Ters yön</tspan>
           </text>
         </g>
@@ -98,9 +101,150 @@ svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px soli
 <script>
 (()=>{
 const root=document.getElementById('curve-turn-demo');
-const svg=root.querySelector('#graph'),curve=root.querySelector('#curve'),point=root.querySelector('#point'),pointHalo=root.querySelector('#pointHalo'),normalArrow=root.querySelector('#normalArrow'),curveType=root.querySelector('#curveType'),resetBtn=root.querySelector('#resetBtn'),yScale=root.querySelector('#yScale'),yScaleValue=root.querySelector('#yScaleValue'),stateLabel=root.querySelector('#stateLabel'),formula=root.querySelector('#formula'),explain=root.querySelector('#explain'),glow=root.querySelector('#glow'),rays=root.querySelector('#rays'),warningCallout=root.querySelector('#warningCallout'),warningStem=root.querySelector('#warningStem'),warningBox=root.querySelector('#warningBox'),warningText=root.querySelector('#warningText');
-const cx=380,cy=215,sx=95,xMin=-3.1,xMax=3.1,snapPx=5,noteW=76,noteH=43;let sy=42;
-let xValue=-2.5,dragging=false,warningVisible=false,warningTimer=null,activeSnapRoot=null,inflectionPoints=[];
+const svg=root.querySelector('#graph'),curve=root.querySelector('#curve'),point=root.querySelector('#point'),pointHalo=root.querySelector('#pointHalo'),normalArrow=root.querySelector('#normalArrow'),curveType=root.querySelector('#curveType'),customOption=root.querySelector('#customOption'),functionInput=root.querySelector('#functionInput'),drawBtn=root.querySelector('#drawBtn'),resetBtn=root.querySelector('#resetBtn'),yScale=root.querySelector('#yScale'),yScaleValue=root.querySelector('#yScaleValue'),stateLabel=root.querySelector('#stateLabel'),formula=root.querySelector('#formula'),explain=root.querySelector('#explain'),glow=root.querySelector('#glow'),rays=root.querySelector('#rays'),warningCallout=root.querySelector('#warningCallout'),warningStem=root.querySelector('#warningStem'),warningBox=root.querySelector('#warningBox'),warningText=root.querySelector('#warningText');
+const cx=380,cy=215,sx=95,xMin=-3.1,xMax=3.1,snapPx=5,noteW=52,noteH=24;let sy=42;
+let xValue=-2.5,dragging=false,warningVisible=false,warningTimer=null,activeSnapRoot=null,inflectionPoints=[],customEval=null,customExpr="";
+
+
+const FUNCTION_NAMES=new Set(['sin','cos','tan','asin','acos','atan','sqrt','abs','exp','ln','log']);
+function normalizeExpression(s){
+ return s.trim()
+  .replace(/−/g,'-').replace(/[×·]/g,'*').replace(/÷/g,'/')
+  .replace(/π/g,'pi').replace(/,/g,'.')
+  .replace(/²/g,'^2').replace(/³/g,'^3').replace(/⁴/g,'^4')
+  .replace(/⁵/g,'^5').replace(/⁶/g,'^6').replace(/⁷/g,'^7')
+  .replace(/⁸/g,'^8').replace(/⁹/g,'^9');
+}
+function tokenizeExpression(src){
+ const tokens=[];let i=0;
+ while(i<src.length){
+  const ch=src[i];
+  if(/\s/.test(ch)){i++;continue}
+  if(/[0-9.]/.test(ch)){
+   let j=i+1;while(j<src.length&&/[0-9.eE+-]/.test(src[j])){
+    const part=src.slice(i,j+1);
+    if(/[+-]$/.test(part)&&!/e[+-]$/i.test(part))break;
+    j++;
+   }
+   let raw=src.slice(i,j);
+   const m=raw.match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?/i);
+   if(!m)throw new Error('Geçersiz sayı');
+   raw=m[0];tokens.push({type:'number',value:Number(raw)});i+=raw.length;continue;
+  }
+  if(/[A-Za-z_]/.test(ch)){
+   let j=i+1;while(j<src.length&&/[A-Za-z0-9_]/.test(src[j]))j++;
+   tokens.push({type:'id',value:src.slice(i,j).toLowerCase()});i=j;continue;
+  }
+  if('+-*/^'.includes(ch)){tokens.push({type:'op',value:ch});i++;continue}
+  if(ch==='('){tokens.push({type:'lparen',value:ch});i++;continue}
+  if(ch===')'){tokens.push({type:'rparen',value:ch});i++;continue}
+  throw new Error('Geçersiz karakter: '+ch);
+ }
+ const out=[];
+ const endsValue=t=>t&&(t.type==='number'||t.type==='id'||t.type==='rparen');
+ const startsValue=t=>t&&(t.type==='number'||t.type==='id'||t.type==='lparen');
+ for(let k=0;k<tokens.length;k++){
+  const prev=out[out.length-1],cur=tokens[k];
+  if(endsValue(prev)&&startsValue(cur)){
+   const functionCall=prev.type==='id'&&FUNCTION_NAMES.has(prev.value)&&cur.type==='lparen';
+   if(!functionCall)out.push({type:'op',value:'*'});
+  }
+  out.push(cur);
+ }
+ return out;
+}
+function compileExpression(source){
+ const src=normalizeExpression(source);
+ if(!src)throw new Error('Bir fonksiyon gir.');
+ const tokens=tokenizeExpression(src);let pos=0;
+ const peek=()=>tokens[pos],take=()=>tokens[pos++];
+ function parseExpression(){
+  let node=parseTerm();
+  while(peek()&&peek().type==='op'&&(peek().value==='+'||peek().value==='-')){
+   const op=take().value,right=parseTerm(),left=node;node=x=>op==='+'?left(x)+right(x):left(x)-right(x);
+  }
+  return node;
+ }
+ function parseTerm(){
+  let node=parseUnary();
+  while(peek()&&peek().type==='op'&&(peek().value==='*'||peek().value==='/')){
+   const op=take().value,right=parseUnary(),left=node;node=x=>op==='*'?left(x)*right(x):left(x)/right(x);
+  }
+  return node;
+ }
+ function parseUnary(){
+  if(peek()&&peek().type==='op'&&(peek().value==='+'||peek().value==='-')){
+   const op=take().value,inner=parseUnary();return x=>op==='-'?-inner(x):inner(x);
+  }
+  return parsePower();
+ }
+ function parsePower(){
+  let node=parsePrimary();
+  if(peek()&&peek().type==='op'&&peek().value==='^'){
+   take();const right=parseUnary(),left=node;node=x=>Math.pow(left(x),right(x));
+  }
+  return node;
+ }
+ function parsePrimary(){
+  const t=take();if(!t)throw new Error('Eksik ifade');
+  if(t.type==='number')return ()=>t.value;
+  if(t.type==='lparen'){
+   const node=parseExpression();
+   if(!peek()||take().type!=='rparen')throw new Error('Parantez kapanmamış');
+   return node;
+  }
+  if(t.type==='id'){
+   if(t.value==='x')return x=>x;
+   if(t.value==='pi')return ()=>Math.PI;
+   if(t.value==='e')return ()=>Math.E;
+   if(FUNCTION_NAMES.has(t.value)){
+    if(!peek()||take().type!=='lparen')throw new Error(t.value+' için parantez kullan.');
+    const arg=parseExpression();
+    if(!peek()||take().type!=='rparen')throw new Error('Parantez kapanmamış');
+    const fn=t.value;
+    return x=>{
+     const v=arg(x);
+     if(fn==='sin')return Math.sin(v);if(fn==='cos')return Math.cos(v);if(fn==='tan')return Math.tan(v);
+     if(fn==='asin')return Math.asin(v);if(fn==='acos')return Math.acos(v);if(fn==='atan')return Math.atan(v);
+     if(fn==='sqrt')return Math.sqrt(v);if(fn==='abs')return Math.abs(v);if(fn==='exp')return Math.exp(v);
+     if(fn==='ln')return Math.log(v);if(fn==='log')return Math.log10(v);
+     return NaN;
+    };
+   }
+   throw new Error('Bilinmeyen ifade: '+t.value);
+  }
+  throw new Error('Geçersiz ifade');
+ }
+ const fn=parseExpression();
+ if(pos!==tokens.length)throw new Error('İfade çözümlenemedi');
+ const test=fn(0);
+ if(typeof test!=='number')throw new Error('Geçersiz fonksiyon');
+ return fn;
+}
+function customD1(x){
+ const h=0.0005*(1+Math.abs(x)),a=customEval(x-h),b=customEval(x+h);
+ return (b-a)/(2*h);
+}
+function customD2(x){
+ const h=0.003*(1+Math.abs(x)),a=customEval(x-h),b=customEval(x),cc=customEval(x+h);
+ return (cc-2*b+a)/(h*h);
+}
+function useCustomFunction(){
+ try{
+  customEval=compileExpression(functionInput.value);
+  customExpr=functionInput.value.trim();
+  const checks=[-1,0,1].map(v=>customEval(v));
+  if(checks.every(v=>!Number.isFinite(v)))throw new Error('Bu aralıkta çizilebilir değer bulunamadı.');
+  functionInput.classList.remove('invalid');
+  customOption.hidden=false;customOption.textContent='f(x)='+customExpr;curveType.value='custom';
+  xValue=-2.5;activeSnapRoot=null;hideWarning();drawCurve();
+ }catch(err){
+  functionInput.classList.add('invalid');
+  functionInput.setCustomValidity(err.message||'Fonksiyon okunamadı.');
+  functionInput.reportValidity();
+  setTimeout(()=>functionInput.setCustomValidity(''),50);
+ }
+}
 
 function f(t,x){
  if(t==='cup')return .32*x*x-2;
@@ -112,6 +256,7 @@ function f(t,x){
  if(t==='quartic')return .08*x*x*x*x-.7*x*x+1;
  if(t==='quintic')return .012*(x*x*x*x*x-5*x*x*x);
  if(t==='rational')return 3*x/(1+x*x);
+ if(t==='custom'&&customEval)return customEval(x);
  return 0;
 }
 function d1(t,x){
@@ -124,6 +269,7 @@ function d1(t,x){
  if(t==='quartic')return .32*x*x*x-1.4*x;
  if(t==='quintic')return .06*x*x*x*x-.18*x*x;
  if(t==='rational')return 3*(1-x*x)/Math.pow(1+x*x,2);
+ if(t==='custom'&&customEval)return customD1(x);
  return 0;
 }
 function d2(t,x){
@@ -136,6 +282,7 @@ function d2(t,x){
  if(t==='quartic')return .96*x*x-1.4;
  if(t==='quintic')return .24*x*x*x-.36*x;
  if(t==='rational')return 6*x*(x*x-3)/Math.pow(1+x*x,3);
+ if(t==='custom'&&customEval)return customD2(x);
  return 0;
 }
 const toSvg=(x,y)=>[cx+sx*x,cy-sy*y],xFromSvg=X=>(X-cx)/sx,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -173,7 +320,7 @@ function placeWarning(px,py){
  bx=clamp(bx,48,720-noteW);
  if(by+noteH>400)by=400-noteH;
  warningBox.setAttribute('x',bx);warningBox.setAttribute('y',by);
- const tx=bx+noteW/2,ty=by+15;
+ const tx=bx+noteW/2,ty=by+noteH/2+.5;
  warningText.setAttribute('x',tx);warningText.setAttribute('y',ty);
  warningText.querySelectorAll('tspan').forEach(s=>{s.setAttribute('x',tx);s.setAttribute('dy',0)});
  const ax=bx+noteW/2,ay=by;
@@ -184,12 +331,17 @@ function showWarning(px,py){warningVisible=true;warningCallout.style.display='';
 function hideWarning(){warningVisible=false;clearTimeout(warningTimer);warningCallout.style.display='none'}
 
 function drawCurve(){
- const t=curveType.value;let d='';
- for(let i=0;i<=260;i++){const x=xMin+(xMax-xMin)*i/260,[X,Y]=toSvg(x,f(t,x));d+=(i===0?'M ':' L ')+X.toFixed(2)+' '+Y.toFixed(2)}
+ const t=curveType.value;let d='',penDown=false;
+ for(let i=0;i<=420;i++){
+  const x=xMin+(xMax-xMin)*i/420,y=f(t,x);
+  if(!Number.isFinite(y)||Math.abs(y)>1000){penDown=false;continue}
+  const [X,Y]=toSvg(x,y);
+  d+=(penDown?' L ':'M ')+X.toFixed(2)+' '+Y.toFixed(2);penDown=true;
+ }
  curve.setAttribute('d',d);updateInflectionPoints();updateVisuals(true);
 }
 function updateVisuals(showArrow){
- const t=curveType.value,curv=d2(t,xValue),[px,py]=toSvg(xValue,f(t,xValue));
+ const t=curveType.value,fy=f(t,xValue),curv=d2(t,xValue);if(!Number.isFinite(fy)){normalArrow.style.display='none';return}const [px,py]=toSvg(xValue,fy);
  point.setAttribute('cx',px);point.setAttribute('cy',py);pointHalo.setAttribute('cx',px);pointHalo.setAttribute('cy',py);normalArrow.style.display=showArrow?'':'none';
  if(showArrow){
   const axv=clamp(xValue+.20,xMin,xMax),[ax,ay]=toSvg(axv,f(t,axv)),slope=d1(t,xValue),ac=d2(t,xValue);let tx=sx,ty=-sy*slope,L=Math.hypot(tx,ty)||1;tx/=L;ty/=L;
@@ -215,8 +367,11 @@ function drag(e){
 function endDrag(e){dragging=false;point.style.cursor='grab';try{point.releasePointerCapture?.(e.pointerId)}catch(_){}}
 point.addEventListener('pointerdown',beginDrag);svg.addEventListener('pointermove',drag);svg.addEventListener('pointerup',endDrag);svg.addEventListener('pointercancel',endDrag);
 curveType.addEventListener('change',()=>{xValue=-2.5;activeSnapRoot=null;hideWarning();drawCurve()});
-yScale.addEventListener('input',()=>{sy=Number(yScale.value);yScaleValue.textContent=(sy/42).toFixed(2)+'×';drawCurve()});
-resetBtn.addEventListener('click',()=>{xValue=-2.5;activeSnapRoot=null;hideWarning();sy=42;yScale.value='42';yScaleValue.textContent='1.00×';drawCurve()});
+drawBtn.addEventListener('click',useCustomFunction);
+functionInput.addEventListener('input',()=>functionInput.classList.remove('invalid'));
+functionInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();useCustomFunction()}});
+yScale.addEventListener('input',()=>{const scale=Number(yScale.value);sy=42*scale;yScaleValue.textContent=scale.toFixed(1)+'×';drawCurve()});
+resetBtn.addEventListener('click',()=>{xValue=-2.5;activeSnapRoot=null;hideWarning();sy=42;yScale.value='1';yScaleValue.textContent='1.0×';drawCurve()});
 drawCurve();
 })();
 </script>
