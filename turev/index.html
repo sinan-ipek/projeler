@@ -1,0 +1,1150 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Türev Adım Adım v10</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --fg:#171717;
+    --muted:#6b7280;
+    --line:#d1d5db;
+    --soft:#f7f7f8;
+    --accent:#2563eb;
+    --accent-soft:#eff6ff;
+    --warn:#b45309;
+    --good:#166534;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--fg);
+    font-family:Arial,Helvetica,sans-serif;
+  }
+  .wrap{
+    width:min(1100px,94vw);
+    margin:30px auto;
+  }
+  .topbar{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+    margin-bottom:24px;
+  }
+  .topbar label{font-weight:700}
+  input{
+    flex:1 1 420px;
+    min-width:260px;
+    font-size:18px;
+    padding:11px 13px;
+    border:1px solid #bfc4cc;
+    border-radius:10px;
+    outline:none;
+  }
+  input:focus{border-color:#6b7280}
+  button{
+    border:1px solid #c9cdd3;
+    background:#fafafa;
+    padding:10px 14px;
+    border-radius:9px;
+    font-size:15px;
+    cursor:pointer;
+  }
+  button:hover{background:#f1f1f1}
+  .examples{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin:-8px 0 22px;
+  }
+  .examples button{
+    padding:8px 12px;
+    font-size:16px;
+    color:#3f3f46;
+    min-height:42px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .examples mjx-container{
+    margin:0 !important;
+    font-size:1.08em !important;
+  }
+
+  .stage{
+    border-top:1px solid #ececec;
+    padding-top:22px;
+  }
+  .row{
+    display:grid;
+    grid-template-columns:auto 34px 1fr;
+    gap:8px;
+    align-items:start;
+    padding:16px 0;
+    border-bottom:1px solid #f0f0f0;
+  }
+  .lhs{
+    font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;
+    font-size:28px;
+    line-height:1.6;
+    cursor:pointer;
+    padding:2px 6px;
+    border-radius:7px;
+    transition:.15s ease;
+    white-space:nowrap;
+  }
+  .lhs.ready:hover{
+    background:var(--accent-soft);
+    outline:1px solid #bfd4ff;
+  }
+  .eq{
+    font-family:"Cambria Math","Times New Roman",serif;
+    font-size:28px;
+    line-height:1.6;
+    border-radius:7px;
+    padding:1px 5px;
+    user-select:none;
+  }
+  .eq.clickable{
+    cursor:pointer;
+    color:var(--accent);
+    background:var(--accent-soft);
+    outline:1px solid #bfd4ff;
+  }
+  .eq.clickable:hover{
+    background:#e2edff;
+  }
+  .expr{
+    min-width:0;
+    font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;
+    font-size:29px;
+    line-height:1.6;
+  }
+
+  .dnode{
+    display:inline-block;
+    position:relative;
+    padding-right:15px;
+    border-radius:6px;
+    transition:.15s ease;
+  }
+  .dnode::after{
+    content:"′";
+    position:absolute;
+    right:1px;
+    top:-7px;
+    font-weight:700;
+    color:var(--accent);
+    cursor:pointer;
+    font-size:.92em;
+  }
+  .dnode.clickable{
+    cursor:pointer;
+    background:rgba(37,99,235,.045);
+    outline:1px solid transparent;
+  }
+  .dnode.clickable:hover{
+    background:var(--accent-soft);
+    outline-color:#b7cdfd;
+  }
+
+  .token-click{
+    cursor:pointer;
+    border-radius:5px;
+    padding:0 2px;
+  }
+  .token-click:hover{
+    background:#f3f4f6;
+    outline:1px solid #d4d4d8;
+  }
+
+  .rule{
+    display:inline-block;
+    margin-left:10px;
+    font-family:Arial,Helvetica,sans-serif;
+    font-size:13px;
+    color:var(--muted);
+    vertical-align:middle;
+    opacity:.95;
+  }
+  .hint{
+    min-height:24px;
+    margin:12px 0 0;
+    color:#555;
+    font-size:14px;
+  }
+  .hint strong{color:#222}
+  .status{
+    margin-top:16px;
+    font-size:14px;
+    color:#555;
+  }
+  .status.good{color:var(--good)}
+  .status.warn{color:var(--warn)}
+
+  .frac{
+    display:inline-grid;
+    grid-template-rows:auto auto;
+    vertical-align:middle;
+    text-align:center;
+    line-height:1.2;
+    margin:0 4px;
+  }
+  .frac .num{
+    border-bottom:1.4px solid currentColor;
+    padding:0 5px 3px;
+  }
+  .frac .den{
+    padding:3px 5px 0;
+  }
+  .sqrt{
+    display:inline-flex;
+    align-items:flex-start;
+  }
+  .sqrt-sign{
+    font-size:1.18em;
+    line-height:1.05;
+    transform:translateY(1px);
+  }
+  .sqrt-body{
+    border-top:1.3px solid currentColor;
+    padding:0 3px 0 2px;
+  }
+  sup{
+    font-size:.66em;
+    line-height:0;
+  }
+  .paren{white-space:nowrap}
+  .flash{
+    animation:flash .55s ease;
+  }
+  @keyframes flash{
+    0%{background:#fff7cc}
+    100%{background:transparent}
+  }
+
+  .legend{
+    margin-top:26px;
+    padding:12px 14px;
+    background:var(--soft);
+    border-radius:10px;
+    font-size:14px;
+    color:#555;
+  }
+
+  @media(max-width:720px){
+    .row{grid-template-columns:auto 25px 1fr}
+    .lhs,.eq,.expr{font-size:23px}
+    .wrap{width:96vw}
+  }
+</style>
+
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(','\\)']],
+      displayMath: [['\\[','\\]']]
+    },
+    svg: {
+      fontCache: 'global'
+    }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <label for="input">f(x) =</label>
+    <input id="input" value="e^(x^2)" spellcheck="false" />
+    <button id="startBtn">Başlat</button>
+    <button id="resetBtn">Sıfırla</button>
+  </div>
+
+  <div class="examples">
+    <button data-ex="e^(x^2)"><span>\(e^{x^2}\)</span></button>
+    <button data-ex="sqrt(x^2+1)"><span>\(\sqrt{x^2+1}\)</span></button>
+    <button data-ex="3*x^2*e^(2*x)"><span>\(3x^2e^{2x}\)</span></button>
+    <button data-ex="3*x*e^(-2*x)"><span>\(3xe^{-2x}\)</span></button>
+    <button data-ex="(2*x+1)/(x^2+3)"><span>\(\frac{2x+1}{x^2+3}\)</span></button>
+    <button data-ex="2^(x^2+1)"><span>\(2^{x^2+1}\)</span></button>
+  </div>
+
+  <div class="stage" id="stage"></div>
+  <div class="hint" id="hint"></div>
+  <div class="status" id="status"></div>
+
+  <div class="legend">
+    <strong>Kullanım:</strong> Sol taraftaki <i>f(x)</i>, <i>f′(x)</i>, <i>f″(x)</i> ifadesine tıklayarak yeni türevi başlatın.
+    Sağ tarafta mavi türev işaretlerine tıklayarak adımları açın. Türev işlemleri bitince mavi <strong>=</strong> işaretine tıklayıp ifadeyi düzenleyin.
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ---------------- AST yardımcıları ---------------- */
+const N = {
+  num:v => ({t:"num",v:Number(v)}),
+  x:() => ({t:"x"}),
+  add:(a,b) => ({t:"add",a,b}),
+  sub:(a,b) => ({t:"sub",a,b}),
+  mul:(a,b) => ({t:"mul",a,b}),
+  div:(a,b) => ({t:"div",a,b}),
+  pow:(a,b) => ({t:"pow",a,b}),
+  func:(name,arg) => ({t:"func",name,arg}),
+  deriv:arg => ({t:"deriv",arg}),
+};
+
+const clone = o => JSON.parse(JSON.stringify(o));
+
+function isNum(n,v=null){ return n && n.t==="num" && (v===null || n.v===v); }
+function isX(n){ return n && n.t==="x"; }
+
+function containsDeriv(n){
+  if(!n) return false;
+  if(n.t==="deriv") return true;
+  if(n.t==="num" || n.t==="x") return false;
+  if(n.t==="func") return containsDeriv(n.arg);
+  return containsDeriv(n.a) || containsDeriv(n.b);
+}
+
+/* ---------------- Tokenizer / Parser ---------------- */
+function tokenize(s){
+  s = s.replace(/\s+/g,"").replace(/√/g,"sqrt");
+  const out=[];
+  let i=0;
+  while(i<s.length){
+    const c=s[i];
+    if(/[0-9.]/.test(c)){
+      let j=i+1;
+      while(j<s.length && /[0-9.]/.test(s[j])) j++;
+      out.push({k:"num",v:s.slice(i,j)});
+      i=j; continue;
+    }
+    if(/[A-Za-z]/.test(c)){
+      let j=i+1;
+      while(j<s.length && /[A-Za-z]/.test(s[j])) j++;
+      out.push({k:"id",v:s.slice(i,j)});
+      i=j; continue;
+    }
+    if("+-*/^(),".includes(c)){ out.push({k:c,v:c}); i++; continue; }
+    throw new Error("Tanımsız karakter: "+c);
+  }
+
+  // örtük çarpma: 2x, 2(x+1), x(x+1), )(
+  const r=[];
+  for(let p=0;p<out.length;p++){
+    const cur=out[p], prev=r[r.length-1];
+    if(prev){
+      const prevCan = prev.k==="num" || prev.k==="id" || prev.k===")";
+      const curCan  = cur.k==="num" || cur.k==="id" || cur.k==="(";
+      const prevIsFunc = prev.k==="id" && ["sqrt","sin","cos","ln","exp"].includes(prev.v);
+      if(prevCan && curCan && !prevIsFunc && !(prev.k==="id" && cur.k==="(" && ["sqrt","sin","cos","ln","exp"].includes(prev.v))){
+        r.push({k:"*",v:"*"});
+      }
+    }
+    r.push(cur);
+  }
+  return r;
+}
+
+function parse(s){
+  const ts=tokenize(s);
+  let p=0;
+  const peek=()=>ts[p];
+  const eat=k=>{
+    if(!peek() || peek().k!==k) throw new Error("Beklenen: "+k);
+    return ts[p++];
+  };
+
+  function primary(){
+    const z=peek();
+    if(!z) throw new Error("İfade eksik");
+    if(z.k==="num"){ eat("num"); return N.num(z.v); }
+    if(z.k==="id"){
+      eat("id");
+      if(z.v==="x") return N.x();
+      if(z.v==="e"){
+        return {t:"const",name:"e"};
+      }
+      if(["sqrt","sin","cos","ln","exp"].includes(z.v)){
+        eat("("); const a=expr(); eat(")");
+        return N.func(z.v,a);
+      }
+      throw new Error("Bilinmeyen ifade: "+z.v);
+    }
+    if(z.k==="("){
+      eat("("); const a=expr(); eat(")"); return a;
+    }
+    if(z.k==="-"){
+      eat("-");
+      return N.mul(N.num(-1), primary());
+    }
+    throw new Error("Beklenmeyen öğe");
+  }
+
+  function power(){
+    let a=primary();
+    if(peek() && peek().k==="^"){
+      eat("^");
+      a=N.pow(a,power());
+    }
+    return a;
+  }
+
+  function term(){
+    let a=power();
+    while(peek() && (peek().k==="*" || peek().k==="/")){
+      const op=eat(peek().k).k;
+      const b=power();
+      a=op==="*" ? N.mul(a,b) : N.div(a,b);
+    }
+    return a;
+  }
+
+  function expr(){
+    let a=term();
+    while(peek() && (peek().k==="+" || peek().k==="-")){
+      const op=eat(peek().k).k;
+      const b=term();
+      a=op==="+" ? N.add(a,b) : N.sub(a,b);
+    }
+    return a;
+  }
+
+  const ast=expr();
+  if(p<ts.length) throw new Error("İfade sonuna kadar okunamadı");
+  return ast;
+}
+
+/* e^(u) ifadesini özel exp düğümüne çevir */
+function normalizeExp(n){
+  if(!n) return n;
+  if(["num","x","const"].includes(n.t)) return n;
+  if(n.t==="func"){ n.arg=normalizeExp(n.arg); return n; }
+  if(n.t==="deriv"){ n.arg=normalizeExp(n.arg); return n; }
+  n.a=normalizeExp(n.a); n.b=normalizeExp(n.b);
+  if(n.t==="pow" && n.a.t==="const" && n.a.name==="e"){
+    return N.func("exp",n.b);
+  }
+  return n;
+}
+
+/* ---------------- Sadeleştirme ---------------- */
+function simplify(n){
+  if(!n) return n;
+  if(["num","x","const"].includes(n.t)) return n;
+  if(n.t==="deriv"){ n.arg=simplify(n.arg); return n; }
+  if(n.t==="func"){
+    n.arg=simplify(n.arg);
+    return n;
+  }
+
+  n.a=simplify(n.a); n.b=simplify(n.b);
+
+  if(n.t==="add"){
+    if(isNum(n.a,0)) return n.b;
+    if(isNum(n.b,0)) return n.a;
+    if(isNum(n.a) && isNum(n.b)) return N.num(n.a.v+n.b.v);
+  }
+  if(n.t==="sub"){
+    if(isNum(n.b,0)) return n.a;
+    if(isNum(n.a) && isNum(n.b)) return N.num(n.a.v-n.b.v);
+  }
+  if(n.t==="mul"){
+    if(isNum(n.a,0) || isNum(n.b,0)) return N.num(0);
+    if(isNum(n.a,1)) return n.b;
+    if(isNum(n.b,1)) return n.a;
+    if(isNum(n.a) && isNum(n.b)) return N.num(n.a.v*n.b.v);
+
+    // sayıları solda birleştir: 2*(3*x) => 6*x
+    if(isNum(n.a) && n.b.t==="mul" && isNum(n.b.a)){
+      return simplify(N.mul(N.num(n.a.v*n.b.a.v), n.b.b));
+    }
+  }
+  if(n.t==="div"){
+    if(isNum(n.a,0)) return N.num(0);
+    if(isNum(n.b,1)) return n.a;
+    if(isNum(n.a) && isNum(n.b)) return N.num(n.a.v/n.b.v);
+  }
+  if(n.t==="pow"){
+    if(isNum(n.b,1)) return n.a;
+    if(isNum(n.b,0)) return N.num(1);
+    if(isNum(n.a) && isNum(n.b)) return N.num(Math.pow(n.a.v,n.b.v));
+  }
+  return n;
+}
+
+function flattenMul(n,out=[]){
+  if(n && n.t==="mul"){
+    flattenMul(n.a,out);
+    flattenMul(n.b,out);
+  }else{
+    out.push(n);
+  }
+  return out;
+}
+
+function buildMul(factors){
+  if(!factors.length) return N.num(1);
+  let r=factors[0];
+  for(let i=1;i<factors.length;i++) r=N.mul(r,factors[i]);
+  return r;
+}
+
+function flattenAdd(n,out=[]){
+  if(n && n.t==="add"){
+    flattenAdd(n.a,out);
+    flattenAdd(n.b,out);
+  }else{
+    out.push(n);
+  }
+  return out;
+}
+
+function buildAdd(terms){
+  if(!terms.length) return N.num(0);
+  let r=terms[0];
+  for(let i=1;i<terms.length;i++) r=N.add(r,terms[i]);
+  return r;
+}
+
+function containsX(n){
+  if(!n) return false;
+  if(n.t==="x") return true;
+  if(["num","const"].includes(n.t)) return false;
+  if(n.t==="func" || n.t==="deriv") return containsX(n.arg);
+  return containsX(n.a) || containsX(n.b);
+}
+
+function isXLike(n){
+  if(!n) return false;
+  if(n.t==="x") return true;
+  if(n.t==="pow" && n.a && n.a.t==="x") return true;
+  return false;
+}
+
+function factorRank(n){
+  if(!n) return 99;
+  if(n.t==="num") return 0;               // sayı başta
+  if(isXLike(n)) return 1;                // x, x^n
+  if(n.t==="pow" && containsX(n)) return 2;
+  if(["add","sub","div"].includes(n.t) && containsX(n)) return 2;
+  if(n.t==="func"){
+    if(n.name==="exp") return 5;           // e^(...) en sonda
+    return 4;                              // sin, cos, ln, sqrt
+  }
+  if(n.t==="pow") return 4;                // a^(f(x)) gibi
+  return 3;
+}
+
+function termRank(n){
+  // Toplamlarda x taşıyan terimler öne, yalnız fonksiyon/sabit olanlar sona.
+  if(containsX(n)){
+    // Çarpımın içinde doğrudan x/x^n varsa daha da öne.
+    const fs=flattenMul(n,[]);
+    if(fs.some(isXLike)) return 0;
+    return 1;
+  }
+  if(n.t==="func" || (n.t==="pow" && !isXLike(n))) return 3;
+  return 2;
+}
+
+function canonicalOrder(n){
+  if(!n) return n;
+  if(["num","x","const"].includes(n.t)) return n;
+
+  if(n.t==="deriv"){
+    n.arg=canonicalOrder(n.arg);
+    return n;
+  }
+
+  if(n.t==="func"){
+    n.arg=canonicalOrder(n.arg);
+    return n;
+  }
+
+  n.a=canonicalOrder(n.a);
+  n.b=canonicalOrder(n.b);
+
+  if(n.t==="mul"){
+    let factors=flattenMul(n,[]).map(canonicalOrder);
+
+    // Sayısal katsayıları birleştir.
+    let coeff=1;
+    let xPower=0;
+    let rest=[];
+
+    for(const f of factors){
+      if(isNum(f)){
+        coeff*=f.v;
+      }else if(f.t==="x"){
+        xPower += 1;
+      }else if(f.t==="pow" && f.a && f.a.t==="x" && isNum(f.b)){
+        xPower += f.b.v;
+      }else{
+        rest.push(f);
+      }
+    }
+
+    if(coeff===0) return N.num(0);
+
+    rest.sort((u,v)=>{
+      const d=factorRank(u)-factorRank(v);
+      if(d!==0) return d;
+      return JSON.stringify(u).localeCompare(JSON.stringify(v));
+    });
+
+    const out=[];
+    if(coeff!==1 || (xPower===0 && rest.length===0)) out.push(N.num(coeff));
+
+    if(xPower===1) out.push(N.x());
+    else if(xPower!==0) out.push(N.pow(N.x(),N.num(xPower)));
+
+    out.push(...rest);
+    return buildMul(out);
+  }
+
+  if(n.t==="add"){
+    let terms=flattenAdd(n,[]).map(canonicalOrder);
+    terms.sort((u,v)=>{
+      const d=termRank(u)-termRank(v);
+      if(d!==0) return d;
+      return JSON.stringify(u).localeCompare(JSON.stringify(v));
+    });
+    return buildAdd(terms);
+  }
+
+  return n;
+}
+
+function simplifyDeep(n){
+  let old="", cur=clone(n);
+  for(let i=0;i<30;i++){
+    const s=JSON.stringify(cur);
+    if(s===old) break;
+    old=s;
+    cur=simplify(cur);
+    cur=canonicalOrder(cur);
+  }
+  return cur;
+}
+
+/* ---------------- Basit polinom terimleri ----------------
+   c*x, c*x^n, x, x^n gibi tek terimler ayrıntıya girilmeden
+   doğrudan türevlenir.
+---------------------------------------------------------- */
+function simpleMonomialInfo(n){
+  // x
+  if(n && n.t==="x") return {c:1,n:1};
+
+  // x^n
+  if(n && n.t==="pow" && n.a && n.a.t==="x" && isNum(n.b)){
+    return {c:1,n:n.b.v};
+  }
+
+  // c*x  veya c*x^n
+  if(n && n.t==="mul"){
+    // Önce kanonik sıraya sokulmuş yapı hedefleniyor: sayı solda.
+    if(isNum(n.a)){
+      if(n.b && n.b.t==="x") return {c:n.a.v,n:1};
+      if(n.b && n.b.t==="pow" && n.b.a && n.b.a.t==="x" && isNum(n.b.b)){
+        return {c:n.a.v,n:n.b.b.v};
+      }
+    }
+
+    // Güvenlik: x*c biçimi de yakalansın.
+    if(isNum(n.b)){
+      if(n.a && n.a.t==="x") return {c:n.b.v,n:1};
+      if(n.a && n.a.t==="pow" && n.a.a && n.a.a.t==="x" && isNum(n.a.b)){
+        return {c:n.b.v,n:n.a.b.v};
+      }
+    }
+  }
+
+  return null;
+}
+
+function derivativeOfSimpleMonomial(n){
+  const m=simpleMonomialInfo(n);
+  if(!m) return null;
+
+  const c=m.c, p=m.n;
+  if(p===0) return N.num(0);
+
+  const newC=c*p;
+  const newP=p-1;
+
+  if(newP===0) return N.num(newC);
+
+  let xPart = newP===1 ? N.x() : N.pow(N.x(),N.num(newP));
+  if(newC===1) return xPart;
+  if(newC===-1) return N.mul(N.num(-1),xPart);
+  return N.mul(N.num(newC),xPart);
+}
+
+function extractConstantCoefficient(n){
+  // Sabit katsayıyı yalnızca gerçekten TEK bir ifadenin katsayısıysa ayır.
+  //
+  // 2·e^(x²)      -> 2 (e^(x²))'      : EVET
+  // 3·(x²+1)      -> 3 (x²+1)'        : EVET
+  //
+  // 2·x·e^(x²)    -> (2x)'e^(x²)+...  : HAYIR
+  // Burada 2, "x" ile birlikte 2x polinom terimini oluşturur.
+  //
+  // Böylece çarpımın pedagojik olarak doğal parçaları korunur.
+
+  if(!n || n.t!=="mul") return null;
+
+  const factors=flattenMul(clone(n),[]);
+  let coeff=1;
+  const rest=[];
+
+  for(const f of factors){
+    if(isNum(f)) coeff*=f.v;
+    else rest.push(f);
+  }
+
+  if(coeff===1 || rest.length===0) return null;
+
+  // Katsayıdan sonra yalnızca tek bir matematiksel faktör kalıyorsa
+  // bu gerçekten sabit katsayı kuralıdır.
+  if(rest.length!==1) return null;
+
+  return {
+    coeff,
+    body: rest[0]
+  };
+}
+
+function derivativeCompact(n){
+  // Çarpım kuralının içinde "zaten bilinen" basit türevleri doğrudan yaz.
+  if(n.t==="num" || n.t==="const") return N.num(0);
+
+  const poly=derivativeOfSimpleMonomial(n);
+  if(poly) return simplifyDeep(poly);
+
+  // Sabit katsayı varsa onu dışarıda tut.
+  const cm=extractConstantCoefficient(n);
+  if(cm){
+    return simplifyDeep(N.mul(N.num(cm.coeff), N.deriv(cm.body)));
+  }
+
+  return N.deriv(clone(n));
+}
+
+/* ---------------- Bir sonraki işlemi önceden bildir ---------------- */
+function ruleForArg(n){
+  if(!n) return "Türev alınacak";
+
+  if(n.t==="num" || n.t==="const") return "Sabitin türevi alınacak";
+
+  if(simpleMonomialInfo(n)) return "Polinom teriminin türevi alınacak";
+
+  const constantMultiple=extractConstantCoefficient(n);
+  if(constantMultiple) return "Sabit katsayı dışarı alınacak";
+
+  if(n.t==="add") return "Toplam kuralı uygulanacak";
+  if(n.t==="sub") return "Fark kuralı uygulanacak";
+  if(n.t==="mul") return "Çarpım kuralı uygulanacak";
+  if(n.t==="div") return "Bölüm kuralı uygulanacak";
+
+  if(n.t==="func"){
+    if(n.name==="exp") return "Zincir kuralı uygulanacak";
+    if(n.name==="sqrt") return "Kök ve zincir kuralı uygulanacak";
+    if(n.name==="ln") return "ln ve zincir kuralı uygulanacak";
+    if(n.name==="sin") return "Sinüs ve zincir kuralı uygulanacak";
+    if(n.name==="cos") return "Kosinüs ve zincir kuralı uygulanacak";
+  }
+
+  if(n.t==="pow"){
+    if(isNum(n.b)){
+      return isX(n.a) ? "Kuvvet kuralı uygulanacak" : "Kuvvet ve zincir kuralı uygulanacak";
+    }
+    if(isNum(n.a)) return "Üstel fonksiyon ve zincir kuralı uygulanacak";
+  }
+
+  return "Türev kuralı uygulanacak";
+}
+
+function findFirstDerivative(n){
+  if(!n) return null;
+  if(n.t==="deriv") return n;
+  if(n.t==="func") return findFirstDerivative(n.arg);
+  if(["num","x","const"].includes(n.t)) return null;
+  return findFirstDerivative(n.a) || findFirstDerivative(n.b);
+}
+
+function nextActionLabel(row){
+  const d=findFirstDerivative(row.ast);
+  if(d) return ruleForArg(d.arg);
+  if(!row.normalized) return "İfade düzenlenecek";
+  return "Bir sonraki türev alınacak";
+}
+
+/* ---------------- Türev kuralı: yalnızca TEK adım ---------------- */
+function derivativeOneStep(n){
+  n=clone(n);
+
+  if(n.t==="num" || n.t==="const")
+    return {node:N.num(0), rule:"Sabitin türevi"};
+
+  // Basit tek polinom terimleri doğrudan türevlenir:
+  // (2x)' -> 2, (3x^2)' -> 6x, (-5x^4)' -> -20x^3
+  const simplePolyDerivative = derivativeOfSimpleMonomial(n);
+  if(simplePolyDerivative)
+    return {node:simplifyDeep(simplePolyDerivative), rule:"Polinom teriminin türevi"};
+
+  // c·u biçiminde, c sabitse:
+  // (2e^(x²))' -> 2(e^(x²))'
+  // (3xe^(-2x))' -> 3(xe^(-2x))'
+  const constantMultiple = extractConstantCoefficient(n);
+  if(constantMultiple){
+    return {
+      node:N.mul(N.num(constantMultiple.coeff), N.deriv(constantMultiple.body)),
+      rule:"Sabit katsayı kuralı"
+    };
+  }
+
+  if(n.t==="add")
+    return {node:N.add(N.deriv(n.a),N.deriv(n.b)), rule:"Toplam kuralı"};
+
+  if(n.t==="sub")
+    return {node:N.sub(N.deriv(n.a),N.deriv(n.b)), rule:"Fark kuralı"};
+
+  if(n.t==="mul"){
+    // Basit polinom/sabit türevleri gereksiz yere açık bırakılmaz.
+    // Örn. (x·e^u)' -> e^u + x(e^u)'
+    //      (4x²·e^u)' -> 8x e^u + 4x²(e^u)'
+    const da=derivativeCompact(n.a);
+    const db=derivativeCompact(n.b);
+
+    return {
+      node:N.add(
+        N.mul(da, clone(n.b)),
+        N.mul(clone(n.a), db)
+      ),
+      rule:"Çarpım kuralı"
+    };
+  }
+
+  if(n.t==="div")
+    return {
+      node:N.div(
+        N.sub(
+          N.mul(derivativeCompact(n.a), clone(n.b)),
+          N.mul(clone(n.a), derivativeCompact(n.b))
+        ),
+        N.pow(clone(n.b),N.num(2))
+      ),
+      rule:"Bölüm kuralı"
+    };
+
+  if(n.t==="func"){
+    const u=clone(n.arg);
+    if(n.name==="exp")
+      return {node:N.mul(N.func("exp",u),N.deriv(u)), rule:"Zincir kuralı"};
+    if(n.name==="sqrt")
+      return {
+        node:N.div(N.deriv(u),N.mul(N.num(2),N.func("sqrt",clone(u)))),
+        rule:"Kök + zincir kuralı"
+      };
+    if(n.name==="ln")
+      return {node:N.div(N.deriv(u),u), rule:"ln + zincir kuralı"};
+    if(n.name==="sin")
+      return {node:N.mul(N.func("cos",u),N.deriv(u)), rule:"sin + zincir kuralı"};
+    if(n.name==="cos")
+      return {
+        node:N.mul(N.mul(N.num(-1),N.func("sin",u)),N.deriv(u)),
+        rule:"cos + zincir kuralı"
+      };
+  }
+
+  if(n.t==="pow"){
+    // x^n veya u^n, n sayısal
+    if(isNum(n.b)){
+      const u=clone(n.a), k=n.b.v;
+      const outer=N.mul(N.num(k),N.pow(clone(u),N.num(k-1)));
+      if(isX(n.a))
+        return {node:simplifyDeep(outer), rule:"Kuvvet kuralı"};
+      return {node:N.mul(outer,N.deriv(u)), rule:"Kuvvet + zincir kuralı"};
+    }
+
+    // a^u, a pozitif sabit sayı
+    if(isNum(n.a)){
+      const a=n.a.v, u=clone(n.b);
+      return {
+        node:N.mul(
+          N.mul(N.pow(N.num(a),clone(u)),N.func("ln",N.num(a))),
+          N.deriv(u)
+        ),
+        rule:"Üstel fonksiyon + zincir kuralı"
+      };
+    }
+  }
+
+  // desteklenmeyen genel u^v:
+  return {node:N.deriv(n),rule:"Bu yapı henüz desteklenmiyor"};
+}
+
+/* ---------------- AST içindeki seçili deriv düğümünü değiştir ---------------- */
+function getAt(root,path){
+  let n=root;
+  for(const k of path) n=n[k];
+  return n;
+}
+function setAt(root,path,newNode){
+  if(path.length===0) return newNode;
+  const r=clone(root);
+  let p=r;
+  for(let i=0;i<path.length-1;i++) p=p[path[i]];
+  p[path[path.length-1]]=newNode;
+  return r;
+}
+
+/* ---------------- Render ---------------- */
+function prec(n){
+  if(!n) return 99;
+  return ({add:1,sub:1,mul:2,div:2,pow:3,deriv:4,func:4,num:5,x:5,const:5})[n.t]||5;
+}
+
+function renderNode(n, path=[], parentPrec=0){
+  const p=prec(n);
+  let h="";
+
+  if(n.t==="num"){
+    h=Number.isInteger(n.v)? String(n.v) : String(Number(n.v.toFixed(6)));
+  } else if(n.t==="x"){
+    h="x";
+  } else if(n.t==="const"){
+    h=n.name;
+  } else if(n.t==="add" || n.t==="sub"){
+    const op=n.t==="add" ? " + " : " − ";
+    h=renderNode(n.a,[...path,"a"],p)+op+renderNode(n.b,[...path,"b"],p+0.1);
+  } else if(n.t==="mul"){
+    const left=renderNode(n.a,[...path,"a"],p);
+    const right=renderNode(n.b,[...path,"b"],p);
+
+    // Standart cebir yazımı:
+    // 3 · x -> 3x, 3x · e^(...) -> 3xe^(...)
+    // Sayı-sayı arasında nokta korunur; diğer doğal çarpımlarda kaldırılır.
+    const aNum = n.a && n.a.t==="num";
+    const bNum = n.b && n.b.t==="num";
+    const needDot = aNum && bNum;
+    h = left + (needDot ? " · " : "") + right;
+  } else if(n.t==="div"){
+    h=`<span class="frac"><span class="num">${renderNode(n.a,[...path,"a"],0)}</span><span class="den">${renderNode(n.b,[...path,"b"],0)}</span></span>`;
+  } else if(n.t==="pow"){
+    const base=renderNode(n.a,[...path,"a"],p);
+    const ex=renderNode(n.b,[...path,"b"],0);
+    h=`${base}<sup>${ex}</sup>`;
+  } else if(n.t==="func"){
+    const a=renderNode(n.arg,[...path,"arg"],0);
+    if(n.name==="sqrt"){
+      h=`<span class="sqrt"><span class="sqrt-sign">√</span><span class="sqrt-body">${a}</span></span>`;
+    }else if(n.name==="exp"){
+      h=`e<sup>${a}</sup>`;
+    }else{
+      h=`${n.name}(${a})`;
+    }
+  } else if(n.t==="deriv"){
+    const inner=renderNode(n.arg,[...path,"arg"],0);
+    const pathStr=path.join(".");
+    h=`<span class="dnode clickable" data-path="${pathStr}" title="Bu türevi al">(${inner})</span>`;
+  }
+
+  if(p<parentPrec && !["div"].includes(n.t)){
+    return `<span class="paren">(${h})</span>`;
+  }
+  return h;
+}
+
+/* ---------------- Öğretim durumu ---------------- */
+let rows=[];
+let currentOrder=0;
+let lastRule="";
+let sourceAST=null;
+
+function lhsLabel(order){
+  if(order===0) return "f(x)";
+  return "f" + "′".repeat(order) + "(x)";
+}
+
+function expressionFinished(ast){
+  return !containsDeriv(ast);
+}
+
+function canonicalize(ast){
+  return simplifyDeep(ast);
+}
+
+function startNewFunction(){
+  try{
+    let ast=normalizeExp(parse(document.getElementById("input").value));
+    ast=canonicalize(ast);
+    sourceAST=clone(ast);
+    currentOrder=0;
+    rows=[{order:0,ast:clone(ast),mode:"result",normalized:true}];
+    lastRule="";
+    setHint("Önce <strong>f(x)</strong> üzerine tıklayın.");
+    setStatus("");
+    render();
+  }catch(e){
+    setStatus("Girdi okunamadı: "+e.message,"warn");
+  }}
+
+function beginNextDerivative(order){
+  const row=rows.find(r=>r.order===order);
+  if(!row) return;
+
+  if(!expressionFinished(row.ast)){
+    setHint("Sağ tarafta hâlâ alınmamış bir türev var.");
+    return;
+  }
+
+  if(!row.normalized){
+    setHint("Önce <strong>=</strong> işaretine tıklayıp ifadeyi düzenleyin.");
+    return;
+  }
+
+  const next=order+1;
+  if(rows.some(r=>r.order===next)) return;
+
+  rows.push({
+    order:next,
+    ast:N.deriv(clone(row.ast)),
+    mode:"working",
+    normalized:false
+  });
+  currentOrder=next;
+  lastRule=nextActionLabel(rows[rows.length-1]);
+  setHint(`<strong>${lhsLabel(next)}</strong> oluşturuldu. Sağdaki mavi türev işaretine tıklayın.`);
+  render();
+}
+
+function clickDerivative(order,pathStr){
+  const row=rows.find(r=>r.order===order);
+  if(!row) return;
+  const path=pathStr ? pathStr.split(".") : [];
+  const target=getAt(row.ast,path);
+  if(!target || target.t!=="deriv") return;
+
+  const step=derivativeOneStep(target.arg);
+  row.ast=setAt(row.ast,path,step.node);
+  row.normalized=false;
+
+  if(expressionFinished(row.ast)){
+    row.mode="result";
+    lastRule="İfade düzenlenecek";
+    setHint(`Türev işlemleri tamamlandı. Şimdi <strong>=</strong> işaretine tıklayıp ifadeyi en düzgün biçimine getirin.`);
+    setStatus("Cebirsel düzenleme bekleniyor.","warn");
+  }else{
+    lastRule=nextActionLabel(row);
+    setHint(`Mavi türev işaretlerinden birine tıklayarak devam edin.`);
+    setStatus("");
+  }
+  render();
+}
+
+function normalizeRow(order){
+  const row=rows.find(r=>r.order===order);
+  if(!row || !expressionFinished(row.ast) || row.normalized) return;
+
+  row.ast=canonicalize(row.ast);
+  row.normalized=true;
+  lastRule="Bir sonraki türev alınacak";
+  setHint(`İfade düzenlendi. Şimdi <strong>${lhsLabel(order)}</strong> üzerine tıklayarak bir sonraki türeve geçebilirsiniz.`);
+  setStatus("İfade düzenlendi ve yeni türeve hazır.","good");
+  render();
+}
+
+function render(){
+  const stage=document.getElementById("stage");
+  stage.innerHTML="";
+
+  rows.forEach(row=>{
+    const div=document.createElement("div");
+    div.className="row";
+    const finished=expressionFinished(row.ast);
+    const canAdvance=finished && row.normalized;
+    const eqReady=finished && !row.normalized;
+    div.innerHTML=`
+      <div class="lhs ${canAdvance?"ready":""}" data-order="${row.order}" title="${canAdvance?"Bir sonraki türevi başlat":""}">
+        ${lhsLabel(row.order)}
+      </div>
+      <div class="eq ${eqReady?"clickable":""}" data-order="${row.order}" title="${eqReady?"İfadeyi düzenle":""}">=</div>
+      <div class="expr" data-order="${row.order}">
+        ${renderNode(row.ast)}
+        ${row.order===currentOrder && lastRule ? `<span class="rule">${lastRule}</span>` : ""}
+      </div>
+    `;
+    stage.appendChild(div);
+  });
+
+  stage.querySelectorAll(".lhs.ready").forEach(el=>{
+    el.addEventListener("click",()=>{
+      const order=Number(el.dataset.order);
+      const row=rows.find(r=>r.order===order);
+
+      // yalnızca son mevcut türev satırı yeni türev başlatabilsin
+      const maxOrder=Math.max(...rows.map(r=>r.order));
+      if(order!==maxOrder){
+        setHint("Yeni türev, en son tamamlanan satırdan başlatılır.");
+        return;
+      }
+
+      if(expressionFinished(row.ast)){
+        beginNextDerivative(order);
+      }
+    });
+  });
+
+  stage.querySelectorAll(".eq.clickable").forEach(el=>{
+    el.addEventListener("click",()=>{
+      normalizeRow(Number(el.dataset.order));
+    });
+  });
+
+  stage.querySelectorAll(".expr").forEach(expr=>{
+    const order=Number(expr.dataset.order);
+    expr.querySelectorAll(".dnode.clickable").forEach(el=>{
+      el.addEventListener("click",(ev)=>{
+        ev.stopPropagation();
+        clickDerivative(order,el.dataset.path);
+      });
+    });
+  });
+}
+
+function setHint(s){ document.getElementById("hint").innerHTML=s; }
+function setStatus(s,kind=""){
+  const el=document.getElementById("status");
+  el.textContent=s;
+  el.className="status "+kind;
+}
+
+/* ---------------- UI ---------------- */
+document.getElementById("startBtn").addEventListener("click",startNewFunction);
+document.getElementById("resetBtn").addEventListener("click",startNewFunction);
+document.getElementById("input").addEventListener("keydown",e=>{
+  if(e.key==="Enter") startNewFunction();
+});
+document.querySelectorAll("[data-ex]").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.getElementById("input").value=b.dataset.ex;
+    startNewFunction();
+  });
+});
+
+startNewFunction();
+
+})();
+</script>
+</body>
+</html>
