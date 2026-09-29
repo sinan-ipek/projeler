@@ -74,9 +74,9 @@ svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px soli
 
         <g id="warningCallout" style="display:none" pointer-events="none">
           <line id="warningStem" stroke="#cda1aa" stroke-width=".9"/>
-          <rect id="warningBox" width="76" height="43" rx="3.5" fill="#fff1f4" stroke="#d9adb6" stroke-width=".95" filter="url(#noteShadow)"/>
-          <text id="warningText" fill="#76565d" font-size="8.6" font-weight="400" text-anchor="middle">
-            <tspan>Grafiği her zaman</tspan><tspan>sağa doğru</tspan><tspan>izlemelisin.</tspan>
+          <rect id="warningBox" width="52" height="24" rx="3.5" fill="#fff1f4" stroke="#d9adb6" stroke-width=".95" filter="url(#noteShadow)"/>
+          <text id="warningText" fill="#76565d" font-size="9" font-weight="400" text-anchor="middle">
+            <tspan>Ters yön</tspan>
           </text>
         </g>
 
@@ -169,12 +169,16 @@ function positionSnapFx(x,y){
 function fireSnapAnimation(x,y){positionSnapFx(x,y);glow.classList.remove('active');rays.classList.remove('active');void glow.getBoundingClientRect();glow.classList.add('active');rays.classList.add('active');setTimeout(()=>{glow.classList.remove('active');rays.classList.remove('active')},900)}
 
 function placeWarning(px,py){
- let bx=px+18,by=py+14;if(bx+noteW>720)bx=px-noteW-18;if(by+noteH>400)by=py-noteH-18;bx=clamp(bx,48,720-noteW);by=clamp(by,34,400-noteH);
+ let bx=px-noteW/2,by=py+24;
+ bx=clamp(bx,48,720-noteW);
+ if(by+noteH>400)by=400-noteH;
  warningBox.setAttribute('x',bx);warningBox.setAttribute('y',by);
- const tx=bx+noteW/2,ty=by+11;warningText.setAttribute('x',tx);warningText.setAttribute('y',ty);
- warningText.querySelectorAll('tspan').forEach((s,i)=>{s.setAttribute('x',tx);s.setAttribute('dy',i===0?0:10)});
- let ax=bx,ay=by+noteH/2;if(px>bx+noteW){ax=bx+noteW}else if(py<by){ax=bx+noteW/2;ay=by}else if(py>by+noteH){ax=bx+noteW/2;ay=by+noteH}
- const dx=px-ax,dy=py-ay,L=Math.hypot(dx,dy)||1;warningStem.setAttribute('x1',ax);warningStem.setAttribute('y1',ay);warningStem.setAttribute('x2',px-dx/L*11);warningStem.setAttribute('y2',py-dy/L*11);
+ const tx=bx+noteW/2,ty=by+15;
+ warningText.setAttribute('x',tx);warningText.setAttribute('y',ty);
+ warningText.querySelectorAll('tspan').forEach(s=>{s.setAttribute('x',tx);s.setAttribute('dy',0)});
+ const ax=bx+noteW/2,ay=by;
+ warningStem.setAttribute('x1',ax);warningStem.setAttribute('y1',ay);
+ warningStem.setAttribute('x2',px);warningStem.setAttribute('y2',py+11);
 }
 function showWarning(px,py){warningVisible=true;warningCallout.style.display='';placeWarning(px,py);clearTimeout(warningTimer);warningTimer=setTimeout(()=>{warningVisible=false;warningCallout.style.display='none'},1350)}
 function hideWarning(){warningVisible=false;clearTimeout(warningTimer);warningCallout.style.display='none'}
