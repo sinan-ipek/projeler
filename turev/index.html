@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Türev Adım Adım v23</title>
+<title>Türev Adım Adım v24</title>
 <style>
   :root{
     --bg:#ffffff;
@@ -317,15 +317,6 @@
     100%{background:transparent}
   }
 
-  .legend{
-    margin-top:26px;
-    padding:12px 14px;
-    background:var(--soft);
-    border-radius:10px;
-    font-size:14px;
-    color:#555;
-  }
-
   @media(max-width:720px){
     .row{grid-template-columns:auto 25px 1fr}
     .lhs,.eq,.expr{font-size:23px}
@@ -369,13 +360,8 @@
   </div>
 
   <div class="stage" id="stage"></div>
-  <div class="hint" id="hint"></div>
-  <div class="status" id="status"></div>
-
-  <div class="legend">
-    <strong>Kullanım:</strong> Sol taraftaki <i>f(x)</i>, <i>f′(x)</i>, <i>f″(x)</i> ifadesine tıklayarak yeni türevi başlatın.
-    Sağ tarafta mavi türev işaretlerine tıklayarak adımları açın. Türev işlemleri bitince mavi <strong>=</strong> işaretine tıklayıp ifadeyi düzenleyin.
-  </div>
+  <div class="hint" id="hint" hidden></div>
+  <div class="status" id="status" hidden></div>
 </div>
 
 <script>
@@ -1823,9 +1809,13 @@ function render(){
   });
 }
 
-function setHint(s){ document.getElementById("hint").innerHTML=s; }
+function setHint(s){
+  const el=document.getElementById("hint");
+  if(el) el.innerHTML=s;
+}
 function setStatus(s,kind=""){
   const el=document.getElementById("status");
+  if(!el) return;
   el.textContent=s;
   el.className="status "+kind;
 }
