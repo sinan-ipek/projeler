@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Türev Adım Adım v15</title>
+<title>Türev Adım Adım v16</title>
 <style>
   :root{
     --bg:#ffffff;
@@ -236,28 +236,14 @@
   }
   .common-factor{
     display:inline-block;
-    padding:0 3px;
+    padding:0 1px;
     margin:0 1px;
-    border-radius:5px;
     cursor:pointer;
     font-weight:600;
-    outline:1px solid currentColor;
-    outline-offset:1px;
-    transition:transform .12s ease, background .12s ease;
   }
   .common-factor:hover{
-    transform:translateY(-1px);
-  }
-  .common-factor.revealed{
-    animation:factorReveal .38s ease both;
-  }
-  .common-factor.locked{
-    cursor:default;
-    pointer-events:none;
-  }
-  @keyframes factorReveal{
-    from{opacity:0;transform:translateY(3px) scale(.96)}
-    to{opacity:1;transform:translateY(0) scale(1)}
+    text-decoration:underline;
+    text-underline-offset:3px;
   }
   .cf0{color:#b45309;background:#fff7ed}
   .cf1{color:#1d4ed8;background:#eff6ff}
@@ -1256,7 +1242,9 @@ function prepareFactorStage(row){
   }
 }
 
-let factorAnimationToken=0;
+function allFactorTermsExpanded(row){
+  return row.factorExpanded && row.factorExpanded.length>0 && row.factorExpanded.every(Boolean);
+}
 
 function allFactorTermsExpanded(row){
   return row.factorExpanded && row.factorExpanded.length>0 && row.factorExpanded.every(Boolean);
@@ -1270,51 +1258,17 @@ function expandFactorTerm(order,index){
   row.factorExpanded[index]=true;
 
   if(allFactorTermsExpanded(row)){
-    lastRule="Ortak çarpanlar gösterilecek";
-    setHint("Bütün terimler çarpanlarına ayrıldı. Şimdi ortak çarpanlar belirginleşecek.");
-    setStatus("Ortak çarpanlar aranıyor.","warn");
-    render();
-    scheduleCommonFactorReveal(order);
+    row.revealCount=row.commonFactors.length;
+    row.factorClickable=true;
+    lastRule="Ortak çarpanlar seçilecek";
+    setHint("Bütün terimler çarpanlarına ayrıldı. Ortak çarpanlar renkli gösterildi; birine tıklayın.");
+    setStatus("Ortak çarpanlar seçilebilir.","warn");
   }else{
     lastRule="Terimler çarpanlarına ayrılacak";
     setHint("Diğer terimlere de tıklayarak onları çarpanlarına ayırın.");
     setStatus("Terimleri çarpanlarına ayırma aşaması.","warn");
-    render();
   }
-}
-
-function scheduleCommonFactorReveal(order){
-  const token=++factorAnimationToken;
-  const row=rows.find(r=>r.order===order);
-  if(!row) return;
-
-  row.revealCount=0;
-  row.factorClickable=false;
   render();
-
-  const step=190;
-  const firstDelay=420;
-
-  row.commonFactors.forEach((_,i)=>{
-    setTimeout(()=>{
-      if(token!==factorAnimationToken) return;
-      const live=rows.find(r=>r.order===order);
-      if(!live || !live.factorPending) return;
-      live.revealCount=i+1;
-      render();
-    }, firstDelay+i*step);
-  });
-
-  setTimeout(()=>{
-    if(token!==factorAnimationToken) return;
-    const live=rows.find(r=>r.order===order);
-    if(!live || !live.factorPending) return;
-    live.factorClickable=true;
-    lastRule="Ortak çarpanlar seçilecek";
-    setHint("Aynı renkte görünen ortak çarpanlardan birine tıklayın.");
-    setStatus("Ortak çarpanlar seçilebilir.","warn");
-    render();
-  }, firstDelay+row.commonFactors.length*step+220);
 }
 
 function applyCommonFactor(order,factorId){
@@ -1347,8 +1301,7 @@ function applyCommonFactor(order,factorId){
     setHint("Seçtiğiniz ortak çarpan parantezin önüne alındı. Renkli kalan ortak çarpanlara da tıklayın.");
     setStatus("Ortak çarpan alma devam ediyor.","warn");
   }else{
-    factorAnimationToken++;
-    row.factorInside=canonicalize(row.factorInside);
+      row.factorInside=canonicalize(row.factorInside);
     row.ast=canonicalize(N.mul(clone(row.factorOutside),clone(row.factorInside)));
     row.factorExpanded=[];
     row.revealCount=0;
@@ -1413,8 +1366,7 @@ function renderExpandedFactoringTerm(term,row){
     if(specIndex>=0 && specIndex<row.revealCount){
       const sp=row.commonFactors[specIndex];
       const cls="cf"+(specIndex%6);
-      const locked=row.factorClickable ? "" : " locked";
-      html.push(`<span class="common-factor revealed ${cls}${locked}" data-factor-id="${escapeHtmlAttr(sp.id)}">${raw}</span>`);
+      html.push(`<span class="common-factor ${cls}" data-factor-id="${escapeHtmlAttr(sp.id)}">${raw}</span>`);
     }else{
       html.push(raw);
     }
@@ -1487,7 +1439,6 @@ function canonicalize(ast){
 
 function startNewFunction(){
   try{
-    factorAnimationToken++;
     let ast=normalizeExp(parse(document.getElementById("input").value));
     ast=canonicalize(ast);
     sourceAST=clone(ast);
