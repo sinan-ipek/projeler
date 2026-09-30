@@ -12,7 +12,7 @@ button{cursor:pointer}.functionInput{width:250px;min-width:180px;outline:none}.f
 .stage{background:#efefef;border:1px solid #d0d0d0;border-radius:12px;padding:8px;min-width:0}
 svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px solid #d0d0d0;border-radius:12px;background:#fff;padding:16px}
 .info small{color:#777}.state{font-size:20px;font-weight:650;margin:4px 0 8px}.formula{font-size:18px;margin-bottom:10px}.explain{font-size:14px;line-height:1.55;color:#444}.foot{margin-top:10px;color:#777;font-size:13px}.yScaleControl{height:42px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid #cfcfcf;border-radius:10px;background:#fff;color:#555;font-size:13px}.yScaleControl input{width:120px;accent-color:#888}.yScaleValue{min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
-.wp-glow{opacity:0;transform-box:fill-box;transform-origin:center;pointer-events:none}.wp-glow.active{animation:wpGlow 850ms ease-out}
+.axisTick{stroke:#aaa;stroke-width:.75;vector-effect:non-scaling-stroke}.axisTickLabel{fill:#888;font-size:9px;font-family:Arial,sans-serif;user-select:none}.wp-glow{opacity:0;transform-box:fill-box;transform-origin:center;pointer-events:none}.wp-glow.active{animation:wpGlow 850ms ease-out}
 .wp-ray{stroke:#ffb347;stroke-width:2.2;stroke-linecap:round;opacity:0}.wp-rays.active .wp-ray{animation:wpRay 760ms ease-out}
 .wp-rays.active .wp-ray:nth-child(2n){animation-delay:35ms}.wp-rays.active .wp-ray:nth-child(3n){animation-delay:70ms}
 @keyframes wpGlow{0%{opacity:0;transform:scale(.35)}18%{opacity:.9;transform:scale(1)}55%{opacity:.45;transform:scale(1.7)}100%{opacity:0;transform:scale(2.25)}}
@@ -62,6 +62,8 @@ svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px soli
 
         <line x1="45" y1="215" x2="715" y2="215" stroke="#666" stroke-width="1.7"/>
         <line x1="380" y1="28" x2="380" y2="400" stroke="#666" stroke-width="1.7"/>
+        <g id="xAxisTicks" pointer-events="none"></g>
+        <g id="yAxisTicks" pointer-events="none"></g>
         <text x="720" y="207" fill="#555" font-size="16" font-style="italic">x</text>
         <text x="391" y="45" fill="#555" font-size="16" font-style="italic">y</text>
 
