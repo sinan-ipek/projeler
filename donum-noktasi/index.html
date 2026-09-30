@@ -12,7 +12,7 @@ button{cursor:pointer}.functionInput{width:250px;min-width:180px;outline:none}.f
 .stage{background:#efefef;border:1px solid #d0d0d0;border-radius:12px;padding:8px;min-width:0}
 svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px solid #d0d0d0;border-radius:12px;background:#fff;padding:16px}
 .info small{color:#777}.state{font-size:20px;font-weight:650;margin:4px 0 8px}.formula{font-size:18px;margin-bottom:10px}.explain{font-size:14px;line-height:1.55;color:#444}.foot{margin-top:10px;color:#777;font-size:13px}.yScaleControl{height:42px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid #cfcfcf;border-radius:10px;background:#fff;color:#555;font-size:13px}.yScaleControl input{width:120px;accent-color:#888}.yScaleValue{min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
-.axisTick{stroke:#aaa;stroke-width:.75;vector-effect:non-scaling-stroke}.axisTickLabel{fill:#888;font-size:9px;font-family:Arial,sans-serif;user-select:none}.wp-glow{opacity:0;transform-box:fill-box;transform-origin:center;pointer-events:none}.wp-glow.active{animation:wpGlow 850ms ease-out}
+.axisTick{stroke:#9d9d9d;stroke-width:.85;vector-effect:non-scaling-stroke}.axisTickLabel{fill:#777;font-size:9.5px;font-family:Arial,sans-serif;user-select:none}.wp-glow{opacity:0;transform-box:fill-box;transform-origin:center;pointer-events:none}.wp-glow.active{animation:wpGlow 850ms ease-out}
 .wp-ray{stroke:#ffb347;stroke-width:2.2;stroke-linecap:round;opacity:0}.wp-rays.active .wp-ray{animation:wpRay 760ms ease-out}
 .wp-rays.active .wp-ray:nth-child(2n){animation-delay:35ms}.wp-rays.active .wp-ray:nth-child(3n){animation-delay:70ms}
 @keyframes wpGlow{0%{opacity:0;transform:scale(.35)}18%{opacity:.9;transform:scale(1)}55%{opacity:.45;transform:scale(1.7)}100%{opacity:0;transform:scale(2.25)}}
@@ -103,7 +103,7 @@ svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px soli
 <script>
 (()=>{
 const root=document.getElementById('curve-turn-demo');
-const svg=root.querySelector('#graph'),curve=root.querySelector('#curve'),point=root.querySelector('#point'),pointHalo=root.querySelector('#pointHalo'),normalArrow=root.querySelector('#normalArrow'),curveType=root.querySelector('#curveType'),customOption=root.querySelector('#customOption'),functionInput=root.querySelector('#functionInput'),drawBtn=root.querySelector('#drawBtn'),resetBtn=root.querySelector('#resetBtn'),yScale=root.querySelector('#yScale'),yScaleValue=root.querySelector('#yScaleValue'),stateLabel=root.querySelector('#stateLabel'),formula=root.querySelector('#formula'),explain=root.querySelector('#explain'),glow=root.querySelector('#glow'),rays=root.querySelector('#rays'),warningCallout=root.querySelector('#warningCallout'),warningStem=root.querySelector('#warningStem'),warningBox=root.querySelector('#warningBox'),warningText=root.querySelector('#warningText');
+const svg=root.querySelector('#graph'),curve=root.querySelector('#curve'),point=root.querySelector('#point'),pointHalo=root.querySelector('#pointHalo'),normalArrow=root.querySelector('#normalArrow'),curveType=root.querySelector('#curveType'),customOption=root.querySelector('#customOption'),functionInput=root.querySelector('#functionInput'),drawBtn=root.querySelector('#drawBtn'),resetBtn=root.querySelector('#resetBtn'),yScale=root.querySelector('#yScale'),yScaleValue=root.querySelector('#yScaleValue'),stateLabel=root.querySelector('#stateLabel'),formula=root.querySelector('#formula'),explain=root.querySelector('#explain'),glow=root.querySelector('#glow'),rays=root.querySelector('#rays'),warningCallout=root.querySelector('#warningCallout'),warningStem=root.querySelector('#warningStem'),warningBox=root.querySelector('#warningBox'),warningText=root.querySelector('#warningText');const xAxisTicks=root.querySelector('#xAxisTicks'),yAxisTicks=root.querySelector('#yAxisTicks');
 const cx=380,cy=215,sx=95,xMin=-3.1,xMax=3.1,snapPx=5,noteW=52,noteH=24;let sy=42;
 let xValue=-2.5,dragging=false,warningVisible=false,warningTimer=null,activeSnapRoot=null,inflectionPoints=[],customEval=null,customExpr="";
 
@@ -332,6 +332,24 @@ function placeWarning(px,py){
 function showWarning(px,py){warningVisible=true;warningCallout.style.display='';placeWarning(px,py);clearTimeout(warningTimer);warningTimer=setTimeout(()=>{warningVisible=false;warningCallout.style.display='none'},1350)}
 function hideWarning(){warningVisible=false;clearTimeout(warningTimer);warningCallout.style.display='none'}
 
+function makeSvgEl(name){return document.createElementNS('http://www.w3.org/2000/svg',name)}
+function drawAxisScale(){
+ xAxisTicks.innerHTML='';yAxisTicks.innerHTML='';
+ for(let x=-3;x<=3;x++){
+  const X=cx+sx*x,tick=makeSvgEl('line');
+  tick.setAttribute('x1',X);tick.setAttribute('x2',X);tick.setAttribute('y1',cy-4);tick.setAttribute('y2',cy+4);tick.setAttribute('class','axisTick');xAxisTicks.appendChild(tick);
+  const label=makeSvgEl('text');label.setAttribute('class','axisTickLabel');label.setAttribute('y',cy+15);
+  if(x===0){label.setAttribute('x',X-7);label.setAttribute('text-anchor','end')}else{label.setAttribute('x',X);label.setAttribute('text-anchor','middle')}
+  label.textContent=String(x);xAxisTicks.appendChild(label);
+ }
+ const yMax=Math.floor((cy-28)/sy),yMin=-Math.floor((400-cy)/sy);
+ for(let y=yMin;y<=yMax;y++){
+  if(y===0)continue;
+  const Y=cy-sy*y;if(Y<28||Y>400)continue;
+  const tick=makeSvgEl('line');tick.setAttribute('x1',cx-4);tick.setAttribute('x2',cx+4);tick.setAttribute('y1',Y);tick.setAttribute('y2',Y);tick.setAttribute('class','axisTick');yAxisTicks.appendChild(tick);
+  const label=makeSvgEl('text');label.setAttribute('x',cx-8);label.setAttribute('y',Y+3);label.setAttribute('text-anchor','end');label.setAttribute('class','axisTickLabel');label.textContent=String(y);yAxisTicks.appendChild(label);
+ }
+}
 function drawCurve(){
  const t=curveType.value;let d='',penDown=false;
  for(let i=0;i<=420;i++){
@@ -340,7 +358,7 @@ function drawCurve(){
   const [X,Y]=toSvg(x,y);
   d+=(penDown?' L ':'M ')+X.toFixed(2)+' '+Y.toFixed(2);penDown=true;
  }
- curve.setAttribute('d',d);updateInflectionPoints();updateVisuals(true);
+ curve.setAttribute('d',d);drawAxisScale();updateInflectionPoints();updateVisuals(true);
 }
 function updateVisuals(showArrow){
  const t=curveType.value,fy=f(t,xValue),curv=d2(t,xValue);if(!Number.isFinite(fy)){normalArrow.style.display='none';return}const [px,py]=toSvg(xValue,fy);
