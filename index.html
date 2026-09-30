@@ -28,18 +28,17 @@ h1{margin:0;font-size:30px}
 .category-panel .btn-card{width:100%}
 @media(max-width:1000px){.grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:800px){.content-layout{grid-template-columns:1fr}.category-panel{border-left:0;border-top:1px solid #d5d5d5;padding-left:0;padding-top:30px}.category-panel .btn-card{max-width:240px}.grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:500px){.page{padding:28px 16px}.header{margin-bottom:28px}.grid{grid-template-columns:1fr}.language-menu{position:fixed;right:16px;top:76px}}
+@media(max-width:500px){.hero{height:118px}.hero .language{top:12px;right:12px}.page{padding:28px 16px}.grid{grid-template-columns:1fr}.language-menu{position:fixed;right:16px;top:64px}}
 </style>
 </head>
 <body>
-<div class="page">
-<div class="header">
-<h1 id="pageTitle">Öğren</h1>
+<div class="hero" aria-label="DoTEM Dortmund Türk Eğitim Merkezi">
 <div class="language" id="language">
 <button class="language-button" id="languageButton" type="button" aria-haspopup="true" aria-expanded="false"><span id="currentFlag" class="flag"></span><span class="arrow">▼</span></button>
 <div class="language-menu" id="languageMenu" role="menu"></div>
 </div>
 </div>
+<div class="page">
 <div class="content-layout">
 <div class="grid">
 <a href="chess/index.html" class="btn-card" data-key="chess">Satranç</a>
@@ -99,7 +98,7 @@ zh:{title:"学习",other:"其他",chess:"国际象棋",common:"提取公因式",
 el:{title:"Μάθε",other:"Άλλα",chess:"Σκάκι",common:"Κοινός παράγοντας",square:"Συμπλήρωση τετραγώνου",babylon:"Μουσείο της Βαβυλώνας",articles:"Άρθρα",multiply10:"Πολλαπλασιασμός με 10",negpowers:"Αρνητικές δυνάμεις του 2",cube:"Περιστροφή κύβου",rounding:"Στρογγυλοποίηση",rational:"Ρητές παραστάσεις",units:"Μετατροπή μονάδων",trig:"Τριγωνομετρία",circle:"Μοναδιαίος κύκλος",triangles:"Ειδικά τρίγωνα",gears:"Γρανάζια",quad:"Προβολέας τετραπλεύρων",proportion:"Αναλογία",rubik:"Κύβος του Ρούμπικ",divide3:"Νοερή διαίρεση με 3",moonSky:"Σεληνιακός ουρανός",moon3d:"3D Σελήνη",numberLine:"Ευθεία κλασμάτων και δεκαδικών",signedAdd:"Πρόσθεση προσημασμένων",signedMultiply:"Πολλαπλασιασμός προσημασμένων",area:"Εμβαδόν",inflection:"Σημείο καμπής",derivative:"Παράγωγος"}};
 const language=document.getElementById("language"),button=document.getElementById("languageButton"),menu=document.getElementById("languageMenu"),flag=document.getElementById("currentFlag");
 function buildMenu(){menu.innerHTML="";languages.forEach(l=>{const b=document.createElement("button");b.type="button";b.className="language-option";b.dataset.lang=l.code;b.innerHTML='<span class="flag">'+flagSVG(l.code)+'</span><span>'+l.name+'</span>';b.onclick=()=>setLanguage(l.code);menu.appendChild(b)})}
-function setLanguage(code){if(!T[code])code="tr";const t=T[code],l=languages.find(x=>x.code===code);document.documentElement.lang=code;document.title=t.title;document.getElementById("pageTitle").textContent=t.title;document.getElementById("otherTitle").textContent=t.other;document.querySelectorAll("[data-key]").forEach(e=>{const v=t[e.dataset.key];if(v)e.textContent=v});flag.innerHTML=flagSVG(l.code);menu.querySelectorAll(".language-option").forEach(e=>e.classList.toggle("active",e.dataset.lang===code));localStorage.setItem("learnLanguage",code);language.classList.remove("open");button.setAttribute("aria-expanded","false")}
+function setLanguage(code){if(!T[code])code="tr";const t=T[code],l=languages.find(x=>x.code===code);document.documentElement.lang=code;document.title=t.title;const pageTitle=document.getElementById("pageTitle");if(pageTitle)pageTitle.textContent=t.title;document.getElementById("otherTitle").textContent=t.other;document.querySelectorAll("[data-key]").forEach(e=>{const v=t[e.dataset.key];if(v)e.textContent=v});flag.innerHTML=flagSVG(l.code);menu.querySelectorAll(".language-option").forEach(e=>e.classList.toggle("active",e.dataset.lang===code));localStorage.setItem("learnLanguage",code);language.classList.remove("open");button.setAttribute("aria-expanded","false")}
 button.onclick=e=>{e.stopPropagation();language.classList.toggle("open");button.setAttribute("aria-expanded",language.classList.contains("open"))};
 document.addEventListener("click",e=>{if(!language.contains(e.target)){language.classList.remove("open");button.setAttribute("aria-expanded","false")}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){language.classList.remove("open");button.setAttribute("aria-expanded","false")}});
