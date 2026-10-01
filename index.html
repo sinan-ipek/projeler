@@ -39,81 +39,6 @@ body{
   user-select:none;
   -webkit-user-drag:none;
 }
-.hero .language{
-  position:absolute;
-  top:18px;
-  right:22px;
-}
-.page{
-  width:100%;
-  margin:0;
-  padding:38px 56px 40px;
-  background:#f2f2f3;
-}
-.language{position:relative;z-index:50}
-.language-button{
-  height:42px;
-  min-width:58px;
-  padding:0 10px;
-  border:0;
-  border-radius:14px;
-  background:rgba(255,255,255,.96);
-  box-shadow:0 3px 12px rgba(0,0,0,.14);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:7px;
-  cursor:pointer;
-  font-size:24px;
-  transition:.15s ease
-}
-.language-button:hover{
-  transform:translateY(-1px);
-  box-shadow:0 6px 16px rgba(0,0,0,.18)
-}
-.language-button .arrow{font-size:11px;color:#555}
-.flagIcon{display:block;width:32px;height:24px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
-.language-menu{
-  position:absolute;
-  right:0;
-  top:50px;
-  width:190px;
-  padding:7px;
-  background:#fff;
-  border-radius:10px;
-  box-shadow:0 9px 28px rgba(0,0,0,.22);
-  display:none
-}
-.language.open .language-menu{display:block}
-.language-option{
-  width:100%;
-  border:0;
-  background:transparent;
-  border-radius:7px;
-  padding:9px 10px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  text-align:left;
-  cursor:pointer;
-  font:inherit
-}
-.language-option:hover,.language-option.active{background:#f0f2f5}
-.flag{
-  width:32px;
-  height:24px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  flex:0 0 32px
-}
-.flag svg{
-  display:block;
-  width:32px;
-  height:24px;
-  border-radius:2px;
-  box-shadow:0 0 0 1px rgba(0,0,0,.12)
-}
 .grid{
   display:grid;
   grid-template-columns:repeat(6,minmax(0,1fr));
@@ -153,7 +78,6 @@ body{
   body{background:#e4e4e4}
   .site-shell{width:96vw;margin:18px auto;border-radius:24px}
   .hero{height:98px}
-  .hero .language{top:12px;right:12px}
   .page{padding:24px}
   .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
   .btn-card{height:92px;font-size:16px}
@@ -164,7 +88,6 @@ body{
   .page{padding:18px 14px 28px}
   .grid{grid-template-columns:1fr;gap:14px}
   .btn-card{height:84px}
-  .language-menu{position:fixed;right:12px;top:58px}
 }
 </style>
 </head>
@@ -172,10 +95,6 @@ body{
 <div class="site-shell">
 <div class="hero" aria-label="DoTEM Dortmund Türk Eğitim Merkezi">
 <img src="son_banner.png" alt="DoTEM Dortmund Türk Eğitim Merkezi">
-<div class="language" id="language">
-<button class="language-button" id="languageButton" type="button" aria-haspopup="true" aria-expanded="false"><span id="currentFlag" class="flag"></span><span class="arrow">▼</span></button>
-<div class="language-menu" id="languageMenu" role="menu"></div>
-</div>
 </div>
 <div class="page">
 <div class="grid">
@@ -210,38 +129,4 @@ body{
 </div>
 </div>
 </div>
-<script>
-const languages=[
-{code:"tr",name:"Türkçe"},{code:"en",name:"English"},{code:"de",name:"Deutsch"},{code:"fr",name:"Français"},
-{code:"it",name:"Italiano"},{code:"es",name:"Español"},{code:"zh",name:"中文"},{code:"el",name:"Ελληνικά"}];
-function flagSVG(code){
- const s={
- tr:'<svg viewBox="0 0 32 24" aria-hidden="true"><rect width="32" height="24" fill="#e30a17"/><circle cx="13" cy="12" r="6" fill="#fff"/><circle cx="15" cy="12" r="4.8" fill="#e30a17"/><polygon points="19,12 23.2,10.6 20.6,14.1 20.6,9.9 23.2,13.4" fill="#fff"/></svg>',
- en:'<svg viewBox="0 0 32 24" aria-hidden="true"><rect width="32" height="24" fill="#012169"/><path d="M0 0l32 24M32 0L0 24" stroke="#fff" stroke-width="5"/><path d="M0 0l32 24M32 0L0 24" stroke="#c8102e" stroke-width="2"/><path d="M16 0v24M0 12h32" stroke="#fff" stroke-width="8"/><path d="M16 0v24M0 12h32" stroke="#c8102e" stroke-width="4"/></svg>',
- de:'<svg viewBox="0 0 32 24" aria-hidden="true"><rect width="32" height="8" fill="#000"/><rect y="8" width="32" height="8" fill="#dd0000"/><rect y="16" width="32" height="8" fill="#ffce00"/></svg>',
- fr:'<svg viewBox="0 0 32 24" aria-hidden="true"><rect width="10.67" height="24" fill="#0055a4"/><rect x="10.67" width="10.66" height="24" fill="#fff"/><rect x="21.33" width="10.67" height="24" fill="#ef4135"/></svg>',
- it:'<svg viewBox="0 0 32 24" aria-hidden="true"><rect width="10.67" height="24" fill="#009246"/><rect x="10.67" width="10.66" height="24" fill="#fff"/><rect x="21.33" width="10.67" height="24" fill="#ce2b37"/></svg>',
- es:'<svg viewBox="0 0 32 24" aria-hidden="true"><rect width="32" height="24" fill="#aa151b"/><rect y="6" width="32" height="12" fill="#f1bf00"/></svg>',
- zh:'<svg viewBox="0 0 32 24" aria-hidden="true"><rect width="32" height="24" fill="#de2910"/><polygon points="6,3 7.2,6.5 10.8,6.5 7.9,8.6 9,12 6,10 3,12 4.1,8.6 1.2,6.5 4.8,6.5" fill="#ffde00"/></svg>',
- el:'<svg viewBox="0 0 32 24" aria-hidden="true"><rect width="32" height="24" fill="#0d5eaf"/><g fill="#fff"><rect y="2.67" width="32" height="2.67"/><rect y="8" width="32" height="2.67"/><rect y="13.33" width="32" height="2.67"/><rect y="18.67" width="32" height="2.67"/><rect width="13.33" height="13.33" fill="#0d5eaf"/><rect x="5.33" width="2.67" height="13.33"/><rect y="5.33" width="13.33" height="2.67"/></g></svg>'
- }; return s[code]||s.tr;
-}
-const T={
-tr:{title:"Öğren",other:"Diğer",chess:"Satranç",common:"Ortak Parantez",square:"Tam Kareye Tamamlama",babylon:"Babil Müzesi",articles:"Artikeller",multiply10:"10 ile Çarpma",negpowers:"2'nin Negatif Kuvvetleri",cube:"Küp Döndürme",rounding:"Yuvarlama",rational:"Rasyonel İfadeler",units:"Birim Dönüştürme",trig:"Trigonometri",circle:"Birim Çember",triangles:"Özel Üçgenler",gears:"Dişliler",quad:"Dörtgen Projektör",proportion:"Orantı",rubik:"Rubik Küp",divide3:"Zihinden 3'e Bölme",moonSky:"Ay Gökyüzü",moon3d:"3B Ay",numberLine:"Kesir ve Ondalık Sayı Doğrusu",signedAdd:"İşaretli Toplama",signedMultiply:"İşaretli Çarpma",area:"Alan",inflection:"Dönüm Noktası",derivative:"Türev"},
-en:{title:"Learn",other:"Other",chess:"Chess",common:"Common Factor",square:"Completing the Square",babylon:"Babylon Museum",articles:"Articles",multiply10:"Multiplying by 10",negpowers:"Negative Powers of 2",cube:"Rotating a Cube",rounding:"Rounding",rational:"Rational Expressions",units:"Unit Conversion",trig:"Trigonometry",circle:"Unit Circle",triangles:"Special Triangles",gears:"Gears",quad:"Quadrilateral Projector",proportion:"Proportion",rubik:"Rubik's Cube",divide3:"Mental Division by 3",moonSky:"Moon Sky",moon3d:"3D Moon",numberLine:"Fraction and Decimal Number Line",signedAdd:"Signed Addition",signedMultiply:"Signed Multiplication",area:"Area",inflection:"Inflection Point",derivative:"Derivative"},
-de:{title:"Lernen",other:"Andere",chess:"Schach",common:"Gemeinsamer Faktor",square:"Quadratische Ergänzung",babylon:"Babylon-Museum",articles:"Artikel",multiply10:"Mit 10 multiplizieren",negpowers:"Negative Potenzen von 2",cube:"Würfel drehen",rounding:"Runden",rational:"Rationale Ausdrücke",units:"Einheiten umrechnen",trig:"Trigonometrie",circle:"Einheitskreis",triangles:"Besondere Dreiecke",gears:"Zahnräder",quad:"Viereck-Projektor",proportion:"Proportion",rubik:"Rubik-Würfel",divide3:"Kopfrechnen: Durch 3 teilen",moonSky:"Mondhimmel",moon3d:"3D-Mond",numberLine:"Bruch- und Dezimalzahlenstrahl",signedAdd:"Addition mit Vorzeichen",signedMultiply:"Multiplikation mit Vorzeichen",area:"Fläche",inflection:"Wendepunkt",derivative:"Ableitung"},
-fr:{title:"Apprendre",other:"Autres",chess:"Échecs",common:"Mise en facteur commun",square:"Compléter le carré",babylon:"Musée de Babylone",articles:"Articles",multiply10:"Multiplier par 10",negpowers:"Puissances négatives de 2",cube:"Rotation d'un cube",rounding:"Arrondir",rational:"Expressions rationnelles",units:"Conversion d'unités",trig:"Trigonométrie",circle:"Cercle trigonométrique",triangles:"Triangles remarquables",gears:"Engrenages",quad:"Projecteur de quadrilatères",proportion:"Proportion",rubik:"Cube de Rubik",divide3:"Division mentale par 3",moonSky:"Ciel lunaire",moon3d:"Lune 3D",numberLine:"Droite des fractions et décimaux",signedAdd:"Addition des nombres signés",signedMultiply:"Multiplication des nombres signés",area:"Aire",inflection:"Point d’inflexion",derivative:"Dérivée"},
-it:{title:"Impara",other:"Altro",chess:"Scacchi",common:"Fattore comune",square:"Completamento del quadrato",babylon:"Museo di Babilonia",articles:"Articoli",multiply10:"Moltiplicare per 10",negpowers:"Potenze negative di 2",cube:"Rotazione del cubo",rounding:"Arrotondamento",rational:"Espressioni razionali",units:"Conversione delle unità",trig:"Trigonometria",circle:"Circonferenza unitaria",triangles:"Triangoli speciali",gears:"Ingranaggi",quad:"Proiettore di quadrilateri",proportion:"Proporzione",rubik:"Cubo di Rubik",divide3:"Divisione mentale per 3",moonSky:"Cielo lunare",moon3d:"Luna 3D",numberLine:"Retta di frazioni e decimali",signedAdd:"Addizione con segno",signedMultiply:"Moltiplicazione con segno",area:"Area",inflection:"Punto di flesso",derivative:"Derivata"},
-es:{title:"Aprende",other:"Otros",chess:"Ajedrez",common:"Factor común",square:"Completar el cuadrado",babylon:"Museo de Babilonia",articles:"Artículos",multiply10:"Multiplicar por 10",negpowers:"Potencias negativas de 2",cube:"Rotación de un cubo",rounding:"Redondeo",rational:"Expresiones racionales",units:"Conversión de unidades",trig:"Trigonometría",circle:"Círculo unitario",triangles:"Triángulos especiales",gears:"Engranajes",quad:"Proyector de cuadriláteros",proportion:"Proporción",rubik:"Cubo de Rubik",divide3:"División mental entre 3",moonSky:"Cielo lunar",moon3d:"Luna 3D",numberLine:"Recta de fracciones y decimales",signedAdd:"Suma con signo",signedMultiply:"Multiplicación con signo",area:"Área",inflection:"Punto de inflexión",derivative:"Derivada"},
-zh:{title:"学习",other:"其他",chess:"国际象棋",common:"提取公因式",square:"配方法",babylon:"巴比伦博物馆",articles:"冠词",multiply10:"乘以10",negpowers:"2的负整数次幂",cube:"旋转立方体",rounding:"四舍五入",rational:"有理式",units:"单位换算",trig:"三角学",circle:"单位圆",triangles:"特殊三角形",gears:"齿轮",quad:"四边形投影器",proportion:"比例",rubik:"魔方",divide3:"心算除以3",moonSky:"月球天空",moon3d:"3D月球",numberLine:"分数与小数数轴",signedAdd:"有符号数加法",signedMultiply:"有符号数乘法",area:"面积",inflection:"拐点",derivative:"导数"},
-el:{title:"Μάθε",other:"Άλλα",chess:"Σκάκι",common:"Κοινός παράγοντας",square:"Συμπλήρωση τετραγώνου",babylon:"Μουσείο της Βαβυλώνας",articles:"Άρθρα",multiply10:"Πολλαπλασιασμός με 10",negpowers:"Αρνητικές δυνάμεις του 2",cube:"Περιστροφή κύβου",rounding:"Στρογγυλοποίηση",rational:"Ρητές παραστάσεις",units:"Μετατροπή μονάδων",trig:"Τριγωνομετρία",circle:"Μοναδιαίος κύκλος",triangles:"Ειδικά τρίγωνα",gears:"Γρανάζια",quad:"Προβολέας τετραπλεύρων",proportion:"Αναλογία",rubik:"Κύβος του Ρούμπικ",divide3:"Νοερή διαίρεση με 3",moonSky:"Σεληνιακός ουρανός",moon3d:"3D Σελήνη",numberLine:"Ευθεία κλασμάτων και δεκαδικών",signedAdd:"Πρόσθεση προσημασμένων",signedMultiply:"Πολλαπλασιασμός προσημασμένων",area:"Εμβαδόν",inflection:"Σημείο καμπής",derivative:"Παράγωγος"}};
-const language=document.getElementById("language"),button=document.getElementById("languageButton"),menu=document.getElementById("languageMenu"),flag=document.getElementById("currentFlag");
-function buildMenu(){menu.innerHTML="";languages.forEach(l=>{const b=document.createElement("button");b.type="button";b.className="language-option";b.dataset.lang=l.code;b.innerHTML='<span class="flag">'+flagSVG(l.code)+'</span><span>'+l.name+'</span>';b.onclick=()=>setLanguage(l.code);menu.appendChild(b)})}
-function setLanguage(code){if(!T[code])code="tr";const t=T[code],l=languages.find(x=>x.code===code);document.documentElement.lang=code;document.title=t.title;const pageTitle=document.getElementById("pageTitle");if(pageTitle)pageTitle.textContent=t.title;const otherTitle=document.getElementById("otherTitle");if(otherTitle)otherTitle.textContent=t.other;document.querySelectorAll("[data-key]").forEach(e=>{const v=t[e.dataset.key];if(v)e.textContent=v});flag.innerHTML=flagSVG(l.code);menu.querySelectorAll(".language-option").forEach(e=>e.classList.toggle("active",e.dataset.lang===code));localStorage.setItem("learnLanguage",code);language.classList.remove("open");button.setAttribute("aria-expanded","false")}
-button.onclick=e=>{e.stopPropagation();language.classList.toggle("open");button.setAttribute("aria-expanded",language.classList.contains("open"))};
-document.addEventListener("click",e=>{if(!language.contains(e.target)){language.classList.remove("open");button.setAttribute("aria-expanded","false")}});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){language.classList.remove("open");button.setAttribute("aria-expanded","false")}});
-buildMenu();setLanguage(localStorage.getItem("learnLanguage")||"tr");
-</script>
-<script src="global-language.js"></script>
 </body></html>
