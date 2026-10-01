@@ -14,7 +14,6 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#050505;fon
 #helpButton{position:fixed;top:56px;left:14px;z-index:30;width:38px;height:38px;border:1px solid rgba(255,255,255,.32);border-radius:9px;background:rgba(30,30,30,.72);color:#fff;font-size:20px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4);backdrop-filter:blur(6px);user-select:none}
 #helpButton:hover{background:rgba(60,60,60,.88)}
 #helpButton:active{transform:translateY(1px)}
-#languageButton{position:fixed;top:100px;left:14px;right:auto;z-index:30;width:38px;height:38px;border:1px solid rgba(255,255,255,.32);border-radius:9px;background:rgba(30,30,30,.72);color:#fff;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4);backdrop-filter:blur(6px);user-select:none}
 #languageButton:hover{background:rgba(60,60,60,.88)}
 #languageButton:active{transform:translateY(1px)}
 #helpOverlay{position:fixed;inset:0;z-index:100;display:none;pointer-events:none}
@@ -85,7 +84,6 @@ canvas{display:block;width:100%;height:100%;outline:none}
 <div id="scene"></div>
 <a id="homeButton" href="../index.html" title="Projelerim ana sayfasına dön" aria-label="Ana sayfa">⌂</a>
 <button id="helpButton" type="button" title="Kullanım yardımı" aria-label="Yardım">?</button>
-<button id="languageButton" type="button" title="Dil / Language / Sprache" aria-label="Dil">TR</button>
 <div id="helpOverlay" aria-hidden="true">
   <div id="helpPanel" role="dialog" aria-modal="false" aria-labelledby="helpTitle">
     <h2 id="helpTitle">Kullanım</h2>
@@ -172,7 +170,6 @@ const helpButton=document.getElementById("helpButton");
 const helpOverlay=document.getElementById("helpOverlay");
 const helpClose=document.getElementById("helpClose");
 const helpRows=document.getElementById("helpRows");
-const languageButton=document.getElementById("languageButton");
 const homeButton=document.getElementById("homeButton");
 
 const I18N={
@@ -240,13 +237,7 @@ de:{
   ]
 }
 };
-const LANG_ORDER=["tr","en","de"];
-let currentLanguage=(()=>{
-  try{
-    const saved=localStorage.getItem("sinan_ipek_3d_moon_language");
-    return LANG_ORDER.includes(saved)?saved:"tr";
-  }catch{return "tr";}
-})();
+let currentLanguage="tr";
 
 function t(){return I18N[currentLanguage];}
 function renderHelp(){
@@ -260,7 +251,6 @@ function applyLanguage(){
     const L=t();
     document.documentElement.lang=L.htmlLang;
     document.title=L.title;
-    languageButton.textContent=L.code;
     textureButton.textContent=L.texture;
     modelButton.textContent=L.model;
     clearCirclesButton.textContent=L.clearCircles;
@@ -276,11 +266,6 @@ function applyLanguage(){
     renderHelp();
     updateQualityButton();
 }
-languageButton.addEventListener("click",()=>{
-    currentLanguage=LANG_ORDER[(LANG_ORDER.indexOf(currentLanguage)+1)%LANG_ORDER.length];
-    try{localStorage.setItem("sinan_ipek_3d_moon_language",currentLanguage)}catch{}
-    applyLanguage();
-});
 
 function openHelp(){
     helpOverlay.classList.add("open");
