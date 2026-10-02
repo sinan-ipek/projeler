@@ -74,6 +74,11 @@
     padding:0 10px;
   }
   #contextMenu button:hover{background:#f3f5f8}
+  #contextMenu button:disabled{
+    opacity:.42;
+    cursor:default;
+    background:transparent;
+  }
   #lockMenuIcon{font-size:17px;width:22px;text-align:center}
   #imageInput{display:none}
 
@@ -275,7 +280,8 @@
       <option value="parabola">Parabol</option>
       <option value="sinx">sin x</option>
       <option value="tanx">tan x</option>
-      <option value="ex">e^x</option>
+      <option value="ex">eˣ</option>
+      <option value="x3">x³</option>
       <option value="triangle">Üçgen</option>
       <option value="pentagon">Beşgen</option>
       <option value="hexagon">Altıgen</option>
@@ -325,6 +331,18 @@
         <span id="lockMenuIcon">🔓</span>
         <span id="lockMenuText">Kilitle</span>
       </button>
+      <button id="flipHorizontalBtn" role="menuitem">
+        <span style="font-size:17px;width:22px;text-align:center">↔</span>
+        <span>Yatayda yansıt</span>
+      </button>
+      <button id="flipVerticalBtn" role="menuitem">
+        <span style="font-size:17px;width:22px;text-align:center">↕</span>
+        <span>Dikeyde yansıt</span>
+      </button>
+      <button id="groupToggleBtn" role="menuitem">
+        <span id="groupMenuIcon" style="font-size:16px;width:22px;text-align:center">▦</span>
+        <span id="groupMenuText">Grupla</span>
+      </button>
     </div>
 
     <div id="hint">
@@ -360,6 +378,11 @@
   const lockToggleBtn = document.getElementById('lockToggleBtn');
   const lockMenuIcon = document.getElementById('lockMenuIcon');
   const lockMenuText = document.getElementById('lockMenuText');
+  const flipHorizontalBtn = document.getElementById('flipHorizontalBtn');
+  const flipVerticalBtn = document.getElementById('flipVerticalBtn');
+  const groupToggleBtn = document.getElementById('groupToggleBtn');
+  const groupMenuIcon = document.getElementById('groupMenuIcon');
+  const groupMenuText = document.getElementById('groupMenuText');
   const colorBtn = document.getElementById('colorBtn');
   const colorMenu = document.getElementById('colorMenu');
   const colorOptions = Array.from(document.querySelectorAll('.colorOption'));
@@ -410,6 +433,7 @@
 
   let selectedIndex = -1;
   let selectedIndices = [];
+  let nextGroupId = 1;
   let selectAction = null;   // 'move' | 'groupMove' | 'groupResize' | 'groupRotate' | 'resize' | 'rotate' | 'point' | 'marquee'
   let selectStart = null;
   let selectSnapshot = null;
@@ -591,9 +615,10 @@
           const u=-1 + 2*i/n;
           // Finite upward-opening parabola segment:
           // vertex at local y=+h/2, endpoints at local y=-h/2.
+          const sy=o.mirrorY ? -1 : 1;
           const local={
             x:o.center.x + u*(w/2),
-            y:o.center.y + h/2 - (u*u)*h
+            y:o.center.y + sy*(h/2 - (u*u)*h)
           };
           const q=rotatePoint(local,o.center,a);
           if(i===0) ctx.moveTo(q.x,q.y);
@@ -620,10 +645,11 @@
 
         const a=Number(o.angle)||0;
         const hw=w/2, hh=h/2;
+        const sy=o.mirrorY ? -1 : 1;
         const left=rotatePoint({x:o.center.x-hw,y:o.center.y},o.center,a);
         const right=rotatePoint({x:o.center.x+hw,y:o.center.y},o.center,a);
-        const top=rotatePoint({x:o.center.x,y:o.center.y-hh},o.center,a);
-        const bottom=rotatePoint({x:o.center.x,y:o.center.y+hh},o.center,a);
+        const top=rotatePoint({x:o.center.x,y:o.center.y-sy*hh},o.center,a);
+        const bottom=rotatePoint({x:o.center.x,y:o.center.y+sy*hh},o.center,a);
 
         // x axis
         ctx.moveTo(left.x,left.y);
@@ -660,8 +686,9 @@
 
       if(o.kind==='axes'){
         const a=Number(o.angle)||0;
+        const sy=o.mirrorY ? -1 : 1;
         const right=rotatePoint({x:o.center.x+o.w/2,y:o.center.y},o.center,a);
-        const top=rotatePoint({x:o.center.x,y:o.center.y-o.h/2},o.center,a);
+        const top=rotatePoint({x:o.center.x,y:o.center.y-sy*o.h/2},o.center,a);
         ctx.fillStyle = ghost ? '#2563eb' : (o.style.color || '#111111');
         ctx.font='14px Arial, sans-serif';
         ctx.fillText('x',right.x+7,right.y+4);
@@ -694,6 +721,7 @@
     ctx.save();
     ctx.translate(o.center.x,o.center.y);
     ctx.rotate(o.angle||0);
+    if(o.mirrorY) ctx.scale(1,-1);
 
     if(img && img.complete && img.naturalWidth){
       ctx.drawImage(img,-o.w/2,-o.h/2,o.w,o.h);
@@ -811,7 +839,7 @@
         const u=-1+2*i/n;
         const local={
           x:o.center.x+u*(w/2),
-          y:o.center.y+h/2-(u*u)*h
+          y:o.center.y+(o.mirrorY?-1:1)*(h/2-(u*u)*h)
         };
         pts.push(rotatePoint(local,o.center,a));
       }
@@ -824,7 +852,7 @@
         const u=-1+2*i/20;
         const q={
           x:o.center.x+u*(o.w/2),
-          y:o.center.y+o.h/2-(u*u)*o.h
+          y:o.center.y+(o.mirrorY?-1:1)*(o.h/2-(u*u)*o.h)
         };
         pts.push(rotatePoint(q,o.center,a));
       }
@@ -968,7 +996,7 @@
         const u=-1+2*i/48;
         const q={
           x:o.center.x+u*(o.w/2),
-          y:o.center.y+o.h/2-(u*u)*o.h
+          y:o.center.y+(o.mirrorY?-1:1)*(o.h/2-(u*u)*o.h)
         };
         pts.push(rotatePoint(q,o.center,a));
       }
@@ -1085,8 +1113,35 @@
     }
   }
 
+  function makeGroupId(){
+    return 'group-' + (nextGroupId++);
+  }
+
+  function indicesForGroupId(groupId){
+    if(!groupId) return [];
+    const out=[];
+    for(let i=0;i<objects.length;i++){
+      if(objects[i] && objects[i].groupId===groupId) out.push(i);
+    }
+    return out;
+  }
+
+  function expandGroupedIndices(indices){
+    const out=new Set();
+    for(const i of (indices||[])){
+      if(!Number.isInteger(i) || i<0 || i>=objects.length || !objects[i]) continue;
+      const gid=objects[i].groupId;
+      if(gid){
+        for(const gi of indicesForGroupId(gid)) out.add(gi);
+      }else{
+        out.add(i);
+      }
+    }
+    return [...out].sort((a,b)=>a-b);
+  }
+
   function setSelection(indices){
-    selectedIndices=(indices||[]).slice();
+    selectedIndices=expandGroupedIndices(indices||[]);
     groupSelectionAngle=0;
     normalizeSelection();
   }
@@ -1386,11 +1441,22 @@
     return JSON.parse(JSON.stringify(o));
   }
 
+  function remapGroupIdsForCopies(copies){
+    const gidMap=new Map();
+    for(const copy of copies){
+      if(!copy || !copy.groupId) continue;
+      if(!gidMap.has(copy.groupId)) gidMap.set(copy.groupId,makeGroupId());
+      copy.groupId=gidMap.get(copy.groupId);
+    }
+    return copies;
+  }
+
   function duplicateSelection(indices){
     const originals=indices.map(i=>objects[i]).filter(Boolean);
+    const copies=remapGroupIdsForCopies(originals.map(cloneObject));
     const start=objects.length;
-    for(const o of originals) objects.push(cloneObject(o));
-    return Array.from({length:originals.length},(_,k)=>start+k);
+    for(const copy of copies) objects.push(copy);
+    return Array.from({length:copies.length},(_,k)=>start+k);
   }
 
   function drawSelection(){
@@ -1640,6 +1706,79 @@
       if(b && pointInBounds(p,b,6/viewZoom)) return i;
     }
     return -1;
+  }
+
+  function reflectPointAcross(p,pivot,axis){
+    if(axis==='horizontal'){
+      return {x:2*pivot.x-p.x,y:p.y};
+    }
+    return {x:p.x,y:2*pivot.y-p.y};
+  }
+
+  function reflectedAngle(angle,axis){
+    const a=Number(angle)||0;
+    return axis==='horizontal' ? Math.PI-a : -a;
+  }
+
+  function reflectObject(o,pivot,axis){
+    if(!o || !pivot) return;
+
+    if(o.kind==='line'){
+      o.a=reflectPointAcross(o.a,pivot,axis);
+      o.b=reflectPointAcross(o.b,pivot,axis);
+      o.boxAngle=reflectedAngle(
+        Number.isFinite(o.boxAngle) ? o.boxAngle : 0,
+        axis
+      );
+      return;
+    }
+
+    if(o.kind==='stroke'){
+      o.points=(o.points||[]).map(p=>reflectPointAcross(p,pivot,axis));
+      o.boxAngle=reflectedAngle(
+        Number.isFinite(o.boxAngle) ? o.boxAngle : 0,
+        axis
+      );
+      return;
+    }
+
+    if(o.kind==='polygon'){
+      const verts=polygonWorldVertices(o).map(p=>reflectPointAcross(p,pivot,axis));
+      const source=o.source;
+      const shapeName=o.shapeName;
+      const fillColor=o.fillColor;
+      const locked=o.locked;
+      const groupId=o.groupId;
+      setPolygonWorldVerticesPreserveAngle(o,verts,0,source,shapeName);
+      o.fillColor=fillColor;
+      o.locked=locked;
+      o.groupId=groupId;
+      o.boxAngle=0;
+      return;
+    }
+
+    if(o.center){
+      o.center=reflectPointAcross(o.center,pivot,axis);
+    }
+
+    if(o.kind==='rect' || o.kind==='ellipse'){
+      o.angle=reflectedAngle(o.angle||0,axis);
+      o.boxAngle=reflectedAngle(
+        Number.isFinite(o.boxAngle) ? o.boxAngle : 0,
+        axis
+      );
+      return;
+    }
+
+    if(o.kind==='image' || o.kind==='axes' || o.kind==='parabola'){
+      o.angle=reflectedAngle(o.angle||0,axis);
+      o.mirrorY=!o.mirrorY;
+      o.boxAngle=reflectedAngle(
+        Number.isFinite(o.boxAngle) ? o.boxAngle : 0,
+        axis
+      );
+      return;
+    }
   }
 
   function translateObject(o,dx,dy){
@@ -3091,7 +3230,7 @@
         const u=-1+2*i/n;
         const q={
           x:o.center.x+u*(o.w/2),
-          y:o.center.y+o.h/2-(u*u)*o.h
+          y:o.center.y+(o.mirrorY?-1:1)*(o.h/2-(u*u)*o.h)
         };
         pts.push(rotatePoint(q,o.center,a));
       }
@@ -3103,10 +3242,11 @@
 
     if(o.kind==='axes'){
       const a=o.angle||0, hw=o.w/2, hh=o.h/2;
+      const sy=o.mirrorY ? -1 : 1;
       const left=rotatePoint({x:o.center.x-hw,y:o.center.y},o.center,a);
       const right=rotatePoint({x:o.center.x+hw,y:o.center.y},o.center,a);
-      const top=rotatePoint({x:o.center.x,y:o.center.y-hh},o.center,a);
-      const bottom=rotatePoint({x:o.center.x,y:o.center.y+hh},o.center,a);
+      const top=rotatePoint({x:o.center.x,y:o.center.y-sy*hh},o.center,a);
+      const bottom=rotatePoint({x:o.center.x,y:o.center.y+sy*hh},o.center,a);
 
       return eraserPointSegDistance(p,left,right)<=r ||
              eraserPointSegDistance(p,bottom,top)<=r;
@@ -3206,7 +3346,7 @@
         const u=-1+2*i/n;
         const q={
           x:o.center.x+u*(o.w/2),
-          y:o.center.y+o.h/2-(u*u)*o.h
+          y:o.center.y+(o.mirrorY?-1:1)*(o.h/2-(u*u)*o.h)
         };
         pts.push(rotatePoint(q,o.center,a));
       }
@@ -3215,10 +3355,11 @@
 
     if(o.kind==='axes'){
       const a=o.angle||0, hw=o.w/2, hh=o.h/2;
+      const sy=o.mirrorY ? -1 : 1;
       const left=rotatePoint({x:o.center.x-hw,y:o.center.y},o.center,a);
       const right=rotatePoint({x:o.center.x+hw,y:o.center.y},o.center,a);
-      const top=rotatePoint({x:o.center.x,y:o.center.y-hh},o.center,a);
-      const bottom=rotatePoint({x:o.center.x,y:o.center.y+hh},o.center,a);
+      const top=rotatePoint({x:o.center.x,y:o.center.y-sy*hh},o.center,a);
+      const bottom=rotatePoint({x:o.center.x,y:o.center.y+sy*hh},o.center,a);
 
       return {
         axes:true,
@@ -3318,17 +3459,37 @@
     const allLocked=targets.every(o=>!!o.locked);
     lockMenuIcon.textContent=allLocked ? '🔒' : '🔓';
     lockMenuText.textContent=allLocked ? 'Kilidi aç' : 'Kilitle';
+
+    const gids=[...new Set(targets.map(o=>o.groupId).filter(Boolean))];
+    const oneWholeGroup=
+      gids.length===1 &&
+      targets.every(o=>o.groupId===gids[0]) &&
+      indicesForGroupId(gids[0]).length===targets.length;
+
+    if(oneWholeGroup){
+      groupMenuIcon.textContent='▤';
+      groupMenuText.textContent='Grubu aç';
+      groupToggleBtn.disabled=false;
+    }else{
+      groupMenuIcon.textContent='▦';
+      groupMenuText.textContent='Grupla';
+      groupToggleBtn.disabled=targets.length<2;
+    }
+
+    flipHorizontalBtn.disabled=false;
+    flipVerticalBtn.disabled=false;
   }
 
   function openContextMenu(screenP,indices){
-    contextTargetIndices=(indices||[])
-      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length);
+    contextTargetIndices=expandGroupedIndices(
+      (indices||[]).filter(i=>Number.isInteger(i) && i>=0 && i<objects.length)
+    );
 
     if(!contextTargetIndices.length) return;
 
     updateContextMenuState();
 
-    const menuW=170, menuH=122;
+    const menuW=190, menuH=230;
     const r=wrap.getBoundingClientRect();
     const x=Math.max(6,Math.min(screenP.x,r.width-menuW-6));
     const y=Math.max(6,Math.min(screenP.y,r.height-menuH-6));
@@ -3381,6 +3542,99 @@
   sendBackBtn.addEventListener('click',e=>{
     e.stopPropagation();
     reorderContextTargets(false);
+  });
+
+  function reflectContextTargets(axis){
+    const valid=expandGroupedIndices(contextTargetIndices)
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length);
+
+    if(!valid.length){
+      closeContextMenu();
+      return;
+    }
+
+    const b=groupSelectionBounds(valid);
+    if(!b){
+      closeContextMenu();
+      return;
+    }
+
+    saveState();
+    const pivot={x:b.cx,y:b.cy};
+    for(const i of valid){
+      reflectObject(objects[i],pivot,axis);
+    }
+
+    contextTargetIndices=valid;
+    const selectable=valid.filter(i=>objects[i] && !objects[i].locked);
+    setSelection(selectable);
+
+    statusEl.textContent=axis==='horizontal'
+      ? (valid.length>1 ? `${valid.length} nesne yatayda yansıtıldı` : 'Nesne yatayda yansıtıldı')
+      : (valid.length>1 ? `${valid.length} nesne dikeyde yansıtıldı` : 'Nesne dikeyde yansıtıldı');
+
+    closeContextMenu();
+    redraw();
+  }
+
+  function toggleContextGroup(){
+    const valid=expandGroupedIndices(contextTargetIndices)
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length);
+
+    if(!valid.length){
+      closeContextMenu();
+      return;
+    }
+
+    const gids=[...new Set(valid.map(i=>objects[i] && objects[i].groupId).filter(Boolean))];
+    const oneWholeGroup=
+      gids.length===1 &&
+      valid.every(i=>objects[i] && objects[i].groupId===gids[0]) &&
+      indicesForGroupId(gids[0]).length===valid.length;
+
+    if(oneWholeGroup){
+      saveState();
+      for(const i of valid){
+        if(objects[i]) delete objects[i].groupId;
+      }
+      setSelection(valid.filter(i=>objects[i] && !objects[i].locked));
+      statusEl.textContent='Grup açıldı';
+      closeContextMenu();
+      redraw();
+      return;
+    }
+
+    if(valid.length<2){
+      closeContextMenu();
+      return;
+    }
+
+    saveState();
+    const gid=makeGroupId();
+    for(const i of valid){
+      if(objects[i]) objects[i].groupId=gid;
+    }
+    contextTargetIndices=valid;
+    setSelection(valid.filter(i=>objects[i] && !objects[i].locked));
+    statusEl.textContent=`${valid.length} nesne gruplandı`;
+    closeContextMenu();
+    redraw();
+  }
+
+  flipHorizontalBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    reflectContextTargets('horizontal');
+  });
+
+  flipVerticalBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    reflectContextTargets('vertical');
+  });
+
+  groupToggleBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(groupToggleBtn.disabled) return;
+    toggleContextGroup();
   });
 
   lockToggleBtn.addEventListener('click',e=>{
@@ -3934,7 +4188,7 @@
           eraserBtn.classList.remove('active');
           eraserCursor=null;
           setSelection([hit]);
-          targets=[hit];
+          targets=selectedIndices.length ? selectedIndices.slice() : [hit];
           redraw();
         }
         openContextMenu(rp.startScreen,targets);
@@ -4153,15 +4407,18 @@
       saveState();
 
       const start=objects.length;
-      for(const original of internalClipboard){
-        const copy=cloneObject(original);
-        copy.locked=false;
-        translateObject(copy,pasteOffsetStep,pasteOffsetStep);
-        objects.push(copy);
-      }
+      const pastedCopies=remapGroupIdsForCopies(
+        internalClipboard.map(original=>{
+          const copy=cloneObject(original);
+          copy.locked=false;
+          translateObject(copy,pasteOffsetStep,pasteOffsetStep);
+          return copy;
+        })
+      );
+      for(const copy of pastedCopies) objects.push(copy);
 
       setSelection(
-        Array.from({length:internalClipboard.length},(_,k)=>start+k)
+        Array.from({length:pastedCopies.length},(_,k)=>start+k)
       );
 
       redraw();
@@ -4332,9 +4589,31 @@
         points:pts,
         style,
         source:'menu',
-        shapeName:'e^x',
+        shapeName:'eˣ',
         boxAngle:0
       };
+    }
+    else if(shape==='x3'){
+      const center=screenToWorld(innerWidth/2,innerHeight/2);
+      const pts=[];
+      const halfW=145/viewZoom;
+      const yScale=18/viewZoom;
+      const n=140;
+      for(let i=0;i<=n;i++){
+        const t=-2.15 + (4.30*i/n);
+        pts.push({
+          x:center.x + (t/2.15)*halfW,
+          y:center.y - (t*t*t)*yScale
+        });
+      }
+      objects.push({
+        kind:'stroke',
+        points:pts,
+        style:{...currentStyle()},
+        source:'menu',
+        shapeName:'x³',
+        boxAngle:0
+      });
     }
 
     return null;
