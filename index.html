@@ -39,23 +39,40 @@ body{
   user-select:none;
   -webkit-user-drag:none;
 }
+.hero-left-fade{
+  position:absolute;
+  inset:0 auto 0 0;
+  width:33.333%;
+  pointer-events:none;
+  background:linear-gradient(
+    to right,
+    rgba(245,247,250,.82) 0%,
+    rgba(245,247,250,.72) 24%,
+    rgba(245,247,250,.48) 52%,
+    rgba(245,247,250,.20) 76%,
+    rgba(245,247,250,0) 100%
+  );
+  z-index:2;
+}
 .hero-signature{
   position:absolute;
+  left:20px;
   top:10%;
-  right:0;
   display:block;
   width:auto;
   height:80%;
   max-width:none;
   object-fit:contain;
-  object-position:center;
+  object-position:left center;
   pointer-events:none;
   user-select:none;
   -webkit-user-drag:none;
   opacity:.98;
+  z-index:3;
   filter:
-    drop-shadow(0 1px 2px rgba(255,255,255,.9))
-    drop-shadow(0 3px 7px rgba(0,0,0,.28));
+    drop-shadow(0 1px 2px rgba(255,255,255,.92))
+    drop-shadow(0 2px 5px rgba(255,255,255,.55))
+    drop-shadow(0 3px 7px rgba(0,0,0,.22));
 }
 .page{
   width:100%;
@@ -100,7 +117,8 @@ body{
 }
 @media(max-width:760px){
   body{background:#e4e4e4}
-  .hero-signature{top:10%;right:0;width:auto;height:80%;max-width:none}
+  .hero-left-fade{width:38%}
+  .hero-signature{left:14px;top:10%;right:auto;width:auto;height:78%;max-width:none}
   .site-shell{width:96vw;margin:18px auto;border-radius:24px}
   .hero{height:98px}
   .page{padding:31px 24px 24px}
@@ -109,7 +127,8 @@ body{
 }
 @media(max-width:500px){
   .site-shell{width:100%;margin:0;border-radius:0}
-  .hero-signature{top:10%;right:0;width:auto;height:80%;max-width:none}
+  .hero-left-fade{width:42%}
+  .hero-signature{left:10px;top:10%;right:auto;width:auto;height:76%;max-width:none}
   .hero{height:82px}
   .page{padding:28px 14px 28px}
   .grid{grid-template-columns:1fr;gap:14px}
@@ -121,6 +140,7 @@ body{
 <div class="site-shell">
 <div class="hero" aria-label="DoTEM Dortmund Türk Eğitim Merkezi">
 <img src="son_banner.png" alt="DoTEM Dortmund Türk Eğitim Merkezi">
+<div class="hero-left-fade" aria-hidden="true"></div>
 <img class="hero-signature" src="sinan_i_pek_in_blauverlauf.png" alt="Sinan İpek">
 </div>
 <div class="page">
