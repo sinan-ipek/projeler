@@ -82,6 +82,25 @@
   #lockMenuIcon{font-size:17px;width:22px;text-align:center}
   #imageInput{display:none}
 
+  #textEditor{
+    position:absolute;
+    display:none;
+    z-index:35;
+    box-sizing:border-box;
+    resize:none;
+    overflow:hidden;
+    padding:4px 6px;
+    border:1.5px solid #2563eb;
+    border-radius:4px;
+    outline:none;
+    background:rgba(255,255,255,.96);
+    color:#111;
+    font-family:"Comic Neue","Trebuchet MS","Segoe UI","Arial Rounded MT Bold","Arial","Comic Sans MS",sans-serif;
+    line-height:1.25;
+    transform-origin:center center;
+    box-shadow:0 2px 10px rgba(37,99,235,.12);
+  }
+
   .eraserWrap{position:relative;display:inline-flex}
   #eraserMenu{
     position:absolute;top:42px;left:0;
@@ -290,6 +309,27 @@
 
     <button id="addShape" class="iconBtn" title="Ekle" aria-label="Ekle">＋</button>
 
+    <button id="textBtn" class="iconBtn" title="Metin kutusu" aria-label="Metin kutusu">
+      <span style="font:600 20px/1 'Comic Neue','Trebuchet MS','Segoe UI','Arial Rounded MT Bold',Arial,'Comic Sans MS',sans-serif">T</span>
+    </button>
+    <button id="sqrtBtn" class="iconBtn" title="Karekök sembolü" aria-label="Karekök sembolü">
+      <svg viewBox="0 0 30 24" aria-hidden="true" style="width:25px;height:22px;display:block">
+        <path d="M2.5 13.5 L6.2 13.5 L8.2 20 L11.8 12.5 L15 4.5 L28 4.5"
+              fill="none" stroke="currentColor" stroke-width="1.9"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <button id="integralBtn" class="iconBtn" title="İntegral sembolü" aria-label="İntegral sembolü">
+      <svg viewBox="0 0 20 30" aria-hidden="true" style="width:17px;height:25px;display:block">
+        <path d="M13.7 2.3
+                 C7.8 1.8 7.1 6.0 7.4 10.3
+                 C7.7 14.6 11.1 15.5 10.4 20.0
+                 C9.8 24.1 8.5 28.0 3.6 27.7"
+              fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
     <button id="imageBtn" class="iconBtn" title="Fotoğraf ekle" aria-label="Fotoğraf ekle">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <rect x="3.5" y="4.5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/>
@@ -317,6 +357,7 @@
   </div>
   <div id="stageWrap">
     <canvas id="c"></canvas>
+    <textarea id="textEditor" spellcheck="false" aria-label="Metin düzenleyici"></textarea>
 
     <div id="contextMenu" role="menu" aria-label="Nesne menüsü">
       <button id="bringFrontBtn" role="menuitem">
@@ -370,6 +411,10 @@
   const fillColorOptions = Array.from(document.querySelectorAll('.fillColorOption'));
   const addShapeBtn = document.getElementById('addShape');
   const shapeType = document.getElementById('shapeType');
+  const textBtn = document.getElementById('textBtn');
+  const sqrtBtn = document.getElementById('sqrtBtn');
+  const integralBtn = document.getElementById('integralBtn');
+  const textEditor = document.getElementById('textEditor');
   const imageBtn = document.getElementById('imageBtn');
   const imageInput = document.getElementById('imageInput');
   const contextMenu = document.getElementById('contextMenu');
@@ -447,6 +492,9 @@
   let internalClipboard = [];
   let pasteOffsetStep = 24;
 
+  let textEditing = null; // {index, isNew, center, w, h, angle, fontSize, style}
+  let textEditorFinishing = false;
+
   let erasing = false;
   let eraserKind = 'stroke';
   let eraserRadius = 14;
@@ -463,6 +511,7 @@
     canvas.style.width = r.width+'px';
     canvas.style.height = r.height+'px';
     redraw();
+    if(textEditing) positionTextEditor();
   }
   window.addEventListener('resize', resize);
 
@@ -503,6 +552,8 @@
       canvas.style.cursor='crosshair';
     }else if(mode==='eraser'){
       canvas.style.cursor='none';
+    }else if(mode==='text'){
+      canvas.style.cursor='text';
     }else{
       canvas.style.cursor='default';
     }
@@ -565,6 +616,220 @@
     return p && Number.isFinite(p.x) && Number.isFinite(p.y);
   }
 
+  function symbolLocalControlPoints(o){
+    if(!o || o.kind!=='symbol') return null;
+    const sy=o.mirrorY ? -1 : 1;
+
+    if(o.symbolType==='sqrt'){
+      const radicalW=Math.max(24,Number(o.radicalW)||90);
+      const roofLen=Math.max(18,Number(o.roofLen)||110);
+      const height=Math.max(24,Number(o.height)||72);
+      const legDepth=Math.max(8,Number(o.legDepth)||34);
+      const startOffset=Number.isFinite(o.startOffset) ? o.startOffset : 0.10*height;
+      const topY=-height/2;
+      return {
+        roof:{x:roofLen,y:topY*sy},
+        leg:{x:-radicalW*0.34,y:legDepth*sy},
+        start:{x:-radicalW*0.58,y:startOffset*sy}
+      };
+    }
+
+    return null;
+  }
+
+  function symbolLocalPoints(o){
+    if(!o || o.kind!=='symbol') return [];
+    const sy=o.mirrorY ? -1 : 1;
+
+    if(o.symbolType==='sqrt'){
+      const radicalW=Math.max(24,Number(o.radicalW)||90);
+      const roofLen=Math.max(18,Number(o.roofLen)||110);
+      const height=Math.max(24,Number(o.height)||72);
+      const legDepth=Math.max(8,Number(o.legDepth)||34);
+      const startOffset=Number.isFinite(o.startOffset) ? o.startOffset : 0.10*height;
+      const topY=-height/2;
+      return [
+        {x:-radicalW*0.58,y:startOffset*sy},
+        {x:-radicalW*0.42,y:startOffset*sy},
+        {x:-radicalW*0.34,y:legDepth*sy},
+        {x:0,y:topY*sy},
+        {x:roofLen,y:topY*sy}
+      ];
+    }
+
+    if(o.symbolType==='integral'){
+      const w=Math.max(14,Number(o.w)||50);
+      const h=Math.max(36,Number(o.h)||130);
+      const pts=[];
+
+      const bez=(p0,p1,p2,p3,t)=>{
+        const u=1-t;
+        return {
+          x:u*u*u*p0.x + 3*u*u*t*p1.x + 3*u*t*t*p2.x + t*t*t*p3.x,
+          y:u*u*u*p0.y + 3*u*u*t*p1.y + 3*u*t*t*p2.y + t*t*t*p3.y
+        };
+      };
+
+      const top={x: 0.30*w,y:-0.50*h*sy};
+      const mid={x: 0.00*w,y: 0.00*h*sy};
+      const bot={x:-0.30*w,y: 0.50*h*sy};
+
+      const c1={x:-0.14*w,y:-0.52*h*sy};
+      const c2={x:-0.11*w,y:-0.14*h*sy};
+      const c3={x: 0.11*w,y: 0.14*h*sy};
+      const c4={x: 0.14*w,y: 0.52*h*sy};
+
+      const n=44;
+      for(let i=0;i<=n;i++) pts.push(bez(top,c1,c2,mid,i/n));
+      for(let i=1;i<=n;i++) pts.push(bez(mid,c3,c4,bot,i/n));
+      return pts;
+    }
+
+    return [];
+  }
+
+  function symbolWorldPoints(o){
+    const pts=symbolLocalPoints(o);
+    const a=o.angle||0;
+    return pts.map(lp=>rotatePoint({x:o.center.x+lp.x,y:o.center.y+lp.y},o.center,a));
+  }
+
+  function symbolWorldHandles(o){
+    if(!o || o.kind!=='symbol') return [];
+    const cp=symbolLocalControlPoints(o);
+    if(!cp) return [];
+    const a=o.angle||0;
+    const out=[];
+    if(cp.roof){
+      const p=rotatePoint({x:o.center.x+cp.roof.x,y:o.center.y+cp.roof.y},o.center,a);
+      out.push({name:'sqrt-roof',x:p.x,y:p.y});
+    }
+    if(cp.leg){
+      const p=rotatePoint({x:o.center.x+cp.leg.x,y:o.center.y+cp.leg.y},o.center,a);
+      out.push({name:'sqrt-leg',x:p.x,y:p.y});
+    }
+    if(cp.start){
+      const p=rotatePoint({x:o.center.x+cp.start.x,y:o.center.y+cp.start.y},o.center,a);
+      out.push({name:'sqrt-start',x:p.x,y:p.y});
+    }
+    return out;
+  }
+
+  function makeSqrtSymbol(cx,cy,scale,style){
+    return {
+      kind:'symbol',
+      symbolType:'sqrt',
+      center:{x:cx,y:cy},
+      radicalW:48*scale,
+      roofLen:66*scale,
+      height:39*scale,
+      legDepth:19*scale,
+      startOffset:0.10*39*scale,
+      angle:0,
+      mirrorY:false,
+      style:{...style},
+      source:'menu',
+      shapeName:'sqrt',
+      boxAngle:0
+    };
+  }
+
+  function makeIntegralSymbol(cx,cy,scale,style){
+    return {
+      kind:'symbol',
+      symbolType:'integral',
+      center:{x:cx,y:cy},
+      w:25*scale,
+      h:72.5*scale,
+      angle:0,
+      mirrorY:false,
+      style:{...style},
+      source:'menu',
+      shapeName:'integral',
+      boxAngle:0
+    };
+  }
+
+  function textFontFamily(){
+    return '"Comic Neue","Trebuchet MS","Segoe UI","Arial Rounded MT Bold","Arial","Comic Sans MS",sans-serif';
+  }
+
+  function layoutTextLines(text,maxWidth,fontSize){
+    const raw=String(text??'').replace(/\r/g,'').split('\n');
+    const lines=[];
+    ctx.save();
+    ctx.font=`${fontSize}px ${textFontFamily()}`;
+
+    for(const paragraph of raw){
+      if(paragraph===''){
+        lines.push('');
+        continue;
+      }
+
+      const words=paragraph.split(/(\s+)/).filter(Boolean);
+      let line='';
+
+      for(const word of words){
+        const candidate=line+word;
+        if(line && ctx.measureText(candidate).width>maxWidth){
+          lines.push(line.trimEnd());
+          line=word.trimStart();
+
+          // Break a single very long token if necessary.
+          if(ctx.measureText(line).width>maxWidth){
+            let chunk='';
+            for(const ch of line){
+              const c=chunk+ch;
+              if(chunk && ctx.measureText(c).width>maxWidth){
+                lines.push(chunk);
+                chunk=ch;
+              }else{
+                chunk=c;
+              }
+            }
+            line=chunk;
+          }
+        }else{
+          line=candidate;
+        }
+      }
+      lines.push(line.trimEnd());
+    }
+
+    ctx.restore();
+    return lines.length ? lines : [''];
+  }
+
+  function drawTextObject(o){
+    if(!o || !o.center) return;
+    const fontSize=Math.max(4,Number(o.fontSize)||24);
+    const w=Math.max(12,Number(o.w)||120);
+    const h=Math.max(12,Number(o.h)||40);
+    const pad=Math.max(2,fontSize*.18);
+    const lineHeight=fontSize*1.25;
+    const lines=layoutTextLines(o.text||'',Math.max(4,w-2*pad),fontSize);
+
+    ctx.save();
+    ctx.translate(o.center.x,o.center.y);
+    ctx.rotate(o.angle||0);
+    ctx.beginPath();
+    ctx.rect(-w/2,-h/2,w,h);
+    ctx.clip();
+
+    ctx.fillStyle=(o.style && o.style.color) || '#111111';
+    ctx.font=`${fontSize}px ${textFontFamily()}`;
+    ctx.textBaseline='top';
+    ctx.textAlign='left';
+
+    let y=-h/2+pad;
+    for(const line of lines){
+      if(y+lineHeight>h/2+lineHeight*.15) break;
+      ctx.fillText(line,-w/2+pad,y);
+      y+=lineHeight;
+    }
+    ctx.restore();
+  }
+
   function drawShape(o, ghost=false){
     if(!o || !o.kind || !o.style) return;
 
@@ -578,7 +843,12 @@
 
       ctx.beginPath();
 
-      if(o.kind==='line'){
+      if(o.kind==='symbol'){
+        const pts=symbolWorldPoints(o);
+        if(!pts.length || !pts.every(finitePoint)) return;
+        pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+
+      }else if(o.kind==='line'){
         if(!finitePoint(o.a) || !finitePoint(o.b)) return;
         ctx.moveTo(o.a.x,o.a.y);
         ctx.lineTo(o.b.x,o.b.y);
@@ -788,6 +1058,24 @@
   function objectBounds(o){
     if(!o) return null;
 
+    if(o.kind==='text'){
+      const hw=Math.max(6,(Number(o.w)||12)/2);
+      const hh=Math.max(6,(Number(o.h)||12)/2);
+      const a=o.angle||0;
+      const pts=[
+        {x:o.center.x-hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y+hh},
+        {x:o.center.x-hw,y:o.center.y+hh}
+      ].map(p=>rotatePoint(p,o.center,a));
+      return bbox(pts);
+    }
+
+    if(o.kind==='symbol'){
+      const pts=symbolWorldPoints(o);
+      return pts.length ? bbox(pts) : null;
+    }
+
     if(o.kind==='image'){
       const hw=o.w/2,hh=o.h/2,a=o.angle||0;
       const pts=[
@@ -813,50 +1101,25 @@
     }
 
     if(o.kind==='rect'){
-      const hw=o.w/2,hh=o.h/2,a=o.angle||0;
-      const pts=[
-        {x:o.center.x-hw,y:o.center.y-hh},
-        {x:o.center.x+hw,y:o.center.y-hh},
-        {x:o.center.x+hw,y:o.center.y+hh},
-        {x:o.center.x-hw,y:o.center.y+hh}
-      ].map(p=>rotatePoint(p,o.center,a));
-      return bbox(pts);
+      return bbox(rectWorldVertices(o));
     }
 
     if(o.kind==='polygon'){
-      const pts=(o.baseVertices||o.vertices||[]).map(p=>
-        o.baseVertices ? rotatePoint(p,o.center,o.angle||0) : p
-      );
-      if(!pts.length) return null;
-      return bbox(pts);
-    }
-
-    if(o.kind==='parabola'){
-      const a=o.angle||0,w=o.w,h=o.h;
-      const pts=[];
-      const n=48;
-      for(let i=0;i<=n;i++){
-        const u=-1+2*i/n;
-        const local={
-          x:o.center.x+u*(w/2),
-          y:o.center.y+(o.mirrorY?-1:1)*(h/2-(u*u)*h)
-        };
-        pts.push(rotatePoint(local,o.center,a));
-      }
-      return bbox(pts);
+      const pts=polygonWorldVertices(o);
+      return pts.length ? bbox(pts) : null;
     }
 
     if(o.kind==='parabola'){
       const pts=[],a=o.angle||0;
-      for(let i=0;i<=20;i++){
-        const u=-1+2*i/20;
+      for(let i=0;i<=48;i++){
+        const u=-1+2*i/48;
         const q={
           x:o.center.x+u*(o.w/2),
           y:o.center.y+(o.mirrorY?-1:1)*(o.h/2-(u*u)*o.h)
         };
         pts.push(rotatePoint(q,o.center,a));
       }
-      return pts;
+      return bbox(pts);
     }
 
     if(o.kind==='axes'){
@@ -870,13 +1133,9 @@
       return bbox(pts);
     }
 
-    if(o.kind==='stroke'){
-      return bbox(o.points);
-    }
-
+    if(o.kind==='stroke') return bbox(o.points||[]);
     return null;
   }
-
 
   function polygonWorldVertices(o){
     if(!o || o.kind!=='polygon') return [];
@@ -938,13 +1197,17 @@
       return ellipseWorldHandles(o);
     }
 
+    if(o.kind==='symbol'){
+      return symbolWorldHandles(o);
+    }
+
     return [];
   }
 
 
   function objectRotation(o){
     if(!o) return 0;
-    if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image') return o.angle||0;
+    if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image' || o.kind==='symbol') return o.angle||0;
     if(o.kind==='line'){
       return Math.atan2(o.b.y-o.a.y,o.b.x-o.a.x);
     }
@@ -954,15 +1217,11 @@
   function selectionSamplePoints(o){
     if(!o) return [];
 
-    if(o.kind==='line'){
-      return [{...o.a},{...o.b}];
-    }
+    if(o.kind==='line') return [{...o.a},{...o.b}];
+    if(o.kind==='stroke') return (o.points||[]).map(p=>({x:p.x,y:p.y}));
+    if(o.kind==='symbol') return symbolWorldPoints(o);
 
-    if(o.kind==='stroke'){
-      return (o.points||[]).map(p=>({x:p.x,y:p.y}));
-    }
-
-    if(o.kind==='image'){
+    if(o.kind==='text' || o.kind==='image'){
       const hw=o.w/2,hh=o.h/2,a=o.angle||0;
       return [
         {x:o.center.x-hw,y:o.center.y-hh},
@@ -972,13 +1231,8 @@
       ].map(p=>rotatePoint(p,o.center,a));
     }
 
-    if(o.kind==='rect'){
-      return rectWorldVertices(o);
-    }
-
-    if(o.kind==='polygon'){
-      return polygonWorldVertices(o);
-    }
+    if(o.kind==='rect') return rectWorldVertices(o);
+    if(o.kind==='polygon') return polygonWorldVertices(o);
 
     if(o.kind==='ellipse'){
       const pts=[],a=o.angle||0;
@@ -1013,13 +1267,7 @@
       ].map(p=>rotatePoint(p,o.center,a));
     }
 
-    const b=objectBounds(o);
-    return b ? [
-      {x:b.x,y:b.y},
-      {x:b.x+b.w,y:b.y},
-      {x:b.x+b.w,y:b.y+b.h},
-      {x:b.x,y:b.y+b.h}
-    ] : [];
+    return [];
   }
 
   function orientedSelectionBox(o){
@@ -1265,7 +1513,7 @@
     const oc=orientedBoxCorners(box,8/viewZoom);
 
     for(const [name,h] of [['nw',oc.nw],['ne',oc.ne],['se',oc.se],['sw',oc.sw]]){
-      if(Math.hypot(p.x-h.x,p.y-h.y)<=11) return name;
+      if(Math.hypot(p.x-h.x,p.y-h.y)<=11/viewZoom) return name;
     }
     if(Math.hypot(p.x-oc.rotate.x,p.y-oc.rotate.y)<=11/viewZoom) return 'rotate';
     return null;
@@ -1294,7 +1542,7 @@
       return;
     }
 
-    if(o.kind==='rect' || o.kind==='ellipse' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image'){
+    if(o.kind==='rect' || o.kind==='ellipse' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image' || o.kind==='text' || o.kind==='symbol'){
       o.center=rotatePoint(o.center,c,delta);
       o.angle=(o.angle||0)+delta;
       o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
@@ -1350,6 +1598,29 @@
       o.center=scalePt(o.center);
       o.w=Math.max(24,o.w*s);
       o.h=Math.max(24,o.h*s);
+      return;
+    }
+
+    if(o.kind==='text'){
+      o.center=scalePt(o.center);
+      o.w=Math.max(24,o.w*s);
+      o.h=Math.max(20,o.h*s);
+      o.fontSize=Math.max(6,(o.fontSize||24)*s);
+      return;
+    }
+
+    if(o.kind==='symbol'){
+      o.center=scalePt(o.center);
+      if(o.symbolType==='sqrt'){
+        o.radicalW=Math.max(18,(o.radicalW||90)*s);
+        o.roofLen=Math.max(18,(o.roofLen||110)*s);
+        o.height=Math.max(18,(o.height||72)*s);
+        o.legDepth=Math.max(6,(o.legDepth||34)*s);
+        o.startOffset=(Number.isFinite(o.startOffset) ? o.startOffset : 0.10*(o.height||72))*s;
+      }else if(o.symbolType==='integral'){
+        o.w=Math.max(10,(o.w||50)*s);
+        o.h=Math.max(22,(o.h||130)*s);
+      }
       return;
     }
 
@@ -1522,7 +1793,8 @@
         ctx.beginPath();
         ctx.fillStyle='white';
         ctx.strokeStyle='#2563eb';
-        ctx.arc(hnd.x,hnd.y,6/viewZoom,0,Math.PI*2);
+        const rr=hnd.name.startsWith('sqrt-') ? 7/viewZoom : 6/viewZoom;
+        ctx.arc(hnd.x,hnd.y,rr,0,Math.PI*2);
         ctx.fill();
         ctx.stroke();
       }
@@ -1605,7 +1877,8 @@
 
     const special=(selected.kind==='ellipse') ? [] : rawSpecial;
     for(const h of special){
-      if(Math.hypot(p.x-h.x,p.y-h.y)<=11/viewZoom) return h.name;
+      const radius=h.name.startsWith('sqrt-') ? 15/viewZoom : 11/viewZoom;
+      if(Math.hypot(p.x-h.x,p.y-h.y)<=radius) return h.name;
     }
 
     const isTriangle=
@@ -1616,7 +1889,7 @@
     if(!special.length && isTriangle){
       const verts=polygonWorldVertices(selected);
       for(let i=0;i<verts.length;i++){
-        if(Math.hypot(p.x-verts[i].x,p.y-verts[i].y)<=11){
+        if(Math.hypot(p.x-verts[i].x,p.y-verts[i].y)<=11/viewZoom){
           return 'vertex-'+i;
         }
       }
@@ -1627,7 +1900,7 @@
         ['nw',oc.nw],['ne',oc.ne],['se',oc.se],['sw',oc.sw]
       ];
       for(const [name,h] of entries){
-        if(Math.hypot(p.x-h.x,p.y-h.y)<=11) return name;
+        if(Math.hypot(p.x-h.x,p.y-h.y)<=11/viewZoom) return name;
       }
     }
 
@@ -1761,6 +2034,15 @@
       o.center=reflectPointAcross(o.center,pivot,axis);
     }
 
+    if(o.kind==='text'){
+      o.angle=reflectedAngle(o.angle||0,axis);
+      o.boxAngle=reflectedAngle(
+        Number.isFinite(o.boxAngle) ? o.boxAngle : 0,
+        axis
+      );
+      return;
+    }
+
     if(o.kind==='rect' || o.kind==='ellipse'){
       o.angle=reflectedAngle(o.angle||0,axis);
       o.boxAngle=reflectedAngle(
@@ -1770,7 +2052,7 @@
       return;
     }
 
-    if(o.kind==='image' || o.kind==='axes' || o.kind==='parabola'){
+    if(o.kind==='image' || o.kind==='axes' || o.kind==='parabola' || o.kind==='symbol'){
       o.angle=reflectedAngle(o.angle||0,axis);
       o.mirrorY=!o.mirrorY;
       o.boxAngle=reflectedAngle(
@@ -1784,7 +2066,7 @@
   function translateObject(o,dx,dy){
     if(o.kind==='line'){
       o.a.x+=dx;o.a.y+=dy;o.b.x+=dx;o.b.y+=dy;
-    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image'){
+    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image' || o.kind==='text' || o.kind==='symbol'){
       o.center.x+=dx;o.center.y+=dy;
       if(o.kind==='polygon' && o.baseVertices){
         o.baseVertices=o.baseVertices.map(p=>({x:p.x+dx,y:p.y+dy}));
@@ -1801,7 +2083,7 @@
       o.b=rotatePoint(o.b,c,delta);
       o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
 
-    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image'){
+    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image' || o.kind==='text' || o.kind==='symbol'){
       // Circle rotation is intentionally ignored.
       if(o.kind==='ellipse' && o.shapeName==='circle') return;
       o.angle=(o.angle||0)+delta;
@@ -1895,6 +2177,27 @@
         'menu',
         'quadrilateral'
       );
+      return true;
+    }
+
+    if(snap.kind==='symbol' && snap.symbolType==='sqrt' && (handle==='sqrt-roof' || handle==='sqrt-leg' || handle==='sqrt-start')){
+      const a=snap.angle||0;
+      const cs=Math.cos(-a), sn=Math.sin(-a);
+      const dx=p.x-snap.center.x, dy=p.y-snap.center.y;
+      const lx=dx*cs-dy*sn;
+      const ly=(dx*sn+dy*cs) * (snap.mirrorY ? -1 : 1);
+
+      Object.assign(o, JSON.parse(JSON.stringify(snap)));
+      if(handle==='sqrt-roof'){
+        o.roofLen=Math.max(18,lx);
+      }else if(handle==='sqrt-leg'){
+        o.legDepth=Math.max(6,ly);
+      }else if(handle==='sqrt-start'){
+        const height=Math.max(24,Number(snap.height)||72);
+        const topY=-height/2;
+        o.startOffset=Math.max(topY + 4, Math.min((snap.legDepth||34) - 4, ly));
+      }
+      o.boxAngle=Number.isFinite(snap.boxAngle) ? snap.boxAngle : (snap.angle||0);
       return true;
     }
 
@@ -2061,6 +2364,32 @@
       return true;
     }
 
+    if(snap.kind==='text'){
+      o.center=newCenter;
+      o.w=Math.max(24,snap.w*sx);
+      o.h=Math.max(20,snap.h*sy);
+      o.fontSize=Math.max(6,(snap.fontSize||24)*sy);
+      o.angle=snap.angle||0;
+      o.boxAngle=Number.isFinite(snap.boxAngle) ? snap.boxAngle : (snap.angle||0);
+      return true;
+    }
+
+    if(snap.kind==='symbol'){
+      o.center=newCenter;
+      o.angle=snap.angle||0;
+      if(snap.symbolType==='sqrt'){
+        o.radicalW=Math.max(18,(snap.radicalW||90)*sx);
+        o.roofLen=Math.max(18,(snap.roofLen||110)*sx);
+        o.height=Math.max(18,(snap.height||72)*sy);
+        o.legDepth=Math.max(6,(snap.legDepth||34)*sy);
+        o.startOffset=(Number.isFinite(snap.startOffset) ? snap.startOffset : 0.10*(snap.height||72))*sy;
+      }else if(snap.symbolType==='integral'){
+        o.w=Math.max(10,(snap.w||50)*sx);
+        o.h=Math.max(22,(snap.h||130)*sy);
+      }
+      return true;
+    }
+
     if(snap.kind==='axes'){
       o.center=newCenter;
       o.w=Math.max(24,snap.w*sx);
@@ -2192,6 +2521,7 @@
     for(const o of objects){
       if(o.kind==='stroke') drawSmoothStroke(o.points,o.style);
       else if(o.kind==='image') drawImageObject(o);
+      else if(o.kind==='text') drawTextObject(o);
       else drawShape(o);
     }
     if(drawing && points.length){
@@ -3194,7 +3524,7 @@
   function isErasableInk(o){
     // Both ink-created and menu-created drawable objects can be erased.
     return !!o &&
-      ['stroke','line','ellipse','rect','polygon','parabola','axes'].includes(o.kind);
+      ['stroke','line','ellipse','rect','polygon','parabola','axes','symbol'].includes(o.kind);
   }
 
   function inkObjectHit(o,p,r){
@@ -3338,6 +3668,10 @@
         pts.push(rotatePoint(local,o.center,a));
       }
       return pts;
+    }
+
+    if(o.kind==='symbol'){
+      return symbolWorldPoints(o);
     }
 
     if(o.kind==='parabola'){
@@ -3703,6 +4037,15 @@
       return;
     }
 
+    if(mode==='text'){
+      if(e.button!==0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      closeContextMenu();
+      beginTextEditingAt(p,'',-1);
+      return;
+    }
+
     if(mode==='fill'){
       closeContextMenu();
       const hit=hitFillableObject(p);
@@ -3776,7 +4119,8 @@
               h.startsWith('vertex-') ||
               h.startsWith('endpoint-') ||
               h.startsWith('rectvertex-') ||
-              h.startsWith('ellipse-')
+              h.startsWith('ellipse-') ||
+              h.startsWith('sqrt-')
             ) ? 'point' :
             'resize';
           redraw();
@@ -3787,6 +4131,36 @@
       const hit=hitTestObject(p);
 
       if(hit>=0){
+        const clickedIndices=expandGroupedIndices([hit]);
+
+        if(e.ctrlKey || e.metaKey){
+          const next=new Set(selectedIndices);
+          const allAlreadySelected=clickedIndices.every(i=>next.has(i));
+
+          if(allAlreadySelected){
+            for(const i of clickedIndices) next.delete(i);
+          }else{
+            for(const i of clickedIndices) next.add(i);
+          }
+
+          setSelection([...next]);
+
+          // Ctrl/Cmd-click changes only the selection list.
+          // Movement starts on a later normal drag/click.
+          selectAction=null;
+          selectStart=null;
+          selectSnapshot=null;
+          groupSnapshots=null;
+          groupBoxSnapshot=null;
+          activeHandle=null;
+
+          redraw();
+          statusEl.textContent=selectedIndices.length
+            ? `${selectedIndices.length} nesne seçili`
+            : 'Seçim kaldırıldı';
+          return;
+        }
+
         const hitAlreadySelected=selectedIndices.includes(hit);
 
         // Clicking a new object collapses to a single selection.
@@ -3875,6 +4249,7 @@
         viewX=rightPress.startView.x+dx;
         viewY=rightPress.startView.y+dy;
         redraw();
+        if(textEditing) positionTextEditor();
       }
       return;
     }
@@ -4000,6 +4375,25 @@
             o.center=scalePointLocal(o.center);
             o.w=Math.max(24,o.w*sx);
             o.h=Math.max(24,o.h*sy);
+
+          }else if(o.kind==='symbol'){
+            o.center=scalePointLocal(o.center);
+            if(o.symbolType==='sqrt'){
+              o.radicalW=Math.max(18,(o.radicalW||90)*sx);
+              o.roofLen=Math.max(18,(o.roofLen||110)*sx);
+              o.height=Math.max(18,(o.height||72)*sy);
+              o.legDepth=Math.max(6,(o.legDepth||34)*sy);
+              o.startOffset=(Number.isFinite(o.startOffset) ? o.startOffset : 0.10*(o.height||72))*sy;
+            }else if(o.symbolType==='integral'){
+              o.w=Math.max(10,(o.w||50)*sx);
+              o.h=Math.max(22,(o.h||130)*sy);
+            }
+
+          }else if(o.kind==='text'){
+            o.center=scalePointLocal(o.center);
+            o.w=Math.max(24,o.w*sx);
+            o.h=Math.max(20,o.h*sy);
+            o.fontSize=Math.max(6,(o.fontSize||24)*sy);
 
           }else if(o.kind==='axes'){
             o.center=scalePointLocal(o.center);
@@ -4305,6 +4699,7 @@
     viewY=s.y-worldBefore.y*viewZoom;
 
     redraw();
+    if(textEditing) positionTextEditor();
   },{passive:false});
 
 
@@ -4317,6 +4712,8 @@
   }
 
   function activateFillTool(){
+    if(textEditing) closeTextEditor(true);
+    textBtn.classList.remove('active');
     mode='fill';
     setSelection([]);
     eraserCursor=null;
@@ -4329,6 +4726,7 @@
     closeContextMenu();
     canvas.style.cursor='crosshair';
     redraw();
+    if(textEditing) positionTextEditor();
     statusEl.textContent='Dolgu modu — kapalı bir nesnenin içine tıkla';
   }
 
@@ -4378,7 +4776,227 @@
     }
   });
 
+  function closeTextEditor(commit=true){
+    if(!textEditing || textEditorFinishing) return;
+    textEditorFinishing=true;
+
+    const state=textEditing;
+    const value=textEditor.value;
+    const clean=value.replace(/\r/g,'');
+
+    if(commit){
+      const visualW=Math.max(40,textEditor.offsetWidth);
+      const visualH=Math.max(30,Math.max(textEditor.offsetHeight,textEditor.scrollHeight));
+      const w=visualW/viewZoom;
+      const h=visualH/viewZoom;
+
+      if(state.isNew){
+        if(clean.trim()!==''){
+          saveState();
+          objects.push({
+            kind:'text',
+            center:{...state.center},
+            w,h,
+            angle:0,
+            text:clean,
+            fontSize:state.fontSize,
+            style:{...state.style},
+            source:'text',
+            shapeName:'text',
+            boxAngle:0
+          });
+          setSelection([objects.length-1]);
+        }
+      }else if(state.index>=0 && objects[state.index]){
+        objects[state.index].text=clean;
+        objects[state.index].w=w;
+        objects[state.index].h=h;
+        if(clean.trim()===''){
+          objects.splice(state.index,1);
+          setSelection([]);
+        }else{
+          setSelection([state.index]);
+        }
+      }
+    }
+
+    textEditor.style.display='none';
+    textEditor.value='';
+    textEditing=null;
+    textEditorFinishing=false;
+    redraw();
+  }
+
+  function positionTextEditor(){
+    if(!textEditing) return;
+    const s=worldToScreenPoint(textEditing.center);
+    const w=Math.max(80,textEditing.w*viewZoom);
+    const h=Math.max(44,textEditing.h*viewZoom);
+    const fontPx=Math.max(10,textEditing.fontSize*viewZoom);
+
+    textEditor.style.left=s.x+'px';
+    textEditor.style.top=s.y+'px';
+    textEditor.style.width=w+'px';
+    textEditor.style.height=h+'px';
+    textEditor.style.fontSize=fontPx+'px';
+    textEditor.style.color=(textEditing.style && textEditing.style.color) || currentColor;
+    textEditor.style.transform=`translate(-50%,-50%) rotate(${textEditing.angle||0}rad)`;
+  }
+
+  function beginTextEditingAt(center,initialText='',existingIndex=-1){
+    if(textEditing) closeTextEditor(true);
+
+    let state;
+    if(existingIndex>=0 && objects[existingIndex] && objects[existingIndex].kind==='text'){
+      const o=objects[existingIndex];
+      saveState();
+      state={
+        index:existingIndex,
+        isNew:false,
+        center:{...o.center},
+        w:o.w,
+        h:o.h,
+        angle:o.angle||0,
+        fontSize:o.fontSize||24,
+        style:{...(o.style||{color:currentColor,width:+widthEl.value})}
+      };
+      textEditor.value=o.text||'';
+    }else{
+      state={
+        index:-1,
+        isNew:true,
+        center:{...center},
+        w:260/viewZoom,
+        h:90/viewZoom,
+        angle:0,
+        fontSize:24/viewZoom,
+        style:{color:currentColor,width:+widthEl.value}
+      };
+      textEditor.value=initialText;
+    }
+
+    textEditing=state;
+    positionTextEditor();
+    textEditor.style.display='block';
+    textEditor.focus();
+    const end=textEditor.value.length;
+    textEditor.setSelectionRange(end,end);
+    statusEl.textContent='Metin yaz — bitirmek için kutunun dışına tıkla';
+  }
+
+  function insertSymbolIntoText(symbol){
+    if(!textEditing){
+      const r=canvas.getBoundingClientRect();
+      const center=screenToWorld({x:r.width/2,y:r.height/2});
+      beginTextEditingAt(center,symbol,-1);
+      return;
+    }
+
+    textEditor.focus();
+    const a=textEditor.selectionStart ?? textEditor.value.length;
+    const b=textEditor.selectionEnd ?? a;
+    textEditor.setRangeText(symbol,a,b,'end');
+    textEditor.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+
+  textEditor.addEventListener('input',()=>{
+    textEditor.style.height='auto';
+    textEditor.style.height=Math.max(44,textEditor.scrollHeight)+'px';
+  });
+
+  textEditor.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+      e.preventDefault();
+      closeTextEditor(false);
+    }else if((e.ctrlKey || e.metaKey) && e.key==='Enter'){
+      e.preventDefault();
+      closeTextEditor(true);
+    }
+  });
+
+  textEditor.addEventListener('blur',()=>{
+    setTimeout(()=>{
+      if(
+        textEditing &&
+        document.activeElement!==textEditor &&
+        document.activeElement!==sqrtBtn &&
+        document.activeElement!==integralBtn
+      ){
+        closeTextEditor(true);
+      }
+    },0);
+  });
+
+  textBtn.onclick=()=>{
+    closeContextMenu();
+    closeFillMenu();
+    eraserMenu.classList.remove('open');
+    colorMenu.classList.remove('open');
+    mode='text';
+    setSelection([]);
+    eraserCursor=null;
+    textBtn.classList.add('active');
+    inkBtn.classList.remove('active');
+    selectBtn.classList.remove('active');
+    eraserBtn.classList.remove('active');
+    fillBtn.classList.remove('active');
+    canvas.style.cursor='text';
+    statusEl.textContent='Metin kutusu — tahtada yazmak istediğin yere tıkla';
+    redraw();
+  };
+
+  function addMathSymbol(symbolType){
+    if(textEditing) closeTextEditor(true);
+    closeContextMenu();
+    closeFillMenu();
+    eraserMenu.classList.remove('open');
+    colorMenu.classList.remove('open');
+    saveState();
+    const r=canvas.getBoundingClientRect();
+    const centerWorld=screenToWorld({x:r.width/2,y:r.height/2});
+    const scale=1/viewZoom;
+    const style=strokeStyle();
+    let obj=null;
+    if(symbolType==='sqrt') obj=makeSqrtSymbol(centerWorld.x,centerWorld.y,scale,style);
+    if(symbolType==='integral') obj=makeIntegralSymbol(centerWorld.x,centerWorld.y,scale,style);
+    if(!obj) return;
+    objects.push(obj);
+    setSelection([objects.length-1]);
+    mode='select';
+    selectBtn.classList.add('active');
+    inkBtn.classList.remove('active');
+    textBtn.classList.remove('active');
+    eraserBtn.classList.remove('active');
+    fillBtn.classList.remove('active');
+    eraserCursor=null;
+    restoreToolCursor();
+    redraw();
+    statusEl.textContent='Sembol eklendi';
+  }
+
+  sqrtBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    addMathSymbol('sqrt');
+  });
+
+  integralBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    addMathSymbol('integral');
+  });
+
+  canvas.addEventListener('dblclick',e=>{
+    if(mode!=='select') return;
+    const p=pFromEvent(e);
+    const hit=hitTestObject(p);
+    if(hit>=0 && objects[hit] && objects[hit].kind==='text'){
+      e.preventDefault();
+      beginTextEditingAt(objects[hit].center,'',hit);
+    }
+  });
+
   imageBtn.onclick=()=>{
+    if(textEditing) closeTextEditor(true);
+    textBtn.classList.remove('active');
     closeContextMenu();
     imageInput.value='';
     imageInput.click();
@@ -4444,6 +5062,8 @@
   });
 
   inkBtn.onclick=()=>{
+    if(textEditing) closeTextEditor(true);
+    textBtn.classList.remove('active');
     fillBtn.classList.remove('active');
     closeFillMenu();
     closeContextMenu();
@@ -4460,6 +5080,8 @@
   };
 
   selectBtn.onclick=()=>{
+    if(textEditing) closeTextEditor(true);
+    textBtn.classList.remove('active');
     fillBtn.classList.remove('active');
     closeFillMenu();
     closeContextMenu();
@@ -4494,6 +5116,8 @@
       eraserOptions.forEach(b=>b.classList.toggle('active',b===btn));
       eraserMenu.classList.remove('open');
 
+      if(textEditing) closeTextEditor(true);
+      textBtn.classList.remove('active');
       mode='eraser';
     fillBtn.classList.remove('active');
     closeFillMenu();
@@ -4732,6 +5356,7 @@
   };
 
   undoBtn.onclick=()=>{
+    if(textEditing) closeTextEditor(true);
     if(!undoStack.length) return;
     redoStack.push(JSON.stringify(objects));
     objects=JSON.parse(undoStack.pop());
@@ -4739,6 +5364,7 @@
     redraw();
   };
   redoBtn.onclick=()=>{
+    if(textEditing) closeTextEditor(true);
     if(!redoStack.length) return;
     undoStack.push(JSON.stringify(objects));
     objects=JSON.parse(redoStack.pop());
@@ -4746,6 +5372,7 @@
     redraw();
   };
   clearBtn.onclick=()=>{
+    if(textEditing) closeTextEditor(true);
     if(!objects.length) return;
     saveState();
     objects=[];
