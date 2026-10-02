@@ -945,7 +945,7 @@
     if(selectedIndices.length<2) return null;
     const box=groupOrientedBox();
     if(!box) return null;
-    const oc=orientedBoxCorners(box,8);
+    const oc=orientedBoxCorners(box,8/viewZoom);
 
     for(const [name,h] of [['nw',oc.nw],['ne',oc.ne],['se',oc.se],['sw',oc.sw]]){
       if(Math.hypot(p.x-h.x,p.y-h.y)<=11) return name;
@@ -1036,12 +1036,12 @@
   function drawGroupSelection(){
     const box=groupOrientedBox();
     if(!box) return;
-    const oc=orientedBoxCorners(box,8);
+    const oc=orientedBoxCorners(box,8/viewZoom);
 
     ctx.save();
     ctx.strokeStyle='#2563eb';
-    ctx.lineWidth=1.5;
-    ctx.setLineDash([6,4]);
+    ctx.lineWidth=1.5/viewZoom;
+    ctx.setLineDash([6/viewZoom,4/viewZoom]);
 
     ctx.beginPath();
     ctx.moveTo(oc.nw.x,oc.nw.y);
@@ -1056,7 +1056,7 @@
       ctx.beginPath();
       ctx.fillStyle='white';
       ctx.strokeStyle='#2563eb';
-      ctx.rect(p.x-5,p.y-5,10,10);
+      ctx.rect(p.x-5/viewZoom,p.y-5/viewZoom,10/viewZoom,10/viewZoom);
       ctx.fill();
       ctx.stroke();
     }
@@ -1068,7 +1068,7 @@
 
     ctx.beginPath();
     ctx.fillStyle='white';
-    ctx.arc(oc.rotate.x,oc.rotate.y,6,0,Math.PI*2);
+    ctx.arc(oc.rotate.x,oc.rotate.y,6/viewZoom,0,Math.PI*2);
     ctx.fill();
     ctx.stroke();
 
@@ -1090,8 +1090,8 @@
     ctx.save();
     ctx.fillStyle='rgba(37,99,235,.08)';
     ctx.strokeStyle='#2563eb';
-    ctx.lineWidth=1.25;
-    ctx.setLineDash([5,4]);    ctx.fillRect(r.x,r.y,r.w,r.h);
+    ctx.lineWidth=1.25/viewZoom;
+    ctx.setLineDash([5/viewZoom,4/viewZoom]);    ctx.fillRect(r.x,r.y,r.w,r.h);
     ctx.strokeRect(r.x,r.y,r.w,r.h);
     ctx.restore();
   }
@@ -1149,7 +1149,7 @@
         ctx.beginPath();
         ctx.fillStyle='white';
         ctx.strokeStyle='#2563eb';
-        ctx.arc(hnd.x,hnd.y,6,0,Math.PI*2);
+        ctx.arc(hnd.x,hnd.y,6/viewZoom,0,Math.PI*2);
         ctx.fill();
         ctx.stroke();
       }
@@ -1159,13 +1159,13 @@
 
     const box=orientedSelectionBox(selected);
     if(!box) return;
-    const oc=orientedBoxCorners(box,8);
+    const oc=orientedBoxCorners(box,8/viewZoom);
     if(!oc) return;
 
     ctx.save();
     ctx.strokeStyle='#2563eb';
-    ctx.lineWidth=1.5;
-    ctx.setLineDash([5,4]);
+    ctx.lineWidth=1.5/viewZoom;
+    ctx.setLineDash([5/viewZoom,4/viewZoom]);
 
     // Rotated bounding box polygon
     ctx.beginPath();
@@ -1183,7 +1183,7 @@
         ctx.beginPath();
         ctx.fillStyle='white';
         ctx.strokeStyle='#2563eb';
-        ctx.arc(hnd.x,hnd.y,6,0,Math.PI*2);
+        ctx.arc(hnd.x,hnd.y,6/viewZoom,0,Math.PI*2);
         ctx.fill();
         ctx.stroke();
       }
@@ -1199,7 +1199,7 @@
           ctx.beginPath();
           ctx.fillStyle='white';
           ctx.strokeStyle='#2563eb';
-          ctx.arc(p.x,p.y,6,0,Math.PI*2);
+          ctx.arc(p.x,p.y,6/viewZoom,0,Math.PI*2);
           ctx.fill();
           ctx.stroke();
         }
@@ -1213,7 +1213,7 @@
         ctx.beginPath();
         ctx.fillStyle='white';
         ctx.strokeStyle='#2563eb';
-        ctx.rect(p.x-5,p.y-5,10,10);
+        ctx.rect(p.x-5/viewZoom,p.y-5/viewZoom,10/viewZoom,10/viewZoom);
         ctx.fill();
         ctx.stroke();
       }
@@ -1229,7 +1229,7 @@
 
       ctx.beginPath();
       ctx.fillStyle='white';
-      ctx.arc(oc.rotate.x,oc.rotate.y,6,0,Math.PI*2);
+      ctx.arc(oc.rotate.x,oc.rotate.y,6/viewZoom,0,Math.PI*2);
       ctx.fill();
       ctx.stroke();
     }
@@ -1262,7 +1262,7 @@
 
     const box=orientedSelectionBox(selected);
     if(!box) return null;
-    const oc=orientedBoxCorners(box,8);
+    const oc=orientedBoxCorners(box,8/viewZoom);
 
     const special=(selected.kind==='ellipse') ? [] : rawSpecial;
     for(const h of special){
