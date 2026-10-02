@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Whiteboard Ink Prototype v15.28 Infinite Surface Pan Zoom</title>
+<title>Whiteboard Ink Prototype v15.34 Axis Aligned Initial Boxes</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -175,6 +175,10 @@
       <option value="line">Çizgi</option>
       <option value="rect">Dikdörtgen</option>
       <option value="ellipse">Elips</option>
+      <option value="parabola">Parabol</option>
+      <option value="sinx">sin x</option>
+      <option value="tanx">tan x</option>
+      <option value="ex">e^x</option>
       <option value="triangle">Üçgen</option>
       <option value="pentagon">Beşgen</option>
       <option value="hexagon">Altıgen</option>
@@ -433,6 +437,26 @@
         verts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
         ctx.closePath();
 
+      }else if(o.kind==='parabola'){
+        if(!finitePoint(o.center)) return;
+        const w=Math.max(1,Math.abs(Number(o.w)||1));
+        const h=Math.max(1,Math.abs(Number(o.h)||1));
+        const a=Number(o.angle)||0;
+
+        const n=64;
+        for(let i=0;i<=n;i++){
+          const u=-1 + 2*i/n;
+          // Finite upward-opening parabola segment:
+          // vertex at local y=+h/2, endpoints at local y=-h/2.
+          const local={
+            x:o.center.x + u*(w/2),
+            y:o.center.y + h/2 - (u*u)*h
+          };
+          const q=rotatePoint(local,o.center,a);
+          if(i===0) ctx.moveTo(q.x,q.y);
+          else ctx.lineTo(q.x,q.y);
+        }
+
       }else if(o.kind==='polygon'){
         if(!finitePoint(o.center)) return;
         let verts=null;
@@ -535,6 +559,34 @@
       return bbox(pts);
     }
 
+    if(o.kind==='parabola'){
+      const a=o.angle||0,w=o.w,h=o.h;
+      const pts=[];
+      const n=48;
+      for(let i=0;i<=n;i++){
+        const u=-1+2*i/n;
+        const local={
+          x:o.center.x+u*(w/2),
+          y:o.center.y+h/2-(u*u)*h
+        };
+        pts.push(rotatePoint(local,o.center,a));
+      }
+      return bbox(pts);
+    }
+
+    if(o.kind==='parabola'){
+      const pts=[],a=o.angle||0;
+      for(let i=0;i<=20;i++){
+        const u=-1+2*i/20;
+        const q={
+          x:o.center.x+u*(o.w/2),
+          y:o.center.y+o.h/2-(u*u)*o.h
+        };
+        pts.push(rotatePoint(q,o.center,a));
+      }
+      return pts;
+    }
+
     if(o.kind==='axes'){
       const hw=o.w/2,hh=o.h/2,a=o.angle||0;
       const pts=[
@@ -620,7 +672,7 @@
 
   function objectRotation(o){
     if(!o) return 0;
-    if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='axes') return o.angle||0;
+    if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes') return o.angle||0;
     if(o.kind==='line'){
       return Math.atan2(o.b.y-o.a.y,o.b.x-o.a.x);
     }
@@ -632,7 +684,7 @@
     const angle=objectRotation(o);
 
     // For rotated geometric objects, derive dimensions in local coordinates.
-    if((o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon' || o.kind==='axes') && o.center){
+    if((o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes') && o.center){
       const c=o.center;
       let localPts=[];
 
@@ -658,6 +710,12 @@
           const dx=p.x-c.x,dy=p.y-c.y;
           return {x:dx*cs-dy*sn,y:dx*sn+dy*cs};
         });
+      }else if(o.kind==='parabola'){
+        localPts=[
+          {x:-o.w/2,y:-o.h/2},
+          {x:o.w/2,y:-o.h/2},
+          {x:0,y:o.h/2}
+        ];
       }else if(o.kind==='axes'){
         localPts=[
           {x:-o.w/2,y:-o.h/2},
@@ -694,16 +752,44 @@
       };
     }
 
-    // Freehand ink: local x-axis follows the stroke's principal direction.
+    // Stroke/function curves:
+    // Their FIRST selection box is always horizontal/vertical.
+    // Only an explicit user rotation changes the box angle afterwards.
     if(o.kind==='stroke' && Array.isArray(o.points) && o.points.length>=2){
-      const f=principalFrame(o.points);
+      const angle=Number.isFinite(o.boxAngle) ? o.boxAngle : 0;
+
+      // Start from a stable world-space center.
+      const wb=bbox(o.points);
+      const c0={x:wb.cx,y:wb.cy};
+      const cs=Math.cos(-angle), sn=Math.sin(-angle);
+
+      let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+      for(const p of o.points){
+        const dx=p.x-c0.x, dy=p.y-c0.y;
+        const x=dx*cs-dy*sn;
+        const y=dx*sn+dy*cs;
+        minX=Math.min(minX,x); maxX=Math.max(maxX,x);
+        minY=Math.min(minY,y); maxY=Math.max(maxY,y);
+      }
+
+      // Recenter the oriented box so its local extents are symmetric.
+      const offX=(minX+maxX)/2;
+      const offY=(minY+maxY)/2;
+      const csa=Math.cos(angle), sna=Math.sin(angle);
+      const center={
+        x:c0.x + offX*csa - offY*sna,
+        y:c0.y + offX*sna + offY*csa
+      };
+
+      const w=Math.max(1,maxX-minX);
+      const h=Math.max(1,maxY-minY);
+
       return {
-        center:{x:f.center.x,y:f.center.y},
-        angle:f.angle,
-        minX:-f.w/2,maxX:f.w/2,
-        minY:-f.h/2,maxY:f.h/2,
-        w:Math.max(1,f.w),
-        h:Math.max(1,f.h)
+        center,
+        angle,
+        minX:-w/2,maxX:w/2,
+        minY:-h/2,maxY:h/2,
+        w,h
       };
     }
 
@@ -877,6 +963,7 @@
 
     if(o.kind==='stroke'){
       o.points=o.points.map(p=>rotatePoint(p,c,delta));
+      o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
       return;
     }
 
@@ -888,7 +975,7 @@
       return;
     }
 
-    if(o.kind==='rect' || o.kind==='ellipse' || o.kind==='axes'){
+    if(o.kind==='rect' || o.kind==='ellipse' || o.kind==='parabola' || o.kind==='axes'){
       o.center=rotatePoint(o.center,c,delta);
       o.angle=(o.angle||0)+delta;
     }
@@ -929,6 +1016,13 @@
       o.center=scalePt(o.center);
       o.rx=Math.max(6,o.rx*s);
       o.ry=Math.max(6,o.ry*s);
+      return;
+    }
+
+    if(o.kind==='parabola'){
+      o.center=scalePt(o.center);
+      o.w=Math.max(24,o.w*s);
+      o.h=Math.max(24,o.h*s);
       return;
     }
 
@@ -1216,7 +1310,7 @@
   function translateObject(o,dx,dy){
     if(o.kind==='line'){
       o.a.x+=dx;o.a.y+=dy;o.b.x+=dx;o.b.y+=dy;
-    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='axes'){
+    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes'){
       o.center.x+=dx;o.center.y+=dy;
       if(o.kind==='polygon' && o.baseVertices){
         o.baseVertices=o.baseVertices.map(p=>({x:p.x+dx,y:p.y+dy}));
@@ -1232,7 +1326,7 @@
       o.a=rotatePoint(o.a,c,delta);
       o.b=rotatePoint(o.b,c,delta);
 
-    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='axes'){
+    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes'){
       // Circle rotation is intentionally ignored.
       if(o.kind==='ellipse' && o.shapeName==='circle') return;
       o.angle=(o.angle||0)+delta;
@@ -1241,6 +1335,7 @@
       const box=orientedSelectionBox(o);
       const c=box ? box.center : {x:bbox(o.points).cx,y:bbox(o.points).cy};
       o.points=o.points.map(p=>rotatePoint(p,c,delta));
+      o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
     }
   }
 
@@ -1470,6 +1565,14 @@
         o.rx=Math.max(6,snap.rx*sx);
         o.ry=Math.max(6,snap.ry*sy);
       }
+      o.angle=snap.angle||0;
+      return true;
+    }
+
+    if(snap.kind==='parabola'){
+      o.center=newCenter;
+      o.w=Math.max(24,snap.w*sx);
+      o.h=Math.max(24,snap.h*sy);
       o.angle=snap.angle||0;
       return true;
     }
@@ -2600,7 +2703,7 @@
   function isErasableInk(o){
     // Both ink-created and menu-created drawable objects can be erased.
     return !!o &&
-      ['stroke','line','ellipse','rect','polygon','axes'].includes(o.kind);
+      ['stroke','line','ellipse','rect','polygon','parabola','axes'].includes(o.kind);
   }
 
   function inkObjectHit(o,p,r){
@@ -2629,14 +2732,21 @@
       return Math.abs(q-1)<=tol;
     }
 
-    if(o.kind==='axes'){
-      const a=o.angle||0, hw=o.w/2, hh=o.h/2;
-      const left=rotatePoint({x:o.center.x-hw,y:o.center.y},o.center,a);
-      const right=rotatePoint({x:o.center.x+hw,y:o.center.y},o.center,a);
-      const top=rotatePoint({x:o.center.x,y:o.center.y-hh},o.center,a);
-      const bottom=rotatePoint({x:o.center.x,y:o.center.y+hh},o.center,a);
-      return eraserPointSegDistance(p,left,right)<=r ||
-             eraserPointSegDistance(p,bottom,top)<=r;
+    if(o.kind==='parabola'){
+      const pts=[];
+      const n=100, a=o.angle||0;
+      for(let i=0;i<=n;i++){
+        const u=-1+2*i/n;
+        const q={
+          x:o.center.x+u*(o.w/2),
+          y:o.center.y+o.h/2-(u*u)*o.h
+        };
+        pts.push(rotatePoint(q,o.center,a));
+      }
+      for(let i=1;i<pts.length;i++){
+        if(eraserPointSegDistance(p,pts[i-1],pts[i])<=r) return true;
+      }
+      return false;
     }
 
     if(o.kind==='axes'){
@@ -2646,11 +2756,8 @@
       const top=rotatePoint({x:o.center.x,y:o.center.y-hh},o.center,a);
       const bottom=rotatePoint({x:o.center.x,y:o.center.y+hh},o.center,a);
 
-      const xPts=eraserSampleSegment(left,right,3);
-      const yPts=eraserSampleSegment(bottom,top,3);
-
-      // Use a NaN separator sentinel; caller handles axes specially below.
-      return {axes:true,xPts,yPts};
+      return eraserPointSegDistance(p,left,right)<=r ||
+             eraserPointSegDistance(p,bottom,top)<=r;
     }
 
     let verts=[];
@@ -2671,6 +2778,7 @@
         if(eraserPointSegDistance(p,verts[i],verts[(i+1)%verts.length])<=r) return true;
       }
     }
+
     return false;
   }
 
@@ -2714,7 +2822,6 @@
 
   function sampleInkObject(o){
     if(o.kind==='stroke'){
-      // Densify so the point eraser creates a clean gap even on sparse strokes.
       const pts=[];
       for(let i=1;i<o.points.length;i++){
         const seg=eraserSampleSegment(o.points[i-1],o.points[i],3);
@@ -2732,10 +2839,40 @@
       const pts=[], n=140, a=o.angle||0;
       for(let i=0;i<=n;i++){
         const t=i*Math.PI*2/n;
-        const local={x:o.center.x+Math.cos(t)*o.rx,y:o.center.y+Math.sin(t)*o.ry};
+        const local={
+          x:o.center.x+Math.cos(t)*o.rx,
+          y:o.center.y+Math.sin(t)*o.ry
+        };
         pts.push(rotatePoint(local,o.center,a));
       }
       return pts;
+    }
+
+    if(o.kind==='parabola'){
+      const pts=[], n=140, a=o.angle||0;
+      for(let i=0;i<=n;i++){
+        const u=-1+2*i/n;
+        const q={
+          x:o.center.x+u*(o.w/2),
+          y:o.center.y+o.h/2-(u*u)*o.h
+        };
+        pts.push(rotatePoint(q,o.center,a));
+      }
+      return pts;
+    }
+
+    if(o.kind==='axes'){
+      const a=o.angle||0, hw=o.w/2, hh=o.h/2;
+      const left=rotatePoint({x:o.center.x-hw,y:o.center.y},o.center,a);
+      const right=rotatePoint({x:o.center.x+hw,y:o.center.y},o.center,a);
+      const top=rotatePoint({x:o.center.x,y:o.center.y-hh},o.center,a);
+      const bottom=rotatePoint({x:o.center.x,y:o.center.y+hh},o.center,a);
+
+      return {
+        axes:true,
+        xPts:eraserSampleSegment(left,right,3),
+        yPts:eraserSampleSegment(bottom,top,3)
+      };
     }
 
     let verts=[];
@@ -3081,6 +3218,11 @@
             o.rx=Math.max(6,o.rx*sx);
             o.ry=Math.max(6,o.ry*sy);
 
+          }else if(o.kind==='parabola'){
+            o.center=scalePointLocal(o.center);
+            o.w=Math.max(24,o.w*sx);
+            o.h=Math.max(24,o.h*sy);
+
           }else if(o.kind==='axes'){
             o.center=scalePointLocal(o.center);
             o.w=Math.max(24,o.w*sx);
@@ -3294,7 +3436,7 @@
       objects.push(JSON.parse(JSON.stringify(previewRecognized)));
       statusEl.textContent='Şekle dönüştürüldü';
     }else{
-      objects.push({kind:'stroke',points:points.map(p=>({x:p.x,y:p.y})),style:strokeStyle()});
+      objects.push({kind:'stroke',points:points.map(p=>({x:p.x,y:p.y})),style:strokeStyle(),boxAngle:0});
       statusEl.textContent='Ink olarak bırakıldı';
     }
 
@@ -3421,6 +3563,82 @@
     }
   });
 
+  function makeFunctionStroke(type,cx,cy,scale,style){
+    const pts=[];
+
+    if(type==='sinx'){
+      // x in [-pi, pi], finite two-period-width style segment.
+      const n=180;
+      const halfW=150*scale;
+      const amp=65*scale;
+      for(let i=0;i<=n;i++){
+        const t=-Math.PI + (2*Math.PI*i/n);
+        pts.push({
+          x:cx + (t/Math.PI)*halfW,
+          y:cy - Math.sin(t)*amp
+        });
+      }
+      return {
+        kind:'stroke',
+        points:pts,
+        style,
+        source:'menu',
+        shapeName:'sin x',
+        boxAngle:0
+      };
+    }
+
+    if(type==='tanx'){
+      // Keep away from +/- pi/2 asymptotes so this is a clean finite curve.
+      const n=160;
+      const limit=1.18;
+      const halfW=145*scale;
+      const ampScale=42*scale;
+      for(let i=0;i<=n;i++){
+        const t=-limit + (2*limit*i/n);
+        pts.push({
+          x:cx + (t/limit)*halfW,
+          y:cy - Math.tan(t)*ampScale
+        });
+      }
+      return {
+        kind:'stroke',
+        points:pts,
+        style,
+        source:'menu',
+        shapeName:'tan x',
+        boxAngle:0
+      };
+    }
+
+    if(type==='ex'){
+      // x in [-2.2, 2.0], vertically centered finite exponential segment.
+      const n=170;
+      const xmin=-2.2, xmax=2.0;
+      const halfW=145*scale;
+      const yScale=22*scale;
+      const baseY=cy + 48*scale;
+      for(let i=0;i<=n;i++){
+        const x=xmin+(xmax-xmin)*i/n;
+        const xn=(x-(xmin+xmax)/2)/((xmax-xmin)/2);
+        pts.push({
+          x:cx + xn*halfW,
+          y:baseY - Math.exp(x)*yScale
+        });
+      }
+      return {
+        kind:'stroke',
+        points:pts,
+        style,
+        source:'menu',
+        shapeName:'e^x',
+        boxAngle:0
+      };
+    }
+
+    return null;
+  }
+
   addShapeBtn.onclick=()=>{
     saveState();
     const r=canvas.getBoundingClientRect();
@@ -3431,6 +3649,24 @@
     if(t==='line') objects.push({kind:'line',a:{x:cx-100*insertionScale,y:cy},b:{x:cx+100*insertionScale,y:cy},style,source:'menu'});
     if(t==='rect') objects.push({kind:'rect',center:{x:cx,y:cy},w:180*insertionScale,h:110*insertionScale,angle:0,style,shapeName:'rectangle',source:'menu'});
     if(t==='ellipse') objects.push({kind:'ellipse',center:{x:cx,y:cy},rx:95*insertionScale,ry:60*insertionScale,angle:0,style,shapeName:'ellipse',source:'menu'});
+    if(t==='parabola') {
+      objects.push({
+        kind:'parabola',
+        center:{x:cx,y:cy},
+        w:220*insertionScale,
+        h:150*insertionScale,
+        angle:0,
+        style,
+        shapeName:'parabola',
+        source:'menu'
+      });
+    }
+
+    if(t==='sinx' || t==='tanx' || t==='ex'){
+      const fn=makeFunctionStroke(t,cx,cy,insertionScale,style);
+      if(fn) objects.push(fn);
+    }
+
     if(t==='triangle') {
       // Menu triangle: simple upright isosceles triangle using current polygon schema.
       const base=[
