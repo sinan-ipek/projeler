@@ -4593,27 +4593,29 @@
         boxAngle:0
       };
     }
-    else if(shape==='x3'){
-      const center=screenToWorld(innerWidth/2,innerHeight/2);
-      const pts=[];
-      const halfW=145/viewZoom;
-      const yScale=18/viewZoom;
-      const n=140;
+    if(type==='x3'){
+      // Finite cubic curve y = x³.
+      const n=180;
+      const limit=1.75;
+      const halfW=145*scale;
+      const yScale=22*scale;
+
       for(let i=0;i<=n;i++){
-        const t=-2.15 + (4.30*i/n);
+        const x=-limit + (2*limit*i/n);
         pts.push({
-          x:center.x + (t/2.15)*halfW,
-          y:center.y - (t*t*t)*yScale
+          x:cx + (x/limit)*halfW,
+          y:cy - (x*x*x)*yScale
         });
       }
-      objects.push({
+
+      return {
         kind:'stroke',
         points:pts,
-        style:{...currentStyle()},
+        style,
         source:'menu',
         shapeName:'x³',
         boxAngle:0
-      });
+      };
     }
 
     return null;
@@ -4643,7 +4645,7 @@
       });
     }
 
-    if(t==='sinx' || t==='tanx' || t==='ex'){
+    if(t==='sinx' || t==='tanx' || t==='ex' || t==='x3'){
       const fn=makeFunctionStroke(t,cx,cy,insertionScale,style);
       if(fn) objects.push(fn);
     }
