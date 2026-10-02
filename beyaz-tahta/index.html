@@ -50,6 +50,33 @@
   #width{width:54px}
   #shapeType{max-width:112px}
 
+  #contextMenu{
+    position:absolute;
+    display:none;
+    min-width:154px;
+    padding:6px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,.14);
+    z-index:40;
+  }
+  #contextMenu.open{display:block}
+  #contextMenu button{
+    width:100%;
+    height:36px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    justify-content:flex-start;
+    border:0;
+    background:transparent;
+    padding:0 10px;
+  }
+  #contextMenu button:hover{background:#f3f5f8}
+  #lockMenuIcon{font-size:17px;width:22px;text-align:center}
+  #imageInput{display:none}
+
   .eraserWrap{position:relative;display:inline-flex}
   #eraserMenu{
     position:absolute;top:42px;left:0;
@@ -187,6 +214,15 @@
 
     <button id="addShape" class="iconBtn" title="Ekle" aria-label="Ekle">＋</button>
 
+    <button id="imageBtn" class="iconBtn" title="Fotoğraf ekle" aria-label="Fotoğraf ekle">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3.5" y="4.5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/>
+        <circle cx="9" cy="9.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <path d="m5.5 17 4.2-4.3 3 3 2.1-2.1 3.7 3.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <input id="imageInput" type="file" accept="image/*">
+
     <div class="sep"></div>
 
     <button id="undoBtn" class="iconBtn" title="Geri" aria-label="Geri">↶</button>
@@ -205,6 +241,22 @@
   </div>
   <div id="stageWrap">
     <canvas id="c"></canvas>
+
+    <div id="contextMenu" role="menu" aria-label="Nesne menüsü">
+      <button id="bringFrontBtn" role="menuitem">
+        <span style="font-size:17px;width:22px;text-align:center">⬆</span>
+        <span>Öne getir</span>
+      </button>
+      <button id="sendBackBtn" role="menuitem">
+        <span style="font-size:17px;width:22px;text-align:center">⬇</span>
+        <span>Arkaya gönder</span>
+      </button>
+      <button id="lockToggleBtn" role="menuitem">
+        <span id="lockMenuIcon">🔓</span>
+        <span id="lockMenuText">Kilitle</span>
+      </button>
+    </div>
+
     <div id="hint">
       <b>Seçim modu:</b> “Seç” aracını aç, nesneye tıkla. Nesneyi taşıyabilir,
       köşe tutamaçlarından büyütüp küçültebilir, üstteki yuvarlak tutamaçtan döndürebilir
@@ -225,6 +277,14 @@
   const eraserOptions = Array.from(document.querySelectorAll('.eraserOption'));
   const addShapeBtn = document.getElementById('addShape');
   const shapeType = document.getElementById('shapeType');
+  const imageBtn = document.getElementById('imageBtn');
+  const imageInput = document.getElementById('imageInput');
+  const contextMenu = document.getElementById('contextMenu');
+  const bringFrontBtn = document.getElementById('bringFrontBtn');
+  const sendBackBtn = document.getElementById('sendBackBtn');
+  const lockToggleBtn = document.getElementById('lockToggleBtn');
+  const lockMenuIcon = document.getElementById('lockMenuIcon');
+  const lockMenuText = document.getElementById('lockMenuText');
   const colorBtn = document.getElementById('colorBtn');
   const colorMenu = document.getElementById('colorMenu');
   const colorOptions = Array.from(document.querySelectorAll('.colorOption'));
@@ -249,6 +309,10 @@
   let panPointerId = null;
   let panStartScreen = null;
   let panStartView = null;
+
+  let rightPress = null;
+  let contextTargetIndices = [];
+  const imageCache = new Map();
 
   let drawing = false;
   let points = [];
@@ -524,8 +588,99 @@
     }
   }
 
+  function getCachedImage(src){
+    if(!src) return null;
+    let img=imageCache.get(src);
+    if(img) return img;
+
+    img=new Image();
+    img.onload=()=>redraw();
+    img.onerror=()=>redraw();
+    img.src=src;
+    imageCache.set(src,img);
+    return img;
+  }
+
+  function drawImageObject(o){
+    if(!o || !o.src || !o.center) return;
+    const img=getCachedImage(o.src);
+
+    ctx.save();
+    ctx.translate(o.center.x,o.center.y);
+    ctx.rotate(o.angle||0);
+
+    if(img && img.complete && img.naturalWidth){
+      ctx.drawImage(img,-o.w/2,-o.h/2,o.w,o.h);
+    }else{
+      ctx.fillStyle='#f3f4f6';
+      ctx.strokeStyle='#9ca3af';
+      ctx.lineWidth=1/viewZoom;
+      ctx.fillRect(-o.w/2,-o.h/2,o.w,o.h);
+      ctx.strokeRect(-o.w/2,-o.h/2,o.w,o.h);
+    }
+    ctx.restore();
+  }
+
+  function addImageDataURL(src,naturalW,naturalH){
+    if(!src) return;
+
+    const r=canvas.getBoundingClientRect();
+    const c=screenToWorld({x:r.width/2,y:r.height/2});
+
+    const nw=Math.max(1,naturalW||800);
+    const nh=Math.max(1,naturalH||600);
+    const fit=Math.min(1,420/nw,320/nh);
+    const screenW=nw*fit;
+    const screenH=nh*fit;
+
+    saveState();
+    const index=objects.length;
+    objects.push({
+      kind:'image',
+      center:{x:c.x,y:c.y},
+      w:screenW/viewZoom,
+      h:screenH/viewZoom,
+      angle:0,
+      src,
+      locked:false,
+      source:'image'
+    });
+
+    mode='select';
+    inkBtn.classList.remove('active');
+    eraserBtn.classList.remove('active');
+    selectBtn.classList.add('active');
+    setSelection([index]);
+    restoreToolCursor();
+    redraw();
+    statusEl.textContent='Fotoğraf eklendi';
+  }
+
+  function loadImageFile(file){
+    if(!file || !file.type || !file.type.startsWith('image/')) return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const src=String(reader.result||'');
+      const img=new Image();
+      img.onload=()=>addImageDataURL(src,img.naturalWidth,img.naturalHeight);
+      img.src=src;
+    };
+    reader.readAsDataURL(file);
+  }
+
   function objectBounds(o){
     if(!o) return null;
+
+    if(o.kind==='image'){
+      const hw=o.w/2,hh=o.h/2,a=o.angle||0;
+      const pts=[
+        {x:o.center.x-hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y+hh},
+        {x:o.center.x-hw,y:o.center.y+hh}
+      ].map(p=>rotatePoint(p,o.center,a));
+      return bbox(pts);
+    }
 
     if(o.kind==='line'){
       const minX=Math.min(o.a.x,o.b.x), maxX=Math.max(o.a.x,o.b.x);
@@ -672,7 +827,7 @@
 
   function objectRotation(o){
     if(!o) return 0;
-    if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes') return o.angle||0;
+    if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image') return o.angle||0;
     if(o.kind==='line'){
       return Math.atan2(o.b.y-o.a.y,o.b.x-o.a.x);
     }
@@ -684,7 +839,7 @@
     const angle=objectRotation(o);
 
     // For rotated geometric objects, derive dimensions in local coordinates.
-    if((o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes') && o.center){
+    if((o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image') && o.center){
       const c=o.center;
       let localPts=[];
 
@@ -716,7 +871,7 @@
           {x:o.w/2,y:-o.h/2},
           {x:0,y:o.h/2}
         ];
-      }else if(o.kind==='axes'){
+      }else if(o.kind==='axes' || o.kind==='image'){
         localPts=[
           {x:-o.w/2,y:-o.h/2},
           {x:o.w/2,y:-o.h/2},
@@ -840,6 +995,7 @@
   function normalizeSelection(){
     selectedIndices = selectedIndices
       .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length)
+      .filter(i=>objects[i] && !objects[i].locked)
       .filter((v,i,a)=>a.indexOf(v)===i);
 
     if(selectedIndices.length===1){
@@ -879,6 +1035,16 @@
 
     if(o.kind==='stroke') return (o.points||[]).map(p=>({x:p.x,y:p.y}));
     if(o.kind==='line') return [{...o.a},{...o.b}];
+
+    if(o.kind==='image'){
+      const hw=o.w/2,hh=o.h/2,a=o.angle||0;
+      return [
+        {x:o.center.x-hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y+hh},
+        {x:o.center.x-hw,y:o.center.y+hh}
+      ].map(p=>rotatePoint(p,o.center,a));
+    }
 
     if(o.kind==='rect'){
       const hw=o.w/2,hh=o.h/2,a=o.angle||0;
@@ -975,7 +1141,7 @@
       return;
     }
 
-    if(o.kind==='rect' || o.kind==='ellipse' || o.kind==='parabola' || o.kind==='axes'){
+    if(o.kind==='rect' || o.kind==='ellipse' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image'){
       o.center=rotatePoint(o.center,c,delta);
       o.angle=(o.angle||0)+delta;
     }
@@ -1020,6 +1186,13 @@
     }
 
     if(o.kind==='parabola'){
+      o.center=scalePt(o.center);
+      o.w=Math.max(24,o.w*s);
+      o.h=Math.max(24,o.h*s);
+      return;
+    }
+
+    if(o.kind==='image'){
       o.center=scalePt(o.center);
       o.w=Math.max(24,o.w*s);
       o.h=Math.max(24,o.h*s);
@@ -1301,6 +1474,15 @@
 
   function hitTestObject(p){
     for(let i=objects.length-1;i>=0;i--){
+      if(objects[i] && objects[i].locked) continue;
+      const b=objectBounds(objects[i]);
+      if(b && pointInBounds(p,b,6/viewZoom)) return i;
+    }
+    return -1;
+  }
+
+  function hitTestObjectAny(p){
+    for(let i=objects.length-1;i>=0;i--){
       const b=objectBounds(objects[i]);
       if(b && pointInBounds(p,b,6/viewZoom)) return i;
     }
@@ -1310,7 +1492,7 @@
   function translateObject(o,dx,dy){
     if(o.kind==='line'){
       o.a.x+=dx;o.a.y+=dy;o.b.x+=dx;o.b.y+=dy;
-    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes'){
+    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image'){
       o.center.x+=dx;o.center.y+=dy;
       if(o.kind==='polygon' && o.baseVertices){
         o.baseVertices=o.baseVertices.map(p=>({x:p.x+dx,y:p.y+dy}));
@@ -1326,7 +1508,7 @@
       o.a=rotatePoint(o.a,c,delta);
       o.b=rotatePoint(o.b,c,delta);
 
-    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes'){
+    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image'){
       // Circle rotation is intentionally ignored.
       if(o.kind==='ellipse' && o.shapeName==='circle') return;
       o.angle=(o.angle||0)+delta;
@@ -1577,6 +1759,14 @@
       return true;
     }
 
+    if(snap.kind==='image'){
+      o.center=newCenter;
+      o.w=Math.max(24,snap.w*sx);
+      o.h=Math.max(24,snap.h*sy);
+      o.angle=snap.angle||0;
+      return true;
+    }
+
     if(snap.kind==='axes'){
       o.center=newCenter;
       o.w=Math.max(24,snap.w*sx);
@@ -1681,6 +1871,11 @@
           y:newCy+(v.y-c.y)*sy
         }));
       }
+    }else if(o.kind==='image'){
+      o.center={x:newCx,y:newCy};
+      o.w=Math.max(24,snap.w*sx);
+      o.h=Math.max(24,snap.h*sy);
+      o.angle=snap.angle||0;
     }else if(o.kind==='stroke'){
       const c={x:startB.cx,y:startB.cy};
       o.points=snap.points.map(v=>({
@@ -1702,6 +1897,7 @@
 
     for(const o of objects){
       if(o.kind==='stroke') drawSmoothStroke(o.points,o.style);
+      else if(o.kind==='image') drawImageObject(o);
       else drawShape(o);
     }
     if(drawing && points.length){
@@ -2950,19 +3146,149 @@
     return changed;
   }
 
+  function closeContextMenu(){
+    contextMenu.classList.remove('open');
+  }
+
+  function updateContextMenuState(){
+    const targets=contextTargetIndices
+      .map(i=>objects[i])
+      .filter(Boolean);
+    if(!targets.length){
+      closeContextMenu();
+      return;
+    }
+
+    const allLocked=targets.every(o=>!!o.locked);
+    lockMenuIcon.textContent=allLocked ? '🔒' : '🔓';
+    lockMenuText.textContent=allLocked ? 'Kilidi aç' : 'Kilitle';
+  }
+
+  function openContextMenu(screenP,indices){
+    contextTargetIndices=(indices||[])
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length);
+
+    if(!contextTargetIndices.length) return;
+
+    updateContextMenuState();
+
+    const menuW=170, menuH=122;
+    const r=wrap.getBoundingClientRect();
+    const x=Math.max(6,Math.min(screenP.x,r.width-menuW-6));
+    const y=Math.max(6,Math.min(screenP.y,r.height-menuH-6));
+    contextMenu.style.left=x+'px';
+    contextMenu.style.top=y+'px';
+    contextMenu.classList.add('open');
+  }
+
+  function reorderContextTargets(toFront){
+    const valid=[...new Set(contextTargetIndices)]
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length)
+      .sort((a,b)=>a-b);
+
+    if(!valid.length){
+      closeContextMenu();
+      return;
+    }
+
+    saveState();
+
+    const chosenSet=new Set(valid);
+    const chosen=valid.map(i=>objects[i]);
+    const remaining=objects.filter((_,i)=>!chosenSet.has(i));
+
+    if(toFront){
+      objects=remaining.concat(chosen);
+      contextTargetIndices=chosen.map((_,k)=>remaining.length+k);
+    }else{
+      objects=chosen.concat(remaining);
+      contextTargetIndices=chosen.map((_,k)=>k);
+    }
+
+    const selectable=contextTargetIndices.filter(i=>objects[i] && !objects[i].locked);
+    setSelection(selectable);
+
+    redraw();
+    statusEl.textContent=toFront
+      ? (chosen.length>1 ? `${chosen.length} nesne öne getirildi` : 'Nesne öne getirildi')
+      : (chosen.length>1 ? `${chosen.length} nesne arkaya gönderildi` : 'Nesne arkaya gönderildi');
+
+    closeContextMenu();
+  }
+
+  bringFrontBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    reorderContextTargets(true);
+  });
+
+  sendBackBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    reorderContextTargets(false);
+  });
+
+  lockToggleBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    const valid=contextTargetIndices
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length);
+    if(!valid.length){
+      closeContextMenu();
+      return;
+    }
+
+    const allLocked=valid.every(i=>objects[i] && objects[i].locked);
+    const newLocked=!allLocked;
+
+    saveState();
+    for(const i of valid){
+      if(objects[i]) objects[i].locked=newLocked;
+    }
+
+    if(newLocked){
+      setSelection([]);
+      statusEl.textContent=valid.length>1
+        ? `${valid.length} nesne kilitlendi`
+        : 'Nesne kilitlendi';
+    }else{
+      setSelection(valid);
+      statusEl.textContent=valid.length>1
+        ? `${valid.length} nesnenin kilidi açıldı`
+        : 'Nesnenin kilidi açıldı';
+    }
+
+    updateContextMenuState();
+    redraw();
+  });
+
+  document.addEventListener('pointerdown',e=>{
+    if(!contextMenu.contains(e.target) && e.target!==canvas){
+      closeContextMenu();
+    }
+  });
+
   canvas.addEventListener('pointerdown',e=>{
     const screenP=screenPointFromEvent(e);
     const p=pFromEvent(e);
 
-    // Right mouse button = temporary pan in every tool mode.
+    // Left-clicking empty canvas closes the object context menu.
+    if(e.button===0 && contextMenu.classList.contains('open')){
+      const hitForMenuClose=hitTestObjectAny(p);
+      if(hitForMenuClose<0){
+        closeContextMenu();
+      }
+    }
+
+    // Right button: click = context menu, drag = pan.
     if(e.button===2){
       e.preventDefault();
-      isPanning=true;
-      panPointerId=e.pointerId;
-      panStartScreen=screenP;
-      panStartView={x:viewX,y:viewY};
+      closeContextMenu();
+      rightPress={
+        pointerId:e.pointerId,
+        startScreen:{...screenP},
+        startView:{x:viewX,y:viewY},
+        hit:hitTestObjectAny(p),
+        dragged:false
+      };
       canvas.setPointerCapture(e.pointerId);
-      canvas.style.cursor='grabbing';
       return;
     }
 
@@ -3108,6 +3434,26 @@
     const screenP=screenPointFromEvent(e);
     const p=pFromEvent(e);
 
+    if(rightPress && e.pointerId===rightPress.pointerId){
+      const dx=screenP.x-rightPress.startScreen.x;
+      const dy=screenP.y-rightPress.startScreen.y;
+      if(!rightPress.dragged && Math.hypot(dx,dy)>4){
+        rightPress.dragged=true;
+        isPanning=true;
+        panPointerId=e.pointerId;
+        panStartScreen=rightPress.startScreen;
+        panStartView=rightPress.startView;
+        canvas.style.cursor='grabbing';
+      }
+
+      if(rightPress.dragged){
+        viewX=rightPress.startView.x+dx;
+        viewY=rightPress.startView.y+dy;
+        redraw();
+      }
+      return;
+    }
+
     if(isPanning && e.pointerId===panPointerId){
       viewX=panStartView.x+(screenP.x-panStartScreen.x);
       viewY=panStartView.y+(screenP.y-panStartScreen.y);
@@ -3219,6 +3565,11 @@
             o.ry=Math.max(6,o.ry*sy);
 
           }else if(o.kind==='parabola'){
+            o.center=scalePointLocal(o.center);
+            o.w=Math.max(24,o.w*sx);
+            o.h=Math.max(24,o.h*sy);
+
+          }else if(o.kind==='image'){
             o.center=scalePointLocal(o.center);
             o.w=Math.max(24,o.w*sx);
             o.h=Math.max(24,o.h*sy);
@@ -3371,6 +3722,56 @@
   });
 
   function finishPointer(e){
+    if(rightPress && e.pointerId===rightPress.pointerId){
+      const rp=rightPress;
+      rightPress=null;
+
+      if(e.type==='pointercancel'){
+        isPanning=false;
+        panPointerId=null;
+        panStartScreen=null;
+        panStartView=null;
+        closeContextMenu();
+        restoreToolCursor();
+        redraw();
+        return;
+      }
+
+      if(rp.dragged){
+        isPanning=false;
+        panPointerId=null;
+        panStartScreen=null;
+        panStartView=null;
+        restoreToolCursor();
+        redraw();
+        return;
+      }
+
+      const hit=rp.hit;
+      if(hit>=0 && objects[hit]){
+        let targets=[];
+        if(objects[hit].locked){
+          targets=[hit];
+        }else if(selectedIndices.includes(hit) && selectedIndices.length){
+          targets=selectedIndices.slice();
+        }else{
+          mode='select';
+          selectBtn.classList.add('active');
+          inkBtn.classList.remove('active');
+          eraserBtn.classList.remove('active');
+          eraserCursor=null;
+          setSelection([hit]);
+          targets=[hit];
+          redraw();
+        }
+        openContextMenu(rp.startScreen,targets);
+      }else{
+        closeContextMenu();
+      }
+      restoreToolCursor();
+      return;
+    }
+
     if(isPanning && e.pointerId===panPointerId){
       isPanning=false;
       panPointerId=null;
@@ -3398,6 +3799,7 @@
         if(r && r.w>3 && r.h>3){
           const hits=[];
           for(let i=0;i<objects.length;i++){
+            if(objects[i] && objects[i].locked) continue;
             const b=objectBounds(objects[i]);
             if(boundsInsideRect(b,r)) hits.push(i);
           }
@@ -3479,6 +3881,51 @@
   },{passive:false});
 
 
+  imageBtn.onclick=()=>{
+    closeContextMenu();
+    imageInput.value='';
+    imageInput.click();
+  };
+
+  imageInput.addEventListener('change',()=>{
+    const file=imageInput.files && imageInput.files[0];
+    if(file) loadImageFile(file);
+  });
+
+  window.addEventListener('paste',e=>{
+    const items=Array.from((e.clipboardData && e.clipboardData.items) || []);
+    const imageItem=items.find(item=>item.kind==='file' && item.type && item.type.startsWith('image/'));
+
+    if(imageItem){
+      const file=imageItem.getAsFile();
+      if(file){
+        e.preventDefault();
+        loadImageFile(file);
+        return;
+      }
+    }
+
+    if(mode==='select' && internalClipboard.length){
+      e.preventDefault();
+      saveState();
+
+      const start=objects.length;
+      for(const original of internalClipboard){
+        const copy=cloneObject(original);
+        copy.locked=false;
+        translateObject(copy,pasteOffsetStep,pasteOffsetStep);
+        objects.push(copy);
+      }
+
+      setSelection(
+        Array.from({length:internalClipboard.length},(_,k)=>start+k)
+      );
+
+      redraw();
+      statusEl.textContent=`${internalClipboard.length} nesne yapıştırıldı`;
+    }
+  });
+
   colorBtn.onclick=(e)=>{
     e.stopPropagation();
     eraserMenu.classList.remove('open');
@@ -3496,6 +3943,7 @@
   });
 
   inkBtn.onclick=()=>{
+    closeContextMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
     mode='ink';
@@ -3509,6 +3957,7 @@
   };
 
   selectBtn.onclick=()=>{
+    closeContextMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
     mode='select';
@@ -3801,26 +4250,6 @@
         .filter(Boolean)
         .map(cloneObject);
       statusEl.textContent=`${internalClipboard.length} nesne kopyalandı`;
-      return;
-    }
-
-    if(mode==='select' && cmd && e.key.toLowerCase()==='v' && internalClipboard.length){
-      e.preventDefault();
-      saveState();
-
-      const start=objects.length;
-      for(const original of internalClipboard){
-        const copy=cloneObject(original);
-        translateObject(copy,pasteOffsetStep,pasteOffsetStep);
-        objects.push(copy);
-      }
-
-      setSelection(
-        Array.from({length:internalClipboard.length},(_,k)=>start+k)
-      );
-
-      redraw();
-      statusEl.textContent=`${internalClipboard.length} nesne yapıştırıldı`;
       return;
     }
 
