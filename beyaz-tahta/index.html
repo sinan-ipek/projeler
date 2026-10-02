@@ -101,6 +101,44 @@
   .dashCircle.medium{width:18px;height:18px}
   .dashCircle.large{width:30px;height:30px}
 
+  .fillWrap{position:relative;display:inline-flex}
+  #fillBtn{
+    width:38px;height:36px;padding:0;
+    display:inline-flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  #fillBtn svg{width:22px;height:22px;display:block}
+  #fillSwatch{
+    position:absolute;
+    right:5px;
+    bottom:4px;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    border:1px solid #667085;
+    background:#facc15;
+  }
+  #fillMenu{
+    position:absolute;top:42px;left:0;
+    display:none;
+    grid-template-columns:repeat(3,34px);
+    gap:7px;
+    padding:8px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:0 8px 24px rgba(0,0,0,.12);
+    z-index:25;
+  }
+  #fillMenu.open{display:grid}
+  .fillColorOption{
+    width:34px;height:34px;padding:0;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:9px;
+  }
+  .fillColorOption .colorSwatch{width:22px;height:22px}
+  .fillColorOption.active{background:#eaf1ff;border-color:#9db7ff}
+
   .colorWrap{position:relative;display:inline-flex}
   #colorBtn{
     width:38px;height:36px;padding:0;
@@ -163,6 +201,31 @@
         <button class="eraserOption" data-eraser-kind="point" data-radius="26" title="Büyük noktasal silgi" aria-label="Büyük noktasal silgi">
           <span class="dashCircle large" aria-hidden="true"></span>
         </button>
+      </div>
+    </div>
+
+    <div class="fillWrap">
+      <button id="fillBtn" class="iconBtn" title="Nesne içini doldur" aria-label="Nesne içini doldur">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m7.2 4.5 8.8 8.8-5.8 5.8a2.2 2.2 0 0 1-3.1 0l-3.2-3.2a2.2 2.2 0 0 1 0-3.1l5.8-5.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="m5.8 11.2 7 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M17.5 16.5c0 1.7 1.2 3 2.6 3s2.4-1.1 2.4-2.5c0-1.5-2.4-4.2-2.4-4.2s-2.6 2.5-2.6 3.7Z" transform="translate(-1.6 -1.3) scale(.85)" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+        <span id="fillSwatch" aria-hidden="true"></span>
+      </button>
+      <div id="fillMenu" role="menu" aria-label="Dolgu renkleri">
+        <button class="fillColorOption" data-fill-color="#111111" title="Siyah"><span class="colorSwatch" style="background:#111111"></span></button>
+        <button class="fillColorOption" data-fill-color="#7e22ce" title="Mor"><span class="colorSwatch" style="background:#7e22ce"></span></button>
+        <button class="fillColorOption" data-fill-color="#172554" title="Lacivert"><span class="colorSwatch" style="background:#172554"></span></button>
+        <button class="fillColorOption" data-fill-color="#2563eb" title="Mavi"><span class="colorSwatch" style="background:#2563eb"></span></button>
+        <button class="fillColorOption" data-fill-color="#16a34a" title="Yeşil"><span class="colorSwatch" style="background:#16a34a"></span></button>
+        <button class="fillColorOption active" data-fill-color="#facc15" title="Sarı"><span class="colorSwatch" style="background:#facc15"></span></button>
+        <button class="fillColorOption" data-fill-color="#f97316" title="Turuncu"><span class="colorSwatch" style="background:#f97316"></span></button>
+        <button class="fillColorOption" data-fill-color="#dc2626" title="Kırmızı"><span class="colorSwatch" style="background:#dc2626"></span></button>
+        <button class="fillColorOption" data-fill-color="#ffffff" title="Beyaz"><span class="colorSwatch" style="background:#ffffff;border-color:#667085"></span></button>
+        <button class="fillColorOption" data-fill-color="#d1d5db" title="Açık gri"><span class="colorSwatch" style="background:#d1d5db"></span></button>
+        <button class="fillColorOption" data-fill-color="#6b7280" title="Orta gri"><span class="colorSwatch" style="background:#6b7280"></span></button>
+        <button class="fillColorOption" data-fill-color="#8b5e3c" title="Kahverengi"><span class="colorSwatch" style="background:#8b5e3c"></span></button>
       </div>
     </div>
 
@@ -275,6 +338,10 @@
   const eraserBtn = document.getElementById('eraserBtn');
   const eraserMenu = document.getElementById('eraserMenu');
   const eraserOptions = Array.from(document.querySelectorAll('.eraserOption'));
+  const fillBtn = document.getElementById('fillBtn');
+  const fillMenu = document.getElementById('fillMenu');
+  const fillSwatch = document.getElementById('fillSwatch');
+  const fillColorOptions = Array.from(document.querySelectorAll('.fillColorOption'));
   const addShapeBtn = document.getElementById('addShape');
   const shapeType = document.getElementById('shapeType');
   const imageBtn = document.getElementById('imageBtn');
@@ -290,6 +357,9 @@
   const colorOptions = Array.from(document.querySelectorAll('.colorOption'));
   const currentColorSwatch = document.getElementById('currentColorSwatch');
   let currentColor = '#111111';
+  let currentFillColor = '#facc15';
+  let fillPressTimer = null;
+  let fillLongPressTriggered = false;
   const widthEl = document.getElementById('width');
   const statusEl = document.getElementById('status');
   const undoBtn = document.getElementById('undoBtn');
@@ -337,6 +407,7 @@
   let selectSnapshot = null;
   let groupSnapshots = null;
   let groupBoxSnapshot = null;
+  let groupSelectionAngle = 0;
   let activeHandle = null;
 
   let marqueeStart = null;
@@ -570,6 +641,13 @@
         return;
       }
 
+      if(!ghost && o.fillColor && (o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon')){
+        ctx.save();
+        ctx.fillStyle=o.fillColor;
+        ctx.fill();
+        ctx.restore();
+      }
+
       ctx.stroke();
 
       if(o.kind==='axes'){
@@ -643,10 +721,13 @@
       angle:0,
       src,
       locked:false,
-      source:'image'
+      source:'image',
+      boxAngle:0
     });
 
     mode='select';
+    fillBtn.classList.remove('active');
+    closeFillMenu();
     inkBtn.classList.remove('active');
     eraserBtn.classList.remove('active');
     selectBtn.classList.add('active');
@@ -834,128 +915,117 @@
     return 0;
   }
 
-  function orientedSelectionBox(o){
-    if(!o) return null;
-    const angle=objectRotation(o);
+  function selectionSamplePoints(o){
+    if(!o) return [];
 
-    // For rotated geometric objects, derive dimensions in local coordinates.
-    if((o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image') && o.center){
-      const c=o.center;
-      let localPts=[];
-
-      if(o.kind==='rect'){
-        localPts=[
-          {x:-o.w/2,y:-o.h/2},
-          {x:o.w/2,y:-o.h/2},
-          {x:o.w/2,y:o.h/2},
-          {x:-o.w/2,y:o.h/2}
-        ];
-      }else if(o.kind==='ellipse'){
-        // selection box follows ellipse's own axes
-        localPts=[
-          {x:-o.rx,y:-o.ry},
-          {x:o.rx,y:-o.ry},
-          {x:o.rx,y:o.ry},
-          {x:-o.rx,y:o.ry}
-        ];
-      }else if(o.kind==='polygon'){
-        const verts=polygonWorldVertices(o);
-        const cs=Math.cos(-angle),sn=Math.sin(-angle);
-        localPts=verts.map(p=>{
-          const dx=p.x-c.x,dy=p.y-c.y;
-          return {x:dx*cs-dy*sn,y:dx*sn+dy*cs};
-        });
-      }else if(o.kind==='parabola'){
-        localPts=[
-          {x:-o.w/2,y:-o.h/2},
-          {x:o.w/2,y:-o.h/2},
-          {x:0,y:o.h/2}
-        ];
-      }else if(o.kind==='axes' || o.kind==='image'){
-        localPts=[
-          {x:-o.w/2,y:-o.h/2},
-          {x:o.w/2,y:-o.h/2},
-          {x:o.w/2,y:o.h/2},
-          {x:-o.w/2,y:o.h/2}
-        ];
-      }
-
-      let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
-      for(const p of localPts){
-        minX=Math.min(minX,p.x); minY=Math.min(minY,p.y);
-        maxX=Math.max(maxX,p.x); maxY=Math.max(maxY,p.y);
-      }
-
-      return {
-        center:{x:c.x,y:c.y},
-        angle,
-        minX,minY,maxX,maxY,
-        w:maxX-minX,
-        h:maxY-minY
-      };
-    }
-
-    // Lines: local x axis follows the line itself.
     if(o.kind==='line'){
-      const c={x:(o.a.x+o.b.x)/2,y:(o.a.y+o.b.y)/2};
-      const len=dist(o.a,o.b);
-      return {
-        center:c,angle,
-        minX:-len/2,maxX:len/2,
-        minY:-8,maxY:8,
-        w:len,h:16
-      };
+      return [{...o.a},{...o.b}];
     }
 
-    // Stroke/function curves:
-    // Their FIRST selection box is always horizontal/vertical.
-    // Only an explicit user rotation changes the box angle afterwards.
-    if(o.kind==='stroke' && Array.isArray(o.points) && o.points.length>=2){
-      const angle=Number.isFinite(o.boxAngle) ? o.boxAngle : 0;
+    if(o.kind==='stroke'){
+      return (o.points||[]).map(p=>({x:p.x,y:p.y}));
+    }
 
-      // Start from a stable world-space center.
-      const wb=bbox(o.points);
-      const c0={x:wb.cx,y:wb.cy};
-      const cs=Math.cos(-angle), sn=Math.sin(-angle);
+    if(o.kind==='image'){
+      const hw=o.w/2,hh=o.h/2,a=o.angle||0;
+      return [
+        {x:o.center.x-hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y+hh},
+        {x:o.center.x-hw,y:o.center.y+hh}
+      ].map(p=>rotatePoint(p,o.center,a));
+    }
 
-      let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
-      for(const p of o.points){
-        const dx=p.x-c0.x, dy=p.y-c0.y;
-        const x=dx*cs-dy*sn;
-        const y=dx*sn+dy*cs;
-        minX=Math.min(minX,x); maxX=Math.max(maxX,x);
-        minY=Math.min(minY,y); maxY=Math.max(maxY,y);
+    if(o.kind==='rect'){
+      return rectWorldVertices(o);
+    }
+
+    if(o.kind==='polygon'){
+      return polygonWorldVertices(o);
+    }
+
+    if(o.kind==='ellipse'){
+      const pts=[],a=o.angle||0;
+      for(let i=0;i<32;i++){
+        const t=i*Math.PI*2/32;
+        const q={x:o.center.x+Math.cos(t)*o.rx,y:o.center.y+Math.sin(t)*o.ry};
+        pts.push(rotatePoint(q,o.center,a));
       }
+      return pts;
+    }
 
-      // Recenter the oriented box so its local extents are symmetric.
-      const offX=(minX+maxX)/2;
-      const offY=(minY+maxY)/2;
-      const csa=Math.cos(angle), sna=Math.sin(angle);
-      const center={
-        x:c0.x + offX*csa - offY*sna,
-        y:c0.y + offX*sna + offY*csa
-      };
+    if(o.kind==='parabola'){
+      const pts=[],a=o.angle||0;
+      for(let i=0;i<=48;i++){
+        const u=-1+2*i/48;
+        const q={
+          x:o.center.x+u*(o.w/2),
+          y:o.center.y+o.h/2-(u*u)*o.h
+        };
+        pts.push(rotatePoint(q,o.center,a));
+      }
+      return pts;
+    }
 
-      const w=Math.max(1,maxX-minX);
-      const h=Math.max(1,maxY-minY);
-
-      return {
-        center,
-        angle,
-        minX:-w/2,maxX:w/2,
-        minY:-h/2,maxY:h/2,
-        w,h
-      };
+    if(o.kind==='axes'){
+      const hw=o.w/2,hh=o.h/2,a=o.angle||0;
+      return [
+        {x:o.center.x-hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y+hh},
+        {x:o.center.x-hw,y:o.center.y+hh}
+      ].map(p=>rotatePoint(p,o.center,a));
     }
 
     const b=objectBounds(o);
-    if(!b) return null;
+    return b ? [
+      {x:b.x,y:b.y},
+      {x:b.x+b.w,y:b.y},
+      {x:b.x+b.w,y:b.y+b.h},
+      {x:b.x,y:b.y+b.h}
+    ] : [];
+  }
+
+  function orientedSelectionBox(o){
+    if(!o) return null;
+
+    // New objects start with boxAngle = 0, so their first bounding box is
+    // horizontal/vertical. Explicit rotation increments boxAngle, so the box
+    // then rotates together with the object.
+    const angle=Number.isFinite(o.boxAngle) ? o.boxAngle : 0;
+    const pts=selectionSamplePoints(o);
+    if(!pts.length) return null;
+
+    const worldB=bbox(pts);
+    const c0={x:worldB.cx,y:worldB.cy};
+    const cs=Math.cos(-angle), sn=Math.sin(-angle);
+
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    for(const p of pts){
+      const dx=p.x-c0.x,dy=p.y-c0.y;
+      const x=dx*cs-dy*sn;
+      const y=dx*sn+dy*cs;
+      minX=Math.min(minX,x); maxX=Math.max(maxX,x);
+      minY=Math.min(minY,y); maxY=Math.max(maxY,y);
+    }
+
+    const offX=(minX+maxX)/2;
+    const offY=(minY+maxY)/2;
+    const ca=Math.cos(angle),sa=Math.sin(angle);
+    const center={
+      x:c0.x+offX*ca-offY*sa,
+      y:c0.y+offX*sa+offY*ca
+    };
+
+    const w=Math.max(1,maxX-minX);
+    const h=Math.max(1,maxY-minY);
+
     return {
-      center:{x:b.cx,y:b.cy},
-      angle:0,
-      minX:-b.w/2,maxX:b.w/2,
-      minY:-b.h/2,maxY:b.h/2,
-      w:b.w,h:b.h
+      center,
+      angle,
+      minX:-w/2,maxX:w/2,
+      minY:-h/2,maxY:h/2,
+      w,h
     };
   }
 
@@ -1009,6 +1079,7 @@
 
   function setSelection(indices){
     selectedIndices=(indices||[]).slice();
+    groupSelectionAngle=0;
     normalizeSelection();
   }
 
@@ -1090,20 +1161,37 @@
   function groupOrientedBox(indices=selectedIndices){
     const pts=[];
     for(const i of indices){
-      if(objects[i]) pts.push(...objectSamplePointsForGroup(objects[i]));
+      if(objects[i]) pts.push(...selectionSamplePoints(objects[i]));
     }
-    if(pts.length<2) return null;
+    if(!pts.length) return null;
 
-    const f=principalFrame(pts);
+    const angle=Number.isFinite(groupSelectionAngle) ? groupSelectionAngle : 0;
+    const wb=bbox(pts);
+    const c0={x:wb.cx,y:wb.cy};
+    const cs=Math.cos(-angle),sn=Math.sin(-angle);
+
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    for(const p of pts){
+      const dx=p.x-c0.x,dy=p.y-c0.y;
+      const x=dx*cs-dy*sn;
+      const y=dx*sn+dy*cs;
+      minX=Math.min(minX,x); maxX=Math.max(maxX,x);
+      minY=Math.min(minY,y); maxY=Math.max(maxY,y);
+    }
+
+    const offX=(minX+maxX)/2,offY=(minY+maxY)/2;
+    const ca=Math.cos(angle),sa=Math.sin(angle);
+    const center={
+      x:c0.x+offX*ca-offY*sa,
+      y:c0.y+offX*sa+offY*ca
+    };
+
+    const w=Math.max(1,maxX-minX),h=Math.max(1,maxY-minY);
     return {
-      center:{x:f.center.x,y:f.center.y},
-      angle:f.angle,
-      minX:-Math.max(1,f.w)/2,
-      maxX: Math.max(1,f.w)/2,
-      minY:-Math.max(1,f.h)/2,
-      maxY: Math.max(1,f.h)/2,
-      w:Math.max(1,f.w),
-      h:Math.max(1,f.h)
+      center,angle,
+      minX:-w/2,maxX:w/2,
+      minY:-h/2,maxY:h/2,
+      w,h
     };
   }
 
@@ -1124,6 +1212,7 @@
     if(o.kind==='line'){
       o.a=rotatePoint(o.a,c,delta);
       o.b=rotatePoint(o.b,c,delta);
+      o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
       return;
     }
 
@@ -1138,12 +1227,14 @@
       if(o.baseVertices){
         o.baseVertices=o.baseVertices.map(p=>rotatePoint(p,c,delta));
       }
+      o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
       return;
     }
 
     if(o.kind==='rect' || o.kind==='ellipse' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image'){
       o.center=rotatePoint(o.center,c,delta);
       o.angle=(o.angle||0)+delta;
+      o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
     }
   }
 
@@ -1264,7 +1355,8 @@
     ctx.fillStyle='rgba(37,99,235,.08)';
     ctx.strokeStyle='#2563eb';
     ctx.lineWidth=1.25/viewZoom;
-    ctx.setLineDash([5/viewZoom,4/viewZoom]);    ctx.fillRect(r.x,r.y,r.w,r.h);
+    ctx.setLineDash([5/viewZoom,4/viewZoom]);
+    ctx.fillRect(r.x,r.y,r.w,r.h);
     ctx.strokeRect(r.x,r.y,r.w,r.h);
     ctx.restore();
   }
@@ -1472,6 +1564,59 @@
     return null;
   }
 
+  function pointInPolygon(pt,verts){
+    let inside=false;
+    for(let i=0,j=verts.length-1;i<verts.length;j=i++){
+      const xi=verts[i].x, yi=verts[i].y;
+      const xj=verts[j].x, yj=verts[j].y;
+      const intersect=((yi>pt.y)!=(yj>pt.y)) &&
+        (pt.x < (xj-xi)*(pt.y-yi)/((yj-yi)||1e-9)+xi);
+      if(intersect) inside=!inside;
+    }
+    return inside;
+  }
+
+  function isFillableObject(o){
+    return !!o && !o.locked &&
+      (o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon');
+  }
+
+  function pointInsideFillableObject(o,p){
+    if(!isFillableObject(o)) return false;
+
+    if(o.kind==='rect'){
+      const a=-(o.angle||0), cs=Math.cos(a), sn=Math.sin(a);
+      const dx=p.x-o.center.x,dy=p.y-o.center.y;
+      const x=dx*cs-dy*sn;
+      const y=dx*sn+dy*cs;
+      return Math.abs(x)<=o.w/2 && Math.abs(y)<=o.h/2;
+    }
+
+    if(o.kind==='ellipse'){
+      const a=-(o.angle||0), cs=Math.cos(a), sn=Math.sin(a);
+      const dx=p.x-o.center.x,dy=p.y-o.center.y;
+      const x=dx*cs-dy*sn;
+      const y=dx*sn+dy*cs;
+      const rx=Math.max(1,o.rx),ry=Math.max(1,o.ry);
+      return (x*x)/(rx*rx)+(y*y)/(ry*ry)<=1;
+    }
+
+    if(o.kind==='polygon'){
+      const verts=polygonWorldVertices(o);
+      return verts.length>=3 && pointInPolygon(p,verts);
+    }
+
+    return false;
+  }
+
+  function hitFillableObject(p){
+    for(let i=objects.length-1;i>=0;i--){
+      const o=objects[i];
+      if(pointInsideFillableObject(o,p)) return i;
+    }
+    return -1;
+  }
+
   function hitTestObject(p){
     for(let i=objects.length-1;i>=0;i--){
       if(objects[i] && objects[i].locked) continue;
@@ -1507,11 +1652,13 @@
       const c={x:(o.a.x+o.b.x)/2,y:(o.a.y+o.b.y)/2};
       o.a=rotatePoint(o.a,c,delta);
       o.b=rotatePoint(o.b,c,delta);
+      o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
 
     }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image'){
       // Circle rotation is intentionally ignored.
       if(o.kind==='ellipse' && o.shapeName==='circle') return;
       o.angle=(o.angle||0)+delta;
+      o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
 
     }else if(o.kind==='stroke'){
       const box=orientedSelectionBox(o);
@@ -2295,7 +2442,8 @@
       */
       const turnModel=typeof robustPolygonIntent==='function' ? robustPolygonIntent(pts) : null;
       const rawVerts=(turnModel && turnModel.n===kindN)
-        ? turnModel.corners.map(p=>({x:p.x,y:p.y}))        : cornerCountCandidate(pts).slice(0,kindN).map(p=>({x:p.x,y:p.y}));
+        ? turnModel.corners.map(p=>({x:p.x,y:p.y}))
+        : cornerCountCandidate(pts).slice(0,kindN).map(p=>({x:p.x,y:p.y}));
 
       if(rawVerts.length!==kindN || !rawVerts.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y))){
         return null;
@@ -3205,6 +3353,7 @@
       contextTargetIndices=chosen.map((_,k)=>k);
     }
 
+    // Keep unlocked targets selected after their indices change.
     const selectable=contextTargetIndices.filter(i=>objects[i] && !objects[i].locked);
     setSelection(selectable);
 
@@ -3255,7 +3404,7 @@
         : 'Nesnenin kilidi açıldı';
     }
 
-    updateContextMenuState();
+    closeContextMenu();
     redraw();
   });
 
@@ -3289,6 +3438,20 @@
         dragged:false
       };
       canvas.setPointerCapture(e.pointerId);
+      return;
+    }
+
+    if(mode==='fill'){
+      closeContextMenu();
+      const hit=hitFillableObject(p);
+      if(hit>=0){
+        saveState();
+        objects[hit].fillColor=currentFillColor;
+        redraw();
+        statusEl.textContent='Nesne dolduruldu';
+      }else{
+        statusEl.textContent='Doldurulabilir kapalı bir nesneye tıkla';
+      }
       return;
     }
 
@@ -3478,6 +3641,7 @@
         eraserChanged=eraserChanged||changed;
         eraserLastPoint=p;
       }
+
       redraw();
       return;
     }
@@ -3496,6 +3660,7 @@
         const a0=Math.atan2(selectStart.y-c.y,selectStart.x-c.x);
         const a1=Math.atan2(p.y-c.y,p.x-c.x);
         const delta=a1-a0;
+        groupSelectionAngle=(groupBoxSnapshot.angle||0)+delta;
 
         for(const item of groupSnapshots){
           objects[item.index]=cloneObject(item.object);
@@ -3830,12 +3995,12 @@
 
     if(lockedShape){
       // Sol tuşun bırakılması otomatik şeklin kabulüdür.
-      objects.push(JSON.parse(JSON.stringify(lockedShape)));
+      const accepted=JSON.parse(JSON.stringify(lockedShape)); accepted.boxAngle=0; objects.push(accepted);
       statusEl.textContent = lockedShape.kind==='line'
         ? 'Doğru kabul edildi — B son konumunda sabitlendi'
         : 'Şekil kabul edildi';
     }else if(previewRecognized){
-      objects.push(JSON.parse(JSON.stringify(previewRecognized)));
+      const accepted=JSON.parse(JSON.stringify(previewRecognized)); accepted.boxAngle=0; objects.push(accepted);
       statusEl.textContent='Şekle dönüştürüldü';
     }else{
       objects.push({kind:'stroke',points:points.map(p=>({x:p.x,y:p.y})),style:strokeStyle(),boxAngle:0});
@@ -3880,6 +4045,72 @@
     redraw();
   },{passive:false});
 
+
+  function closeFillMenu(){
+    fillMenu.classList.remove('open');
+  }
+
+  function activateFillTool(){
+    mode='fill';
+    setSelection([]);
+    eraserCursor=null;
+    inkBtn.classList.remove('active');
+    selectBtn.classList.remove('active');
+    eraserBtn.classList.remove('active');
+    fillBtn.classList.add('active');
+    colorMenu.classList.remove('open');
+    eraserMenu.classList.remove('open');
+    closeContextMenu();
+    canvas.style.cursor='crosshair';
+    redraw();
+    statusEl.textContent='Dolgu modu — kapalı bir nesnenin içine tıkla';
+  }
+
+  fillBtn.addEventListener('pointerdown',e=>{
+    e.stopPropagation();
+    if(e.button!==0) return;
+    fillLongPressTriggered=false;
+    clearTimeout(fillPressTimer);
+    fillPressTimer=setTimeout(()=>{
+      fillLongPressTriggered=true;
+      eraserMenu.classList.remove('open');
+      colorMenu.classList.remove('open');
+      closeContextMenu();
+      fillMenu.classList.add('open');
+    },520);
+  });
+
+  fillBtn.addEventListener('pointerup',e=>{
+    e.stopPropagation();
+    clearTimeout(fillPressTimer);
+    if(!fillLongPressTriggered){
+      closeFillMenu();
+      activateFillTool();
+    }
+    fillLongPressTriggered=false;
+  });
+
+  fillBtn.addEventListener('pointercancel',()=>{
+    clearTimeout(fillPressTimer);
+    fillLongPressTriggered=false;
+  });
+
+  fillColorOptions.forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      currentFillColor=btn.dataset.fillColor || '#facc15';
+      fillSwatch.style.background=currentFillColor;
+      fillColorOptions.forEach(b=>b.classList.toggle('active',b===btn));
+      closeFillMenu();
+      activateFillTool();
+    });
+  });
+
+  document.addEventListener('pointerdown',e=>{
+    if(!fillMenu.contains(e.target) && e.target!==fillBtn){
+      closeFillMenu();
+    }
+  });
 
   imageBtn.onclick=()=>{
     closeContextMenu();
@@ -3928,6 +4159,7 @@
 
   colorBtn.onclick=(e)=>{
     e.stopPropagation();
+    closeFillMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.toggle('open');
   };
@@ -3943,6 +4175,8 @@
   });
 
   inkBtn.onclick=()=>{
+    fillBtn.classList.remove('active');
+    closeFillMenu();
     closeContextMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
@@ -3957,6 +4191,8 @@
   };
 
   selectBtn.onclick=()=>{
+    fillBtn.classList.remove('active');
+    closeFillMenu();
     closeContextMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
@@ -3972,6 +4208,7 @@
 
   eraserBtn.onclick=(e)=>{
     e.stopPropagation();
+    closeFillMenu();
     colorMenu.classList.remove('open');
     eraserMenu.classList.toggle('open');
   };
@@ -3989,6 +4226,8 @@
       eraserMenu.classList.remove('open');
 
       mode='eraser';
+    fillBtn.classList.remove('active');
+    closeFillMenu();
       setSelection([]);
       eraserBtn.classList.add('active');
       inkBtn.classList.remove('active');
@@ -4011,6 +4250,7 @@
       colorMenu.classList.remove('open');
     }
   });
+
 
   function makeFunctionStroke(type,cx,cy,scale,style){
     const pts=[];
@@ -4095,7 +4335,7 @@
     const cx=centerWorld.x, cy=centerWorld.y;
     const insertionScale=1/viewZoom;
     const style=strokeStyle(), t=shapeType.value;
-    if(t==='line') objects.push({kind:'line',a:{x:cx-100*insertionScale,y:cy},b:{x:cx+100*insertionScale,y:cy},style,source:'menu'});
+    if(t==='line') objects.push({kind:'line',a:{x:cx-100*insertionScale,y:cy},b:{x:cx+100*insertionScale,y:cy},style,source:'menu',boxAngle:0});
     if(t==='rect') objects.push({kind:'rect',center:{x:cx,y:cy},w:180*insertionScale,h:110*insertionScale,angle:0,style,shapeName:'rectangle',source:'menu'});
     if(t==='ellipse') objects.push({kind:'ellipse',center:{x:cx,y:cy},rx:95*insertionScale,ry:60*insertionScale,angle:0,style,shapeName:'ellipse',source:'menu'});
     if(t==='parabola') {
@@ -4107,7 +4347,8 @@
         angle:0,
         style,
         shapeName:'parabola',
-        source:'menu'
+        source:'menu',
+        boxAngle:0
       });
     }
 
@@ -4130,7 +4371,8 @@
         angle:0,
         style,
         shapeName:'triangle',
-        source:'menu'
+        source:'menu',
+        boxAngle:0
       });
     }
     if(t==='pentagon') {
@@ -4151,7 +4393,8 @@
         angle:0,
         style,
         shapeName:'regular pentagon',
-        source:'menu'
+        source:'menu',
+        boxAngle:0
       });
     }
 
@@ -4164,7 +4407,8 @@
         angle:0,
         style,
         shapeName:'x-y axes',
-        source:'menu'
+        source:'menu',
+        boxAngle:0
       });
     }
 
@@ -4187,7 +4431,8 @@
         angle:0,
         style,
         shapeName:'regular hexagon',
-        source:'menu'
+        source:'menu',
+        boxAngle:0
       });
     }
     redraw();statusEl.textContent='Şekil eklendi';
