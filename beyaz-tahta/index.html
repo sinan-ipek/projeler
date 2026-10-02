@@ -1,0 +1,3604 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Whiteboard Ink Prototype v15.28 Infinite Surface Pan Zoom</title>
+<style>
+  :root{
+    --bg:#f6f7f9;
+    --panel:#ffffff;
+    --border:#d9dde5;
+    --text:#1f2430;
+    --accent:#2563eb;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+  #app{height:100%;display:flex;flex-direction:column}
+  #toolbar{
+    height:58px;background:var(--panel);border-bottom:1px solid var(--border);
+    display:flex;align-items:center;gap:8px;padding:8px 12px;z-index:5;
+    box-shadow:0 2px 10px rgba(0,0,0,.04)
+  }
+  button,select,input[type=color]{
+    height:38px;border:1px solid var(--border);background:white;border-radius:10px;padding:0 12px;
+    font-size:14px;cursor:pointer
+  }
+  button.active{background:#eaf1ff;border-color:#9db7ff;color:#1747b0}
+  button:hover{background:#f3f5f8}
+  .sep{width:1px;height:30px;background:var(--border);margin:0 2px}
+  #stageWrap{position:relative;flex:1;overflow:hidden;background:
+      linear-gradient(#eef1f5 1px,transparent 1px),
+      linear-gradient(90deg,#eef1f5 1px,transparent 1px);
+      background-size:24px 24px;
+  }
+  canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+  #hint{
+    position:absolute;right:16px;bottom:16px;background:rgba(255,255,255,.94);
+    border:1px solid var(--border);border-radius:12px;padding:10px 12px;font-size:12px;
+    max-width:360px;box-shadow:0 6px 22px rgba(0,0,0,.08)
+  }
+  #status{margin-left:auto;font-size:12px;color:#687080}
+  .label{font-size:12px;color:#667085}
+  .iconBtn{
+    width:38px;height:36px;padding:0;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:20px;line-height:1;
+  }
+  .iconBtn svg{width:21px;height:21px;display:block}
+  #color{width:38px;height:36px;padding:3px;cursor:pointer}
+  #width{width:54px}
+  #shapeType{max-width:112px}
+
+  .eraserWrap{position:relative;display:inline-flex}
+  #eraserMenu{
+    position:absolute;top:42px;left:0;
+    display:none;gap:6px;align-items:center;
+    padding:6px;background:#fff;border:1px solid var(--border);
+    border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);
+    z-index:20;
+  }
+  #eraserMenu.open{display:flex}
+  .eraserOption{
+    width:38px;height:38px;padding:0;
+    display:inline-flex;align-items:center;justify-content:center;
+    border-radius:9px;
+  }
+  .eraserOption.active{background:#eaf1ff;border-color:#9db7ff}
+  .eraserOption svg{display:block}
+  .dashCircle{
+    border:1.6px dashed currentColor;border-radius:50%;
+    display:block;
+  }
+  .dashCircle.small{width:8px;height:8px}
+  .dashCircle.medium{width:18px;height:18px}
+  .dashCircle.large{width:30px;height:30px}
+
+  .colorWrap{position:relative;display:inline-flex}
+  #colorBtn{
+    width:38px;height:36px;padding:0;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  .colorSwatch{
+    width:20px;height:20px;border-radius:50%;
+    border:1px solid #8c94a3;
+    display:block;
+  }
+  #colorMenu{
+    position:absolute;top:42px;left:0;
+    display:none;
+    grid-template-columns:repeat(3,34px);
+    gap:7px;
+    padding:8px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:0 8px 24px rgba(0,0,0,.12);
+    z-index:20;
+  }
+  #colorMenu.open{display:grid}
+  .colorOption{
+    width:34px;height:34px;padding:0;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:9px;
+  }
+  .colorOption .colorSwatch{width:22px;height:22px}
+  .colorOption.active{background:#eaf1ff;border-color:#9db7ff}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="toolbar">
+    <button id="inkBtn" class="active iconBtn" title="Ink" aria-label="Ink">✎</button>
+    <button id="selectBtn" class="iconBtn" title="Seç" aria-label="Seç">↖</button>
+
+    <div class="eraserWrap">
+      <button id="eraserBtn" class="iconBtn" title="Silgi" aria-label="Silgi">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7.1 18.2 3.8 14.9a2.2 2.2 0 0 1 0-3.1l7.5-7.5a2.2 2.2 0 0 1 3.1 0l5.3 5.3a2.2 2.2 0 0 1 0 3.1l-5.5 5.5H7.1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="m8 8 8 8M7.1 18.2h11.1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <div id="eraserMenu" role="menu" aria-label="Silgi seçenekleri">
+        <button class="eraserOption active" data-eraser-kind="stroke" title="Tüm ink'i sil" aria-label="Tüm ink'i sil">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="M7.1 18.2 3.8 14.9a2.2 2.2 0 0 1 0-3.1l7.5-7.5a2.2 2.2 0 0 1 3.1 0l5.3 5.3a2.2 2.2 0 0 1 0 3.1l-5.5 5.5H7.1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="m8 8 8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button class="eraserOption" data-eraser-kind="point" data-radius="6" title="Küçük noktasal silgi" aria-label="Küçük noktasal silgi">
+          <span class="dashCircle small" aria-hidden="true"></span>
+        </button>
+        <button class="eraserOption" data-eraser-kind="point" data-radius="14" title="Orta noktasal silgi" aria-label="Orta noktasal silgi">
+          <span class="dashCircle medium" aria-hidden="true"></span>
+        </button>
+        <button class="eraserOption" data-eraser-kind="point" data-radius="26" title="Büyük noktasal silgi" aria-label="Büyük noktasal silgi">
+          <span class="dashCircle large" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="colorWrap">
+      <button id="colorBtn" class="iconBtn" title="Renk" aria-label="Renk">
+        <span id="currentColorSwatch" class="colorSwatch" style="background:#111111"></span>
+      </button>
+
+      <div id="colorMenu" role="menu" aria-label="Renk paleti">
+        <button class="colorOption active" data-color="#111111" title="Siyah" aria-label="Siyah"><span class="colorSwatch" style="background:#111111"></span></button>
+        <button class="colorOption" data-color="#7e22ce" title="Mor" aria-label="Mor"><span class="colorSwatch" style="background:#7e22ce"></span></button>
+        <button class="colorOption" data-color="#172554" title="Lacivert" aria-label="Lacivert"><span class="colorSwatch" style="background:#172554"></span></button>
+        <button class="colorOption" data-color="#2563eb" title="Mavi" aria-label="Mavi"><span class="colorSwatch" style="background:#2563eb"></span></button>
+        <button class="colorOption" data-color="#16a34a" title="Yeşil" aria-label="Yeşil"><span class="colorSwatch" style="background:#16a34a"></span></button>
+        <button class="colorOption" data-color="#facc15" title="Sarı" aria-label="Sarı"><span class="colorSwatch" style="background:#facc15"></span></button>
+        <button class="colorOption" data-color="#f97316" title="Turuncu" aria-label="Turuncu"><span class="colorSwatch" style="background:#f97316"></span></button>
+        <button class="colorOption" data-color="#dc2626" title="Kırmızı" aria-label="Kırmızı"><span class="colorSwatch" style="background:#dc2626"></span></button>
+        <button class="colorOption" data-color="#ffffff" title="Beyaz" aria-label="Beyaz"><span class="colorSwatch" style="background:#ffffff;border-color:#667085"></span></button>
+        <button class="colorOption" data-color="#d1d5db" title="Açık gri" aria-label="Açık gri"><span class="colorSwatch" style="background:#d1d5db"></span></button>
+        <button class="colorOption" data-color="#6b7280" title="Orta gri" aria-label="Orta gri"><span class="colorSwatch" style="background:#6b7280"></span></button>
+        <button class="colorOption" data-color="#8b5e3c" title="Kahverengi" aria-label="Kahverengi"><span class="colorSwatch" style="background:#8b5e3c"></span></button>
+      </div>
+    </div>
+
+    <select id="width" title="Kalınlık" aria-label="Kalınlık">
+      <option value="2">2</option>
+      <option value="4" selected>4</option>
+      <option value="6">6</option>
+      <option value="9">9</option>
+    </select>
+
+    <div class="sep"></div>
+
+    <select id="shapeType" title="Şekil" aria-label="Şekil">
+      <option value="line">Çizgi</option>
+      <option value="rect">Dikdörtgen</option>
+      <option value="ellipse">Elips</option>
+      <option value="triangle">Üçgen</option>
+      <option value="pentagon">Beşgen</option>
+      <option value="hexagon">Altıgen</option>
+      <option value="axes">x-y</option>
+    </select>
+
+    <button id="addShape" class="iconBtn" title="Ekle" aria-label="Ekle">＋</button>
+
+    <div class="sep"></div>
+
+    <button id="undoBtn" class="iconBtn" title="Geri" aria-label="Geri">↶</button>
+    <button id="redoBtn" class="iconBtn" title="İleri" aria-label="İleri">↷</button>
+
+    <button id="clearBtn" class="iconBtn" title="Tümünü temizle" aria-label="Tümünü temizle">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M9 7V4.8h6V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M6.5 7 7.4 20h9.2l.9-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M10 10.5v6M14 10.5v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <div id="status">Hazır</div>
+  </div>
+  <div id="stageWrap">
+    <canvas id="c"></canvas>
+    <div id="hint">
+      <b>Seçim modu:</b> “Seç” aracını aç, nesneye tıkla. Nesneyi taşıyabilir,
+      köşe tutamaçlarından büyütüp küçültebilir, üstteki yuvarlak tutamaçtan döndürebilir
+      ve <b>Delete</b> ile silebilirsin.
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const wrap = document.getElementById('stageWrap');
+  const inkBtn = document.getElementById('inkBtn');
+  const selectBtn = document.getElementById('selectBtn');
+  const eraserBtn = document.getElementById('eraserBtn');
+  const eraserMenu = document.getElementById('eraserMenu');
+  const eraserOptions = Array.from(document.querySelectorAll('.eraserOption'));
+  const addShapeBtn = document.getElementById('addShape');
+  const shapeType = document.getElementById('shapeType');
+  const colorBtn = document.getElementById('colorBtn');
+  const colorMenu = document.getElementById('colorMenu');
+  const colorOptions = Array.from(document.querySelectorAll('.colorOption'));
+  const currentColorSwatch = document.getElementById('currentColorSwatch');
+  let currentColor = '#111111';
+  const widthEl = document.getElementById('width');
+  const statusEl = document.getElementById('status');
+  const undoBtn = document.getElementById('undoBtn');
+  const redoBtn = document.getElementById('redoBtn');
+  const clearBtn = document.getElementById('clearBtn');
+
+  let mode = 'ink';
+
+  // Infinite-surface camera. Objects always remain in world coordinates.
+  let viewX = 0;
+  let viewY = 0;
+  let viewZoom = 1;
+  const MIN_ZOOM = 0.12;
+  const MAX_ZOOM = 8;
+
+  let isPanning = false;
+  let panPointerId = null;
+  let panStartScreen = null;
+  let panStartView = null;
+
+  let drawing = false;
+  let points = [];
+  let holdTimer = null;
+  let lastMoveTime = 0;
+  let previewRecognized = null;
+  let lockedShape = null;      // hold sonrası aktifleşen otomatik şekil
+  let lockedShapeType = null;
+  let lockAnchor = null;       // çizgi için sabit A noktası
+  let rotationCenter = null;     // şekiller için sabit dönüş merkezi
+  let rotationStartPointerAngle = 0;
+  let rotationStartShapeAngle = 0;
+  let lockPointer = null;
+  let objects = [];
+  let undoStack = [];
+  let redoStack = [];
+
+  let selectedIndex = -1;
+  let selectedIndices = [];
+  let selectAction = null;   // 'move' | 'groupMove' | 'groupResize' | 'groupRotate' | 'resize' | 'rotate' | 'point' | 'marquee'
+  let selectStart = null;
+  let selectSnapshot = null;
+  let groupSnapshots = null;
+  let groupBoxSnapshot = null;
+  let activeHandle = null;
+
+  let marqueeStart = null;
+  let marqueeEnd = null;
+  let internalClipboard = [];
+  let pasteOffsetStep = 24;
+
+  let erasing = false;
+  let eraserKind = 'stroke';
+  let eraserRadius = 14;
+  let eraserLastPoint = null;
+  let eraserCursor = null;
+  let eraserChanged = false;
+
+  let dpr = Math.max(1, window.devicePixelRatio || 1);
+
+  function resize(){
+    const r = wrap.getBoundingClientRect();
+    canvas.width = Math.round(r.width*dpr);
+    canvas.height = Math.round(r.height*dpr);
+    canvas.style.width = r.width+'px';
+    canvas.style.height = r.height+'px';
+    redraw();
+  }
+  window.addEventListener('resize', resize);
+
+  function screenToWorld(p){
+    return {
+      x:(p.x-viewX)/viewZoom,
+      y:(p.y-viewY)/viewZoom
+    };
+  }
+
+  function worldToScreenPoint(p){
+    return {
+      x:p.x*viewZoom+viewX,
+      y:p.y*viewZoom+viewY
+    };
+  }
+
+  function screenPointFromEvent(e){
+    const r=canvas.getBoundingClientRect();
+    return {x:e.clientX-r.left,y:e.clientY-r.top};
+  }
+
+  function pFromEvent(e){
+    const s=screenPointFromEvent(e);
+    const w=screenToWorld(s);
+    return {
+      x:w.x,
+      y:w.y,
+      t:performance.now(),
+      pressure:e.pressure||0.5
+    };
+  }
+
+  function restoreToolCursor(){
+    if(isPanning){
+      canvas.style.cursor='grabbing';
+    }else if(mode==='ink'){
+      canvas.style.cursor='crosshair';
+    }else if(mode==='eraser'){
+      canvas.style.cursor='none';
+    }else{
+      canvas.style.cursor='default';
+    }
+  }
+
+  function saveState(){
+    undoStack.push(JSON.stringify(objects));
+    if(undoStack.length>60) undoStack.shift();
+    redoStack = [];
+  }
+
+  function strokeStyle(){
+    return {color:currentColor,width:+widthEl.value};
+  }
+
+  function drawSmoothStroke(pts, style){
+    if(pts.length<2) return;
+    ctx.save();
+    ctx.strokeStyle = style.color;
+    ctx.lineWidth = style.width;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for(let i=1;i<pts.length-1;i++){
+      const mx=(pts[i].x+pts[i+1].x)/2;
+      const my=(pts[i].y+pts[i+1].y)/2;
+      ctx.quadraticCurveTo(pts[i].x,pts[i].y,mx,my);
+    }
+    const last=pts[pts.length-1];
+    ctx.lineTo(last.x,last.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function rotatePoint(p,c,a){
+    const cs=Math.cos(a), sn=Math.sin(a);
+    const dx=p.x-c.x, dy=p.y-c.y;
+    return {x:c.x+dx*cs-dy*sn,y:c.y+dx*sn+dy*cs};
+  }
+
+  function regularPolygon(cx,cy,rx,ry,n,rot=0){
+    const verts=[];
+    if(!Number.isFinite(cx) || !Number.isFinite(cy) ||
+       !Number.isFinite(rx) || !Number.isFinite(ry) ||
+       !Number.isFinite(n) || n<3){
+      return verts;
+    }
+    for(let i=0;i<n;i++){
+      const a=rot+i*Math.PI*2/n;
+      verts.push({
+        x:cx+Math.cos(a)*rx,
+        y:cy+Math.sin(a)*ry
+      });
+    }
+    return verts;
+  }
+
+  function finitePoint(p){
+    return p && Number.isFinite(p.x) && Number.isFinite(p.y);
+  }
+
+  function drawShape(o, ghost=false){
+    if(!o || !o.kind || !o.style) return;
+
+    ctx.save();
+    try{
+      ctx.strokeStyle = ghost ? '#2563eb' : (o.style.color || '#111111');
+      ctx.lineWidth = ghost ? Math.max(2,Number(o.style.width)||2) : (Number(o.style.width)||2);
+      ctx.lineCap='round';
+      ctx.lineJoin='round';
+      if(ghost){ctx.setLineDash([6,5]);ctx.globalAlpha=.88}
+
+      ctx.beginPath();
+
+      if(o.kind==='line'){
+        if(!finitePoint(o.a) || !finitePoint(o.b)) return;
+        ctx.moveTo(o.a.x,o.a.y);
+        ctx.lineTo(o.b.x,o.b.y);
+
+      }else if(o.kind==='ellipse'){
+        if(!finitePoint(o.center)) return;
+        const rx=Math.abs(Number(o.rx)), ry=Math.abs(Number(o.ry));
+        if(!Number.isFinite(rx)||!Number.isFinite(ry)||rx<1||ry<1) return;
+        ctx.ellipse(o.center.x,o.center.y,rx,ry,Number(o.angle)||0,0,Math.PI*2);
+
+      }else if(o.kind==='rect'){
+        if(!finitePoint(o.center)) return;
+        const w=Math.abs(Number(o.w)), h=Math.abs(Number(o.h));
+        if(!Number.isFinite(w)||!Number.isFinite(h)||w<1||h<1) return;
+        const hw=w/2,hh=h/2,a=Number(o.angle)||0;
+        const verts=[
+          {x:o.center.x-hw,y:o.center.y-hh},
+          {x:o.center.x+hw,y:o.center.y-hh},
+          {x:o.center.x+hw,y:o.center.y+hh},
+          {x:o.center.x-hw,y:o.center.y+hh}
+        ].map(p=>rotatePoint(p,o.center,a));
+        if(!verts.every(finitePoint)) return;
+        verts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+        ctx.closePath();
+
+      }else if(o.kind==='polygon'){
+        if(!finitePoint(o.center)) return;
+        let verts=null;
+        if(Array.isArray(o.baseVertices) && o.baseVertices.length>=3){
+          const a=Number(o.angle)||0;
+          verts=o.baseVertices.map(p=>rotatePoint(p,o.center,a));
+        }else if(Array.isArray(o.vertices) && o.vertices.length>=3){
+          verts=o.vertices;
+        }
+        if(!verts || !verts.every(finitePoint)) return;
+        verts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+        ctx.closePath();
+
+      }else if(o.kind==='axes'){
+        if(!finitePoint(o.center)) return;
+        const w=Math.abs(Number(o.w)), h=Math.abs(Number(o.h));
+        if(!Number.isFinite(w)||!Number.isFinite(h)||w<1||h<1) return;
+
+        const a=Number(o.angle)||0;
+        const hw=w/2, hh=h/2;
+        const left=rotatePoint({x:o.center.x-hw,y:o.center.y},o.center,a);
+        const right=rotatePoint({x:o.center.x+hw,y:o.center.y},o.center,a);
+        const top=rotatePoint({x:o.center.x,y:o.center.y-hh},o.center,a);
+        const bottom=rotatePoint({x:o.center.x,y:o.center.y+hh},o.center,a);
+
+        // x axis
+        ctx.moveTo(left.x,left.y);
+        ctx.lineTo(right.x,right.y);
+
+        // y axis
+        ctx.moveTo(bottom.x,bottom.y);
+        ctx.lineTo(top.x,top.y);
+
+        // arrow heads
+        const ah=10;
+        function addArrow(tip,from){
+          const ang=Math.atan2(tip.y-from.y,tip.x-from.x);
+          ctx.moveTo(tip.x,tip.y);
+          ctx.lineTo(tip.x+Math.cos(ang+2.6)*ah,tip.y+Math.sin(ang+2.6)*ah);
+          ctx.moveTo(tip.x,tip.y);
+          ctx.lineTo(tip.x+Math.cos(ang-2.6)*ah,tip.y+Math.sin(ang-2.6)*ah);
+        }
+        addArrow(right,left);
+        addArrow(top,bottom);
+
+      }else{
+        return;
+      }
+
+      ctx.stroke();
+
+      if(o.kind==='axes'){
+        const a=Number(o.angle)||0;
+        const right=rotatePoint({x:o.center.x+o.w/2,y:o.center.y},o.center,a);
+        const top=rotatePoint({x:o.center.x,y:o.center.y-o.h/2},o.center,a);
+        ctx.fillStyle = ghost ? '#2563eb' : (o.style.color || '#111111');
+        ctx.font='14px Arial, sans-serif';
+        ctx.fillText('x',right.x+7,right.y+4);
+        ctx.fillText('y',top.x+5,top.y-7);
+      }
+    }catch(err){
+      console.warn('Geçersiz şekil adayı atlandı:',err,o);
+    }finally{
+      ctx.restore();
+    }
+  }
+
+  function objectBounds(o){
+    if(!o) return null;
+
+    if(o.kind==='line'){
+      const minX=Math.min(o.a.x,o.b.x), maxX=Math.max(o.a.x,o.b.x);
+      const minY=Math.min(o.a.y,o.b.y), maxY=Math.max(o.a.y,o.b.y);
+      return {x:minX,y:minY,w:maxX-minX,h:maxY-minY,cx:(minX+maxX)/2,cy:(minY+maxY)/2};
+    }
+
+    if(o.kind==='ellipse'){
+      const a=o.angle||0, rx=o.rx, ry=o.ry;
+      const ex=Math.sqrt((rx*Math.cos(a))**2+(ry*Math.sin(a))**2);
+      const ey=Math.sqrt((rx*Math.sin(a))**2+(ry*Math.cos(a))**2);
+      return {x:o.center.x-ex,y:o.center.y-ey,w:2*ex,h:2*ey,cx:o.center.x,cy:o.center.y};
+    }
+
+    if(o.kind==='rect'){
+      const hw=o.w/2,hh=o.h/2,a=o.angle||0;
+      const pts=[
+        {x:o.center.x-hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y+hh},
+        {x:o.center.x-hw,y:o.center.y+hh}
+      ].map(p=>rotatePoint(p,o.center,a));
+      return bbox(pts);
+    }
+
+    if(o.kind==='polygon'){
+      const pts=(o.baseVertices||o.vertices||[]).map(p=>
+        o.baseVertices ? rotatePoint(p,o.center,o.angle||0) : p
+      );
+      if(!pts.length) return null;
+      return bbox(pts);
+    }
+
+    if(o.kind==='axes'){
+      const hw=o.w/2,hh=o.h/2,a=o.angle||0;
+      const pts=[
+        {x:o.center.x-hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y+hh},
+        {x:o.center.x-hw,y:o.center.y+hh}
+      ].map(p=>rotatePoint(p,o.center,a));
+      return bbox(pts);
+    }
+
+    if(o.kind==='stroke'){
+      return bbox(o.points);
+    }
+
+    return null;
+  }
+
+
+  function polygonWorldVertices(o){
+    if(!o || o.kind!=='polygon') return [];
+    const source=o.baseVertices || o.vertices || [];
+    if(!source.length) return [];
+    if(o.baseVertices && o.center){
+      return source.map(p=>rotatePoint(p,o.center,o.angle||0));
+    }
+    return source.map(p=>({x:p.x,y:p.y}));
+  }
+
+
+  function rectWorldVertices(o){
+    if(!o || o.kind!=='rect' || !o.center) return [];
+    const hw=o.w/2, hh=o.h/2, a=o.angle||0;
+    return [
+      {x:o.center.x-hw,y:o.center.y-hh},
+      {x:o.center.x+hw,y:o.center.y-hh},
+      {x:o.center.x+hw,y:o.center.y+hh},
+      {x:o.center.x-hw,y:o.center.y+hh}
+    ].map(p=>rotatePoint(p,o.center,a));
+  }
+
+  function ellipseWorldHandles(o){
+    if(!o || o.kind!=='ellipse' || !o.center) return [];
+    const a=o.angle||0;
+    const raw=[
+      {name:'ellipse-e',x:o.center.x+o.rx,y:o.center.y},
+      {name:'ellipse-s',x:o.center.x,y:o.center.y+o.ry},
+      {name:'ellipse-w',x:o.center.x-o.rx,y:o.center.y},
+      {name:'ellipse-n',x:o.center.x,y:o.center.y-o.ry}
+    ];
+    return raw.map(h=>({...h,...rotatePoint(h,o.center,a)}));
+  }
+
+  function menuEditHandles(o){
+    if(!o || o.source!=='menu') return [];
+
+    if(o.kind==='line'){
+      return [
+        {name:'endpoint-0',x:o.a.x,y:o.a.y},
+        {name:'endpoint-1',x:o.b.x,y:o.b.y}
+      ];
+    }
+
+    if(o.kind==='polygon'){
+      return polygonWorldVertices(o).map((p,i)=>({
+        name:'vertex-'+i,x:p.x,y:p.y
+      }));
+    }
+
+    if(o.kind==='rect'){
+      return rectWorldVertices(o).map((p,i)=>({
+        name:'rectvertex-'+i,x:p.x,y:p.y
+      }));
+    }
+
+    if(o.kind==='ellipse'){
+      return ellipseWorldHandles(o);
+    }
+
+    return [];
+  }
+
+
+  function objectRotation(o){
+    if(!o) return 0;
+    if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='axes') return o.angle||0;
+    if(o.kind==='line'){
+      return Math.atan2(o.b.y-o.a.y,o.b.x-o.a.x);
+    }
+    return 0;
+  }
+
+  function orientedSelectionBox(o){
+    if(!o) return null;
+    const angle=objectRotation(o);
+
+    // For rotated geometric objects, derive dimensions in local coordinates.
+    if((o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon' || o.kind==='axes') && o.center){
+      const c=o.center;
+      let localPts=[];
+
+      if(o.kind==='rect'){
+        localPts=[
+          {x:-o.w/2,y:-o.h/2},
+          {x:o.w/2,y:-o.h/2},
+          {x:o.w/2,y:o.h/2},
+          {x:-o.w/2,y:o.h/2}
+        ];
+      }else if(o.kind==='ellipse'){
+        // selection box follows ellipse's own axes
+        localPts=[
+          {x:-o.rx,y:-o.ry},
+          {x:o.rx,y:-o.ry},
+          {x:o.rx,y:o.ry},
+          {x:-o.rx,y:o.ry}
+        ];
+      }else if(o.kind==='polygon'){
+        const verts=polygonWorldVertices(o);
+        const cs=Math.cos(-angle),sn=Math.sin(-angle);
+        localPts=verts.map(p=>{
+          const dx=p.x-c.x,dy=p.y-c.y;
+          return {x:dx*cs-dy*sn,y:dx*sn+dy*cs};
+        });
+      }else if(o.kind==='axes'){
+        localPts=[
+          {x:-o.w/2,y:-o.h/2},
+          {x:o.w/2,y:-o.h/2},
+          {x:o.w/2,y:o.h/2},
+          {x:-o.w/2,y:o.h/2}
+        ];
+      }
+
+      let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+      for(const p of localPts){
+        minX=Math.min(minX,p.x); minY=Math.min(minY,p.y);
+        maxX=Math.max(maxX,p.x); maxY=Math.max(maxY,p.y);
+      }
+
+      return {
+        center:{x:c.x,y:c.y},
+        angle,
+        minX,minY,maxX,maxY,
+        w:maxX-minX,
+        h:maxY-minY
+      };
+    }
+
+    // Lines: local x axis follows the line itself.
+    if(o.kind==='line'){
+      const c={x:(o.a.x+o.b.x)/2,y:(o.a.y+o.b.y)/2};
+      const len=dist(o.a,o.b);
+      return {
+        center:c,angle,
+        minX:-len/2,maxX:len/2,
+        minY:-8,maxY:8,
+        w:len,h:16
+      };
+    }
+
+    // Freehand ink: local x-axis follows the stroke's principal direction.
+    if(o.kind==='stroke' && Array.isArray(o.points) && o.points.length>=2){
+      const f=principalFrame(o.points);
+      return {
+        center:{x:f.center.x,y:f.center.y},
+        angle:f.angle,
+        minX:-f.w/2,maxX:f.w/2,
+        minY:-f.h/2,maxY:f.h/2,
+        w:Math.max(1,f.w),
+        h:Math.max(1,f.h)
+      };
+    }
+
+    const b=objectBounds(o);
+    if(!b) return null;
+    return {
+      center:{x:b.cx,y:b.cy},
+      angle:0,
+      minX:-b.w/2,maxX:b.w/2,
+      minY:-b.h/2,maxY:b.h/2,
+      w:b.w,h:b.h
+    };
+  }
+
+  function localToWorld(box,p){
+    const cs=Math.cos(box.angle),sn=Math.sin(box.angle);
+    return {
+      x:box.center.x + p.x*cs - p.y*sn,
+      y:box.center.y + p.x*sn + p.y*cs
+    };
+  }
+
+  function worldToLocal(box,p){
+    const dx=p.x-box.center.x,dy=p.y-box.center.y;
+    const cs=Math.cos(-box.angle),sn=Math.sin(-box.angle);
+    return {
+      x:dx*cs-dy*sn,
+      y:dx*sn+dy*cs
+    };
+  }
+
+  function orientedBoxCorners(box,pad=8){
+    if(!box) return null;
+    const minX=box.minX-pad,maxX=box.maxX+pad;
+    const minY=box.minY-pad,maxY=box.maxY+pad;
+    return {
+      nw:localToWorld(box,{x:minX,y:minY}),
+      ne:localToWorld(box,{x:maxX,y:minY}),
+      se:localToWorld(box,{x:maxX,y:maxY}),
+      sw:localToWorld(box,{x:minX,y:maxY}),
+      topCenter:localToWorld(box,{x:(minX+maxX)/2,y:minY}),
+      rotate:localToWorld(box,{x:(minX+maxX)/2,y:minY-28}),
+      local:{minX,maxX,minY,maxY}
+    };
+  }
+
+
+  function normalizeSelection(){
+    selectedIndices = selectedIndices
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length)
+      .filter((v,i,a)=>a.indexOf(v)===i);
+
+    if(selectedIndices.length===1){
+      selectedIndex=selectedIndices[0];
+    }else if(selectedIndices.length===0){
+      selectedIndex=-1;
+    }else{
+      selectedIndex=-1;
+    }
+  }
+
+  function setSelection(indices){
+    selectedIndices=(indices||[]).slice();
+    normalizeSelection();
+  }
+
+  function groupSelectionBounds(indices=selectedIndices){
+    if(!indices.length) return null;
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    let any=false;
+    for(const i of indices){
+      const b=objectBounds(objects[i]);
+      if(!b) continue;
+      minX=Math.min(minX,b.x);
+      minY=Math.min(minY,b.y);
+      maxX=Math.max(maxX,b.x+b.w);
+      maxY=Math.max(maxY,b.y+b.h);
+      any=true;
+    }
+    if(!any) return null;
+    return {x:minX,y:minY,w:maxX-minX,h:maxY-minY,cx:(minX+maxX)/2,cy:(minY+maxY)/2};
+  }
+
+
+  function objectSamplePointsForGroup(o){
+    if(!o) return [];
+
+    if(o.kind==='stroke') return (o.points||[]).map(p=>({x:p.x,y:p.y}));
+    if(o.kind==='line') return [{...o.a},{...o.b}];
+
+    if(o.kind==='rect'){
+      const hw=o.w/2,hh=o.h/2,a=o.angle||0;
+      return [
+        {x:o.center.x-hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y+hh},
+        {x:o.center.x-hw,y:o.center.y+hh}
+      ].map(p=>rotatePoint(p,o.center,a));
+    }
+
+    if(o.kind==='polygon') return polygonWorldVertices(o);
+
+    if(o.kind==='ellipse'){
+      const pts=[],a=o.angle||0;
+      for(let i=0;i<20;i++){
+        const t=i*Math.PI*2/20;
+        const q={x:o.center.x+Math.cos(t)*o.rx,y:o.center.y+Math.sin(t)*o.ry};
+        pts.push(rotatePoint(q,o.center,a));
+      }
+      return pts;
+    }
+
+    if(o.kind==='axes'){
+      const hw=o.w/2,hh=o.h/2,a=o.angle||0;
+      return [
+        rotatePoint({x:o.center.x-hw,y:o.center.y},o.center,a),
+        rotatePoint({x:o.center.x+hw,y:o.center.y},o.center,a),
+        rotatePoint({x:o.center.x,y:o.center.y-hh},o.center,a),
+        rotatePoint({x:o.center.x,y:o.center.y+hh},o.center,a)
+      ];
+    }
+
+    const b=objectBounds(o);
+    return b ? [
+      {x:b.x,y:b.y},
+      {x:b.x+b.w,y:b.y},
+      {x:b.x+b.w,y:b.y+b.h},
+      {x:b.x,y:b.y+b.h}
+    ] : [];
+  }
+
+  function groupOrientedBox(indices=selectedIndices){
+    const pts=[];
+    for(const i of indices){
+      if(objects[i]) pts.push(...objectSamplePointsForGroup(objects[i]));
+    }
+    if(pts.length<2) return null;
+
+    const f=principalFrame(pts);
+    return {
+      center:{x:f.center.x,y:f.center.y},
+      angle:f.angle,
+      minX:-Math.max(1,f.w)/2,
+      maxX: Math.max(1,f.w)/2,
+      minY:-Math.max(1,f.h)/2,
+      maxY: Math.max(1,f.h)/2,
+      w:Math.max(1,f.w),
+      h:Math.max(1,f.h)
+    };
+  }
+
+  function hitGroupSelectionHandle(p){
+    if(selectedIndices.length<2) return null;
+    const box=groupOrientedBox();
+    if(!box) return null;
+    const oc=orientedBoxCorners(box,8);
+
+    for(const [name,h] of [['nw',oc.nw],['ne',oc.ne],['se',oc.se],['sw',oc.sw]]){
+      if(Math.hypot(p.x-h.x,p.y-h.y)<=11) return name;
+    }
+    if(Math.hypot(p.x-oc.rotate.x,p.y-oc.rotate.y)<=11/viewZoom) return 'rotate';
+    return null;
+  }
+
+  function rotateObjectAround(o,c,delta){
+    if(o.kind==='line'){
+      o.a=rotatePoint(o.a,c,delta);
+      o.b=rotatePoint(o.b,c,delta);
+      return;
+    }
+
+    if(o.kind==='stroke'){
+      o.points=o.points.map(p=>rotatePoint(p,c,delta));
+      return;
+    }
+
+    if(o.kind==='polygon'){
+      o.center=rotatePoint(o.center,c,delta);
+      if(o.baseVertices){
+        o.baseVertices=o.baseVertices.map(p=>rotatePoint(p,c,delta));
+      }
+      return;
+    }
+
+    if(o.kind==='rect' || o.kind==='ellipse' || o.kind==='axes'){
+      o.center=rotatePoint(o.center,c,delta);
+      o.angle=(o.angle||0)+delta;
+    }
+  }
+
+  function scaleObjectUniformAround(o,anchor,s){
+    s=Math.max(.06,s);
+
+    const scalePt=p=>({
+      x:anchor.x+(p.x-anchor.x)*s,
+      y:anchor.y+(p.y-anchor.y)*s
+    });
+
+    if(o.kind==='line'){
+      o.a=scalePt(o.a); o.b=scalePt(o.b);
+      return;
+    }
+
+    if(o.kind==='stroke'){
+      o.points=o.points.map(scalePt);
+      return;
+    }
+
+    if(o.kind==='polygon'){
+      o.center=scalePt(o.center);
+      if(o.baseVertices) o.baseVertices=o.baseVertices.map(scalePt);
+      return;
+    }
+
+    if(o.kind==='rect'){
+      o.center=scalePt(o.center);
+      o.w=Math.max(12,o.w*s);
+      o.h=Math.max(12,o.h*s);
+      return;
+    }
+
+    if(o.kind==='ellipse'){
+      o.center=scalePt(o.center);
+      o.rx=Math.max(6,o.rx*s);
+      o.ry=Math.max(6,o.ry*s);
+      return;
+    }
+
+    if(o.kind==='axes'){
+      o.center=scalePt(o.center);
+      o.w=Math.max(24,o.w*s);
+      o.h=Math.max(24,o.h*s);
+    }
+  }
+
+  function drawGroupSelection(){
+    const box=groupOrientedBox();
+    if(!box) return;
+    const oc=orientedBoxCorners(box,8);
+
+    ctx.save();
+    ctx.strokeStyle='#2563eb';
+    ctx.lineWidth=1.5;
+    ctx.setLineDash([6,4]);
+
+    ctx.beginPath();
+    ctx.moveTo(oc.nw.x,oc.nw.y);
+    ctx.lineTo(oc.ne.x,oc.ne.y);
+    ctx.lineTo(oc.se.x,oc.se.y);
+    ctx.lineTo(oc.sw.x,oc.sw.y);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    for(const p of [oc.nw,oc.ne,oc.se,oc.sw]){
+      ctx.beginPath();
+      ctx.fillStyle='white';
+      ctx.strokeStyle='#2563eb';
+      ctx.rect(p.x-5,p.y-5,10,10);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(oc.topCenter.x,oc.topCenter.y);
+    ctx.lineTo(oc.rotate.x,oc.rotate.y);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.fillStyle='white';
+    ctx.arc(oc.rotate.x,oc.rotate.y,6,0,Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function marqueeRect(){
+    if(!marqueeStart || !marqueeEnd) return null;
+    const x=Math.min(marqueeStart.x,marqueeEnd.x);
+    const y=Math.min(marqueeStart.y,marqueeEnd.y);
+    const w=Math.abs(marqueeEnd.x-marqueeStart.x);
+    const h=Math.abs(marqueeEnd.y-marqueeStart.y);
+    return {x,y,w,h};
+  }
+
+  function drawMarquee(){
+    const r=marqueeRect();
+    if(!r) return;
+    ctx.save();
+    ctx.fillStyle='rgba(37,99,235,.08)';
+    ctx.strokeStyle='#2563eb';
+    ctx.lineWidth=1.25;
+    ctx.setLineDash([5,4]);    ctx.fillRect(r.x,r.y,r.w,r.h);
+    ctx.strokeRect(r.x,r.y,r.w,r.h);
+    ctx.restore();
+  }
+
+  function boundsInsideRect(b,r){
+    return b &&
+      b.x>=r.x &&
+      b.y>=r.y &&
+      b.x+b.w<=r.x+r.w &&
+      b.y+b.h<=r.y+r.h;
+  }
+
+  function objectPointInsideSelection(i,p){
+    const b=objectBounds(objects[i]);
+    return !!(b && pointInBounds(p,b,6));
+  }
+
+  function cloneObject(o){
+    return JSON.parse(JSON.stringify(o));
+  }
+
+  function duplicateSelection(indices){
+    const originals=indices.map(i=>objects[i]).filter(Boolean);
+    const start=objects.length;
+    for(const o of originals) objects.push(cloneObject(o));
+    return Array.from({length:originals.length},(_,k)=>start+k);
+  }
+
+  function drawSelection(){
+    normalizeSelection();
+
+    if(selectedIndices.length>1){
+      drawGroupSelection();
+      return;
+    }
+
+    if(selectedIndices.length===1 && selectedIndex<0){
+      selectedIndex=selectedIndices[0];
+    }
+
+    if(selectedIndex<0 || !objects[selectedIndex]) return;
+    const selected=objects[selectedIndex];
+
+    const rawSpecial=menuEditHandles(selected);
+    const special=(selected.kind==='ellipse') ? [] : rawSpecial;
+
+    // LINE: always show A and B, regardless of whether it came from menu or ink recognition.
+    if(selected.kind==='line'){
+      const lineHandles=[
+        {name:'endpoint-0',x:selected.a.x,y:selected.a.y},
+        {name:'endpoint-1',x:selected.b.x,y:selected.b.y}
+      ];
+      ctx.save();
+      for(const hnd of lineHandles){
+        ctx.beginPath();
+        ctx.fillStyle='white';
+        ctx.strokeStyle='#2563eb';
+        ctx.arc(hnd.x,hnd.y,6,0,Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
+      return;
+    }
+
+    const box=orientedSelectionBox(selected);
+    if(!box) return;
+    const oc=orientedBoxCorners(box,8);
+    if(!oc) return;
+
+    ctx.save();
+    ctx.strokeStyle='#2563eb';
+    ctx.lineWidth=1.5;
+    ctx.setLineDash([5,4]);
+
+    // Rotated bounding box polygon
+    ctx.beginPath();
+    ctx.moveTo(oc.nw.x,oc.nw.y);
+    ctx.lineTo(oc.ne.x,oc.ne.y);
+    ctx.lineTo(oc.se.x,oc.se.y);
+    ctx.lineTo(oc.sw.x,oc.sw.y);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Shape's own editable points
+    if(special.length){
+      for(const hnd of special){
+        ctx.beginPath();
+        ctx.fillStyle='white';
+        ctx.strokeStyle='#2563eb';
+        ctx.arc(hnd.x,hnd.y,6,0,Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }else{
+      const isTriangle=
+        selected.kind==='polygon' &&
+        selected.shapeName==='triangle' &&
+        polygonWorldVertices(selected).length===3;
+
+      if(isTriangle){
+        const verts=polygonWorldVertices(selected);
+        for(const p of verts){
+          ctx.beginPath();
+          ctx.fillStyle='white';
+          ctx.strokeStyle='#2563eb';
+          ctx.arc(p.x,p.y,6,0,Math.PI*2);
+          ctx.fill();
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Bounding-box resize handles
+    const showBBoxHandles = selected.source==='menu' || !special.length;
+    if(showBBoxHandles){
+      for(const p of [oc.nw,oc.ne,oc.se,oc.sw]){
+        ctx.beginPath();
+        ctx.fillStyle='white';
+        ctx.strokeStyle='#2563eb';
+        ctx.rect(p.x-5,p.y-5,10,10);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+
+    const canRotate=!(selected.kind==='ellipse' && selected.shapeName==='circle');
+    if(canRotate){
+      ctx.beginPath();
+      ctx.moveTo(oc.topCenter.x,oc.topCenter.y);
+      ctx.lineTo(oc.rotate.x,oc.rotate.y);
+      ctx.strokeStyle='#2563eb';
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.fillStyle='white';
+      ctx.arc(oc.rotate.x,oc.rotate.y,6,0,Math.PI*2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function pointInBounds(p,b,pad=8){
+    return p.x>=b.x-pad && p.x<=b.x+b.w+pad &&
+           p.y>=b.y-pad && p.y<=b.y+b.h+pad;
+  }
+
+  function hitSelectionHandle(p){
+    if(selectedIndex<0) return null;
+    const selected=objects[selectedIndex];
+
+    const rawSpecial=menuEditHandles(selected);
+
+    // LINE: A/B endpoints are interactive for every line object.
+    if(selected.kind==='line'){
+      const lineHandles=[
+        {name:'endpoint-0',x:selected.a.x,y:selected.a.y},
+        {name:'endpoint-1',x:selected.b.x,y:selected.b.y}
+      ];
+      for(const h of lineHandles){
+        if(Math.hypot(p.x-h.x,p.y-h.y)<=11/viewZoom) return h.name;
+      }
+      return null;
+    }
+
+    const box=orientedSelectionBox(selected);
+    if(!box) return null;
+    const oc=orientedBoxCorners(box,8);
+
+    const special=(selected.kind==='ellipse') ? [] : rawSpecial;
+    for(const h of special){
+      if(Math.hypot(p.x-h.x,p.y-h.y)<=11/viewZoom) return h.name;
+    }
+
+    const isTriangle=
+      selected.kind==='polygon' &&
+      selected.shapeName==='triangle' &&
+      polygonWorldVertices(selected).length===3;
+
+    if(!special.length && isTriangle){
+      const verts=polygonWorldVertices(selected);
+      for(let i=0;i<verts.length;i++){
+        if(Math.hypot(p.x-verts[i].x,p.y-verts[i].y)<=11){
+          return 'vertex-'+i;
+        }
+      }
+    }
+
+    if(selected.source==='menu' || (!special.length && !isTriangle)){
+      const entries=[
+        ['nw',oc.nw],['ne',oc.ne],['se',oc.se],['sw',oc.sw]
+      ];
+      for(const [name,h] of entries){
+        if(Math.hypot(p.x-h.x,p.y-h.y)<=11) return name;
+      }
+    }
+
+    if(!(selected.kind==='ellipse' && selected.shapeName==='circle')){
+      if(Math.hypot(p.x-oc.rotate.x,p.y-oc.rotate.y)<=11/viewZoom) return 'rotate';
+    }
+
+    return null;
+  }
+
+  function hitTestObject(p){
+    for(let i=objects.length-1;i>=0;i--){
+      const b=objectBounds(objects[i]);
+      if(b && pointInBounds(p,b,6/viewZoom)) return i;
+    }
+    return -1;
+  }
+
+  function translateObject(o,dx,dy){
+    if(o.kind==='line'){
+      o.a.x+=dx;o.a.y+=dy;o.b.x+=dx;o.b.y+=dy;
+    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='axes'){
+      o.center.x+=dx;o.center.y+=dy;
+      if(o.kind==='polygon' && o.baseVertices){
+        o.baseVertices=o.baseVertices.map(p=>({x:p.x+dx,y:p.y+dy}));
+      }
+    }else if(o.kind==='stroke'){
+      o.points=o.points.map(p=>({x:p.x+dx,y:p.y+dy}));
+    }
+  }
+
+  function rotateObject(o,delta){
+    if(o.kind==='line'){
+      const c={x:(o.a.x+o.b.x)/2,y:(o.a.y+o.b.y)/2};
+      o.a=rotatePoint(o.a,c,delta);
+      o.b=rotatePoint(o.b,c,delta);
+
+    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='axes'){
+      // Circle rotation is intentionally ignored.
+      if(o.kind==='ellipse' && o.shapeName==='circle') return;
+      o.angle=(o.angle||0)+delta;
+
+    }else if(o.kind==='stroke'){
+      const box=orientedSelectionBox(o);
+      const c=box ? box.center : {x:bbox(o.points).cx,y:bbox(o.points).cy};
+      o.points=o.points.map(p=>rotatePoint(p,c,delta));
+    }
+  }
+
+
+
+
+  function setPolygonWorldVerticesPreserveAngle(o, worldVerts, angle, source, shapeName){
+    if(!worldVerts || !worldVerts.length) return;
+
+    const center={
+      x:worldVerts.reduce((s,v)=>s+v.x,0)/worldVerts.length,
+      y:worldVerts.reduce((s,v)=>s+v.y,0)/worldVerts.length
+    };
+
+    const cs=Math.cos(-angle), sn=Math.sin(-angle);
+    const baseVertices=worldVerts.map(v=>{
+      const dx=v.x-center.x, dy=v.y-center.y;
+      return {
+        x:center.x + dx*cs - dy*sn,
+        y:center.y + dx*sn + dy*cs
+      };
+    });
+
+    o.kind='polygon';
+    o.center=center;
+    o.angle=angle;
+    o.baseVertices=baseVertices;
+    if(source!==undefined) o.source=source;
+    if(shapeName!==undefined) o.shapeName=shapeName;
+  }
+
+  function moveMenuHandleFromSnapshot(o,snap,handle,p){
+    if(!o || !snap) return false;
+
+    // LINE endpoints work for every line, including ink-recognized AB segments.
+    if(snap.kind==='line' && handle.startsWith('endpoint-')){
+      const i=Number(handle.split('-')[1]);
+      o.a={...snap.a}; o.b={...snap.b};
+      if(i===0) o.a={x:p.x,y:p.y};
+      if(i===1) o.b={x:p.x,y:p.y};
+      return true;
+    }
+
+    if(snap.source!=='menu') return false;
+
+    // POLYGON vertices (triangle, hexagon, future menu polygons)
+    if(snap.kind==='polygon' && handle.startsWith('vertex-')){
+      const i=Number(handle.split('-')[1]);
+      const verts=polygonWorldVertices(snap);
+      if(!Number.isInteger(i) || i<0 || i>=verts.length) return false;
+
+      verts[i]={x:p.x,y:p.y};
+
+      // Preserve the polygon's existing local coordinate frame.
+      setPolygonWorldVerticesPreserveAngle(
+        o,
+        verts,
+        snap.angle||0,
+        'menu',
+        snap.shapeName
+      );
+      return true;
+    }
+
+    // RECTANGLE: moving one actual corner turns it into a freely editable quadrilateral.
+    if(snap.kind==='rect' && handle.startsWith('rectvertex-')){
+      const i=Number(handle.split('-')[1]);
+      const verts=rectWorldVertices(snap);
+      if(!Number.isInteger(i) || i<0 || i>=4) return false;
+
+      verts[i]={x:p.x,y:p.y};
+
+      // Convert to a freely editable quadrilateral, BUT preserve the
+      // rectangle's local rotation frame. The bounding box therefore keeps
+      // the same orientation after a corner is moved.
+      delete o.w; delete o.h;
+      setPolygonWorldVerticesPreserveAngle(
+        o,
+        verts,
+        snap.angle||0,
+        'menu',
+        'quadrilateral'
+      );
+      return true;
+    }
+
+    // ELLIPSE cardinal handles. Keep opposite side fixed in local coordinates.
+    if(snap.kind==='ellipse' && handle.startsWith('ellipse-')){
+      const a=snap.angle||0;
+      const cs=Math.cos(-a), sn=Math.sin(-a);
+      const dx=p.x-snap.center.x, dy=p.y-snap.center.y;
+      const lx=dx*cs-dy*sn;
+      const ly=dx*sn+dy*cs;
+
+      let cx=0,cy=0,rx=snap.rx,ry=snap.ry;
+
+      if(handle==='ellipse-e'){
+        const opp=-snap.rx;
+        cx=(lx+opp)/2;
+        rx=Math.max(6,Math.abs(lx-opp)/2);
+      }else if(handle==='ellipse-w'){
+        const opp=snap.rx;
+        cx=(lx+opp)/2;
+        rx=Math.max(6,Math.abs(opp-lx)/2);
+      }else if(handle==='ellipse-s'){
+        const opp=-snap.ry;
+        cy=(ly+opp)/2;
+        ry=Math.max(6,Math.abs(ly-opp)/2);
+      }else if(handle==='ellipse-n'){
+        const opp=snap.ry;
+        cy=(ly+opp)/2;
+        ry=Math.max(6,Math.abs(opp-ly)/2);
+      }
+
+      // Local center offset back to world.
+      const ccs=Math.cos(a), ss=Math.sin(a);
+      o.center={
+        x:snap.center.x + cx*ccs - cy*ss,
+        y:snap.center.y + cx*ss + cy*ccs
+      };
+      o.rx=rx; o.ry=ry;
+      o.angle=a;
+      o.source='menu';
+      return true;
+    }
+
+    return false;
+  }
+
+  function moveTriangleVertexFromSnapshot(o,snap,vertexIndex,p){
+    if(!o || !snap || snap.kind!=='polygon' || snap.shapeName!=='triangle') return;
+
+    const verts=polygonWorldVertices(snap);
+    if(verts.length!==3 || vertexIndex<0 || vertexIndex>2) return;
+
+    verts[vertexIndex]={x:p.x,y:p.y};
+
+    // Preserve the triangle's current local rotation frame.
+    setPolygonWorldVerticesPreserveAngle(
+      o,
+      verts,
+      snap.angle||0,
+      snap.source,
+      'triangle'
+    );
+  }
+
+
+  function resizeObjectLocalFromSnapshot(o,snap,p,handle,uniformScale=false){
+    const box=orientedSelectionBox(snap);
+    if(!box) return false;
+
+    const lp=worldToLocal(box,p);
+    const opposite={
+      nw:{x:box.maxX,y:box.maxY},
+      ne:{x:box.minX,y:box.maxY},
+      se:{x:box.minX,y:box.minY},
+      sw:{x:box.maxX,y:box.minY}
+    }[handle];
+    if(!opposite) return false;
+
+    const newMinX=Math.min(lp.x,opposite.x);
+    const newMaxX=Math.max(lp.x,opposite.x);
+    const newMinY=Math.min(lp.y,opposite.y);
+    const newMaxY=Math.max(lp.y,opposite.y);
+
+    let newW=Math.max(12,newMaxX-newMinX);
+    let newH=Math.max(12,newMaxY-newMinY);
+
+    let sx=newW/Math.max(1,box.w);
+    let sy=newH/Math.max(1,box.h);
+
+    let usedMinX=newMinX, usedMaxX=newMaxX, usedMinY=newMinY, usedMaxY=newMaxY;
+
+    if(uniformScale){
+      const s=Math.max(sx,sy);
+      sx=s;
+      sy=s;
+
+      const targetW=Math.max(12,box.w*s);
+      const targetH=Math.max(12,box.h*s);
+
+      const isLeft = handle==='nw' || handle==='sw';
+      const isTop  = handle==='nw' || handle==='ne';
+
+      if(isLeft){
+        usedMaxX=opposite.x;
+        usedMinX=usedMaxX-targetW;
+      }else{
+        usedMinX=opposite.x;
+        usedMaxX=usedMinX+targetW;
+      }
+
+      if(isTop){
+        usedMaxY=opposite.y;
+        usedMinY=usedMaxY-targetH;
+      }else{
+        usedMinY=opposite.y;
+        usedMaxY=usedMinY+targetH;
+      }
+
+      newW=targetW;
+      newH=targetH;
+    }
+
+    const localCenter={
+      x:(usedMinX+usedMaxX)/2,
+      y:(usedMinY+usedMaxY)/2
+    };
+    const newCenter=localToWorld(box,localCenter);
+
+    if(snap.kind==='rect'){
+      o.center=newCenter;
+      o.w=Math.max(12,snap.w*sx);
+      o.h=Math.max(12,snap.h*sy);
+      o.angle=snap.angle||0;
+      return true;
+    }
+
+    if(snap.kind==='ellipse'){
+      o.center=newCenter;
+      if(snap.shapeName==='circle'){
+        const s=Math.max(sx,sy);
+        o.rx=Math.max(6,snap.rx*s);
+        o.ry=o.rx;
+      }else{
+        o.rx=Math.max(6,snap.rx*sx);
+        o.ry=Math.max(6,snap.ry*sy);
+      }
+      o.angle=snap.angle||0;
+      return true;
+    }
+
+    if(snap.kind==='axes'){
+      o.center=newCenter;
+      o.w=Math.max(24,snap.w*sx);
+      o.h=Math.max(24,snap.h*sy);
+      o.angle=snap.angle||0;
+      return true;
+    }
+
+    if(snap.kind==='polygon'){
+      const oldBox=orientedSelectionBox(snap);
+      const verts=polygonWorldVertices(snap);
+      const newVerts=verts.map(v=>{
+        const lv=worldToLocal(oldBox,v);
+        const nx=(lv.x-oldBox.minX)*sx + usedMinX;
+        const ny=(lv.y-oldBox.minY)*sy + usedMinY;
+        return localToWorld(oldBox,{x:nx,y:ny});
+      });
+
+      setPolygonWorldVerticesPreserveAngle(
+        o,
+        newVerts,
+        snap.angle||0,
+        snap.source,
+        snap.shapeName
+      );
+      return true;
+    }
+
+    if(snap.kind==='line'){
+      const oldBox=orientedSelectionBox(snap);
+      const la=worldToLocal(oldBox,snap.a);
+      const lb=worldToLocal(oldBox,snap.b);
+      const mapPt=l=>localToWorld(oldBox,{
+        x:(l.x-oldBox.minX)*sx + usedMinX,
+        y:(l.y-oldBox.minY)*sy + usedMinY
+      });
+      o.a=mapPt(la);
+      o.b=mapPt(lb);
+      return true;
+    }
+
+    if(snap.kind==='stroke'){
+      const oldBox=orientedSelectionBox(snap);
+      o.points=snap.points.map(v=>{
+        const lv=worldToLocal(oldBox,v);
+        const nx=(lv.x-oldBox.minX)*sx + usedMinX;
+        const ny=(lv.y-oldBox.minY)*sy + usedMinY;
+        return localToWorld(oldBox,{x:nx,y:ny});
+      });
+      return true;
+    }
+
+    return false;
+  }
+
+  function resizeObjectFromSnapshot(o,snap,startB,p,handle){
+    const opp={
+      nw:{x:startB.x+startB.w,y:startB.y+startB.h},
+      ne:{x:startB.x,y:startB.y+startB.h},
+      se:{x:startB.x,y:startB.y},
+      sw:{x:startB.x+startB.w,y:startB.y}
+    }[handle];
+    if(!opp) return;
+
+    const newW=Math.max(12,Math.abs(p.x-opp.x));
+    const newH=Math.max(12,Math.abs(p.y-opp.y));
+    const newCx=(p.x+opp.x)/2;
+    const newCy=(p.y+opp.y)/2;
+    const sx=newW/Math.max(1,startB.w);
+    const sy=newH/Math.max(1,startB.h);
+
+    if(o.kind==='line'){
+      const c={x:startB.cx,y:startB.cy};
+      o.a={
+        x:newCx+(snap.a.x-c.x)*sx,
+        y:newCy+(snap.a.y-c.y)*sy
+      };
+      o.b={
+        x:newCx+(snap.b.x-c.x)*sx,
+        y:newCy+(snap.b.y-c.y)*sy
+      };
+    }else if(o.kind==='ellipse'){
+      o.center={x:newCx,y:newCy};
+      if(o.shapeName==='circle'){
+        const s=Math.max(sx,sy);
+        o.rx=Math.max(6,snap.rx*s);
+        o.ry=o.rx;
+      }else{
+        o.rx=Math.max(6,snap.rx*sx);
+        o.ry=Math.max(6,snap.ry*sy);
+      }
+    }else if(o.kind==='rect'){
+      o.center={x:newCx,y:newCy};
+      o.w=Math.max(12,snap.w*sx);
+      o.h=Math.max(12,snap.h*sy);
+    }else if(o.kind==='polygon'){
+      const c={x:startB.cx,y:startB.cy};
+      o.center={x:newCx,y:newCy};
+      if(snap.baseVertices){
+        o.baseVertices=snap.baseVertices.map(v=>({
+          x:newCx+(v.x-c.x)*sx,
+          y:newCy+(v.y-c.y)*sy
+        }));
+      }
+    }else if(o.kind==='stroke'){
+      const c={x:startB.cx,y:startB.cy};
+      o.points=snap.points.map(v=>({
+        x:newCx+(v.x-c.x)*sx,
+        y:newCy+(v.y-c.y)*sy
+      }));
+    }
+  }
+
+  function redraw(){
+    // Clear in device pixels, then render the infinite world through the camera.
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.setTransform(
+      dpr*viewZoom,0,
+      0,dpr*viewZoom,
+      dpr*viewX,dpr*viewY
+    );
+
+    for(const o of objects){
+      if(o.kind==='stroke') drawSmoothStroke(o.points,o.style);
+      else drawShape(o);
+    }
+    if(drawing && points.length){
+      if(lockedShape){
+        // Otomatik şekil aktifleştiğinde ham ink yerine canlı geometrik öneriyi göster.
+        drawShape(lockedShape,true);
+      }else{
+        drawSmoothStroke(points,strokeStyle());
+        if(previewRecognized) drawShape(previewRecognized,true);
+      }
+    }
+    if(mode==='select'){
+      drawSelection();
+      if(selectAction==='marquee') drawMarquee();
+    }
+
+    if(mode==='eraser' && eraserCursor){
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(eraserCursor.x,eraserCursor.y,eraserRadius/viewZoom,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,.72)';
+      ctx.strokeStyle='#667085';
+      ctx.lineWidth=1.25/viewZoom;
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+  function bbox(pts){
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    for(const p of pts){minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y)}
+    return {x:minX,y:minY,w:maxX-minX,h:maxY-minY,cx:(minX+maxX)/2,cy:(minY+maxY)/2};
+  }
+
+  function simplifyRDP(pts, eps){
+    if(pts.length<3) return pts.slice();
+    const a=pts[0], b=pts[pts.length-1];
+    let maxD=0, idx=0;
+    const vx=b.x-a.x, vy=b.y-a.y, len2=vx*vx+vy*vy || 1;
+    for(let i=1;i<pts.length-1;i++){
+      const p=pts[i];
+      let t=((p.x-a.x)*vx+(p.y-a.y)*vy)/len2; t=Math.max(0,Math.min(1,t));
+      const px=a.x+t*vx, py=a.y+t*vy;
+      const d=Math.hypot(p.x-px,p.y-py);
+      if(d>maxD){maxD=d;idx=i}
+    }
+    if(maxD>eps){
+      const l=simplifyRDP(pts.slice(0,idx+1),eps);
+      const r=simplifyRDP(pts.slice(idx),eps);
+      return l.slice(0,-1).concat(r);
+    }
+    return [a,b];
+  }
+
+  function lineCandidate(pts, style){
+    const a=pts[0], b=pts[pts.length-1];
+    const chord=dist(a,b);
+    if(chord<35) return null;
+    let max=0,sum=0;
+    const vx=b.x-a.x,vy=b.y-a.y,len2=vx*vx+vy*vy||1;
+    for(const p of pts){
+      let t=((p.x-a.x)*vx+(p.y-a.y)*vy)/len2;t=Math.max(0,Math.min(1,t));
+      const q={x:a.x+t*vx,y:a.y+t*vy};
+      const d=dist(p,q);max=Math.max(max,d);sum+=d;
+    }
+    const avg=sum/pts.length;
+    if(max<Math.max(10,chord*.05) && avg<Math.max(5,chord*.025))
+      return {kind:'line',a,b,style};
+    return null;
+  }
+
+  function principalFrame(pts){
+    let cx=0,cy=0;
+    for(const p of pts){cx+=p.x;cy+=p.y}
+    cx/=pts.length;cy/=pts.length;
+    let xx=0,yy=0,xy=0;
+    for(const p of pts){
+      const dx=p.x-cx,dy=p.y-cy;
+      xx+=dx*dx;yy+=dy*dy;xy+=dx*dy;
+    }
+    const angle=.5*Math.atan2(2*xy,xx-yy);
+    const cs=Math.cos(-angle),sn=Math.sin(-angle);
+    const local=pts.map(p=>{
+      const dx=p.x-cx,dy=p.y-cy;
+      return {x:dx*cs-dy*sn,y:dx*sn+dy*cs};
+    });
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    for(const p of local){
+      minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);
+      maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y);
+    }
+    // Center of oriented bounds, transformed back to world.
+    const lcx=(minX+maxX)/2,lcy=(minY+maxY)/2;
+    const ccs=Math.cos(angle),ss=Math.sin(angle);
+    const center={x:cx+lcx*ccs-lcy*ss,y:cy+lcx*ss+lcy*ccs};
+    return {center,angle,w:maxX-minX,h:maxY-minY,local,minX,minY,maxX,maxY};
+  }
+
+  function trimOvershootForClosedIntent(pts){
+    if(pts.length<10) return pts.slice();
+    const b=bbox(pts), scale=Math.max(30,Math.min(b.w,b.h));
+    // Find the first late point that returns close to start. Anything after it is likely closure overshoot.
+    const start=pts[0];
+    let best=-1;
+    for(let i=Math.floor(pts.length*.55);i<pts.length;i++){
+      if(dist(start,pts[i]) < scale*.28){best=i;break}
+    }
+    if(best>0) return pts.slice(0,best+1);
+    return pts.slice();
+  }
+
+  function cleanSimplifiedCorners(simp, pts){
+    const b=bbox(pts);
+    const scale=Math.max(20,Math.min(b.w,b.h));
+    const closeTol=Math.max(20,scale*.30);
+    let out=simp.slice();
+
+    if(out.length>3 && dist(out[0],out[out.length-1])<closeTol) out.pop();
+
+    const minSeg=Math.max(7,scale*.045);
+    const cleaned=[];
+    for(const p of out){
+      if(!cleaned.length || dist(cleaned[cleaned.length-1],p)>minSeg) cleaned.push(p);
+    }
+    if(cleaned.length>3 && dist(cleaned[0],cleaned[cleaned.length-1])<minSeg*1.7) cleaned.pop();
+
+    // Remove obvious fake closure corners.
+    let changed=true;
+    while(changed && cleaned.length>3){
+      changed=false;
+      const n=cleaned.length;
+      let perimeter=0;
+      for(let i=0;i<n;i++) perimeter+=dist(cleaned[i],cleaned[(i+1)%n]);
+
+      let remove=-1, weakness=0;
+      for(let i=0;i<n;i++){
+        const prev=cleaned[(i-1+n)%n], cur=cleaned[i], next=cleaned[(i+1)%n];
+        const l1=dist(prev,cur), l2=dist(cur,next);
+        const avg=perimeter/n;
+        const v1={x:prev.x-cur.x,y:prev.y-cur.y};
+        const v2={x:next.x-cur.x,y:next.y-cur.y};
+        const den=Math.max(1e-9,Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y));
+        const angle=Math.acos(Math.max(-1,Math.min(1,(v1.x*v2.x+v1.y*v2.y)/den)));
+        const straightness=Math.abs(Math.PI-angle);
+
+        let w=0;
+        const shortRatio=Math.min(l1,l2)/Math.max(1,avg);
+        if(shortRatio<.30) w+=(.30-shortRatio)*2.5;
+        if(straightness<.18) w+=(.18-straightness)*3.5;
+
+        if(w>weakness){weakness=w;remove=i}
+      }
+
+      if(remove>=0 && weakness>.14){
+        cleaned.splice(remove,1);
+        changed=true;
+      }
+    }
+    return cleaned;
+  }
+
+  function cornersAtTolerance(pts,factor){
+    const b=bbox(pts);
+    const eps=Math.max(4.5,Math.min(b.w,b.h)*factor);
+    return cleanSimplifiedCorners(simplifyRDP(pts,eps),pts);
+  }
+
+  function pointToSegmentDistance(p,a,b){
+    const vx=b.x-a.x,vy=b.y-a.y;
+    const len2=vx*vx+vy*vy || 1;
+    let t=((p.x-a.x)*vx+(p.y-a.y)*vy)/len2;
+    t=Math.max(0,Math.min(1,t));
+    return Math.hypot(p.x-(a.x+t*vx),p.y-(a.y+t*vy));
+  }
+
+  function polygonStrokeError(pts,verts){
+    if(!verts || verts.length<3) return Infinity;
+    let sum=0;
+    for(const p of pts){
+      let best=Infinity;
+      for(let i=0;i<verts.length;i++){
+        best=Math.min(best,pointToSegmentDistance(p,verts[i],verts[(i+1)%verts.length]));
+      }
+      sum+=best;
+    }
+    const b=bbox(pts);
+    return (sum/Math.max(1,pts.length))/Math.max(1,Math.hypot(b.w,b.h));
+  }
+
+  function resamplePolyline(pts, count=72){
+    if(!pts || pts.length<2) return pts ? pts.slice() : [];
+    const d=[0];
+    for(let i=1;i<pts.length;i++) d.push(d[i-1]+dist(pts[i-1],pts[i]));
+    const total=d[d.length-1];
+    if(total<1) return pts.slice();
+
+    const out=[];
+    let j=1;
+    for(let k=0;k<count;k++){
+      const target=total*k/(count-1);
+      while(j<d.length-1 && d[j]<target) j++;
+      const d0=d[j-1],d1=d[j];
+      const t=(target-d0)/Math.max(1e-9,d1-d0);
+      out.push({
+        x:pts[j-1].x+(pts[j].x-pts[j-1].x)*t,
+        y:pts[j-1].y+(pts[j].y-pts[j-1].y)*t
+      });
+    }
+    return out;
+  }
+
+  function angleDiff(a,b){
+    let d=a-b;
+    while(d>Math.PI)d-=Math.PI*2;
+    while(d<-Math.PI)d+=Math.PI*2;
+    return d;
+  }
+
+  function turningCorners(pts){
+    /*
+      Robust polygon-corner detector:
+      resample stroke uniformly, then look for strong changes in tangent
+      direction. This is much more stable for pentagons/hexagons than simply
+      asking RDP how many points remain.
+    */
+    const trimmed=trimOvershootForClosedIntent(pts);
+    const rs=resamplePolyline(trimmed,84);
+    if(rs.length<20) return [];
+
+    const b=bbox(trimmed);
+    const scale=Math.max(1,Math.hypot(b.w,b.h));
+    const step=4;
+    const candidates=[];
+
+    for(let i=step;i<rs.length-step;i++){
+      const a=rs[i-step], p=rs[i], c=rs[i+step];
+      const a1=Math.atan2(p.y-a.y,p.x-a.x);
+      const a2=Math.atan2(c.y-p.y,c.x-p.x);
+      const turn=Math.abs(angleDiff(a2,a1));
+
+      // Ignore very weak bends; hand-drawn polygon corners are usually clear.
+      if(turn>0.30){
+        candidates.push({i,p,turn});
+      }
+    }
+
+    // Non-maximum suppression: retain one strongest sample per actual corner.
+    candidates.sort((u,v)=>v.turn-u.turn);
+    const chosen=[];
+    const minIndexGap=8;
+    for(const c of candidates){
+      if(chosen.every(q=>Math.abs(c.i-q.i)>minIndexGap)){
+        chosen.push(c);
+        if(chosen.length>=8) break;
+      }
+    }
+
+    chosen.sort((u,v)=>u.i-v.i);
+
+    // Merge first/last if they are the same closure corner.
+    if(chosen.length>3){
+      const first=chosen[0], last=chosen[chosen.length-1];
+      if(dist(first.p,last.p)<scale*.10){
+        if(first.turn>=last.turn) chosen.pop();
+        else chosen.shift();
+      }
+    }
+    return chosen.map(c=>({x:c.p.x,y:c.p.y,turn:c.turn}));
+  }
+
+  function robustPolygonIntent(pts){
+    const corners=turningCorners(pts);
+    if(corners.length<3) return null;
+
+    /*
+      Prefer 3..6 corners. If noise yields 7/8, remove weakest turns until six.
+      This is intentionally biased toward a usable polygon rather than failure.
+    */
+    let work=corners.slice();
+    while(work.length>6){
+      let weakest=0;
+      for(let i=1;i<work.length;i++){
+        if((work[i].turn||0)<(work[weakest].turn||0)) weakest=i;
+      }
+      work.splice(weakest,1);
+    }
+
+    if(work.length<3 || work.length>6) return null;
+
+    const verts=work.map(p=>({x:p.x,y:p.y}));
+    const err=polygonStrokeError(trimOvershootForClosedIntent(pts),verts);
+    return {n:verts.length,corners:verts,error:err};
+  }
+
+  function candidateModels(pts){
+    const factors=[.032,.040,.048,.056,.066,.078,.092,.11];
+    const bestByN=new Map();
+
+    for(const f of factors){
+      const corners=cornersAtTolerance(pts,f);
+      if(corners.length<3 || corners.length>6) continue;
+      const error=polygonStrokeError(pts,corners);
+      const old=bestByN.get(corners.length);
+      if(!old || error<old.error){
+        bestByN.set(corners.length,{n:corners.length,corners,error});
+      }
+    }
+    return [...bestByN.values()];
+  }
+
+  function cornerCountCandidate(pts){
+    const models=candidateModels(pts);
+    if(!models.length) return cornersAtTolerance(pts,.056);
+
+    const tri=models.find(m=>m.n===3);
+    const quad=models.find(m=>m.n===4);
+
+    // A 4th corner is accepted only if it improves the fit clearly.
+    if(tri && quad && tri.error <= quad.error*1.32 + .003){
+      return tri.corners;
+    }
+
+    let best=null;
+    for(const m of models){
+      const score=m.error+(m.n-3)*.004;
+      if(!best || score<best.score) best={...m,score};
+    }
+    return best.corners;
+  }
+  function polygonCentroid(verts){
+    let x=0,y=0;
+    for(const p of verts){x+=p.x;y+=p.y}
+    return {x:x/verts.length,y:y/verts.length};
+  }
+
+  function polygonIdeal(kindN, pts, style){
+    const frame=principalFrame(pts);
+
+    if(kindN===3){
+      // Use the best detected three corner positions themselves.
+      // Thus the ideal triangle keeps the user's side ratios and angles.
+      const models=candidateModels(pts);
+      const tri=models.find(m=>m.n===3);
+      let verts=tri ? tri.corners.map(p=>({x:p.x,y:p.y})) : cornerCountCandidate(pts).slice(0,3);
+
+      if(verts.length!==3 || !verts.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y))){
+        const b=bbox(pts);
+        verts=[
+          {x:b.cx,y:b.y},
+          {x:b.x+b.w,y:b.y+b.h},
+          {x:b.x,y:b.y+b.h}
+        ];
+      }
+
+      const center=polygonCentroid(verts);
+      return {
+        kind:'polygon',
+        center,
+        angle:0,
+        baseVertices:verts,
+        style,
+        shapeName:'triangle'
+      };
+    }
+
+    if(kindN===4){
+      return {
+        kind:'rect',
+        center:frame.center,
+        w:frame.w,
+        h:frame.h,
+        angle:frame.angle,
+        style,
+        shapeName:Math.abs(frame.w-frame.h)/Math.max(frame.w,frame.h)<.16?'square':'rectangle'
+      };
+    }
+
+    if(kindN===5 || kindN===6){
+      /*
+        Recognition source:
+        - kindN===5 or 6 comes from the polygon recognizer (v7 logic)
+
+        Output rule requested by user:
+        - 5 corners => regular pentagon
+        - 6 corners => regular hexagon
+
+        We preserve:
+        - approximate center
+        - approximate size
+        - rough orientation
+
+        But the final polygon itself is mathematically regular.
+      */
+      const turnModel=typeof robustPolygonIntent==='function' ? robustPolygonIntent(pts) : null;
+      const rawVerts=(turnModel && turnModel.n===kindN)
+        ? turnModel.corners.map(p=>({x:p.x,y:p.y}))        : cornerCountCandidate(pts).slice(0,kindN).map(p=>({x:p.x,y:p.y}));
+
+      if(rawVerts.length!==kindN || !rawVerts.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y))){
+        return null;
+      }
+
+      const center=polygonCentroid(rawVerts);
+
+      let radius=0;
+      for(const p of rawVerts){
+        radius += Math.hypot(p.x-center.x,p.y-center.y);
+      }
+      radius /= kindN;
+      if(!Number.isFinite(radius) || radius < 5) return null;
+
+      // Preserve the user's rough orientation via the first detected corner.
+      const rot=Math.atan2(rawVerts[0].y-center.y, rawVerts[0].x-center.x);
+      const verts=regularPolygon(center.x,center.y,radius,radius,kindN,rot);
+
+      return {
+        kind:'polygon',
+        center,
+        angle:0,
+        baseVertices:verts,
+        style,
+        shapeName:kindN===5 ? 'regular pentagon' : 'regular hexagon'
+      };
+    }
+    return null;
+  }
+  function ellipseCandidateLoose(pts,style){
+    const trimmed=trimOvershootForClosedIntent(pts);
+    const frame=principalFrame(trimmed);
+    if(Math.min(frame.w,frame.h)<28) return null;
+
+    const cs=Math.cos(-frame.angle),sn=Math.sin(-frame.angle);
+    const rx=frame.w/2, ry=frame.h/2;
+    let err=0, useful=0;
+    for(const p of trimmed){
+      const dx=p.x-frame.center.x,dy=p.y-frame.center.y;
+      const x=dx*cs-dy*sn, y=dx*sn+dy*cs;
+      const rr=Math.sqrt((x/(rx||1))**2+(y/(ry||1))**2);
+      if(Number.isFinite(rr)){err+=Math.abs(rr-1);useful++}
+    }
+    err/=Math.max(1,useful);
+
+    const b=bbox(trimmed);
+    const closeGap=dist(trimmed[0],trimmed[trimmed.length-1]);
+    const perimeterScale=Math.max(b.w,b.h);
+    // Permit incomplete circles/ellipses, but not a clearly open arc.
+    const closurePlausible = closeGap < perimeterScale*.52;
+    if(err<.20 && closurePlausible){
+      return {
+        kind:'ellipse',center:frame.center,rx,ry,angle:frame.angle,style,
+        shapeName: Math.abs(rx-ry)/Math.max(rx,ry)<.14?'circle':'ellipse'
+      };
+    }
+    return null;
+  }
+
+  function polygonCandidateLoose(pts,style){
+    const trimmed=trimOvershootForClosedIntent(pts);
+    const b=bbox(trimmed);
+    if(Math.min(b.w,b.h)<28) return null;
+
+    const closeGap=dist(trimmed[0],trimmed[trimmed.length-1]);
+
+    // Slightly more permissive than v3: the user need not close the polygon exactly.
+    if(closeGap > Math.max(b.w,b.h)*.68) return null;
+
+    const turnModel=robustPolygonIntent(trimmed);
+    if(turnModel && (turnModel.n===5 || turnModel.n===6)){
+      return polygonIdeal(turnModel.n,trimmed,style);
+    }
+
+    const corners=cornerCountCandidate(trimmed);
+    if(corners.length>=3 && corners.length<=6){
+      return polygonIdeal(corners.length,trimmed,style);
+    }
+    return null;
+  }
+
+
+  function rectangleEdgeFitError(pts){
+    /*
+      Rotate the stroke into its principal frame and ask:
+      how close is each point to one of the four sides of its oriented bbox?
+
+      Rectangle/square -> very low error.
+      Ellipse/circle    -> noticeably higher error because most curved points
+                           sit away from the four bbox edges.
+    */
+    const trimmed=trimOvershootForClosedIntent(pts);
+    const frame=principalFrame(trimmed);
+    if(!frame || frame.w<10 || frame.h<10) return Infinity;
+
+    const cx=frame.center.x, cy=frame.center.y;
+    const cs=Math.cos(-frame.angle), sn=Math.sin(-frame.angle);
+
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    const local=[];
+    for(const p of trimmed){
+      const dx=p.x-cx,dy=p.y-cy;
+      const x=dx*cs-dy*sn;
+      const y=dx*sn+dy*cs;
+      local.push({x,y});
+      minX=Math.min(minX,x); maxX=Math.max(maxX,x);
+      minY=Math.min(minY,y); maxY=Math.max(maxY,y);
+    }
+
+    const diag=Math.max(1,Math.hypot(maxX-minX,maxY-minY));
+    let sum=0;
+    for(const p of local){
+      const d=Math.min(
+        Math.abs(p.x-minX),
+        Math.abs(p.x-maxX),
+        Math.abs(p.y-minY),
+        Math.abs(p.y-maxY)
+      );
+      sum+=d;
+    }
+    return (sum/Math.max(1,local.length))/diag;
+  }
+
+  function ellipseFitErrorValue(pts){
+    const trimmed=trimOvershootForClosedIntent(pts);
+    const frame=principalFrame(trimmed);
+    if(!frame || Math.min(frame.w,frame.h)<10) return Infinity;
+
+    const cs=Math.cos(-frame.angle),sn=Math.sin(-frame.angle);
+    const rx=frame.w/2, ry=frame.h/2;
+    if(rx<1 || ry<1) return Infinity;
+
+    let err=0,useful=0;
+    for(const p of trimmed){
+      const dx=p.x-frame.center.x,dy=p.y-frame.center.y;
+      const x=dx*cs-dy*sn;
+      const y=dx*sn+dy*cs;
+      const rr=Math.sqrt((x/rx)**2+(y/ry)**2);
+      if(Number.isFinite(rr)){
+        err+=Math.abs(rr-1);
+        useful++;
+      }
+    }
+    return err/Math.max(1,useful);
+  }
+
+  function rectangleHasStrongEvidence(pts){
+    const rectErr=rectangleEdgeFitError(pts);
+    const ellErr=ellipseFitErrorValue(pts);
+
+    /*
+      Typical intention:
+      - true rectangle: rectErr is very small and clearly beats ellipse fit
+      - true ellipse: ellipse fit wins strongly
+
+      The absolute guard prevents a random closed scribble from becoming a box.
+    */
+    return rectErr < 0.055 && rectErr < ellErr*0.72;
+  }
+
+
+  function clamp01(v){
+    return Math.max(0, Math.min(1, v));
+  }
+
+  function closureScore(pts){
+    const trimmed=trimOvershootForClosedIntent(pts);
+    if(!trimmed || trimmed.length<2) return 0;
+    const b=bbox(trimmed);
+    const maxDim=Math.max(1, Math.max(b.w,b.h));
+    const gap=dist(trimmed[0], trimmed[trimmed.length-1]);
+    // 1 = very closed, 0 = too open
+    return clamp01(1 - gap/(maxDim*0.72));
+  }
+
+  function buildEllipseIdeal(pts, style){
+    const trimmed=trimOvershootForClosedIntent(pts);
+    const frame=principalFrame(trimmed);
+    if(!frame || Math.min(frame.w,frame.h)<28) return null;
+    const rx=frame.w/2, ry=frame.h/2;
+    if(!Number.isFinite(rx) || !Number.isFinite(ry) || rx<1 || ry<1) return null;
+    return {
+      kind:'ellipse',
+      center:frame.center,
+      rx, ry,
+      angle:frame.angle,
+      style,
+      shapeName: Math.abs(rx-ry)/Math.max(rx,ry)<.16 ? 'circle' : 'ellipse'
+    };
+  }
+
+  function lineScore(pts){
+    const a=pts[0], b=pts[pts.length-1];
+    const chord=dist(a,b);
+    if(chord<35) return 0;
+    let max=0,sum=0,pathLen=0;
+    const vx=b.x-a.x,vy=b.y-a.y,len2=vx*vx+vy*vy||1;
+    for(let i=1;i<pts.length;i++) pathLen += dist(pts[i-1],pts[i]);
+    for(const p of pts){
+      let t=((p.x-a.x)*vx+(p.y-a.y)*vy)/len2;
+      t=Math.max(0,Math.min(1,t));
+      const q={x:a.x+t*vx,y:a.y+t*vy};
+      const d=dist(p,q); max=Math.max(max,d); sum+=d;
+    }
+    const avg=sum/pts.length;
+    const straightness=clamp01(chord/Math.max(chord,pathLen)); // 1 if pathLen≈chord
+    const avgScore=clamp01(1 - avg/Math.max(5,chord*.03));
+    const maxScore=clamp01(1 - max/Math.max(10,chord*.06));
+    return 0.45*straightness + 0.30*avgScore + 0.25*maxScore;
+  }
+
+  function ellipseScore(pts){
+    const err=ellipseFitErrorValue(pts);
+    const close=closureScore(pts);
+    const rectErr=rectangleEdgeFitError(pts);
+
+    const fitScore=clamp01(1 - err/0.24);
+    // Ellipses should not lie strongly on four straight edges.
+    const edgePenalty=clamp01(1 - clamp01((0.07-rectErr)/0.05)); // near 0 if very rectangle-like
+    return 0.60*fitScore + 0.22*close + 0.18*edgePenalty;
+  }
+
+  function rectangleScore(pts){
+    const rectErr=rectangleEdgeFitError(pts);
+    const ellErr=ellipseFitErrorValue(pts);
+    const close=closureScore(pts);
+    const corners=cornerCountCandidate(trimOvershootForClosedIntent(pts)).length;
+
+    const fitScore=clamp01(1 - rectErr/0.075);
+    const cornerScore=(corners===4) ? 1 : (corners===3 || corners===5 ? 0.40 : 0.10);
+    const beatsEllipse=clamp01((ellErr - rectErr + 0.02)/0.10);
+    return 0.46*fitScore + 0.22*close + 0.18*cornerScore + 0.14*beatsEllipse;
+  }
+
+  function triangleScore(pts){
+    const trimmed=trimOvershootForClosedIntent(pts);
+    const close=closureScore(trimmed);
+    const models=candidateModels(trimmed);
+    const tri=models.find(m=>m.n===3);
+    if(!tri) return 0;
+    const quad=models.find(m=>m.n===4);
+
+    const fitScore=clamp01(1 - tri.error/0.06);
+    const rivalry = quad ? clamp01((quad.error - tri.error + 0.01)/0.04) : 1;
+    return 0.58*fitScore + 0.20*close + 0.22*rivalry;
+  }
+
+  function regularPolygonScore(pts, n){
+    const trimmed=trimOvershootForClosedIntent(pts);
+    const close=closureScore(trimmed);
+    const turn=robustPolygonIntent(trimmed);
+    if(!turn || turn.n!==n) return 0;
+
+    const fitScore=clamp01(1 - turn.error/0.085);
+    const exactNBoost=1; // because turn.n===n exactly
+    return 0.64*fitScore + 0.24*close + 0.12*exactNBoost;
+  }
+
+  function buildRectIdeal(pts, style){
+    return polygonIdeal(4, trimOvershootForClosedIntent(pts), style);
+  }
+
+  function buildTriangleIdeal(pts, style){
+    return polygonIdeal(3, trimOvershootForClosedIntent(pts), style);
+  }
+
+  function buildRegularPolygonIdeal(pts, n, style){
+    return polygonIdeal(n, trimOvershootForClosedIntent(pts), style);
+  }
+
+
+  function solve3x3(A,b){
+    // Gaussian elimination for a small 3x3 system.
+    const m=[
+      [A[0][0],A[0][1],A[0][2],b[0]],
+      [A[1][0],A[1][1],A[1][2],b[1]],
+      [A[2][0],A[2][1],A[2][2],b[2]]
+    ];
+
+    for(let col=0;col<3;col++){
+      let pivot=col;
+      for(let r=col+1;r<3;r++){
+        if(Math.abs(m[r][col])>Math.abs(m[pivot][col])) pivot=r;
+      }
+      if(Math.abs(m[pivot][col])<1e-9) return null;
+      if(pivot!==col){ const tmp=m[col];m[col]=m[pivot];m[pivot]=tmp; }
+
+      const d=m[col][col];
+      for(let c=col;c<4;c++) m[col][c]/=d;
+
+      for(let r=0;r<3;r++){
+        if(r===col) continue;
+        const f=m[r][col];
+        for(let c=col;c<4;c++) m[r][c]-=f*m[col][c];
+      }
+    }
+    return [m[0][3],m[1][3],m[2][3]];
+  }
+
+  function fitCircleLeastSquares(pts){
+    /*
+      Fit:
+        x² + y² + D x + E y + F = 0
+      by least squares.
+
+      Unlike the PCA/bounding-box ellipse test, this directly asks:
+      "What circle best fits the user's stroke?"
+    */
+    const trimmed=trimOvershootForClosedIntent(pts);
+    if(!trimmed || trimmed.length<8) return null;
+
+    let sx=0,sy=0;
+    for(const p of trimmed){sx+=p.x;sy+=p.y}
+    const ox=sx/trimmed.length, oy=sy/trimmed.length;
+
+    let sxx=0,syy=0,sxy=0,sx1=0,sy1=0;
+    let bx=0,by=0,b1=0;
+
+    for(const p0 of trimmed){
+      const x=p0.x-ox, y=p0.y-oy;
+      const z=-(x*x+y*y);
+      sxx+=x*x; syy+=y*y; sxy+=x*y;
+      sx1+=x; sy1+=y;
+      bx+=x*z; by+=y*z; b1+=z;
+    }
+
+    const sol=solve3x3(
+      [[sxx,sxy,sx1],[sxy,syy,sy1],[sx1,sy1,trimmed.length]],
+      [bx,by,b1]
+    );
+    if(!sol) return null;
+
+    const [D,E,F]=sol;
+    const cxLocal=-D/2, cyLocal=-E/2;
+    const r2=cxLocal*cxLocal+cyLocal*cyLocal-F;
+    if(!Number.isFinite(r2) || r2<=0) return null;
+
+    const radius=Math.sqrt(r2);
+    const center={x:cxLocal+ox,y:cyLocal+oy};
+
+    let sumAbs=0,sumSq=0,maxErr=0;
+    for(const p of trimmed){
+      const rr=Math.hypot(p.x-center.x,p.y-center.y);
+      const e=Math.abs(rr-radius);
+      sumAbs+=e;
+      sumSq+=e*e;
+      maxErr=Math.max(maxErr,e);
+    }
+
+    const meanAbs=(sumAbs/trimmed.length)/Math.max(1,radius);
+    const rms=Math.sqrt(sumSq/trimmed.length)/Math.max(1,radius);
+    const maxRel=maxErr/Math.max(1,radius);
+
+    return {center,radius,meanAbs,rms,maxRel,points:trimmed};
+  }
+
+  function straightRunEvidence(pts){
+    /*
+      Measures how much of the stroke behaves like long straight runs.
+      Rectangles/squares have a lot; circles have very little.
+    */
+    const rs=resamplePolyline(trimOvershootForClosedIntent(pts),84);
+    if(rs.length<16) return 0;
+
+    const step=3;
+    let straight=0,total=0;
+    for(let i=step;i<rs.length-step;i++){
+      const a=rs[i-step],p=rs[i],c=rs[i+step];
+      const a1=Math.atan2(p.y-a.y,p.x-a.x);
+      const a2=Math.atan2(c.y-p.y,c.x-p.x);
+      const turn=Math.abs(angleDiff(a2,a1));
+      total++;
+      if(turn<0.10) straight++;
+    }
+    return straight/Math.max(1,total);
+  }
+
+  function circleCandidateRobust(pts,style){
+    const fit=fitCircleLeastSquares(pts);
+    if(!fit) return null;
+
+    const b=bbox(fit.points);
+    const aspect=Math.min(b.w,b.h)/Math.max(1,Math.max(b.w,b.h));
+    const close=closureScore(fit.points);
+    const straight=straightRunEvidence(fit.points);
+
+    /*
+      Intentionally generous for hand drawing:
+      - aspect >= .72 permits noticeably imperfect circles
+      - normalized mean radial error <= .16
+      - enough closure
+      - reject shapes dominated by straight sides
+    */
+    const plausible =
+      aspect >= .72 &&
+      fit.meanAbs <= .16 &&
+      fit.rms <= .20 &&
+      close >= .34 &&
+      straight <= .62;
+
+    if(!plausible) return null;
+
+    return {
+      shape:{
+        kind:'ellipse',
+        center:fit.center,
+        rx:fit.radius,
+        ry:fit.radius,
+        angle:0,
+        style,
+        shapeName:'circle'
+      },
+      score:
+        0.46*clamp01(1-fit.meanAbs/.16) +
+        0.18*clamp01(1-fit.rms/.20) +
+        0.16*aspect +
+        0.12*close +
+        0.08*clamp01(1-straight/.62)
+    };
+  }
+
+
+  function openStrokeLineIntent(pts){
+    /*
+      A single open A→B stroke should become AB even if it is curved.
+      We only send the stroke to polygon/ellipse recognition when there is
+      convincing closure or several strong directional turns.
+    */
+    if(!pts || pts.length<4) return false;
+
+    const b=bbox(pts);
+    const maxDim=Math.max(1,Math.max(b.w,b.h));
+    const gap=dist(pts[0],pts[pts.length-1]);
+
+    let pathLen=0;
+    for(let i=1;i<pts.length;i++) pathLen+=dist(pts[i-1],pts[i]);
+    const chord=Math.max(1,gap);
+
+    // Strong corner count from a uniformly resampled stroke.
+    const rs=resamplePolyline(pts,64);
+    let strongTurns=0;
+    const step=3;
+    for(let i=step;i<rs.length-step;i++){
+      const a=rs[i-step], p=rs[i], c=rs[i+step];
+      const a1=Math.atan2(p.y-a.y,p.x-a.x);
+      const a2=Math.atan2(c.y-p.y,c.x-p.x);
+      const turn=Math.abs(angleDiff(a2,a1));
+      if(turn>0.48) strongTurns++;
+    }
+
+    // If endpoints are clearly separate, the stroke is not trying to close.
+    const clearlyOpen = gap > maxDim*.42;
+
+    // A simple curved line may be longer than its chord, but should not contain
+    // repeated sharp corners or loop around on itself.
+    const pathRatio=pathLen/chord;
+    const simpleOpenCurve = pathRatio < 1.85 && strongTurns <= 5;
+
+    return clearlyOpen && simpleOpenCurve;
+  }
+
+  function forceABLine(pts,style){
+    if(!pts || pts.length<2) return null;
+    return {
+      kind:'line',
+      a:{x:pts[0].x,y:pts[0].y},
+      b:{x:pts[pts.length-1].x,y:pts[pts.length-1].y},
+      style,
+      shapeName:'line'
+    };
+  }
+
+  function recognize(pts){
+    try{
+      if(pts.length<6) return null;
+      const style=strokeStyle();
+
+      // NEW: an open A→B stroke remains a line even if the hand path is curved.
+      if(openStrokeLineIntent(pts)){
+        return forceABLine(pts,style);
+      }
+
+      const trimmed=trimOvershootForClosedIntent(pts);
+
+      // 1) Straight line keeps the familiar v6 behavior.
+      const lineCand=lineCandidate(trimmed,style);
+      const sLine=lineScore(trimmed);
+      if(lineCand && sLine>0.78) return lineCand;
+
+      /*
+        2) Circle is now an independent geometric model.
+        It no longer depends on the generic ellipse score.
+      */
+      const circle=circleCandidateRobust(trimmed,style);
+
+      // Compute rectangle evidence before accepting circle.
+      const rectCand=buildRectIdeal(trimmed,style);
+      const sRect=rectangleScore(trimmed);
+
+      if(circle){
+        /*
+          A rectangle may only steal the result when it has clearly stronger
+          four-straight-edge evidence. This prevents "almost round" hand circles
+          from being rejected by tiny corner noise.
+        */
+        if(rectCand && rectangleHasStrongEvidence(trimmed) && sRect > circle.score + 0.10){
+          return rectCand;
+        }
+        return circle.shape;
+      }
+
+      // 3) Generic ellipse for non-circular ellipses.
+      const ellCand=buildEllipseIdeal(trimmed,style);
+      const sEll=ellipseScore(trimmed);
+
+      // 4) Triangle / rectangle.
+      const triCand=buildTriangleIdeal(trimmed,style);
+      const sTri=triangleScore(trimmed);
+
+      // Strong rectangle evidence wins over ellipse.
+      if(rectCand && rectangleHasStrongEvidence(trimmed) && sRect>=0.56){
+        return rectCand;
+      }
+
+      if(ellCand && sEll>=0.54){
+        return ellCand;
+      }
+
+      // 5) v7 turning-angle engine for 5/6-gons.
+      const turnModel=robustPolygonIntent(trimmed);
+      if(turnModel && (turnModel.n===5 || turnModel.n===6)){
+        const pg=buildRegularPolygonIdeal(trimmed,turnModel.n,style);
+        if(pg) return pg;
+      }
+
+      if(triCand && sTri>=0.54) return triCand;
+      if(rectCand && sRect>=0.54) return rectCand;
+
+      return null;
+
+    }catch(err){
+      console.warn('Tanıma adayı atlandı:',err);
+      statusEl.textContent='Şekil tanıma başarısız oldu — çizim ink olarak kalacak';
+      return null;
+    }
+  }
+  function armHold(){
+    clearTimeout(holdTimer);
+    holdTimer=setTimeout(()=>{
+      if(!drawing || points.length<4 || lockedShape) return;
+      const idle=performance.now()-lastMoveTime;
+      if(idle<480) return;
+
+      const recognized=recognize(points);
+      if(recognized){
+        lockedShape=JSON.parse(JSON.stringify(recognized));
+        lockedShapeType=lockedShape.kind;
+        lockPointer={x:points[points.length-1].x,y:points[points.length-1].y};
+
+        if(lockedShape.kind==='line'){
+          lockAnchor={x:points[0].x,y:points[0].y};
+          lockedShape.a={...lockAnchor};
+          lockedShape.b={...lockPointer};
+          statusEl.textContent='Doğru aktif — A sabit, B’yi sürükleyebilirsin';
+        }else{
+          rotationCenter={...lockedShape.center};
+          rotationStartPointerAngle=Math.atan2(lockPointer.y-rotationCenter.y,lockPointer.x-rotationCenter.x);
+          rotationStartShapeAngle=lockedShape.angle||0;
+          statusEl.textContent=(lockedShape.shapeName||'Şekil')+' algılandı — hareket ettirirsen döndürme moduna geçer';
+        }
+        previewRecognized=null;
+      }else{
+        statusEl.textContent='Şekil algılanmadı';
+      }
+      redraw();
+    },560);
+  }
+
+  function eraserPointSegDistance(p,a,b){
+    const vx=b.x-a.x, vy=b.y-a.y;
+    const wx=p.x-a.x, wy=p.y-a.y;
+    const vv=vx*vx+vy*vy;
+    if(vv<1e-9) return Math.hypot(p.x-a.x,p.y-a.y);
+    let t=(wx*vx+wy*vy)/vv;
+    t=Math.max(0,Math.min(1,t));
+    const qx=a.x+t*vx,qy=a.y+t*vy;
+    return Math.hypot(p.x-qx,p.y-qy);
+  }
+
+  function eraserSampleSegment(a,b,step=4){
+    const d=Math.max(1,Math.hypot(b.x-a.x,b.y-a.y));
+    const n=Math.max(1,Math.ceil(d/step));
+    const out=[];
+    for(let i=0;i<=n;i++){
+      const t=i/n;
+      out.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});
+    }
+    return out;
+  }
+
+  function isErasableInk(o){
+    // Both ink-created and menu-created drawable objects can be erased.
+    return !!o &&
+      ['stroke','line','ellipse','rect','polygon','axes'].includes(o.kind);
+  }
+
+  function inkObjectHit(o,p,r){
+    if(!isErasableInk(o)) return false;
+
+    if(o.kind==='stroke'){
+      const pts=o.points||[];
+      if(pts.length===1) return Math.hypot(pts[0].x-p.x,pts[0].y-p.y)<=r;
+      for(let i=1;i<pts.length;i++){
+        if(eraserPointSegDistance(p,pts[i-1],pts[i])<=r) return true;
+      }
+      return false;
+    }
+
+    if(o.kind==='line'){
+      return eraserPointSegDistance(p,o.a,o.b)<=r;
+    }
+
+    if(o.kind==='ellipse'){
+      const a=-(o.angle||0), cs=Math.cos(a), sn=Math.sin(a);
+      const dx=p.x-o.center.x, dy=p.y-o.center.y;
+      const x=dx*cs-dy*sn, y=dx*sn+dy*cs;
+      const rx=Math.max(1,o.rx), ry=Math.max(1,o.ry);
+      const q=Math.sqrt((x*x)/(rx*rx)+(y*y)/(ry*ry));
+      const tol=r/Math.max(10,Math.min(rx,ry));
+      return Math.abs(q-1)<=tol;
+    }
+
+    if(o.kind==='axes'){
+      const a=o.angle||0, hw=o.w/2, hh=o.h/2;
+      const left=rotatePoint({x:o.center.x-hw,y:o.center.y},o.center,a);
+      const right=rotatePoint({x:o.center.x+hw,y:o.center.y},o.center,a);
+      const top=rotatePoint({x:o.center.x,y:o.center.y-hh},o.center,a);
+      const bottom=rotatePoint({x:o.center.x,y:o.center.y+hh},o.center,a);
+      return eraserPointSegDistance(p,left,right)<=r ||
+             eraserPointSegDistance(p,bottom,top)<=r;
+    }
+
+    if(o.kind==='axes'){
+      const a=o.angle||0, hw=o.w/2, hh=o.h/2;
+      const left=rotatePoint({x:o.center.x-hw,y:o.center.y},o.center,a);
+      const right=rotatePoint({x:o.center.x+hw,y:o.center.y},o.center,a);
+      const top=rotatePoint({x:o.center.x,y:o.center.y-hh},o.center,a);
+      const bottom=rotatePoint({x:o.center.x,y:o.center.y+hh},o.center,a);
+
+      const xPts=eraserSampleSegment(left,right,3);
+      const yPts=eraserSampleSegment(bottom,top,3);
+
+      // Use a NaN separator sentinel; caller handles axes specially below.
+      return {axes:true,xPts,yPts};
+    }
+
+    let verts=[];
+    if(o.kind==='rect'){
+      const hw=o.w/2,hh=o.h/2,a=o.angle||0;
+      verts=[
+        {x:o.center.x-hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y+hh},
+        {x:o.center.x-hw,y:o.center.y+hh}
+      ].map(v=>rotatePoint(v,o.center,a));
+    }else if(o.kind==='polygon'){
+      verts=polygonWorldVertices(o);
+    }
+
+    if(verts.length){
+      for(let i=0;i<verts.length;i++){
+        if(eraserPointSegDistance(p,verts[i],verts[(i+1)%verts.length])<=r) return true;
+      }
+    }
+    return false;
+  }
+
+  function eraseWholeInkAt(p){
+    let changed=false;
+    for(let i=objects.length-1;i>=0;i--){
+      if(inkObjectHit(objects[i],p,eraserRadius/viewZoom)){
+        objects.splice(i,1);
+        changed=true;
+      }
+    }
+    return changed;
+  }
+
+  function splitSampledStroke(points,style,p,r){
+    if(!points || points.length<2) return null;
+
+    let removed=false;
+    const chunks=[];
+    let cur=[];
+
+    for(const pt of points){
+      if(Math.hypot(pt.x-p.x,pt.y-p.y)<=r){
+        removed=true;
+        if(cur.length>=2) chunks.push(cur);
+        cur=[];
+      }else{
+        cur.push({x:pt.x,y:pt.y});
+      }
+    }
+    if(cur.length>=2) chunks.push(cur);
+
+    if(!removed) return null;
+
+    return chunks.map(pts=>({
+      kind:'stroke',
+      points:pts,
+      style:JSON.parse(JSON.stringify(style||{}))
+    }));
+  }
+
+  function sampleInkObject(o){
+    if(o.kind==='stroke'){
+      // Densify so the point eraser creates a clean gap even on sparse strokes.
+      const pts=[];
+      for(let i=1;i<o.points.length;i++){
+        const seg=eraserSampleSegment(o.points[i-1],o.points[i],3);
+        if(i>1) seg.shift();
+        pts.push(...seg);
+      }
+      return pts;
+    }
+
+    if(o.kind==='line'){
+      return eraserSampleSegment(o.a,o.b,3);
+    }
+
+    if(o.kind==='ellipse'){
+      const pts=[], n=140, a=o.angle||0;
+      for(let i=0;i<=n;i++){
+        const t=i*Math.PI*2/n;
+        const local={x:o.center.x+Math.cos(t)*o.rx,y:o.center.y+Math.sin(t)*o.ry};
+        pts.push(rotatePoint(local,o.center,a));
+      }
+      return pts;
+    }
+
+    let verts=[];
+    if(o.kind==='rect'){
+      const hw=o.w/2,hh=o.h/2,a=o.angle||0;
+      verts=[
+        {x:o.center.x-hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y-hh},
+        {x:o.center.x+hw,y:o.center.y+hh},
+        {x:o.center.x-hw,y:o.center.y+hh}
+      ].map(v=>rotatePoint(v,o.center,a));
+    }else if(o.kind==='polygon'){
+      verts=polygonWorldVertices(o);
+    }
+
+    if(verts.length){
+      const pts=[];
+      for(let i=0;i<verts.length;i++){
+        const seg=eraserSampleSegment(verts[i],verts[(i+1)%verts.length],3);
+        if(i>0) seg.shift();
+        pts.push(...seg);
+      }
+      return pts;
+    }
+
+    return [];
+  }
+
+  function erasePointInkAt(p){
+    let changed=false;
+    const next=[];
+
+    for(const o of objects){
+      if(!isErasableInk(o) || !inkObjectHit(o,p,eraserRadius/viewZoom)){
+        next.push(o);
+        continue;
+      }
+
+      const sampled=sampleInkObject(o);
+
+      if(sampled && sampled.axes){
+        const xParts=splitSampledStroke(sampled.xPts,o.style,p,eraserRadius/viewZoom);
+        const yParts=splitSampledStroke(sampled.yPts,o.style,p,eraserRadius/viewZoom);
+
+        if(xParts===null && yParts===null){
+          next.push(o);
+        }else{
+          if(xParts===null){
+            next.push({kind:'stroke',points:sampled.xPts,style:JSON.parse(JSON.stringify(o.style||{}))});
+          }else{
+            next.push(...xParts);
+          }
+
+          if(yParts===null){
+            next.push({kind:'stroke',points:sampled.yPts,style:JSON.parse(JSON.stringify(o.style||{}))});
+          }else{
+            next.push(...yParts);
+          }
+
+          changed=true;
+        }
+      }else{
+        const parts=splitSampledStroke(sampled,o.style,p,eraserRadius/viewZoom);
+
+        if(parts===null){
+          next.push(o);
+        }else{
+          next.push(...parts);
+          changed=true;
+        }
+      }
+    }
+
+    if(changed) objects=next;
+    return changed;
+  }
+
+  canvas.addEventListener('pointerdown',e=>{
+    const screenP=screenPointFromEvent(e);
+    const p=pFromEvent(e);
+
+    // Right mouse button = temporary pan in every tool mode.
+    if(e.button===2){
+      e.preventDefault();
+      isPanning=true;
+      panPointerId=e.pointerId;
+      panStartScreen=screenP;
+      panStartView={x:viewX,y:viewY};
+      canvas.setPointerCapture(e.pointerId);
+      canvas.style.cursor='grabbing';
+      return;
+    }
+
+    if(mode==='eraser'){
+      canvas.setPointerCapture(e.pointerId);
+      erasing=true;
+      eraserLastPoint=p;
+      eraserCursor=p;
+      eraserChanged=false;
+      selectedIndex=-1;
+
+      saveState();
+      const changed=(eraserKind==='stroke')
+        ? eraseWholeInkAt(p)
+        : erasePointInkAt(p);
+      eraserChanged=eraserChanged||changed;
+
+      statusEl.textContent=(eraserKind==='stroke')
+        ? 'Silgi'
+        : `Silgi — ${eraserRadius}px`;
+      redraw();
+      return;
+    }
+
+    if(mode==='select'){
+      canvas.setPointerCapture(e.pointerId);
+
+      // Multi-selection transform handles.
+      if(selectedIndices.length>1){
+        const gh=hitGroupSelectionHandle(p);
+        if(gh){
+          saveState();
+          selectStart=p;
+          activeHandle=gh;
+          groupBoxSnapshot=groupOrientedBox();
+          groupSnapshots=selectedIndices.map(i=>({
+            index:i,
+            object:cloneObject(objects[i])
+          }));
+          selectSnapshot=null;
+          selectAction=(gh==='rotate') ? 'groupRotate' : 'groupResize';
+          redraw();
+          return;
+        }
+      }
+
+      // Single-selection edit handles remain unchanged.
+      if(selectedIndices.length<=1){
+        const h=hitSelectionHandle(p);
+        if(h && selectedIndex>=0){
+          saveState();
+          setSelection([selectedIndex]);
+          selectStart=p;
+          selectSnapshot=JSON.parse(JSON.stringify(objects[selectedIndex]));
+          groupSnapshots=null;
+          activeHandle=h;
+          selectAction=
+            (h==='rotate') ? 'rotate' :
+            (
+              h.startsWith('vertex-') ||
+              h.startsWith('endpoint-') ||
+              h.startsWith('rectvertex-') ||
+              h.startsWith('ellipse-')
+            ) ? 'point' :
+            'resize';
+          redraw();
+          return;
+        }
+      }
+
+      const hit=hitTestObject(p);
+
+      if(hit>=0){
+        const hitAlreadySelected=selectedIndices.includes(hit);
+
+        // Clicking a new object collapses to a single selection.
+        if(!hitAlreadySelected){
+          setSelection([hit]);
+        }
+
+        const movingIndices=selectedIndices.length ? selectedIndices.slice() : [hit];
+
+        saveState();
+
+        // Alt-drag duplicates the current selection and moves the copies.
+        if(e.altKey && hitAlreadySelected){
+          const dupIndices=duplicateSelection(movingIndices);
+          setSelection(dupIndices);
+        }
+
+        selectStart=p;
+        activeHandle=null;
+        groupBoxSnapshot=null;
+
+        if(selectedIndices.length>1){
+          groupSnapshots=selectedIndices.map(i=>({
+            index:i,
+            object:cloneObject(objects[i])
+          }));
+          selectSnapshot=null;
+          selectAction='groupMove';
+        }else{
+          selectedIndex=selectedIndices[0];
+          selectSnapshot=cloneObject(objects[selectedIndex]);
+          groupSnapshots=null;
+          selectAction='move';
+        }
+
+        redraw();
+        return;
+      }
+
+      // Empty-space drag starts marquee selection.
+      setSelection([]);
+      marqueeStart=p;
+      marqueeEnd=p;
+      selectStart=p;
+      selectSnapshot=null;
+      groupSnapshots=null;
+      groupBoxSnapshot=null;
+      activeHandle=null;
+      selectAction='marquee';
+      redraw();
+      return;
+    }
+    if(mode!=='ink') return;
+    canvas.setPointerCapture(e.pointerId);
+    drawing=true; points=[p];
+    previewRecognized=null;
+    lockedShape=null;
+    lockedShapeType=null;
+    lockAnchor=null;
+    rotationCenter=null;
+    lockPointer=null;
+    rotationStartPointerAngle=0;
+    rotationStartShapeAngle=0;
+    lastMoveTime=performance.now();
+    statusEl.textContent='Çiziliyor…';
+    armHold();
+  });
+
+  canvas.addEventListener('pointermove',e=>{
+    const screenP=screenPointFromEvent(e);
+    const p=pFromEvent(e);
+
+    if(isPanning && e.pointerId===panPointerId){
+      viewX=panStartView.x+(screenP.x-panStartScreen.x);
+      viewY=panStartView.y+(screenP.y-panStartScreen.y);
+      redraw();
+      return;
+    }
+
+    if(mode==='eraser'){
+      eraserCursor=p;
+
+      if(erasing){
+        const samples=eraserLastPoint
+          ? eraserSampleSegment(eraserLastPoint,p,4)
+          : [p];
+
+        let changed=false;
+        for(const sp of samples){
+          changed=((eraserKind==='stroke')
+            ? eraseWholeInkAt(sp)
+            : erasePointInkAt(sp)) || changed;
+        }
+        eraserChanged=eraserChanged||changed;
+        eraserLastPoint=p;
+      }
+      redraw();
+      return;
+    }
+
+    if(mode==='select' && selectAction){
+      if(selectAction==='marquee'){
+        marqueeEnd=p;
+        redraw();
+        return;
+      }
+
+      if(selectAction==='groupRotate'){
+        if(!groupSnapshots || !groupBoxSnapshot) return;
+
+        const c=groupBoxSnapshot.center;
+        const a0=Math.atan2(selectStart.y-c.y,selectStart.x-c.x);
+        const a1=Math.atan2(p.y-c.y,p.x-c.x);
+        const delta=a1-a0;
+
+        for(const item of groupSnapshots){
+          objects[item.index]=cloneObject(item.object);
+          rotateObjectAround(objects[item.index],c,delta);
+        }
+        redraw();
+        return;
+      }
+
+      if(selectAction==='groupResize'){
+        if(!groupSnapshots || !groupBoxSnapshot) return;
+
+        const box=groupBoxSnapshot;
+        const corners={
+          nw:{x:box.minX,y:box.minY},
+          ne:{x:box.maxX,y:box.minY},
+          se:{x:box.maxX,y:box.maxY},
+          sw:{x:box.minX,y:box.maxY}
+        };
+        const opposites={nw:'se',ne:'sw',se:'nw',sw:'ne'};
+        const dragged=corners[activeHandle];
+        const opposite=corners[opposites[activeHandle]];
+        if(!dragged || !opposite) return;
+
+        const lp=worldToLocal(box,p);
+
+        let sx=Math.abs(lp.x-opposite.x)/Math.max(1,box.w);
+        let sy=Math.abs(lp.y-opposite.y)/Math.max(1,box.h);
+        sx=Math.max(.06,sx);
+        sy=Math.max(.06,sy);
+
+        if(e.shiftKey){
+          const s=Math.max(sx,sy);
+          sx=s;
+          sy=s;
+        }
+
+        function scalePointLocal(pt){
+          const lp0=worldToLocal(box,pt);
+          const nx=opposite.x+(lp0.x-opposite.x)*sx;
+          const ny=opposite.y+(lp0.y-opposite.y)*sy;
+          return localToWorld(box,{x:nx,y:ny});
+        }
+
+        for(const item of groupSnapshots){
+          const o=cloneObject(item.object);
+
+          if(o.kind==='line'){
+            o.a=scalePointLocal(o.a);
+            o.b=scalePointLocal(o.b);
+
+          }else if(o.kind==='stroke'){
+            o.points=o.points.map(scalePointLocal);
+
+          }else if(o.kind==='polygon'){
+            o.center=scalePointLocal(o.center);
+            if(o.baseVertices) o.baseVertices=o.baseVertices.map(scalePointLocal);
+
+          }else if(o.kind==='rect'){
+            o.center=scalePointLocal(o.center);
+            o.w=Math.max(12,o.w*sx);
+            o.h=Math.max(12,o.h*sy);
+
+          }else if(o.kind==='ellipse'){
+            o.center=scalePointLocal(o.center);
+            o.rx=Math.max(6,o.rx*sx);
+            o.ry=Math.max(6,o.ry*sy);
+
+          }else if(o.kind==='axes'){
+            o.center=scalePointLocal(o.center);
+            o.w=Math.max(24,o.w*sx);
+            o.h=Math.max(24,o.h*sy);
+          }
+
+          objects[item.index]=o;
+        }
+
+        redraw();
+        return;
+      }
+
+      if(selectAction==='groupMove'){
+        if(!groupSnapshots) return;
+        const dx=p.x-selectStart.x,dy=p.y-selectStart.y;
+        for(const item of groupSnapshots){
+          objects[item.index]=cloneObject(item.object);
+          translateObject(objects[item.index],dx,dy);
+        }
+        redraw();
+        return;
+      }
+
+      if(selectedIndex<0) return;
+      const o=objects[selectedIndex];
+      if(!o || !selectSnapshot) return;
+
+      if(selectAction==='move'){
+        const dx=p.x-selectStart.x,dy=p.y-selectStart.y;
+        objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
+        translateObject(objects[selectedIndex],dx,dy);
+
+      }else if(selectAction==='rotate'){
+        const box=orientedSelectionBox(selectSnapshot);
+        if(box){
+          const c=box.center;
+          const a0=Math.atan2(selectStart.y-c.y,selectStart.x-c.x);
+          const a1=Math.atan2(p.y-c.y,p.x-c.x);
+          objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
+          rotateObject(objects[selectedIndex],a1-a0);
+        }
+
+      }else if(selectAction==='point'){
+        objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
+
+        const handled=moveMenuHandleFromSnapshot(
+          objects[selectedIndex],
+          selectSnapshot,
+          String(activeHandle),
+          p
+        );
+
+        // Backward compatibility: auto-recognized triangle still uses vertex editing.
+        if(!handled && String(activeHandle).startsWith('vertex-')){
+          const vertexIndex=Number(String(activeHandle).split('-')[1]);
+          moveTriangleVertexFromSnapshot(
+            objects[selectedIndex],
+            selectSnapshot,
+            vertexIndex,
+            p
+          );
+        }
+
+      }else if(selectAction==='resize'){
+        objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
+
+        const handled=resizeObjectLocalFromSnapshot(
+          objects[selectedIndex],
+          selectSnapshot,
+          p,
+          activeHandle,
+          e.shiftKey
+        );
+
+        // Fallback for objects that don't support local resize yet.
+        if(!handled){
+          const startB=objectBounds(selectSnapshot);
+          if(startB){
+            resizeObjectFromSnapshot(
+              objects[selectedIndex],
+              selectSnapshot,
+              startB,
+              p,
+              activeHandle
+            );
+          }
+        }
+      }
+      redraw();
+      return;
+    }
+
+    if(!drawing || mode!=='ink') return;
+
+    if(lockedShape){
+      if(lockedShape.kind==='line'){
+        // Çizgi: A sabit, B fareyi takip eder.
+        lockedShape.a={...lockAnchor};
+        lockedShape.b={x:p.x,y:p.y};
+        statusEl.textContent='Doğru aktif — B noktası hareket ediyor';
+
+      }else if(lockedShape.kind==='ellipse' && lockedShape.shapeName==='circle'){
+        /*
+          Dairede döndürmenin anlamı yok.
+          Merkez sabit kalır; imlecin merkeze uzaklığı yeni yarıçaptır.
+          Böylece kullanıcı tuşu bırakana kadar çapı canlı olarak değiştirir.
+        */
+        const r=Math.hypot(
+          p.x-lockedShape.center.x,
+          p.y-lockedShape.center.y
+        );
+        const radius=Math.max(8,r);
+        lockedShape.rx=radius;
+        lockedShape.ry=radius;
+        lockedShape.angle=0;
+        statusEl.textContent='Daire aktif — çap değiştiriliyor';
+
+      }else{
+        // Elips ve diğer otomatik şekiller döndürülür.
+        const a=Math.atan2(p.y-rotationCenter.y,p.x-rotationCenter.x);
+        let delta=a-rotationStartPointerAngle;
+        while(delta>Math.PI) delta-=Math.PI*2;
+        while(delta<-Math.PI) delta+=Math.PI*2;
+        lockedShape.angle=rotationStartShapeAngle+delta;
+        statusEl.textContent=(lockedShape.shapeName||'Şekil')+' döndürülüyor — bırakınca sabitlenecek';
+      }
+      redraw();
+      return;
+    }
+
+    const prev=points[points.length-1];
+    if(dist(prev,p)>1.5){
+      points.push(p);
+      lastMoveTime=performance.now();
+      previewRecognized=null;
+      armHold();
+      redraw();
+    }
+  });
+  canvas.addEventListener('pointerleave',()=>{
+    if(mode==='eraser' && !erasing){
+      eraserCursor=null;
+      redraw();
+    }
+  });
+
+  function finishPointer(e){
+    if(isPanning && e.pointerId===panPointerId){
+      isPanning=false;
+      panPointerId=null;
+      panStartScreen=null;
+      panStartView=null;
+      restoreToolCursor();
+      redraw();
+      return;
+    }
+
+    if(mode==='eraser'){
+      erasing=false;
+      eraserLastPoint=null;
+
+      // If the eraser touched nothing, remove the unnecessary undo snapshot.
+      if(!eraserChanged && undoStack.length) undoStack.pop();
+      eraserChanged=false;
+      redraw();
+      return;
+    }
+
+    if(mode==='select'){
+      if(selectAction==='marquee'){
+        const r=marqueeRect();
+        if(r && r.w>3 && r.h>3){
+          const hits=[];
+          for(let i=0;i<objects.length;i++){
+            const b=objectBounds(objects[i]);
+            if(boundsInsideRect(b,r)) hits.push(i);
+          }
+          setSelection(hits);
+          statusEl.textContent = hits.length
+            ? `${hits.length} nesne seçildi`
+            : 'Seçim yok';
+        }else{
+          setSelection([]);
+        }
+      }
+
+      selectAction=null;
+      selectStart=null;
+      selectSnapshot=null;
+      groupSnapshots=null;
+      groupBoxSnapshot=null;
+      activeHandle=null;
+      marqueeStart=null;
+      marqueeEnd=null;
+      redraw();
+      return;
+    }
+
+    if(!drawing) return;
+    clearTimeout(holdTimer);
+    saveState();
+
+    if(lockedShape){
+      // Sol tuşun bırakılması otomatik şeklin kabulüdür.
+      objects.push(JSON.parse(JSON.stringify(lockedShape)));
+      statusEl.textContent = lockedShape.kind==='line'
+        ? 'Doğru kabul edildi — B son konumunda sabitlendi'
+        : 'Şekil kabul edildi';
+    }else if(previewRecognized){
+      objects.push(JSON.parse(JSON.stringify(previewRecognized)));
+      statusEl.textContent='Şekle dönüştürüldü';
+    }else{
+      objects.push({kind:'stroke',points:points.map(p=>({x:p.x,y:p.y})),style:strokeStyle()});
+      statusEl.textContent='Ink olarak bırakıldı';
+    }
+
+    drawing=false;
+    points=[];
+    previewRecognized=null;
+    lockedShape=null;
+    lockedShapeType=null;
+    lockAnchor=null;
+    rotationCenter=null;
+    lockPointer=null;
+    redraw();
+  }
+  canvas.addEventListener('pointerup',finishPointer);
+  canvas.addEventListener('pointercancel',finishPointer);
+
+  canvas.addEventListener('contextmenu',e=>{
+    e.preventDefault();
+  });
+
+  canvas.addEventListener('wheel',e=>{
+    e.preventDefault();
+
+    const s=screenPointFromEvent(e);
+    const worldBefore=screenToWorld(s);
+
+    // Smooth exponential zoom works consistently for mouse wheels and trackpads.
+    const factor=Math.exp(-e.deltaY*0.0014);
+    const nextZoom=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,viewZoom*factor));
+
+    if(Math.abs(nextZoom-viewZoom)<1e-6) return;
+
+    viewZoom=nextZoom;
+
+    // Keep the world point under the cursor fixed on screen.
+    viewX=s.x-worldBefore.x*viewZoom;
+    viewY=s.y-worldBefore.y*viewZoom;
+
+    redraw();
+  },{passive:false});
+
+
+  colorBtn.onclick=(e)=>{
+    e.stopPropagation();
+    eraserMenu.classList.remove('open');
+    colorMenu.classList.toggle('open');
+  };
+
+  colorOptions.forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      currentColor=btn.dataset.color || '#111111';
+      currentColorSwatch.style.background=currentColor;
+      colorOptions.forEach(b=>b.classList.toggle('active',b===btn));
+      colorMenu.classList.remove('open');
+    });
+  });
+
+  inkBtn.onclick=()=>{
+    eraserMenu.classList.remove('open');
+    colorMenu.classList.remove('open');
+    mode='ink';
+    setSelection([]);
+    eraserCursor=null;
+    inkBtn.classList.add('active');
+    selectBtn.classList.remove('active');
+    eraserBtn.classList.remove('active');
+    canvas.style.cursor='crosshair';
+    redraw();
+  };
+
+  selectBtn.onclick=()=>{
+    eraserMenu.classList.remove('open');
+    colorMenu.classList.remove('open');
+    mode='select';
+    eraserCursor=null;
+    selectBtn.classList.add('active');
+    inkBtn.classList.remove('active');
+    eraserBtn.classList.remove('active');
+    canvas.style.cursor='default';
+    statusEl.textContent='Seçim modu — nesneye tıkla, taşı / resize / rotate';
+    redraw();
+  };
+
+  eraserBtn.onclick=(e)=>{
+    e.stopPropagation();
+    colorMenu.classList.remove('open');
+    eraserMenu.classList.toggle('open');
+  };
+
+  eraserOptions.forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+
+      eraserKind=btn.dataset.eraserKind;
+      if(eraserKind==='point'){
+        eraserRadius=Number(btn.dataset.radius)||14;
+      }
+
+      eraserOptions.forEach(b=>b.classList.toggle('active',b===btn));
+      eraserMenu.classList.remove('open');
+
+      mode='eraser';
+      setSelection([]);
+      eraserBtn.classList.add('active');
+      inkBtn.classList.remove('active');
+      selectBtn.classList.remove('active');
+      canvas.style.cursor='none';
+
+      statusEl.textContent=(eraserKind==='stroke')
+        ? 'Silgi'
+        : `Silgi — ${eraserRadius}px`;
+
+      redraw();
+    });
+  });
+
+  document.addEventListener('pointerdown',e=>{
+    if(!e.target.closest('.eraserWrap')){
+      eraserMenu.classList.remove('open');
+    }
+    if(!e.target.closest('.colorWrap')){
+      colorMenu.classList.remove('open');
+    }
+  });
+
+  addShapeBtn.onclick=()=>{
+    saveState();
+    const r=canvas.getBoundingClientRect();
+    const centerWorld=screenToWorld({x:r.width/2,y:r.height/2});
+    const cx=centerWorld.x, cy=centerWorld.y;
+    const insertionScale=1/viewZoom;
+    const style=strokeStyle(), t=shapeType.value;
+    if(t==='line') objects.push({kind:'line',a:{x:cx-100*insertionScale,y:cy},b:{x:cx+100*insertionScale,y:cy},style,source:'menu'});
+    if(t==='rect') objects.push({kind:'rect',center:{x:cx,y:cy},w:180*insertionScale,h:110*insertionScale,angle:0,style,shapeName:'rectangle',source:'menu'});
+    if(t==='ellipse') objects.push({kind:'ellipse',center:{x:cx,y:cy},rx:95*insertionScale,ry:60*insertionScale,angle:0,style,shapeName:'ellipse',source:'menu'});
+    if(t==='triangle') {
+      // Menu triangle: simple upright isosceles triangle using current polygon schema.
+      const base=[
+        {x:cx,      y:cy-80*insertionScale},
+        {x:cx+95*insertionScale,   y:cy+65*insertionScale},
+        {x:cx-95*insertionScale,   y:cy+65*insertionScale}
+      ];
+      objects.push({
+        kind:'polygon',
+        center:{x:cx,y:cy},
+        baseVertices:base,
+        angle:0,
+        style,
+        shapeName:'triangle',
+        source:'menu'
+      });
+    }
+    if(t==='pentagon') {
+      // Menu pentagon: mathematically regular pentagon.
+      const radius=90*insertionScale;
+      const base=[];
+      for(let i=0;i<5;i++){
+        const a=-Math.PI/2 + i*Math.PI*2/5;
+        base.push({
+          x:cx+Math.cos(a)*radius,
+          y:cy+Math.sin(a)*radius
+        });
+      }
+      objects.push({
+        kind:'polygon',
+        center:{x:cx,y:cy},
+        baseVertices:base,
+        angle:0,
+        style,
+        shapeName:'regular pentagon',
+        source:'menu'
+      });
+    }
+
+    if(t==='axes') {
+      objects.push({
+        kind:'axes',
+        center:{x:cx,y:cy},
+        w:240*insertionScale,
+        h:180*insertionScale,
+        angle:0,
+        style,
+        shapeName:'x-y axes',
+        source:'menu'
+      });
+    }
+
+    if(t==='hexagon') {
+      // Menu hexagon: mathematically regular hexagon.
+      // Build vertices locally; no dependency on any helper function.
+      const radius=90*insertionScale;
+      const base=[];
+      for(let i=0;i<6;i++){
+        const a=i*Math.PI/3;
+        base.push({
+          x:cx+Math.cos(a)*radius,
+          y:cy+Math.sin(a)*radius
+        });
+      }
+      objects.push({
+        kind:'polygon',
+        center:{x:cx,y:cy},
+        baseVertices:base,
+        angle:0,
+        style,
+        shapeName:'regular hexagon',
+        source:'menu'
+      });
+    }
+    redraw();statusEl.textContent='Şekil eklendi';
+  };
+
+  undoBtn.onclick=()=>{
+    if(!undoStack.length) return;
+    redoStack.push(JSON.stringify(objects));
+    objects=JSON.parse(undoStack.pop());
+    setSelection([]);
+    redraw();
+  };
+  redoBtn.onclick=()=>{
+    if(!redoStack.length) return;
+    undoStack.push(JSON.stringify(objects));
+    objects=JSON.parse(redoStack.pop());
+    setSelection([]);
+    redraw();
+  };
+  clearBtn.onclick=()=>{
+    if(!objects.length) return;
+    saveState();
+    objects=[];
+    setSelection([]);
+    redraw();
+    statusEl.textContent='Temizlendi';
+  };
+
+
+  window.addEventListener('error',e=>{
+    console.error(e.error||e.message);
+    statusEl.textContent='Bir çizim hatası atlandı — uygulama çalışmaya devam ediyor';
+    e.preventDefault();
+  });
+
+
+  window.addEventListener('keydown',e=>{
+    const cmd=e.ctrlKey || e.metaKey;
+
+    if(mode==='select' && selectedIndices.length && (e.key==='Delete' || e.key==='Backspace')){
+      e.preventDefault();
+      saveState();
+
+      const sorted=selectedIndices.slice().sort((a,b)=>b-a);
+      for(const i of sorted){
+        if(i>=0 && i<objects.length) objects.splice(i,1);
+      }
+
+      const count=sorted.length;
+      setSelection([]);
+      redraw();
+      statusEl.textContent=`${count} nesne silindi`;
+      return;
+    }
+
+    if(mode==='select' && cmd && e.key.toLowerCase()==='c' && selectedIndices.length){
+      e.preventDefault();
+      internalClipboard=selectedIndices
+        .map(i=>objects[i])
+        .filter(Boolean)
+        .map(cloneObject);
+      statusEl.textContent=`${internalClipboard.length} nesne kopyalandı`;
+      return;
+    }
+
+    if(mode==='select' && cmd && e.key.toLowerCase()==='v' && internalClipboard.length){
+      e.preventDefault();
+      saveState();
+
+      const start=objects.length;
+      for(const original of internalClipboard){
+        const copy=cloneObject(original);
+        translateObject(copy,pasteOffsetStep,pasteOffsetStep);
+        objects.push(copy);
+      }
+
+      setSelection(
+        Array.from({length:internalClipboard.length},(_,k)=>start+k)
+      );
+
+      redraw();
+      statusEl.textContent=`${internalClipboard.length} nesne yapıştırıldı`;
+      return;
+    }
+
+    if(e.key==='Escape'){
+      setSelection([]);
+      selectAction=null;
+      marqueeStart=null;
+      marqueeEnd=null;
+      redraw();
+    }
+  });
+
+  resize();
+})();
+</script>
+</body>
+</html>
