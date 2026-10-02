@@ -3522,8 +3522,10 @@
   }
 
   function isErasableInk(o){
-    // Both ink-created and menu-created drawable objects can be erased.
+    // Both ink-created and menu-created drawable objects can be erased,
+    // but locked objects are always protected from the eraser.
     return !!o &&
+      !o.locked &&
       ['stroke','line','ellipse','rect','polygon','parabola','axes','symbol'].includes(o.kind);
   }
 
@@ -5374,11 +5376,13 @@
   clearBtn.onclick=()=>{
     if(textEditing) closeTextEditor(true);
     if(!objects.length) return;
+
+    const count=objects.length;
     saveState();
     objects=[];
     setSelection([]);
     redraw();
-    statusEl.textContent='Temizlendi';
+    statusEl.textContent=`${count} nesne silindi`;
   };
 
 
@@ -5394,14 +5398,24 @@
 
     if(mode==='select' && selectedIndices.length && (e.key==='Delete' || e.key==='Backspace')){
       e.preventDefault();
-      saveState();
 
-      const sorted=selectedIndices.slice().sort((a,b)=>b-a);
-      for(const i of sorted){
-        if(i>=0 && i<objects.length) objects.splice(i,1);
+      const deletable=selectedIndices
+        .filter(i=>i>=0 && i<objects.length && objects[i] && !objects[i].locked)
+        .sort((a,b)=>b-a);
+
+      if(!deletable.length){
+        statusEl.textContent='Kilitli nesneler silinemez';
+        redraw();
+        return;
       }
 
-      const count=sorted.length;
+      saveState();
+
+      for(const i of deletable){
+        objects.splice(i,1);
+      }
+
+      const count=deletable.length;
       setSelection([]);
       redraw();
       statusEl.textContent=`${count} nesne silindi`;
