@@ -394,6 +394,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (() => {
   const canvas = document.getElementById('c');
@@ -475,6 +476,32 @@
   let objects = [];
   let undoStack = [];
   let redoStack = [];
+
+  // ============================================================
+  // v16 — Realtime Collaborative Whiteboard
+  // ============================================================
+  // Supabase Project Settings > API bölümünden alın.
+  const SUPABASE_URL = 'https://wtgvrjacvmduodnaskjg.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_bEsvEKhBm0aJVAYvQBgeaA_tN4cnSxj';
+
+  // GitHub sayfasına giren herkes bu ilk sürümde aynı tahtaya bağlanır.
+  const COLLAB_BOARD_ID = 'main';
+  const COLLAB_TABLE = 'whiteboards';
+
+  const COLLAB_CLIENT_ID = (
+    (globalThis.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : 'client_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2)
+  );
+
+  let collabClient = null;
+  let collabChannel = null;
+  let collabEnabled = false;
+  let collabApplyingRemote = false;
+  let collabLastSignature = '';
+  let collabSendTimer = null;
+  let collabSendInFlight = false;
+  let collabSendAgain = false;
 
   let selectedIndex = -1;
   let selectedIndices = [];
@@ -740,6 +767,221 @@
       canvas.style.cursor='text';
     }else{
       canvas.style.cursor='default';
+    }
+  }
+
+
+  function collabConfigured(){
+    return (
+      typeof SUPABASE_URL==='string' &&
+      typeof SUPABASE_ANON_KEY==='string' &&
+      SUPABASE_URL.startsWith('https://') &&
+      !SUPABASE_URL.includes('YOUR_SUPABASE') &&
+      SUPABASE_ANON_KEY.length>20 &&
+      !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE')
+    );
+  }
+
+  function makeObjectId(){
+    return (
+      (globalThis.crypto && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : 'obj_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2)
+    );
+  }
+
+  function ensureUniqueObjectIds(){
+    const seen=new Set();
+    let changed=false;
+
+    for(const o of objects){
+      if(!o || typeof o!=='object') continue;
+      if(!o.id || typeof o.id!=='string' || seen.has(o.id)){
+        o.id=makeObjectId();
+        changed=true;
+      }
+      seen.add(o.id);
+    }
+    return changed;
+  }
+
+  function collabSerializableObjects(){
+    ensureUniqueObjectIds();
+    return JSON.parse(JSON.stringify(objects));
+  }
+
+  function collabSignature(state=objects){
+    try{
+      return JSON.stringify(state);
+    }catch(_){
+      return '';
+    }
+  }
+
+  function collabSetStatus(message){
+    if(message) statusEl.textContent=message;
+  }
+
+  async function collabSendBoardNow(){
+    if(!collabEnabled || !collabClient || collabApplyingRemote) return;
+
+    if(collabSendInFlight){
+      collabSendAgain=true;
+      return;
+    }
+
+    collabSendInFlight=true;
+    collabSendAgain=false;
+
+    try{
+      const state=collabSerializableObjects();
+      const signature=collabSignature(state);
+
+      const {error}=await collabClient
+        .from(COLLAB_TABLE)
+        .upsert({
+          id:COLLAB_BOARD_ID,
+          state,
+          updated_at:new Date().toISOString(),
+          updated_by:COLLAB_CLIENT_ID
+        },{onConflict:'id'});
+
+      if(error) throw error;
+      collabLastSignature=signature;
+    }catch(err){
+      console.error('Realtime gönderim hatası:',err);
+      collabSetStatus('Ortak tahta bağlantısında gönderim hatası');
+    }finally{
+      collabSendInFlight=false;
+      if(collabSendAgain){
+        collabSendAgain=false;
+        setTimeout(collabSendBoardNow,40);
+      }
+    }
+  }
+
+  function collabScheduleSend(delay=80){
+    if(!collabEnabled || collabApplyingRemote) return;
+    clearTimeout(collabSendTimer);
+    collabSendTimer=setTimeout(collabSendBoardNow,delay);
+  }
+
+  function collabApplyRemoteState(nextState,updatedBy=''){
+    if(!Array.isArray(nextState)) return;
+    if(updatedBy===COLLAB_CLIENT_ID) return;
+
+    const incoming=JSON.parse(JSON.stringify(nextState));
+    const sig=collabSignature(incoming);
+    if(sig===collabLastSignature) return;
+
+    collabApplyingRemote=true;
+    try{
+      objects=incoming;
+      ensureUniqueObjectIds();
+
+      setSelection([]);
+      closeContextMenu();
+      if(textEditing) closeTextEditor(false);
+
+      collabLastSignature=collabSignature(objects);
+      redraw();
+    }finally{
+      collabApplyingRemote=false;
+    }
+  }
+
+  async function initCollaboration(){
+    ensureUniqueObjectIds();
+    collabLastSignature=collabSignature(objects);
+
+    if(!collabConfigured()){
+      console.info('Ortak tahta altyapısı hazır; Supabase URL ve anon key bekleniyor.');
+      collabSetStatus('Yerel mod — ortak tahta için Supabase ayarı gerekiyor');
+      return;
+    }
+
+    if(!window.supabase || !window.supabase.createClient){
+      collabSetStatus('Supabase kütüphanesi yüklenemedi');
+      return;
+    }
+
+    try{
+      collabClient=window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
+        {
+          auth:{persistSession:false,autoRefreshToken:false},
+          realtime:{params:{eventsPerSecond:20}}
+        }
+      );
+
+      // Önce ortak tahtanın mevcut halini yükle.
+      const {data,error}=await collabClient
+        .from(COLLAB_TABLE)
+        .select('id,state,updated_at,updated_by')
+        .eq('id',COLLAB_BOARD_ID)
+        .maybeSingle();
+
+      if(error) throw error;
+
+      if(data && Array.isArray(data.state)){
+        collabApplyRemoteState(data.state,data.updated_by||'');
+      }else{
+        const initialState=collabSerializableObjects();
+        const {error:insertError}=await collabClient
+          .from(COLLAB_TABLE)
+          .upsert({
+            id:COLLAB_BOARD_ID,
+            state:initialState,
+            updated_at:new Date().toISOString(),
+            updated_by:COLLAB_CLIENT_ID
+          },{onConflict:'id'});
+
+        if(insertError) throw insertError;
+        collabLastSignature=collabSignature(initialState);
+      }
+
+      collabChannel=collabClient
+        .channel('whiteboard:'+COLLAB_BOARD_ID)
+        .on(
+          'postgres_changes',
+          {
+            event:'*',
+            schema:'public',
+            table:COLLAB_TABLE,
+            filter:'id=eq.'+COLLAB_BOARD_ID
+          },
+          payload=>{
+            const row=payload.new;
+            if(!row || !Array.isArray(row.state)) return;
+            collabApplyRemoteState(row.state,row.updated_by||'');
+          }
+        )
+        .subscribe(status=>{
+          if(status==='SUBSCRIBED'){
+            collabEnabled=true;
+            collabLastSignature=collabSignature(objects);
+            collabSetStatus('Ortak tahta bağlı');
+          }else if(status==='CHANNEL_ERROR' || status==='TIMED_OUT'){
+            collabSetStatus('Ortak tahta bağlantı hatası');
+          }
+        });
+
+      // Mevcut uygulamadaki bütün ekleme/taşıma/döndürme/silme yollarını
+      // tek tek değiştirmeden, nesne listesindeki değişiklikleri izler.
+      setInterval(()=>{
+        if(!collabEnabled || collabApplyingRemote) return;
+        ensureUniqueObjectIds();
+        const sig=collabSignature(objects);
+        if(sig && sig!==collabLastSignature){
+          collabScheduleSend(70);
+        }
+      },100);
+
+    }catch(err){
+      console.error('Ortak tahta başlatılamadı:',err);
+      collabEnabled=false;
+      collabSetStatus('Yerel mod — ortak tahta bağlantısı kurulamadı');
     }
   }
 
@@ -5722,6 +5964,7 @@
     if(!undoStack.length) return;
     redoStack.push(JSON.stringify(objects));
     objects=JSON.parse(undoStack.pop());
+    ensureUniqueObjectIds();
     setSelection([]);
     redraw();
   };
@@ -5730,6 +5973,7 @@
     if(!redoStack.length) return;
     undoStack.push(JSON.stringify(objects));
     objects=JSON.parse(redoStack.pop());
+    ensureUniqueObjectIds();
     setSelection([]);
     redraw();
   };
@@ -5802,6 +6046,7 @@
   });
 
   resize();
+  initCollaboration();
 })();
 </script>
 </body>
