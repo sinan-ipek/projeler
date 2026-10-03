@@ -502,6 +502,23 @@
   let eraserCursor = null;
   let eraserChanged = false;
 
+  // Tablet / touch input layer.
+  // Mouse and pen keep the existing desktop behavior.
+  const activeTouches = new Map();
+  let touchGesture = null;
+  let touchToolPointerId = null;
+  let touchActionObjectsSnapshot = null;
+  let touchActionSelectionSnapshot = null;
+  let touchActionUndoDepth = 0;
+  let suppressTouchUntilAllUp = false;
+  let inkPointerId = null;
+
+  let touchLongPressTimer = null;
+  let touchLongPressPointerId = null;
+  let touchLongPressTriggered = false;
+  let touchLongPressStartScreen = null;
+  let touchLongPressStartWorld = null;
+
   let dpr = Math.max(1, window.devicePixelRatio || 1);
 
   function resize(){
@@ -543,6 +560,169 @@
       t:performance.now(),
       pressure:e.pressure||0.5
     };
+  }
+
+  function touchMidpoint(a,b){
+    return {x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+  }
+
+  function touchDistance(a,b){
+    return Math.hypot(b.x-a.x,b.y-a.y);
+  }
+
+  function clearTouchLongPress(){
+    clearTimeout(touchLongPressTimer);
+    touchLongPressTimer=null;
+    touchLongPressPointerId=null;
+    touchLongPressStartScreen=null;
+    touchLongPressStartWorld=null;
+  }
+
+  function cancelCurrentTouchToolAction(restoreObjects=true){
+    clearTimeout(holdTimer);
+
+    if(restoreObjects && touchActionObjectsSnapshot!==null){
+      try{
+        objects=JSON.parse(touchActionObjectsSnapshot);
+      }catch(_){}
+      if(undoStack.length>touchActionUndoDepth){
+        undoStack.length=touchActionUndoDepth;
+      }
+      if(touchActionSelectionSnapshot){
+        selectedIndices=touchActionSelectionSnapshot.indices.slice();
+        selectedIndex=touchActionSelectionSnapshot.selectedIndex;
+        groupSelectionAngle=touchActionSelectionSnapshot.groupSelectionAngle;
+        normalizeSelection();
+      }
+    }
+
+    drawing=false;
+    points=[];
+    previewRecognized=null;
+    lockedShape=null;
+    lockedShapeType=null;
+    lockAnchor=null;
+    rotationCenter=null;
+    lockPointer=null;
+    inkPointerId=null;
+
+    erasing=false;
+    eraserLastPoint=null;
+    eraserChanged=false;
+
+    selectAction=null;
+    selectStart=null;
+    selectSnapshot=null;
+    groupSnapshots=null;
+    groupBoxSnapshot=null;
+    activeHandle=null;
+    marqueeStart=null;
+    marqueeEnd=null;
+
+    touchToolPointerId=null;
+    touchActionObjectsSnapshot=null;
+    touchActionSelectionSnapshot=null;
+    touchActionUndoDepth=undoStack.length;
+  }
+
+  function beginTwoFingerGesture(){
+    clearTouchLongPress();
+    touchLongPressTriggered=false;
+
+    // Cancel any one-finger drawing/drag/erase that may have begun
+    // before the second finger arrived.
+    cancelCurrentTouchToolAction(true);
+
+    const pts=[...activeTouches.values()];
+    if(pts.length<2) return;
+
+    const a=pts[0], b=pts[1];
+    const mid=touchMidpoint(a,b);
+    const dist=Math.max(1,touchDistance(a,b));
+    const anchorWorld={
+      x:(mid.x-viewX)/viewZoom,
+      y:(mid.y-viewY)/viewZoom
+    };
+
+    touchGesture={
+      startDistance:dist,
+      startZoom:viewZoom,
+      anchorWorld
+    };
+    suppressTouchUntilAllUp=false;
+    closeContextMenu();
+    if(textEditing) closeTextEditor(true);
+    statusEl.textContent='İki parmak: kaydır / yakınlaştır';
+    redraw();
+  }
+
+  function updateTwoFingerGesture(){
+    if(!touchGesture || activeTouches.size<2) return;
+    const pts=[...activeTouches.values()];
+    const a=pts[0], b=pts[1];
+    const mid=touchMidpoint(a,b);
+    const dist=Math.max(1,touchDistance(a,b));
+
+    const factor=dist/touchGesture.startDistance;
+    const nextZoom=Math.max(
+      MIN_ZOOM,
+      Math.min(MAX_ZOOM,touchGesture.startZoom*factor)
+    );
+
+    viewZoom=nextZoom;
+    viewX=mid.x-touchGesture.anchorWorld.x*viewZoom;
+    viewY=mid.y-touchGesture.anchorWorld.y*viewZoom;
+
+    redraw();
+    if(textEditing) positionTextEditor();
+  }
+
+  function openTouchContextMenuAt(screenP,worldP){
+    const hit=hitTestObjectAny(worldP);
+    if(hit<0 || !objects[hit]){
+      closeContextMenu();
+      return;
+    }
+
+    let targets=[];
+    if(objects[hit].locked){
+      targets=[hit];
+    }else if(selectedIndices.includes(hit) && selectedIndices.length){
+      targets=selectedIndices.slice();
+    }else{
+      setSelection([hit]);
+      targets=selectedIndices.length ? selectedIndices.slice() : [hit];
+    }
+
+    redraw();
+    openContextMenu(screenP,targets);
+  }
+
+  function armTouchLongPress(e,screenP,worldP){
+    clearTouchLongPress();
+    if(e.pointerType!=='touch' || mode!=='select' || activeTouches.size!==1) return;
+
+    touchLongPressPointerId=e.pointerId;
+    touchLongPressStartScreen={...screenP};
+    touchLongPressStartWorld={x:worldP.x,y:worldP.y};
+    touchLongPressTriggered=false;
+
+    touchLongPressTimer=setTimeout(()=>{
+      if(
+        activeTouches.size!==1 ||
+        !activeTouches.has(e.pointerId) ||
+        touchGesture ||
+        suppressTouchUntilAllUp
+      ) return;
+
+      touchLongPressTriggered=true;
+      cancelCurrentTouchToolAction(true);
+      openTouchContextMenuAt(
+        touchLongPressStartScreen,
+        touchLongPressStartWorld
+      );
+      statusEl.textContent='Nesne menüsü';
+    },620);
   }
 
   function restoreToolCursor(){
@@ -1506,16 +1686,17 @@
     };
   }
 
-  function hitGroupSelectionHandle(p){
+  function hitGroupSelectionHandle(p,pointerType='mouse'){
     if(selectedIndices.length<2) return null;
     const box=groupOrientedBox();
     if(!box) return null;
     const oc=orientedBoxCorners(box,8/viewZoom);
 
+    const hitR=(pointerType==='touch' ? 22 : 11)/viewZoom;
     for(const [name,h] of [['nw',oc.nw],['ne',oc.ne],['se',oc.se],['sw',oc.sw]]){
-      if(Math.hypot(p.x-h.x,p.y-h.y)<=11/viewZoom) return name;
+      if(Math.hypot(p.x-h.x,p.y-h.y)<=hitR) return name;
     }
-    if(Math.hypot(p.x-oc.rotate.x,p.y-oc.rotate.y)<=11/viewZoom) return 'rotate';
+    if(Math.hypot(p.x-oc.rotate.x,p.y-oc.rotate.y)<=hitR) return 'rotate';
     return null;
   }
 
@@ -1853,7 +2034,7 @@
            p.y>=b.y-pad && p.y<=b.y+b.h+pad;
   }
 
-  function hitSelectionHandle(p){
+  function hitSelectionHandle(p,pointerType='mouse'){
     if(selectedIndex<0) return null;
     const selected=objects[selectedIndex];
 
@@ -1865,8 +2046,9 @@
         {name:'endpoint-0',x:selected.a.x,y:selected.a.y},
         {name:'endpoint-1',x:selected.b.x,y:selected.b.y}
       ];
+      const hitR=(pointerType==='touch' ? 22 : 11)/viewZoom;
       for(const h of lineHandles){
-        if(Math.hypot(p.x-h.x,p.y-h.y)<=11/viewZoom) return h.name;
+        if(Math.hypot(p.x-h.x,p.y-h.y)<=hitR) return h.name;
       }
       return null;
     }
@@ -1877,7 +2059,8 @@
 
     const special=(selected.kind==='ellipse') ? [] : rawSpecial;
     for(const h of special){
-      const radius=h.name.startsWith('sqrt-') ? 15/viewZoom : 11/viewZoom;
+      const base=h.name.startsWith('sqrt-') ? 15 : 11;
+      const radius=(pointerType==='touch' ? Math.max(22,base) : base)/viewZoom;
       if(Math.hypot(p.x-h.x,p.y-h.y)<=radius) return h.name;
     }
 
@@ -1889,7 +2072,8 @@
     if(!special.length && isTriangle){
       const verts=polygonWorldVertices(selected);
       for(let i=0;i<verts.length;i++){
-        if(Math.hypot(p.x-verts[i].x,p.y-verts[i].y)<=11/viewZoom){
+        const hitR=(pointerType==='touch' ? 22 : 11)/viewZoom;
+        if(Math.hypot(p.x-verts[i].x,p.y-verts[i].y)<=hitR){
           return 'vertex-'+i;
         }
       }
@@ -1899,13 +2083,15 @@
       const entries=[
         ['nw',oc.nw],['ne',oc.ne],['se',oc.se],['sw',oc.sw]
       ];
+      const hitR=(pointerType==='touch' ? 22 : 11)/viewZoom;
       for(const [name,h] of entries){
-        if(Math.hypot(p.x-h.x,p.y-h.y)<=11/viewZoom) return name;
+        if(Math.hypot(p.x-h.x,p.y-h.y)<=hitR) return name;
       }
     }
 
     if(!(selected.kind==='ellipse' && selected.shapeName==='circle')){
-      if(Math.hypot(p.x-oc.rotate.x,p.y-oc.rotate.y)<=11/viewZoom) return 'rotate';
+      const hitR=(pointerType==='touch' ? 22 : 11)/viewZoom;
+      if(Math.hypot(p.x-oc.rotate.x,p.y-oc.rotate.y)<=hitR) return 'rotate';
     }
 
     return null;
@@ -4016,6 +4202,35 @@
     const screenP=screenPointFromEvent(e);
     const p=pFromEvent(e);
 
+    if(e.pointerType==='touch'){
+      e.preventDefault();
+
+      activeTouches.set(e.pointerId,{...screenP});
+      try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
+
+      // Once a two-finger gesture has ended, the remaining finger must be
+      // lifted before another one-finger tool action may start.
+      if(suppressTouchUntilAllUp){
+        return;
+      }
+
+      if(activeTouches.size>=2){
+        if(activeTouches.size===2) beginTwoFingerGesture();
+        return;
+      }
+
+      touchToolPointerId=e.pointerId;
+      touchActionObjectsSnapshot=JSON.stringify(objects);
+      touchActionSelectionSnapshot={
+        indices:selectedIndices.slice(),
+        selectedIndex,
+        groupSelectionAngle
+      };
+      touchActionUndoDepth=undoStack.length;
+
+      armTouchLongPress(e,screenP,p);
+    }
+
     // Left-clicking empty canvas closes the object context menu.
     if(e.button===0 && contextMenu.classList.contains('open')){
       const hitForMenuClose=hitTestObjectAny(p);
@@ -4088,7 +4303,7 @@
 
       // Multi-selection transform handles.
       if(selectedIndices.length>1){
-        const gh=hitGroupSelectionHandle(p);
+        const gh=hitGroupSelectionHandle(p,e.pointerType);
         if(gh){
           saveState();
           selectStart=p;
@@ -4107,7 +4322,7 @@
 
       // Single-selection edit handles remain unchanged.
       if(selectedIndices.length<=1){
-        const h=hitSelectionHandle(p);
+        const h=hitSelectionHandle(p,e.pointerType);
         if(h && selectedIndex>=0){
           saveState();
           setSelection([selectedIndex]);
@@ -4217,6 +4432,7 @@
     }
     if(mode!=='ink') return;
     canvas.setPointerCapture(e.pointerId);
+    inkPointerId=e.pointerId;
     drawing=true; points=[p];
     previewRecognized=null;
     lockedShape=null;
@@ -4234,6 +4450,33 @@
   canvas.addEventListener('pointermove',e=>{
     const screenP=screenPointFromEvent(e);
     const p=pFromEvent(e);
+
+    if(e.pointerType==='touch'){
+      e.preventDefault();
+
+      if(activeTouches.has(e.pointerId)){
+        activeTouches.set(e.pointerId,{...screenP});
+      }
+
+      if(touchGesture){
+        updateTwoFingerGesture();
+        return;
+      }
+
+      if(suppressTouchUntilAllUp) return;
+      if(e.pointerId!==touchToolPointerId) return;
+
+      if(
+        touchLongPressPointerId===e.pointerId &&
+        touchLongPressStartScreen &&
+        Math.hypot(
+          screenP.x-touchLongPressStartScreen.x,
+          screenP.y-touchLongPressStartScreen.y
+        )>10
+      ){
+        clearTouchLongPress();
+      }
+    }
 
     if(rightPress && e.pointerId===rightPress.pointerId){
       const dx=screenP.x-rightPress.startScreen.x;
@@ -4491,6 +4734,7 @@
     }
 
     if(!drawing || mode!=='ink') return;
+    if(inkPointerId!==null && e.pointerId!==inkPointerId) return;
 
     if(lockedShape){
       if(lockedShape.kind==='line'){
@@ -4545,6 +4789,51 @@
   });
 
   function finishPointer(e){
+    if(e.pointerType==='touch'){
+      const wasLongPress=
+        touchLongPressTriggered &&
+        touchLongPressPointerId===e.pointerId;
+
+      if(touchLongPressPointerId===e.pointerId){
+        clearTouchLongPress();
+      }
+
+      activeTouches.delete(e.pointerId);
+
+      if(touchGesture){
+        if(activeTouches.size<2){
+          touchGesture=null;
+          suppressTouchUntilAllUp=activeTouches.size>0;
+          cancelCurrentTouchToolAction(false);
+          statusEl.textContent=suppressTouchUntilAllUp
+            ? 'Diğer parmağı da kaldır'
+            : 'Hazır';
+          redraw();
+        }
+        return;
+      }
+
+      if(suppressTouchUntilAllUp){
+        if(activeTouches.size===0){
+          suppressTouchUntilAllUp=false;
+          touchToolPointerId=null;
+          statusEl.textContent='Hazır';
+        }
+        return;
+      }
+
+      if(wasLongPress){
+        touchLongPressTriggered=false;
+        cancelCurrentTouchToolAction(false);
+        redraw();
+        return;
+      }
+
+      if(e.pointerId!==touchToolPointerId){
+        return;
+      }
+    }
+
     if(rightPress && e.pointerId===rightPress.pointerId){
       const rp=rightPress;
       rightPress=null;
@@ -4612,6 +4901,12 @@
       // If the eraser touched nothing, remove the unnecessary undo snapshot.
       if(!eraserChanged && undoStack.length) undoStack.pop();
       eraserChanged=false;
+      if(e.pointerType==='touch'){
+        touchToolPointerId=null;
+        touchActionObjectsSnapshot=null;
+        touchActionSelectionSnapshot=null;
+        touchActionUndoDepth=undoStack.length;
+      }
       redraw();
       return;
     }
@@ -4643,11 +4938,26 @@
       activeHandle=null;
       marqueeStart=null;
       marqueeEnd=null;
+      if(e.pointerType==='touch'){
+        touchToolPointerId=null;
+        touchActionObjectsSnapshot=null;
+        touchActionSelectionSnapshot=null;
+        touchActionUndoDepth=undoStack.length;
+      }
       redraw();
       return;
     }
 
-    if(!drawing) return;
+    if(!drawing){
+      if(e.pointerType==='touch'){
+        touchToolPointerId=null;
+        touchActionObjectsSnapshot=null;
+        touchActionSelectionSnapshot=null;
+        touchActionUndoDepth=undoStack.length;
+      }
+      return;
+    }
+    if(inkPointerId!==null && e.pointerId!==inkPointerId) return;
     clearTimeout(holdTimer);
     saveState();
 
@@ -4673,6 +4983,13 @@
     lockAnchor=null;
     rotationCenter=null;
     lockPointer=null;
+    inkPointerId=null;
+    if(e.pointerType==='touch'){
+      touchToolPointerId=null;
+      touchActionObjectsSnapshot=null;
+      touchActionSelectionSnapshot=null;
+      touchActionUndoDepth=undoStack.length;
+    }
     redraw();
   }
   canvas.addEventListener('pointerup',finishPointer);
