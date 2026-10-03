@@ -503,6 +503,18 @@
   let collabSendInFlight = false;
   let collabSendAgain = false;
 
+  // v16.1 — low-latency Broadcast layer
+  let collabLiveSnapshot = new Map();
+  let collabLastLiveReceivedAt = 0;
+  let collabLocalDirty = false;
+
+  // Local in-progress ink is not yet inside objects[], so it has its own
+  // temporary realtime stream.
+  let liveInkId = null;
+  let liveInkSentIndex = 0;
+  let liveInkLastSentAt = 0;
+  const remoteLiveInk = new Map();
+
   let selectedIndex = -1;
   let selectedIndices = [];
   let nextGroupId = 1;
@@ -607,6 +619,10 @@
 
   function cancelCurrentTouchToolAction(restoreObjects=true){
     clearTimeout(holdTimer);
+
+    if(drawing && liveInkId){
+      collabCancelLiveInk();
+    }
 
     if(restoreObjects && touchActionObjectsSnapshot!==null){
       try{
@@ -822,6 +838,245 @@
     if(message) statusEl.textContent=message;
   }
 
+
+  function collabRebuildLiveSnapshot(){
+    const next=new Map();
+    ensureUniqueObjectIds();
+    for(const o of objects){
+      if(!o || !o.id) continue;
+      try{
+        next.set(o.id,JSON.stringify(o));
+      }catch(_){}
+    }
+    collabLiveSnapshot=next;
+  }
+
+  function collabBroadcast(event,payload){
+    if(!collabEnabled || !collabChannel) return;
+    try{
+      collabChannel.send({
+        type:'broadcast',
+        event,
+        payload:{
+          clientId:COLLAB_CLIENT_ID,
+          ...payload
+        }
+      });
+    }catch(err){
+      console.warn('Broadcast gönderilemedi:',err);
+    }
+  }
+
+  function collabApplyLiveDelta(payload){
+    if(!payload || payload.clientId===COLLAB_CLIENT_ID) return;
+
+    const upserts=Array.isArray(payload.upserts) ? payload.upserts : [];
+    const deletes=Array.isArray(payload.deletes) ? payload.deletes : [];
+
+    collabApplyingRemote=true;
+    try{
+      let removedSomething=false;
+
+      if(deletes.length){
+        const del=new Set(deletes);
+        if(objects.some(o=>o && del.has(o.id))) removedSomething=true;
+        objects=objects.filter(o=>o && !del.has(o.id));
+      }
+
+      for(const incoming of upserts){
+        if(!incoming || !incoming.id) continue;
+        const copy=JSON.parse(JSON.stringify(incoming));
+        const idx=objects.findIndex(o=>o && o.id===copy.id);
+        if(idx>=0) objects[idx]=copy;
+        else objects.push(copy);
+      }
+
+      if(removedSomething){
+        // Index tabanlı seçimlerin kaymasını önle.
+        setSelection([]);
+      }else{
+        normalizeSelection();
+      }
+
+      collabLastLiveReceivedAt=Date.now();
+      collabRebuildLiveSnapshot();
+      redraw();
+    }finally{
+      collabApplyingRemote=false;
+    }
+  }
+
+  function collabApplyLiveInk(payload){
+    if(!payload || payload.clientId===COLLAB_CLIENT_ID) return;
+    const id=payload.id;
+    if(!id) return;
+
+    collabLastLiveReceivedAt=Date.now();
+
+    if(payload.action==='start'){
+      remoteLiveInk.set(id,{
+        id,
+        points:Array.isArray(payload.points)
+          ? payload.points.map(p=>({x:p.x,y:p.y}))
+          : [],
+        style:payload.style || {color:'#111827',width:3}
+      });
+      redraw();
+      return;
+    }
+
+    if(payload.action==='append'){
+      let item=remoteLiveInk.get(id);
+      if(!item){
+        item={
+          id,
+          points:[],
+          style:payload.style || {color:'#111827',width:3}
+        };
+        remoteLiveInk.set(id,item);
+      }
+      if(Array.isArray(payload.points)){
+        for(const p of payload.points){
+          item.points.push({x:p.x,y:p.y});
+        }
+      }
+      redraw();
+      return;
+    }
+
+    if(payload.action==='cancel' || payload.action==='end'){
+      remoteLiveInk.delete(id);
+      redraw();
+    }
+  }
+
+  function collabApplyLiveCommit(payload){
+    if(!payload || payload.clientId===COLLAB_CLIENT_ID) return;
+    const incoming=payload.object;
+    if(!incoming || !incoming.id) return;
+
+    collabApplyingRemote=true;
+    try{
+      remoteLiveInk.delete(incoming.id);
+      const copy=JSON.parse(JSON.stringify(incoming));
+      const idx=objects.findIndex(o=>o && o.id===copy.id);
+      if(idx>=0) objects[idx]=copy;
+      else objects.push(copy);
+
+      collabLastLiveReceivedAt=Date.now();
+      collabRebuildLiveSnapshot();
+      normalizeSelection();
+      redraw();
+    }finally{
+      collabApplyingRemote=false;
+    }
+  }
+
+  function collabBroadcastLiveInk(force=false){
+    if(!collabEnabled || !liveInkId || !drawing || !points.length) return;
+
+    const now=performance.now();
+    if(!force && now-liveInkLastSentAt<24) return;
+
+    if(liveInkSentIndex===0){
+      collabBroadcast('live_ink',{
+        action:'start',
+        id:liveInkId,
+        points:[{x:points[0].x,y:points[0].y}],
+        style:strokeStyle()
+      });
+      liveInkSentIndex=1;
+    }
+
+    if(points.length>liveInkSentIndex){
+      const chunk=points
+        .slice(liveInkSentIndex)
+        .map(p=>({x:p.x,y:p.y}));
+
+      collabBroadcast('live_ink',{
+        action:'append',
+        id:liveInkId,
+        points:chunk,
+        style:strokeStyle()
+      });
+      liveInkSentIndex=points.length;
+    }
+
+    liveInkLastSentAt=now;
+  }
+
+  function collabCancelLiveInk(){
+    if(liveInkId){
+      collabBroadcast('live_ink',{
+        action:'cancel',
+        id:liveInkId
+      });
+    }
+    liveInkId=null;
+    liveInkSentIndex=0;
+    liveInkLastSentAt=0;
+  }
+
+  function collabCommitLiveObject(o){
+    if(!o) return;
+    if(!o.id) o.id=liveInkId || makeObjectId();
+
+    collabBroadcast('live_object_commit',{
+      object:JSON.parse(JSON.stringify(o))
+    });
+
+    if(liveInkId){
+      collabBroadcast('live_ink',{
+        action:'end',
+        id:liveInkId
+      });
+    }
+
+    liveInkId=null;
+    liveInkSentIndex=0;
+    liveInkLastSentAt=0;
+  }
+
+  function collabBroadcastDeltaTick(){
+    if(!collabEnabled || collabApplyingRemote) return;
+
+    ensureUniqueObjectIds();
+
+    const current=new Map();
+    const upserts=[];
+
+    for(const o of objects){
+      if(!o || !o.id) continue;
+
+      let serialized='';
+      try{
+        serialized=JSON.stringify(o);
+      }catch(_){
+        continue;
+      }
+
+      current.set(o.id,serialized);
+      if(collabLiveSnapshot.get(o.id)!==serialized){
+        upserts.push(JSON.parse(serialized));
+      }
+    }
+
+    const deletes=[];
+    for(const id of collabLiveSnapshot.keys()){
+      if(!current.has(id)) deletes.push(id);
+    }
+
+    if(!upserts.length && !deletes.length) return;
+
+    collabLiveSnapshot=current;
+    collabLocalDirty=true;
+
+    collabBroadcast('live_delta',{upserts,deletes});
+
+    // Broadcast gives fluid motion; database remains the durable checkpoint.
+    collabScheduleSend(120);
+  }
+
   async function collabSendBoardNow(){
     if(!collabEnabled || !collabClient || collabApplyingRemote) return;
 
@@ -884,6 +1139,7 @@
       if(textEditing) closeTextEditor(false);
 
       collabLastSignature=collabSignature(objects);
+      collabRebuildLiveSnapshot();
       redraw();
     }finally{
       collabApplyingRemote=false;
@@ -942,7 +1198,25 @@
       }
 
       collabChannel=collabClient
-        .channel('whiteboard:'+COLLAB_BOARD_ID)
+        .channel(
+          'whiteboard:'+COLLAB_BOARD_ID,
+          {config:{broadcast:{self:false,ack:false}}}
+        )
+        .on(
+          'broadcast',
+          {event:'live_delta'},
+          ({payload})=>collabApplyLiveDelta(payload)
+        )
+        .on(
+          'broadcast',
+          {event:'live_ink'},
+          ({payload})=>collabApplyLiveInk(payload)
+        )
+        .on(
+          'broadcast',
+          {event:'live_object_commit'},
+          ({payload})=>collabApplyLiveCommit(payload)
+        )
         .on(
           'postgres_changes',
           {
@@ -954,6 +1228,13 @@
           payload=>{
             const row=payload.new;
             if(!row || !Array.isArray(row.state)) return;
+            if((row.updated_by||'')===COLLAB_CLIENT_ID) return;
+
+            // Broadcast normalde bu değişikliği daha önce getirmiş olur.
+            // PostgreSQL olayı yalnızca kaçırılmış mesajlar için fallback'tir.
+            if(Date.now()-collabLastLiveReceivedAt<900) return;
+            if(drawing || erasing || selectAction) return;
+
             collabApplyRemoteState(row.state,row.updated_by||'');
           }
         )
@@ -961,22 +1242,15 @@
           if(status==='SUBSCRIBED'){
             collabEnabled=true;
             collabLastSignature=collabSignature(objects);
-            collabSetStatus('Ortak tahta bağlı');
+            collabRebuildLiveSnapshot();
+            collabSetStatus('Ortak tahta bağlı — canlı senkronizasyon');
           }else if(status==='CHANNEL_ERROR' || status==='TIMED_OUT'){
             collabSetStatus('Ortak tahta bağlantı hatası');
           }
         });
 
-      // Mevcut uygulamadaki bütün ekleme/taşıma/döndürme/silme yollarını
-      // tek tek değiştirmeden, nesne listesindeki değişiklikleri izler.
-      setInterval(()=>{
-        if(!collabEnabled || collabApplyingRemote) return;
-        ensureUniqueObjectIds();
-        const sig=collabSignature(objects);
-        if(sig && sig!==collabLastSignature){
-          collabScheduleSend(70);
-        }
-      },100);
+      // Nesne hareketlerini ~30 FPS Broadcast ile aktar.
+      setInterval(collabBroadcastDeltaTick,33);
 
     }catch(err){
       console.error('Ortak tahta başlatılamadı:',err);
@@ -2956,6 +3230,12 @@
       else if(o.kind==='text') drawTextObject(o);
       else drawShape(o);
     }
+    for(const item of remoteLiveInk.values()){
+      if(item && item.points && item.points.length){
+        drawSmoothStroke(item.points,item.style);
+      }
+    }
+
     if(drawing && points.length){
       if(lockedShape){
         // Otomatik şekil aktifleştiğinde ham ink yerine canlı geometrik öneriyi göster.
@@ -4684,6 +4964,11 @@
     canvas.setPointerCapture(e.pointerId);
     inkPointerId=e.pointerId;
     drawing=true; points=[p];
+
+    liveInkId=makeObjectId();
+    liveInkSentIndex=0;
+    liveInkLastSentAt=0;
+    collabBroadcastLiveInk(true);
     previewRecognized=null;
     lockedShape=null;
     lockedShapeType=null;
@@ -5041,6 +5326,7 @@
       lastMoveTime=performance.now();
       previewRecognized=null;
       armHold();
+      collabBroadcastLiveInk(false);
       redraw();
     }
   });
@@ -5246,19 +5532,40 @@
     clearTimeout(holdTimer);
     saveState();
 
+    let committedObject=null;
+
     if(lockedShape){
       // Sol tuşun bırakılması otomatik şeklin kabulüdür.
-      const accepted=JSON.parse(JSON.stringify(lockedShape)); accepted.boxAngle=0; objects.push(accepted);
+      const accepted=JSON.parse(JSON.stringify(lockedShape));
+      accepted.boxAngle=0;
+      accepted.id=liveInkId || makeObjectId();
+      objects.push(accepted);
+      committedObject=accepted;
       statusEl.textContent = lockedShape.kind==='line'
         ? 'Doğru kabul edildi — B son konumunda sabitlendi'
         : 'Şekil kabul edildi';
     }else if(previewRecognized){
-      const accepted=JSON.parse(JSON.stringify(previewRecognized)); accepted.boxAngle=0; objects.push(accepted);
+      const accepted=JSON.parse(JSON.stringify(previewRecognized));
+      accepted.boxAngle=0;
+      accepted.id=liveInkId || makeObjectId();
+      objects.push(accepted);
+      committedObject=accepted;
       statusEl.textContent='Şekle dönüştürüldü';
     }else{
-      objects.push({kind:'stroke',points:points.map(p=>({x:p.x,y:p.y})),style:strokeStyle(),boxAngle:0});
+      const accepted={
+        id:liveInkId || makeObjectId(),
+        kind:'stroke',
+        points:points.map(p=>({x:p.x,y:p.y})),
+        style:strokeStyle(),
+        boxAngle:0
+      };
+      objects.push(accepted);
+      committedObject=accepted;
       statusEl.textContent='Ink olarak bırakıldı';
     }
+
+    collabBroadcastLiveInk(true);
+    collabCommitLiveObject(committedObject);
 
     drawing=false;
     points=[];
