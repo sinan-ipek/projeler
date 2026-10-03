@@ -700,7 +700,12 @@
 
   function armTouchLongPress(e,screenP,worldP){
     clearTouchLongPress();
-    if(e.pointerType!=='touch' || mode!=='select' || activeTouches.size!==1) return;
+
+    const isTouch=e.pointerType==='touch';
+    const isPen=e.pointerType==='pen';
+
+    if((!isTouch && !isPen) || mode!=='select') return;
+    if(isTouch && activeTouches.size!==1) return;
 
     touchLongPressPointerId=e.pointerId;
     touchLongPressStartScreen={...screenP};
@@ -709,8 +714,7 @@
 
     touchLongPressTimer=setTimeout(()=>{
       if(
-        activeTouches.size!==1 ||
-        !activeTouches.has(e.pointerId) ||
+        (isTouch && (activeTouches.size!==1 || !activeTouches.has(e.pointerId))) ||
         touchGesture ||
         suppressTouchUntilAllUp
       ) return;
@@ -4231,6 +4235,10 @@
       armTouchLongPress(e,screenP,p);
     }
 
+    if(e.pointerType==='pen' && mode==='select'){
+      armTouchLongPress(e,screenP,p);
+    }
+
     // Left-clicking empty canvas closes the object context menu.
     if(e.button===0 && contextMenu.classList.contains('open')){
       const hitForMenuClose=hitTestObjectAny(p);
@@ -4466,6 +4474,19 @@
       if(suppressTouchUntilAllUp) return;
       if(e.pointerId!==touchToolPointerId) return;
 
+      if(
+        touchLongPressPointerId===e.pointerId &&
+        touchLongPressStartScreen &&
+        Math.hypot(
+          screenP.x-touchLongPressStartScreen.x,
+          screenP.y-touchLongPressStartScreen.y
+        )>10
+      ){
+        clearTouchLongPress();
+      }
+    }
+
+    if(e.pointerType==='pen'){
       if(
         touchLongPressPointerId===e.pointerId &&
         touchLongPressStartScreen &&
@@ -4789,6 +4810,28 @@
   });
 
   function finishPointer(e){
+    if(e.pointerType==='pen'){
+      const wasPenLongPress=
+        touchLongPressTriggered &&
+        touchLongPressPointerId===e.pointerId;
+
+      if(touchLongPressPointerId===e.pointerId){
+        clearTouchLongPress();
+      }
+
+      if(wasPenLongPress){
+        touchLongPressTriggered=false;
+        selectAction=null;
+        selectStart=null;
+        selectSnapshot=null;
+        groupSnapshots=null;
+        groupBoxSnapshot=null;
+        activeHandle=null;
+        redraw();
+        return;
+      }
+    }
+
     if(e.pointerType==='touch'){
       const wasLongPress=
         touchLongPressTriggered &&
