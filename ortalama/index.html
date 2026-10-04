@@ -209,6 +209,7 @@ function render(){
       block.className = "block";
       block.draggable = true;
       block.dataset.column = index;
+      block.dataset.level = i;
 
       block.addEventListener("dragstart",e=>{
         if(solved){
@@ -217,12 +218,24 @@ function render(){
         }
         draggedBlock = block;
         sourceColumn = Number(block.dataset.column);
-        block.classList.add("dragging");
+        const startLevel = Number(block.dataset.level);
+        draggedBlock = {
+          column: sourceColumn,
+          level: startLevel,
+          count: values[sourceColumn] - startLevel
+        };
+
+        column.querySelectorAll(".block").forEach((b,idx)=>{
+          if(idx >= startLevel){
+            b.classList.add("dragging");
+          }
+        });
+
         e.dataTransfer.effectAllowed = "move";
       });
 
       block.addEventListener("dragend",()=>{
-        block.classList.remove("dragging");
+        document.querySelectorAll(".block.dragging").forEach(b=>b.classList.remove("dragging"));
         draggedBlock = null;
         sourceColumn = null;
         document.querySelectorAll(".column").forEach(c=>c.classList.remove("drag-over"));
@@ -250,9 +263,11 @@ function render(){
       const targetColumn = Number(column.dataset.index);
       if(targetColumn === sourceColumn) return;
 
-      if(values[sourceColumn] > 0){
-        values[sourceColumn] -= BLOCK_VALUE;
-        values[targetColumn] += BLOCK_VALUE;
+      const moveCount = draggedBlock.count;
+
+      if(moveCount > 0 && values[sourceColumn] >= moveCount){
+        values[sourceColumn] -= moveCount * BLOCK_VALUE;
+        values[targetColumn] += moveCount * BLOCK_VALUE;
       }
 
       render();
