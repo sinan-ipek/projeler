@@ -191,6 +191,8 @@ function updateSlopeAngle(tangentA,tangentB,derivative,point,axisPoint){
  const dir=normalize({x:tangentB.x-tangentA.x,y:tangentB.y-tangentA.y});
  const alpha=Math.atan(derivative)*180/Math.PI;
  const mid=theta/2,lr=ARC_R+27;
+ const TEXT_SHIFT_X=18;
+ const TEXT_SHIFT_Y=9;
 
  /*
  A noktası teğet üzerinde kalıyor; yalnızca varsayılan sol uçtan
@@ -206,7 +208,7 @@ function updateSlopeAngle(tangentA,tangentB,derivative,point,axisPoint){
   const anchor=add(tangentA,mul(dir,shifts[i]));
   const C={x:anchor.x+AC_LENGTH,y:anchor.y};
   const arcEnd={x:anchor.x+ARC_R*Math.cos(theta),y:anchor.y+ARC_R*Math.sin(theta)};
-  const textPos={x:anchor.x+lr*Math.cos(mid),y:anchor.y+lr*Math.sin(mid)};
+  const textPos={x:anchor.x+lr*Math.cos(mid)+TEXT_SHIFT_X,y:anchor.y+lr*Math.sin(mid)+TEXT_SHIFT_Y};
 
   const minX=Math.min(anchor.x,C.x,arcEnd.x,textPos.x-48)-10;
   const maxX=Math.max(anchor.x,C.x,arcEnd.x,textPos.x+48)+10;
