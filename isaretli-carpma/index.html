@@ -67,4 +67,4 @@ areaRect.addEventListener("click",()=>{if(!animationRunning&&a*b)animate()});
 function animate(){const us=[...unitLayer.querySelectorAll(".unitText")];if(!us.length)return;animationRunning=true;counter=0;panel();const tr=resultBox.getBoundingClientRect(),tx=tr.left+tr.width/2,ty=tr.top+tr.height/2,s=a*b>0?1:-1;let done=0;us.forEach((u,i)=>{const r=u.getBoundingClientRect(),sx=r.left+r.width/2,sy=r.top+r.height/2,f=document.createElement("div");f.className="flyingUnit "+(s>0?"flyPositive":"flyNegative");f.textContent=s>0?"+1":"-1";f.style.left=sx-13+"px";f.style.top=sy-13+"px";document.body.append(f);setTimeout(()=>{u.style.opacity=0;const an=f.animate([{transform:"translate(0,0)"},{transform:`translate(${tx-sx}px,${ty-sy}px)`}],{duration:520,easing:"cubic-bezier(.45,0,.2,1)",fill:"forwards"});an.onfinish=()=>{f.remove();counter+=s;resultValue.textContent=counter;box(resultBox,counter);if(++done===us.length)animationRunning=false}},i*70)})}
 function rebuild(){calc();keep();render()}window.addEventListener("resize",rebuild);rebuild();
 </script>
-</body></html>
+<script src="/projeler/shared-ui.js?v=20261004-1"></script>\n</body></html>
