@@ -3046,18 +3046,123 @@
     return -1;
   }
 
+  function selectionHitObject(o,p){
+    if(!o || !p) return false;
+
+    const baseTol=8/viewZoom;
+    const strokeW=Math.max(1,Number(o.style && o.style.width)||1);
+    const tol=baseTol + strokeW/2;
+
+    // Metin ve resimler kendi dikdörtgen alanlarıyla seçilir.
+    if(o.kind==='text' || o.kind==='image'){
+      const hw=Math.max(6,(Number(o.w)||12)/2);
+      const hh=Math.max(6,(Number(o.h)||12)/2);
+      const a=-(o.angle||0), cs=Math.cos(a), sn=Math.sin(a);
+      const dx=p.x-o.center.x, dy=p.y-o.center.y;
+      const x=dx*cs-dy*sn;
+      const y=dx*sn+dy*cs;
+      return Math.abs(x)<=hw+baseTol && Math.abs(y)<=hh+baseTol;
+    }
+
+    // Dikdörtgen, elips ve çokgenlerde şeklin iç bölgesi de seçilebilir.
+    if(o.kind==='rect'){
+      const a=-(o.angle||0), cs=Math.cos(a), sn=Math.sin(a);
+      const dx=p.x-o.center.x, dy=p.y-o.center.y;
+      const x=dx*cs-dy*sn;
+      const y=dx*sn+dy*cs;
+      return Math.abs(x)<=o.w/2+baseTol && Math.abs(y)<=o.h/2+baseTol;
+    }
+
+    if(o.kind==='ellipse'){
+      const a=-(o.angle||0), cs=Math.cos(a), sn=Math.sin(a);
+      const dx=p.x-o.center.x, dy=p.y-o.center.y;
+      const x=dx*cs-dy*sn;
+      const y=dx*sn+dy*cs;
+      const rx=Math.max(1,Number(o.rx)||1);
+      const ry=Math.max(1,Number(o.ry)||1);
+      const ex=rx+baseTol;
+      const ey=ry+baseTol;
+      return (x*x)/(ex*ex)+(y*y)/(ey*ey)<=1;
+    }
+
+    if(o.kind==='polygon'){
+      const verts=polygonWorldVertices(o);
+      if(verts.length>=3 && pointInPolygon(p,verts)) return true;
+      for(let i=0;i<verts.length;i++){
+        if(eraserPointSegDistance(p,verts[i],verts[(i+1)%verts.length])<=tol) return true;
+      }
+      return false;
+    }
+
+    // İnce/çizgisel nesnelerde yalnızca gerçek çizgiye yakınlık seçim sayılır.
+    if(o.kind==='line'){
+      return eraserPointSegDistance(p,o.a,o.b)<=tol;
+    }
+
+    if(o.kind==='stroke'){
+      const pts=o.points||[];
+      if(!pts.length) return false;
+      if(pts.length===1) return Math.hypot(pts[0].x-p.x,pts[0].y-p.y)<=tol;
+      for(let i=1;i<pts.length;i++){
+        if(eraserPointSegDistance(p,pts[i-1],pts[i])<=tol) return true;
+      }
+      return false;
+    }
+
+    if(o.kind==='symbol'){
+      const pts=symbolWorldPoints(o);
+      if(!pts.length) return false;
+      if(pts.length===1) return Math.hypot(pts[0].x-p.x,pts[0].y-p.y)<=tol;
+      for(let i=1;i<pts.length;i++){
+        if(eraserPointSegDistance(p,pts[i-1],pts[i])<=tol) return true;
+      }
+      return false;
+    }
+
+    if(o.kind==='parabola'){
+      const pts=[];
+      const n=120;
+      const a=o.angle||0;
+      for(let i=0;i<=n;i++){
+        const u=-1+2*i/n;
+        const q={
+          x:o.center.x+u*(o.w/2),
+          y:o.center.y+(o.mirrorY?-1:1)*(o.h/2-(u*u)*o.h)
+        };
+        pts.push(rotatePoint(q,o.center,a));
+      }
+      for(let i=1;i<pts.length;i++){
+        if(eraserPointSegDistance(p,pts[i-1],pts[i])<=tol) return true;
+      }
+      return false;
+    }
+
+    if(o.kind==='axes'){
+      const a=o.angle||0, hw=o.w/2, hh=o.h/2;
+      const sy=o.mirrorY ? -1 : 1;
+      const left=rotatePoint({x:o.center.x-hw,y:o.center.y},o.center,a);
+      const right=rotatePoint({x:o.center.x+hw,y:o.center.y},o.center,a);
+      const top=rotatePoint({x:o.center.x,y:o.center.y-sy*hh},o.center,a);
+      const bottom=rotatePoint({x:o.center.x,y:o.center.y+sy*hh},o.center,a);
+      return eraserPointSegDistance(p,left,right)<=tol ||
+             eraserPointSegDistance(p,bottom,top)<=tol;
+    }
+
+    // Gelecekte eklenecek bilinmeyen nesneler için güvenli geri dönüş.
+    const b=objectBounds(o);
+    return !!(b && pointInBounds(p,b,baseTol));
+  }
+
   function hitTestObject(p){
     for(let i=objects.length-1;i>=0;i--){
-      const b=objectBounds(objects[i]);
-      if(b && pointInBounds(p,b,6/viewZoom)) return i;
+      if(selectionHitObject(objects[i],p)) return i;
     }
     return -1;
   }
 
   function hitTestObjectAny(p){
     for(let i=objects.length-1;i>=0;i--){
-      const b=objectBounds(objects[i]);
-      if(b && pointInBounds(p,b,6/viewZoom)) return i;
+      if(selectionHitObject(objects[i],p)) return i;
     }
     return -1;
   }
