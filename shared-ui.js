@@ -349,7 +349,25 @@
     "İşlemdeki 165'e tıkla.":"Klicke auf die 165 in der Aufgabe.",
     "Yeni Soru":"Neue Aufgabe",
     "165 Örneği":"Beispiel 165",
-    "Ana Sayfa":"Startseite"
+    "Ana Sayfa":"Startseite",
+    "Fare Tekerleği":"Mausrad",
+    "Boşluk":"Leertaste",
+    "↶ Geri Al":"↶ Rückgängig",
+    "↷ İleri":"↷ Wiederholen",
+    "⬇️ PNG Dışa Aktar":"⬇️ PNG exportieren",
+    "Dişlilerden birini sürükleyin veya otomatik döndürmeyi başlatın. Temas eden iki dişlinin dönme açıları, diş sayılarıyla ters orantılıdır. Beyaz başlangıç çizgileri dişlilerden bağımsız olarak ayarlanabilir. Dişler, 20° basınç açılı standart evolvent profile göre çizilir.":"Ziehen Sie eines der Zahnräder oder starten Sie die automatische Drehung. Die Drehwinkel der beiden Zahnräder sind umgekehrt proportional zu ihren Zahnzahlen. Die weißen Startlinien können unabhängig von den Zahnrädern eingestellt werden. Die Zähne werden nach einem Standard-Evolventenprofil mit 20° Eingriffswinkel gezeichnet.",
+    "Dişlinin gövdesini tutarsanız iki dişli birlikte döner. Beyaz çizgiyi veya ucundaki beyaz noktayı tutarsanız yalnızca o çizginin başlangıç konumu değişir.":"Wenn Sie den Körper eines Zahnrads ziehen, drehen sich beide Zahnräder zusammen. Wenn Sie die weiße Linie oder den weißen Punkt an ihrem Ende ziehen, ändert sich nur die Startposition dieser Linie.",
+    "İkinci dişlinin diş sayısı birinci dişlinin iki katı olduğu için, ikinci dişli birinci dişlinin yarısı kadar ve ters yönde döner. Diş yanakları 20° basınç açılı evolvent profile göre oluşturulmuştur.":"Da das zweite Zahnrad doppelt so viele Zähne wie das erste hat, dreht es sich nur halb so weit und in die entgegengesetzte Richtung. Die Zahnflanken sind als Evolventenprofil mit 20° Eingriffswinkel ausgeführt.",
+    "Çizim sol bölgede dışarıdan başlayabilir ve dışarıda bitebilir. Yine de yalnızca dörtgen içindeki kısım gösterilir. Doğru aracı iki tıklama ile, çember aracı merkez ve yarıçap için iki tıklama ile çalışır.":"Die Zeichnung kann außerhalb des linken Bereichs beginnen und enden. Angezeigt wird trotzdem nur der Teil innerhalb des Vierecks. Das Geradenwerkzeug arbeitet mit zwei Klicks, das Kreiswerkzeug mit zwei Klicks für Mittelpunkt und Radius.",
+    "Yüklenen resim sol tarafta arka plana yerleşir. Resmi sürükleyerek konumunu değiştirebilirsin. Sağ tarafta görüntü, girdi dörtgeninden çıktı dörtgenine gerçek homografi ile canvas üzerinde aktarılır.":"Das geladene Bild wird links als Hintergrund platziert. Sie können seine Position durch Ziehen ändern. Rechts wird das Bild mit einer echten Homographie vom Eingangsviereck auf das Ausgangsviereck auf die Zeichenfläche übertragen.",
+    "Sağ tarafta serbest çizgiler çizgi olarak, doğrular doğru olarak, çemberler ise genel durumda konik eğriye dönüşmüş halde çizilir. Nesneler dışarıdan başlasa bile sadece dörtgenlerin içindeki bölümler görünür.":"Rechts werden Freihandlinien als Linien, Geraden als Geraden und Kreise im allgemeinen Fall als Kegelschnitte dargestellt. Auch wenn Objekte außerhalb beginnen, sind nur die Teile innerhalb der Vierecke sichtbar.",
+    "Kesir animasyonu düzeltildi • Ondalık sabit slot • Yalnız değişen basamak flip":"Bruchanimation korrigiert • feste Dezimalstellen • nur geänderte Ziffern klappen um",
+    "İlk bölmede: 1 yukarı → çizgi büyür → payda flip-in • Sonraki bölmelerde: payda flip, çizgi hafif pulse.":"Beim ersten Teilen: 1 nach oben → Linie wächst → Nenner klappt ein • Danach: Nenner klappt um, Linie pulsiert leicht.",
+    "Perspektif Projeksiyonu Tuvale":"Perspektivische Projektion auf die Zeichenfläche",
+    "Bir düzleme perspektif projeksiyon":"Perspektivische Projektion auf eine Ebene",
+    "Ayarlanabilir bir düzleme perspektif projeksiyon":"Perspektivische Projektion auf eine einstellbare Ebene",
+    "Göz ve Retina Projeksiyonu":"Augen- und Retina-Projektion",
+    "İlginç 3B yüzeyler":"Interessante 3D-Flächen"
   };
 
   const REPLACE = {
@@ -364,7 +382,15 @@
     "← Home":"Ana Sayfa",
     "⌂ Home":"Ana Sayfa",
     "← Ana sayfa":"Ana Sayfa",
-    "← Startseite":"Ana Sayfa"
+    "← Startseite":"Ana Sayfa",
+    "↶ Undo":"↶ Geri Al",
+    "↷ Redo":"↷ İleri",
+    "⬇️ Export PNG":"⬇️ PNG Dışa Aktar",
+    "Perspective Projection onto Canvas":"Perspektif Projeksiyonu Tuvale",
+    "perspective projection onto a plane":"Bir düzleme perspektif projeksiyon",
+    "perspective projection onto an adjustable plane":"Ayarlanabilir bir düzleme perspektif projeksiyon",
+    "Eye and Retina Projection":"Göz ve Retina Projeksiyonu",
+    "interesting 3D surfaces":"İlginç 3B yüzeyler"
   };
 
   const DYN = [
