@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ortalama</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  background:#f5f7fb;
+  color:#25324a;
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+.app{
+  width:100vw;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+.topbar{
+  height:68px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding:0 24px;
+}
+button{
+  border:1px solid #ccd3df;
+  background:#fff;
+  border-radius:9px;
+  padding:10px 17px;
+  font-size:15px;
+  cursor:pointer;
+  transition:.15s;
+}
+button:hover{background:#f0f3f8}
+.game{
+  flex:1;
+  min-height:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  padding:24px 24px 96px;
+}
+.columns{
+  height:min(70vh,560px);
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  gap:clamp(30px,6vw,90px);
+}
+.column-wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.column{
+  width:92px;
+  height:min(62vh,500px);
+  display:flex;
+  flex-direction:column-reverse;
+  justify-content:flex-start;
+  align-items:center;
+  border-bottom:3px solid #596579;
+  position:relative;
+}
+.block{
+  width:78px;
+  height:18px;
+  flex:0 0 18px;
+  background:#5b8def;
+  border:1px solid rgba(255,255,255,.7);
+  border-radius:3px;
+  cursor:grab;
+  transition:background .35s,transform .15s,box-shadow .15s,opacity .15s;
+}
+.block:hover{
+  transform:scale(1.04);
+  box-shadow:0 2px 5px rgba(0,0,0,.15);
+}
+.block:active{cursor:grabbing}
+.block.dragging{opacity:.35}
+.column.solved .block{background:#45b96b}
+.value{
+  margin-top:13px;
+  min-width:54px;
+  height:36px;
+  padding:0 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  border:1px solid #d5dae4;
+  border-radius:8px;
+  font-size:19px;
+  font-weight:600;
+  transition:.35s;
+}
+.value.solved{
+  color:#18843c;
+  border-color:#68c985;
+  background:#eefaf2;
+}
+.message{
+  position:absolute;
+  left:50%;
+  bottom:24px;
+  transform:translateX(-50%) translateY(10px);
+  min-width:min(86vw,390px);
+  padding:14px 22px;
+  border-radius:12px;
+  background:#fff;
+  box-shadow:0 5px 20px rgba(0,0,0,.12);
+  text-align:center;
+  opacity:0;
+  pointer-events:none;
+  transition:.35s;
+}
+.message.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+.message-title{
+  color:#24984d;
+  font-size:20px;
+  font-weight:700;
+}
+.message-text{
+  margin-top:4px;
+  font-size:16px;
+}
+.column.drag-over{
+  filter:brightness(1.04);
+}
+@media(max-width:700px){
+  .topbar{height:58px;padding:0 14px}
+  .game{padding:12px 10px 88px}
+  .columns{gap:18px}
+  .column{width:72px}
+  .block{width:60px}
+  .value{font-size:17px;min-width:48px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <button id="newBtn">Yeni</button>
+  </div>
+
+  <main class="game">
+    <div id="columns" class="columns"></div>
+
+    <div id="message" class="message">
+      <div class="message-title">Tebrikler!</div>
+      <div id="messageText" class="message-text">Ortalama değeri buldunuz.</div>
+    </div>
+  </main>
+</div>
+
+<script>
+const BLOCK_VALUE = 1;
+const FIRST_VALUES = [10,20,30];
+
+const EXAMPLES = [
+  [10,20,30],
+  [15,20,25],
+  [10,25,25],
+  [5,20,35],
+  [12,18,30],
+  [8,16,24],
+  [10,15,20,35],
+  [5,15,25,35],
+  [10,20,30,40],
+  [8,16,24,32]
+];
+
+let values = [];
+let draggedBlock = null;
+let sourceColumn = null;
+let solved = false;
+
+function startGame(newValues){
+  solved = false;
+  values = [...newValues];
+  document.getElementById("message").classList.remove("show");
+  render();
+}
+
+function render(){
+  const container = document.getElementById("columns");
+  container.innerHTML = "";
+
+  values.forEach((value,index)=>{
+    const wrap = document.createElement("div");
+    wrap.className = "column-wrap";
+
+    const column = document.createElement("div");
+    column.className = "column";
+    column.dataset.index = index;
+
+    for(let i=0;i<value;i++){
+      const block = document.createElement("div");
+      block.className = "block";
+      block.draggable = true;
+      block.dataset.column = index;
+
+      block.addEventListener("dragstart",e=>{
+        if(solved){
+          e.preventDefault();
+          return;
+        }
+        draggedBlock = block;
+        sourceColumn = Number(block.dataset.column);
+        block.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+      });
+
+      block.addEventListener("dragend",()=>{
+        block.classList.remove("dragging");
+        draggedBlock = null;
+        sourceColumn = null;
+        document.querySelectorAll(".column").forEach(c=>c.classList.remove("drag-over"));
+      });
+
+      column.appendChild(block);
+    }
+
+    column.addEventListener("dragover",e=>{
+      if(solved) return;
+      e.preventDefault();
+      column.classList.add("drag-over");
+    });
+
+    column.addEventListener("dragleave",()=>{
+      column.classList.remove("drag-over");
+    });
+
+    column.addEventListener("drop",e=>{
+      e.preventDefault();
+      column.classList.remove("drag-over");
+
+      if(draggedBlock === null || sourceColumn === null) return;
+
+      const targetColumn = Number(column.dataset.index);
+      if(targetColumn === sourceColumn) return;
+
+      if(values[sourceColumn] > 0){
+        values[sourceColumn] -= BLOCK_VALUE;
+        values[targetColumn] += BLOCK_VALUE;
+      }
+
+      render();
+      checkSolution();
+    });
+
+    const valueLabel = document.createElement("div");
+    valueLabel.className = "value";
+    valueLabel.textContent = value;
+
+    wrap.appendChild(column);
+    wrap.appendChild(valueLabel);
+    container.appendChild(wrap);
+  });
+}
+
+function checkSolution(){
+  if(values.length === 0) return;
+
+  const first = values[0];
+  const equal = values.every(value=>value === first);
+
+  if(!equal) return;
+
+  solved = true;
+
+  document.querySelectorAll(".column").forEach(column=>{
+    column.classList.add("solved");
+  });
+
+  document.querySelectorAll(".value").forEach(value=>{
+    value.classList.add("solved");
+  });
+
+  document.getElementById("messageText").textContent =
+    "Ortalama değeri buldunuz: " + first;
+
+  document.getElementById("message").classList.add("show");
+}
+
+function newQuestion(){
+  let example;
+
+  do{
+    example = EXAMPLES[Math.floor(Math.random()*EXAMPLES.length)];
+  }while(arraysEqual(example,values) && EXAMPLES.length > 1);
+
+  startGame(example);
+}
+
+function arraysEqual(a,b){
+  if(!a || !b || a.length !== b.length) return false;
+  for(let i=0;i<a.length;i++){
+    if(a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+document.getElementById("newBtn").addEventListener("click",newQuestion);
+
+startGame(FIRST_VALUES);
+</script>
+</body>
+</html>
