@@ -32,7 +32,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f1f2f3;fon
 <filter id="labelShadow" x="-40%" y="-50%" width="180%" height="200%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity=".14"/></filter>
 </defs>
 <rect id="backgroundRect" x="0" y="0" width="1280" height="800" fill="#f1f2f3"/>
-<g id="gridLayer"></g><g id="axesLayer"></g><g id="curveLayer"></g><g id="projectionLayer"></g><g id="tangentLayer"></g><g id="angleLayer"></g><g id="pointLayer"></g>
+<g id="gridLayer"></g><g id="axesLayer"></g><g id="curveLayer"></g><g id="projectionLayer"></g><g id="tangentLayer"></g><g id="angleLayer"></g><g id="formulaLayer"></g><g id="pointLayer"></g>
 </svg>
 <div class="functionBox">
 <input id="functionInput" type="text" spellcheck="false" autocomplete="off" value="0.15x^2 - 1" aria-label="Fonksiyon">
@@ -54,10 +54,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f1f2f3;fon
 const BASE_H=800;let W=1280,H=BASE_H;
 const INITIAL_Y_RANGE=8,MIN_ZOOM=.20,MAX_ZOOM=20;
 const camera={centerX:0,centerY:0,zoom:1};
-const svg=document.getElementById("scene"),backgroundRect=document.getElementById("backgroundRect"),gridLayer=document.getElementById("gridLayer"),axesLayer=document.getElementById("axesLayer"),curveLayer=document.getElementById("curveLayer"),projectionLayer=document.getElementById("projectionLayer"),tangentLayer=document.getElementById("tangentLayer"),angleLayer=document.getElementById("angleLayer"),pointLayer=document.getElementById("pointLayer");
+const svg=document.getElementById("scene"),backgroundRect=document.getElementById("backgroundRect"),gridLayer=document.getElementById("gridLayer"),axesLayer=document.getElementById("axesLayer"),curveLayer=document.getElementById("curveLayer"),projectionLayer=document.getElementById("projectionLayer"),tangentLayer=document.getElementById("tangentLayer"),angleLayer=document.getElementById("angleLayer"),formulaLayer=document.getElementById("formulaLayer"),pointLayer=document.getElementById("pointLayer");
 const functionInput=document.getElementById("functionInput"),functionMenuButton=document.getElementById("functionMenuButton"),functionMenu=document.getElementById("functionMenu"),functionOptions=document.querySelectorAll(".functionOption"),angleButton=document.getElementById("angleButton");
 
-let currentFunction=null,xValue=-2.4,dashPhase=0,lastTime=performance.now(),showSlopeAngle=false,lastDerivativeLabelRect=null;
+let currentFunction=null,currentFunctionSource="0.15x^2 - 1",xValue=-2.4,dashPhase=0,lastTime=performance.now(),showSlopeAngle=false,lastDerivativeLabelRect=null,lastFormulaRect=null,lastAngleTextRect=null;
 const DASH_SPEED_FACTOR=90,DASH_LENGTH=18,DASH_GAP=13,TANGENT_LENGTH=330;
 
 let draggingPoint=false,pointPointerId=null,isPanning=false,panPointerId=null,panStartScreen=null,panStartCamera=null;
@@ -70,7 +70,7 @@ function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function add(a,b){return{x:a.x+b.x,y:a.y+b.y}}
 function mul(v,s){return{x:v.x*s,y:v.y*s}}
 function normalize(v){const n=Math.hypot(v.x,v.y)||1;return{x:v.x/n,y:v.y/n}}
-function formatSmallNumber(value){if(Math.abs(value)<.0005)value=0;const a=Math.abs(value);if(a!==0&&(a>=10000||a<.001))return value.toExponential(2).replace("e+","e");let t=value.toFixed(3).replace(/\.?0+$/,"");return t==="-0"?"0":t}
+function formatSmallNumber(value){if(Math.abs(value)<.0005)value=0;const a=Math.abs(value);if(a!==0&&(a>=10000||a<.001))return value.toExponential(2).replace("e+","e");let t=value.toFixed(3).replace(/\.?0+$/,"");return t==="-0"?"0":t}\nconst SUPER_MAP={"0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹","+":"⁺","-":"⁻","x":"ˣ","(":"⁽",")":"⁾"};\nfunction toSuperscript(str){let out="";for(const ch of str)out+=SUPER_MAP[ch]||ch;return out}\nfunction formatExpressionForDisplay(source){let s=source.trim().replace(/\\s+/g," ").replace(/pi/g,"π").replace(/\\*/g,"·").replace(/-/g,"−");s=s.replace(/\\^([0-9+\\-x()]+)/g,(_,exp)=>toSuperscript(exp));s=s.replace(/sqrt\\s*\\(/g,"√(");return "f(x) = "+s}
 
 function getScale(){return H/INITIAL_Y_RANGE*camera.zoom}
 function worldToScreen(x,y){const s=getScale();return{x:W/2+(x-camera.centerX)*s,y:H/2-(y-camera.centerY)*s}}
@@ -125,7 +125,7 @@ function compileExpression(source){
 function f(x){if(!currentFunction)return NaN;try{const r=currentFunction(x);return Number.isFinite(r)?r:NaN}catch{return NaN}}
 function df(x){const h=Math.max(1e-6,Math.abs(x)*1e-6),l=f(x-h),r=f(x+h);if(!Number.isFinite(l)||!Number.isFinite(r))return NaN;return(r-l)/(2*h)}
 
-function applyFunctionInput(){const source=functionInput.value.trim();if(!source){functionInput.classList.add("invalid");return}try{currentFunction=compileExpression(source);functionInput.classList.remove("invalid");drawCurve()}catch{functionInput.classList.add("invalid")}}
+function applyFunctionInput(){const source=functionInput.value.trim();if(!source){functionInput.classList.add("invalid");return}try{currentFunction=compileExpression(source);currentFunctionSource=source;functionInput.classList.remove("invalid");drawCurve()}catch{functionInput.classList.add("invalid")}}
 let inputTimer=null;
 functionInput.addEventListener("input",()=>{clearTimeout(inputTimer);inputTimer=setTimeout(applyFunctionInput,140)});
 functionInput.addEventListener("keydown",e=>{if(e.key==="Enter"){applyFunctionInput();functionInput.blur();functionMenu.classList.remove("open")}});
@@ -163,6 +163,9 @@ const angleGroup=svgEl("g",{"pointer-events":"none",visibility:"hidden"});angleL
 const angleHorizontal=svgEl("line",{stroke:"#5f6872","stroke-width":2,"stroke-linecap":"round"});angleGroup.appendChild(angleHorizontal);
 const angleArc=svgEl("path",{fill:"none",stroke:"#5f6872","stroke-width":2.2,"stroke-linecap":"round"});angleGroup.appendChild(angleArc);
 const angleText=svgEl("text",{"font-size":17,"font-family":"Cambria Math, STIX Two Math, Times New Roman, serif",fill:"#353b42","text-anchor":"middle","dominant-baseline":"middle"});angleGroup.appendChild(angleText);
+const formulaGroup=svgEl("g",{"pointer-events":"none"});formulaLayer.appendChild(formulaGroup);
+const formulaRect=svgEl("rect",{x:0,y:0,width:220,height:50,rx:9,ry:9,fill:"rgba(255,255,255,.95)",stroke:"#aeb6bf","stroke-width":1.4,filter:"url(#labelShadow)"});formulaGroup.appendChild(formulaRect);
+const formulaText=svgEl("text",{x:14,y:32,"font-size":23,"font-family":"Cambria Math, STIX Two Math, Times New Roman, serif",fill:"#1f2933"});formulaGroup.appendChild(formulaText);
 
 const pointCircle=svgEl("circle",{r:17,fill:"#ef3030",stroke:"#ffffff","stroke-width":3,filter:"url(#pointShadow)",cursor:"grab"});pointLayer.appendChild(pointCircle);
 
@@ -184,21 +187,23 @@ function getHtmlOverlayRect(element){
 }
 
 function updateSlopeAngle(tangentA,tangentB,derivative,point,axisPoint){
- if(!showSlopeAngle)return;
+ if(!showSlopeAngle){
+  angleGroup.setAttribute("visibility","hidden");
+  lastAngleTextRect=null;
+  return;
+ }
+ angleGroup.setAttribute("visibility","visible");
 
  const AC_LENGTH=115,ARC_R=42;
  const theta=Math.atan2(tangentB.y-tangentA.y,tangentB.x-tangentA.x);
  const dir=normalize({x:tangentB.x-tangentA.x,y:tangentB.y-tangentA.y});
  const alpha=Math.atan(derivative)*180/Math.PI;
- const mid=theta/2,lr=ARC_R+27;
- const TEXT_SHIFT_X=18;
- const TEXT_SHIFT_Y=9;
+ const alphaString="α = "+formatSmallNumber(alpha)+"°";
 
- /*
- A noktası teğet üzerinde kalıyor; yalnızca varsayılan sol uçtan
- çok uzaklaşmadan teğet boyunca biraz kayabiliyor.
- Böylece açı işareti boş bölgeyi arıyor ama bağlantısını kaybetmiyor.
- */
+ angleText.textContent=alphaString;
+ let textWidth=92;
+ try{textWidth=angleText.getComputedTextLength()}catch{textWidth=alphaString.length*9}
+
  const shifts=[0,38,76,114];
  const candidates=[];
  const functionRect=getHtmlOverlayRect(document.querySelector(".functionBox"));
@@ -208,57 +213,46 @@ function updateSlopeAngle(tangentA,tangentB,derivative,point,axisPoint){
   const anchor=add(tangentA,mul(dir,shifts[i]));
   const C={x:anchor.x+AC_LENGTH,y:anchor.y};
   const arcEnd={x:anchor.x+ARC_R*Math.cos(theta),y:anchor.y+ARC_R*Math.sin(theta)};
-  const textPos={x:anchor.x+lr*Math.cos(mid)+TEXT_SHIFT_X,y:anchor.y+lr*Math.sin(mid)+TEXT_SHIFT_Y};
 
-  const minX=Math.min(anchor.x,C.x,arcEnd.x,textPos.x-48)-10;
-  const maxX=Math.max(anchor.x,C.x,arcEnd.x,textPos.x+48)+10;
-  const minY=Math.min(anchor.y,C.y,arcEnd.y,textPos.y-14)-10;
-  const maxY=Math.max(anchor.y,C.y,arcEnd.y,textPos.y+14)+10;
-  const rect={x:minX,y:minY,w:maxX-minX,h:maxY-minY};
+  const labelX=anchor.x+AC_LENGTH*0.62;
+  const placements=[
+   {x:labelX,y:anchor.y-20,pref:0},
+   {x:labelX,y:anchor.y+23,pref:1}
+  ];
 
-  let score=i*18;
+  for(const place of placements){
+   const textRect={x:place.x-textWidth/2-6,y:place.y-11,w:textWidth+12,h:22};
+   const graphicRect={
+    x:Math.min(anchor.x,C.x,arcEnd.x,textRect.x)-10,
+    y:Math.min(anchor.y,C.y,arcEnd.y,textRect.y)-10,
+    w:0,h:0
+   };
+   graphicRect.w=Math.max(anchor.x,C.x,arcEnd.x,textRect.x+textRect.w)-graphicRect.x+10;
+   graphicRect.h=Math.max(anchor.y,C.y,arcEnd.y,textRect.y+textRect.h)-graphicRect.y+10;
 
-  if(rect.x<8||rect.y<8||rect.x+rect.w>W-8||rect.y+rect.h>H-8)score+=100000;
+   let score=i*20+place.pref*2;
+   if(graphicRect.x<8||graphicRect.y<8||graphicRect.x+graphicRect.w>W-8||graphicRect.y+graphicRect.h>H-8)score+=100000;
+   if(pointInsideRect(point.x,point.y,textRect,12))score+=1200;
+   score+=curveRectPenalty(textRect)*1.4;
+   score+=segmentRectPenalty(point,axisPoint,textRect)*1.1;
+   if(lastDerivativeLabelRect)score+=rectOverlapArea(textRect,lastDerivativeLabelRect)*6;
+   if(lastFormulaRect)score+=rectOverlapArea(textRect,lastFormulaRect)*6;
+   if(functionRect)score+=rectOverlapArea(textRect,functionRect)*8;
+   if(buttonRect)score+=rectOverlapArea(textRect,buttonRect)*8;
 
-  score+=curveRectPenalty(rect)*1.25;
-  score+=segmentRectPenalty(point,axisPoint,rect)*1.15;
-
-  if(pointInsideRect(point.x,point.y,rect,12))score+=1200;
-
-  if(lastDerivativeLabelRect){
-   score+=rectOverlapArea(rect,lastDerivativeLabelRect)*4.5;
+   candidates.push({anchor,C,arcEnd,textPos:place,textRect,score});
   }
-
-  if(functionRect){
-   score+=rectOverlapArea(rect,functionRect)*6;
-  }
-
-  if(buttonRect){
-   score+=rectOverlapArea(rect,buttonRect)*6;
-  }
-
-  candidates.push({anchor,C,arcEnd,textPos,score});
  }
 
  candidates.sort((a,b)=>a.score-b.score);
- const best=candidates[0];
- const sweep=theta>=0?1:0;
+ const best=candidates[0],sweep=theta>=0?1:0;
 
- setAttrs(angleHorizontal,{
-  x1:best.anchor.x,y1:best.anchor.y,
-  x2:best.C.x,y2:best.C.y
- });
-
- angleArc.setAttribute(
-  "d",
-  "M "+(best.anchor.x+ARC_R)+" "+best.anchor.y+
-  " A "+ARC_R+" "+ARC_R+" 0 0 "+sweep+" "+best.arcEnd.x+" "+best.arcEnd.y
- );
-
+ setAttrs(angleHorizontal,{x1:best.anchor.x,y1:best.anchor.y,x2:best.C.x,y2:best.C.y});
+ angleArc.setAttribute("d","M "+(best.anchor.x+ARC_R)+" "+best.anchor.y+" A "+ARC_R+" "+ARC_R+" 0 0 "+sweep+" "+best.arcEnd.x+" "+best.arcEnd.y);
  setAttrs(angleText,{x:best.textPos.x,y:best.textPos.y});
- angleText.textContent="α = "+formatSmallNumber(alpha)+"°";
+ angleText.textContent=alphaString;
+ lastAngleTextRect=best.textRect;
 }
-
 function pointInsideRect(x,y,r,p=0){return x>=r.x-p&&x<=r.x+r.w+p&&y>=r.y-p&&y<=r.y+r.h+p}
 function segmentRectPenalty(a,b,r){let s=0;for(let i=0;i<=24;i++){const t=i/24,x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t;if(pointInsideRect(x,y,r,4))s+=100;else if(pointInsideRect(x,y,r,15))s+=12}return s}
 function curveRectPenalty(r){const left=screenToWorld(r.x-16,H/2).x,right=screenToWorld(r.x+r.w+16,H/2).x,start=Math.min(left,right),end=Math.max(left,right);let s=0;for(let i=0;i<=36;i++){const x=start+(end-start)*(i/36),y=f(x);if(!Number.isFinite(y))continue;const p=worldToScreen(x,y);if(pointInsideRect(p.x,p.y,r,4))s+=90;else if(pointInsideRect(p.x,p.y,r,16))s+=9}return s}
@@ -271,6 +265,46 @@ function updateDerivativeLabel(point,derivative,tangentA,tangentB,axisPoint){
  c.sort((a,b)=>a.score-b.score);const best=c[0],fx=clamp(best.x,8,W-bw-8),fy=clamp(best.y,8,H-bh-8);
  derivativeLabelGroup.setAttribute("transform","translate("+fx+","+fy+")");
  lastDerivativeLabelRect={x:fx,y:fy,w:bw,h:bh};
+}
+
+function updateFunctionFormulaLabel(point){
+ const label=formatExpressionForDisplay(currentFunctionSource||"");
+ formulaText.textContent=label;
+
+ let textWidth=180;
+ try{textWidth=formulaText.getComputedTextLength()}catch{textWidth=label.length*10}
+
+ const bw=Math.max(210,textWidth+28),bh=50;
+ formulaRect.setAttribute("width",bw);
+ formulaRect.setAttribute("height",bh);
+
+ const functionRect=getHtmlOverlayRect(document.querySelector(".functionBox"));
+ const buttonRect=getHtmlOverlayRect(angleButton);
+ const candidates=[
+  {x:W/2-bw/2,y:82,pref:0},
+  {x:W-bw-22,y:82,pref:1},
+  {x:W/2-bw/2,y:H-bh-22,pref:2},
+  {x:W-bw-22,y:H-bh-22,pref:3}
+ ];
+
+ for(const candidate of candidates){
+  const rect={x:candidate.x,y:candidate.y,w:bw,h:bh};
+  let score=candidate.pref*.2;
+  if(rect.x<8||rect.y<8||rect.x+rect.w>W-8||rect.y+rect.h>H-8)score+=100000;
+  if(pointInsideRect(point.x,point.y,rect,20))score+=900;
+  score+=curveRectPenalty(rect)*1.15;
+  if(lastDerivativeLabelRect)score+=rectOverlapArea(rect,lastDerivativeLabelRect)*6;
+  if(lastAngleTextRect)score+=rectOverlapArea(rect,lastAngleTextRect)*6;
+  if(functionRect)score+=rectOverlapArea(rect,functionRect)*8;
+  if(buttonRect)score+=rectOverlapArea(rect,buttonRect)*8;
+  candidate.score=score;
+ }
+
+ candidates.sort((a,b)=>a.score-b.score);
+ const best=candidates[0];
+ const fx=clamp(best.x,10,W-bw-10),fy=clamp(best.y,10,H-bh-10);
+ formulaGroup.setAttribute("transform","translate("+fx+","+fy+")");
+ lastFormulaRect={x:fx,y:fy,w:bw,h:bh};
 }
 
 function getSvgCoordinatesFromClient(clientX,clientY){const r=svg.getBoundingClientRect();return{x:(clientX-r.left)*(W/r.width),y:(clientY-r.top)*(H/r.height)}}
@@ -298,14 +332,15 @@ window.addEventListener("resize",resizeScene);
 
 function render(now){
  const dt=Math.min(.04,(now-lastTime)/1000);lastTime=now;const yValue=f(xValue);
- if(!Number.isFinite(yValue)){pointCircle.setAttribute("visibility","hidden");movingTangent.setAttribute("visibility","hidden");xProjectionLine.setAttribute("visibility","hidden");derivativeLabelGroup.setAttribute("visibility","hidden");angleGroup.setAttribute("visibility","hidden");requestAnimationFrame(render);return}
- pointCircle.setAttribute("visibility","visible");movingTangent.setAttribute("visibility","visible");xProjectionLine.setAttribute("visibility","visible");derivativeLabelGroup.setAttribute("visibility","visible");angleGroup.setAttribute("visibility",showSlopeAngle?"visible":"hidden");
+ if(!Number.isFinite(yValue)){pointCircle.setAttribute("visibility","hidden");movingTangent.setAttribute("visibility","hidden");xProjectionLine.setAttribute("visibility","hidden");derivativeLabelGroup.setAttribute("visibility","hidden");angleGroup.setAttribute("visibility","hidden");formulaGroup.setAttribute("visibility","hidden");requestAnimationFrame(render);return}
+ pointCircle.setAttribute("visibility","visible");movingTangent.setAttribute("visibility","visible");xProjectionLine.setAttribute("visibility","visible");derivativeLabelGroup.setAttribute("visibility","visible");angleGroup.setAttribute("visibility",showSlopeAngle?"visible":"hidden");formulaGroup.setAttribute("visibility","visible");
  let derivative=df(xValue);if(!Number.isFinite(derivative))derivative=0;if(Math.abs(derivative)<.002)derivative=0;
  const point=worldToScreen(xValue,yValue),axisPoint=worldToScreen(xValue,0);setAttrs(xProjectionLine,{x1:point.x,y1:point.y,x2:axisPoint.x,y2:axisPoint.y});
  const tangentUnit=normalize({x:1,y:-derivative}),tangentA=add(point,mul(tangentUnit,-TANGENT_LENGTH/2)),tangentB=add(point,mul(tangentUnit,TANGENT_LENGTH/2));
  setAttrs(movingTangent,{x1:tangentA.x,y1:tangentA.y,x2:tangentB.x,y2:tangentB.y});
  dashPhase=(dashPhase+DASH_SPEED_FACTOR*Math.abs(derivative)*dt)%(DASH_LENGTH+DASH_GAP);movingTangent.setAttribute("stroke-dashoffset",-dashPhase);
  updateDerivativeLabel(point,derivative,tangentA,tangentB,axisPoint);
+ updateFunctionFormulaLabel(point);
  updateSlopeAngle(tangentA,tangentB,derivative,point,axisPoint);
  setAttrs(pointCircle,{cx:point.x,cy:point.y});requestAnimationFrame(render);
 }
