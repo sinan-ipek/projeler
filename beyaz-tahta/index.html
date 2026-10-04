@@ -27,23 +27,27 @@
   button.active{background:#eaf1ff;border-color:#9db7ff;color:#1747b0}
   button:hover{background:#f3f5f8}
   .sep{width:1px;height:30px;background:var(--border);margin:0 2px}
-  #stageWrap{position:relative;flex:1;overflow:hidden;background:
-      linear-gradient(#eef1f5 1px,transparent 1px),
-      linear-gradient(90deg,#eef1f5 1px,transparent 1px);
-      background-size:24px 24px;
+  #stageWrap{
+    position:relative;
+    flex:1;
+    overflow:hidden;
+    background:#ffffff;
   }
-  canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
-  #hint{
-    position:absolute;right:16px;bottom:16px;background:rgba(255,255,255,.94);
-    border:1px solid var(--border);border-radius:12px;padding:10px 12px;font-size:12px;
-    max-width:360px;box-shadow:0 6px 22px rgba(0,0,0,.08)
-  }
+  canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:default}
   #status{margin-left:auto;font-size:12px;color:#687080}
   .label{font-size:12px;color:#667085}
   .iconBtn{
-    width:38px;height:36px;padding:0;
-    display:inline-flex;align-items:center;justify-content:center;
-    font-size:20px;line-height:1;
+    width:38px;
+    min-width:38px;
+    max-width:38px;
+    height:36px;
+    padding:0;
+    flex:0 0 38px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    line-height:1;
   }
   .iconBtn svg{width:21px;height:21px;display:block}
   #color{width:38px;height:36px;padding:3px;cursor:pointer}
@@ -79,6 +83,8 @@
     cursor:default;
     background:transparent;
   }
+  #deleteContextBtn:not(:disabled){color:#b42318}
+  #deleteContextBtn:not(:disabled):hover{background:#fff1f0}
   #lockMenuIcon{font-size:17px;width:22px;text-align:center}
   #imageInput{display:none}
 
@@ -99,6 +105,74 @@
     line-height:1.25;
     transform-origin:center center;
     box-shadow:0 2px 10px rgba(37,99,235,.12);
+  }
+
+  .fileWrap{position:relative;display:inline-flex}
+  #fileMenu{
+    position:absolute;
+    top:42px;
+    left:0;
+    display:none;
+    min-width:150px;
+    padding:6px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,.14);
+    z-index:45;
+  }
+  #fileMenu.open{display:block}
+  #fileMenu button{
+    width:100%;
+    height:36px;
+    border:0;
+    background:transparent;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    justify-content:flex-start;
+    padding:0 10px;
+  }
+  #fileMenu button:hover{background:#f3f5f8}
+  #boardFileInput{display:none}
+
+  #boardLoadConfirm{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(17,24,39,.22);
+    z-index:80;
+  }
+  #boardLoadConfirm.open{display:flex}
+  .boardConfirmCard{
+    width:min(420px,calc(100% - 32px));
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:14px;
+    box-shadow:0 18px 50px rgba(0,0,0,.18);
+    padding:18px;
+  }
+  .boardConfirmTitle{
+    font-size:16px;
+    font-weight:650;
+    margin-bottom:8px;
+    color:#111827;
+  }
+  .boardConfirmText{
+    font-size:13px;
+    line-height:1.45;
+    color:#4b5563;
+  }
+  .boardConfirmActions{
+    margin-top:16px;
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+  }
+  .boardConfirmActions button{
+    min-width:92px;
   }
 
   .eraserWrap{position:relative;display:inline-flex}
@@ -193,6 +267,124 @@
   }
   .colorOption .colorSwatch{width:22px;height:22px}
   .colorOption.active{background:#eaf1ff;border-color:#9db7ff}
+
+  .creator-signature{
+    position:fixed;
+    right:16px;
+    bottom:12px;
+    z-index:20;
+    width:auto;
+    height:auto;
+    min-width:0;
+    padding:2px 3px;
+    border:0;
+    border-radius:4px;
+    background:transparent;
+    color:#9a9a9a;
+    font:400 13px/1.2 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+    letter-spacing:.15px;
+    user-select:none;
+    -webkit-user-select:none;
+    transition:color .16s ease, opacity .16s ease;
+    opacity:.82;
+    cursor:pointer;
+  }
+  .creator-signature:hover,
+  .creator-signature:focus-visible{
+    background:transparent;
+    color:#111;
+    opacity:1;
+    outline:none;
+  }
+
+  #feedbackModal{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:120;
+    background:rgba(17,24,39,.18);
+    padding:18px;
+  }
+  #feedbackModal.open{display:flex}
+  .feedbackCard{
+    width:min(420px,calc(100vw - 36px));
+    background:#fff;
+    border:1px solid #dfe3e8;
+    border-radius:14px;
+    box-shadow:0 18px 55px rgba(0,0,0,.18);
+    padding:16px;
+  }
+  .feedbackTitle{
+    font-size:16px;
+    font-weight:650;
+    color:#222;
+    margin-bottom:5px;
+  }
+  .feedbackSub{
+    font-size:12px;
+    line-height:1.4;
+    color:#6b7280;
+    margin-bottom:10px;
+  }
+  #feedbackText{
+    width:100%;
+    min-height:120px;
+    resize:vertical;
+    border:1px solid #cfd5dc;
+    border-radius:9px;
+    padding:10px 11px;
+    outline:none;
+    font:14px/1.45 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+    color:#222;
+    background:#fff;
+  }
+  #feedbackText:focus{
+    border-color:#8da6c8;
+    box-shadow:0 0 0 3px rgba(83,119,166,.10);
+  }
+  .feedbackStatus{
+    min-height:18px;
+    margin-top:8px;
+    font-size:12px;
+    line-height:1.35;
+    color:#6b7280;
+  }
+  .feedbackStatus.error{color:#b42318}
+  .feedbackStatus.success{color:#18794e}
+  .feedbackBottom{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:6px;
+  }
+  #feedbackCount{
+    margin-right:auto;
+    font-size:11px;
+    color:#8a919b;
+  }
+  .feedbackBottom button{
+    height:34px;
+    border-radius:8px;
+    padding:0 12px;
+  }
+  #sendFeedbackBtn{
+    background:#20242a;
+    border-color:#20242a;
+    color:#fff;
+  }
+  #sendFeedbackBtn:hover{background:#111418}
+  #sendFeedbackBtn:disabled{opacity:.55;cursor:default}
+
+  @media (pointer:coarse){
+    .creator-signature{
+      right:12px;
+      bottom:10px;
+      font-size:12px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -204,6 +396,30 @@
         <path d="M5.5 10.5V20h13v-9.5M9.2 20v-5.8h5.6V20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
       </svg>
     </button>
+
+    <div class="fileWrap">
+      <button id="fileBtn" class="iconBtn" title="Dosya" aria-label="Dosya">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4.5 4.5h6l2 2h7v13h-15z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+          <path d="M4.5 8h15" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </button>
+      <div id="fileMenu" role="menu" aria-label="Dosya menüsü">
+        <button id="saveBoardBtn" role="menuitem">
+          <span style="font-size:16px;width:22px;text-align:center">↓</span>
+          <span>Kaydet</span>
+        </button>
+        <button id="openBoardBtn" role="menuitem">
+          <span style="font-size:16px;width:22px;text-align:center">↑</span>
+          <span>Aç</span>
+        </button>
+        <button id="shareBoardBtn" role="menuitem">
+          <span style="font-size:16px;width:22px;text-align:center">↗</span>
+          <span>Paylaş</span>
+        </button>
+      </div>
+      <input id="boardFileInput" type="file" accept=".whiteboard,.json,application/json">
+    </div>
 
     <button id="inkBtn" class="active iconBtn" title="Ink" aria-label="Ink">✎</button>
     <button id="selectBtn" class="iconBtn" title="Seç" aria-label="Seç">↖</button>
@@ -362,11 +578,11 @@
     <div id="contextMenu" role="menu" aria-label="Nesne menüsü">
       <button id="bringFrontBtn" role="menuitem">
         <span style="font-size:17px;width:22px;text-align:center">⬆</span>
-        <span>Öne getir</span>
+        <span>En öne getir</span>
       </button>
       <button id="sendBackBtn" role="menuitem">
         <span style="font-size:17px;width:22px;text-align:center">⬇</span>
-        <span>Arkaya gönder</span>
+        <span>En arkaya gönder</span>
       </button>
       <button id="lockToggleBtn" role="menuitem">
         <span id="lockMenuIcon">🔓</span>
@@ -384,23 +600,75 @@
         <span id="groupMenuIcon" style="font-size:16px;width:22px;text-align:center">▦</span>
         <span id="groupMenuText">Grupla</span>
       </button>
+      <button id="deleteContextBtn" role="menuitem">
+        <span style="font-size:17px;width:22px;text-align:center">⌫</span>
+        <span>Sil</span>
+      </button>
     </div>
 
-    <div id="hint">
-      <b>Seçim modu:</b> “Seç” aracını aç, nesneye tıkla. Nesneyi taşıyabilir,
-      köşe tutamaçlarından büyütüp küçültebilir, üstteki yuvarlak tutamaçtan döndürebilir
-      ve <b>Delete</b> ile silebilirsin.
+
+    <div id="boardLoadConfirm" aria-hidden="true">
+      <div class="boardConfirmCard" role="dialog" aria-modal="true" aria-labelledby="boardConfirmTitle">
+        <div id="boardConfirmTitle" class="boardConfirmTitle">Ortak tahtaya geri yükle</div>
+        <div class="boardConfirmText">
+          Bu dosya mevcut ortak tahtanın yerini alacak ve değişiklik tüm bağlı cihazlara yansıyacak.
+          Mevcut çalışma ayrıca kaydedilmediyse geri alınamayabilir.
+        </div>
+        <div class="boardConfirmActions">
+          <button id="cancelBoardLoadBtn">İptal</button>
+          <button id="confirmBoardLoadBtn">Ortak tahtaya yükle</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <button id="creatorSignature"
+          class="creator-signature"
+          type="button"
+          title="Sinan İpek'e mesaj gönder"
+          aria-label="Sinan İpek'e mesaj gönder">Sinan İpek</button>
+
+  <div id="feedbackModal" aria-hidden="true">
+    <div class="feedbackCard" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+      <div id="feedbackTitle" class="feedbackTitle">Sinan İpek'e mesaj</div>
+      <div class="feedbackSub">Görüşünüzü, önerinizi veya fark ettiğiniz bir sorunu yazabilirsiniz.</div>
+      <textarea id="feedbackText"
+                maxlength="1500"
+                placeholder="Mesajınızı yazın..."></textarea>
+      <div id="feedbackStatus" class="feedbackStatus" aria-live="polite"></div>
+      <div class="feedbackBottom">
+        <span id="feedbackCount">0 / 1500</span>
+        <button id="cancelFeedbackBtn" type="button">İptal</button>
+        <button id="sendFeedbackBtn" type="button">Gönder</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 (() => {
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d');
   const wrap = document.getElementById('stageWrap');
   const homeBtn = document.getElementById('homeBtn');
+  const fileBtn = document.getElementById('fileBtn');
+  const fileMenu = document.getElementById('fileMenu');
+  const saveBoardBtn = document.getElementById('saveBoardBtn');
+  const openBoardBtn = document.getElementById('openBoardBtn');
+  const shareBoardBtn = document.getElementById('shareBoardBtn');
+  const boardFileInput = document.getElementById('boardFileInput');
+  const boardLoadConfirm = document.getElementById('boardLoadConfirm');
+  const cancelBoardLoadBtn = document.getElementById('cancelBoardLoadBtn');
+  const confirmBoardLoadBtn = document.getElementById('confirmBoardLoadBtn');
+  const creatorSignature = document.getElementById('creatorSignature');
+  const feedbackModal = document.getElementById('feedbackModal');
+  const feedbackText = document.getElementById('feedbackText');
+  const feedbackCount = document.getElementById('feedbackCount');
+  const feedbackStatus = document.getElementById('feedbackStatus');
+  const cancelFeedbackBtn = document.getElementById('cancelFeedbackBtn');
+  const sendFeedbackBtn = document.getElementById('sendFeedbackBtn');
   const inkBtn = document.getElementById('inkBtn');
   const selectBtn = document.getElementById('selectBtn');
   const eraserBtn = document.getElementById('eraserBtn');
@@ -429,6 +697,7 @@
   const groupToggleBtn = document.getElementById('groupToggleBtn');
   const groupMenuIcon = document.getElementById('groupMenuIcon');
   const groupMenuText = document.getElementById('groupMenuText');
+  const deleteContextBtn = document.getElementById('deleteContextBtn');
   const colorBtn = document.getElementById('colorBtn');
   const colorMenu = document.getElementById('colorMenu');
   const colorOptions = Array.from(document.querySelectorAll('.colorOption'));
@@ -437,6 +706,8 @@
   let currentFillColor = '#facc15';
   let fillPressTimer = null;
   let fillLongPressTriggered = false;
+  let eraserPressTimer = null;
+  let eraserLongPressTriggered = false;
   const widthEl = document.getElementById('width');
   const statusEl = document.getElementById('status');
   const undoBtn = document.getElementById('undoBtn');
@@ -459,6 +730,7 @@
 
   let rightPress = null;
   let contextTargetIndices = [];
+  let pendingBoardLoad = null;
   const imageCache = new Map();
 
   let drawing = false;
@@ -472,6 +744,8 @@
   let rotationCenter = null;     // şekiller için sabit dönüş merkezi
   let rotationStartPointerAngle = 0;
   let rotationStartShapeAngle = 0;
+  let lockedShapeSnapshot = null;   // hold anındaki geometrinin değişmez kopyası
+  let transformStartRadius = 1;     // hold anında imlecin merkeze uzaklığı
   let lockPointer = null;
   let objects = [];
   let undoStack = [];
@@ -646,6 +920,8 @@
     lockedShapeType=null;
     lockAnchor=null;
     rotationCenter=null;
+    lockedShapeSnapshot=null;
+    transformStartRadius=1;
     lockPointer=null;
     inkPointerId=null;
 
@@ -728,9 +1004,9 @@
     }
 
     let targets=[];
-    if(objects[hit].locked){
-      targets=[hit];
-    }else if(selectedIndices.includes(hit) && selectedIndices.length){
+    if(selectedIndices.includes(hit) && selectedIndices.length){
+      // Seçimin içindeki herhangi bir nesneye uzun basılırsa,
+      // kilitli olsa bile bağlam menüsü tüm seçime uygulanır.
       targets=selectedIndices.slice();
     }else{
       setSelection([hit]);
@@ -776,7 +1052,7 @@
     if(isPanning){
       canvas.style.cursor='grabbing';
     }else if(mode==='ink'){
-      canvas.style.cursor='crosshair';
+      canvas.style.cursor='default';
     }else if(mode==='eraser'){
       canvas.style.cursor='none';
     }else if(mode==='text'){
@@ -967,6 +1243,29 @@
       collabRebuildLiveSnapshot();
       normalizeSelection();
       redraw();
+    }finally{
+      collabApplyingRemote=false;
+    }
+  }
+
+  function collabApplyBoardReplace(payload){
+    if(!payload || payload.clientId===COLLAB_CLIENT_ID) return;
+    if(!Array.isArray(payload.objects)) return;
+
+    collabApplyingRemote=true;
+    try{
+      objects=JSON.parse(JSON.stringify(payload.objects));
+      ensureUniqueObjectIds();
+      setSelection([]);
+      closeContextMenu();
+      if(textEditing) closeTextEditor(false);
+      remoteLiveInk.clear();
+
+      collabLastLiveReceivedAt=Date.now();
+      collabLastSignature=collabSignature(objects);
+      collabRebuildLiveSnapshot();
+      redraw();
+      statusEl.textContent='Ortak tahta başka bir cihazdan geri yüklendi';
     }finally{
       collabApplyingRemote=false;
     }
@@ -1216,6 +1515,11 @@
           'broadcast',
           {event:'live_object_commit'},
           ({payload})=>collabApplyLiveCommit(payload)
+        )
+        .on(
+          'broadcast',
+          {event:'board_replace'},
+          ({payload})=>collabApplyBoardReplace(payload)
         )
         .on(
           'postgres_changes',
@@ -2049,7 +2353,7 @@
   function normalizeSelection(){
     selectedIndices = selectedIndices
       .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length)
-      .filter(i=>objects[i] && !objects[i].locked)
+      .filter(i=>objects[i])
       .filter((v,i,a)=>a.indexOf(v)===i);
 
     if(selectedIndices.length===1){
@@ -2208,6 +2512,7 @@
 
   function hitGroupSelectionHandle(p,pointerType='mouse'){
     if(selectedIndices.length<2) return null;
+    if(selectedIndices.some(i=>objects[i] && objects[i].locked)) return null;
     const box=groupOrientedBox();
     if(!box) return null;
     const oc=orientedBoxCorners(box,8/viewZoom);
@@ -2336,6 +2641,7 @@
     const box=groupOrientedBox();
     if(!box) return;
     const oc=orientedBoxCorners(box,8/viewZoom);
+    const hasLocked=selectedIndices.some(i=>objects[i] && objects[i].locked);
 
     ctx.save();
     ctx.strokeStyle='#2563eb';
@@ -2351,25 +2657,29 @@
     ctx.stroke();
     ctx.setLineDash([]);
 
-    for(const p of [oc.nw,oc.ne,oc.se,oc.sw]){
+    // Kilitli bir nesne seçimin içindeyse bounding box görünür kalır,
+    // ancak düzenleme tutamaçları gösterilmez.
+    if(!hasLocked){
+      for(const p of [oc.nw,oc.ne,oc.se,oc.sw]){
+        ctx.beginPath();
+        ctx.fillStyle='white';
+        ctx.strokeStyle='#2563eb';
+        ctx.rect(p.x-5/viewZoom,p.y-5/viewZoom,10/viewZoom,10/viewZoom);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(oc.topCenter.x,oc.topCenter.y);
+      ctx.lineTo(oc.rotate.x,oc.rotate.y);
+      ctx.stroke();
+
       ctx.beginPath();
       ctx.fillStyle='white';
-      ctx.strokeStyle='#2563eb';
-      ctx.rect(p.x-5/viewZoom,p.y-5/viewZoom,10/viewZoom,10/viewZoom);
+      ctx.arc(oc.rotate.x,oc.rotate.y,6/viewZoom,0,Math.PI*2);
       ctx.fill();
       ctx.stroke();
     }
-
-    ctx.beginPath();
-    ctx.moveTo(oc.topCenter.x,oc.topCenter.y);
-    ctx.lineTo(oc.rotate.x,oc.rotate.y);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.fillStyle='white';
-    ctx.arc(oc.rotate.x,oc.rotate.y,6/viewZoom,0,Math.PI*2);
-    ctx.fill();
-    ctx.stroke();
 
     ctx.restore();
   }
@@ -2445,6 +2755,29 @@
 
     if(selectedIndex<0 || !objects[selectedIndex]) return;
     const selected=objects[selectedIndex];
+
+    // Kilitli nesne seçilebilir; yalnızca bounding box gösterilir.
+    // Taşıma / resize / rotate tutamaçları bilinçli olarak gizlidir.
+    if(selected.locked){
+      const lockedBox=orientedSelectionBox(selected);
+      if(!lockedBox) return;
+      const lockedOc=orientedBoxCorners(lockedBox,8/viewZoom);
+      if(!lockedOc) return;
+
+      ctx.save();
+      ctx.strokeStyle='#2563eb';
+      ctx.lineWidth=1.5/viewZoom;
+      ctx.setLineDash([5/viewZoom,4/viewZoom]);
+      ctx.beginPath();
+      ctx.moveTo(lockedOc.nw.x,lockedOc.nw.y);
+      ctx.lineTo(lockedOc.ne.x,lockedOc.ne.y);
+      ctx.lineTo(lockedOc.se.x,lockedOc.se.y);
+      ctx.lineTo(lockedOc.sw.x,lockedOc.sw.y);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
 
     const rawSpecial=menuEditHandles(selected);
     const special=(selected.kind==='ellipse') ? [] : rawSpecial;
@@ -2557,6 +2890,7 @@
   function hitSelectionHandle(p,pointerType='mouse'){
     if(selectedIndex<0) return null;
     const selected=objects[selectedIndex];
+    if(!selected || selected.locked) return null;
 
     const rawSpecial=menuEditHandles(selected);
 
@@ -2672,7 +3006,6 @@
 
   function hitTestObject(p){
     for(let i=objects.length-1;i>=0;i--){
-      if(objects[i] && objects[i].locked) continue;
       const b=objectBounds(objects[i]);
       if(b && pointInBounds(p,b,6/viewZoom)) return i;
     }
@@ -3214,6 +3547,89 @@
     }
   }
 
+
+  function drawAdaptiveGrid(){
+    const rect=canvas.getBoundingClientRect();
+    const screenW=Math.max(1,rect.width);
+    const screenH=Math.max(1,rect.height);
+
+    // Visible world rectangle.
+    const left=(0-viewX)/viewZoom;
+    const top=(0-viewY)/viewZoom;
+    const right=(screenW-viewX)/viewZoom;
+    const bottom=(screenH-viewY)/viewZoom;
+
+    // 24 world units reproduces the old grid at zoom=1.
+    // When zooming out, promote every 4th line to the new major grid.
+    let majorStep=24;
+    while(majorStep*viewZoom<22){
+      majorStep*=4;
+    }
+
+    // At high zoom, the existing large square stays large and child grids
+    // appear inside it. We can reveal more than one nested level.
+    const levels=[
+      {
+        step:majorStep,
+        alpha:.78,
+        width:1.0,
+        color:'rgba(218,223,231,.78)'
+      }
+    ];
+
+    let childStep=majorStep/4;
+    let depth=0;
+    while(childStep*viewZoom>=8 && depth<3){
+      const alpha=Math.max(.26,.54-depth*.12);
+      levels.push({
+        step:childStep,
+        alpha,
+        width:.72,
+        color:`rgba(232,235,241,${alpha})`
+      });
+      childStep/=4;
+      depth++;
+    }
+
+    // Draw finer levels first; stronger parent lines go on top.
+    levels.sort((a,b)=>a.step-b.step);
+
+    ctx.save();
+
+    for(const level of levels){
+      const step=level.step;
+      if(!Number.isFinite(step) || step<=0) continue;
+
+      const startX=Math.floor(left/step)*step;
+      const endX=Math.ceil(right/step)*step;
+      const startY=Math.floor(top/step)*step;
+      const endY=Math.ceil(bottom/step)*step;
+
+      ctx.beginPath();
+
+      // Guard against pathological line counts at extreme view states.
+      let count=0;
+      for(let x=startX;x<=endX+step*.5;x+=step){
+        ctx.moveTo(x,top);
+        ctx.lineTo(x,bottom);
+        if(++count>1200) break;
+      }
+
+      count=0;
+      for(let y=startY;y<=endY+step*.5;y+=step){
+        ctx.moveTo(left,y);
+        ctx.lineTo(right,y);
+        if(++count>1200) break;
+      }
+
+      ctx.strokeStyle=level.color;
+      ctx.lineWidth=level.width/viewZoom;
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
   function redraw(){
     // Clear in device pixels, then render the infinite world through the camera.
     ctx.setTransform(1,0,0,1,0,0);
@@ -3223,6 +3639,8 @@
       0,dpr*viewZoom,
       dpr*viewX,dpr*viewY
     );
+
+    drawAdaptiveGrid();
 
     for(const o of objects){
       if(o.kind==='stroke') drawSmoothStroke(o.points,o.style);
@@ -4199,9 +4617,22 @@
           statusEl.textContent='Doğru aktif — A sabit, B’yi sürükleyebilirsin';
         }else{
           rotationCenter={...lockedShape.center};
-          rotationStartPointerAngle=Math.atan2(lockPointer.y-rotationCenter.y,lockPointer.x-rotationCenter.x);
+          rotationStartPointerAngle=Math.atan2(
+            lockPointer.y-rotationCenter.y,
+            lockPointer.x-rotationCenter.x
+          );
           rotationStartShapeAngle=lockedShape.angle||0;
-          statusEl.textContent=(lockedShape.shapeName||'Şekil')+' algılandı — hareket ettirirsen döndürme moduna geçer';
+          transformStartRadius=Math.max(
+            8,
+            Math.hypot(
+              lockPointer.x-rotationCenter.x,
+              lockPointer.y-rotationCenter.y
+            )
+          );
+          lockedShapeSnapshot=JSON.parse(JSON.stringify(lockedShape));
+          statusEl.textContent=
+            (lockedShape.shapeName||'Şekil')+
+            ' algılandı — merkezden uzaklık boyutu, merkez çevresindeki hareket dönüşü değiştirir';
         }
         previewRecognized=null;
       }else{
@@ -4526,6 +4957,7 @@
 
     flipHorizontalBtn.disabled=false;
     flipVerticalBtn.disabled=false;
+    deleteContextBtn.disabled=targets.every(o=>!!o.locked);
   }
 
   function openContextMenu(screenP,indices){
@@ -4537,7 +4969,7 @@
 
     updateContextMenuState();
 
-    const menuW=190, menuH=230;
+    const menuW=190, menuH=272;
     const r=wrap.getBoundingClientRect();
     const x=Math.max(6,Math.min(screenP.x,r.width-menuW-6));
     const y=Math.max(6,Math.min(screenP.y,r.height-menuH-6));
@@ -4563,21 +4995,23 @@
     const remaining=objects.filter((_,i)=>!chosenSet.has(i));
 
     if(toFront){
+      // objects[] çizim sırasında baştan sona render edildiği için,
+      // sona eklenen seçim gerçekten bütün nesnelerin üstüne çıkar.
       objects=remaining.concat(chosen);
       contextTargetIndices=chosen.map((_,k)=>remaining.length+k);
     }else{
+      // Dizinin başına alınan seçim gerçekten bütün nesnelerin altına iner.
       objects=chosen.concat(remaining);
       contextTargetIndices=chosen.map((_,k)=>k);
     }
 
-    // Keep unlocked targets selected after their indices change.
-    const selectable=contextTargetIndices.filter(i=>objects[i] && !objects[i].locked);
-    setSelection(selectable);
+    // Keep all targets selected after their indices change, including locked ones.
+    setSelection(contextTargetIndices.filter(i=>objects[i]));
 
     redraw();
     statusEl.textContent=toFront
-      ? (chosen.length>1 ? `${chosen.length} nesne öne getirildi` : 'Nesne öne getirildi')
-      : (chosen.length>1 ? `${chosen.length} nesne arkaya gönderildi` : 'Nesne arkaya gönderildi');
+      ? (chosen.length>1 ? `${chosen.length} nesne en öne getirildi` : 'Nesne en öne getirildi')
+      : (chosen.length>1 ? `${chosen.length} nesne en arkaya gönderildi` : 'Nesne en arkaya gönderildi');
 
     closeContextMenu();
   }
@@ -4614,8 +5048,7 @@
     }
 
     contextTargetIndices=valid;
-    const selectable=valid.filter(i=>objects[i] && !objects[i].locked);
-    setSelection(selectable);
+    setSelection(valid.filter(i=>objects[i]));
 
     statusEl.textContent=axis==='horizontal'
       ? (valid.length>1 ? `${valid.length} nesne yatayda yansıtıldı` : 'Nesne yatayda yansıtıldı')
@@ -4645,7 +5078,7 @@
       for(const i of valid){
         if(objects[i]) delete objects[i].groupId;
       }
-      setSelection(valid.filter(i=>objects[i] && !objects[i].locked));
+      setSelection(valid.filter(i=>objects[i]));
       statusEl.textContent='Grup açıldı';
       closeContextMenu();
       redraw();
@@ -4663,7 +5096,7 @@
       if(objects[i]) objects[i].groupId=gid;
     }
     contextTargetIndices=valid;
-    setSelection(valid.filter(i=>objects[i] && !objects[i].locked));
+    setSelection(valid.filter(i=>objects[i]));
     statusEl.textContent=`${valid.length} nesne gruplandı`;
     closeContextMenu();
     redraw();
@@ -4703,7 +5136,8 @@
     }
 
     if(newLocked){
-      setSelection([]);
+      // Kilitli nesneler artık seçilebilir olduğundan seçim korunur.
+      setSelection(valid);
       statusEl.textContent=valid.length>1
         ? `${valid.length} nesne kilitlendi`
         : 'Nesne kilitlendi';
@@ -4716,6 +5150,38 @@
 
     closeContextMenu();
     redraw();
+  });
+
+  deleteContextBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+
+    const deletable=expandGroupedIndices(contextTargetIndices)
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length)
+      .filter(i=>objects[i] && !objects[i].locked)
+      .sort((a,b)=>b-a);
+
+    if(!deletable.length){
+      statusEl.textContent='Kilitli nesneler silinemez';
+      closeContextMenu();
+      redraw();
+      return;
+    }
+
+    saveState();
+
+    for(const i of deletable){
+      objects.splice(i,1);
+    }
+
+    const count=deletable.length;
+    contextTargetIndices=[];
+    setSelection([]);
+    closeContextMenu();
+    redraw();
+
+    statusEl.textContent=count>1
+      ? `${count} nesne silindi`
+      : 'Nesne silindi';
   });
 
   document.addEventListener('pointerdown',e=>{
@@ -4822,7 +5288,7 @@
       eraserChanged=eraserChanged||changed;
 
       statusEl.textContent=(eraserKind==='stroke')
-        ? 'Silgi'
+        ? 'Silgi — nesne silme'
         : `Silgi — ${eraserRadius}px`;
       redraw();
       return;
@@ -4915,6 +5381,26 @@
           setSelection([hit]);
         }
 
+        // Locked objects are selectable so their bounding box is visible,
+        // but any selection containing a locked object remains non-editable.
+        const selectionHasLocked=selectedIndices.some(
+          i=>objects[i] && objects[i].locked
+        );
+
+        if(selectionHasLocked){
+          selectAction=null;
+          selectStart=null;
+          selectSnapshot=null;
+          groupSnapshots=null;
+          groupBoxSnapshot=null;
+          activeHandle=null;
+          redraw();
+          statusEl.textContent=selectedIndices.length>1
+            ? `${selectedIndices.length} nesne seçili — kilitli seçim`
+            : 'Kilitli nesne seçildi';
+          return;
+        }
+
         const movingIndices=selectedIndices.length ? selectedIndices.slice() : [hit];
 
         saveState();
@@ -4974,6 +5460,8 @@
     lockedShapeType=null;
     lockAnchor=null;
     rotationCenter=null;
+    lockedShapeSnapshot=null;
+    transformStartRadius=1;
     lockPointer=null;
     rotationStartPointerAngle=0;
     rotationStartShapeAngle=0;
@@ -5291,30 +5779,51 @@
         lockedShape.b={x:p.x,y:p.y};
         statusEl.textContent='Doğru aktif — B noktası hareket ediyor';
 
-      }else if(lockedShape.kind==='ellipse' && lockedShape.shapeName==='circle'){
-        /*
-          Dairede döndürmenin anlamı yok.
-          Merkez sabit kalır; imlecin merkeze uzaklığı yeni yarıçaptır.
-          Böylece kullanıcı tuşu bırakana kadar çapı canlı olarak değiştirir.
-        */
-        const r=Math.hypot(
-          p.x-lockedShape.center.x,
-          p.y-lockedShape.center.y
-        );
-        const radius=Math.max(8,r);
-        lockedShape.rx=radius;
-        lockedShape.ry=radius;
-        lockedShape.angle=0;
-        statusEl.textContent='Daire aktif — çap değiştiriliyor';
-
       }else{
-        // Elips ve diğer otomatik şekiller döndürülür.
-        const a=Math.atan2(p.y-rotationCenter.y,p.x-rotationCenter.x);
-        let delta=a-rotationStartPointerAngle;
-        while(delta>Math.PI) delta-=Math.PI*2;
-        while(delta<-Math.PI) delta+=Math.PI*2;
-        lockedShape.angle=rotationStartShapeAngle+delta;
-        statusEl.textContent=(lockedShape.shapeName||'Şekil')+' döndürülüyor — bırakınca sabitlenecek';
+        /*
+          Hold sonrası otomatik şekil için tek hareket iki bilgiyi taşır:
+          - merkezden uzaklık  -> uniform boyutlandırma
+          - merkez etrafı açı  -> döndürme
+          Dairede dönüş görsel olarak anlamsız olduğundan yalnızca ölçek uygulanır.
+        */
+        const center=rotationCenter || lockedShape.center;
+        const startShape=lockedShapeSnapshot || lockedShape;
+
+        const currentRadius=Math.max(
+          2,
+          Math.hypot(p.x-center.x,p.y-center.y)
+        );
+        const scale=Math.max(
+          .12,
+          Math.min(12,currentRadius/Math.max(1,transformStartRadius))
+        );
+
+        lockedShape=JSON.parse(JSON.stringify(startShape));
+        scaleObjectUniformAround(lockedShape,center,scale);
+
+        const isCircle=
+          lockedShape.kind==='ellipse' &&
+          lockedShape.shapeName==='circle';
+
+        if(isCircle){
+          lockedShape.angle=0;
+          statusEl.textContent='Daire aktif — merkezden uzaklık çapı değiştiriyor';
+        }else{
+          const a=Math.atan2(p.y-center.y,p.x-center.x);
+          let delta=a-rotationStartPointerAngle;
+          while(delta>Math.PI) delta-=Math.PI*2;
+          while(delta<-Math.PI) delta+=Math.PI*2;
+
+          if(Number.isFinite(lockedShape.angle)){
+            lockedShape.angle=rotationStartShapeAngle+delta;
+          }else{
+            rotateObjectAround(lockedShape,center,delta);
+          }
+
+          statusEl.textContent=
+            (lockedShape.shapeName||'Şekil')+
+            ' — aynı anda boyutlandırılıyor ve döndürülüyor';
+        }
       }
       redraw();
       return;
@@ -5433,9 +5942,9 @@
       const hit=rp.hit;
       if(hit>=0 && objects[hit]){
         let targets=[];
-        if(objects[hit].locked){
-          targets=[hit];
-        }else if(selectedIndices.includes(hit) && selectedIndices.length){
+        if(selectedIndices.includes(hit) && selectedIndices.length){
+          // Sağ tıklanan nesne mevcut seçimin içindeyse,
+          // kilitli/kilitsiz ayrımı yapmadan tüm seçim hedeflenir.
           targets=selectedIndices.slice();
         }else{
           mode='select';
@@ -5488,7 +5997,6 @@
         if(r && r.w>3 && r.h>3){
           const hits=[];
           for(let i=0;i<objects.length;i++){
-            if(objects[i] && objects[i].locked) continue;
             const b=objectBounds(objects[i]);
             if(boundsInsideRect(b,r)) hits.push(i);
           }
@@ -5574,6 +6082,8 @@
     lockedShapeType=null;
     lockAnchor=null;
     rotationCenter=null;
+    lockedShapeSnapshot=null;
+    transformStartRadius=1;
     lockPointer=null;
     inkPointerId=null;
     if(e.pointerType==='touch'){
@@ -5614,6 +6124,358 @@
   },{passive:false});
 
 
+  function closeFileMenu(){
+    fileMenu.classList.remove('open');
+  }
+
+  function boardFilePayload(){
+    return {
+      format:'sinan-ipek-whiteboard',
+      version:1,
+      savedAt:new Date().toISOString(),
+      boardId:COLLAB_BOARD_ID,
+      objects:collabSerializableObjects()
+    };
+  }
+
+  function safeBoardFilename(){
+    const d=new Date();
+    const pad=n=>String(n).padStart(2,'0');
+    return `Beyaz_Tahta_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.whiteboard`;
+  }
+
+  function safeBoardPngFilename(){
+    const d=new Date();
+    const pad=n=>String(n).padStart(2,'0');
+    return `Beyaz_Tahta_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.png`;
+  }
+
+  function captureVisibleBoardCanvas(){
+    // Ekranda görünen tahta alanını yakala.
+    // Araç çubuğu zaten canvas dışında. Seçim çerçevesi ve silgi imleci
+    // ise canvas üzerinde çizildiği için yakalama anında geçici olarak gizlenir.
+    const selectionSnapshot={
+      selectedIndex,
+      selectedIndices:selectedIndices.slice()
+    };
+    const eraserCursorSnapshot=eraserCursor;
+
+    try{
+      selectedIndex=-1;
+      selectedIndices=[];
+      eraserCursor=null;
+      redraw();
+
+      const exportCanvas=document.createElement('canvas');
+      exportCanvas.width=canvas.width;
+      exportCanvas.height=canvas.height;
+      const exportCtx=exportCanvas.getContext('2d');
+
+      // Paylaşılan PNG her zaman opak beyaz arka plana sahip olsun.
+      exportCtx.save();
+      exportCtx.setTransform(1,0,0,1,0,0);
+      exportCtx.fillStyle='#ffffff';
+      exportCtx.fillRect(0,0,exportCanvas.width,exportCanvas.height);
+      exportCtx.restore();
+
+      exportCtx.drawImage(canvas,0,0);
+      return exportCanvas;
+    }finally{
+      selectedIndex=selectionSnapshot.selectedIndex;
+      selectedIndices=selectionSnapshot.selectedIndices;
+      eraserCursor=eraserCursorSnapshot;
+      redraw();
+    }
+  }
+
+  function canvasToPngBlob(sourceCanvas){
+    return new Promise((resolve,reject)=>{
+      sourceCanvas.toBlob(blob=>{
+        if(blob) resolve(blob);
+        else reject(new Error('PNG oluşturulamadı'));
+      },'image/png');
+    });
+  }
+
+  function downloadBlob(blob,filename){
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
+
+  async function shareCurrentBoard(){
+    try{
+      const exportCanvas=captureVisibleBoardCanvas();
+      const blob=await canvasToPngBlob(exportCanvas);
+      const filename=safeBoardPngFilename();
+      const file=new File([blob],filename,{type:'image/png'});
+
+      // Telefon/tablet ve destekleyen masaüstü tarayıcılarda sistemin
+      // normal paylaşım penceresini aç.
+      if(navigator.share){
+        const shareData={
+          title:'Beyaz Tahta',
+          text:'Beyaz Tahta görüntüsü',
+          files:[file]
+        };
+
+        if(!navigator.canShare || navigator.canShare({files:[file]})){
+          try{
+            await navigator.share(shareData);
+            statusEl.textContent='Tahta görüntüsü paylaşıldı';
+            return;
+          }catch(err){
+            // Kullanıcı paylaşım penceresini kapattıysa indirme başlatma.
+            if(err && err.name==='AbortError'){
+              statusEl.textContent='Paylaşma iptal edildi';
+              return;
+            }
+            console.warn('Sistem paylaşımı kullanılamadı, PNG indiriliyor:',err);
+          }
+        }
+      }
+
+      // Web Share / dosya paylaşımı desteklenmiyorsa PNG indir.
+      downloadBlob(blob,filename);
+      statusEl.textContent='Paylaşım desteklenmedi — PNG indirildi';
+    }catch(err){
+      console.error('Tahta paylaşılamadı:',err);
+      statusEl.textContent='Tahta görüntüsü oluşturulamadı';
+    }
+  }
+
+  async function downloadCurrentBoard(){
+    try{
+      const payload=boardFilePayload();
+      const text=JSON.stringify(payload,null,2);
+      const suggestedName=safeBoardFilename();
+
+      // Chromium tabanlı tarayıcılarda gerçek sistem "Farklı Kaydet"
+      // penceresini aç. Kullanıcı burada adı/konumu değiştirebilir.
+      if('showSaveFilePicker' in window){
+        try{
+          const handle=await window.showSaveFilePicker({
+            suggestedName,
+            types:[
+              {
+                description:'Beyaz Tahta dosyası',
+                accept:{
+                  'application/json':['.whiteboard']
+                }
+              }
+            ],
+            excludeAcceptAllOption:false
+          });
+
+          const writable=await handle.createWritable();
+          await writable.write(text);
+          await writable.close();
+
+          statusEl.textContent=`${objects.length} nesneli tahta kaydedildi`;
+          return;
+        }catch(err){
+          // Kullanıcı kayıt penceresini iptal ettiyse hata mesajı gösterme.
+          if(err && err.name==='AbortError'){
+            statusEl.textContent='Kaydetme iptal edildi';
+            return;
+          }
+          console.warn('Sistem kayıt penceresi kullanılamadı, indirme yöntemine geçiliyor:',err);
+        }
+      }
+
+      // showSaveFilePicker desteklenmiyorsa klasik tarayıcı indirmesi.
+      const blob=new Blob(
+        [text],
+        {type:'application/json;charset=utf-8'}
+      );
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download=suggestedName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),0);
+
+      statusEl.textContent=`${objects.length} nesneli tahta yerel dosyaya kaydedildi`;
+    }catch(err){
+      console.error('Tahta kaydedilemedi:',err);
+      statusEl.textContent='Tahta kaydedilemedi';
+    }
+  }
+
+  function normalizeLoadedBoardPayload(parsed){
+    // Yeni .whiteboard biçimi
+    if(
+      parsed &&
+      parsed.format==='sinan-ipek-whiteboard' &&
+      Array.isArray(parsed.objects)
+    ){
+      return JSON.parse(JSON.stringify(parsed.objects));
+    }
+
+    // Eski/elle hazırlanmış yalın object-array dosyaları için uyumluluk.
+    if(Array.isArray(parsed)){
+      return JSON.parse(JSON.stringify(parsed));
+    }
+
+    throw new Error('Geçerli bir whiteboard dosyası değil');
+  }
+
+  function showBoardLoadConfirmation(objectsFromFile,fileName=''){
+    pendingBoardLoad={
+      objects:objectsFromFile,
+      fileName:String(fileName||'')
+    };
+    boardLoadConfirm.classList.add('open');
+    boardLoadConfirm.setAttribute('aria-hidden','false');
+  }
+
+  function hideBoardLoadConfirmation(){
+    boardLoadConfirm.classList.remove('open');
+    boardLoadConfirm.setAttribute('aria-hidden','true');
+  }
+
+  async function applyPendingBoardLoad(){
+    if(!pendingBoardLoad || !Array.isArray(pendingBoardLoad.objects)){
+      hideBoardLoadConfirmation();
+      pendingBoardLoad=null;
+      return;
+    }
+
+    const incoming=JSON.parse(JSON.stringify(pendingBoardLoad.objects));
+    pendingBoardLoad=null;
+    hideBoardLoadConfirmation();
+
+    // Undo, yalnızca yüklemeyi yapan bu tarayıcıda eski tahtayı geri alma
+    // imkânı sağlar. Ortak odadaki diğer cihazlar yeni state'i görür.
+    saveState();
+
+    objects=incoming;
+    ensureUniqueObjectIds();
+    setSelection([]);
+    closeContextMenu();
+    closeFileMenu();
+    if(textEditing) closeTextEditor(false);
+    remoteLiveInk.clear();
+
+    collabRebuildLiveSnapshot();
+    collabLastSignature=collabSignature(objects);
+    redraw();
+
+    // Hızlı yol: bağlı cihazlara tam tahta değişimini anında bildir.
+    collabBroadcast('board_replace',{
+      objects:collabSerializableObjects()
+    });
+
+    // Kalıcı checkpoint: aynı state'i Supabase main tahtasına yaz.
+    if(collabEnabled && collabClient){
+      try{
+        const state=collabSerializableObjects();
+        const {error}=await collabClient
+          .from(COLLAB_TABLE)
+          .upsert({
+            id:COLLAB_BOARD_ID,
+            state,
+            updated_at:new Date().toISOString(),
+            updated_by:COLLAB_CLIENT_ID
+          },{onConflict:'id'});
+
+        if(error) throw error;
+        collabLastSignature=collabSignature(state);
+        collabRebuildLiveSnapshot();
+        statusEl.textContent=`Kaydedilmiş tahta ortak odaya yüklendi — ${objects.length} nesne`;
+      }catch(err){
+        console.error('Kaydedilmiş tahta Supabase’e yazılamadı:',err);
+        statusEl.textContent='Tahta yerelde açıldı; ortak odaya kalıcı yazma başarısız';
+      }
+    }else{
+      statusEl.textContent=`Kaydedilmiş tahta açıldı — ${objects.length} nesne`;
+    }
+  }
+
+  fileBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    closeFillMenu();
+    eraserMenu.classList.remove('open');
+    colorMenu.classList.remove('open');
+    closeContextMenu();
+    fileMenu.classList.toggle('open');
+  });
+
+  saveBoardBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    closeFileMenu();
+    downloadCurrentBoard();
+  });
+
+  openBoardBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    closeFileMenu();
+    boardFileInput.value='';
+    boardFileInput.click();
+  });
+
+  shareBoardBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    closeFileMenu();
+    shareCurrentBoard();
+  });
+
+  boardFileInput.addEventListener('change',()=>{
+    const file=boardFileInput.files && boardFileInput.files[0];
+    if(!file) return;
+
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        const parsed=JSON.parse(String(reader.result||''));
+        const loadedObjects=normalizeLoadedBoardPayload(parsed);
+        showBoardLoadConfirmation(loadedObjects,file.name);
+      }catch(err){
+        console.error('Whiteboard dosyası açılamadı:',err);
+        pendingBoardLoad=null;
+        hideBoardLoadConfirmation();
+        statusEl.textContent='Dosya açılamadı — geçerli bir whiteboard dosyası değil';
+      }
+    };
+    reader.onerror=()=>{
+      statusEl.textContent='Dosya okunamadı';
+    };
+    reader.readAsText(file);
+  });
+
+  cancelBoardLoadBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    pendingBoardLoad=null;
+    hideBoardLoadConfirmation();
+    statusEl.textContent='Dosya yükleme iptal edildi';
+  });
+
+  confirmBoardLoadBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    applyPendingBoardLoad();
+  });
+
+  boardLoadConfirm.addEventListener('pointerdown',e=>{
+    if(e.target===boardLoadConfirm){
+      pendingBoardLoad=null;
+      hideBoardLoadConfirmation();
+      statusEl.textContent='Dosya yükleme iptal edildi';
+    }
+  });
+
+  document.addEventListener('pointerdown',e=>{
+    if(!e.target.closest('.fileWrap')){
+      closeFileMenu();
+    }
+  });
+
   homeBtn.onclick=()=>{
     window.location.href='../index.html';
   };
@@ -5635,7 +6497,7 @@
     colorMenu.classList.remove('open');
     eraserMenu.classList.remove('open');
     closeContextMenu();
-    canvas.style.cursor='crosshair';
+    canvas.style.cursor='default';
     redraw();
     if(textEditing) positionTextEditor();
     statusEl.textContent='Dolgu modu — kapalı bir nesnenin içine tıkla';
@@ -5899,7 +6761,12 @@
     if(mode!=='select') return;
     const p=pFromEvent(e);
     const hit=hitTestObject(p);
-    if(hit>=0 && objects[hit] && objects[hit].kind==='text'){
+    if(
+      hit>=0 &&
+      objects[hit] &&
+      !objects[hit].locked &&
+      objects[hit].kind==='text'
+    ){
       e.preventDefault();
       beginTextEditingAt(objects[hit].center,'',hit);
     }
@@ -5986,7 +6853,7 @@
     inkBtn.classList.add('active');
     selectBtn.classList.remove('active');
     eraserBtn.classList.remove('active');
-    canvas.style.cursor='crosshair';
+    canvas.style.cursor='default';
     redraw();
   };
 
@@ -6008,41 +6875,90 @@
     redraw();
   };
 
-  eraserBtn.onclick=(e)=>{
-    e.stopPropagation();
+  function activateEraserTool(kind='stroke',radius=eraserRadius){
+    if(textEditing) closeTextEditor(true);
+
+    textBtn.classList.remove('active');
+    fillBtn.classList.remove('active');
     closeFillMenu();
+    closeContextMenu();
     colorMenu.classList.remove('open');
-    eraserMenu.classList.toggle('open');
-  };
+
+    eraserKind=kind;
+    if(eraserKind==='point'){
+      eraserRadius=Number(radius)||14;
+    }
+
+    eraserOptions.forEach(btn=>{
+      const sameKind=btn.dataset.eraserKind===eraserKind;
+      const sameRadius=
+        eraserKind!=='point' ||
+        Number(btn.dataset.radius)===Number(eraserRadius);
+      btn.classList.toggle('active',sameKind && sameRadius);
+    });
+
+    mode='eraser';
+    setSelection([]);
+    eraserCursor=null;
+
+    eraserBtn.classList.add('active');
+    inkBtn.classList.remove('active');
+    selectBtn.classList.remove('active');
+
+    canvas.style.cursor='none';
+
+    statusEl.textContent=(eraserKind==='stroke')
+      ? 'Silgi — nesne silme'
+      : `Silgi — ${eraserRadius}px`;
+
+    redraw();
+  }
+
+  eraserBtn.addEventListener('pointerdown',e=>{
+    e.stopPropagation();
+    if(e.button!==0) return;
+
+    eraserLongPressTriggered=false;
+    clearTimeout(eraserPressTimer);
+
+    eraserPressTimer=setTimeout(()=>{
+      eraserLongPressTriggered=true;
+      closeFillMenu();
+      colorMenu.classList.remove('open');
+      closeContextMenu();
+      eraserMenu.classList.add('open');
+    },520);
+  });
+
+  eraserBtn.addEventListener('pointerup',e=>{
+    e.stopPropagation();
+    if(e.button!==0) return;
+
+    clearTimeout(eraserPressTimer);
+
+    if(!eraserLongPressTriggered){
+      // Kısa basma her zaman varsayılan nesne silme moduna döner.
+      eraserMenu.classList.remove('open');
+      activateEraserTool('stroke');
+    }
+
+    eraserLongPressTriggered=false;
+  });
+
+  eraserBtn.addEventListener('pointercancel',()=>{
+    clearTimeout(eraserPressTimer);
+    eraserLongPressTriggered=false;
+  });
 
   eraserOptions.forEach(btn=>{
     btn.addEventListener('click',e=>{
       e.stopPropagation();
 
-      eraserKind=btn.dataset.eraserKind;
-      if(eraserKind==='point'){
-        eraserRadius=Number(btn.dataset.radius)||14;
-      }
+      const kind=btn.dataset.eraserKind || 'stroke';
+      const radius=Number(btn.dataset.radius)||eraserRadius;
 
-      eraserOptions.forEach(b=>b.classList.toggle('active',b===btn));
       eraserMenu.classList.remove('open');
-
-      if(textEditing) closeTextEditor(true);
-      textBtn.classList.remove('active');
-      mode='eraser';
-    fillBtn.classList.remove('active');
-    closeFillMenu();
-      setSelection([]);
-      eraserBtn.classList.add('active');
-      inkBtn.classList.remove('active');
-      selectBtn.classList.remove('active');
-      canvas.style.cursor='none';
-
-      statusEl.textContent=(eraserKind==='stroke')
-        ? 'Silgi'
-        : `Silgi — ${eraserRadius}px`;
-
-      redraw();
+      activateEraserTool(kind,radius);
     });
   });
 
@@ -6352,9 +7268,115 @@
     }
   });
 
+  function openFeedbackModal(){
+    feedbackModal.classList.add('open');
+    feedbackModal.setAttribute('aria-hidden','false');
+    feedbackText.value='';
+    feedbackCount.textContent='0 / 1500';
+    feedbackStatus.textContent='';
+    feedbackStatus.className='feedbackStatus';
+    sendFeedbackBtn.disabled=false;
+    sendFeedbackBtn.textContent='Gönder';
+    setTimeout(()=>feedbackText.focus(),0);
+  }
+
+  function closeFeedbackModal(){
+    feedbackModal.classList.remove('open');
+    feedbackModal.setAttribute('aria-hidden','true');
+  }
+
+  async function sendFeedbackMessage(){
+    const message=feedbackText.value.trim();
+
+    feedbackStatus.className='feedbackStatus';
+    feedbackStatus.textContent='';
+
+    if(!message){
+      feedbackStatus.classList.add('error');
+      feedbackStatus.textContent='Lütfen önce bir mesaj yazın.';
+      feedbackText.focus();
+      return;
+    }
+
+    if(!window.supabase || !window.supabase.createClient){
+      feedbackStatus.classList.add('error');
+      feedbackStatus.textContent='Mesaj sistemi şu anda kullanılamıyor.';
+      return;
+    }
+
+    sendFeedbackBtn.disabled=true;
+    sendFeedbackBtn.textContent='Gönderiliyor…';
+    feedbackStatus.textContent='Mesaj gönderiliyor…';
+
+    try{
+      const client=collabClient || window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
+        {auth:{persistSession:false,autoRefreshToken:false}}
+      );
+
+      const {error}=await client
+        .from('feedback_messages')
+        .insert({message});
+
+      if(error) throw error;
+
+      feedbackStatus.classList.add('success');
+      feedbackStatus.textContent='Mesajınız gönderildi. Teşekkürler.';
+      statusEl.textContent='Mesajınız gönderildi — teşekkürler';
+
+      setTimeout(()=>{
+        closeFeedbackModal();
+      },700);
+
+    }catch(err){
+      console.error('Mesaj gönderilemedi:',err);
+
+      const raw=(err && (err.message || err.details || err.hint || err.code)) ? String(err.message || err.details || err.hint || err.code) : '';
+      const tableMissing =
+        /feedback_messages/i.test(raw) &&
+        /(not found|does not exist|schema cache|42P01|PGRST)/i.test(raw);
+
+      feedbackStatus.classList.add('error');
+
+      if(tableMissing){
+        feedbackStatus.textContent='Mesaj sistemi henüz kurulmamış. Supabase içinde feedback_messages tablosu oluşturulmalı.';
+      }else{
+        feedbackStatus.textContent='Mesaj gönderilemedi. İnternet bağlantısını veya mesaj sistemini kontrol edin.';
+      }
+
+      statusEl.textContent='Mesaj gönderilemedi';
+      sendFeedbackBtn.disabled=false;
+      sendFeedbackBtn.textContent='Gönder';
+    }
+  }
+
+  creatorSignature.addEventListener('click',openFeedbackModal);
+  cancelFeedbackBtn.addEventListener('click',closeFeedbackModal);
+  sendFeedbackBtn.addEventListener('click',sendFeedbackMessage);
+
+  feedbackText.addEventListener('input',()=>{
+    feedbackCount.textContent=`${feedbackText.value.length} / 1500`;
+  });
+
+  feedbackModal.addEventListener('pointerdown',e=>{
+    if(e.target===feedbackModal) closeFeedbackModal();
+  });
+
+  feedbackText.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+      e.preventDefault();
+      closeFeedbackModal();
+    }else if((e.ctrlKey || e.metaKey) && e.key==='Enter'){
+      e.preventDefault();
+      sendFeedbackMessage();
+    }
+  });
+
   resize();
   initCollaboration();
 })();
 </script>
+
 </body>
 </html>
