@@ -537,10 +537,10 @@
     </button>
     <button id="integralBtn" class="iconBtn" title="İntegral sembolü" aria-label="İntegral sembolü">
       <svg viewBox="0 0 20 30" aria-hidden="true" style="width:17px;height:25px;display:block">
-        <path d="M18.0 2.9
-                 C10.9 0.5 9.8 7.0 10.0 9.6
-                 C10.2 12.4 10.3 17.6 10.0 20.4
-                 C10.2 23.0 9.1 29.5 2.0 27.1"
+        <path d="M13.2 2.9
+                 C10.36 0.5 9.92 7.0 10.0 9.6
+                 C10.08 12.4 10.12 17.6 10.0 20.4
+                 C10.08 23.0 9.64 29.5 6.8 27.1"
               fill="none" stroke="currentColor" stroke-width="1.8"
               stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -1645,12 +1645,14 @@
     const w=Math.max(10,Number(o.w)||20);
     const h=Math.max(30,Number(o.h)||64);
     const sy=o.mirrorY ? -1 : 1;
-    const P=(x,y)=>({x:x*w,y:y*h*sy});
 
-    // integral_Sembolü.whiteboard içindeki üst ve alt el çizimi,
-    // uç noktalar sabit tutularak kübik Bézier eğrilerine uyduruldu.
-    // Orta bölüm de ayrı bir kübik Bézier; böylece bütün sembol,
-    // doğru parçaları yerine üç gerçek kübik Bézier segmentinden oluşur.
+    // Yatayda %60 daraltma:
+    // yeni genişlik = eski genişliğin %40'ı.
+    const kx=0.4;
+    const P=(x,y)=>({x:x*w*kx,y:y*h*sy});
+
+    // integral_Sembolü.whiteboard içindeki çizime uydurulmuş
+    // üç parçalı gerçek kübik Bézier integral sembolü.
     const top0=P( 0.500000,-0.469836);
     const top1=P( 0.054569,-0.567643);
     const top2=P(-0.011943,-0.268647);
@@ -1661,7 +1663,6 @@
     const bot2=P(-0.054569, 0.567643);
     const bot3=P(-0.500000, 0.469836);
 
-    // Üst/alt eğrilerin uç teğetleriyle uyumlu, neredeyse dik orta Bézier.
     const dx=0.012806;
     const dy=0.086902;
     const mid1=P( 0.000863+dx,-0.181746+dy);
