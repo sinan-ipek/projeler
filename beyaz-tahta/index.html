@@ -396,7 +396,6 @@
         <path d="M5.5 10.5V20h13v-9.5M9.2 20v-5.8h5.6V20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
       </svg>
     </button>
-    <button id="selectBtn" class="iconBtn" title="Seç" aria-label="Seç">↖</button>
 
     <div class="fileWrap">
       <button id="fileBtn" class="iconBtn" title="Dosya" aria-label="Dosya">
@@ -421,6 +420,8 @@
       </div>
       <input id="boardFileInput" type="file" accept=".whiteboard,.json,application/json">
     </div>
+
+    <button id="selectBtn" class="iconBtn" title="Seç" aria-label="Seç">↖</button>
 
     <button id="inkBtn" class="active iconBtn" title="Ink" aria-label="Ink">✎</button>
 
@@ -536,10 +537,12 @@
     </button>
     <button id="integralBtn" class="iconBtn" title="İntegral sembolü" aria-label="İntegral sembolü">
       <svg viewBox="0 0 20 30" aria-hidden="true" style="width:17px;height:25px;display:block">
-        <path d="M13.7 2.3
-                 C7.8 1.8 7.1 6.0 7.4 10.3
-                 C7.7 14.6 11.1 15.5 10.4 20.0
-                 C9.8 24.1 8.5 28.0 3.6 27.7"
+        <path d="M15.5 2.4
+                 C12.0 1.7 9.8 3.0 9.2 5.6
+                 C8.8 7.4 9.0 9.0 9.0 10.4
+                 L9.0 19.6
+                 C9.0 21.5 8.3 24.0 6.8 26.0
+                 C5.3 27.9 3.4 28.5 2.4 27.8"
               fill="none" stroke="currentColor" stroke-width="1.8"
               stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -1661,31 +1664,32 @@
     }
 
     if(o.symbolType==='integral'){
-      const w=Math.max(14,Number(o.w)||50);
-      const h=Math.max(36,Number(o.h)||130);
-      const pts=[];
+      const w=Math.max(10,Number(o.w)||20);
+      const h=Math.max(30,Number(o.h)||64);
 
-      const bez=(p0,p1,p2,p3,t)=>{
-        const u=1-t;
-        return {
-          x:u*u*u*p0.x + 3*u*u*t*p1.x + 3*u*t*t*p2.x + t*t*t*p3.x,
-          y:u*u*u*p0.y + 3*u*u*t*p1.y + 3*u*t*t*p2.y + t*t*t*p3.y
-        };
-      };
+      // integral_Sembolü.whiteboard dosyasındaki çizimin sadeleştirilmiş,
+      // normalize edilmiş geometrisi. Üst kanca → düz orta gövde → alt kanca.
+      const template=[
+        {x: 0.50000,y:-0.46984},
+        {x: 0.39562,y:-0.49724},
+        {x: 0.28666,y:-0.49511},
+        {x: 0.18379,y:-0.46363},
+        {x: 0.09708,y:-0.40590},
+        {x: 0.04211,y:-0.33975},
+        {x: 0.00611,y:-0.24980},
+        {x:-0.00191,y: 0.22271},
+        {x:-0.04982,y: 0.35163},
+        {x:-0.13167,y: 0.43355},
+        {x:-0.24121,y: 0.48509},
+        {x:-0.36449,y: 0.49969},
+        {x:-0.44153,y: 0.48902},
+        {x:-0.50000,y: 0.46984}
+      ];
 
-      const top={x: 0.30*w,y:-0.50*h*sy};
-      const mid={x: 0.00*w,y: 0.00*h*sy};
-      const bot={x:-0.30*w,y: 0.50*h*sy};
-
-      const c1={x:-0.14*w,y:-0.52*h*sy};
-      const c2={x:-0.11*w,y:-0.14*h*sy};
-      const c3={x: 0.11*w,y: 0.14*h*sy};
-      const c4={x: 0.14*w,y: 0.52*h*sy};
-
-      const n=44;
-      for(let i=0;i<=n;i++) pts.push(bez(top,c1,c2,mid,i/n));
-      for(let i=1;i<=n;i++) pts.push(bez(mid,c3,c4,bot,i/n));
-      return pts;
+      return template.map(p=>({
+        x:p.x*w,
+        y:p.y*h*sy
+      }));
     }
 
     return [];
@@ -1742,8 +1746,8 @@
       kind:'symbol',
       symbolType:'integral',
       center:{x:cx,y:cy},
-      w:25*scale,
-      h:72.5*scale,
+      w:20*scale,
+      h:64*scale,
       angle:0,
       mirrorY:false,
       style:{...style},
@@ -5665,8 +5669,8 @@
               o.legDepth=Math.max(6,(o.legDepth||34)*sy);
               o.startOffset=(Number.isFinite(o.startOffset) ? o.startOffset : 0.10*(o.height||72))*sy;
             }else if(o.symbolType==='integral'){
-              o.w=Math.max(10,(o.w||50)*sx);
-              o.h=Math.max(22,(o.h||130)*sy);
+              o.w=Math.max(10,(o.w||20)*sx);
+              o.h=Math.max(22,(o.h||64)*sy);
             }
 
           }else if(o.kind==='text'){
