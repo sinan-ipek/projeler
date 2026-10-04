@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eğim</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f1f2f3;font-family:Arial,Helvetica,sans-serif}
+#app{position:relative;width:100%;height:100%}
+#scene{display:block;width:100%;height:100%;background:#f1f2f3;user-select:none;-webkit-user-select:none;touch-action:none;cursor:grab}
+#scene.panning{cursor:grabbing}
+.functionBox{position:absolute;left:18px;top:18px;z-index:30;display:flex;align-items:center;width:340px;background:rgba(255,255,255,.96);border:1px solid #aeb6bf;border-radius:9px;box-shadow:0 2px 8px rgba(0,0,0,.10);overflow:hidden}
+#functionInput{flex:1;min-width:0;height:44px;padding:0 12px;border:0;outline:none;background:transparent;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:18px;color:#20262d}
+#functionInput.invalid{background:#fff0f0}
+#functionMenuButton{width:44px;height:44px;flex:0 0 44px;border:0;border-left:1px solid #d3d8dd;background:#f7f8f9;font-size:17px;color:#4d5863;cursor:pointer}
+#functionMenuButton:hover{background:#eef1f3}
+#functionMenu{position:absolute;left:18px;top:68px;z-index:40;width:340px;display:none;padding:6px;background:#fff;border:1px solid #b8c0c8;border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.16)}
+#functionMenu.open{display:block}
+.functionOption{display:block;width:100%;padding:9px 10px;border:0;border-radius:6px;background:transparent;text-align:left;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:16px;color:#29313a;cursor:pointer}
+.functionOption:hover{background:#eef2f6}
+</style>
+</head>
+<body>
+<div id="app">
+<svg id="scene" viewBox="0 0 1280 800" preserveAspectRatio="none">
+<defs>
+<filter id="pointShadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity=".22"/></filter>
+<filter id="labelShadow" x="-40%" y="-50%" width="180%" height="200%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity=".14"/></filter>
+</defs>
+<rect id="backgroundRect" x="0" y="0" width="1280" height="800" fill="#f1f2f3"/>
+<g id="gridLayer"></g><g id="axesLayer"></g><g id="curveLayer"></g><g id="projectionLayer"></g><g id="tangentLayer"></g><g id="pointLayer"></g>
+</svg>
+<div class="functionBox">
+<input id="functionInput" type="text" spellcheck="false" autocomplete="off" value="0.15x^2 - 1" aria-label="Fonksiyon">
+<button id="functionMenuButton" type="button" aria-label="Hazır fonksiyonlar">▼</button>
+</div>
+<div id="functionMenu">
+<button class="functionOption" type="button" data-function="0.15x^2 - 1" data-start="-2.4">f(x) = 0.15x² − 1</button>
+<button class="functionOption" type="button" data-function="e^x" data-start="0">f(x) = eˣ</button>
+<button class="functionOption" type="button" data-function="0.55x" data-start="-2.5">f(x) = 0.55x</button>
+<button class="functionOption" type="button" data-function="0.95sin(0.78x) - 0.045x^2 + 0.35" data-start="0.5">f(x) = 0.95 sin(0.78x) − 0.045x² + 0.35</button>
+<button class="functionOption" type="button" data-function="0.055x^3 - 0.5x" data-start="-2.2">f(x) = 0.055x³ − 0.5x</button>
+<button class="functionOption" type="button" data-function="0.012x^4 - 0.27x^2 + 1.25" data-start="-2.4">f(x) = 0.012x⁴ − 0.27x² + 1.25</button>
+<button class="functionOption" type="button" data-function="sin(x) + 0.4sin(2x)" data-start="0.4">f(x) = sin(x) + 0.4 sin(2x)</button>
+<button class="functionOption" type="button" data-function="2sin(1.5x)/(1 + 0.18x^2)" data-start="0.5">f(x) = 2 sin(1.5x)/(1 + 0.18x²)</button>
+</div>
+</div>
+<script>
+const BASE_H=800;let W=1280,H=BASE_H;
+const INITIAL_Y_RANGE=8,MIN_ZOOM=.20,MAX_ZOOM=20;
+const camera={centerX:0,centerY:0,zoom:1};
+const svg=document.getElementById("scene"),backgroundRect=document.getElementById("backgroundRect"),gridLayer=document.getElementById("gridLayer"),axesLayer=document.getElementById("axesLayer"),curveLayer=document.getElementById("curveLayer"),projectionLayer=document.getElementById("projectionLayer"),tangentLayer=document.getElementById("tangentLayer"),pointLayer=document.getElementById("pointLayer");
+const functionInput=document.getElementById("functionInput"),functionMenuButton=document.getElementById("functionMenuButton"),functionMenu=document.getElementById("functionMenu"),functionOptions=document.querySelectorAll(".functionOption");
+
+let currentFunction=null,xValue=-2.4,dashPhase=0,lastTime=performance.now();
+const DASH_SPEED_FACTOR=90,DASH_LENGTH=18,DASH_GAP=13,TANGENT_LENGTH=330;
+
+let draggingPoint=false,pointPointerId=null,isPanning=false,panPointerId=null,panStartScreen=null,panStartCamera=null;
+const activePointers=new Map();
+let pinchActive=false,pinchStartDistance=0,pinchStartZoom=1,pinchAnchorWorld=null;
+
+function svgEl(name,attrs={}){const e=document.createElementNS("http://www.w3.org/2000/svg",name);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);return e}
+function setAttrs(e,attrs){for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function add(a,b){return{x:a.x+b.x,y:a.y+b.y}}
+function mul(v,s){return{x:v.x*s,y:v.y*s}}
+function normalize(v){const n=Math.hypot(v.x,v.y)||1;return{x:v.x/n,y:v.y/n}}
+function formatSmallNumber(value){if(Math.abs(value)<.0005)value=0;const a=Math.abs(value);if(a!==0&&(a>=10000||a<.001))return value.toExponential(2).replace("e+","e");let t=value.toFixed(3).replace(/\.?0+$/,"");return t==="-0"?"0":t}
+
+function getScale(){return H/INITIAL_Y_RANGE*camera.zoom}
+function worldToScreen(x,y){const s=getScale();return{x:W/2+(x-camera.centerX)*s,y:H/2-(y-camera.centerY)*s}}
+function screenToWorld(x,y){const s=getScale();return{x:camera.centerX+(x-W/2)/s,y:camera.centerY-(y-H/2)/s}}
+function getVisibleBounds(){return{left:screenToWorld(0,H/2).x,right:screenToWorld(W,H/2).x,top:screenToWorld(W/2,0).y,bottom:screenToWorld(W/2,H).y}}
+
+const FUNCTION_NAMES=new Set(["sin","cos","tan","asin","acos","atan","sqrt","abs","ln","log","exp","sinh","cosh","tanh"]);
+function tokenize(source){
+ source=source.toLowerCase().replaceAll("π","pi").replaceAll("−","-").replaceAll("×","*").replaceAll("÷","/").replace(/(\d),(\d)/g,"$1.$2");
+ const tokens=[];let i=0;
+ while(i<source.length){
+  const c=source[i];
+  if(/\s/.test(c)){i++;continue}
+  if(/[0-9.]/.test(c)){let text="",dots=0;while(i<source.length&&/[0-9.]/.test(source[i])){if(source[i]===".")dots++;text+=source[i++]}if(dots>1||text===".")throw Error("Geçersiz sayı");tokens.push({type:"number",value:text});continue}
+  if(/[a-z]/.test(c)){let name="";while(i<source.length&&/[a-z]/.test(source[i]))name+=source[i++];if(name==="x")tokens.push({type:"variable",value:"x"});else if(name==="e")tokens.push({type:"constant",value:"e"});else if(name==="pi")tokens.push({type:"constant",value:"pi"});else if(FUNCTION_NAMES.has(name))tokens.push({type:"function",value:name});else throw Error("Bilinmeyen ifade");continue}
+  if("+-*/^()".includes(c)){tokens.push(c==="("||c===")"?{type:"paren",value:c}:{type:"operator",value:c});i++;continue}
+  throw Error("Geçersiz karakter");
+ }
+ return tokens;
+}
+function addImplicitMultiplication(tokens){
+ const out=[];
+ const ends=t=>t&&(t.type==="number"||t.type==="variable"||t.type==="constant"||(t.type==="paren"&&t.value===")"));
+ const starts=t=>t&&(t.type==="number"||t.type==="variable"||t.type==="constant"||t.type==="function"||(t.type==="paren"&&t.value==="("));
+ for(const token of tokens){const p=out[out.length-1];if(ends(p)&&starts(token))out.push({type:"operator",value:"*"});out.push(token)}
+ return out;
+}
+function compileExpression(source){
+ const tokens=addImplicitMultiplication(tokenize(source));let index=0;
+ const peek=()=>tokens[index],consume=()=>tokens[index++];
+ function expr(){return addsub()}
+ function addsub(){let left=muldiv();while(peek()&&peek().type==="operator"&&(peek().value==="+"||peek().value==="-")){const op=consume().value,right=muldiv(),old=left;left=op==="+"?(x=>old(x)+right(x)):(x=>old(x)-right(x))}return left}
+ function muldiv(){let left=unary();while(peek()&&peek().type==="operator"&&(peek().value==="*"||peek().value==="/")){const op=consume().value,right=unary(),old=left;left=op==="*"?(x=>old(x)*right(x)):(x=>old(x)/right(x))}return left}
+ function unary(){if(peek()&&peek().type==="operator"&&(peek().value==="+"||peek().value==="-")){const op=consume().value,v=unary();return op==="-"?(x=>-v(x)):v}return power()}
+ function power(){let left=primary();if(peek()&&peek().type==="operator"&&peek().value==="^"){consume();const right=unary(),old=left;left=x=>Math.pow(old(x),right(x))}return left}
+ function primary(){
+  const t=consume();if(!t)throw Error("Eksik ifade");
+  if(t.type==="number"){const v=Number(t.value);return()=>v}
+  if(t.type==="variable")return x=>x;
+  if(t.type==="constant")return t.value==="e"?(()=>Math.E):(()=>Math.PI);
+  if(t.type==="paren"&&t.value==="("){const inside=expr(),c=consume();if(!c||c.type!=="paren"||c.value!==")")throw Error("Parantez");return inside}
+  if(t.type==="function"){
+   const o=consume();if(!o||o.type!=="paren"||o.value!=="(")throw Error("Fonksiyon parantezi");
+   const arg=expr(),c=consume();if(!c||c.type!=="paren"||c.value!==")")throw Error("Parantez");
+   const n=t.value;
+   return x=>{const v=arg(x);switch(n){case"sin":return Math.sin(v);case"cos":return Math.cos(v);case"tan":return Math.tan(v);case"asin":return Math.asin(v);case"acos":return Math.acos(v);case"atan":return Math.atan(v);case"sqrt":return Math.sqrt(v);case"abs":return Math.abs(v);case"ln":return Math.log(v);case"log":return Math.log10(v);case"exp":return Math.exp(v);case"sinh":return Math.sinh(v);case"cosh":return Math.cosh(v);case"tanh":return Math.tanh(v);default:return NaN}}
+  }
+  throw Error("Geçersiz ifade");
+ }
+ const fn=expr();if(index!==tokens.length)throw Error("İfade tamamlanamadı");return fn;
+}
+function f(x){if(!currentFunction)return NaN;try{const r=currentFunction(x);return Number.isFinite(r)?r:NaN}catch{return NaN}}
+function df(x){const h=Math.max(1e-6,Math.abs(x)*1e-6),l=f(x-h),r=f(x+h);if(!Number.isFinite(l)||!Number.isFinite(r))return NaN;return(r-l)/(2*h)}
+
+function applyFunctionInput(){const source=functionInput.value.trim();if(!source){functionInput.classList.add("invalid");return}try{currentFunction=compileExpression(source);functionInput.classList.remove("invalid");drawCurve()}catch{functionInput.classList.add("invalid")}}
+let inputTimer=null;
+functionInput.addEventListener("input",()=>{clearTimeout(inputTimer);inputTimer=setTimeout(applyFunctionInput,140)});
+functionInput.addEventListener("keydown",e=>{if(e.key==="Enter"){applyFunctionInput();functionInput.blur();functionMenu.classList.remove("open")}});
+functionMenuButton.addEventListener("click",e=>{e.stopPropagation();functionMenu.classList.toggle("open")});
+functionOptions.forEach(o=>o.addEventListener("click",()=>{functionInput.value=o.dataset.function;xValue=Number(o.dataset.start);applyFunctionInput();functionMenu.classList.remove("open")}));
+document.addEventListener("pointerdown",e=>{if(!functionMenu.contains(e.target)&&e.target!==functionMenuButton)functionMenu.classList.remove("open")});
+
+function niceStep(target){const p=Math.pow(10,Math.floor(Math.log10(target))),n=target/p;if(n<1.5)return p;if(n<3.5)return 2*p;if(n<7.5)return 5*p;return 10*p}
+function drawGridAndAxes(){
+ gridLayer.innerHTML="";axesLayer.innerHTML="";
+ const b=getVisibleBounds(),step=niceStep(90/getScale());
+ const firstX=Math.floor(b.left/step)*step;
+ for(let x=firstX;x<=b.right+step;x+=step){const p=worldToScreen(x,0);gridLayer.appendChild(svgEl("line",{x1:p.x,y1:0,x2:p.x,y2:H,stroke:"#d8dcdf","stroke-width":1}))}
+ const firstY=Math.floor(b.bottom/step)*step;
+ for(let y=firstY;y<=b.top+step;y+=step){const p=worldToScreen(0,y);gridLayer.appendChild(svgEl("line",{x1:0,y1:p.y,x2:W,y2:p.y,stroke:"#d8dcdf","stroke-width":1}))}
+ const o=worldToScreen(0,0);
+ if(o.y>=0&&o.y<=H)axesLayer.appendChild(svgEl("line",{x1:0,y1:o.y,x2:W,y2:o.y,stroke:"#89939c","stroke-width":2}));
+ if(o.x>=0&&o.x<=W)axesLayer.appendChild(svgEl("line",{x1:o.x,y1:0,x2:o.x,y2:H,stroke:"#89939c","stroke-width":2}));
+}
+function drawCurve(){
+ curveLayer.innerHTML="";const b=getVisibleBounds(),samples=Math.max(800,Math.ceil(W));let d="",drawing=false;
+ for(let i=0;i<=samples;i++){const x=b.left+(b.right-b.left)*(i/samples),y=f(x);if(!Number.isFinite(y)){drawing=false;continue}const p=worldToScreen(x,y);if(p.y<-6000||p.y>H+6000){drawing=false;continue}d+=(drawing?"L ":"M ")+p.x.toFixed(2)+" "+p.y.toFixed(2)+" ";drawing=true}
+ curveLayer.appendChild(svgEl("path",{d:d,fill:"none",stroke:"#ee7b22","stroke-width":6,"stroke-linecap":"round","stroke-linejoin":"round","pointer-events":"none"}));
+}
+function updateStaticGraphics(){drawGridAndAxes();drawCurve()}
+
+const xProjectionLine=svgEl("line",{stroke:"#7b8791","stroke-width":2,"stroke-dasharray":"7 7",opacity:.9,"pointer-events":"none"});projectionLayer.appendChild(xProjectionLine);
+const derivativeLabelGroup=svgEl("g",{"pointer-events":"none"});projectionLayer.appendChild(derivativeLabelGroup);
+const derivativeLabelRect=svgEl("rect",{x:0,y:0,width:110,height:34,rx:6,ry:6,fill:"#fff2a8",stroke:"#c8b75b","stroke-width":1.2,filter:"url(#labelShadow)"});derivativeLabelGroup.appendChild(derivativeLabelRect);
+const derivativeLabelText=svgEl("text",{x:10,y:22,"font-size":16,"font-family":"Cambria Math, STIX Two Math, Times New Roman, serif",fill:"#302d24"});derivativeLabelGroup.appendChild(derivativeLabelText);
+const movingTangent=svgEl("line",{stroke:"#2f6df6","stroke-width":5,"stroke-dasharray":DASH_LENGTH+" "+DASH_GAP,"stroke-linecap":"round","pointer-events":"none"});tangentLayer.appendChild(movingTangent);
+const pointCircle=svgEl("circle",{r:17,fill:"#ef3030",stroke:"#ffffff","stroke-width":3,filter:"url(#pointShadow)",cursor:"grab"});pointLayer.appendChild(pointCircle);
+
+function pointInsideRect(x,y,r,p=0){return x>=r.x-p&&x<=r.x+r.w+p&&y>=r.y-p&&y<=r.y+r.h+p}
+function segmentRectPenalty(a,b,r){let s=0;for(let i=0;i<=24;i++){const t=i/24,x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t;if(pointInsideRect(x,y,r,4))s+=100;else if(pointInsideRect(x,y,r,15))s+=12}return s}
+function curveRectPenalty(r){const left=screenToWorld(r.x-16,H/2).x,right=screenToWorld(r.x+r.w+16,H/2).x,start=Math.min(left,right),end=Math.max(left,right);let s=0;for(let i=0;i<=36;i++){const x=start+(end-start)*(i/36),y=f(x);if(!Number.isFinite(y))continue;const p=worldToScreen(x,y);if(pointInsideRect(p.x,p.y,r,4))s+=90;else if(pointInsideRect(p.x,p.y,r,16))s+=9}return s}
+function updateDerivativeLabel(point,derivative,tangentA,tangentB,axisPoint){
+ const label="f′("+formatSmallNumber(xValue)+") = "+formatSmallNumber(derivative);derivativeLabelText.textContent=label;
+ let measuredWidth=90;try{measuredWidth=derivativeLabelText.getComputedTextLength()}catch{measuredWidth=label.length*8}
+ const bw=Math.max(92,measuredWidth+20),bh=34,gx=23,gy=23;derivativeLabelRect.setAttribute("width",bw);derivativeLabelRect.setAttribute("height",bh);
+ const c=[{x:point.x+gx,y:point.y+gy},{x:point.x-bw-gx,y:point.y+gy},{x:point.x+gx,y:point.y-bh-gy},{x:point.x-bw-gx,y:point.y-bh-gy}];
+ for(const a of c){const r={x:a.x,y:a.y,w:bw,h:bh};let score=0;if(r.x<8||r.y<8||r.x+r.w>W-8||r.y+r.h>H-8)score+=100000;if(pointInsideRect(point.x,point.y,r,18))score+=600;score+=segmentRectPenalty(tangentA,tangentB,r)+segmentRectPenalty(point,axisPoint,r)+curveRectPenalty(r);a.score=score}
+ c.sort((a,b)=>a.score-b.score);const best=c[0],fx=clamp(best.x,8,W-bw-8),fy=clamp(best.y,8,H-bh-8);derivativeLabelGroup.setAttribute("transform","translate("+fx+","+fy+")");
+}
+
+function getSvgCoordinatesFromClient(clientX,clientY){const r=svg.getBoundingClientRect();return{x:(clientX-r.left)*(W/r.width),y:(clientY-r.top)*(H/r.height)}}
+function getSvgCoordinates(e){return getSvgCoordinatesFromClient(e.clientX,e.clientY)}
+function zoomAt(x,y,factor){const before=screenToWorld(x,y),newZoom=clamp(camera.zoom*factor,MIN_ZOOM,MAX_ZOOM);if(Math.abs(newZoom-camera.zoom)<1e-6)return;camera.zoom=newZoom;const after=screenToWorld(x,y);camera.centerX+=before.x-after.x;camera.centerY+=before.y-after.y;updateStaticGraphics()}
+svg.addEventListener("wheel",e=>{e.preventDefault();const p=getSvgCoordinates(e);zoomAt(p.x,p.y,Math.exp(-e.deltaY*.0014))},{passive:false});
+
+function beginPinch(){const p=Array.from(activePointers.values());if(p.length<2)return;const a=p[0],b=p[1];pinchStartDistance=Math.hypot(b.x-a.x,b.y-a.y);if(pinchStartDistance<2)return;pinchStartZoom=camera.zoom;const c=getSvgCoordinatesFromClient((a.x+b.x)/2,(a.y+b.y)/2);pinchAnchorWorld=screenToWorld(c.x,c.y);pinchActive=true;isPanning=false;draggingPoint=false;svg.classList.remove("panning")}
+svg.addEventListener("pointerdown",e=>{if(e.pointerType==="touch"||e.pointerType==="pen"){activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(activePointers.size===2){beginPinch();return}}if(e.pointerType==="mouse"&&e.button===0){isPanning=true;panPointerId=e.pointerId;panStartScreen=getSvgCoordinates(e);panStartCamera={centerX:camera.centerX,centerY:camera.centerY};svg.setPointerCapture(e.pointerId);svg.classList.add("panning")}});
+svg.addEventListener("pointermove",e=>{
+ if(activePointers.has(e.pointerId))activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(pinchActive&&activePointers.size>=2){e.preventDefault();const p=Array.from(activePointers.values()),a=p[0],b=p[1],distance=Math.hypot(b.x-a.x,b.y-a.y);if(distance<2)return;const c=getSvgCoordinatesFromClient((a.x+b.x)/2,(a.y+b.y)/2);camera.zoom=clamp(pinchStartZoom*(distance/pinchStartDistance),MIN_ZOOM,MAX_ZOOM);camera.centerX=pinchAnchorWorld.x-(c.x-W/2)/getScale();camera.centerY=pinchAnchorWorld.y+(c.y-H/2)/getScale();updateStaticGraphics();return}
+ if(isPanning&&e.pointerId===panPointerId){const cur=getSvgCoordinates(e),dx=cur.x-panStartScreen.x,dy=cur.y-panStartScreen.y;camera.centerX=panStartCamera.centerX-dx/getScale();camera.centerY=panStartCamera.centerY+dy/getScale();updateStaticGraphics()}
+});
+function endPointer(e){activePointers.delete(e.pointerId);if(activePointers.size<2)pinchActive=false;if(e.pointerId===panPointerId){isPanning=false;panPointerId=null;svg.classList.remove("panning");if(svg.hasPointerCapture(e.pointerId))svg.releasePointerCapture(e.pointerId)}}
+svg.addEventListener("pointerup",endPointer);svg.addEventListener("pointercancel",endPointer);
+
+pointCircle.addEventListener("pointerdown",e=>{e.stopPropagation();draggingPoint=true;pointPointerId=e.pointerId;pointCircle.setPointerCapture(e.pointerId);pointCircle.setAttribute("cursor","grabbing")});
+pointCircle.addEventListener("pointermove",e=>{if(!draggingPoint||pointPointerId!==e.pointerId||pinchActive)return;const p=getSvgCoordinates(e),w=screenToWorld(p.x,p.y);xValue=w.x});
+pointCircle.addEventListener("pointerup",e=>{if(pointPointerId!==e.pointerId)return;draggingPoint=false;pointPointerId=null;if(pointCircle.hasPointerCapture(e.pointerId))pointCircle.releasePointerCapture(e.pointerId);pointCircle.setAttribute("cursor","grab")});
+pointCircle.addEventListener("pointercancel",()=>{draggingPoint=false;pointPointerId=null;pointCircle.setAttribute("cursor","grab")});
+
+function resizeScene(){const r=svg.getBoundingClientRect();if(r.width<=0||r.height<=0)return;H=BASE_H;W=H*(r.width/r.height);svg.setAttribute("viewBox","0 0 "+W+" "+H);backgroundRect.setAttribute("width",W);backgroundRect.setAttribute("height",H);updateStaticGraphics()}
+window.addEventListener("resize",resizeScene);
+
+function render(now){
+ const dt=Math.min(.04,(now-lastTime)/1000);lastTime=now;const yValue=f(xValue);
+ if(!Number.isFinite(yValue)){pointCircle.setAttribute("visibility","hidden");movingTangent.setAttribute("visibility","hidden");xProjectionLine.setAttribute("visibility","hidden");derivativeLabelGroup.setAttribute("visibility","hidden");requestAnimationFrame(render);return}
+ pointCircle.setAttribute("visibility","visible");movingTangent.setAttribute("visibility","visible");xProjectionLine.setAttribute("visibility","visible");derivativeLabelGroup.setAttribute("visibility","visible");
+ let derivative=df(xValue);if(!Number.isFinite(derivative))derivative=0;if(Math.abs(derivative)<.002)derivative=0;
+ const point=worldToScreen(xValue,yValue),axisPoint=worldToScreen(xValue,0);setAttrs(xProjectionLine,{x1:point.x,y1:point.y,x2:axisPoint.x,y2:axisPoint.y});
+ const tangentUnit=normalize({x:1,y:-derivative}),tangentA=add(point,mul(tangentUnit,-TANGENT_LENGTH/2)),tangentB=add(point,mul(tangentUnit,TANGENT_LENGTH/2));
+ setAttrs(movingTangent,{x1:tangentA.x,y1:tangentA.y,x2:tangentB.x,y2:tangentB.y});
+ dashPhase=(dashPhase+DASH_SPEED_FACTOR*Math.abs(derivative)*dt)%(DASH_LENGTH+DASH_GAP);movingTangent.setAttribute("stroke-dashoffset",-dashPhase);
+ updateDerivativeLabel(point,derivative,tangentA,tangentB,axisPoint);setAttrs(pointCircle,{cx:point.x,cy:point.y});requestAnimationFrame(render);
+}
+
+applyFunctionInput();resizeScene();requestAnimationFrame(render);
+</script>
+</body>
+</html>
