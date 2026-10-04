@@ -4769,6 +4769,18 @@
              eraserPointSegDistance(p,bottom,top)<=r;
     }
 
+    if(o.kind==='symbol'){
+      const pts=symbolWorldPoints(o);
+      if(!pts || pts.length===0) return false;
+      if(pts.length===1){
+        return Math.hypot(pts[0].x-p.x,pts[0].y-p.y)<=r;
+      }
+      for(let i=1;i<pts.length;i++){
+        if(eraserPointSegDistance(p,pts[i-1],pts[i])<=r) return true;
+      }
+      return false;
+    }
+
     let verts=[];
     if(o.kind==='rect'){
       const hw=o.w/2,hh=o.h/2,a=o.angle||0;
