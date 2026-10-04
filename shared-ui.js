@@ -527,7 +527,14 @@
   function isHomeLike(el){
     const t=norm(el.textContent).toLowerCase();
     const href=(el.getAttribute && el.getAttribute('href'))||'';
-    return ['home','← home','⌂ home','ana sayfa','← ana sayfa','← startseite'].includes(t) ||
+    const id=(el.id||'').toLowerCase();
+    const title=((el.getAttribute && el.getAttribute('title'))||'').toLowerCase();
+    const aria=((el.getAttribute && el.getAttribute('aria-label'))||'').toLowerCase();
+
+    return id==='homebtn' ||
+      ['home','← home','⌂ home','ana sayfa','← ana sayfa','← startseite'].includes(t) ||
+      title==='ana sayfa' || title==='ana sayfa · startseite' ||
+      aria==='ana sayfa' || aria==='ana sayfa · startseite' ||
       /(^|\/)projeler\/?$/.test(href) || href==='../index.html' || href==='/projeler/' || href==='/projeler/index.html';
   }
 
