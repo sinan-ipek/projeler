@@ -453,6 +453,17 @@
       <option value="9">9</option>
     </select>
 
+    <button id="formatPainterBtn" class="iconBtn" title="Biçim boyayıcısı" aria-label="Biçim boyayıcısı">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 4.5h10.5a2 2 0 0 1 2 2v2.2a2 2 0 0 1-2 2H5z"
+              fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M17.5 7.6h1.8a1.7 1.7 0 0 1 1.7 1.7v1.1a1.7 1.7 0 0 1-1.7 1.7h-5.8"
+              fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        <path d="M13.5 10.7v8.8"
+              fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      </svg>
+    </button>
+
 
     <div class="eraserWrap">
       <button id="eraserBtn" class="iconBtn" title="Silgi" aria-label="Silgi">
@@ -703,12 +714,14 @@
   const colorOptions = Array.from(document.querySelectorAll('.colorOption'));
   const currentColorSwatch = document.getElementById('currentColorSwatch');
   let currentColor = '#111111';
+  let currentWidth = 4;
   let currentFillColor = '#facc15';
   let fillPressTimer = null;
   let fillLongPressTriggered = false;
   let eraserPressTimer = null;
   let eraserLongPressTriggered = false;
   const widthEl = document.getElementById('width');
+  const formatPainterBtn = document.getElementById('formatPainterBtn');
   const statusEl = document.getElementById('status');
   const undoBtn = document.getElementById('undoBtn');
   const redoBtn = document.getElementById('redoBtn');
@@ -791,6 +804,7 @@
 
   let selectedIndex = -1;
   let selectedIndices = [];
+  let formatPainterStyle = null;
   let nextGroupId = 1;
   let selectAction = null;   // 'move' | 'groupMove' | 'groupResize' | 'groupRotate' | 'resize' | 'rotate' | 'point' | 'marquee'
   let selectStart = null;
@@ -1569,8 +1583,175 @@
     redoStack = [];
   }
 
+  function selectedStyleSource(){
+    const idx=(selectedIndex>=0 && objects[selectedIndex])
+      ? selectedIndex
+      : selectedIndices.find(i=>objects[i]);
+    return Number.isInteger(idx) ? objects[idx] : null;
+  }
+
+  function setWidthControlValue(width){
+    const value=Number(width);
+    if(!Number.isFinite(value)) return;
+
+    const temp=widthEl.querySelector('option[data-selected-width="true"]');
+    if(temp) temp.remove();
+
+    const match=Array.from(widthEl.options).find(
+      opt=>Math.abs(Number(opt.value)-value)<1e-9
+    );
+
+    if(match){
+      widthEl.value=match.value;
+    }else{
+      const opt=document.createElement('option');
+      opt.value=String(value);
+      opt.textContent=String(value);
+      opt.dataset.selectedWidth='true';
+      widthEl.appendChild(opt);
+      widthEl.value=opt.value;
+    }
+  }
+
+  function syncStyleControlsFromSelection(){
+    const o=selectedStyleSource();
+
+    if(o && o.style){
+      if(o.style.color){
+        currentColorSwatch.style.background=o.style.color;
+        colorOptions.forEach(btn=>{
+          btn.classList.toggle('active',btn.dataset.color===o.style.color);
+        });
+      }
+
+      if(Number.isFinite(Number(o.style.width))){
+        setWidthControlValue(Number(o.style.width));
+      }
+      return;
+    }
+
+    currentColorSwatch.style.background=currentColor;
+    colorOptions.forEach(btn=>{
+      btn.classList.toggle('active',btn.dataset.color===currentColor);
+    });
+    setWidthControlValue(currentWidth);
+  }
+
+  function styleEditableIndices(indices=selectedIndices){
+    return (indices||[])
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length)
+      .filter(i=>objects[i] && !objects[i].locked && objects[i].kind!=='image');
+  }
+
+  function applyStrokeColorToSelection(color){
+    const targets=styleEditableIndices();
+    if(!targets.length) return 0;
+
+    saveState();
+    for(const i of targets){
+      const o=objects[i];
+      o.style={...(o.style||{}),color};
+    }
+    redraw();
+    return targets.length;
+  }
+
+  function applyStrokeWidthToSelection(width){
+    const value=Number(width);
+    if(!Number.isFinite(value) || value<=0) return 0;
+
+    const targets=styleEditableIndices();
+    if(!targets.length) return 0;
+
+    saveState();
+    for(const i of targets){
+      const o=objects[i];
+      o.style={...(o.style||{}),width:value};
+    }
+    redraw();
+    return targets.length;
+  }
+
+  function copyFormatFromObject(o){
+    if(!o || o.kind==='image') return null;
+
+    const style=o.style||{};
+    const payload={
+      color:style.color || currentColor,
+      width:Number.isFinite(Number(style.width)) ? Number(style.width) : Number(widthEl.value)||4,
+      hasFill:false,
+      fillColor:null
+    };
+
+    if(
+      (o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon') &&
+      typeof o.fillColor==='string' &&
+      o.fillColor
+    ){
+      payload.hasFill=true;
+      payload.fillColor=o.fillColor;
+    }
+
+    return payload;
+  }
+
+  function applyFormatToIndices(payload,indices){
+    if(!payload) return 0;
+
+    const targets=styleEditableIndices(indices);
+    if(!targets.length) return 0;
+
+    let changed=0;
+    for(const i of targets){
+      const o=objects[i];
+      o.style={
+        ...(o.style||{}),
+        color:payload.color,
+        width:payload.width
+      };
+
+      if(
+        payload.hasFill &&
+        (o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon')
+      ){
+        o.fillColor=payload.fillColor;
+      }
+      changed++;
+    }
+    return changed;
+  }
+
+  function cancelFormatPainter(){
+    formatPainterStyle=null;
+    formatPainterBtn.classList.remove('active');
+    if(mode==='select') canvas.style.cursor='default';
+  }
+
+  function armFormatPainter(){
+    const source=selectedStyleSource();
+    const payload=copyFormatFromObject(source);
+
+    if(!payload){
+      cancelFormatPainter();
+      statusEl.textContent='Önce biçimini kopyalamak istediğin bir nesneyi seç';
+      return;
+    }
+
+    formatPainterStyle=payload;
+    mode='select';
+    selectBtn.classList.add('active');
+    inkBtn.classList.remove('active');
+    eraserBtn.classList.remove('active');
+    fillBtn.classList.remove('active');
+    textBtn.classList.remove('active');
+    formatPainterBtn.classList.add('active');
+    canvas.style.cursor='copy';
+    statusEl.textContent='Biçim boyayıcısı — biçimi aktaracağın nesneye tıkla';
+    redraw();
+  }
+
   function strokeStyle(){
-    return {color:currentColor,width:+widthEl.value};
+    return {color:currentColor,width:currentWidth};
   }
 
   function drawSmoothStroke(pts, style){
@@ -2438,6 +2619,7 @@
     selectedIndices=expandGroupedIndices(indices||[]);
     groupSelectionAngle=0;
     normalizeSelection();
+    syncStyleControlsFromSelection();
   }
 
   function groupSelectionBounds(indices=selectedIndices){
@@ -5456,6 +5638,40 @@
     if(mode==='select'){
       canvas.setPointerCapture(e.pointerId);
 
+      if(formatPainterStyle){
+        const hit=hitTestObject(p);
+
+        if(hit>=0){
+          const targets=expandGroupedIndices([hit]);
+
+          if(targets.some(i=>objects[i] && objects[i].locked)){
+            statusEl.textContent='Kilitli nesnenin biçimi değiştirilemez';
+            redraw();
+            return;
+          }
+
+          saveState();
+          const count=applyFormatToIndices(formatPainterStyle,targets);
+
+          if(count){
+            setSelection(targets);
+            currentColor=formatPainterStyle.color;
+            currentColorSwatch.style.background=currentColor;
+            currentWidth=formatPainterStyle.width;
+            setWidthControlValue(formatPainterStyle.width);
+            cancelFormatPainter();
+            syncStyleControlsFromSelection();
+            redraw();
+            statusEl.textContent=count>1
+              ? `Biçim ${count} nesneye aktarıldı`
+              : 'Biçim nesneye aktarıldı';
+          }
+        }else{
+          statusEl.textContent='Biçimi aktaracağın nesneye tıkla';
+        }
+        return;
+      }
+
       // Multi-selection transform handles.
       if(selectedIndices.length>1){
         const gh=hitGroupSelectionHandle(p,e.pointerType);
@@ -6644,6 +6860,7 @@
   }
 
   function activateFillTool(){
+    cancelFormatPainter();
     if(textEditing) closeTextEditor(true);
     textBtn.classList.remove('active');
     mode='fill';
@@ -6790,7 +7007,7 @@
         h:o.h,
         angle:o.angle||0,
         fontSize:o.fontSize||24,
-        style:{...(o.style||{color:currentColor,width:+widthEl.value})}
+        style:{...(o.style||{color:currentColor,width:currentWidth})}
       };
       textEditor.value=o.text||'';
     }else{
@@ -6802,7 +7019,7 @@
         h:90/viewZoom,
         angle:0,
         fontSize:24/viewZoom,
-        style:{color:currentColor,width:+widthEl.value}
+        style:{color:currentColor,width:currentWidth}
       };
       textEditor.value=initialText;
     }
@@ -6860,6 +7077,7 @@
   });
 
   textBtn.onclick=()=>{
+    cancelFormatPainter();
     closeContextMenu();
     closeFillMenu();
     eraserMenu.classList.remove('open');
@@ -6995,10 +7213,46 @@
       currentColorSwatch.style.background=currentColor;
       colorOptions.forEach(b=>b.classList.toggle('active',b===btn));
       colorMenu.classList.remove('open');
+
+      if(mode==='select' && selectedIndices.length){
+        const count=applyStrokeColorToSelection(currentColor);
+        if(count){
+          statusEl.textContent=count>1
+            ? `${count} nesnenin çizgi rengi değiştirildi`
+            : 'Nesnenin çizgi rengi değiştirildi';
+        }
+      }
     });
   });
 
+  widthEl.addEventListener('change',()=>{
+    const width=Number(widthEl.value);
+    currentWidth=width;
+    if(mode==='select' && selectedIndices.length){
+      const count=applyStrokeWidthToSelection(width);
+      if(count){
+        statusEl.textContent=count>1
+          ? `${count} nesnenin çizgi kalınlığı değiştirildi`
+          : 'Nesnenin çizgi kalınlığı değiştirildi';
+      }
+    }
+  });
+
+  formatPainterBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+
+    if(formatPainterStyle){
+      cancelFormatPainter();
+      statusEl.textContent='Biçim boyayıcısı kapatıldı';
+      redraw();
+      return;
+    }
+
+    armFormatPainter();
+  });
+
   inkBtn.onclick=()=>{
+    cancelFormatPainter();
     if(textEditing) closeTextEditor(true);
     textBtn.classList.remove('active');
     fillBtn.classList.remove('active');
@@ -7017,6 +7271,7 @@
   };
 
   selectBtn.onclick=()=>{
+    cancelFormatPainter();
     if(textEditing) closeTextEditor(true);
     textBtn.classList.remove('active');
     fillBtn.classList.remove('active');
@@ -7035,6 +7290,7 @@
   };
 
   function activateEraserTool(kind='stroke',radius=eraserRadius){
+    cancelFormatPainter();
     if(textEditing) closeTextEditor(true);
 
     textBtn.classList.remove('active');
