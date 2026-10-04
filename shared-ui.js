@@ -685,26 +685,60 @@
       tip.classList.remove('open');
     }
 
+    let hoverTimer=null;
+    let hoverTarget=null;
+    let lastPointerEvent=null;
+    const HOVER_DELAY=650;
+
+    function cancelPending(){
+      if(hoverTimer){
+        clearTimeout(hoverTimer);
+        hoverTimer=null;
+      }
+      hoverTarget=null;
+    }
+
     document.addEventListener('pointerover',e=>{
       if(e.pointerType && e.pointerType!=='mouse' && e.pointerType!=='pen') return;
       const el=e.target.closest && e.target.closest('[data-si-de]');
       if(!el) return;
-      show(el,e);
+
+      cancelPending();
+      hide();
+
+      hoverTarget=el;
+      lastPointerEvent=e;
+
+      hoverTimer=setTimeout(()=>{
+        hoverTimer=null;
+        if(hoverTarget===el && lastPointerEvent){
+          show(el,lastPointerEvent);
+        }
+      },HOVER_DELAY);
     });
 
     document.addEventListener('pointermove',e=>{
+      lastPointerEvent=e;
       if(current) move(e);
     });
 
     document.addEventListener('pointerout',e=>{
-      if(!current) return;
+      const el=e.target.closest && e.target.closest('[data-si-de]');
       const related=e.relatedTarget;
+
+      if(hoverTarget && el===hoverTarget){
+        if(!(related && hoverTarget.contains && hoverTarget.contains(related))){
+          cancelPending();
+        }
+      }
+
+      if(!current) return;
       if(related && current.contains && current.contains(related)) return;
       if(e.target===current || (current.contains && current.contains(e.target))) hide();
     });
 
-    window.addEventListener('blur',hide);
-    document.addEventListener('scroll',hide,true);
+    window.addEventListener('blur',()=>{cancelPending();hide()});
+    document.addEventListener('scroll',()=>{cancelPending();hide()},true);
   }
 
   function init(){
