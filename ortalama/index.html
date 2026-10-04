@@ -24,7 +24,7 @@ body{
   height:68px;
   display:flex;
   align-items:center;
-  justify-content:flex-end;
+  justify-content:space-between;
   padding:0 24px;
 }
 button{
@@ -149,6 +149,7 @@ button:hover{background:#f0f3f8}
 <body>
 <div class="app">
   <div class="topbar">
+    <button id="homeBtn" aria-label="Ana sayfa">⌂</button>
     <button id="newBtn">Yeni</button>
   </div>
 
@@ -309,6 +310,10 @@ function arraysEqual(a,b){
   }
   return true;
 }
+
+document.getElementById("homeBtn").addEventListener("click",()=>{
+  window.location.href = "../index.html";
+});
 
 document.getElementById("newBtn").addEventListener("click",newQuestion);
 
