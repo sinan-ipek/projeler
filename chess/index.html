@@ -35,17 +35,58 @@
       background: radial-gradient(1200px 900px at 30% 20%, #1a2240 0%, var(--bg) 55%) fixed;
       color: var(--text);
     }
+    .homeBar{
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 18px 18px 0;
+      display:flex;
+      justify-content:flex-start;
+    }
+    .homeLink{
+      display:inline-flex;
+      align-items:center;
+      text-decoration:none;
+      background:white;
+      padding:8px 14px;
+      border-radius:8px;
+      font-size:14px;
+      color:black;
+      box-shadow:0 4px 12px rgba(0,0,0,0.18);
+    }
     .wrap{
       max-width: 1400px;
       margin: 0 auto;
-      padding: 18px;
+      padding: 14px 18px 18px;
       display:grid;
       gap: 14px;
-      grid-template-columns: 520px 1fr;
+      grid-template-columns: minmax(0, 1fr);
       align-items:start;
     }
-    @media (max-width: 1100px){
-      .wrap{ grid-template-columns: 1fr; }
+    .playArea{
+      display:grid;
+      grid-template-columns: minmax(420px,520px) minmax(340px,1fr);
+      gap:14px;
+      align-items:start;
+    }
+    .boardColumn{ min-width:0; }
+    .sideInfo{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      min-width:0;
+    }
+    .sideInfo .status,
+    .sideInfo .capturedBox,
+    .sideInfo .coachBox{ margin-top:0; }
+    .boardToolbar{
+      display:flex;
+      justify-content:flex-end;
+      margin-bottom:10px;
+    }
+    @media (max-width: 900px){
+      .playArea{ grid-template-columns:1fr; }
+      .boardColumn{ max-width:520px; width:100%; margin:0 auto; }
+      .sideInfo{ width:100%; }
     }
 
     .card{
@@ -393,42 +434,26 @@
 </head>
 
 <body>
-<body>
 
-<!-- HOME BUTTON -->
-<div style="
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  z-index: 1000;
-">
-  <a href="../index.html" style="
-    text-decoration: none;
-    background: white;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 14px;
-    color: black;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  ">
-    ← Home
-  </a>
+<!-- HOME BUTTON: normal document flow, never overlaps content -->
+<div class="homeBar">
+  <a class="homeLink" href="../index.html">← Home</a>
 </div>
 
 <div class="wrap">
-<div class="wrap">
-  <!-- LEFT: Board -->
+  <!-- BOARD + STATUS / CAPTURED / COACH -->
   <div class="card">
-    <h2>
-      <span>Satranç Tahtası (Offline) – Koç</span>
-      <button id="btnFlip" class="btn">Tahtayı Döndür</button>
-    </h2>
     <div class="body">
-      <div class="boardWrap">
-        <div id="board" class="board"></div>
-      </div>
+      <div class="playArea">
+        <div class="boardColumn">
+          <div class="boardToolbar">
+            <button id="btnFlip" class="btn">Tahtayı Döndür</button>
+          </div>
+          <div class="boardWrap">
+            <div id="board" class="board"></div>
+          </div>
 
-      <div class="row" style="margin-top:12px;">
+          <div class="row" style="margin-top:12px;">
         <button id="btnNew" class="btn primary">Yeni Oyun</button>
         <button id="btnUndo" class="btn">Geri Al</button>
         <button id="btnStop" class="btn danger" title="Motor düşünüyorsa durdurur">Motoru Durdur</button>
@@ -437,6 +462,9 @@
         <button id="btnShowCtrlB" class="btn toggle" title="Siyah'ın kontrol ettiği kareleri göster">Siyah Kontrol</button>
       </div>
 
+        </div>
+
+        <div class="sideInfo">
       <div class="status" id="statusBox">
         Hazır.
         <small id="statusSub"></small>
@@ -451,7 +479,6 @@
           <div class="capturedLabel">Siyahın Aldıkları:</div>
           <div id="capByBlack" class="capturedPieces"></div>
         </div>
-        <div class="hint" style="margin-top:6px;">Captured taşlar hamle geçmişinden hesaplanır (undo/PGN/FEN uyumlu).</div>
       </div>
 
       <div class="coachBox">
@@ -474,11 +501,12 @@
           <div class="hint">Koçu açınca, her <b>senin hamlenden sonra</b> değerlendirme yapılır ve hatalar raporlanır.</div>
         </div>
       </div>
-
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- RIGHT: Settings / History / Save -->
+  <!-- SETTINGS / HISTORY / SAVE -->
   <div class="card">
     <h2>Ayarlar, Kayıtlar, Raporlar</h2>
     <div class="body">
@@ -2606,5 +2634,6 @@
   boot();
 })();
 </script>
-<script src="/projeler/shared-ui.js?v=20261004-1"></script>\n</body>
+<script src="/projeler/shared-ui.js?v=20261004-1"></script>
+</body>
 </html>
