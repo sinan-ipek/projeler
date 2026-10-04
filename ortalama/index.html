@@ -37,6 +37,27 @@ button{
   transition:.15s;
 }
 button:hover{background:#f0f3f8}
+
+.mode-switch{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.mode-btn{
+  min-width:92px;
+}
+
+.mode-btn.active{
+  background:#25324a;
+  color:#fff;
+  border-color:#25324a;
+}
+
+.mode-btn.disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
 .game{
   flex:1;
   min-height:0;
@@ -168,6 +189,12 @@ button:hover{background:#f0f3f8}
 <div class="app">
   <div class="topbar">
     <button id="homeBtn" aria-label="Ana sayfa">⌂</button>
+
+    <div class="mode-switch" aria-label="Mod seçimi">
+      <button id="simpleModeBtn" class="mode-btn active" aria-pressed="true">Basit</button>
+      <button id="advancedModeBtn" class="mode-btn disabled" aria-pressed="false" title="Yakında">Gelişmiş</button>
+    </div>
+
     <button id="newBtn">Yeni</button>
   </div>
 
@@ -371,6 +398,15 @@ function arraysEqual(a,b){
 
 document.getElementById("homeBtn").addEventListener("click",()=>{
   window.location.href = "../index.html";
+});
+
+document.getElementById("simpleModeBtn").addEventListener("click",()=>{
+  document.getElementById("simpleModeBtn").classList.add("active");
+  document.getElementById("simpleModeBtn").setAttribute("aria-pressed","true");
+});
+
+document.getElementById("advancedModeBtn").addEventListener("click",()=>{
+  // Gelişmiş mod daha sonra eklenecek.
 });
 
 document.getElementById("newBtn").addEventListener("click",newQuestion);
