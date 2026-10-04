@@ -488,6 +488,7 @@
   function processElement(el){
     if(!el || el.nodeType!==1) return;
     if(el.closest('.si-feedback-layer') || el.classList.contains('si-creator') || el.classList.contains('si-home-btn')) return;
+    if(el.closest('.btn-card') && el.closest('.btn-card').querySelector('.btn-de')) return;
     if(/^(SCRIPT|STYLE|TEXTAREA|OPTION|SVG|PATH|CANVAS)$/.test(el.tagName)) return;
 
     let t=norm(el.textContent);
@@ -531,6 +532,7 @@
   }
 
   function setupHome(){
+    if(document.body && document.body.dataset.siMainPage==='true') return;
     const candidates=[...document.querySelectorAll('a,button')].filter(isHomeLike);
     let home=candidates.shift();
 
