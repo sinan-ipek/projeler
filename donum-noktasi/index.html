@@ -12,7 +12,7 @@ button{cursor:pointer}.functionInput{width:250px;min-width:180px;outline:none}.f
 .stage{background:#efefef;border:1px solid #d0d0d0;border-radius:12px;padding:8px;min-width:0}
 svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px solid #d0d0d0;border-radius:12px;background:#fff;padding:16px}
 .info small{color:#777}.state{font-size:20px;font-weight:650;margin:4px 0 8px}.formula{font-size:18px;margin-bottom:10px}.explain{font-size:14px;line-height:1.55;color:#444}.foot{margin-top:10px;color:#777;font-size:13px}.yScaleControl{height:42px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid #cfcfcf;border-radius:10px;background:#fff;color:#555;font-size:13px}.yScaleControl input{width:120px;accent-color:#888}.yScaleValue{min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
-.axisTick{stroke:#9d9d9d;stroke-width:.85;vector-effect:non-scaling-stroke}.axisTickLabel{fill:#777;font-size:9.5px;font-family:Arial,sans-serif;user-select:none}.wp-glow{opacity:0;transform-box:fill-box;transform-origin:center;pointer-events:none}.wp-glow.active{animation:wpGlow 850ms ease-out}
+.axisTick{stroke:#9d9d9d;stroke-width:.85;vector-effect:non-scaling-stroke}.axisTickLabel{fill:#777;font-size:9.5px;font-family:Arial,sans-serif;user-select:none}.pointTriangle{fill:#1f4aa8}.pointHit{fill:transparent}.wp-glow{opacity:0;transform-box:fill-box;transform-origin:center;pointer-events:none}.wp-glow.active{animation:wpGlow 850ms ease-out}
 .wp-ray{stroke:#ffb347;stroke-width:2.2;stroke-linecap:round;opacity:0}.wp-rays.active .wp-ray{animation:wpRay 760ms ease-out}
 .wp-rays.active .wp-ray:nth-child(2n){animation-delay:35ms}.wp-rays.active .wp-ray:nth-child(3n){animation-delay:70ms}
 @keyframes wpGlow{0%{opacity:0;transform:scale(.35)}18%{opacity:.9;transform:scale(1)}55%{opacity:.45;transform:scale(1.7)}100%{opacity:0;transform:scale(2.25)}}
@@ -56,6 +56,22 @@ svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px soli
           <filter id="noteShadow" x="-40%" y="-40%" width="180%" height="180%">
             <feDropShadow dx="0" dy="1.5" stdDeviation="1.8" flood-color="#704850" flood-opacity=".18"/>
           </filter>
+
+          <filter
+            id="pointShadow"
+            x="-100%"
+            y="-100%"
+            width="300%"
+            height="300%"
+          >
+            <feDropShadow
+              dx="1"
+              dy="1.2"
+              stdDeviation="1.25"
+              flood-color="#163a7a"
+              flood-opacity=".28"
+            />
+          </filter>
         </defs>
 
         <path id="curve" d="" fill="none" stroke="#ff70ad" stroke-width="5" stroke-linecap="round"/>
@@ -86,7 +102,15 @@ svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px soli
         </g>
 
         <circle id="pointHalo" r="15" fill="transparent" stroke="#cfcfcf" stroke-width="1.5" stroke-dasharray="3 3"/>
-        <circle id="point" r="8.5" fill="#5d9cff" style="cursor:grab"/>
+        <g id="pointGroup" style="cursor:grab">
+          <polygon
+            id="pointTriangle"
+            class="pointTriangle"
+            filter="url(#pointShadow)"
+            points="13,0 -10,-9.5 -10,9.5"
+          />
+          <circle id="pointHit" class="pointHit" r="17"/>
+        </g>
       </svg>
     </div>
 
@@ -103,7 +127,7 @@ svg{display:block;width:100%;height:auto;touch-action:none}.info{border:1px soli
 <script>
 (()=>{
 const root=document.getElementById('curve-turn-demo');
-const svg=root.querySelector('#graph'),curve=root.querySelector('#curve'),point=root.querySelector('#point'),pointHalo=root.querySelector('#pointHalo'),normalArrow=root.querySelector('#normalArrow'),curveType=root.querySelector('#curveType'),customOption=root.querySelector('#customOption'),functionInput=root.querySelector('#functionInput'),drawBtn=root.querySelector('#drawBtn'),resetBtn=root.querySelector('#resetBtn'),yScale=root.querySelector('#yScale'),yScaleValue=root.querySelector('#yScaleValue'),stateLabel=root.querySelector('#stateLabel'),formula=root.querySelector('#formula'),explain=root.querySelector('#explain'),glow=root.querySelector('#glow'),rays=root.querySelector('#rays'),warningCallout=root.querySelector('#warningCallout'),warningStem=root.querySelector('#warningStem'),warningBox=root.querySelector('#warningBox'),warningText=root.querySelector('#warningText');const xAxisTicks=root.querySelector('#xAxisTicks'),yAxisTicks=root.querySelector('#yAxisTicks');
+const svg=root.querySelector('#graph'),curve=root.querySelector('#curve'),pointHalo=root.querySelector('#pointHalo'),pointGroup=root.querySelector('#pointGroup'),pointTriangle=root.querySelector('#pointTriangle'),pointHit=root.querySelector('#pointHit'),normalArrow=root.querySelector('#normalArrow'),curveType=root.querySelector('#curveType'),customOption=root.querySelector('#customOption'),functionInput=root.querySelector('#functionInput'),drawBtn=root.querySelector('#drawBtn'),resetBtn=root.querySelector('#resetBtn'),yScale=root.querySelector('#yScale'),yScaleValue=root.querySelector('#yScaleValue'),stateLabel=root.querySelector('#stateLabel'),formula=root.querySelector('#formula'),explain=root.querySelector('#explain'),glow=root.querySelector('#glow'),rays=root.querySelector('#rays'),warningCallout=root.querySelector('#warningCallout'),warningStem=root.querySelector('#warningStem'),warningBox=root.querySelector('#warningBox'),warningText=root.querySelector('#warningText');const xAxisTicks=root.querySelector('#xAxisTicks'),yAxisTicks=root.querySelector('#yAxisTicks');
 const cx=380,cy=215,sx=95,xMin=-3.1,xMax=3.1,snapPx=5,noteW=52,noteH=24;let sy=42;
 let xValue=-2.5,dragging=false,warningVisible=false,warningTimer=null,activeSnapRoot=null,inflectionPoints=[],customEval=null,customExpr="";
 
@@ -361,8 +385,24 @@ function drawCurve(){
  curve.setAttribute('d',d);drawAxisScale();updateInflectionPoints();updateVisuals(true);
 }
 function updateVisuals(showArrow){
- const t=curveType.value,fy=f(t,xValue),curv=d2(t,xValue);if(!Number.isFinite(fy)){normalArrow.style.display='none';return}const [px,py]=toSvg(xValue,fy);
- point.setAttribute('cx',px);point.setAttribute('cy',py);pointHalo.setAttribute('cx',px);pointHalo.setAttribute('cy',py);normalArrow.style.display=showArrow?'':'none';
+ const t=curveType.value,fy=f(t,xValue),curv=d2(t,xValue);
+ if(!Number.isFinite(fy)){
+  pointHalo.style.display='none';
+  pointGroup.style.display='none';
+  normalArrow.style.display='none';
+  return;
+ }
+ pointHalo.style.display='';
+ pointGroup.style.display='';
+ const [px,py]=toSvg(xValue,fy);
+ pointHalo.setAttribute('cx',px);
+ pointHalo.setAttribute('cy',py);
+ const slopeHere=d1(t,xValue);
+ const dirX=sx;
+ const dirY=-sy*slopeHere;
+ const angleDeg=Math.atan2(dirY,dirX)*180/Math.PI;
+ pointGroup.setAttribute('transform',`translate(${px} ${py}) rotate(${angleDeg})`);
+ normalArrow.style.display=showArrow?'':'none';
  if(showArrow){
   const axv=clamp(xValue+.20,xMin,xMax),[ax,ay]=toSvg(axv,f(t,axv)),slope=d1(t,xValue),ac=d2(t,xValue);let tx=sx,ty=-sy*slope,L=Math.hypot(tx,ty)||1;tx/=L;ty/=L;
   const lnx=ty,lny=-tx,nx=ac>=0?lnx:-lnx,ny=ac>=0?lny:-lny,off=15,len=25,sx0=ax+nx*off,sy0=ay+ny*off;
@@ -375,17 +415,24 @@ function updateVisuals(showArrow){
  else if(curv<0){stateLabel.textContent='Sağ kıvrım (Rechtskrümmung)';formula.innerHTML="f''(x) &lt; 0";explain.textContent='Ok, sağa doğru ilerlerken dönüşün sağ tarafa olduğunu gösterir.'}
  else{stateLabel.textContent='Kıvrım';formula.innerHTML="f''(x) = 0";explain.textContent='Burada ikinci türev sıfırdır.'}
 }
-function beginDrag(e){dragging=true;point.style.cursor='grabbing';point.setPointerCapture?.(e.pointerId)}
+function beginDrag(e){dragging=true;pointGroup.style.cursor='grabbing';pointGroup.setPointerCapture?.(e.pointerId)}
 function drag(e){
  if(!dragging)return;const p=clientToSvg(e.clientX,e.clientY);let newX=clamp(xFromSvg(p.x),xMin,xMax);const movingLeft=newX<xValue-.002,movingRight=newX>xValue+.002;
  let snapRoot=null,best=Infinity;for(const r of inflectionPoints){const dist=Math.abs((cx+sx*newX)-(cx+sx*r));if(dist<=snapPx&&dist<best){best=dist;snapRoot=r}}
  if(snapRoot!==null){newX=snapRoot;if(activeSnapRoot===null||Math.abs(activeSnapRoot-snapRoot)>.01){activeSnapRoot=snapRoot;fireSnapAnimation(snapRoot,f(curveType.value,snapRoot))}}
  else if(activeSnapRoot!==null&&Math.abs((cx+sx*newX)-(cx+sx*activeSnapRoot))>snapPx+4)activeSnapRoot=null;
- xValue=newX;const [px,py]=toSvg(xValue,f(curveType.value,xValue));
+ xValue=newX;
+ const dragFy=f(curveType.value,xValue);
+ if(!Number.isFinite(dragFy)){
+  hideWarning();
+  updateVisuals(false);
+  return;
+ }
+ const [px,py]=toSvg(xValue,dragFy);
  if(movingLeft){showWarning(px,py);updateVisuals(false)}else if(movingRight){hideWarning();updateVisuals(true)}else updateVisuals(normalArrow.style.display!=='none');
 }
-function endDrag(e){dragging=false;point.style.cursor='grab';try{point.releasePointerCapture?.(e.pointerId)}catch(_){}}
-point.addEventListener('pointerdown',beginDrag);svg.addEventListener('pointermove',drag);svg.addEventListener('pointerup',endDrag);svg.addEventListener('pointercancel',endDrag);
+function endDrag(e){dragging=false;pointGroup.style.cursor='grab';try{pointGroup.releasePointerCapture?.(e.pointerId)}catch(_){}}
+pointGroup.addEventListener('pointerdown',beginDrag);svg.addEventListener('pointermove',drag);svg.addEventListener('pointerup',endDrag);svg.addEventListener('pointercancel',endDrag);
 curveType.addEventListener('change',()=>{xValue=-2.5;activeSnapRoot=null;hideWarning();drawCurve()});
 drawBtn.addEventListener('click',useCustomFunction);
 functionInput.addEventListener('input',()=>functionInput.classList.remove('invalid'));
