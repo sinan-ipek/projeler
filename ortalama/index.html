@@ -83,7 +83,25 @@ button:hover{background:#f0f3f8}
   box-shadow:0 2px 5px rgba(0,0,0,.15);
 }
 .block:active{cursor:grabbing}
-.block.dragging{opacity:.35}
+.block.dragging{opacity:0}
+
+.drag-image{
+  position:fixed;
+  left:-10000px;
+  top:-10000px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  pointer-events:none;
+  z-index:9999;
+}
+
+.drag-image .block{
+  margin:0;
+  transform:none !important;
+  box-shadow:none !important;
+  opacity:1 !important;
+}
 .column.solved .block{background:#45b96b}
 .value{
   margin-top:13px;
@@ -225,13 +243,38 @@ function render(){
           count: values[sourceColumn] - startLevel
         };
 
-        column.querySelectorAll(".block").forEach((b,idx)=>{
-          if(idx >= startLevel){
-            b.classList.add("dragging");
-          }
-        });
+        const movingBlocks = [...column.querySelectorAll(".block")]
+          .filter((b,idx)=>idx >= startLevel);
+
+        movingBlocks.forEach(b=>b.classList.add("dragging"));
+
+        const dragImage = document.createElement("div");
+        dragImage.className = "drag-image";
+
+        for(let n=0;n<movingBlocks.length;n++){
+          const ghostBlock = document.createElement("div");
+          ghostBlock.className = "block";
+          dragImage.appendChild(ghostBlock);
+        }
+
+        document.body.appendChild(dragImage);
+
+        const blockRect = block.getBoundingClientRect();
+        const pointerX = e.clientX - blockRect.left;
+        const pointerY = e.clientY - blockRect.top;
+        const dragHeight = movingBlocks.length * blockRect.height;
+
+        e.dataTransfer.setDragImage(
+          dragImage,
+          pointerX,
+          dragHeight - blockRect.height + pointerY
+        );
 
         e.dataTransfer.effectAllowed = "move";
+
+        requestAnimationFrame(()=>{
+          dragImage.remove();
+        });
       });
 
       block.addEventListener("dragend",()=>{
