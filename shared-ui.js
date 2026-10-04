@@ -422,11 +422,15 @@
   .si-home-btn:hover{background:#f3f5f8!important}
   .si-home-btn svg{width:21px!important;height:21px!important;display:block!important}
   .si-home-fixed{position:fixed!important;left:12px;top:12px;z-index:9990!important}
-  .si-bi::after{
-    content:attr(data-si-de);display:block;color:#8b8f97;font-size:10px;font-weight:400;
-    line-height:1.05;margin-top:2px;letter-spacing:0;white-space:normal
+  .si-translation-tooltip{
+    position:fixed;left:0;top:0;z-index:11000;display:none;pointer-events:none;
+    max-width:min(320px,calc(100vw - 24px));padding:5px 8px;border-radius:7px;
+    background:rgba(35,39,46,.94);color:#fff;border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 6px 18px rgba(0,0,0,.18);
+    font:400 11px/1.25 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+    white-space:normal
   }
-  button.si-bi::after,a.si-bi::after{font-size:9px;margin-top:1px}
+  .si-translation-tooltip.open{display:block}
   .si-creator{
     position:fixed;right:16px;bottom:12px;z-index:9988;border:0!important;background:transparent!important;
     color:#999!important;font:400 13px/1.2 system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important;
@@ -445,10 +449,7 @@
     font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif
   }
   .si-feedback-title{font-size:16px;font-weight:650;margin-bottom:3px}
-  .si-feedback-title::after,.si-feedback-sub::after{display:block;color:#8b8f97;font-weight:400}
-  .si-feedback-title::after{content:"Nachricht an Sinan İpek";font-size:10px;margin-top:2px}
   .si-feedback-sub{font-size:12px;line-height:1.35;color:#59616d;margin:8px 0 10px}
-  .si-feedback-sub::after{content:"Schreiben Sie Ihre Meinung, einen Vorschlag oder ein Problem.";font-size:10px;margin-top:2px}
   .si-feedback-text{
     width:100%;min-height:120px;resize:vertical;border:1px solid #cfd5dc;border-radius:9px;
     padding:10px 11px;outline:none;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#222;background:#fff
@@ -487,8 +488,7 @@
 
   function processElement(el){
     if(!el || el.nodeType!==1) return;
-    if(el.closest('.si-feedback-layer') || el.classList.contains('si-creator') || el.classList.contains('si-home-btn')) return;
-    if(el.closest('.btn-card') && el.closest('.btn-card').querySelector('.btn-de')) return;
+    if(el.classList.contains('si-creator') || el.classList.contains('si-home-btn') || el.classList.contains('si-translation-tooltip')) return;
     if(/^(SCRIPT|STYLE|TEXTAREA|OPTION|SVG|PATH|CANVAS)$/.test(el.tagName)) return;
 
     let t=norm(el.textContent);
@@ -501,13 +501,13 @@
 
     const de=germanFor(t);
     if(de){
-      if(existingGermanSibling(el,de)) {
-        el.classList.remove('si-bi');
-        el.removeAttribute('data-si-de');
-      } else {
-        el.dataset.siDe=de;
-        el.classList.add('si-bi');
-      }
+      const n=el.nextElementSibling;
+      const p=el.previousElementSibling;
+      if(n && norm(n.textContent)===de) n.style.display='none';
+      if(p && norm(p.textContent)===de) p.style.display='none';
+
+      el.dataset.siDe=de;
+      el.classList.add('si-bi');
     }else{
       el.classList.remove('si-bi');
       el.removeAttribute('data-si-de');
@@ -647,11 +647,72 @@
     if(sig) sig.dataset.siApp=appName();
   }
 
+  function setupTranslationTooltip(){
+    if(document.querySelector('.si-translation-tooltip')) return;
+
+    const tip=document.createElement('div');
+    tip.className='si-translation-tooltip';
+    tip.setAttribute('role','tooltip');
+    document.body.appendChild(tip);
+
+    let current=null;
+
+    function show(el,e){
+      const de=el && el.dataset ? el.dataset.siDe : '';
+      if(!de) return;
+      current=el;
+      tip.textContent=de;
+      tip.classList.add('open');
+      move(e);
+    }
+
+    function move(e){
+      if(!current || !tip.classList.contains('open')) return;
+      const gap=12;
+      const pad=8;
+      const r=tip.getBoundingClientRect();
+      let x=e.clientX+gap;
+      let y=e.clientY+gap;
+      if(x+r.width>window.innerWidth-pad) x=e.clientX-r.width-gap;
+      if(y+r.height>window.innerHeight-pad) y=e.clientY-r.height-gap;
+      x=Math.max(pad,x);
+      y=Math.max(pad,y);
+      tip.style.transform=`translate(${Math.round(x)}px,${Math.round(y)}px)`;
+    }
+
+    function hide(){
+      current=null;
+      tip.classList.remove('open');
+    }
+
+    document.addEventListener('pointerover',e=>{
+      if(e.pointerType && e.pointerType!=='mouse' && e.pointerType!=='pen') return;
+      const el=e.target.closest && e.target.closest('[data-si-de]');
+      if(!el) return;
+      show(el,e);
+    });
+
+    document.addEventListener('pointermove',e=>{
+      if(current) move(e);
+    });
+
+    document.addEventListener('pointerout',e=>{
+      if(!current) return;
+      const related=e.relatedTarget;
+      if(related && current.contains && current.contains(related)) return;
+      if(e.target===current || (current.contains && current.contains(e.target))) hide();
+    });
+
+    window.addEventListener('blur',hide);
+    document.addEventListener('scroll',hide,true);
+  }
+
   function init(){
     addStyle();
     setupHome();
     setupFeedback();
     patchExistingWhiteboardFeedback();
+    setupTranslationTooltip();
     translateTree();
 
     let queued=false;
