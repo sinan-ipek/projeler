@@ -19,6 +19,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f1f2f3;fon
 #functionMenu.open{display:block}
 .functionOption{display:block;width:100%;padding:9px 10px;border:0;border-radius:6px;background:transparent;text-align:left;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:16px;color:#29313a;cursor:pointer}
 .functionOption:hover{background:#eef2f6}
+.angleButton{position:absolute;left:370px;top:18px;z-index:30;height:44px;padding:0 16px;border:1px solid #aeb6bf;border-radius:9px;background:rgba(255,255,255,.96);box-shadow:0 2px 8px rgba(0,0,0,.10);font-size:15px;color:#29313a;cursor:pointer}
+.angleButton:hover{background:#eef1f3}
+.angleButton.active{background:#e8f0ff;border-color:#7f9ed1;color:#1f4f99}
 </style>
 </head>
 <body>
@@ -29,12 +32,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f1f2f3;fon
 <filter id="labelShadow" x="-40%" y="-50%" width="180%" height="200%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity=".14"/></filter>
 </defs>
 <rect id="backgroundRect" x="0" y="0" width="1280" height="800" fill="#f1f2f3"/>
-<g id="gridLayer"></g><g id="axesLayer"></g><g id="curveLayer"></g><g id="projectionLayer"></g><g id="tangentLayer"></g><g id="pointLayer"></g>
+<g id="gridLayer"></g><g id="axesLayer"></g><g id="curveLayer"></g><g id="projectionLayer"></g><g id="tangentLayer"></g><g id="angleLayer"></g><g id="pointLayer"></g>
 </svg>
 <div class="functionBox">
 <input id="functionInput" type="text" spellcheck="false" autocomplete="off" value="0.15x^2 - 1" aria-label="Fonksiyon">
 <button id="functionMenuButton" type="button" aria-label="Hazır fonksiyonlar">▼</button>
 </div>
+<button id="angleButton" class="angleButton" type="button">Eğim açısı</button>
 <div id="functionMenu">
 <button class="functionOption" type="button" data-function="0.15x^2 - 1" data-start="-2.4">f(x) = 0.15x² − 1</button>
 <button class="functionOption" type="button" data-function="e^x" data-start="0">f(x) = eˣ</button>
@@ -50,10 +54,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f1f2f3;fon
 const BASE_H=800;let W=1280,H=BASE_H;
 const INITIAL_Y_RANGE=8,MIN_ZOOM=.20,MAX_ZOOM=20;
 const camera={centerX:0,centerY:0,zoom:1};
-const svg=document.getElementById("scene"),backgroundRect=document.getElementById("backgroundRect"),gridLayer=document.getElementById("gridLayer"),axesLayer=document.getElementById("axesLayer"),curveLayer=document.getElementById("curveLayer"),projectionLayer=document.getElementById("projectionLayer"),tangentLayer=document.getElementById("tangentLayer"),pointLayer=document.getElementById("pointLayer");
-const functionInput=document.getElementById("functionInput"),functionMenuButton=document.getElementById("functionMenuButton"),functionMenu=document.getElementById("functionMenu"),functionOptions=document.querySelectorAll(".functionOption");
+const svg=document.getElementById("scene"),backgroundRect=document.getElementById("backgroundRect"),gridLayer=document.getElementById("gridLayer"),axesLayer=document.getElementById("axesLayer"),curveLayer=document.getElementById("curveLayer"),projectionLayer=document.getElementById("projectionLayer"),tangentLayer=document.getElementById("tangentLayer"),angleLayer=document.getElementById("angleLayer"),pointLayer=document.getElementById("pointLayer");
+const functionInput=document.getElementById("functionInput"),functionMenuButton=document.getElementById("functionMenuButton"),functionMenu=document.getElementById("functionMenu"),functionOptions=document.querySelectorAll(".functionOption"),angleButton=document.getElementById("angleButton");
 
-let currentFunction=null,xValue=-2.4,dashPhase=0,lastTime=performance.now();
+let currentFunction=null,xValue=-2.4,dashPhase=0,lastTime=performance.now(),showSlopeAngle=false;
 const DASH_SPEED_FACTOR=90,DASH_LENGTH=18,DASH_GAP=13,TANGENT_LENGTH=330;
 
 let draggingPoint=false,pointPointerId=null,isPanning=false,panPointerId=null,panStartScreen=null,panStartCamera=null;
@@ -128,6 +132,7 @@ functionInput.addEventListener("keydown",e=>{if(e.key==="Enter"){applyFunctionIn
 functionMenuButton.addEventListener("click",e=>{e.stopPropagation();functionMenu.classList.toggle("open")});
 functionOptions.forEach(o=>o.addEventListener("click",()=>{functionInput.value=o.dataset.function;xValue=Number(o.dataset.start);applyFunctionInput();functionMenu.classList.remove("open")}));
 document.addEventListener("pointerdown",e=>{if(!functionMenu.contains(e.target)&&e.target!==functionMenuButton)functionMenu.classList.remove("open")});
+angleButton.addEventListener("click",()=>{showSlopeAngle=!showSlopeAngle;angleButton.classList.toggle("active",showSlopeAngle);angleGroup.setAttribute("visibility",showSlopeAngle?"visible":"hidden")});
 
 function niceStep(target){const p=Math.pow(10,Math.floor(Math.log10(target))),n=target/p;if(n<1.5)return p;if(n<3.5)return 2*p;if(n<7.5)return 5*p;return 10*p}
 function drawGridAndAxes(){
@@ -153,7 +158,28 @@ const derivativeLabelGroup=svgEl("g",{"pointer-events":"none"});projectionLayer.
 const derivativeLabelRect=svgEl("rect",{x:0,y:0,width:110,height:34,rx:6,ry:6,fill:"#fff2a8",stroke:"#c8b75b","stroke-width":1.2,filter:"url(#labelShadow)"});derivativeLabelGroup.appendChild(derivativeLabelRect);
 const derivativeLabelText=svgEl("text",{x:10,y:22,"font-size":16,"font-family":"Cambria Math, STIX Two Math, Times New Roman, serif",fill:"#302d24"});derivativeLabelGroup.appendChild(derivativeLabelText);
 const movingTangent=svgEl("line",{stroke:"#2f6df6","stroke-width":5,"stroke-dasharray":DASH_LENGTH+" "+DASH_GAP,"stroke-linecap":"round","pointer-events":"none"});tangentLayer.appendChild(movingTangent);
+
+const angleGroup=svgEl("g",{"pointer-events":"none",visibility:"hidden"});angleLayer.appendChild(angleGroup);
+const angleHorizontal=svgEl("line",{stroke:"#5f6872","stroke-width":2,"stroke-linecap":"round"});angleGroup.appendChild(angleHorizontal);
+const angleArc=svgEl("path",{fill:"none",stroke:"#5f6872","stroke-width":2.2,"stroke-linecap":"round"});angleGroup.appendChild(angleArc);
+const angleText=svgEl("text",{"font-size":17,"font-family":"Cambria Math, STIX Two Math, Times New Roman, serif",fill:"#353b42","text-anchor":"middle","dominant-baseline":"middle"});angleGroup.appendChild(angleText);
+
 const pointCircle=svgEl("circle",{r:17,fill:"#ef3030",stroke:"#ffffff","stroke-width":3,filter:"url(#pointShadow)",cursor:"grab"});pointLayer.appendChild(pointCircle);
+
+function updateSlopeAngle(tangentA,tangentB,derivative){
+ if(!showSlopeAngle)return;
+ const AC_LENGTH=115,ARC_R=42;
+ const C={x:tangentA.x+AC_LENGTH,y:tangentA.y};
+ setAttrs(angleHorizontal,{x1:tangentA.x,y1:tangentA.y,x2:C.x,y2:C.y});
+ const theta=Math.atan2(tangentB.y-tangentA.y,tangentB.x-tangentA.x);
+ const arcEnd={x:tangentA.x+ARC_R*Math.cos(theta),y:tangentA.y+ARC_R*Math.sin(theta)};
+ const sweep=theta>=0?1:0;
+ angleArc.setAttribute("d","M "+(tangentA.x+ARC_R)+" "+tangentA.y+" A "+ARC_R+" "+ARC_R+" 0 0 "+sweep+" "+arcEnd.x+" "+arcEnd.y);
+ const alpha=Math.atan(derivative)*180/Math.PI;
+ const mid=theta/2,lr=ARC_R+24;
+ setAttrs(angleText,{x:tangentA.x+lr*Math.cos(mid),y:tangentA.y+lr*Math.sin(mid)});
+ angleText.textContent="α = "+formatSmallNumber(alpha)+"°";
+}
 
 function pointInsideRect(x,y,r,p=0){return x>=r.x-p&&x<=r.x+r.w+p&&y>=r.y-p&&y<=r.y+r.h+p}
 function segmentRectPenalty(a,b,r){let s=0;for(let i=0;i<=24;i++){const t=i/24,x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t;if(pointInsideRect(x,y,r,4))s+=100;else if(pointInsideRect(x,y,r,15))s+=12}return s}
@@ -192,13 +218,14 @@ window.addEventListener("resize",resizeScene);
 
 function render(now){
  const dt=Math.min(.04,(now-lastTime)/1000);lastTime=now;const yValue=f(xValue);
- if(!Number.isFinite(yValue)){pointCircle.setAttribute("visibility","hidden");movingTangent.setAttribute("visibility","hidden");xProjectionLine.setAttribute("visibility","hidden");derivativeLabelGroup.setAttribute("visibility","hidden");requestAnimationFrame(render);return}
- pointCircle.setAttribute("visibility","visible");movingTangent.setAttribute("visibility","visible");xProjectionLine.setAttribute("visibility","visible");derivativeLabelGroup.setAttribute("visibility","visible");
+ if(!Number.isFinite(yValue)){pointCircle.setAttribute("visibility","hidden");movingTangent.setAttribute("visibility","hidden");xProjectionLine.setAttribute("visibility","hidden");derivativeLabelGroup.setAttribute("visibility","hidden");angleGroup.setAttribute("visibility","hidden");requestAnimationFrame(render);return}
+ pointCircle.setAttribute("visibility","visible");movingTangent.setAttribute("visibility","visible");xProjectionLine.setAttribute("visibility","visible");derivativeLabelGroup.setAttribute("visibility","visible");angleGroup.setAttribute("visibility",showSlopeAngle?"visible":"hidden");
  let derivative=df(xValue);if(!Number.isFinite(derivative))derivative=0;if(Math.abs(derivative)<.002)derivative=0;
  const point=worldToScreen(xValue,yValue),axisPoint=worldToScreen(xValue,0);setAttrs(xProjectionLine,{x1:point.x,y1:point.y,x2:axisPoint.x,y2:axisPoint.y});
  const tangentUnit=normalize({x:1,y:-derivative}),tangentA=add(point,mul(tangentUnit,-TANGENT_LENGTH/2)),tangentB=add(point,mul(tangentUnit,TANGENT_LENGTH/2));
  setAttrs(movingTangent,{x1:tangentA.x,y1:tangentA.y,x2:tangentB.x,y2:tangentB.y});
  dashPhase=(dashPhase+DASH_SPEED_FACTOR*Math.abs(derivative)*dt)%(DASH_LENGTH+DASH_GAP);movingTangent.setAttribute("stroke-dashoffset",-dashPhase);
+ updateSlopeAngle(tangentA,tangentB,derivative);
  updateDerivativeLabel(point,derivative,tangentA,tangentB,axisPoint);setAttrs(pointCircle,{cx:point.x,cy:point.y});requestAnimationFrame(render);
 }
 
