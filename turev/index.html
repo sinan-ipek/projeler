@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Türev Adım Adım v25</title>
+<title>Türev Adım Adım v26</title>
 <style>
   :root{
     --bg:#ffffff;
@@ -532,10 +532,18 @@ function simplify(n){
     if(isNum(n.a,0)) return n.b;
     if(isNum(n.b,0)) return n.a;
     if(isNum(n.a) && isNum(n.b)) return N.num(n.a.v+n.b.v);
+
+    // a + (-b) -> a - b
+    const sb=splitLeadingSign(n.b);
+    if(sb.sign<0) return N.sub(n.a,sb.node);
   }
   if(n.t==="sub"){
     if(isNum(n.b,0)) return n.a;
     if(isNum(n.a) && isNum(n.b)) return N.num(n.a.v-n.b.v);
+
+    // a - (-b) -> a + b
+    const sb=splitLeadingSign(n.b);
+    if(sb.sign<0) return N.add(n.a,sb.node);
   }
   if(n.t==="mul"){
     if(isNum(n.a,0) || isNum(n.b,0)) return N.num(0);
@@ -634,6 +642,55 @@ function termRank(n){
   }
   if(n.t==="func" || (n.t==="pow" && !isXLike(n))) return 3;
   return 2;
+}
+
+function splitLeadingSign(n){
+  if(!n) return {sign:1,node:n};
+
+  if(isNum(n)){
+    if(n.v<0) return {sign:-1,node:N.num(Math.abs(n.v))};
+    return {sign:1,node:n};
+  }
+
+  if(n.t==="mul"){
+    const factors=flattenMul(clone(n),[]);
+    let coeff=1;
+    const rest=[];
+
+    for(const f of factors){
+      if(isNum(f)) coeff*=f.v;
+      else rest.push(f);
+    }
+
+    if(coeff<0){
+      const abs=Math.abs(coeff);
+      const out=[];
+      if(abs!==1 || rest.length===0) out.push(N.num(abs));
+      out.push(...rest);
+      return {sign:-1,node:buildMul(out)};
+    }
+  }
+
+  return {sign:1,node:n};
+}
+
+function buildSignedSum(terms){
+  if(!terms.length) return N.num(0);
+
+  let result=null;
+
+  for(const raw of terms){
+    const part=splitLeadingSign(raw);
+    const term=part.node;
+
+    if(result===null){
+      result = part.sign<0 ? N.mul(N.num(-1),term) : term;
+    }else{
+      result = part.sign<0 ? N.sub(result,term) : N.add(result,term);
+    }
+  }
+
+  return result || N.num(0);
 }
 
 function canonicalOrder(n){
@@ -1202,8 +1259,15 @@ function renderNode(n, path=[], parentPrec=0){
     const op=n.t==="add" ? " + " : " − ";
     h=renderNode(n.a,[...path,"a"],p)+op+renderNode(n.b,[...path,"b"],p+0.1);
   } else if(n.t==="mul"){
-    const left=renderNode(n.a,[...path,"a"],p);
-    const right=renderNode(n.b,[...path,"b"],p);
+    // -1·u -> -u ; 1·u -> u
+    if(isNum(n.a,-1)){
+      const right=renderNode(n.b,[...path,"b"],p);
+      h="−"+right;
+    }else if(isNum(n.a,1)){
+      h=renderNode(n.b,[...path,"b"],p);
+    }else{
+      const left=renderNode(n.a,[...path,"a"],p);
+      const right=renderNode(n.b,[...path,"b"],p);
 
     // Çarpma işaretini yalnız gerektiğinde göster.
     // Özellikle 2·4x hiçbir zaman "24x" gibi görünmemeli.
@@ -1224,7 +1288,8 @@ function renderNode(n, path=[], parentPrec=0){
       (endsWithNumericFactor(n.a) && startsWithNumericFactor(n.b)) ||
       (n.a && n.a.t==="num" && n.b && n.b.t==="num");
 
-    h = left + (needDot ? " · " : "") + right;
+      h = left + (needDot ? " · " : "") + right;
+    }
   } else if(n.t==="div"){
     h=`<span class="frac"><span class="num">${renderNode(n.a,[...path,"a"],0)}</span><span class="den">${renderNode(n.b,[...path,"b"],0)}</span></span>`;
   } else if(n.t==="pow"){
