@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zihinden 3'e Bölme</title>
+<title>Zihinden Bölme</title>
 
 <style>
     * { box-sizing: border-box; }
@@ -68,6 +68,10 @@
         position:absolute; left:0; right:0; bottom:21px; padding:0 18px;
         color:#677989; font-size:17px; font-weight:600; pointer-events:none;
     }
+    .operation-label {
+        fill:#176fbc; font-family:Arial,Helvetica,sans-serif; font-weight:700;
+        text-anchor:start; dominant-baseline:middle; pointer-events:none;
+    }
     .controls {
         display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
         gap:11px; margin-top:19px;
@@ -80,7 +84,10 @@
     }
     button:hover,.home-link:hover { transform:translateY(-2px); }
     #newQuestionButton { color:#fff; background:var(--blue); box-shadow:0 5px 14px rgba(40,127,210,.24); }
-    #exampleButton,.home-link { color:#40556a; background:#eef2f6; }
+    .mode-button,.home-link { color:#40556a; background:#eef2f6; }
+    .mode-button.active {
+        color:#fff; background:#3d769f; box-shadow:0 5px 14px rgba(35,91,133,.22);
+    }
     .home-fixed {
         position: fixed;
         top: 16px;
@@ -103,8 +110,8 @@
 
 <body>
 <main class="app">
-    <h1>Zihinden 3'e Bölme</h1>
-    <div class="subtitle">Sayıyı uygun parçalara ayır ve zihinden böl.</div>
+    <h1 id="pageTitle">Zihinden 3'e Bölme</h1>
+    <div id="subtitle" class="subtitle">Sayıyı uygun parçalara ayır ve zihinden böl.</div>
 
     <div id="equation" aria-label="Bölme işlemi">
         <span id="equationNumber" class="awaiting" role="button" tabindex="0">165</span>
@@ -169,6 +176,7 @@
                 <g id="edgeBlobs"></g>
             </g>
             <g id="numberLayer"></g>
+            <g id="labelLayer"></g>
         </svg>
         <div id="instruction" aria-live="polite">İşlemdeki 165'e tıkla.</div>
     </section>
@@ -177,7 +185,10 @@
 
     <div class="controls">
         <button id="newQuestionButton" type="button">Yeni Soru</button>
-        <button id="exampleButton" type="button">165 Örneği</button>
+        <button class="mode-button active" type="button" data-divisor="3">3'e bölme</button>
+        <button class="mode-button" type="button" data-divisor="4">4'e bölme</button>
+        <button class="mode-button" type="button" data-divisor="5">5'e bölme</button>
+        <button class="mode-button" type="button" data-divisor="8">8'e bölme</button>
     </div>
 </main>
 
@@ -202,13 +213,16 @@
     const edgeBlobs = document.getElementById("edgeBlobs");
     const highlightLayer = document.getElementById("highlightLayer");
     const numberLayer = document.getElementById("numberLayer");
+    const labelLayer = document.getElementById("labelLayer");
     const equationNumber = document.getElementById("equationNumber");
     const divisorText = document.getElementById("divisorText");
     const answerBox = document.getElementById("answerBox");
     const answerText = document.getElementById("answerText");
     const instruction = document.getElementById("instruction");
     const newQuestionButton = document.getElementById("newQuestionButton");
-    const exampleButton = document.getElementById("exampleButton");
+    const pageTitle = document.getElementById("pageTitle");
+    const subtitle = document.getElementById("subtitle");
+    const modeButtons = [...document.querySelectorAll(".mode-button")];
 
     let animationFrame = 0;
     let sceneVersion = 0;
@@ -273,6 +287,8 @@
             });
             this.highlightGroups=[];
             this.numberNodes=new Map();
+            this.labelNode=svgElement("text",{class:"operation-label",opacity:0,"font-size":27});
+            labelLayer.appendChild(this.labelNode);
             for (let index=0; index<this.maximumBlobs; index++) {
                 this.highlightGroups.push(this.createHighlightGroup());
             }
@@ -327,7 +343,14 @@
         hideNumbersExcept(keys) {
             for (const [key,node] of this.numberNodes) if (!keys.includes(key)) node.setAttribute("opacity",0);
         }
-        clear() { this.renderBlobs([]); this.setVisible(0); this.hideNumbersExcept([]); }
+        setLabel(text,x,y,opacity=1) {
+            this.labelNode.textContent=text;
+            this.labelNode.setAttribute("x",x);
+            this.labelNode.setAttribute("y",y);
+            this.labelNode.setAttribute("opacity",clamp(opacity));
+        }
+        hideLabel() { this.labelNode.setAttribute("opacity",0); }
+        clear() { this.renderBlobs([]); this.setVisible(0); this.hideNumbersExcept([]); this.hideLabel(); }
         singleBlob(x,y,radius,options={}) {
             return {
                 x,y,rx:radius*(options.scaleX??1),ry:radius*.94*(options.scaleY??1),
@@ -344,6 +367,27 @@
             this.leftResult=50; this.rightResult=5; this.result=55;
             this.leftDivided=false; this.rightDivided=false;
             this.partRadius={left:65,right:62};
+            this.currentValue=165; this.stepIndex=0;
+        }
+        formatValue(value) {
+            return Number.isInteger(value)
+                ?String(value)
+                :String(Math.round(value*1000)/1000).replace(".",",");
+        }
+        modeText() {
+            if (this.divisor===3) return "Sayıyı uygun parçalara ayır ve zihinden böl.";
+            if (this.divisor===4) return "Yarısını al, sonra çıkan sayının yine yarısını al.";
+            if (this.divisor===5) return "Önce 10'a böl, sonra 2'yle çarp.";
+            return "Sayıyı peş peşe üç kez yarıya indir.";
+        }
+        defaultNumber() {
+            return {3:165,4:164,5:165,8:168}[this.divisor];
+        }
+        randomNumber() {
+            const ranges={3:[20,99],4:[15,75],5:[12,60],8:[8,40]};
+            const [minimum,maximum]=ranges[this.divisor];
+            const multiplier=Math.floor(Math.random()*(maximum-minimum+1))+minimum;
+            return multiplier*this.divisor;
         }
         decompose(number) {
             let first=Math.floor(number/(this.divisor*10))*(this.divisor*10);
@@ -354,11 +398,14 @@
             const gentleFactor=clamp(.96+Math.log10(Math.max(2,value))*.025,.97,1.045);
             return base*gentleFactor;
         }
-        setup(number) {
+        setup(number=this.defaultNumber()) {
             sceneVersion+=1; cancelAnimationFrame(animationFrame); animationFrame=0;
-            this.original=number; [this.leftValue,this.rightValue]=this.decompose(number);
-            this.leftResult=this.leftValue/this.divisor;
-            this.rightResult=this.rightValue/this.divisor;
+            this.original=number; this.currentValue=number; this.stepIndex=0;
+            if (this.divisor===3) {
+                [this.leftValue,this.rightValue]=this.decompose(number);
+                this.leftResult=this.leftValue/this.divisor;
+                this.rightResult=this.rightValue/this.divisor;
+            }
             this.result=number/this.divisor;
             this.leftDivided=false; this.rightDivided=false;
             this.partRadius.left=this.radiusForValue(this.leftValue);
@@ -367,6 +414,10 @@
             equationNumber.textContent=number; equationNumber.classList.add("awaiting");
             divisorText.textContent=this.divisor; answerText.textContent="";
             answerBox.classList.remove("filled");
+            pageTitle.textContent=`Zihinden ${this.divisor}'e Bölme`;
+            document.title=pageTitle.textContent;
+            subtitle.textContent=this.modeText();
+            modeButtons.forEach(button=>button.classList.toggle("active",Number(button.dataset.divisor)===this.divisor));
             instruction.textContent=`İşlemdeki ${number}'e tıkla.`;
             this.water.clear();
             document.querySelectorAll(".flying-liquid").forEach(node=>node.remove());
@@ -378,24 +429,32 @@
             instruction.textContent="Su damlası oluşuyor.";
             const version=sceneVersion;
             const radius=this.radiusForValue(this.original,72);
+            const targetY=this.divisor===3?STAGE.sourceY:STAGE.partY;
+            const startY=this.divisor===3?STAGE.sourceY:58;
             this.water.setVisible(1);
-            this.water.setNumber("source",this.original,STAGE.sourceX,STAGE.sourceY,0,44);
+            this.water.setNumber("source",this.original,STAGE.sourceX,startY,0,44);
             const finished=await tween("appear",progress=>{
                 const grow=easeOutBack(progress), scale=Math.max(0,grow);
                 const ripple=1+.025*Math.sin(progress*Math.PI*2)*(1-progress);
+                const y=lerp(startY,targetY,easeInOutCubic(progress));
                 this.water.renderBlobs([
-                    this.water.singleBlob(STAGE.sourceX,STAGE.sourceY,radius*scale,{
+                    this.water.singleBlob(STAGE.sourceX,y,radius*scale,{
                         scaleX:ripple,scaleY:2-ripple,highlight:smoothStep(.12,.60,progress)
                     })
                 ]);
                 this.water.setVisible(smoothStep(0,.46,progress));
-                this.water.setNumber("source",this.original,STAGE.sourceX,STAGE.sourceY,smoothStep(.30,.78,progress),44);
+                this.water.setNumber("source",this.original,STAGE.sourceX,y,smoothStep(.30,.78,progress),44);
             },version);
             if (!finished||version!==sceneVersion) return;
-            this.water.renderBlobs([this.water.singleBlob(STAGE.sourceX,STAGE.sourceY,radius)]);
-            this.water.setNumber("source",this.original,STAGE.sourceX,STAGE.sourceY,1,44);
+            this.water.renderBlobs([this.water.singleBlob(STAGE.sourceX,targetY,radius)]);
+            this.water.setNumber("source",this.original,STAGE.sourceX,targetY,1,44);
             this.state="source"; this.busy=false;
-            instruction.textContent=`${this.original}'e tıkla.`;
+            if (this.divisor===3) instruction.textContent=`${this.original}'e tıkla.`;
+            else if (this.divisor===5) instruction.textContent=`${this.original}'e tekrar tıkla.`;
+            else {
+                this.showSequentialPrompt(0);
+                instruction.textContent=this.divisor===4?"Yarısı kaç?":"İlk olarak yarısını al.";
+            }
         }
         async split() {
             if (this.busy||this.state!=="source") return;
@@ -542,6 +601,98 @@
             this.state="result"; this.busy=false;
             instruction.textContent=`${this.result}'e tıkla.`;
         }
+        sequentialSteps() {
+            if (this.divisor===5) {
+                return [
+                    {label:"10'a böl",apply:value=>value/10},
+                    {label:"2'yle çarp",apply:value=>value*2}
+                ];
+            }
+            if (this.divisor===4) {
+                return [
+                    {label:"Yarısı kaç?",apply:value=>value/2},
+                    {label:"Şimdi yine yarısını al",apply:value=>value/2}
+                ];
+            }
+            return [
+                {label:"İlk olarak yarısını al",apply:value=>value/2},
+                {label:"Şimdi yine yarısını al",apply:value=>value/2},
+                {label:"Bir kez daha yarısını al",apply:value=>value/2}
+            ];
+        }
+        showSequentialPrompt(index) {
+            const step=this.sequentialSteps()[index];
+            if (!step) return;
+            const radius=this.radiusForValue(this.currentValue,72);
+            this.water.setLabel(step.label,STAGE.sourceX+radius+28,STAGE.partY,1);
+        }
+        handleSequentialTap() {
+            if (this.busy) return;
+            if (this.divisor===5) {
+                if (this.state==="source"||this.state==="step-await-reveal") {
+                    this.showSequentialPrompt(this.stepIndex);
+                    this.state="step-ready";
+                    instruction.textContent=`“${this.sequentialSteps()[this.stepIndex].label}” işlemini uygula.`;
+                    return;
+                }
+                if (this.state==="step-ready") this.performSequentialStep();
+                return;
+            }
+            if (this.state==="source"||this.state==="step-ready") this.performSequentialStep();
+        }
+        async performSequentialStep() {
+            const steps=this.sequentialSteps();
+            const step=steps[this.stepIndex];
+            if (!step||this.busy) return;
+            this.busy=true; this.state="transforming";
+            const version=sceneVersion;
+            const oldValue=this.currentValue;
+            const nextValue=step.apply(oldValue);
+            const oldRadius=this.radiusForValue(oldValue,72);
+            const nextRadius=this.radiusForValue(nextValue,72);
+            this.water.setNumber("seqNext",this.formatValue(nextValue),STAGE.sourceX,STAGE.partY,0,44);
+            instruction.textContent=`${this.formatValue(oldValue)} → ${this.formatValue(nextValue)}`;
+            const finished=await tween("divide",progress=>{
+                const change=easeInOutCubic(progress);
+                const pulse=Math.sin(progress*Math.PI)*.055;
+                const radius=lerp(oldRadius,nextRadius,change);
+                this.water.renderBlobs([
+                    this.water.singleBlob(STAGE.sourceX,STAGE.partY,radius,{
+                        scaleX:1+pulse,scaleY:1-pulse*.72,
+                        highlight:1,edge:1
+                    })
+                ]);
+                this.water.setNumber("source",this.formatValue(oldValue),STAGE.sourceX,STAGE.partY,1-smoothStep(.16,.62,progress),44);
+                this.water.setNumber("seqNext",this.formatValue(nextValue),STAGE.sourceX,STAGE.partY,smoothStep(.38,.84,progress),44);
+                this.water.setLabel(step.label,STAGE.sourceX+radius+28,STAGE.partY,1-smoothStep(.08,.70,progress));
+            },version);
+            if (!finished||version!==sceneVersion) return;
+            this.currentValue=nextValue;
+            this.stepIndex+=1;
+            this.water.renderBlobs([this.water.singleBlob(STAGE.sourceX,STAGE.partY,nextRadius)]);
+            this.water.setNumber("source",this.formatValue(nextValue),STAGE.sourceX,STAGE.partY,1,44);
+            this.water.hideNumbersExcept(["source"]);
+            this.water.hideLabel();
+            this.busy=false;
+
+            if (this.stepIndex>=steps.length) {
+                this.result=nextValue;
+                this.state="result";
+                instruction.textContent="Sonuç yerine gidiyor.";
+                await new Promise(resolve=>setTimeout(resolve,150/ANIMATION_SPEED));
+                if (version===sceneVersion) this.moveResultToAnswer();
+                return;
+            }
+
+            if (this.divisor===5) {
+                this.state="step-await-reveal";
+                instruction.textContent=`${this.formatValue(nextValue)}'e tekrar tıkla.`;
+            } else {
+                this.state="source";
+                this.showSequentialPrompt(this.stepIndex);
+                instruction.textContent=steps[this.stepIndex].label+".";
+            }
+        }
         createFlyingDrop(value) {
             const wrapper=document.createElement("div");
             wrapper.className="flying-liquid";
@@ -560,7 +711,7 @@
                     <ellipse cx="78" cy="67" rx="59" ry="55" fill="url(#flyWater)" stroke="#71808a" stroke-opacity=".62" stroke-width="2.4"/>
                     <path d="M43 49 C50 27 79 17 102 30 C79 29 61 37 50 55 C46 61 41 58 43 49Z" fill="white" opacity=".62"/>
                     <ellipse cx="118" cy="65" rx="6" ry="11" fill="white" opacity=".72"/>
-                    <text x="78" y="72" text-anchor="middle" dominant-baseline="middle" fill="#173e60" font-family="Arial,Helvetica,sans-serif" font-size="37" font-weight="700">${value}</text>
+                    <text x="78" y="72" text-anchor="middle" dominant-baseline="middle" fill="#173e60" font-family="Arial,Helvetica,sans-serif" font-size="37" font-weight="700">${this.formatValue(value)}</text>
                 </svg>`;
             document.body.appendChild(wrapper); return wrapper;
         }
@@ -594,13 +745,20 @@
                 duration:duration("answer"),easing:"cubic-bezier(.32,.70,.36,1)",fill:"forwards"
             });
             animation.onfinish=()=>{
-                flying.remove(); answerText.textContent=this.result;
+                flying.remove(); answerText.textContent=this.formatValue(this.result);
                 answerBox.classList.add("filled"); instruction.textContent="İşlem tamamlandı.";
                 this.busy=false; this.state="completed";
             };
         }
         handleStagePoint(x,y) {
             if (this.busy) return;
+            if (this.divisor!==3) {
+                const sequentialStates=["source","step-await-reveal","step-ready"];
+                if (sequentialStates.includes(this.state)&&Math.hypot(x-STAGE.sourceX,y-STAGE.partY)<105) {
+                    this.handleSequentialTap();
+                }
+                return;
+            }
             if (this.state==="source") {
                 if (Math.hypot(x-STAGE.sourceX,y-STAGE.sourceY)<92) this.split();
                 return;
@@ -632,17 +790,17 @@
     liquidSvg.addEventListener("keydown",event=>{
         if (event.key!=="Enter"&&event.key!==" ") return;
         event.preventDefault();
-        if (scene.state==="source") scene.split();
+        if (scene.divisor!==3) scene.handleSequentialTap();
+        else if (scene.state==="source") scene.split();
         else if (scene.state==="result") scene.moveResultToAnswer();
     });
-    newQuestionButton.addEventListener("click",()=>{
-        let number;
-        do { number=(Math.floor(Math.random()*80)+20)*3; }
-        while (number<60||number>297);
-        scene.setup(number);
-    });
-    exampleButton.addEventListener("click",()=>scene.setup(165));
+    newQuestionButton.addEventListener("click",()=>scene.setup(scene.randomNumber()));
+    modeButtons.forEach(button=>button.addEventListener("click",()=>{
+        scene.divisor=Number(button.dataset.divisor);
+        scene.setup(scene.defaultNumber());
+    }));
     scene.setup(165);
 </script>
-<script src="/projeler/shared-ui.js?v=20261004-1"></script>\n</body>
+<script src="/projeler/shared-ui.js?v=20261004-1"></script>
+</body>
 </html>
