@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Türev Adım Adım v24</title>
+<title>Türev Adım Adım v25</title>
 <style>
   :root{
     --bg:#ffffff;
@@ -986,11 +986,13 @@ function ruleForArg(n){
   if(n.t==="div") return "Bölüm kuralı uygulanacak";
 
   if(n.t==="func"){
-    if(n.name==="exp") return "Zincir kuralı uygulanacak";
-    if(n.name==="sqrt") return "Kök ve zincir kuralı uygulanacak";
-    if(n.name==="ln") return "ln ve zincir kuralı uygulanacak";
-    if(n.name==="sin") return "Sinüs ve zincir kuralı uygulanacak";
-    if(n.name==="cos") return "Kosinüs ve zincir kuralı uygulanacak";
+    const directX=isX(n.arg);
+
+    if(n.name==="exp") return directX ? "Üstel fonksiyonun türevi alınacak" : "Zincir kuralı uygulanacak";
+    if(n.name==="sqrt") return directX ? "Kökün türevi alınacak" : "Kök ve zincir kuralı uygulanacak";
+    if(n.name==="ln") return directX ? "ln x'in türevi alınacak" : "ln ve zincir kuralı uygulanacak";
+    if(n.name==="sin") return directX ? "sin x'in türevi alınacak" : "Sinüs ve zincir kuralı uygulanacak";
+    if(n.name==="cos") return directX ? "cos x'in türevi alınacak" : "Kosinüs ve zincir kuralı uygulanacak";
   }
 
   if(n.t==="pow"){
@@ -1083,22 +1085,48 @@ function derivativeOneStep(n){
 
   if(n.t==="func"){
     const u=clone(n.arg);
-    if(n.name==="exp")
+    const directX=isX(n.arg);
+
+    if(n.name==="exp"){
+      if(directX) return {node:N.func("exp",N.x()), rule:"Üstel fonksiyonun türevi"};
       return {node:N.mul(N.func("exp",u),N.deriv(u)), rule:"Zincir kuralı"};
-    if(n.name==="sqrt")
+    }
+
+    if(n.name==="sqrt"){
+      if(directX){
+        return {
+          node:N.div(N.num(1),N.mul(N.num(2),N.func("sqrt",N.x()))),
+          rule:"Kökün türevi"
+        };
+      }
       return {
         node:N.div(N.deriv(u),N.mul(N.num(2),N.func("sqrt",clone(u)))),
         rule:"Kök + zincir kuralı"
       };
-    if(n.name==="ln")
+    }
+
+    if(n.name==="ln"){
+      if(directX) return {node:N.div(N.num(1),N.x()), rule:"ln x'in türevi"};
       return {node:N.div(N.deriv(u),u), rule:"ln + zincir kuralı"};
-    if(n.name==="sin")
+    }
+
+    if(n.name==="sin"){
+      if(directX) return {node:N.func("cos",N.x()), rule:"sin x'in türevi"};
       return {node:N.mul(N.func("cos",u),N.deriv(u)), rule:"sin + zincir kuralı"};
-    if(n.name==="cos")
+    }
+
+    if(n.name==="cos"){
+      if(directX){
+        return {
+          node:N.mul(N.num(-1),N.func("sin",N.x())),
+          rule:"cos x'in türevi"
+        };
+      }
       return {
         node:N.mul(N.mul(N.num(-1),N.func("sin",u)),N.deriv(u)),
         rule:"cos + zincir kuralı"
       };
+    }
   }
 
   if(n.t==="pow"){
@@ -1114,6 +1142,17 @@ function derivativeOneStep(n){
     // a^u, a pozitif sabit sayı
     if(isNum(n.a)){
       const a=n.a.v, u=clone(n.b);
+
+      if(isX(n.b)){
+        return {
+          node:N.mul(
+            N.pow(N.num(a),N.x()),
+            N.func("ln",N.num(a))
+          ),
+          rule:"Üstel fonksiyonun türevi"
+        };
+      }
+
       return {
         node:N.mul(
           N.mul(N.pow(N.num(a),clone(u)),N.func("ln",N.num(a))),
