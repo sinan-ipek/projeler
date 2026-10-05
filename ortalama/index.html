@@ -220,6 +220,22 @@ button:hover{background:#f0f3f8}
   margin-top:4px;
   font-size:16px;
 }
+
+.retry-btn{
+  margin-top:12px;
+  display:none;
+  background:#25324a;
+  color:#fff;
+  border-color:#25324a;
+}
+
+.retry-btn.show{
+  display:inline-block;
+}
+
+.retry-btn:hover{
+  background:#34425d;
+}
 .column.drag-over{
   filter:brightness(1.04);
 }
@@ -318,6 +334,7 @@ button:hover{background:#f0f3f8}
     <div id="message" class="message">
       <div class="message-title">Tebrikler!</div>
       <div id="messageText" class="message-text">Ortalama değeri buldunuz.</div>
+      <button id="retryBtn" class="retry-btn">Yeniden dene!</button>
     </div>
   </main>
 </div>
@@ -489,6 +506,7 @@ function startGame(newValues){
 
   const message=document.getElementById("message");
   message.classList.remove("show","best");
+  document.getElementById("retryBtn").classList.remove("show");
 
   stopFireworks();
   updateColumnSizing();
@@ -648,6 +666,7 @@ function checkSolution(){
 
   message.classList.toggle("best",isBest);
   message.classList.add("show");
+  document.getElementById("retryBtn").classList.add("show");
 
   if(isBest){
     startFireworks();
@@ -785,6 +804,10 @@ countSlider.addEventListener("input",()=>{
 
 countSlider.addEventListener("change",()=>{
   newQuestion();
+});
+
+document.getElementById("retryBtn").addEventListener("click",()=>{
+  startGame(initialValues);
 });
 
 document.getElementById("newBtn").addEventListener("click",newQuestion);
