@@ -47,12 +47,14 @@ easyBtn.onclick=startEasy;advancedBtn.onclick=startAdvanced;formulaBtn.onclick=b
 <script src="/projeler/shared-ui.js?v=20261004-1"></script>
 <script>
 (() => {
-  const removeLeftHome = () => {
-    document.querySelectorAll('.si-home-fixed').forEach(el => el.remove());
-  };
-  removeLeftHome();
-  requestAnimationFrame(removeLeftHome);
-  setTimeout(removeLeftHome, 50);
+  const home = document.querySelector('.si-home-btn');
+  if (!home) return;
+  if (home.tagName === 'A') {
+    home.setAttribute('href', '/projeler/');
+    home.setAttribute('target', '_top');
+  } else {
+    home.onclick = () => { window.top.location.href = '/projeler/'; };
+  }
 })();
 </script>
 </body>
