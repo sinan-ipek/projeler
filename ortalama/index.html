@@ -84,8 +84,20 @@ button:hover{background:#f0f3f8}
   cursor:not-allowed;
 }
 
-.slider-toggle-btn{
+.slider-toggle-btn,
+.new-value-btn{
   min-width:82px;
+}
+
+.new-value-btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.new-value-btn.active{
+  background:#2f9e5b;
+  color:#fff;
+  border-color:#2f9e5b;
 }
 
 .slider-toggle-btn.locked{
@@ -467,6 +479,7 @@ button:hover{background:#f0f3f8}
       </div>
 
       <button id="sliderToggleBtn" class="slider-toggle-btn" title="Sürgüyü göster">Sürgü</button>
+      <button id="newValueBtn" class="new-value-btn" disabled title="Önce ortalamayı bulun">Yeni değer</button>
 
       <div class="count-control">
         <span class="count-label">Sayı adedi</span>
@@ -521,6 +534,8 @@ let rulerDragging = false;
 let targetAverage = 0;
 let sliderUnlocked = true;
 let sliderVisible = false;
+let extraColumnActive = false;
+let extraColumnIndex = null;
 
 function randomInt(min,max){
   return Math.floor(Math.random()*(max-min+1))+min;
@@ -728,6 +743,11 @@ function updateSliderUI(){
   btn.title=sliderVisible ? "Sürgüyü gizle" : "Sürgüyü göster";
 }
 
+function refreshTargetAverage(){
+  targetAverage=getAverage(values);
+  updateRulerGeometry();
+}
+
 function setRulerLevel(level){
   rulerLevel=Math.max(0,Math.min(MAX_RULER_LEVEL,Math.round(level)));
   updateRulerGeometry();
@@ -778,6 +798,8 @@ function startGame(newValues){
   initialValues=[...newValues];
   targetAverage=getAverage(initialValues);
   rulerLevel=0;
+  extraColumnActive=false;
+  extraColumnIndex=null;
   userMoves=0;
   moveHistory=[];
   rewinding=false;
@@ -786,6 +808,11 @@ function startGame(newValues){
   const message=document.getElementById("message");
   message.classList.remove("show","best");
   document.getElementById("retryBtn").classList.remove("show");
+
+  const newValueBtn=document.getElementById("newValueBtn");
+  newValueBtn.disabled=true;
+  newValueBtn.classList.remove("active");
+  newValueBtn.title="Önce ortalamayı bulun";
 
   stopFireworks();
   updateColumnSizing();
@@ -812,15 +839,26 @@ function render(){
     column.className="column";
     column.dataset.index=index;
 
+    if(extraColumnActive && index===extraColumnIndex){
+      column.style.cursor="pointer";
+      column.title="Tıklayarak blok ekle";
+      column.addEventListener("click",e=>{
+        if(rewinding) return;
+        values[index]+=1;
+        render();
+        refreshTargetAverage();
+      });
+    }
+
     for(let i=0;i<value;i++){
       const block=document.createElement("div");
       block.className="block";
-      block.draggable=true;
+      block.draggable=!(extraColumnActive && index===extraColumnIndex);
       block.dataset.column=index;
       block.dataset.level=i;
 
       block.addEventListener("dragstart",e=>{
-        if(solved || rewinding){
+        if((extraColumnActive && index===extraColumnIndex) || solved || rewinding){
           e.preventDefault();
           return;
         }
@@ -912,6 +950,7 @@ function render(){
       }
 
       render();
+      refreshTargetAverage();
       checkSolution();
     });
 
@@ -959,6 +998,11 @@ function checkSolution(){
 
   const retryBtn=document.getElementById("retryBtn");
   retryBtn.classList.toggle("show",!isBest);
+
+  const newValueBtn=document.getElementById("newValueBtn");
+  newValueBtn.disabled=false;
+  newValueBtn.classList.add("active");
+  newValueBtn.title="Yeni boş sütun ekle";
 
   if(isBest){
     startFireworks();
@@ -1208,10 +1252,14 @@ async function rewindMoves(){
   }
 
   values=[...initialValues];
+  targetAverage=getAverage(values);
+  extraColumnActive=false;
+  extraColumnIndex=null;
   userMoves=0;
   moveHistory=[];
   rewinding=false;
   render();
+  updateRulerGeometry();
 }
 
 function newQuestion(){
@@ -1239,6 +1287,29 @@ sliderToggleBtn.addEventListener("click",()=>{
 });
 
 updateSliderUI();
+
+const newValueBtn=document.getElementById("newValueBtn");
+
+newValueBtn.addEventListener("click",()=>{
+  if(newValueBtn.disabled || extraColumnActive) return;
+
+  extraColumnActive=true;
+  extraColumnIndex=values.length;
+  values.push(0);
+
+  // Artık yeni değer keşif aşamasındayız; başarı mesajı kapanır.
+  solved=false;
+  document.getElementById("message").classList.remove("show","best");
+  document.getElementById("retryBtn").classList.remove("show");
+
+  newValueBtn.disabled=true;
+  newValueBtn.classList.remove("active");
+  newValueBtn.title="Yeni değer sütunu eklendi";
+
+  updateColumnSizing();
+  render();
+  refreshTargetAverage();
+});
 
 const countSlider=document.getElementById("countSlider");
 const countValue=document.getElementById("countValue");
