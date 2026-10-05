@@ -466,7 +466,7 @@ button:hover{background:#f0f3f8}
         <button id="advancedModeBtn" class="mode-btn disabled" aria-pressed="false" title="Yakında">Gelişmiş</button>
       </div>
 
-      <button id="sliderToggleBtn" class="slider-toggle-btn locked" disabled title="3 kez üst üste mükemmel çözümden sonra açılır">Sürgü</button>
+      <button id="sliderToggleBtn" class="slider-toggle-btn" title="Sürgüyü göster">Sürgü</button>
 
       <div class="count-control">
         <span class="count-label">Sayı adedi</span>
@@ -519,8 +519,7 @@ const MAX_RULER_LEVEL = 25;
 let rulerLevel = 0;
 let rulerDragging = false;
 let targetAverage = 0;
-let perfectStreak = Number(localStorage.getItem("averagePerfectStreak") || 0);
-let sliderUnlocked = localStorage.getItem("averageSliderUnlocked") === "1";
+let sliderUnlocked = true;
 let sliderVisible = false;
 
 function randomInt(min,max){
@@ -713,11 +712,11 @@ function updateSliderUI(){
   const line=document.getElementById("levelLine");
   const btn=document.getElementById("sliderToggleBtn");
 
-  btn.disabled=!sliderUnlocked;
-  btn.classList.toggle("locked",!sliderUnlocked);
-  btn.classList.toggle("active",sliderUnlocked && sliderVisible);
+  btn.disabled=false;
+  btn.classList.remove("locked");
+  btn.classList.toggle("active",sliderVisible);
 
-  if(!sliderUnlocked || !sliderVisible){
+  if(!sliderVisible){
     ruler.classList.add("hidden");
     line.classList.add("hidden");
   }else{
@@ -726,11 +725,7 @@ function updateSliderUI(){
     requestAnimationFrame(updateRulerGeometry);
   }
 
-  if(sliderUnlocked){
-    btn.title=sliderVisible ? "Sürgüyü gizle" : "Sürgüyü göster";
-  }else{
-    btn.title="3 kez üst üste mükemmel çözümden sonra açılır";
-  }
+  btn.title=sliderVisible ? "Sürgüyü gizle" : "Sürgüyü göster";
 }
 
 function setRulerLevel(level){
@@ -966,20 +961,7 @@ function checkSolution(){
   retryBtn.classList.toggle("show",!isBest);
 
   if(isBest){
-    perfectStreak++;
-    localStorage.setItem("averagePerfectStreak",String(perfectStreak));
-
-    if(perfectStreak>=3 && !sliderUnlocked){
-      sliderUnlocked=true;
-      localStorage.setItem("averageSliderUnlocked","1");
-      sliderVisible=true;
-      updateSliderUI();
-    }
-
     startFireworks();
-  }else{
-    perfectStreak=0;
-    localStorage.setItem("averagePerfectStreak","0");
   }
 }
 
@@ -1252,7 +1234,6 @@ document.getElementById("advancedModeBtn").addEventListener("click",()=>{
 const sliderToggleBtn=document.getElementById("sliderToggleBtn");
 
 sliderToggleBtn.addEventListener("click",()=>{
-  if(!sliderUnlocked) return;
   sliderVisible=!sliderVisible;
   updateSliderUI();
 });
