@@ -84,6 +84,21 @@ button:hover{background:#f0f3f8}
   cursor:not-allowed;
 }
 
+.slider-toggle-btn{
+  min-width:82px;
+}
+
+.slider-toggle-btn.locked{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.slider-toggle-btn.active{
+  background:#4f86e8;
+  color:#fff;
+  border-color:#4f86e8;
+}
+
 .count-control{
   display:flex;
   align-items:center;
@@ -286,16 +301,26 @@ button:hover{background:#f0f3f8}
   width:34px;
   height:450px;
   pointer-events:none;
+  transition:opacity .2s;
+}
+
+.level-ruler.hidden{
+  opacity:0;
+  pointer-events:none;
+}
+
+.level-line.hidden{
+  opacity:0;
 }
 
 .level-track{
   position:absolute;
-  left:15px;
+  left:14px;
   top:0;
-  width:2px;
+  width:5px;
   height:100%;
-  background:#aab2bf;
-  border-radius:2px;
+  background:#8d96a3;
+  border-radius:4px;
 }
 
 .level-ticks{
@@ -441,6 +466,8 @@ button:hover{background:#f0f3f8}
         <button id="advancedModeBtn" class="mode-btn disabled" aria-pressed="false" title="Yakında">Gelişmiş</button>
       </div>
 
+      <button id="sliderToggleBtn" class="slider-toggle-btn locked" disabled title="3 kez üst üste mükemmel çözümden sonra açılır">Sürgü</button>
+
       <div class="count-control">
         <span class="count-label">Sayı adedi</span>
         <input id="countSlider" type="range" min="1" max="10" step="1" value="3" aria-label="Ortalaması alınacak sayı adedi">
@@ -492,6 +519,9 @@ const MAX_RULER_LEVEL = 25;
 let rulerLevel = 0;
 let rulerDragging = false;
 let targetAverage = 0;
+let perfectStreak = Number(localStorage.getItem("averagePerfectStreak") || 0);
+let sliderUnlocked = localStorage.getItem("averageSliderUnlocked") === "1";
+let sliderVisible = false;
 
 function randomInt(min,max){
   return Math.floor(Math.random()*(max-min+1))+min;
@@ -649,7 +679,7 @@ function updateRulerGeometry(){
   const rulerHeight=MAX_RULER_LEVEL*blockHeight;
   const baselineY=firstRect.bottom-gameRect.top-3;
   const rulerTop=baselineY-rulerHeight;
-  const rulerLeft=Math.max(38,firstRect.left-gameRect.left-48);
+  const rulerLeft=Math.max(14,firstRect.left-gameRect.left-78);
 
   ruler.style.left=rulerLeft+"px";
   ruler.style.top=rulerTop+"px";
@@ -668,7 +698,7 @@ function updateRulerGeometry(){
   const y=baselineY-rulerLevel*blockHeight;
   handle.style.bottom=(rulerLevel*blockHeight-7)+"px";
 
-  const lineLeft=rulerLeft+27;
+  const lineLeft=rulerLeft+30;
   const lineRight=lastRect.right-gameRect.left;
   line.style.left=lineLeft+"px";
   line.style.top=y+"px";
@@ -676,6 +706,31 @@ function updateRulerGeometry(){
 
   handle.classList.toggle("correct",Math.abs(rulerLevel-targetAverage)<1e-9);
   handle.setAttribute("aria-valuenow",String(rulerLevel));
+}
+
+function updateSliderUI(){
+  const ruler=document.getElementById("levelRuler");
+  const line=document.getElementById("levelLine");
+  const btn=document.getElementById("sliderToggleBtn");
+
+  btn.disabled=!sliderUnlocked;
+  btn.classList.toggle("locked",!sliderUnlocked);
+  btn.classList.toggle("active",sliderUnlocked && sliderVisible);
+
+  if(!sliderUnlocked || !sliderVisible){
+    ruler.classList.add("hidden");
+    line.classList.add("hidden");
+  }else{
+    ruler.classList.remove("hidden");
+    line.classList.remove("hidden");
+    requestAnimationFrame(updateRulerGeometry);
+  }
+
+  if(sliderUnlocked){
+    btn.title=sliderVisible ? "Sürgüyü gizle" : "Sürgüyü göster";
+  }else{
+    btn.title="3 kez üst üste mükemmel çözümden sonra açılır";
+  }
 }
 
 function setRulerLevel(level){
@@ -740,7 +795,10 @@ function startGame(newValues){
   stopFireworks();
   updateColumnSizing();
   render();
-  requestAnimationFrame(updateRulerGeometry);
+  requestAnimationFrame(()=>{
+    updateRulerGeometry();
+    updateSliderUI();
+  });
 
   if(values.length===1){
     checkSolution();
@@ -908,7 +966,20 @@ function checkSolution(){
   retryBtn.classList.toggle("show",!isBest);
 
   if(isBest){
+    perfectStreak++;
+    localStorage.setItem("averagePerfectStreak",String(perfectStreak));
+
+    if(perfectStreak>=3 && !sliderUnlocked){
+      sliderUnlocked=true;
+      localStorage.setItem("averageSliderUnlocked","1");
+      sliderVisible=true;
+      updateSliderUI();
+    }
+
     startFireworks();
+  }else{
+    perfectStreak=0;
+    localStorage.setItem("averagePerfectStreak","0");
   }
 }
 
@@ -1177,6 +1248,16 @@ document.getElementById("simpleModeBtn").addEventListener("click",()=>{
 document.getElementById("advancedModeBtn").addEventListener("click",()=>{
   // Gelişmiş mod daha sonra eklenecek.
 });
+
+const sliderToggleBtn=document.getElementById("sliderToggleBtn");
+
+sliderToggleBtn.addEventListener("click",()=>{
+  if(!sliderUnlocked) return;
+  sliderVisible=!sliderVisible;
+  updateSliderUI();
+});
+
+updateSliderUI();
 
 const countSlider=document.getElementById("countSlider");
 const countValue=document.getElementById("countValue");
