@@ -355,6 +355,8 @@ let columnCount = DEFAULT_COUNT;
 let userMoves = 0;
 let theoreticalMinMoves = 0;
 let initialValues = [];
+let moveHistory = [];
+let rewinding = false;
 
 function randomInt(min,max){
   return Math.floor(Math.random()*(max-min+1))+min;
@@ -502,6 +504,8 @@ function startGame(newValues){
   values=[...newValues];
   initialValues=[...newValues];
   userMoves=0;
+  moveHistory=[];
+  rewinding=false;
   theoreticalMinMoves=calculateMinimumMoves(initialValues);
 
   const message=document.getElementById("message");
@@ -537,7 +541,7 @@ function render(){
       block.dataset.level=i;
 
       block.addEventListener("dragstart",e=>{
-        if(solved){
+        if(solved || rewinding){
           e.preventDefault();
           return;
         }
@@ -621,6 +625,11 @@ function render(){
         values[sourceColumn]-=transferCount*BLOCK_VALUE;
         values[targetColumn]+=transferCount*BLOCK_VALUE;
         userMoves++;
+        moveHistory.push({
+          from:sourceColumn,
+          to:targetColumn,
+          count:transferCount
+        });
       }
 
       render();
@@ -779,6 +788,44 @@ function stopFireworks(){
 
 window.addEventListener("resize",resizeFireworks);
 
+function rewindMoves(){
+  if(rewinding || moveHistory.length===0) return;
+
+  rewinding=true;
+  solved=false;
+  stopFireworks();
+
+  const message=document.getElementById("message");
+  message.classList.remove("show","best");
+  document.getElementById("retryBtn").classList.remove("show");
+
+  const history=[...moveHistory].reverse();
+  let step=0;
+
+  function undoNext(){
+    if(step>=history.length){
+      values=[...initialValues];
+      userMoves=0;
+      moveHistory=[];
+      rewinding=false;
+      render();
+      return;
+    }
+
+    const move=history[step];
+
+    values[move.to]-=move.count;
+    values[move.from]+=move.count;
+
+    render();
+    step++;
+
+    setTimeout(undoNext,180);
+  }
+
+  undoNext();
+}
+
 function newQuestion(){
   startGame(generateValues(columnCount));
 }
@@ -809,7 +856,7 @@ countSlider.addEventListener("change",()=>{
 });
 
 document.getElementById("retryBtn").addEventListener("click",()=>{
-  startGame(initialValues);
+  rewindMoves();
 });
 
 document.getElementById("newBtn").addEventListener("click",newQuestion);
