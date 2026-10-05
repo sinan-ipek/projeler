@@ -666,7 +666,9 @@ function checkSolution(){
 
   message.classList.toggle("best",isBest);
   message.classList.add("show");
-  document.getElementById("retryBtn").classList.add("show");
+
+  const retryBtn=document.getElementById("retryBtn");
+  retryBtn.classList.toggle("show",!isBest);
 
   if(isBest){
     startFireworks();
