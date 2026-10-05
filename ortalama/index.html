@@ -169,6 +169,27 @@ button:hover{background:#f0f3f8}
   opacity:1 !important;
 }
 
+.rewind-group{
+  position:fixed;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  pointer-events:none;
+  z-index:10000;
+  filter:drop-shadow(0 5px 8px rgba(0,0,0,.18));
+}
+
+.rewind-group .block{
+  margin:0;
+  transform:none !important;
+  box-shadow:none !important;
+  opacity:1 !important;
+}
+
+.block.rewind-hidden{
+  opacity:0 !important;
+}
+
 .column.solved .block{background:#45b96b}
 
 .value{
@@ -788,7 +809,7 @@ function stopFireworks(){
 
 window.addEventListener("resize",resizeFireworks);
 
-function rewindMoves(){
+async function rewindMoves(){
   if(rewinding || moveHistory.length===0) return;
 
   rewinding=true;
@@ -800,30 +821,90 @@ function rewindMoves(){
   document.getElementById("retryBtn").classList.remove("show");
 
   const history=[...moveHistory].reverse();
-  let step=0;
 
-  function undoNext(){
-    if(step>=history.length){
-      values=[...initialValues];
-      userMoves=0;
-      moveHistory=[];
-      rewinding=false;
+  for(const move of history){
+    const targetColumn=document.querySelector('.column[data-index="'+move.to+'"]');
+    const sourceColumnEl=document.querySelector('.column[data-index="'+move.from+'"]');
+
+    if(!targetColumn || !sourceColumnEl){
+      values[move.to]-=move.count;
+      values[move.from]+=move.count;
       render();
-      return;
+      continue;
     }
 
-    const move=history[step];
+    const targetBlocks=[...targetColumn.querySelectorAll(".block")];
+    const movingBlocks=targetBlocks.slice(Math.max(0,targetBlocks.length-move.count));
+
+    if(movingBlocks.length!==move.count){
+      values[move.to]-=move.count;
+      values[move.from]+=move.count;
+      render();
+      continue;
+    }
+
+    const firstRect=movingBlocks[0].getBoundingClientRect();
+    const topRect=movingBlocks[movingBlocks.length-1].getBoundingClientRect();
+    const blockHeight=firstRect.height;
+    const groupHeight=move.count*blockHeight;
+
+    const ghost=document.createElement("div");
+    ghost.className="rewind-group";
+    ghost.style.left=firstRect.left+"px";
+    ghost.style.top=topRect.top+"px";
+    ghost.style.width=firstRect.width+"px";
+
+    for(let i=0;i<move.count;i++){
+      const b=document.createElement("div");
+      b.className="block";
+      b.style.width=firstRect.width+"px";
+      b.style.height=blockHeight+"px";
+      b.style.flex="0 0 "+blockHeight+"px";
+      ghost.appendChild(b);
+    }
+
+    movingBlocks.forEach(b=>b.classList.add("rewind-hidden"));
+    document.body.appendChild(ghost);
+
+    const sourceRect=sourceColumnEl.getBoundingClientRect();
+    const destLeft=sourceRect.left+(sourceRect.width-firstRect.width)/2;
+    const destTop=sourceRect.bottom-3-(values[move.from]+move.count)*blockHeight;
+
+    const dx=destLeft-firstRect.left;
+    const dy=destTop-topRect.top;
+
+    try{
+      const animation=ghost.animate(
+        [
+          {transform:"translate(0,0)",opacity:1},
+          {transform:"translate("+dx+"px,"+dy+"px)",opacity:1}
+        ],
+        {
+          duration:190,
+          easing:"cubic-bezier(.35,.05,.2,1)",
+          fill:"forwards"
+        }
+      );
+
+      await animation.finished;
+    }catch(e){
+      await new Promise(resolve=>setTimeout(resolve,190));
+    }
+
+    ghost.remove();
 
     values[move.to]-=move.count;
     values[move.from]+=move.count;
-
     render();
-    step++;
 
-    setTimeout(undoNext,180);
+    await new Promise(resolve=>setTimeout(resolve,45));
   }
 
-  undoNext();
+  values=[...initialValues];
+  userMoves=0;
+  moveHistory=[];
+  rewinding=false;
+  render();
 }
 
 function newQuestion(){
