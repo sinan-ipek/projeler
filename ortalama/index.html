@@ -363,10 +363,10 @@ button:hover{background:#f0f3f8}
 
 .level-handle{
   position:absolute;
-  left:5px;
-  width:22px;
-  height:14px;
-  border-radius:4px;
+  left:-2px;
+  width:38px;
+  height:20px;
+  border-radius:5px;
   background:#4f86e8;
   border:1px solid rgba(0,0,0,.12);
   box-shadow:0 2px 5px rgba(0,0,0,.18);
@@ -374,6 +374,14 @@ button:hover{background:#f0f3f8}
   cursor:ns-resize;
   pointer-events:auto;
   transition:background .16s, box-shadow .16s, transform .08s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
 }
 
 .level-handle:hover{
@@ -495,7 +503,7 @@ button:hover{background:#f0f3f8}
     <div id="levelRuler" class="level-ruler" aria-label="Seviye cetveli">
       <div class="level-track"></div>
       <div id="levelTicks" class="level-ticks"></div>
-      <div id="levelHandle" class="level-handle" role="slider" aria-label="Seviye" aria-valuemin="0" aria-valuemax="25" aria-valuenow="0" tabindex="0"></div>
+      <div id="levelHandle" class="level-handle" role="slider" aria-label="Seviye" aria-valuemin="0" aria-valuemax="25" aria-valuenow="0" tabindex="0"><span id="levelHandleValue">0</span></div>
     </div>
     <div id="levelLine" class="level-line"></div>
 
@@ -722,6 +730,14 @@ function updateRulerGeometry(){
 
   handle.classList.toggle("correct",showActualAverage || Math.abs(rulerLevel-targetAverage)<1e-9);
   handle.setAttribute("aria-valuenow",String(displayLevel));
+
+  const handleValue=document.getElementById("levelHandleValue");
+  if(handleValue){
+    const rounded=Math.round(displayLevel*10)/10;
+    handleValue.textContent=Number.isInteger(rounded)
+      ? String(rounded)
+      : String(rounded).replace(".",",");
+  }
 }
 
 function updateSliderUI(){
