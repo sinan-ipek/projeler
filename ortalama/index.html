@@ -21,11 +21,12 @@ body{
   flex-direction:column;
 }
 .topbar{
-  height:68px;
-  display:flex;
+  min-height:72px;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
   align-items:center;
-  justify-content:space-between;
-  padding:0 24px;
+  gap:20px;
+  padding:8px 24px;
 }
 button{
   border:1px solid #ccd3df;
@@ -37,6 +38,14 @@ button{
   transition:.15s;
 }
 button:hover{background:#f0f3f8}
+
+.center-controls{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:22px;
+  min-width:0;
+}
 
 .mode-switch{
   display:flex;
@@ -58,6 +67,37 @@ button:hover{background:#f0f3f8}
   opacity:.5;
   cursor:not-allowed;
 }
+
+.count-control{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:7px 12px;
+  background:#fff;
+  border:1px solid #d7dce5;
+  border-radius:11px;
+  white-space:nowrap;
+}
+
+.count-label{
+  font-size:14px;
+  color:#596579;
+}
+
+#countSlider{
+  width:180px;
+  accent-color:#5b8def;
+  cursor:pointer;
+}
+
+#countValue{
+  width:24px;
+  text-align:center;
+  font-size:16px;
+  font-weight:700;
+  color:#25324a;
+}
+
 .game{
   flex:1;
   min-height:0;
@@ -65,22 +105,27 @@ button:hover{background:#f0f3f8}
   align-items:center;
   justify-content:center;
   position:relative;
-  padding:24px 24px 96px;
+  padding:18px 18px 94px;
 }
 .columns{
+  --column-w:92px;
+  --block-w:78px;
+  --gap:42px;
   height:min(70vh,560px);
+  width:100%;
   display:flex;
   align-items:flex-end;
   justify-content:center;
-  gap:clamp(30px,6vw,90px);
+  gap:var(--gap);
 }
 .column-wrap{
   display:flex;
   flex-direction:column;
   align-items:center;
+  min-width:0;
 }
 .column{
-  width:92px;
+  width:var(--column-w);
   height:min(62vh,500px);
   display:flex;
   flex-direction:column-reverse;
@@ -90,7 +135,7 @@ button:hover{background:#f0f3f8}
   position:relative;
 }
 .block{
-  width:78px;
+  width:var(--block-w);
   height:18px;
   flex:0 0 18px;
   background:#5b8def;
@@ -123,19 +168,21 @@ button:hover{background:#f0f3f8}
   box-shadow:none !important;
   opacity:1 !important;
 }
+
 .column.solved .block{background:#45b96b}
+
 .value{
   margin-top:13px;
-  min-width:54px;
-  height:36px;
-  padding:0 12px;
+  min-width:46px;
+  height:34px;
+  padding:0 10px;
   display:flex;
   align-items:center;
   justify-content:center;
   background:#fff;
   border:1px solid #d5dae4;
   border-radius:8px;
-  font-size:19px;
+  font-size:18px;
   font-weight:600;
   transition:.35s;
 }
@@ -144,10 +191,11 @@ button:hover{background:#f0f3f8}
   border-color:#68c985;
   background:#eefaf2;
 }
+
 .message{
   position:absolute;
   left:50%;
-  bottom:24px;
+  bottom:22px;
   transform:translateX(-50%) translateY(10px);
   min-width:min(86vw,390px);
   padding:14px 22px;
@@ -175,13 +223,47 @@ button:hover{background:#f0f3f8}
 .column.drag-over{
   filter:brightness(1.04);
 }
+
+@media(max-width:900px){
+  .topbar{
+    grid-template-columns:auto 1fr auto;
+    gap:10px;
+    padding:8px 12px;
+  }
+  .center-controls{gap:10px}
+  #countSlider{width:120px}
+  .count-label{display:none}
+}
+
 @media(max-width:700px){
-  .topbar{height:58px;padding:0 14px}
-  .game{padding:12px 10px 88px}
-  .columns{gap:18px}
-  .column{width:72px}
-  .block{width:60px}
-  .value{font-size:17px;min-width:48px}
+  .topbar{
+    min-height:108px;
+    grid-template-columns:auto auto;
+    grid-template-areas:
+      "home new"
+      "center center";
+  }
+  #homeBtn{grid-area:home;justify-self:start}
+  #newBtn{grid-area:new;justify-self:end}
+  .center-controls{
+    grid-area:center;
+    width:100%;
+  }
+  .game{padding:8px 6px 86px}
+  #countSlider{width:130px}
+}
+
+@media(max-width:480px){
+  .mode-btn{
+    min-width:72px;
+    padding:9px 10px;
+    font-size:13px;
+  }
+  .count-control{
+    gap:7px;
+    padding:6px 8px;
+  }
+  #countSlider{width:100px}
 }
 </style>
 </head>
@@ -190,9 +272,17 @@ button:hover{background:#f0f3f8}
   <div class="topbar">
     <button id="homeBtn" aria-label="Ana sayfa">⌂</button>
 
-    <div class="mode-switch" aria-label="Mod seçimi">
-      <button id="simpleModeBtn" class="mode-btn active" aria-pressed="true">Basit</button>
-      <button id="advancedModeBtn" class="mode-btn disabled" aria-pressed="false" title="Yakında">Gelişmiş</button>
+    <div class="center-controls">
+      <div class="mode-switch" aria-label="Mod seçimi">
+        <button id="simpleModeBtn" class="mode-btn active" aria-pressed="true">Basit</button>
+        <button id="advancedModeBtn" class="mode-btn disabled" aria-pressed="false" title="Yakında">Gelişmiş</button>
+      </div>
+
+      <div class="count-control">
+        <span class="count-label">Sayı adedi</span>
+        <input id="countSlider" type="range" min="1" max="10" step="1" value="3" aria-label="Ortalaması alınacak sayı adedi">
+        <span id="countValue">3</span>
+      </div>
     </div>
 
     <button id="newBtn">Yeni</button>
@@ -210,94 +300,181 @@ button:hover{background:#f0f3f8}
 
 <script>
 const BLOCK_VALUE = 1;
-const FIRST_VALUES = [10,20,30];
-
-const EXAMPLES = [
-  [10,20,30],
-  [15,20,25],
-  [10,25,25],
-  [5,20,35],
-  [12,18,30],
-  [8,16,24],
-  [10,15,20,35],
-  [5,15,25,35],
-  [10,20,30,40],
-  [8,16,24,32]
-];
+const MIN_VALUE = 1;
+const MAX_VALUE = 25;
+const DEFAULT_COUNT = 3;
 
 let values = [];
 let draggedBlock = null;
 let sourceColumn = null;
 let solved = false;
+let columnCount = DEFAULT_COUNT;
+
+function randomInt(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function shuffle(array){
+  for(let i=array.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [array[i],array[j]]=[array[j],array[i]];
+  }
+  return array;
+}
+
+function generateValues(count){
+  if(count===1){
+    return [randomInt(MIN_VALUE,MAX_VALUE)];
+  }
+
+  // Ortalama tam sayı olsun ve başlangıçta sütunlar eşit olmasın.
+  // 1 ve 25 uçlarında, tüm değerler 1..25 arasında kalırken farklı
+  // sütunlar üretmek mümkün olmadığı için çok sütunlu oyunda 2..24 kullanılır.
+  const targetAverage=randomInt(MIN_VALUE+1,MAX_VALUE-1);
+  const result=new Array(count).fill(targetAverage);
+
+  let changed=false;
+  const attempts=Math.max(8,count*5);
+
+  for(let k=0;k<attempts;k++){
+    const a=randomInt(0,count-1);
+    let b=randomInt(0,count-1);
+    if(a===b) continue;
+
+    if(result[a]>MIN_VALUE && result[b]<MAX_VALUE){
+      const maxMove=Math.min(
+        result[a]-MIN_VALUE,
+        MAX_VALUE-result[b],
+        Math.max(1,Math.min(6,targetAverage))
+      );
+
+      if(maxMove>0){
+        const amount=randomInt(1,maxMove);
+        result[a]-=amount;
+        result[b]+=amount;
+        changed=true;
+      }
+    }
+  }
+
+  if(!changed || result.every(v=>v===targetAverage)){
+    const amount=Math.min(
+      targetAverage-MIN_VALUE,
+      MAX_VALUE-targetAverage,
+      1
+    );
+
+    if(amount>0){
+      result[0]-=amount;
+      result[1]+=amount;
+    }
+  }
+
+  return shuffle(result);
+}
+
+function updateColumnSizing(){
+  const container=document.getElementById("columns");
+  const count=values.length || columnCount;
+
+  let columnW=92;
+  let blockW=78;
+  let gap=42;
+
+  if(count>=8){
+    columnW=68;
+    blockW=58;
+    gap=14;
+  }else if(count>=6){
+    columnW=76;
+    blockW=64;
+    gap=20;
+  }else if(count>=4){
+    columnW=84;
+    blockW=70;
+    gap=30;
+  }
+
+  container.style.setProperty("--column-w",columnW+"px");
+  container.style.setProperty("--block-w",blockW+"px");
+  container.style.setProperty("--gap",gap+"px");
+}
 
 function startGame(newValues){
-  solved = false;
-  values = [...newValues];
+  solved=false;
+  values=[...newValues];
   document.getElementById("message").classList.remove("show");
+  updateColumnSizing();
   render();
+
+  if(values.length===1){
+    checkSolution();
+  }
 }
 
 function render(){
-  const container = document.getElementById("columns");
-  container.innerHTML = "";
+  const container=document.getElementById("columns");
+  container.innerHTML="";
 
   values.forEach((value,index)=>{
-    const wrap = document.createElement("div");
-    wrap.className = "column-wrap";
+    const wrap=document.createElement("div");
+    wrap.className="column-wrap";
 
-    const column = document.createElement("div");
-    column.className = "column";
-    column.dataset.index = index;
+    const column=document.createElement("div");
+    column.className="column";
+    column.dataset.index=index;
 
     for(let i=0;i<value;i++){
-      const block = document.createElement("div");
-      block.className = "block";
-      block.draggable = true;
-      block.dataset.column = index;
-      block.dataset.level = i;
+      const block=document.createElement("div");
+      block.className="block";
+      block.draggable=true;
+      block.dataset.column=index;
+      block.dataset.level=i;
 
       block.addEventListener("dragstart",e=>{
         if(solved){
           e.preventDefault();
           return;
         }
-        draggedBlock = block;
-        sourceColumn = Number(block.dataset.column);
-        const startLevel = Number(block.dataset.level);
-        draggedBlock = {
-          column: sourceColumn,
-          level: startLevel,
-          count: values[sourceColumn] - startLevel
+
+        sourceColumn=Number(block.dataset.column);
+        const startLevel=Number(block.dataset.level);
+
+        draggedBlock={
+          column:sourceColumn,
+          level:startLevel,
+          count:values[sourceColumn]-startLevel
         };
 
-        const movingBlocks = [...column.querySelectorAll(".block")]
-          .filter((b,idx)=>idx >= startLevel);
+        const movingBlocks=[...column.querySelectorAll(".block")]
+          .filter((b,idx)=>idx>=startLevel);
 
         movingBlocks.forEach(b=>b.classList.add("dragging"));
 
-        const dragImage = document.createElement("div");
-        dragImage.className = "drag-image";
+        const dragImage=document.createElement("div");
+        dragImage.className="drag-image";
+        dragImage.style.setProperty("--block-w",getComputedStyle(document.getElementById("columns")).getPropertyValue("--block-w"));
 
         for(let n=0;n<movingBlocks.length;n++){
-          const ghostBlock = document.createElement("div");
-          ghostBlock.className = "block";
+          const ghostBlock=document.createElement("div");
+          ghostBlock.className="block";
           dragImage.appendChild(ghostBlock);
         }
 
         document.body.appendChild(dragImage);
 
-        const blockRect = block.getBoundingClientRect();
-        const pointerX = e.clientX - blockRect.left;
-        const pointerY = e.clientY - blockRect.top;
-        const dragHeight = movingBlocks.length * blockRect.height;
+        const blockRect=block.getBoundingClientRect();
+        const pointerX=e.clientX-blockRect.left;
+        const pointerY=e.clientY-blockRect.top;
+        const dragHeight=movingBlocks.length*blockRect.height;
 
         e.dataTransfer.setDragImage(
           dragImage,
           pointerX,
-          dragHeight - blockRect.height + pointerY
+          dragHeight-blockRect.height+pointerY
         );
 
-        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.effectAllowed="move";
 
         requestAnimationFrame(()=>{
           dragImage.remove();
@@ -306,8 +483,8 @@ function render(){
 
       block.addEventListener("dragend",()=>{
         document.querySelectorAll(".block.dragging").forEach(b=>b.classList.remove("dragging"));
-        draggedBlock = null;
-        sourceColumn = null;
+        draggedBlock=null;
+        sourceColumn=null;
         document.querySelectorAll(".column").forEach(c=>c.classList.remove("drag-over"));
       });
 
@@ -328,25 +505,25 @@ function render(){
       e.preventDefault();
       column.classList.remove("drag-over");
 
-      if(draggedBlock === null || sourceColumn === null) return;
+      if(draggedBlock===null || sourceColumn===null) return;
 
-      const targetColumn = Number(column.dataset.index);
-      if(targetColumn === sourceColumn) return;
+      const targetColumn=Number(column.dataset.index);
+      if(targetColumn===sourceColumn) return;
 
-      const moveCount = draggedBlock.count;
+      const moveCount=draggedBlock.count;
 
-      if(moveCount > 0 && values[sourceColumn] >= moveCount){
-        values[sourceColumn] -= moveCount * BLOCK_VALUE;
-        values[targetColumn] += moveCount * BLOCK_VALUE;
+      if(moveCount>0 && values[sourceColumn]>=moveCount){
+        values[sourceColumn]-=moveCount*BLOCK_VALUE;
+        values[targetColumn]+=moveCount*BLOCK_VALUE;
       }
 
       render();
       checkSolution();
     });
 
-    const valueLabel = document.createElement("div");
-    valueLabel.className = "value";
-    valueLabel.textContent = value;
+    const valueLabel=document.createElement("div");
+    valueLabel.className="value";
+    valueLabel.textContent=value;
 
     wrap.appendChild(column);
     wrap.appendChild(valueLabel);
@@ -355,14 +532,14 @@ function render(){
 }
 
 function checkSolution(){
-  if(values.length === 0) return;
+  if(values.length===0) return;
 
-  const first = values[0];
-  const equal = values.every(value=>value === first);
+  const first=values[0];
+  const equal=values.every(value=>value===first);
 
   if(!equal) return;
 
-  solved = true;
+  solved=true;
 
   document.querySelectorAll(".column").forEach(column=>{
     column.classList.add("solved");
@@ -372,32 +549,18 @@ function checkSolution(){
     value.classList.add("solved");
   });
 
-  document.getElementById("messageText").textContent =
-    "Ortalama değeri buldunuz: " + first;
+  document.getElementById("messageText").textContent=
+    "Ortalama değeri buldunuz: "+first;
 
   document.getElementById("message").classList.add("show");
 }
 
 function newQuestion(){
-  let example;
-
-  do{
-    example = EXAMPLES[Math.floor(Math.random()*EXAMPLES.length)];
-  }while(arraysEqual(example,values) && EXAMPLES.length > 1);
-
-  startGame(example);
-}
-
-function arraysEqual(a,b){
-  if(!a || !b || a.length !== b.length) return false;
-  for(let i=0;i<a.length;i++){
-    if(a[i] !== b[i]) return false;
-  }
-  return true;
+  startGame(generateValues(columnCount));
 }
 
 document.getElementById("homeBtn").addEventListener("click",()=>{
-  window.location.href = "../index.html";
+  window.location.href="../index.html";
 });
 
 document.getElementById("simpleModeBtn").addEventListener("click",()=>{
@@ -409,9 +572,21 @@ document.getElementById("advancedModeBtn").addEventListener("click",()=>{
   // Gelişmiş mod daha sonra eklenecek.
 });
 
+const countSlider=document.getElementById("countSlider");
+const countValue=document.getElementById("countValue");
+
+countSlider.addEventListener("input",()=>{
+  columnCount=Number(countSlider.value);
+  countValue.textContent=columnCount;
+});
+
+countSlider.addEventListener("change",()=>{
+  newQuestion();
+});
+
 document.getElementById("newBtn").addEventListener("click",newQuestion);
 
-startGame(FIRST_VALUES);
+startGame(generateValues(DEFAULT_COUNT));
 </script>
 </body>
 </html>
