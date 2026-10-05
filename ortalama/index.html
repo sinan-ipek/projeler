@@ -279,6 +279,84 @@ button:hover{background:#f0f3f8}
   filter:brightness(1.04);
 }
 
+/* Dikey seviye cetveli */
+.level-ruler{
+  position:absolute;
+  z-index:30;
+  width:34px;
+  height:450px;
+  pointer-events:none;
+}
+
+.level-track{
+  position:absolute;
+  left:15px;
+  top:0;
+  width:2px;
+  height:100%;
+  background:#aab2bf;
+  border-radius:2px;
+}
+
+.level-ticks{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+.level-tick{
+  position:absolute;
+  right:17px;
+  height:1px;
+  background:#aab2bf;
+  transform:translateY(.5px);
+}
+
+.level-tick.minor{width:6px}
+.level-tick.major{width:11px}
+
+.level-tick-label{
+  position:absolute;
+  right:30px;
+  transform:translateY(50%);
+  font-size:10px;
+  color:#8a94a3;
+  line-height:1;
+}
+
+.level-handle{
+  position:absolute;
+  left:5px;
+  width:22px;
+  height:14px;
+  border-radius:4px;
+  background:#4f86e8;
+  border:1px solid rgba(0,0,0,.12);
+  box-shadow:0 2px 5px rgba(0,0,0,.18);
+  transform:translateY(50%);
+  cursor:ns-resize;
+  pointer-events:auto;
+  transition:background .16s, box-shadow .16s, transform .08s;
+}
+
+.level-handle:hover{
+  box-shadow:0 3px 7px rgba(0,0,0,.22);
+}
+
+.level-handle.correct{
+  background:#e34848;
+  box-shadow:0 0 0 3px rgba(227,72,72,.14),0 3px 7px rgba(0,0,0,.20);
+}
+
+.level-line{
+  position:absolute;
+  z-index:20;
+  height:1px;
+  background:#9aa3af;
+  pointer-events:none;
+  opacity:.85;
+}
+
 .message.best{
   animation:bestPulse .72s ease-in-out 3;
   border:2px solid #f0b429;
@@ -374,6 +452,13 @@ button:hover{background:#f0f3f8}
   </div>
 
   <main class="game">
+    <div id="levelRuler" class="level-ruler" aria-label="Seviye cetveli">
+      <div class="level-track"></div>
+      <div id="levelTicks" class="level-ticks"></div>
+      <div id="levelHandle" class="level-handle" role="slider" aria-label="Seviye" aria-valuemin="0" aria-valuemax="25" aria-valuenow="0" tabindex="0"></div>
+    </div>
+    <div id="levelLine" class="level-line"></div>
+
     <div id="columns" class="columns"></div>
 
     <div id="message" class="message">
@@ -402,6 +487,11 @@ let theoreticalMinMoves = 0;
 let initialValues = [];
 let moveHistory = [];
 let rewinding = false;
+
+const MAX_RULER_LEVEL = 25;
+let rulerLevel = 0;
+let rulerDragging = false;
+let targetAverage = 0;
 
 function randomInt(min,max){
   return Math.floor(Math.random()*(max-min+1))+min;
@@ -517,6 +607,94 @@ function calculateMinimumMoves(startValues){
   return n-groups;
 }
 
+function getAverage(arr){
+  if(!arr.length) return 0;
+  return arr.reduce((sum,v)=>sum+v,0)/arr.length;
+}
+
+function buildRulerTicks(){
+  const ticks=document.getElementById("levelTicks");
+  ticks.innerHTML="";
+
+  for(let level=0;level<=MAX_RULER_LEVEL;level++){
+    const tick=document.createElement("div");
+    tick.className="level-tick "+(level%5===0 ? "major" : "minor");
+    tick.dataset.level=level;
+    ticks.appendChild(tick);
+
+    if(level>0 && level%5===0){
+      const label=document.createElement("div");
+      label.className="level-tick-label";
+      label.dataset.level=level;
+      label.textContent=level;
+      ticks.appendChild(label);
+    }
+  }
+}
+
+function updateRulerGeometry(){
+  const game=document.querySelector(".game");
+  const ruler=document.getElementById("levelRuler");
+  const line=document.getElementById("levelLine");
+  const handle=document.getElementById("levelHandle");
+  const columns=[...document.querySelectorAll(".column")];
+
+  if(!game || !ruler || !line || !handle || columns.length===0) return;
+
+  const gameRect=game.getBoundingClientRect();
+  const firstRect=columns[0].getBoundingClientRect();
+  const lastRect=columns[columns.length-1].getBoundingClientRect();
+
+  const blockHeight=18;
+  const rulerHeight=MAX_RULER_LEVEL*blockHeight;
+  const baselineY=firstRect.bottom-gameRect.top-3;
+  const rulerTop=baselineY-rulerHeight;
+  const rulerLeft=Math.max(38,firstRect.left-gameRect.left-48);
+
+  ruler.style.left=rulerLeft+"px";
+  ruler.style.top=rulerTop+"px";
+  ruler.style.height=rulerHeight+"px";
+
+  document.querySelectorAll(".level-tick").forEach(tick=>{
+    const level=Number(tick.dataset.level);
+    tick.style.bottom=(level*blockHeight)+"px";
+  });
+
+  document.querySelectorAll(".level-tick-label").forEach(label=>{
+    const level=Number(label.dataset.level);
+    label.style.bottom=(level*blockHeight-5)+"px";
+  });
+
+  const y=baselineY-rulerLevel*blockHeight;
+  handle.style.bottom=(rulerLevel*blockHeight-7)+"px";
+
+  const lineLeft=rulerLeft+27;
+  const lineRight=lastRect.right-gameRect.left;
+  line.style.left=lineLeft+"px";
+  line.style.top=y+"px";
+  line.style.width=Math.max(0,lineRight-lineLeft)+"px";
+
+  handle.classList.toggle("correct",Math.abs(rulerLevel-targetAverage)<1e-9);
+  handle.setAttribute("aria-valuenow",String(rulerLevel));
+}
+
+function setRulerLevel(level){
+  rulerLevel=Math.max(0,Math.min(MAX_RULER_LEVEL,Math.round(level)));
+  updateRulerGeometry();
+}
+
+function rulerLevelFromClientY(clientY){
+  const game=document.querySelector(".game");
+  const firstColumn=document.querySelector(".column");
+  if(!game || !firstColumn) return rulerLevel;
+
+  const gameRect=game.getBoundingClientRect();
+  const columnRect=firstColumn.getBoundingClientRect();
+  const baselineY=columnRect.bottom-gameRect.top-3;
+  const localY=clientY-gameRect.top;
+  return (baselineY-localY)/18;
+}
+
 function updateColumnSizing(){
   const container=document.getElementById("columns");
   const count=values.length || columnCount;
@@ -548,6 +726,8 @@ function startGame(newValues){
   solved=false;
   values=[...newValues];
   initialValues=[...newValues];
+  targetAverage=getAverage(initialValues);
+  rulerLevel=0;
   userMoves=0;
   moveHistory=[];
   rewinding=false;
@@ -560,6 +740,7 @@ function startGame(newValues){
   stopFireworks();
   updateColumnSizing();
   render();
+  requestAnimationFrame(updateRulerGeometry);
 
   if(values.length===1){
     checkSolution();
@@ -689,6 +870,8 @@ function render(){
     wrap.appendChild(valueLabel);
     container.appendChild(wrap);
   });
+
+  requestAnimationFrame(updateRulerGeometry);
 }
 
 function checkSolution(){
@@ -831,7 +1014,54 @@ function stopFireworks(){
   }
 }
 
-window.addEventListener("resize",resizeFireworks);
+window.addEventListener("resize",()=>{
+  resizeFireworks();
+  updateRulerGeometry();
+});
+
+buildRulerTicks();
+
+const levelHandle=document.getElementById("levelHandle");
+
+levelHandle.addEventListener("pointerdown",e=>{
+  rulerDragging=true;
+  levelHandle.setPointerCapture(e.pointerId);
+  setRulerLevel(rulerLevelFromClientY(e.clientY));
+  e.preventDefault();
+});
+
+levelHandle.addEventListener("pointermove",e=>{
+  if(!rulerDragging) return;
+  setRulerLevel(rulerLevelFromClientY(e.clientY));
+  e.preventDefault();
+});
+
+levelHandle.addEventListener("pointerup",e=>{
+  rulerDragging=false;
+  if(levelHandle.hasPointerCapture(e.pointerId)){
+    levelHandle.releasePointerCapture(e.pointerId);
+  }
+});
+
+levelHandle.addEventListener("pointercancel",()=>{
+  rulerDragging=false;
+});
+
+levelHandle.addEventListener("keydown",e=>{
+  if(e.key==="ArrowUp"){
+    setRulerLevel(rulerLevel+1);
+    e.preventDefault();
+  }else if(e.key==="ArrowDown"){
+    setRulerLevel(rulerLevel-1);
+    e.preventDefault();
+  }else if(e.key==="Home"){
+    setRulerLevel(0);
+    e.preventDefault();
+  }else if(e.key==="End"){
+    setRulerLevel(MAX_RULER_LEVEL);
+    e.preventDefault();
+  }
+});
 
 async function rewindMoves(){
   if(rewinding || moveHistory.length===0) return;
