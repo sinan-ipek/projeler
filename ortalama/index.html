@@ -536,6 +536,7 @@ let sliderUnlocked = true;
 let sliderVisible = false;
 let extraColumnActive = false;
 let extraColumnIndex = null;
+let showActualAverage = false;
 
 function randomInt(min,max){
   return Math.floor(Math.random()*(max-min+1))+min;
@@ -709,8 +710,9 @@ function updateRulerGeometry(){
     label.style.bottom=(level*blockHeight-5)+"px";
   });
 
-  const y=baselineY-rulerLevel*blockHeight;
-  handle.style.bottom=(rulerLevel*blockHeight-7)+"px";
+  const displayLevel=showActualAverage ? targetAverage : rulerLevel;
+  const y=baselineY-displayLevel*blockHeight;
+  handle.style.bottom=(displayLevel*blockHeight-7)+"px";
 
   const lineLeft=rulerLeft+30;
   const lineRight=lastRect.right-gameRect.left;
@@ -718,8 +720,8 @@ function updateRulerGeometry(){
   line.style.top=y+"px";
   line.style.width=Math.max(0,lineRight-lineLeft)+"px";
 
-  handle.classList.toggle("correct",Math.abs(rulerLevel-targetAverage)<1e-9);
-  handle.setAttribute("aria-valuenow",String(rulerLevel));
+  handle.classList.toggle("correct",showActualAverage || Math.abs(rulerLevel-targetAverage)<1e-9);
+  handle.setAttribute("aria-valuenow",String(displayLevel));
 }
 
 function updateSliderUI(){
@@ -749,6 +751,7 @@ function refreshTargetAverage(){
 }
 
 function setRulerLevel(level){
+  if(showActualAverage) return;
   rulerLevel=Math.max(0,Math.min(MAX_RULER_LEVEL,Math.round(level)));
   updateRulerGeometry();
 }
@@ -800,6 +803,7 @@ function startGame(newValues){
   rulerLevel=0;
   extraColumnActive=false;
   extraColumnIndex=null;
+  showActualAverage=false;
   userMoves=0;
   moveHistory=[];
   rewinding=false;
@@ -845,8 +849,9 @@ function render(){
       column.addEventListener("click",e=>{
         if(rewinding) return;
         values[index]+=1;
+        targetAverage=getAverage(values);
         render();
-        refreshTargetAverage();
+        updateRulerGeometry();
       });
     }
 
@@ -975,6 +980,9 @@ function checkSolution(){
   if(!equal) return;
 
   solved=true;
+  showActualAverage=true;
+  targetAverage=getAverage(values);
+  updateRulerGeometry();
 
   document.querySelectorAll(".column").forEach(column=>{
     column.classList.add("solved");
@@ -1255,6 +1263,7 @@ async function rewindMoves(){
   targetAverage=getAverage(values);
   extraColumnActive=false;
   extraColumnIndex=null;
+  showActualAverage=false;
   userMoves=0;
   moveHistory=[];
   rewinding=false;
@@ -1296,6 +1305,7 @@ newValueBtn.addEventListener("click",()=>{
   extraColumnActive=true;
   extraColumnIndex=values.length;
   values.push(0);
+  showActualAverage=true;
 
   // Artık yeni değer keşif aşamasındayız; başarı mesajı kapanır.
   solved=false;
