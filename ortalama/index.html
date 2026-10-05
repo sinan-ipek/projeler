@@ -904,7 +904,7 @@ async function rewindMoves(){
           {transform:"translate("+dx+"px,"+dy+"px)",opacity:1}
         ],
         {
-          duration:190,
+          duration:95,
           easing:"cubic-bezier(.35,.05,.2,1)",
           fill:"forwards"
         }
@@ -912,7 +912,7 @@ async function rewindMoves(){
 
       await animation.finished;
     }catch(e){
-      await new Promise(resolve=>setTimeout(resolve,190));
+      await new Promise(resolve=>setTimeout(resolve,95));
     }
 
     ghost.remove();
@@ -921,7 +921,7 @@ async function rewindMoves(){
     values[move.from]+=move.count;
     render();
 
-    await new Promise(resolve=>setTimeout(resolve,45));
+    await new Promise(resolve=>setTimeout(resolve,22));
   }
 
   values=[...initialValues];
