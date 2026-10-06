@@ -6336,11 +6336,19 @@
       }else if(selectAction==='point'){
         objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
 
+        const rawDx=p.x-selectStart.x;
+        const rawDy=p.y-selectStart.y;
+        const d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
+        const pointTarget={
+          x:selectStart.x+d.dx,
+          y:selectStart.y+d.dy
+        };
+
         const handled=moveMenuHandleFromSnapshot(
           objects[selectedIndex],
           selectSnapshot,
           String(activeHandle),
-          p
+          pointTarget
         );
 
         // Backward compatibility: auto-recognized triangle still uses vertex editing.
@@ -6350,7 +6358,7 @@
             objects[selectedIndex],
             selectSnapshot,
             vertexIndex,
-            p
+            pointTarget
           );
         }
 
