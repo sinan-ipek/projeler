@@ -2056,12 +2056,31 @@
   }
 
   function drawSmoothStroke(pts, style){
-    if(pts.length<2) return;
+    if(!pts || !pts.length) return;
+
     ctx.save();
     ctx.strokeStyle = style.color;
+    ctx.fillStyle = style.color;
     ctx.lineWidth = style.width;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+
+    // Tek tıklama da gerçek bir ink izi olsun.
+    // Tek noktalı stroke, kalem kalınlığı kadar dolu bir daire olarak çizilir.
+    if(pts.length===1){
+      ctx.beginPath();
+      ctx.arc(
+        pts[0].x,
+        pts[0].y,
+        Math.max(0.75,Number(style.width)||1)/2,
+        0,
+        Math.PI*2
+      );
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
+
     ctx.beginPath();
     ctx.moveTo(pts[0].x, pts[0].y);
     for(let i=1;i<pts.length-1;i++){
@@ -5723,7 +5742,11 @@
   }
 
   function splitSampledStroke(points,style,p,r){
-    if(!points || points.length<2) return null;
+    if(!points || !points.length) return null;
+
+    if(points.length===1){
+      return Math.hypot(points[0].x-p.x,points[0].y-p.y)<=r ? [] : null;
+    }
 
     let removed=false;
     const chunks=[];
@@ -5751,6 +5774,11 @@
 
   function sampleInkObject(o){
     if(o.kind==='stroke'){
+      if(!o.points || !o.points.length) return [];
+      if(o.points.length===1){
+        return [{x:o.points[0].x,y:o.points[0].y}];
+      }
+
       const pts=[];
       for(let i=1;i<o.points.length;i++){
         const seg=eraserSampleSegment(o.points[i-1],o.points[i],3);
