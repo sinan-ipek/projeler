@@ -30,7 +30,7 @@ jobs:
           REPO: ${{ github.repository }}
         shell: bash
         run: |
-          set -euo pipefail
+          set -u
 
           echo "Repository: $REPO"
 
@@ -44,32 +44,35 @@ jobs:
 
           total=${#artifacts[@]}
           keep=3
+          deleted=0
+          freed=0
+          failed=0
 
           echo "github-pages artifacts found: $total"
           echo "Keeping newest: $keep"
 
           if (( total > keep )); then
-            deleted=0
-            freed=0
-
             for ((i=keep; i<total; i++)); do
               IFS=$'\t' read -r created_at artifact_id size_in_bytes <<< "${artifacts[$i]}"
-
               echo "Deleting artifact $artifact_id ($created_at, $size_in_bytes bytes)"
-              gh api \
-                --method DELETE \
+
+              if gh api --method DELETE \
                 -H "Accept: application/vnd.github+json" \
-                "/repos/$REPO/actions/artifacts/$artifact_id"
+                "/repos/$REPO/actions/artifacts/$artifact_id" >/dev/null 2>&1; then
+                deleted=$((deleted + 1))
+                freed=$((freed + size_in_bytes))
+              else
+                echo "Could not delete artifact $artifact_id; continuing."
+                failed=$((failed + 1))
+              fi
 
-              deleted=$((deleted + 1))
-              freed=$((freed + size_in_bytes))
+              sleep 1
             done
-
-            echo "Deleted artifacts: $deleted"
-            echo "Approx. freed bytes: $freed"
-          else
-            echo "No old Pages artifacts to delete."
           fi
+
+          echo "Deleted artifacts: $deleted"
+          echo "Failed artifact deletions: $failed"
+          echo "Approx. freed bytes: $freed"
 
       - name: Delete old completed workflow runs
         env:
@@ -78,7 +81,7 @@ jobs:
           CURRENT_RUN_ID: ${{ github.run_id }}
         shell: bash
         run: |
-          set -euo pipefail
+          set -u
 
           keep=20
 
@@ -94,27 +97,49 @@ jobs:
           echo "Completed workflow runs found: $total"
           echo "Keeping newest: $keep"
 
-          if (( total <= keep )); then
-            echo "No old workflow runs to delete."
-            exit 0
+          deleted=0
+          failed=0
+
+          if (( total > keep )); then
+            for ((i=keep; i<total; i++)); do
+              IFS=$'\t' read -r created_at run_id run_name <<< "${runs[$i]}"
+
+              if [[ "$run_id" == "$CURRENT_RUN_ID" ]]; then
+                continue
+              fi
+
+              echo "Deleting run $run_id ($created_at, $run_name)"
+
+              success=0
+              for attempt in 1 2 3; do
+                if gh api --method DELETE \
+                  -H "Accept: application/vnd.github+json" \
+                  "/repos/$REPO/actions/runs/$run_id" >/dev/null 2>&1; then
+                  success=1
+                  break
+                fi
+
+                echo "Delete attempt $attempt failed for run $run_id; retrying..."
+                sleep $((attempt * 3))
+              done
+
+              if (( success == 1 )); then
+                deleted=$((deleted + 1))
+              else
+                echo "Could not delete run $run_id after retries; continuing."
+                failed=$((failed + 1))
+              fi
+
+              sleep 1
+            done
           fi
 
-          deleted=0
-
-          for ((i=keep; i<total; i++)); do
-            IFS=$'\t' read -r created_at run_id run_name <<< "${runs[$i]}"
-
-            if [[ "$run_id" == "$CURRENT_RUN_ID" ]]; then
-              continue
-            fi
-
-            echo "Deleting run $run_id ($created_at, $run_name)"
-            gh api \
-              --method DELETE \
-              -H "Accept: application/vnd.github+json" \
-              "/repos/$REPO/actions/runs/$run_id"
-
-            deleted=$((deleted + 1))
-          done
-
           echo "Deleted workflow runs: $deleted"
+          echo "Failed workflow run deletions: $failed"
+
+          remaining=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/$REPO/actions/runs?per_page=1" \
+            --jq '.total_count')
+
+          echo "Workflow runs remaining: $remaining"
