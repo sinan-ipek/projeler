@@ -818,7 +818,7 @@
   let activeHandle = null;
 
   // Repeat-last-transform state.
-  // Space repeats it; Alt+Space duplicates the current selection first.
+  // Space repeats it; Shift+Space duplicates the current selection first.
   let lastRepeatTransform = null;
   let pendingRepeatTransform = null;
 
@@ -8102,13 +8102,16 @@
       (target && target.isContentEditable) ||
       !!textEditing;
 
+    if(e.altKey && e.code==='Space'){
+      return;
+    }
+
     if(
       !typingTarget &&
       mode==='select' &&
       selectedIndices.length &&
       e.code==='Space' &&
-      !cmd &&
-      !e.shiftKey
+      !cmd
     ){
       e.preventDefault();
 
@@ -8119,7 +8122,7 @@
 
       applyRepeatTransformToSelection(
         lastRepeatTransform,
-        e.altKey
+        e.shiftKey
       );
       return;
     }
