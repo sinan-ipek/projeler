@@ -842,6 +842,7 @@
               <li>Bu kural tek nesne, çoklu seçim, tek handle ve çoklu handle için çalışır.</li>
               <li>Resize sırasında Shift oranı korur.</li>
               <li>Alt + sürükleme seçimin kopyasını oluşturup taşır.</li>
+              <li>Alt + boyutlandırma seçimin kopyasını oluşturup kopyayı boyutlandırır.</li>
               <li>Alt + döndürme seçimin kopyasını oluşturup döndürür.</li>
             </ul>
           </section>
@@ -909,6 +910,7 @@
           <div class="helpShortcutRow"><kbd>Ctrl + tıklama</kbd><span>Çoklu nesne veya çoklu handle seçimi</span></div>
           <div class="helpShortcutRow"><kbd>Shift + sürükleme</kbd><span>Yatay / dikey hareket kısıtlaması</span></div>
           <div class="helpShortcutRow"><kbd>Alt + sürükleme</kbd><span>Kopyala ve taşı</span></div>
+          <div class="helpShortcutRow"><kbd>Alt + boyutlandırma</kbd><span>Kopyala ve boyutlandır</span></div>
           <div class="helpShortcutRow"><kbd>Alt + döndürme</kbd><span>Kopyala ve döndür</span></div>
           <div class="helpShortcutRow"><kbd>Space</kbd><span>Son transformasyonu tekrarla</span></div>
           <div class="helpShortcutRow"><kbd>Shift + Space</kbd><span>Kopyala ve son transformasyonu uygula</span></div>
@@ -6328,9 +6330,9 @@
         if(gh){
           saveState();
 
-          // Alt + rotate: duplicate the whole current selection first.
-          // Originals stay in place; only the copies are rotated.
-          if(gh==='rotate' && e.altKey){
+          // Alt + rotate/resize: duplicate the whole current selection first.
+          // Originals stay in place; only the copies are transformed.
+          if(e.altKey && (gh==='rotate' || gh==='nw' || gh==='ne' || gh==='se' || gh==='sw')){
             const dupIndices=duplicateSelection(selectedIndices);
             setSelection(dupIndices);
           }
@@ -6382,9 +6384,9 @@
 
           saveState();
 
-          // Alt + rotate: create a copy before rotation begins.
+          // Alt + rotate/resize: create a copy before the transform begins.
           // The original remains unchanged and the new copy becomes selected.
-          if(h==='rotate' && e.altKey){
+          if(e.altKey && (h==='rotate' || !realHandle)){
             const dupIndices=duplicateSelection([selectedIndex]);
             setSelection(dupIndices);
             selectedIndex=selectedIndices[0];
