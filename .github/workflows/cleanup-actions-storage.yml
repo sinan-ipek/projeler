@@ -1,0 +1,73 @@
+name: Cleanup Actions Storage
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: cleanup-actions-storage
+  cancel-in-progress: true
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Wait for Pages artifact creation
+        run: sleep 120
+
+      - name: Delete old GitHub Pages artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Repository: $REPO"
+
+          mapfile -t artifacts < <(
+            gh api --paginate \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/$REPO/actions/artifacts?per_page=100" \
+              --jq '.artifacts[] | select(.name == "github-pages") | [.created_at, (.id|tostring), (.size_in_bytes|tostring)] | @tsv' \
+            | sort -r
+          )
+
+          total=${#artifacts[@]}
+          keep=3
+
+          echo "github-pages artifacts found: $total"
+          echo "Keeping newest: $keep"
+
+          if (( total <= keep )); then
+            echo "Nothing to delete."
+            exit 0
+          fi
+
+          deleted=0
+          freed=0
+
+          for ((i=keep; i<total; i++)); do
+            IFS=$'\t' read -r created_at artifact_id size_in_bytes <<< "${artifacts[$i]}"
+
+            echo "Deleting artifact $artifact_id ($created_at, $size_in_bytes bytes)"
+            gh api \
+              --method DELETE \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/$REPO/actions/artifacts/$artifact_id"
+
+            deleted=$((deleted + 1))
+            freed=$((freed + size_in_bytes))
+          done
+
+          echo "Deleted artifacts: $deleted"
+          echo "Approx. freed bytes: $freed"
