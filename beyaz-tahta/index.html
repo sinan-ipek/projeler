@@ -297,6 +297,121 @@
     outline:none;
   }
 
+  #helpModal{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:125;
+    background:rgba(17,24,39,.20);
+    padding:18px;
+  }
+  #helpModal.open{display:flex}
+  .helpCard{
+    width:min(760px,calc(100vw - 36px));
+    max-height:min(82vh,760px);
+    background:#fff;
+    border:1px solid #dfe3e8;
+    border-radius:14px;
+    box-shadow:0 18px 55px rgba(0,0,0,.20);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .helpHeader{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 16px 12px;
+    border-bottom:1px solid #e7e9ed;
+    background:#fff;
+  }
+  .helpTitle{
+    font-size:17px;
+    font-weight:700;
+    color:#1f2937;
+    margin-right:auto;
+  }
+  #closeHelpBtn{
+    width:34px;
+    height:34px;
+    min-width:34px;
+    padding:0;
+    border-radius:8px;
+    font-size:22px;
+    line-height:1;
+  }
+  .helpBody{
+    overflow:auto;
+    padding:14px 16px 18px;
+    font-size:13px;
+    line-height:1.45;
+    color:#374151;
+  }
+  .helpIntro{
+    margin:0 0 12px;
+    color:#6b7280;
+  }
+  .helpGrid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+  .helpSection{
+    border:1px solid #e5e7eb;
+    border-radius:11px;
+    padding:11px 12px;
+    background:#fafafa;
+  }
+  .helpSection h3{
+    margin:0 0 7px;
+    font-size:13px;
+    color:#111827;
+  }
+  .helpSection ul{
+    margin:0;
+    padding-left:18px;
+  }
+  .helpSection li{margin:3px 0}
+  .helpShortcuts{
+    margin-top:12px;
+    border:1px solid #dfe3e8;
+    border-radius:11px;
+    overflow:hidden;
+  }
+  .helpShortcuts h3{
+    margin:0;
+    padding:10px 12px;
+    font-size:13px;
+    background:#f6f7f9;
+    border-bottom:1px solid #e5e7eb;
+  }
+  .helpShortcutRow{
+    display:grid;
+    grid-template-columns:minmax(150px,210px) 1fr;
+    gap:12px;
+    padding:8px 12px;
+    border-bottom:1px solid #eef0f2;
+    align-items:center;
+  }
+  .helpShortcutRow:last-child{border-bottom:0}
+  .helpShortcutRow kbd{
+    justify-self:start;
+    border:1px solid #cfd5dc;
+    border-bottom-width:2px;
+    border-radius:6px;
+    padding:2px 7px;
+    background:#fff;
+    color:#111827;
+    font:600 12px/1.45 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+    white-space:nowrap;
+  }
+  @media (max-width:720px){
+    .helpGrid{grid-template-columns:1fr}
+    .helpShortcutRow{grid-template-columns:1fr}
+  }
+
   #feedbackModal{
     position:fixed;
     inset:0;
@@ -580,6 +695,9 @@
       </svg>
     </button>
 
+    <button id="helpBtn" class="iconBtn" title="Yardım" aria-label="Yardım"
+            style="font-weight:700;font-size:18px;line-height:1">?</button>
+
     <div id="status">Hazır</div>
   </div>
   <div id="stageWrap">
@@ -642,6 +760,137 @@
           title="Sinan İpek'e mesaj gönder"
           aria-label="Sinan İpek'e mesaj gönder">Sinan İpek</button>
 
+  <div id="helpModal" aria-hidden="true">
+    <div class="helpCard" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <div class="helpHeader">
+        <div id="helpTitle" class="helpTitle">Beyaz Tahta — Yardım</div>
+        <button id="closeHelpBtn" type="button" title="Kapat" aria-label="Kapat">×</button>
+      </div>
+
+      <div class="helpBody">
+        <p class="helpIntro">
+          Araçların çoğu doğrudan kullanılabilir; aşağıdaki liste özellikle keşfedilmesi zor özellikleri ve kısayolları toplar.
+        </p>
+
+        <div class="helpGrid">
+          <section class="helpSection">
+            <h3>Çizim</h3>
+            <ul>
+              <li>Kalemle serbest çizim yap.</li>
+              <li>Çizgi rengini ve kalınlığını değiştir.</li>
+              <li>Uygun çizimler bekletildiğinde otomatik şekle dönüşebilir.</li>
+              <li>Silgi ile tüm ink nesnesini veya yalnız belirli bir bölümü sil.</li>
+              <li>Dikdörtgen, elips ve çokgenlerin içini renkle doldur.</li>
+            </ul>
+          </section>
+
+          <section class="helpSection">
+            <h3>Hazır nesneler</h3>
+            <ul>
+              <li>Çizgi, dikdörtgen, elips, üçgen, beşgen, altıgen.</li>
+              <li>Parabol, sin x, tan x, eˣ ve x-y eksenleri.</li>
+              <li>Metin kutusu, karekök ve integral sembolü.</li>
+              <li>Fotoğraf / resim ekleme.</li>
+            </ul>
+          </section>
+
+          <section class="helpSection">
+            <h3>Seçme ve düzenleme</h3>
+            <ul>
+              <li>Nesneye tıkla; boş alanda sürükleyerek çoklu seçim yap.</li>
+              <li>Ctrl + tıklama ile seçime nesne ekle / çıkar.</li>
+              <li>Nesneleri taşı, boyutlandır ve döndür.</li>
+              <li>Hazır şekillerin gerçek düzenleme handle'larını tek tek taşı.</li>
+              <li>Ctrl ile birden fazla gerçek handle seçip birlikte taşı.</li>
+              <li>Bounding-box resize ve rotate tutamaçları handle çoklu seçimine dahil değildir.</li>
+            </ul>
+          </section>
+
+          <section class="helpSection">
+            <h3>Hareket ve kopyalama</h3>
+            <ul>
+              <li>Shift + sürükleme hareketi yatay veya dikey eksene kilitler.</li>
+              <li>Bu kural tek nesne, çoklu seçim, tek handle ve çoklu handle için çalışır.</li>
+              <li>Resize sırasında Shift oranı korur.</li>
+              <li>Alt + sürükleme seçimin kopyasını oluşturup taşır.</li>
+              <li>Alt + döndürme seçimin kopyasını oluşturup döndürür.</li>
+            </ul>
+          </section>
+
+          <section class="helpSection">
+            <h3>Transformasyonu tekrarlama</h3>
+            <ul>
+              <li>Space son taşıma, döndürme veya ölçekleme işlemini tekrarlar.</li>
+              <li>Shift + Space önce kopya oluşturur, sonra son transformasyonu uygular.</li>
+              <li>Tekli ve çoklu seçimlerde çalışır.</li>
+            </ul>
+          </section>
+
+          <section class="helpSection">
+            <h3>Biçim</h3>
+            <ul>
+              <li>Seçili nesnenin çizgi rengini sonradan değiştir.</li>
+              <li>Seçili nesnenin çizgi kalınlığını sonradan değiştir.</li>
+              <li>Biçim Boyayıcısı ile renk, kalınlık ve uygun nesnelerde dolguyu aktar.</li>
+            </ul>
+          </section>
+
+          <section class="helpSection">
+            <h3>Nesne işlemleri</h3>
+            <ul>
+              <li>Nesneleri grupla / grubu çöz.</li>
+              <li>En öne getir veya en arkaya gönder.</li>
+              <li>Yatay ve dikey yansıt.</li>
+              <li>Nesneyi kilitle; kilitli nesne seçilebilir ama değiştirilemez ve silinemez.</li>
+            </ul>
+          </section>
+
+          <section class="helpSection">
+            <h3>Dosya ve ortak çalışma</h3>
+            <ul>
+              <li>Tahtayı .whiteboard dosyası olarak kaydet ve yeniden aç.</li>
+              <li>Görünen tahtayı PNG olarak paylaş / indir.</li>
+              <li>Geri Al, Yinele ve Tümünü Temizle araçlarını kullan.</li>
+              <li>Bağlı cihazlar aynı ortak tahtadaki değişiklikleri eş zamanlı görür.</li>
+            </ul>
+          </section>
+
+          <section class="helpSection">
+            <h3>Gezinme</h3>
+            <ul>
+              <li>Fare tekeriyle yakınlaştır / uzaklaştır.</li>
+              <li>Tahtayı kaydırarak sonsuz yüzeyde gez.</li>
+              <li>Tablette iki parmakla aynı anda kaydır ve zoom yap.</li>
+            </ul>
+          </section>
+
+          <section class="helpSection">
+            <h3>Tablet / dokunmatik</h3>
+            <ul>
+              <li>Tek parmakla seçme ve çizim araçlarını kullan.</li>
+              <li>Nesneye uzun basarak nesne menüsünü aç.</li>
+              <li>Gerçek bir handle'a uzun basarak çoklu handle seçim modunu aç.</li>
+              <li>Sonra diğer handle'lara dokunarak seçime ekle.</li>
+            </ul>
+          </section>
+        </div>
+
+        <div class="helpShortcuts">
+          <h3>Klavye kısayolları</h3>
+          <div class="helpShortcutRow"><kbd>Ctrl + tıklama</kbd><span>Çoklu nesne veya çoklu handle seçimi</span></div>
+          <div class="helpShortcutRow"><kbd>Shift + sürükleme</kbd><span>Yatay / dikey hareket kısıtlaması</span></div>
+          <div class="helpShortcutRow"><kbd>Alt + sürükleme</kbd><span>Kopyala ve taşı</span></div>
+          <div class="helpShortcutRow"><kbd>Alt + döndürme</kbd><span>Kopyala ve döndür</span></div>
+          <div class="helpShortcutRow"><kbd>Space</kbd><span>Son transformasyonu tekrarla</span></div>
+          <div class="helpShortcutRow"><kbd>Shift + Space</kbd><span>Kopyala ve son transformasyonu uygula</span></div>
+          <div class="helpShortcutRow"><kbd>Delete / Backspace</kbd><span>Seçili nesneyi / nesneleri sil</span></div>
+          <div class="helpShortcutRow"><kbd>Ctrl + C</kbd><span>Seçili nesneyi / nesneleri kopyala</span></div>
+          <div class="helpShortcutRow"><kbd>Esc</kbd><span>Seçimi kaldır</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="feedbackModal" aria-hidden="true">
     <div class="feedbackCard" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
       <div id="feedbackTitle" class="feedbackTitle">Sinan İpek'e mesaj</div>
@@ -674,6 +923,9 @@
   const cancelBoardLoadBtn = document.getElementById('cancelBoardLoadBtn');
   const confirmBoardLoadBtn = document.getElementById('confirmBoardLoadBtn');
   const creatorSignature = document.getElementById('creatorSignature');
+  const helpBtn = document.getElementById('helpBtn');
+  const helpModal = document.getElementById('helpModal');
+  const closeHelpBtn = document.getElementById('closeHelpBtn');
   const feedbackModal = document.getElementById('feedbackModal');
   const feedbackText = document.getElementById('feedbackText');
   const feedbackCount = document.getElementById('feedbackCount');
@@ -8164,12 +8416,33 @@
     }
 
     if(e.key==='Escape'){
+      if(helpModal.classList.contains('open')){
+        e.preventDefault();
+        closeHelpModal();
+        return;
+      }
       setSelection([]);
       selectAction=null;
       marqueeStart=null;
       marqueeEnd=null;
       redraw();
     }
+  });
+
+  function openHelpModal(){
+    helpModal.classList.add('open');
+    helpModal.setAttribute('aria-hidden','false');
+  }
+
+  function closeHelpModal(){
+    helpModal.classList.remove('open');
+    helpModal.setAttribute('aria-hidden','true');
+  }
+
+  helpBtn.addEventListener('click',openHelpModal);
+  closeHelpBtn.addEventListener('click',closeHelpModal);
+  helpModal.addEventListener('pointerdown',e=>{
+    if(e.target===helpModal) closeHelpModal();
   });
 
   function openFeedbackModal(){
