@@ -48,26 +48,73 @@ jobs:
           echo "github-pages artifacts found: $total"
           echo "Keeping newest: $keep"
 
+          if (( total > keep )); then
+            deleted=0
+            freed=0
+
+            for ((i=keep; i<total; i++)); do
+              IFS=$'\t' read -r created_at artifact_id size_in_bytes <<< "${artifacts[$i]}"
+
+              echo "Deleting artifact $artifact_id ($created_at, $size_in_bytes bytes)"
+              gh api \
+                --method DELETE \
+                -H "Accept: application/vnd.github+json" \
+                "/repos/$REPO/actions/artifacts/$artifact_id"
+
+              deleted=$((deleted + 1))
+              freed=$((freed + size_in_bytes))
+            done
+
+            echo "Deleted artifacts: $deleted"
+            echo "Approx. freed bytes: $freed"
+          else
+            echo "No old Pages artifacts to delete."
+          fi
+
+      - name: Delete old completed workflow runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          CURRENT_RUN_ID: ${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          keep=20
+
+          mapfile -t runs < <(
+            gh api --paginate \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/$REPO/actions/runs?per_page=100" \
+              --jq '.workflow_runs[] | select(.status == "completed") | [.created_at, (.id|tostring), .name] | @tsv' \
+            | sort -r
+          )
+
+          total=${#runs[@]}
+          echo "Completed workflow runs found: $total"
+          echo "Keeping newest: $keep"
+
           if (( total <= keep )); then
-            echo "Nothing to delete."
+            echo "No old workflow runs to delete."
             exit 0
           fi
 
           deleted=0
-          freed=0
 
           for ((i=keep; i<total; i++)); do
-            IFS=$'\t' read -r created_at artifact_id size_in_bytes <<< "${artifacts[$i]}"
+            IFS=$'\t' read -r created_at run_id run_name <<< "${runs[$i]}"
 
-            echo "Deleting artifact $artifact_id ($created_at, $size_in_bytes bytes)"
+            if [[ "$run_id" == "$CURRENT_RUN_ID" ]]; then
+              continue
+            fi
+
+            echo "Deleting run $run_id ($created_at, $run_name)"
             gh api \
               --method DELETE \
               -H "Accept: application/vnd.github+json" \
-              "/repos/$REPO/actions/artifacts/$artifact_id"
+              "/repos/$REPO/actions/runs/$run_id"
 
             deleted=$((deleted + 1))
-            freed=$((freed + size_in_bytes))
           done
 
-          echo "Deleted artifacts: $deleted"
-          echo "Approx. freed bytes: $freed"
+          echo "Deleted workflow runs: $deleted"
