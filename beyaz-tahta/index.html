@@ -804,6 +804,9 @@
 
   let selectedIndex = -1;
   let selectedIndices = [];
+  let selectedHandles = [];      // only real geometry-edit handles; never bbox resize/rotate handles
+  let handleMultiSelectMode = false;
+  let multiHandleMoved = false;
   let formatPainterStyle = null;
   let nextGroupId = 1;
   let selectAction = null;   // 'move' | 'groupMove' | 'groupResize' | 'groupRotate' | 'resize' | 'rotate' | 'point' | 'marquee'
@@ -1054,6 +1057,18 @@
 
       touchLongPressTriggered=true;
       cancelCurrentTouchToolAction(true);
+
+      const handle=hitSelectionHandle(touchLongPressStartWorld,'touch');
+      if(handle && isRealEditHandleName(handle) && selectedIndex>=0){
+        if(!selectedHandleIs(handle)) selectedHandles.push(String(handle));
+        handleMultiSelectMode=true;
+        multiHandleMoved=false;
+        closeContextMenu();
+        redraw();
+        statusEl.textContent='Çoklu nokta seçimi — diğer noktalara dokun';
+        return;
+      }
+
       openTouchContextMenuAt(
         touchLongPressStartScreen,
         touchLongPressStartWorld
@@ -2432,6 +2447,169 @@
   }
 
 
+  function isRealEditHandleName(name){
+    const s=String(name||'');
+    return (
+      s.startsWith('vertex-') ||
+      s.startsWith('endpoint-') ||
+      s.startsWith('rectvertex-') ||
+      s.startsWith('ellipse-') ||
+      s.startsWith('sqrt-')
+    );
+  }
+
+  function realEditHandles(o){
+    if(!o || o.locked) return [];
+
+    if(o.kind==='line'){
+      return [
+        {name:'endpoint-0',x:o.a.x,y:o.a.y},
+        {name:'endpoint-1',x:o.b.x,y:o.b.y}
+      ];
+    }
+
+    const fromMenu=menuEditHandles(o).filter(h=>isRealEditHandleName(h.name));
+    if(fromMenu.length) return fromMenu;
+
+    // Auto-recognized triangle vertices are also true editable handles.
+    if(
+      o.kind==='polygon' &&
+      o.shapeName==='triangle' &&
+      polygonWorldVertices(o).length===3
+    ){
+      return polygonWorldVertices(o).map((p,i)=>({
+        name:'vertex-'+i,
+        x:p.x,
+        y:p.y
+      }));
+    }
+
+    return [];
+  }
+
+  function clearHandleSelection(){
+    selectedHandles=[];
+    handleMultiSelectMode=false;
+    multiHandleMoved=false;
+  }
+
+  function toggleSelectedHandle(name){
+    if(!isRealEditHandleName(name)) return false;
+    const s=String(name);
+    const i=selectedHandles.indexOf(s);
+    if(i>=0) selectedHandles.splice(i,1);
+    else selectedHandles.push(s);
+    return true;
+  }
+
+  function selectedHandleIs(name){
+    return selectedHandles.includes(String(name));
+  }
+
+  function constrainMoveDelta(dx,dy,enabled){
+    if(!enabled) return {dx,dy};
+    return Math.abs(dx)>=Math.abs(dy)
+      ? {dx,dy:0}
+      : {dx:0,dy};
+  }
+
+  function applyMultipleHandleDelta(o,snap,handles,dx,dy){
+    if(!o || !snap || !Array.isArray(handles) || !handles.length) return false;
+    const names=handles.map(String);
+
+    if(snap.kind==='line'){
+      Object.assign(o,cloneObject(snap));
+      if(names.includes('endpoint-0')){
+        o.a={x:snap.a.x+dx,y:snap.a.y+dy};
+      }
+      if(names.includes('endpoint-1')){
+        o.b={x:snap.b.x+dx,y:snap.b.y+dy};
+      }
+      return true;
+    }
+
+    if(snap.kind==='polygon'){
+      const verts=polygonWorldVertices(snap);
+      let changed=false;
+      for(const name of names){
+        if(!name.startsWith('vertex-')) continue;
+        const i=Number(name.split('-')[1]);
+        if(!Number.isInteger(i) || i<0 || i>=verts.length) continue;
+        verts[i]={x:verts[i].x+dx,y:verts[i].y+dy};
+        changed=true;
+      }
+      if(!changed) return false;
+      setPolygonWorldVerticesPreserveAngle(
+        o,verts,snap.angle||0,snap.source,snap.shapeName
+      );
+      return true;
+    }
+
+    if(snap.kind==='rect'){
+      const verts=rectWorldVertices(snap);
+      let changed=false;
+      for(const name of names){
+        if(!name.startsWith('rectvertex-')) continue;
+        const i=Number(name.split('-')[1]);
+        if(!Number.isInteger(i) || i<0 || i>=verts.length) continue;
+        verts[i]={x:verts[i].x+dx,y:verts[i].y+dy};
+        changed=true;
+      }
+      if(!changed) return false;
+      delete o.w;
+      delete o.h;
+      setPolygonWorldVerticesPreserveAngle(
+        o,verts,snap.angle||0,'menu','quadrilateral'
+      );
+      return true;
+    }
+
+    if(snap.kind==='symbol' && snap.symbolType==='sqrt'){
+      Object.assign(o,cloneObject(snap));
+      const a=snap.angle||0;
+      const cs=Math.cos(-a),sn=Math.sin(-a);
+      const sy=snap.mirrorY ? -1 : 1;
+      const controls=symbolWorldHandles(snap);
+
+      function localMoved(handleName){
+        const h=controls.find(q=>q.name===handleName);
+        if(!h) return null;
+        const px=h.x+dx,py=h.y+dy;
+        const wx=px-snap.center.x,wy=py-snap.center.y;
+        return {
+          x:wx*cs-wy*sn,
+          y:(wx*sn+wy*cs)*sy
+        };
+      }
+
+      if(names.includes('sqrt-roof')){
+        const q=localMoved('sqrt-roof');
+        if(q) o.roofLen=Math.max(18,q.x);
+      }
+      if(names.includes('sqrt-leg')){
+        const q=localMoved('sqrt-leg');
+        if(q) o.legDepth=Math.max(6,q.y);
+      }
+      if(names.includes('sqrt-start')){
+        const q=localMoved('sqrt-start');
+        if(q){
+          const height=Math.max(24,Number(snap.height)||72);
+          const topY=-height/2;
+          o.startOffset=Math.max(
+            topY+4,
+            Math.min((snap.legDepth||34)-4,q.y)
+          );
+        }
+      }
+      o.boxAngle=Number.isFinite(snap.boxAngle)
+        ? snap.boxAngle
+        : (snap.angle||0);
+      return true;
+    }
+
+    return false;
+  }
+
   function objectRotation(o){
     if(!o) return 0;
     if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image' || o.kind==='symbol') return o.angle||0;
@@ -2616,9 +2794,17 @@
   }
 
   function setSelection(indices){
+    const before=selectedIndices.slice();
     selectedIndices=expandGroupedIndices(indices||[]);
     groupSelectionAngle=0;
     normalizeSelection();
+
+    const sameSingle=
+      before.length===1 &&
+      selectedIndices.length===1 &&
+      before[0]===selectedIndices[0];
+
+    if(!sameSingle) clearHandleSelection();
     syncStyleControlsFromSelection();
   }
 
@@ -3015,7 +3201,7 @@
       ctx.save();
       for(const hnd of lineHandles){
         ctx.beginPath();
-        ctx.fillStyle='white';
+        ctx.fillStyle=selectedHandleIs(hnd.name) ? '#2563eb' : 'white';
         ctx.strokeStyle='#2563eb';
         ctx.arc(hnd.x,hnd.y,6/viewZoom,0,Math.PI*2);
         ctx.fill();
@@ -3049,7 +3235,7 @@
     if(special.length){
       for(const hnd of special){
         ctx.beginPath();
-        ctx.fillStyle='white';
+        ctx.fillStyle=selectedHandleIs(hnd.name) ? '#2563eb' : 'white';
         ctx.strokeStyle='#2563eb';
         const rr=hnd.name.startsWith('sqrt-') ? 7/viewZoom : 6/viewZoom;
         ctx.arc(hnd.x,hnd.y,rr,0,Math.PI*2);
@@ -3064,9 +3250,10 @@
 
       if(isTriangle){
         const verts=polygonWorldVertices(selected);
-        for(const p of verts){
+        for(let i=0;i<verts.length;i++){
+          const p=verts[i];
           ctx.beginPath();
-          ctx.fillStyle='white';
+          ctx.fillStyle=selectedHandleIs('vertex-'+i) ? '#2563eb' : 'white';
           ctx.strokeStyle='#2563eb';
           ctx.arc(p.x,p.y,6/viewZoom,0,Math.PI*2);
           ctx.fill();
@@ -5691,26 +5878,60 @@
         }
       }
 
-      // Single-selection edit handles remain unchanged.
+      // Single-object handles. Only true geometry handles participate
+      // in Ctrl/tablet multi-handle selection; bbox resize/rotate handles never do.
       if(selectedIndices.length<=1){
         const h=hitSelectionHandle(p,e.pointerType);
         if(h && selectedIndex>=0){
+          const realHandle=isRealEditHandleName(h);
+
+          if(realHandle && (e.ctrlKey || e.metaKey)){
+            toggleSelectedHandle(h);
+            handleMultiSelectMode=selectedHandles.length>0;
+            selectAction=null;
+            selectStart=null;
+            selectSnapshot=null;
+            activeHandle=null;
+            redraw();
+            statusEl.textContent=selectedHandles.length
+              ? `${selectedHandles.length} nokta seçili`
+              : 'Nokta seçimi kaldırıldı';
+            return;
+          }
+
+          if(realHandle && e.pointerType==='touch' && handleMultiSelectMode){
+            if(!selectedHandleIs(h)){
+              selectedHandles.push(String(h));
+              redraw();
+              statusEl.textContent=`${selectedHandles.length} nokta seçili`;
+              return;
+            }
+            // Touching an already-selected point starts moving the whole point set.
+          }
+
           saveState();
-          setSelection([selectedIndex]);
           selectStart=p;
           selectSnapshot=JSON.parse(JSON.stringify(objects[selectedIndex]));
           groupSnapshots=null;
           activeHandle=h;
-          selectAction=
-            (h==='rotate') ? 'rotate' :
-            (
-              h.startsWith('vertex-') ||
-              h.startsWith('endpoint-') ||
-              h.startsWith('rectvertex-') ||
-              h.startsWith('ellipse-') ||
-              h.startsWith('sqrt-')
-            ) ? 'point' :
-            'resize';
+
+          if(realHandle && selectedHandleIs(h) && selectedHandles.length>1){
+            selectAction='multiPoint';
+            multiHandleMoved=false;
+          }else{
+            if(realHandle){
+              selectedHandles=[String(h)];
+              handleMultiSelectMode=false;
+            }else{
+              clearHandleSelection();
+            }
+
+            selectAction=
+              (h==='rotate') ? 'rotate' :
+              realHandle ? 'point' :
+              'resize';
+          }
+
           redraw();
           return;
         }
@@ -5719,6 +5940,7 @@
       const hit=hitTestObject(p);
 
       if(hit>=0){
+        clearHandleSelection();
         const clickedIndices=expandGroupedIndices([hit]);
 
         if(e.ctrlKey || e.metaKey){
@@ -6066,10 +6288,11 @@
 
       if(selectAction==='groupMove'){
         if(!groupSnapshots) return;
-        const dx=p.x-selectStart.x,dy=p.y-selectStart.y;
+        const rawDx=p.x-selectStart.x,rawDy=p.y-selectStart.y;
+        const d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
         for(const item of groupSnapshots){
           objects[item.index]=cloneObject(item.object);
-          translateObject(objects[item.index],dx,dy);
+          translateObject(objects[item.index],d.dx,d.dy);
         }
         redraw();
         return;
@@ -6080,9 +6303,25 @@
       if(!o || !selectSnapshot) return;
 
       if(selectAction==='move'){
-        const dx=p.x-selectStart.x,dy=p.y-selectStart.y;
+        const rawDx=p.x-selectStart.x,rawDy=p.y-selectStart.y;
+        const d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
         objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
-        translateObject(objects[selectedIndex],dx,dy);
+        translateObject(objects[selectedIndex],d.dx,d.dy);
+
+      }else if(selectAction==='multiPoint'){
+        const rawDx=p.x-selectStart.x,rawDy=p.y-selectStart.y;
+        const d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
+        objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
+
+        applyMultipleHandleDelta(
+          objects[selectedIndex],
+          selectSnapshot,
+          selectedHandles,
+          d.dx,
+          d.dy
+        );
+
+        if(Math.hypot(rawDx,rawDy)>2/viewZoom) multiHandleMoved=true;
 
       }else if(selectAction==='rotate'){
         const box=orientedSelectionBox(selectSnapshot);
@@ -7272,6 +7511,7 @@
 
   selectBtn.onclick=()=>{
     cancelFormatPainter();
+    clearHandleSelection();
     if(textEditing) closeTextEditor(true);
     textBtn.classList.remove('active');
     fillBtn.classList.remove('active');
