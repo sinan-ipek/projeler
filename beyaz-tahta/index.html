@@ -817,6 +817,11 @@
   let groupSelectionAngle = 0;
   let activeHandle = null;
 
+  // Repeat-last-transform state.
+  // Space repeats it; Alt+Space duplicates the current selection first.
+  let lastRepeatTransform = null;
+  let pendingRepeatTransform = null;
+
   let marqueeStart = null;
   let marqueeEnd = null;
   let internalClipboard = [];
@@ -3149,6 +3154,154 @@
     const start=objects.length;
     for(const copy of copies) objects.push(copy);
     return Array.from({length:copies.length},(_,k)=>start+k);
+  }
+
+  function scaleObjectXYAround(o,anchor,sx,sy,angle=0){
+    if(!o || !anchor) return;
+    sx=Math.max(.06,Number(sx)||1);
+    sy=Math.max(.06,Number(sy)||1);
+
+    const ca=Math.cos(angle),sa=Math.sin(angle);
+    const cs=Math.cos(-angle),sn=Math.sin(-angle);
+
+    const scalePt=p=>{
+      const dx=p.x-anchor.x,dy=p.y-anchor.y;
+      const lx=dx*cs-dy*sn;
+      const ly=dx*sn+dy*cs;
+      const nx=lx*sx,ny=ly*sy;
+      return {
+        x:anchor.x+nx*ca-ny*sa,
+        y:anchor.y+nx*sa+ny*ca
+      };
+    };
+
+    if(o.kind==='line'){
+      o.a=scalePt(o.a);
+      o.b=scalePt(o.b);
+      return;
+    }
+
+    if(o.kind==='stroke'){
+      o.points=(o.points||[]).map(scalePt);
+      return;
+    }
+
+    if(o.kind==='polygon'){
+      o.center=scalePt(o.center);
+      if(o.baseVertices) o.baseVertices=o.baseVertices.map(scalePt);
+      return;
+    }
+
+    if(o.center) o.center=scalePt(o.center);
+
+    if(o.kind==='rect'){
+      o.w=Math.max(12,o.w*sx);
+      o.h=Math.max(12,o.h*sy);
+      return;
+    }
+
+    if(o.kind==='ellipse'){
+      o.rx=Math.max(6,o.rx*sx);
+      o.ry=Math.max(6,o.ry*sy);
+      return;
+    }
+
+    if(o.kind==='parabola' || o.kind==='image' || o.kind==='axes'){
+      o.w=Math.max(24,o.w*sx);
+      o.h=Math.max(24,o.h*sy);
+      return;
+    }
+
+    if(o.kind==='text'){
+      o.w=Math.max(24,o.w*sx);
+      o.h=Math.max(20,o.h*sy);
+      o.fontSize=Math.max(6,(o.fontSize||24)*sy);
+      return;
+    }
+
+    if(o.kind==='symbol'){
+      if(o.symbolType==='sqrt'){
+        o.radicalW=Math.max(18,(o.radicalW||90)*sx);
+        o.roofLen=Math.max(18,(o.roofLen||110)*sx);
+        o.height=Math.max(18,(o.height||72)*sy);
+        o.legDepth=Math.max(6,(o.legDepth||34)*sy);
+        o.startOffset=(Number.isFinite(o.startOffset)
+          ? o.startOffset
+          : 0.10*(o.height||72))*sy;
+      }else if(o.symbolType==='integral'){
+        o.w=Math.max(10,(o.w||50)*sx);
+        o.h=Math.max(22,(o.h||130)*sy);
+      }
+    }
+  }
+
+  function applyRepeatTransformToSelection(transform,duplicateFirst=false){
+    if(!transform || !selectedIndices.length) return false;
+
+    if(selectedIndices.some(i=>objects[i] && objects[i].locked)){
+      statusEl.textContent='Kilitli nesneye transformasyon uygulanamaz';
+      redraw();
+      return false;
+    }
+
+    saveState();
+
+    if(duplicateFirst){
+      const dupIndices=duplicateSelection(selectedIndices);
+      setSelection(dupIndices);
+    }
+
+    const indices=selectedIndices.slice();
+    if(!indices.length) return false;
+
+    if(transform.type==='move'){
+      for(const i of indices){
+        if(objects[i]) translateObject(objects[i],transform.dx,transform.dy);
+      }
+
+    }else if(transform.type==='rotate'){
+      const delta=Number(transform.delta)||0;
+      if(indices.length===1){
+        const o=objects[indices[0]];
+        if(o) rotateObject(o,delta);
+      }else{
+        const box=groupOrientedBox(indices);
+        if(!box) return false;
+        for(const i of indices){
+          if(objects[i]) rotateObjectAround(objects[i],box.center,delta);
+        }
+        groupSelectionAngle=(groupSelectionAngle||0)+delta;
+      }
+
+    }else if(transform.type==='scale'){
+      const sx=Number(transform.sx)||1;
+      const sy=Number(transform.sy)||1;
+      const box=indices.length===1
+        ? orientedSelectionBox(objects[indices[0]])
+        : groupOrientedBox(indices);
+
+      if(!box) return false;
+
+      for(const i of indices){
+        if(objects[i]){
+          scaleObjectXYAround(
+            objects[i],
+            box.center,
+            sx,
+            sy,
+            box.angle||0
+          );
+        }
+      }
+    }else{
+      return false;
+    }
+
+    redraw();
+    statusEl.textContent=duplicateFirst
+      ? 'Kopya oluşturuldu ve son transformasyon tekrarlandı'
+      : 'Son transformasyon tekrarlandı';
+    return true;
   }
 
   function drawSelection(){
@@ -5824,6 +5977,7 @@
 
     if(mode==='select'){
       canvas.setPointerCapture(e.pointerId);
+      pendingRepeatTransform=null;
 
       if(formatPainterStyle){
         const hit=hitTestObject(p);
@@ -6193,6 +6347,9 @@
         const a1=Math.atan2(p.y-c.y,p.x-c.x);
         const delta=a1-a0;
         groupSelectionAngle=(groupBoxSnapshot.angle||0)+delta;
+        if(Math.abs(delta)>1e-5){
+          pendingRepeatTransform={type:'rotate',delta};
+        }
 
         for(const item of groupSnapshots){
           objects[item.index]=cloneObject(item.object);
@@ -6228,6 +6385,10 @@
           const s=Math.max(sx,sy);
           sx=s;
           sy=s;
+        }
+
+        if(Math.abs(sx-1)>1e-4 || Math.abs(sy-1)>1e-4){
+          pendingRepeatTransform={type:'scale',sx,sy};
         }
 
         function scalePointLocal(pt){
@@ -6307,6 +6468,9 @@
         if(!groupSnapshots) return;
         const rawDx=p.x-selectStart.x,rawDy=p.y-selectStart.y;
         const d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
+        if(Math.hypot(d.dx,d.dy)>1e-5){
+          pendingRepeatTransform={type:'move',dx:d.dx,dy:d.dy};
+        }
         for(const item of groupSnapshots){
           objects[item.index]=cloneObject(item.object);
           translateObject(objects[item.index],d.dx,d.dy);
@@ -6322,6 +6486,9 @@
       if(selectAction==='move'){
         const rawDx=p.x-selectStart.x,rawDy=p.y-selectStart.y;
         const d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
+        if(Math.hypot(d.dx,d.dy)>1e-5){
+          pendingRepeatTransform={type:'move',dx:d.dx,dy:d.dy};
+        }
         objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
         translateObject(objects[selectedIndex],d.dx,d.dy);
 
@@ -6346,8 +6513,12 @@
           const c=box.center;
           const a0=Math.atan2(selectStart.y-c.y,selectStart.x-c.x);
           const a1=Math.atan2(p.y-c.y,p.x-c.x);
+          const delta=a1-a0;
+          if(Math.abs(delta)>1e-5){
+            pendingRepeatTransform={type:'rotate',delta};
+          }
           objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
-          rotateObject(objects[selectedIndex],a1-a0);
+          rotateObject(objects[selectedIndex],delta);
         }
 
       }else if(selectAction==='point'){
@@ -6401,6 +6572,16 @@
               p,
               activeHandle
             );
+          }
+        }
+
+        const beforeBox=orientedSelectionBox(selectSnapshot);
+        const afterBox=orientedSelectionBox(objects[selectedIndex]);
+        if(beforeBox && afterBox){
+          const sx=afterBox.w/Math.max(1,beforeBox.w);
+          const sy=afterBox.h/Math.max(1,beforeBox.h);
+          if(Math.abs(sx-1)>1e-4 || Math.abs(sy-1)>1e-4){
+            pendingRepeatTransform={type:'scale',sx,sy};
           }
         }
       }
@@ -6631,6 +6812,15 @@
     }
 
     if(mode==='select'){
+      if(
+        e.type==='pointerup' &&
+        pendingRepeatTransform &&
+        ['move','rotate','scale'].includes(pendingRepeatTransform.type)
+      ){
+        lastRepeatTransform=cloneObject(pendingRepeatTransform);
+      }
+      pendingRepeatTransform=null;
+
       if(selectAction==='marquee'){
         const r=marqueeRect();
         if(r && r.w>3 && r.h>3){
@@ -7902,6 +8092,37 @@
 
   window.addEventListener('keydown',e=>{
     const cmd=e.ctrlKey || e.metaKey;
+
+    const target=e.target;
+    const tag=target && target.tagName ? target.tagName.toLowerCase() : '';
+    const typingTarget=
+      tag==='input' ||
+      tag==='textarea' ||
+      tag==='select' ||
+      (target && target.isContentEditable) ||
+      !!textEditing;
+
+    if(
+      !typingTarget &&
+      mode==='select' &&
+      selectedIndices.length &&
+      e.code==='Space' &&
+      !cmd &&
+      !e.shiftKey
+    ){
+      e.preventDefault();
+
+      if(!lastRepeatTransform){
+        statusEl.textContent='Tekrarlanacak bir transformasyon yok';
+        return;
+      }
+
+      applyRepeatTransformToSelection(
+        lastRepeatTransform,
+        e.altKey
+      );
+      return;
+    }
 
     if(mode==='select' && selectedIndices.length && (e.key==='Delete' || e.key==='Backspace')){
       e.preventDefault();
