@@ -522,7 +522,7 @@
     if(REPLACE[title]) document.title=REPLACE[title];
   }
 
-  const homeSvg='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11.2 12 4l8.5 7.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5V20h13v-9.5M9.2 20v-5.8h5.6V20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+  const homeSvg='<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 28 L14 56 L50 56 L50 28" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg>';
 
   function isHomeLike(el){
     const t=norm(el.textContent).toLowerCase();
