@@ -842,6 +842,7 @@
               <li>Bu kural tek nesne, çoklu seçim, tek handle ve çoklu handle için çalışır.</li>
               <li>Resize sırasında Shift oranı korur.</li>
               <li>Alt + sürükleme seçimin kopyasını oluşturup taşır.</li>
+              <li>Doğru parçasında A veya B noktası Alt ile sürüklenirse önce kopya oluşur; uç nokta kopyada taşınır.</li>
               <li>Alt + boyutlandırma seçimin kopyasını oluşturup kopyayı boyutlandırır.</li>
               <li>Alt + döndürme seçimin kopyasını oluşturup döndürür.</li>
             </ul>
@@ -851,8 +852,9 @@
             <h3>Transformasyonu tekrarlama</h3>
             <ul>
               <li>Space son taşıma, döndürme veya ölçekleme işlemini tekrarlar.</li>
+              <li>Doğru parçasında A/B uç noktası taşındıysa Space aynı ucu aynı vektör kadar yeniden taşır.</li>
               <li>Shift + Space önce kopya oluşturur, sonra son transformasyonu uygular.</li>
-              <li>Tekli ve çoklu seçimlerde çalışır.</li>
+              <li>Tekli ve çoklu seçimlerde çalışır; uç-nokta tekrarı tek doğru parçasına özeldir.</li>
             </ul>
           </section>
 
@@ -909,7 +911,7 @@
           <h3>Klavye kısayolları</h3>
           <div class="helpShortcutRow"><kbd>Ctrl + tıklama</kbd><span>Çoklu nesne veya çoklu handle seçimi</span></div>
           <div class="helpShortcutRow"><kbd>Shift + sürükleme</kbd><span>Yatay / dikey hareket kısıtlaması</span></div>
-          <div class="helpShortcutRow"><kbd>Alt + sürükleme</kbd><span>Kopyala ve taşı</span></div>
+          <div class="helpShortcutRow"><kbd>Alt + sürükleme</kbd><span>Kopyala ve taşı; doğru parçasında A/B ucunda kopyala + ucu taşı</span></div>
           <div class="helpShortcutRow"><kbd>Alt + boyutlandırma</kbd><span>Kopyala ve boyutlandır</span></div>
           <div class="helpShortcutRow"><kbd>Alt + döndürme</kbd><span>Kopyala ve döndür</span></div>
           <div class="helpShortcutRow"><kbd>Space</kbd><span>Son transformasyonu tekrarla</span></div>
@@ -1101,7 +1103,7 @@
   let activeHandle = null;
 
   // Repeat-last-transform state.
-  // Space repeats it; Shift+Space duplicates the current selection first.
+  // Space repeats it; Shift+Space duplicates the current selection first. Line endpoint drags are repeatable too.
   let lastRepeatTransform = null;
   let pendingRepeatTransform = null;
 
@@ -3595,6 +3597,26 @@
           );
         }
       }
+
+    }else if(transform.type==='lineEndpoint'){
+      // Endpoint repetition is intentionally specific to a single line.
+      // Space moves the same endpoint by the same vector again.
+      if(indices.length!==1) return false;
+
+      const o=objects[indices[0]];
+      if(!o || o.kind!=='line') return false;
+
+      const dx=Number(transform.dx)||0;
+      const dy=Number(transform.dy)||0;
+
+      if(transform.endpoint==='endpoint-0'){
+        o.a={x:o.a.x+dx,y:o.a.y+dy};
+      }else if(transform.endpoint==='endpoint-1'){
+        o.b={x:o.b.x+dx,y:o.b.y+dy};
+      }else{
+        return false;
+      }
+
     }else{
       return false;
     }
@@ -6384,9 +6406,15 @@
 
           saveState();
 
-          // Alt + rotate/resize: create a copy before the transform begins.
+          // Alt + rotate/resize or Alt + line endpoint drag:
+          // create a copy before the transform begins.
           // The original remains unchanged and the new copy becomes selected.
-          if(e.altKey && (h==='rotate' || !realHandle)){
+          const isLineEndpoint=
+            objects[selectedIndex] &&
+            objects[selectedIndex].kind==='line' &&
+            (h==='endpoint-0' || h==='endpoint-1');
+
+          if(e.altKey && (h==='rotate' || !realHandle || isLineEndpoint)){
             const dupIndices=duplicateSelection([selectedIndex]);
             setSelection(dupIndices);
             selectedIndex=selectedIndices[0];
@@ -6843,6 +6871,19 @@
           y:selectStart.y+d.dy
         };
 
+        if(
+          selectSnapshot.kind==='line' &&
+          (activeHandle==='endpoint-0' || activeHandle==='endpoint-1') &&
+          Math.hypot(d.dx,d.dy)>1e-5
+        ){
+          pendingRepeatTransform={
+            type:'lineEndpoint',
+            endpoint:activeHandle,
+            dx:d.dx,
+            dy:d.dy
+          };
+        }
+
         const handled=moveMenuHandleFromSnapshot(
           objects[selectedIndex],
           selectSnapshot,
@@ -7126,7 +7167,7 @@
       if(
         e.type==='pointerup' &&
         pendingRepeatTransform &&
-        ['move','rotate','scale'].includes(pendingRepeatTransform.type)
+        ['move','rotate','scale','lineEndpoint'].includes(pendingRepeatTransform.type)
       ){
         lastRepeatTransform=cloneObject(pendingRepeatTransform);
       }
