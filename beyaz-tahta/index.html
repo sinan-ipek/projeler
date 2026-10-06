@@ -5864,6 +5864,14 @@
         const gh=hitGroupSelectionHandle(p,e.pointerType);
         if(gh){
           saveState();
+
+          // Alt + rotate: duplicate the whole current selection first.
+          // Originals stay in place; only the copies are rotated.
+          if(gh==='rotate' && e.altKey){
+            const dupIndices=duplicateSelection(selectedIndices);
+            setSelection(dupIndices);
+          }
+
           selectStart=p;
           activeHandle=gh;
           groupBoxSnapshot=groupOrientedBox();
@@ -5910,6 +5918,15 @@
           }
 
           saveState();
+
+          // Alt + rotate: create a copy before rotation begins.
+          // The original remains unchanged and the new copy becomes selected.
+          if(h==='rotate' && e.altKey){
+            const dupIndices=duplicateSelection([selectedIndex]);
+            setSelection(dupIndices);
+            selectedIndex=selectedIndices[0];
+          }
+
           selectStart=p;
           selectSnapshot=JSON.parse(JSON.stringify(objects[selectedIndex]));
           groupSnapshots=null;
