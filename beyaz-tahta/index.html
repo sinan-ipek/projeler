@@ -829,6 +829,7 @@
               <li>Nesneye tıkla; boş alanda sürükleyerek çoklu seçim yap.</li>
               <li>Ctrl + tıklama ile seçime nesne ekle / çıkar.</li>
               <li>Nesneleri taşı, boyutlandır ve döndür.</li>
+              <li>Doğru parçasında A ve B uçlarına ek olarak orta noktadan çıkan döndürme tutamacını kullan.</li>
               <li>Hazır şekillerin gerçek düzenleme handle'larını tek tek taşı.</li>
               <li>Ctrl ile birden fazla gerçek handle seçip birlikte taşı.</li>
               <li>Bounding-box resize ve rotate tutamaçları handle çoklu seçimine dahil değildir.</li>
@@ -2767,6 +2768,30 @@
     );
   }
 
+  function lineRotateHandle(o){
+    if(!o || o.kind!=='line' || !o.a || !o.b) return null;
+
+    const mx=(o.a.x+o.b.x)/2;
+    const my=(o.a.y+o.b.y)/2;
+    const dx=o.b.x-o.a.x;
+    const dy=o.b.y-o.a.y;
+    const len=Math.hypot(dx,dy);
+
+    if(len<1e-6) return null;
+
+    // Perpendicular unit vector. Offset is screen-size-stable.
+    const nx=-dy/len;
+    const ny= dx/len;
+    const offset=30/viewZoom;
+
+    return {
+      name:'rotate',
+      mid:{x:mx,y:my},
+      x:mx+nx*offset,
+      y:my+ny*offset
+    };
+  }
+
   function realEditHandles(o){
     if(!o || o.locked) return [];
 
@@ -3669,21 +3694,39 @@
     const rawSpecial=menuEditHandles(selected);
     const special=(selected.kind==='ellipse') ? [] : rawSpecial;
 
-    // LINE: always show A and B, regardless of whether it came from menu or ink recognition.
+    // LINE: A/B endpoints + one dedicated rotation handle.
     if(selected.kind==='line'){
       const lineHandles=[
         {name:'endpoint-0',x:selected.a.x,y:selected.a.y},
         {name:'endpoint-1',x:selected.b.x,y:selected.b.y}
       ];
+      const rh=lineRotateHandle(selected);
+
       ctx.save();
+      ctx.strokeStyle='#2563eb';
+      ctx.lineWidth=1.5/viewZoom;
+
       for(const hnd of lineHandles){
         ctx.beginPath();
         ctx.fillStyle=selectedHandleIs(hnd.name) ? '#2563eb' : 'white';
-        ctx.strokeStyle='#2563eb';
         ctx.arc(hnd.x,hnd.y,6/viewZoom,0,Math.PI*2);
         ctx.fill();
         ctx.stroke();
       }
+
+      if(rh){
+        ctx.beginPath();
+        ctx.moveTo(rh.mid.x,rh.mid.y);
+        ctx.lineTo(rh.x,rh.y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.fillStyle='white';
+        ctx.arc(rh.x,rh.y,6/viewZoom,0,Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
       ctx.restore();
       return;
     }
@@ -3782,16 +3825,21 @@
 
     const rawSpecial=menuEditHandles(selected);
 
-    // LINE: A/B endpoints are interactive for every line object.
+    // LINE: A/B endpoints plus a dedicated rotate handle.
     if(selected.kind==='line'){
       const lineHandles=[
         {name:'endpoint-0',x:selected.a.x,y:selected.a.y},
         {name:'endpoint-1',x:selected.b.x,y:selected.b.y}
       ];
       const hitR=(pointerType==='touch' ? 22 : 11)/viewZoom;
+
       for(const h of lineHandles){
         if(Math.hypot(p.x-h.x,p.y-h.y)<=hitR) return h.name;
       }
+
+      const rh=lineRotateHandle(selected);
+      if(rh && Math.hypot(p.x-rh.x,p.y-rh.y)<=hitR) return 'rotate';
+
       return null;
     }
 
