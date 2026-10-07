@@ -1083,6 +1083,8 @@
 
   // Local in-progress ink is not yet inside objects[], so it has its own
   // temporary realtime stream.
+  // Pointer samples can be coalesced by the browser; rendering is RAF-paced
+  // so high-frequency pen input does not force a full-canvas redraw per sample.
   let liveInkId = null;
   let liveInkSentIndex = 0;
   let liveInkLastSentAt = 0;
@@ -4671,6 +4673,16 @@
     ctx.restore();
   }
 
+  let inkRedrawFrame=null;
+
+  function scheduleInkRedraw(){
+    if(inkRedrawFrame!==null) return;
+    inkRedrawFrame=requestAnimationFrame(()=>{
+      inkRedrawFrame=null;
+      redraw();
+    });
+  }
+
   function redraw(){
     // Clear in device pixels, then render the infinite world through the camera.
     ctx.setTransform(1,0,0,1,0,0);
@@ -7049,14 +7061,33 @@
       return;
     }
 
-    const prev=points[points.length-1];
-    if(dist(prev,p)>1.5){
-      points.push(p);
+    const rawEvents=(
+      typeof e.getCoalescedEvents==='function'
+        ? e.getCoalescedEvents()
+        : null
+    );
+    const inkEvents=(rawEvents && rawEvents.length) ? rawEvents : [e];
+
+    let inkMoved=false;
+
+    for(const ev of inkEvents){
+      const q=pFromEvent(ev);
+      const prev=points[points.length-1];
+      if(!prev || dist(prev,q)>1.5){
+        points.push(q);
+        inkMoved=true;
+      }
+    }
+
+    if(inkMoved){
       lastMoveTime=performance.now();
       previewRecognized=null;
       armHold();
       collabBroadcastLiveInk(false);
-      redraw();
+
+      // Pointer samples may arrive faster than the display can present them.
+      // Collect all samples, but redraw at most once per animation frame.
+      scheduleInkRedraw();
     }
   });
   canvas.addEventListener('pointerleave',()=>{
