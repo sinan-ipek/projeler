@@ -444,6 +444,7 @@ function rubberBandPath(bubbles,fallback){
         y:fallback.y+Math.sin(angle)*27
       });
     }
+
     return denseClosedPath(points);
   }
 
@@ -453,6 +454,7 @@ function rubberBandPath(bubbles,fallback){
 
   for(const bubble of bubbles){
     const mass=bubbleMass(bubble);
+
     totalMass+=mass;
     centerX+=bubble.x*mass;
     centerY+=bubble.y*mass;
@@ -463,10 +465,14 @@ function rubberBandPath(bubbles,fallback){
     y:centerY/Math.max(1,totalMass)
   };
 
-  const points=[];
   const steps=84;
-  let lastRadius=26;
+  const radii=new Array(steps).fill(NaN);
 
+  /*
+    Her yönde, merkezden çıkan ışının gerçek balon çevreleriyle
+    kesiştiği en dış noktayı buluyoruz. Böylece sınır, eski
+    "destek düzlemi" yaklaşımı gibi gereksiz yere şişmiyor.
+  */
   for(let i=0;i<steps;i++){
     const angle=Math.PI*2*i/steps;
     const ux=Math.cos(angle);
@@ -482,7 +488,9 @@ function rubberBandPath(bubbles,fallback){
       const cx=bubble.x-center.x;
       const cy=bubble.y-center.y;
 
-      const along=cx*ux+cy*uy;
+      const along=
+        cx*ux+
+        cy*uy;
 
       const perpendicularSquared=Math.max(
         0,
@@ -491,7 +499,9 @@ function rubberBandPath(bubbles,fallback){
         along*along
       );
 
-      const radiusSquared=radius*radius;
+      const radiusSquared=
+        radius*
+        radius;
 
       if(perpendicularSquared>radiusSquared){
         continue;
@@ -517,51 +527,101 @@ function rubberBandPath(bubbles,fallback){
       }
     }
 
-    if(!Number.isFinite(farthest)){
-      farthest=lastRadius;
+    if(Number.isFinite(farthest)){
+      radii[i]=farthest;
     }
-
-    const maxNeighborChange=14;
-
-    farthest=Math.max(
-      lastRadius-maxNeighborChange,
-      Math.min(
-        lastRadius+maxNeighborChange,
-        farthest
-      )
-    );
-
-    lastRadius=farthest;
-
-    points.push({
-      x:center.x+ux*farthest,
-      y:center.y+uy*farthest
-    });
   }
 
-  for(let pass=0;pass<2;pass++){
-    const copy=points.map(point=>({...point}));
+  /*
+    Çok dar bir boğazda bir ışın hiçbir balona değmezse,
+    iki yandaki gerçek çevre değerleri arasında dairesel
+    interpolasyon yapıyoruz.
+  */
+  for(let i=0;i<steps;i++){
+    if(Number.isFinite(radii[i]))continue;
 
-    for(let i=0;i<points.length;i++){
+    let previousIndex=null;
+    let nextIndex=null;
+
+    for(let offset=1;offset<steps;offset++){
+      const index=(i-offset+steps)%steps;
+
+      if(Number.isFinite(radii[index])){
+        previousIndex=index;
+        break;
+      }
+    }
+
+    for(let offset=1;offset<steps;offset++){
+      const index=(i+offset)%steps;
+
+      if(Number.isFinite(radii[index])){
+        nextIndex=index;
+        break;
+      }
+    }
+
+    if(previousIndex!==null&&nextIndex!==null){
+      radii[i]=
+        (
+          radii[previousIndex]+
+          radii[nextIndex]
+        )/
+        2;
+    }
+    else if(previousIndex!==null){
+      radii[i]=radii[previousIndex];
+    }
+    else if(nextIndex!==null){
+      radii[i]=radii[nextIndex];
+    }
+    else{
+      radii[i]=27;
+    }
+  }
+
+  /*
+    Çok hafif dairesel yumuşatma:
+    keskin sayısal kırılmaları alır ama bandı balonlardan
+    uzaklaştıracak kadar şişirmez.
+  */
+  for(let pass=0;pass<2;pass++){
+    const copy=radii.slice();
+
+    for(let i=0;i<steps;i++){
       const previous=
-        copy[(i-1+copy.length)%copy.length];
+        copy[(i-1+steps)%steps];
 
       const current=
         copy[i];
 
       const next=
-        copy[(i+1)%copy.length];
+        copy[(i+1)%steps];
 
-      points[i].x=
-        previous.x*.18+
-        current.x*.64+
-        next.x*.18;
+      const smoothed=
+        previous*.16+
+        current*.68+
+        next*.16;
 
-      points[i].y=
-        previous.y*.18+
-        current.y*.64+
-        next.y*.18;
+      radii[i]=Math.max(
+        current-3.2,
+        Math.min(
+          current+3.2,
+          smoothed
+        )
+      );
     }
+  }
+
+  const points=[];
+
+  for(let i=0;i<steps;i++){
+    const angle=Math.PI*2*i/steps;
+
+    points.push({
+      x:center.x+Math.cos(angle)*radii[i],
+      y:center.y+Math.sin(angle)*radii[i]
+    });
   }
 
   return denseClosedPath(points);
