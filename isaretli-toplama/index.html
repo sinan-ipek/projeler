@@ -65,7 +65,11 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
   pointer-events:visiblePainted;
   cursor:grab;
   touch-action:none;
-  transition:stroke .18s ease,fill .18s ease,opacity .18s ease,stroke-dashoffset .18s ease
+  transition:stroke .18s ease,fill .18s ease,opacity .24s ease,stroke-dashoffset .18s ease
+}
+
+.cluster-band.forming{
+  opacity:0;
 }
 .cluster-band.dragging{
   cursor:grabbing;
@@ -678,10 +682,15 @@ function denseClosedPath(points){
 
 function makeTerm(value100){return{id:state.nextTermId++,value100,opened:false,opening:false,closing:false,openPromise:null,card:null,clusterId:null,openedAt:0}}
 
-function createCluster(termIds,anchor){
+function createCluster(termIds,anchor,{forming=false}={}){
   const id=state.nextClusterId++;
   const band=document.createElementNS("http://www.w3.org/2000/svg","path");
-  band.setAttribute("class","cluster-band");
+  band.setAttribute(
+    "class",
+    forming
+      ?"cluster-band forming"
+      :"cluster-band"
+  );
   band.dataset.clusterId=String(id);
   clusterBandGroup.appendChild(band);
 
@@ -692,6 +701,11 @@ function createCluster(termIds,anchor){
     band,
     mode:"free",
     createdAt:performance.now(),
+    forming,
+    formingUntil:
+      forming
+        ?performance.now()+360
+        :0,
     annihilating:false
   };
 
@@ -939,8 +953,23 @@ function directionalExtent(cluster,center,ux,uy){
 
 function updateBands(){
   const one=state.clusters.size===1&&!state.mergeInProgress;
+  const now=performance.now();
+
   for(const c of state.clusters.values()){
     const bs=bubblesInCluster(c.id);
+
+    if(
+      c.forming
+      &&
+      c.formingUntil
+      &&
+      now>=c.formingUntil
+    ){
+      c.forming=false;
+      c.formingUntil=0;
+      c.band.classList.remove("forming");
+    }
+
     c.band.setAttribute("d",rubberBandPath(bs,clusterStats(c).center));
     c.band.classList.toggle("single",one&&c.termIds.size===1);
     c.band.classList.toggle("mergeable",state.clusters.size>=2||state.mergeInProgress);
@@ -1977,14 +2006,49 @@ async function openTerm(termId){
   const term=state.terms.find(t=>t.id===termId);if(!term||term.opened||term.opening||term.closing)return;
   term.opened=true;term.opening=true;term.openedAt=performance.now();state.explicitCloseArmedAt=performance.now()+700;
   const index=state.terms.findIndex(t=>t.id===termId),source=elementCenterInStage(term.card),anchor=termAnchor(index);
-  const cluster=createCluster([term.id],anchor);term.clusterId=cluster.id;term.card.classList.add("gone");updatePlusSigns();
+  const cluster=createCluster(
+    [term.id],
+    anchor,
+    {
+      forming:true
+    }
+  );
+
+  term.clusterId=cluster.id;
+  term.card.classList.add("gone");
+  updatePlusSigns();
   const values=decomposeValue(term.value100),points=seedLayout(values,anchor,termSegmentWidth()),generation=state.generation;
   for(let i=0;i<values.length;i++){
     if(generation!==state.generation)break;
     const b=createBubble(values[i],source.x,source.y,cluster.id,term.id,1,1);
     const target=points[i];b.vx=(target.x-source.x)*.075;b.vy=(target.y-source.y)*.075;
   }
-  await sleep(420);if(generation!==state.generation)return;term.opening=false;updateInteractionText();
+  await sleep(300);
+
+  if(
+    generation!==state.generation
+  ){
+    return;
+  }
+
+  if(
+    state.clusters.has(cluster.id)
+  ){
+    cluster.forming=false;
+    cluster.formingUntil=0;
+    cluster.band.classList.remove("forming");
+  }
+
+  await sleep(120);
+
+  if(
+    generation!==state.generation
+  ){
+    return;
+  }
+
+  term.opening=false;
+  updateInteractionText();
 }
 
 async function closeSingleCluster(clusterId,explicit=false){
