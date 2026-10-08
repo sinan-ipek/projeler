@@ -98,7 +98,10 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
   opacity:0;
   background:linear-gradient(90deg,rgba(37,99,235,.20),rgba(37,99,235,.92),#fff,rgba(225,29,72,.92),rgba(225,29,72,.20));
   box-shadow:0 0 8px rgba(124,58,237,.34),0 0 16px rgba(255,255,255,.82);
-  animation:matchLineAppear .16s ease-out forwards,matchLinePulse .52s .16s ease-in-out infinite alternate
+  clip-path:inset(0 50% 0 50%);
+  animation:
+    matchLineDraw .17s ease-out forwards,
+    matchLinePulse .52s .17s ease-in-out infinite alternate
 }
 .match-line::before{
   content:"";
@@ -122,9 +125,17 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
   filter:blur(6px);
   opacity:.38
 }
-@keyframes matchLineAppear{
-  from{opacity:0;filter:blur(3px)}
-  to{opacity:.98;filter:blur(0)}
+@keyframes matchLineDraw{
+  from{
+    opacity:0;
+    filter:blur(3px);
+    clip-path:inset(0 50% 0 50%);
+  }
+  to{
+    opacity:.98;
+    filter:blur(0);
+    clip-path:inset(0 0 0 0);
+  }
 }
 @keyframes matchLinePulse{
   from{
@@ -246,7 +257,34 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
       0 0 26px rgba(124,58,237,.50),
       inset 0 1px 0 rgba(255,255,255,.96)
   }
-}.bubble-wrap.annihilation-focus{z-index:78}.bubble-wrap.annihilation-focus .bubble-core{box-shadow:0 0 0 4px rgba(255,255,255,.55),0 0 24px rgba(124,58,237,.36),inset 0 1px 0 rgba(255,255,255,.9)}
+}.stage.annihilation-focus-mode .bubble-wrap:not(.annihilation-focus) .bubble-core{
+  opacity:.58;
+  filter:saturate(.72) brightness(.98);
+  transition:opacity .16s ease,filter .16s ease;
+}
+.stage.annihilation-focus-mode .annihilation-focus .bubble-core{
+  opacity:1;
+}
+
+.zero-flash{
+  position:absolute;
+  transform:translate(-50%,-50%) scale(.72);
+  z-index:96;
+  pointer-events:none;
+  font-weight:900;
+  font-size:22px;
+  color:#4b5563;
+  text-shadow:0 0 7px #fff,0 0 14px rgba(255,255,255,.98);
+  animation:zeroFlash .44s ease-out forwards;
+}
+@keyframes zeroFlash{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.55)}
+  28%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
+  72%{opacity:.95;transform:translate(-50%,-60%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-86%) scale(.82)}
+}
+
+.bubble-wrap.annihilation-focus{z-index:78}.bubble-wrap.annihilation-focus .bubble-core{box-shadow:0 0 0 4px rgba(255,255,255,.55),0 0 24px rgba(124,58,237,.36),inset 0 1px 0 rgba(255,255,255,.9)}
 .bubble-wrap.final-result{z-index:88}
 .bubble-wrap.final-result .bubble-core{
   box-shadow:0 0 0 6px rgba(124,58,237,.09),0 0 32px rgba(124,58,237,.30),inset 0 1px 0 rgba(255,255,255,.9);
@@ -1260,6 +1298,101 @@ function createAnnihilationBurst(x,y){
   },620);
 }
 
+function createZeroFlash(x,y){
+  const zero=document.createElement("div");
+  zero.className="zero-flash";
+  zero.textContent="0";
+  zero.style.left=x+"px";
+  zero.style.top=y+"px";
+  stage.appendChild(zero);
+
+  setTimeout(()=>{
+    if(zero.isConnected)zero.remove();
+  },520);
+}
+
+function cancellationLockRadius(bubble){
+  const unit=Math.abs(bubble.value100);
+
+  if(unit===100)return 112;
+  if(unit===10)return 88;
+  return 72;
+}
+
+function nearbyCancelablePairs(clusterId){
+  const bubbles=
+    bubblesInCluster(clusterId)
+    .filter(
+      bubble=>
+        bubble.alive
+        &&
+        !bubble.locked
+        &&
+        [100,10,1].includes(
+          Math.abs(bubble.value100)
+        )
+    );
+
+  const candidates=[];
+
+  for(let i=0;i<bubbles.length;i++){
+    for(let j=i+1;j<bubbles.length;j++){
+      const a=bubbles[i];
+      const b=bubbles[j];
+
+      if(!oppositeAtomicPair(a,b))continue;
+
+      const distance=
+        Math.hypot(
+          a.x-b.x,
+          a.y-b.y
+        );
+
+      const lockRadius=
+        Math.max(
+          cancellationLockRadius(a),
+          cancellationLockRadius(b)
+        );
+
+      if(distance<=lockRadius){
+        candidates.push({
+          a,
+          b,
+          distance
+        });
+      }
+    }
+  }
+
+  candidates.sort(
+    (x,y)=>x.distance-y.distance
+  );
+
+  const used=new Set();
+  const pairs=[];
+
+  for(const candidate of candidates){
+    if(
+      used.has(candidate.a.id)
+      ||
+      used.has(candidate.b.id)
+    ){
+      continue;
+    }
+
+    used.add(candidate.a.id);
+    used.add(candidate.b.id);
+
+    pairs.push([
+      candidate.a,
+      candidate.b
+    ]);
+  }
+
+  return pairs;
+}
+
+
 function showFlash(point,className="band-join-flash"){
   const el=document.createElement("div");el.className=className;el.style.left=point.x+"px";el.style.top=point.y+"px";stage.appendChild(el);setTimeout(()=>el.isConnected&&el.remove(),560);
 }
@@ -1388,18 +1521,41 @@ function scheduleAnnihilation(a,b,slow=false){
     !b.alive
     ||
     a.clusterId!==b.clusterId
-  )return Promise.resolve();
+  ){
+    return Promise.resolve();
+  }
 
   a.locked=b.locked=true;
+
   a.el.classList.add("merging");
   b.el.classList.add("merging");
 
   if(slow){
-    a.el.classList.add("annihilation-focus");
-    b.el.classList.add("annihilation-focus");
+    stage.classList.add(
+      "annihilation-focus-mode"
+    );
+
+    a.el.classList.add(
+      "annihilation-focus"
+    );
+
+    b.el.classList.add(
+      "annihilation-focus"
+    );
   }
 
-  return annihilatePair(a,b,{slow});
+  return annihilatePair(
+    a,
+    b,
+    {slow}
+  )
+  .finally(()=>{
+    if(slow){
+      stage.classList.remove(
+        "annihilation-focus-mode"
+      );
+    }
+  });
 }
 
 async function annihilatePair(a,b,{slow=false}={}){
@@ -1407,7 +1563,7 @@ async function annihilatePair(a,b,{slow=false}={}){
 
   const line=createMatchLine(a,b,slow);
 
-  await sleep(slow?260:120);
+  await sleep(slow?190:85);
 
   const startA={x:a.x,y:a.y};
   const startB={x:b.x,y:b.y};
@@ -1438,7 +1594,7 @@ async function annihilatePair(a,b,{slow=false}={}){
     y:(startB.y+target.y)/2-ny*curve
   };
 
-  const duration=slow?540:365;
+  const duration=slow?410:325;
   const started=performance.now();
 
   await new Promise(resolve=>{
@@ -1495,6 +1651,13 @@ async function annihilatePair(a,b,{slow=false}={}){
 
   createAnnihilationBurst(target.x,target.y);
 
+  if(slow){
+    createZeroFlash(
+      target.x,
+      target.y
+    );
+  }
+
   const vanish=p=>p.core.animate(
     [
       {transform:"scale(1)",opacity:1},
@@ -1502,7 +1665,7 @@ async function annihilatePair(a,b,{slow=false}={}){
       {transform:"scale(.02)",opacity:0}
     ],
     {
-      duration:slow?255:235,
+      duration:slow?185:170,
       easing:"cubic-bezier(.25,.78,.35,1)",
       fill:"forwards"
     }
@@ -1518,7 +1681,10 @@ async function annihilatePair(a,b,{slow=false}={}){
 }
 
 async function runAnnihilationSequence(clusterId){
-  const cluster=state.clusters.get(clusterId);
+  const cluster=
+    state.clusters.get(
+      clusterId
+    );
 
   if(
     !cluster
@@ -1528,55 +1694,225 @@ async function runAnnihilationSequence(clusterId){
     state.finalAggregation
     ||
     state.finalDone
-  )return;
+  ){
+    return;
+  }
 
   cluster.annihilating=true;
+
   clearSplittableMarks();
 
+  const active=
+    new Set();
+
   try{
-    while(state.clusters.has(clusterId)){
-      const pairs=collectCancelablePairs(clusterId);
+    /*
+      1. DOĞAL KARŞILAŞMA
 
-      if(!pairs.length)break;
+      Eski sürümlerdeki etkileyici davranış:
+      bütün eşleşmeleri baştan hesaplamıyoruz.
+      Yalnız fizik içinde gerçekten birbirine yaklaşan
+      zıt eş balonlar kilitleniyor.
+    */
+    const liveStart=
+      performance.now();
 
-      if(pairs.length>3){
-        const bulk=pairs.slice(0,pairs.length-3);
+    const liveDuration=
+      620;
 
-        setStatus(
-          bulk.length+
-          " zıt çift aynı anda yok oluyor…"
+    setStatus(
+      "Zıt eş balonlar birbirlerini <strong>yakından buluyor</strong>…"
+    );
+
+    while(
+      state.clusters.has(clusterId)
+      &&
+      performance.now()-liveStart<
+      liveDuration
+    ){
+      const nearby=
+        nearbyCancelablePairs(
+          clusterId
         );
 
-        await Promise.all(
-          bulk.map(([a,b])=>scheduleAnnihilation(a,b,false))
-        );
-
-        await sleep(155);
-        continue;
-      }
-
-      setStatus(
-        "Kalan zıt balonlar birbirine yaklaşıp <strong>teker teker</strong> yok oluyor…"
-      );
-
-      for(const [a,b] of pairs){
+      for(
+        const [a,b]
+        of nearby.slice(0,2)
+      ){
         if(
-          !state.clusters.has(clusterId)
+          a.locked
+          ||
+          b.locked
           ||
           !a.alive
           ||
           !b.alive
-        )break;
+        ){
+          continue;
+        }
 
-        await scheduleAnnihilation(a,b,true);
-        await sleep(120);
+        let job=null;
+
+        job=
+          scheduleAnnihilation(
+            a,
+            b,
+            false
+          )
+          .finally(()=>{
+            active.delete(
+              job
+            );
+          });
+
+        active.add(
+          job
+        );
       }
 
-      break;
+      await sleep(42);
     }
-  }finally{
-    const current=state.clusters.get(clusterId);
-    if(current)current.annihilating=false;
+
+    if(active.size){
+      await Promise.all(
+        [...active]
+      );
+    }
+
+    /*
+      2. HIZLI DALGA
+
+      Doğal karşılaşma sonunda çok çift kalmışsa,
+      hepsi aynı karede silinmez.
+      48 ms'lik küçük gecikmeler çiftleri okunur kılar.
+    */
+    while(
+      state.clusters.has(
+        clusterId
+      )
+    ){
+      const remaining=
+        collectCancelablePairs(
+          clusterId
+        );
+
+      if(
+        remaining.length<=3
+      ){
+        break;
+      }
+
+      const waveCount=
+        Math.min(
+          4,
+          remaining.length-3
+        );
+
+      const wave=
+        remaining.slice(
+          0,
+          waveCount
+        );
+
+      setStatus(
+        "Eşleşen zıt çiftler <strong>dalga halinde</strong> sadeleşiyor…"
+      );
+
+      await Promise.all(
+        wave.map(
+          async(
+            [a,b],
+            index
+          )=>{
+            await sleep(
+              index*48
+            );
+
+            await scheduleAnnihilation(
+              a,
+              b,
+              false
+            );
+          }
+        )
+      );
+
+      await sleep(75);
+    }
+
+    /*
+      3. SON ÇİFTLER
+
+      Bunlar öğretim anıdır:
+      çevre geri plana gider,
+      çift tek başına vurgulanır,
+      çizgi görünür,
+      temas gerçekleşir
+      ve 0 izi bırakılır.
+    */
+    while(
+      state.clusters.has(
+        clusterId
+      )
+    ){
+      const remaining=
+        collectCancelablePairs(
+          clusterId
+        );
+
+      if(!remaining.length){
+        break;
+      }
+
+      const [a,b]=
+        remaining[0];
+
+      if(
+        !a
+        ||
+        !b
+        ||
+        !a.alive
+        ||
+        !b.alive
+      ){
+        break;
+      }
+
+      setStatus(
+        "<strong>"+
+        formatBubbleValue(
+          a.value100
+        )+
+        "</strong> ile <strong>"+
+        formatBubbleValue(
+          b.value100
+        )+
+        "</strong> eşleşiyor → 0"
+      );
+
+      await scheduleAnnihilation(
+        a,
+        b,
+        true
+      );
+
+      await sleep(95);
+    }
+  }
+  finally{
+    stage.classList.remove(
+      "annihilation-focus-mode"
+    );
+
+    const current=
+      state.clusters.get(
+        clusterId
+      );
+
+    if(current){
+      current.annihilating=false;
+    }
   }
 
   checkFinalReadiness();
@@ -2106,11 +2442,11 @@ async function onBubbleClick(b,explicit=false){
 function clearSimulation(){
   for(const b of state.bubbles)if(b.el?.isConnected)b.el.remove();state.bubbles=[];
   for(const c of state.clusters.values())if(c.band?.isConnected)c.band.remove();state.clusters.clear();
-  document.querySelectorAll(".band-join-flash,.merge-flash,.match-line,.annihilation-burst").forEach(el=>el.remove());
+  document.querySelectorAll(".band-join-flash,.merge-flash,.match-line,.annihilation-burst,.zero-flash").forEach(el=>el.remove());
 }
 
 function newProblem(){
-  state.generation++;clearSimulation();state.terms=[];state.nextTermId=1;state.nextClusterId=1;state.nextBubbleId=1;state.mergeInProgress=false;state.mergeClusterIds=[];state.mergedClusterId=null;state.finalAggregation=false;state.finalDone=false;state.finalClusterId=null;state.finalReady=false;state.clusterDrag=null;state.resolutionCheckAt=0;state.explicitCloseArmedAt=0;
+  state.generation++;clearSimulation();state.terms=[];state.nextTermId=1;state.nextClusterId=1;state.nextBubbleId=1;state.mergeInProgress=false;state.mergeClusterIds=[];state.mergedClusterId=null;state.finalAggregation=false;state.finalDone=false;state.finalClusterId=null;state.finalReady=false;state.clusterDrag=null;stage.classList.remove("annihilation-focus-mode");state.resolutionCheckAt=0;state.explicitCloseArmedAt=0;
   for(let i=0;i<state.operandCount;i++)state.terms.push(makeTerm(generateValue100()));
   document.body.dataset.mode=state.level;stage.style.height=calculateStageHeight()+"px";renderTerms();updateInteractionText();
 }
