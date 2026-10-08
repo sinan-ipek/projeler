@@ -65,10 +65,15 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
 .bubble-wrap.neutral .bubble-core{color:#616977;background:radial-gradient(circle at 35% 28%,#fff 0 9%,#f7f8fa 28%,#dde1e7 100%)}
 .bubble-wrap.aging .bubble-core{animation:agingPulse .62s ease-in-out infinite alternate;filter:saturate(1.08)}
 .bubble-wrap.seeking .bubble-core{box-shadow:0 0 0 4px rgba(124,58,237,.08),0 0 19px rgba(124,58,237,.23),inset 0 1px 0 rgba(255,255,255,.82)}
+.bubble-wrap.splittable{z-index:82}
 .bubble-wrap.splittable .bubble-core{
-  outline:3px solid rgba(124,58,237,.30);
-  box-shadow:0 0 0 5px rgba(124,58,237,.07),0 0 24px rgba(124,58,237,.28),inset 0 1px 0 rgba(255,255,255,.82);
-  animation:splitPulse 1.0s ease-in-out infinite alternate;
+  outline:4px solid rgba(124,58,237,.78);
+  box-shadow:
+    0 0 0 7px rgba(124,58,237,.14),
+    0 0 30px rgba(124,58,237,.58),
+    0 0 52px rgba(124,58,237,.30),
+    inset 0 1px 0 rgba(255,255,255,.88);
+  animation:splitPulse .72s ease-in-out infinite alternate;
 }
 @keyframes splitPulse{from{transform:scale(1)}to{transform:scale(1.07)}}
 .bubble-wrap.merging{z-index:72}.bubble-wrap.merging .bubble-core{animation:none;filter:brightness(1.08)}.bubble-wrap.annihilation-focus{z-index:78}.bubble-wrap.annihilation-focus .bubble-core{box-shadow:0 0 0 4px rgba(255,255,255,.55),0 0 24px rgba(124,58,237,.36),inset 0 1px 0 rgba(255,255,255,.9)}
@@ -374,7 +379,17 @@ function installClusterPointerHandlers(element,clusterId,bubbleId=null){
   element.addEventListener("pointerdown",event=>{
     if(event.button!==undefined&&event.button!==0)return;
 
-    const cluster=state.clusters.get(clusterId);
+    const liveBubble=
+      bubbleId!==null
+        ? aliveBubbles().find(item=>item.id===bubbleId)
+        : null;
+
+    const liveClusterId=
+      liveBubble
+        ? liveBubble.clusterId
+        : clusterId;
+
+    const cluster=state.clusters.get(liveClusterId);
     if(!cluster)return;
 
     event.preventDefault();
@@ -384,7 +399,7 @@ function installClusterPointerHandlers(element,clusterId,bubbleId=null){
     const stats=clusterStats(cluster);
 
     state.clusterDrag={
-      clusterId,
+      clusterId:liveClusterId,
       bubbleId,
       pointerId:event.pointerId,
       startX:point.x,
@@ -402,9 +417,9 @@ function installClusterPointerHandlers(element,clusterId,bubbleId=null){
       pointerAY:0,
       moved:false,
       localOffsets:new Map(
-        bubblesInCluster(clusterId).map(b=>[
-          b.id,
-          {x:b.x-stats.center.x,y:b.y-stats.center.y}
+        bubblesInCluster(liveClusterId).map(item=>[
+          item.id,
+          {x:item.x-stats.center.x,y:item.y-stats.center.y}
         ])
       )
     };
@@ -545,8 +560,7 @@ async function handleClusterTap(clusterId){
     &&
     !state.finalAggregation
   ){
-    await closeSingleCluster(clusterId,true);
-    return;
+    return closeSingleCluster(clusterId,true);
   }
 
   updateInteractionText();
@@ -1122,27 +1136,67 @@ function atomicUnit(value100){
 
 function markNeededSplits(cluster){
   clearSplittableMarks();
-  const bs=bubblesInCluster(cluster.id).filter(b=>b.alive&&b.value100!==0);
+
+  const bubbles=
+    bubblesInCluster(cluster.id)
+      .filter(b=>b.alive&&b.value100!==0&&!b.locked);
+
   const minUnit=currentConfig().minUnit;
-  let marked=0;
+  let best=null;
 
-  for(const b of bs){
-    const unit=atomicUnit(b.value100);
-    if(unit<=minUnit)continue;
+  for(const big of bubbles){
+    const bigUnit=atomicUnit(big.value100);
+    if(bigUnit<=minUnit)continue;
 
-    const hasOppositeSmaller=bs.some(other=>
-      Math.sign(other.value100)===-Math.sign(b.value100)
-      && atomicUnit(other.value100)<unit
-    );
+    for(const small of bubbles){
+      if(big.id===small.id)continue;
 
-    if(hasOppositeSmaller){
-      b.splittable=true;
-      b.el.classList.add("splittable");
-      marked++;
+      const smallUnit=atomicUnit(small.value100);
+
+      if(
+        Math.sign(small.value100)!==-Math.sign(big.value100)
+        ||
+        smallUnit>=bigUnit
+      ){
+        continue;
+      }
+
+      const distance=Math.hypot(
+        big.x-small.x,
+        big.y-small.y
+      );
+
+      const nextUnit=
+        bigUnit===100
+          ? 10
+          : bigUnit===10
+            ? 1
+            : null;
+
+      if(!nextUnit)continue;
+
+      const score=
+        bigUnit*100000+
+        distance;
+
+      if(!best||score<best.score){
+        best={
+          bubble:big,
+          fromUnit:bigUnit,
+          toUnit:nextUnit,
+          targetUnit:smallUnit,
+          score
+        };
+      }
     }
   }
 
-  return marked;
+  if(!best)return null;
+
+  best.bubble.splittable=true;
+  best.bubble.el.classList.add("splittable");
+
+  return best;
 }
 
 function hasCancelablePair(cluster){
@@ -1202,11 +1256,19 @@ function checkFinalReadiness(){
     return;
   }
 
-  const marked=markNeededSplits(cluster);
+  const splitInfo=markNeededSplits(cluster);
 
-  if(marked){
+  if(splitInfo){
+    const sign=Math.sign(splitInfo.bubble.value100);
+
     setStatus(
-      "Zıt işaretliler farklı büyüklükte kaldı. <strong>Parlayan büyük balona tıkla.</strong>"
+      "Zıt işaretliler farklı büyüklükte kaldı. " +
+      "<strong>" +
+      formatBubbleValue(sign*splitInfo.fromUnit) +
+      " balonuna tıkla:</strong> " +
+      "10 tane " +
+      formatBubbleValue(sign*splitInfo.toUnit) +
+      " balonuna ayrılacak."
     );
   }
 }
@@ -1334,7 +1396,12 @@ async function splitBubble(b){
     child.vy=Math.sin(angle)*1.1;
   }
 
-  setStatus("Büyük balon 10 küçük balona ayrıldı. Zıt eş balonlar yeniden sadeleştiriliyor…");
+  setStatus(
+    formatBubbleValue(sign*unit) +
+    " balonu 10 tane " +
+    formatBubbleValue(childValue) +
+    " balonuna ayrıldı. Zıt eş balonlar yeniden sadeleştiriliyor…"
+  );
   state.finalReady=false;
   setTimeout(()=>{
     const cluster=state.clusters.get(clusterId);
