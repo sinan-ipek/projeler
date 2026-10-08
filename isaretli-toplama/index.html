@@ -321,8 +321,8 @@ const PHYSICS={
   damping:.91,
   centerCohesion:.00092,
   attraction:.00122,
-  sameSizeMultiplier:1.95,
-  oppositeSignMultiplier:2.85,
+  sameSizeMultiplier:1,
+  oppositeSignMultiplier:1,
   overlapSpring:.075,
   nearContactSpring:.010,
   tangentialSlide:.0019,
@@ -1003,12 +1003,13 @@ function nearestBubble(source,clusterId){
   return best?{bubble:best,distance:bestD}:null;
 }
 
-function attractionMultiplier(a,b){
-  let m=1;
-  const ra=bubbleRadius(a.value100),rb=bubbleRadius(b.value100);
-  if(Math.abs(ra-rb)<3)m*=PHYSICS.sameSizeMultiplier;
-  if(a.value100!==0&&b.value100!==0&&Math.sign(a.value100)!==Math.sign(b.value100))m*=PHYSICS.oppositeSignMultiplier;
-  return m;
+function attractionMultiplier(){
+  /*
+    Küme içindeki bütün balon çiftleri aynı çekim katsayısını kullanır.
+    İşaret ve büyüklük yalnız yok olma / parçalama matematiğini etkiler;
+    fiziksel çekim kuvvetini etkilemez.
+  */
+  return 1;
 }
 
 function sameAtomicMagnitude(a,b){
