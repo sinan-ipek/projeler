@@ -52,7 +52,17 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
 .term-card{position:absolute;top:148px;transform:translate(-50%,-50%);min-width:94px;padding:15px 16px;border:0;border-radius:18px;background:#fff;color:var(--text);font-size:clamp(24px,3vw,40px);font-weight:850;letter-spacing:-.04em;box-shadow:0 14px 30px rgba(30,38,56,.14);cursor:grab;z-index:45;pointer-events:auto;touch-action:none;transition:left .28s ease,transform .18s ease,opacity .25s ease,box-shadow .2s ease}
 .term-card:hover{transform:translate(-50%,-52%) scale(1.025)}.term-card.dragging{cursor:grabbing;z-index:90;transition:none;box-shadow:0 20px 40px rgba(30,38,56,.22)}.term-card.gone{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.72)}
 .dynamic-plus{position:absolute;top:148px;transform:translate(-50%,-50%);font-size:clamp(38px,4.8vw,60px);font-weight:500;color:#343b4b;opacity:.34;pointer-events:none;z-index:34;transition:opacity .22s ease,transform .22s ease}.dynamic-plus.fade-away{opacity:0;transform:translate(-50%,-50%) scale(.78)}
-.band-layer{position:absolute;inset:0;width:100%;height:100%;z-index:8;overflow:visible;pointer-events:none}
+.band-layer{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:8;
+  overflow:visible;
+  pointer-events:none;
+  opacity:0;
+  visibility:hidden;
+}
 .cluster-band{
   fill:var(--band-fill);
   stroke:var(--band);
@@ -309,10 +319,10 @@ const LEVELS={
 
 const PHYSICS={
   damping:.91,
-  centerCohesion:.00064,
-  attraction:.00086,
-  sameSizeMultiplier:1.75,
-  oppositeSignMultiplier:2.55,
+  centerCohesion:.00092,
+  attraction:.00122,
+  sameSizeMultiplier:1.95,
+  oppositeSignMultiplier:2.85,
   overlapSpring:.075,
   nearContactSpring:.010,
   tangentialSlide:.0019,
@@ -321,8 +331,8 @@ const PHYSICS={
   clusterRepulsion:.032,
   maxSpeed:9.6,
   dragMaxSpeed:16.5,
-  boundaryOffset:4.5,
-  mergeGap:5,
+  boundaryOffset:0,
+  mergeGap:2.5,
   lifeSeekAt:.68,
   lifeUrgentAt:.86,
   dragSpring:.038,
@@ -443,7 +453,14 @@ function seedLayout(values,center,width){
     const rowW=(take-1)*dx+(row%2?maxR:0);
     const startX=center.x-rowW/2;
     for(let col=0;col<take;col++){
-      points[cursor++]={x:startX+col*dx+(row%2?maxR:0),y:center.y-totalH/2+maxR+row*dy};
+      const rawX=startX+col*dx+(row%2?maxR:0);
+      const rawY=center.y-totalH/2+maxR+row*dy;
+      const birthSpread=.52;
+
+      points[cursor++]={
+        x:center.x+(rawX-center.x)*birthSpread,
+        y:center.y+(rawY-center.y)*birthSpread
+      };
     }
   }
   return points;
@@ -2010,7 +2027,7 @@ async function openTerm(termId){
     [term.id],
     anchor,
     {
-      forming:true
+      forming:false
     }
   );
 
@@ -2021,7 +2038,7 @@ async function openTerm(termId){
   for(let i=0;i<values.length;i++){
     if(generation!==state.generation)break;
     const b=createBubble(values[i],source.x,source.y,cluster.id,term.id,1,1);
-    const target=points[i];b.vx=(target.x-source.x)*.075;b.vy=(target.y-source.y)*.075;
+    const target=points[i];b.vx=(target.x-source.x)*.052;b.vy=(target.y-source.y)*.052;
   }
   await sleep(300);
 
