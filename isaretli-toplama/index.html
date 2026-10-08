@@ -71,6 +71,11 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
 .result-frame{position:absolute;left:50%;bottom:20px;width:174px;height:96px;transform:translateX(-50%) scale(.58);opacity:0;border:2px solid rgba(124,58,237,.24);border-radius:25px;background:rgba(255,255,255,.98);box-shadow:0 16px 38px rgba(30,38,56,.18);pointer-events:none;z-index:95;transition:opacity .25s ease,transform .38s cubic-bezier(.16,1.08,.34,1),box-shadow .3s ease,border-color .3s ease}.result-frame.show{opacity:1;transform:translateX(-50%) scale(1)}.result-frame.gravity-active{border-color:rgba(124,58,237,.38);box-shadow:0 16px 38px rgba(30,38,56,.18),0 -5px 28px rgba(124,58,237,.10)}.counter-value{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(35px,5vw,55px);font-weight:900;letter-spacing:-.05em}.counter-value.bump{animation:counterBump .16s ease-out}@keyframes counterBump{0%{transform:scale(1)}45%{transform:scale(1.08)}100%{transform:scale(1)}}
 .statusbar{min-height:90px;border-top:1px solid rgba(42,50,70,.13);display:flex;align-items:center;justify-content:center;padding:18px 24px 22px;background:rgba(255,255,255,.86)}.status{margin:0;text-align:center;font-size:15px;line-height:1.45;color:var(--muted)}.status strong{color:var(--text)}
 @media(max-width:720px){body{padding:10px}.board{border-radius:22px}.settings-panel{top:10px;right:10px;padding:7px 8px}.setting-row{grid-template-columns:52px 90px;gap:6px;font-size:11px}.setting-slider{width:90px}.term-card{top:140px;min-width:70px;padding:12px 9px;font-size:clamp(20px,6vw,29px)}.dynamic-plus{top:140px;font-size:36px}.bubble-wrap.unit-100 .bubble-core{width:52px;height:52px;font-size:18px}.bubble-wrap.unit-10 .bubble-core{width:41px;height:41px;font-size:14px}body[data-mode="medium"] .bubble-wrap.unit-10 .bubble-core{width:32px;height:32px;font-size:11px}.bubble-wrap.unit-1 .bubble-core{width:28px;height:28px;font-size:9px}.bubble-wrap.unit-0 .bubble-core{width:40px;height:40px;font-size:14px}.result-frame{width:158px;height:84px;bottom:18px}}
+
+.bubble-wrap.aging .bubble-core{animation:agingPulse .62s ease-in-out infinite alternate;filter:saturate(1.08)}
+.bubble-wrap.seeking .bubble-core{box-shadow:0 0 0 4px rgba(124,58,237,.08),0 0 19px rgba(124,58,237,.23),inset 0 1px 0 rgba(255,255,255,.82)}
+.bubble-wrap.merging{z-index:72}.bubble-wrap.merging .bubble-core{animation:none;filter:brightness(1.08)}
+@keyframes agingPulse{from{transform:scale(1)}to{transform:scale(1.055)}}
 </style>
 </head>
 <body data-mode="basic">
@@ -168,7 +173,9 @@ const PHYSICS={
   maxSpeed:8.5,
   settleSpeed:.18,
   boundaryOffset:7,
-  mergeGap:5
+  mergeGap:5,
+  lifeSeekAt:.68,
+  lifeUrgentAt:.86
 };
 
 const state={
@@ -257,8 +264,48 @@ function radiusForUnit(unit){
   return mobile?20:22;
 }
 
+function particleValue100(p){
+  return Number.isFinite(p.value100)?p.value100:p.sign*p.unit;
+}
+
+function unitForValue(value100){
+  const a=Math.abs(value100);
+  if(a>=100)return 100;
+  if(a>=10)return 10;
+  if(a>0)return 1;
+  return 0;
+}
+
+function radiusForParticle(p){
+  const value=Math.abs(particleValue100(p));
+  const unit=unitForValue(value);
+  const base=radiusForUnit(unit);
+  const atomic=Math.max(1,value/Math.max(1,currentConfig().minUnit));
+  const extra=Math.min(innerWidth<=720?13:17,Math.log2(atomic+1)*(innerWidth<=720?2.6:3.2));
+  return base+extra;
+}
+
+function formatBubbleValue(value100){
+  if(value100===0)return"0";
+  const precision=value100%100===0?0:value100%10===0?1:2;
+  return(value100>0?"+":"−")+(Math.abs(value100)/100).toFixed(precision).replace(".",",");
+}
+
+function updateBubbleVisual(p){
+  const value=particleValue100(p);
+  const r=radiusForParticle(p);
+  p.sign=Math.sign(value);
+  p.unit=unitForValue(value);
+  p.el.classList.remove("unit-100","unit-10","unit-1","unit-0","positive","negative","neutral");
+  p.el.classList.add("unit-"+p.unit,p.sign>0?"positive":p.sign<0?"negative":"neutral");
+  p.core.textContent=formatBubbleValue(value);
+  p.core.style.width=(r*2)+"px";
+  p.core.style.height=(r*2)+"px";
+  p.core.style.fontSize=Math.max(10,Math.min(20,r*.55))+"px";
+}
+
 function massForParticle(p){
-  const r=radiusForUnit(p.unit);
+  const r=radiusForParticle(p);
   return Math.max(1,r*r);
 }
 
@@ -361,7 +408,7 @@ function seedLayout(pieces,center,availableWidth){
    VERİ MODELLERİ
    ========================================================= */
 function makeTerm(value100,opened=false,clusterId=null){
-  return{id:state.nextTermId++,value100,opened,opening:false,closing:false,openPromise:null,clusterId,card:null};
+  return{id:state.nextTermId++,value100,opened,opening:false,closing:false,openPromise:null,clusterId,card:null,openedAt:0};
 }
 
 function createCluster(termIds,anchor){
@@ -379,7 +426,7 @@ function ensureClusterBand(cluster){
   path.dataset.clusterId=String(cluster.id);
   path.addEventListener("click",event=>{
     event.stopPropagation();
-    handleClusterClick(cluster.id);
+    if(event.isTrusted)handleClusterClick(cluster.id,true);
   });
   clusterBandGroup.appendChild(path);
   cluster.band=path;
@@ -396,29 +443,53 @@ function deleteCluster(clusterId){
 /* =========================================================
    BALON OLUŞTUR
    ========================================================= */
-function createBubble(sign,unit,x,y,clusterId,termId){
+function createBubble(sign,unit,x,y,clusterId,termId,value100=sign*unit,lineageCount=1,lifeScale=1){
   const wrap=document.createElement("div");
-  wrap.className="bubble-wrap unit-"+unit+" "+(sign>0?"positive":sign<0?"negative":"neutral");
+  wrap.className="bubble-wrap";
   wrap.style.left=x+"px";
   wrap.style.top=y+"px";
 
   const core=document.createElement("div");
   core.className="bubble-core";
-  core.textContent=bubbleLabel(sign,unit);
   wrap.appendChild(core);
   stage.appendChild(wrap);
 
+  const now=performance.now();
   const particle={
-    id:state.nextParticleId++,sign,unit,clusterId,termId,x,y,vx:0,vy:0,alive:true,locked:false,splittable:false,el:wrap,core
+    id:state.nextParticleId++,
+    sign,
+    unit,
+    value100,
+    lineageCount,
+    clusterId,
+    termId,
+    x,
+    y,
+    vx:0,
+    vy:0,
+    birth:now,
+    lifeSpan:(1500+Math.random()*1500)*lifeScale,
+    seekingId:null,
+    alive:true,
+    locked:false,
+    splittable:false,
+    el:wrap,
+    core
   };
+
+  updateBubbleVisual(particle);
 
   core.addEventListener("click",event=>{
     event.stopPropagation();
-    onBubbleClick(particle);
+    if(event.isTrusted)onBubbleClick(particle,true);
   });
 
   state.particles.push(particle);
   return particle;
+}
+
+function createBubbleFromValue(value100,x,y,clusterId,termId,lineageCount=1,lifeScale=1){
+  return createBubble(Math.sign(value100),unitForValue(value100),x,y,clusterId,termId,value100,lineageCount,lifeScale);
 }
 
 function aliveParticles(){return state.particles.filter(p=>p.alive&&p.el.isConnected);}
@@ -466,7 +537,7 @@ function rubberBandPath(cluster){
   }
 
   for(const p of particles){
-    const r=radiusForUnit(p.unit)+offset;
+    const r=radiusForParticle(p)+offset;
     const count=p.unit===100?14:12;
     for(let i=0;i<count;i++){
       const a=Math.PI*2*i/count;
@@ -482,11 +553,11 @@ function clusterStats(cluster){
   let sx=0,sy=0,mass=0,rs=0;
   for(const p of particles){
     const m=massForParticle(p);
-    sx+=p.x*m;sy+=p.y*m;mass+=m;rs+=radiusForUnit(p.unit);
+    sx+=p.x*m;sy+=p.y*m;mass+=m;rs+=radiusForParticle(p);
   }
   const center={x:sx/mass,y:sy/mass};
   let radius=0;
-  for(const p of particles)radius=Math.max(radius,Math.hypot(p.x-center.x,p.y-center.y)+radiusForUnit(p.unit)+PHYSICS.boundaryOffset);
+  for(const p of particles)radius=Math.max(radius,Math.hypot(p.x-center.x,p.y-center.y)+radiusForParticle(p)+PHYSICS.boundaryOffset);
   return{center,mass,radius,avgRadius:rs/particles.length};
 }
 
@@ -511,12 +582,21 @@ function clampMagnitude(x,y,max){
   return{x:x/d*max,y:y/d*max};
 }
 
-function applyInternalForces(cluster,dt){
-  const particles=particlesInCluster(cluster.id).filter(p=>!p.locked&&p.unit!==0);
+function nearestParticleInCluster(source,clusterId){
+  let best=null,bestDistance=Infinity;
+  for(const other of particlesInCluster(clusterId)){
+    if(other.id===source.id||other.locked||!other.alive)continue;
+    const d=Math.hypot(other.x-source.x,other.y-source.y);
+    if(d<bestDistance){bestDistance=d;best=other;}
+  }
+  return best;
+}
+
+function applyInternalForces(cluster,dt,now=performance.now()){
+  const particles=particlesInCluster(cluster.id).filter(p=>!p.locked);
   if(!particles.length)return;
   const stats=clusterStats(cluster);
 
-  /* Elastik dış zarın içe doğru gerilimi + küme kohezyonu */
   for(const p of particles){
     const dx=stats.center.x-p.x;
     const dy=stats.center.y-p.y;
@@ -526,22 +606,40 @@ function applyInternalForces(cluster,dt){
     if(d>targetRadius)strength*=1+(d-targetRadius)/Math.max(40,targetRadius)*2.1;
     p.vx+=dx*strength*dt;
     p.vy+=dy*strength*dt;
+
+    const age=(now-p.birth)/Math.max(300,p.lifeSpan);
+    p.el.classList.toggle("aging",age>=PHYSICS.lifeSeekAt&&particles.length>1);
+
+    if(age>=PHYSICS.lifeSeekAt&&particles.length>1){
+      const nearest=nearestParticleInCluster(p,cluster.id);
+      p.seekingId=nearest?nearest.id:null;
+      p.el.classList.toggle("seeking",!!nearest);
+    }else{
+      p.seekingId=null;
+      p.el.classList.remove("seeking");
+    }
   }
 
-  /* Bütün balonlar birbirini çeker. */
   for(let i=0;i<particles.length;i++){
     const a=particles[i];
+
     for(let j=i+1;j<particles.length;j++){
       const b=particles[j];
-      let dx=b.x-a.x,dy=b.y-a.y;
+
+      let dx=b.x-a.x;
+      let dy=b.y-a.y;
       let d=Math.hypot(dx,dy);
+
       if(d<.01){dx=.01;dy=.01;d=.014;}
-      const ux=dx/d,uy=dy/d;
-      const contact=radiusForUnit(a.unit)+radiusForUnit(b.unit);
-      const sameSize=a.unit===b.unit;
+
+      const ux=dx/d;
+      const uy=dy/d;
+      const ra=radiusForParticle(a);
+      const rb=radiusForParticle(b);
+      const contact=ra+rb;
+      const sameSize=Math.abs(ra-rb)<3;
       const differentColor=a.sign!==0&&b.sign!==0&&a.sign!==b.sign;
 
-      /* Çakışma varsa kuvvetli elastik itme. */
       if(d<contact){
         const overlap=contact-d;
         const push=overlap*PHYSICS.overlapSpring*dt;
@@ -551,24 +649,38 @@ function applyInternalForces(cluster,dt){
         let multiplier=1;
         if(sameSize)multiplier*=PHYSICS.sameSizeMultiplier;
         if(differentColor)multiplier*=PHYSICS.oppositeColorMultiplier;
-        const range=Math.max(170,contact*5.5);
-        const falloff=1/(1+d/contact*.55);
-        const pull=PHYSICS.pairAttraction*multiplier*falloff*dt;
+
+        const falloff=1/(1+d/Math.max(16,contact)*.55);
+        let pull=PHYSICS.pairAttraction*multiplier*falloff*dt;
+
+        const ageA=(now-a.birth)/Math.max(300,a.lifeSpan);
+        const ageB=(now-b.birth)/Math.max(300,b.lifeSpan);
+
+        if(a.seekingId===b.id||b.seekingId===a.id){
+          const urgency=Math.max(ageA,ageB);
+          pull*=urgency>=PHYSICS.lifeUrgentAt?8:4.3;
+        }
+
         a.vx+=ux*pull*d*.12;a.vy+=uy*pull*d*.12;
         b.vx-=ux*pull*d*.12;b.vy-=uy*pull*d*.12;
 
-        /* Yakın balonlar birbirinin etrafından kayabilsin. */
         if(d<contact*1.42){
-          const sign=((a.id+b.id)&1)?1:-1;
-          const slide=PHYSICS.tangentialSlide*(1-(d-contact)/(contact*.42))*sign*dt;
+          const turn=((a.id+b.id)&1)?1:-1;
+          const slide=PHYSICS.tangentialSlide*(1-(d-contact)/(contact*.42))*turn*dt;
           a.vx+=-uy*slide*contact;a.vy+=ux*slide*contact;
-          b.vx-= -uy*slide*contact;b.vy-=ux*slide*contact;
+          b.vx-=-uy*slide*contact;b.vy-=ux*slide*contact;
         }
       }
 
-      /* Zıt renk ve aynı büyüklük temas edince patlar. */
-      if(differentColor&&sameSize&&d<=contact+1.5&&!a.locked&&!b.locked){
-        scheduleAnnihilation(a,b);
+      const ageA=(now-a.birth)/Math.max(300,a.lifeSpan);
+      const ageB=(now-b.birth)/Math.max(300,b.lifeSpan);
+      const lifeReady=
+        (ageA>=PHYSICS.lifeSeekAt&&a.seekingId===b.id)
+        ||
+        (ageB>=PHYSICS.lifeSeekAt&&b.seekingId===a.id);
+
+      if(lifeReady&&d<=contact+4&&!a.locked&&!b.locked){
+        scheduleLifeMerge(a,b);
       }
     }
   }
@@ -610,7 +722,7 @@ function directionalExtent(cluster,center,ux,uy){
   let extent=0;
   for(const p of particles){
     const projection=(p.x-center.x)*ux+(p.y-center.y)*uy;
-    extent=Math.max(extent,projection+radiusForUnit(p.unit)+PHYSICS.boundaryOffset);
+    extent=Math.max(extent,projection+radiusForParticle(p)+PHYSICS.boundaryOffset);
   }
   return extent;
 }
@@ -647,7 +759,7 @@ function applyCrossClusterBubbleAttraction(a,b,gap,dt){
     for(const y of pb){
       let dx=y.x-x.x,dy=y.y-x.y;
       const d=Math.max(1,Math.hypot(dx,dy));
-      const contact=radiusForUnit(x.unit)+radiusForUnit(y.unit);
+      const contact=radiusForParticle(x)+radiusForParticle(y);
       if(d>210)continue;
 
       const ux=dx/d,uy=dy/d;
@@ -750,7 +862,7 @@ function integrateParticles(dt){
     p.x+=p.vx*dt;
     p.y+=p.vy*dt;
 
-    const r=radiusForUnit(p.unit)+8;
+    const r=radiusForParticle(p)+8;
     p.x=Math.max(r,Math.min(stage.clientWidth-r,p.x));
     p.y=Math.max(190+r,Math.min(stage.clientHeight-125-r,p.y));
 
@@ -764,7 +876,7 @@ function physicsFrame(now){
   state.lastPhysicsTime=now;
 
   for(const cluster of state.clusters.values()){
-    applyInternalForces(cluster,dt);
+    applyInternalForces(cluster,dt,now);
     applyAnchorForce(cluster,dt);
   }
   applySeparateClusterRepulsion(dt);
@@ -798,37 +910,127 @@ function createBurst(x,y){
   setTimeout(()=>{if(burst.isConnected)burst.remove();},620);
 }
 
-function scheduleAnnihilation(a,b){
-  if(a.locked||b.locked||!a.alive||!b.alive)return;
+function scheduleLifeMerge(a,b){
+  if(a.locked||b.locked||!a.alive||!b.alive||a.clusterId!==b.clusterId)return;
   a.locked=b.locked=true;
-  annihilatePair(a,b);
+  a.el.classList.add("merging");
+  b.el.classList.add("merging");
+  lifeMergePair(a,b);
 }
 
-async function annihilatePair(a,b){
-  const target={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
-  const startA={x:a.x,y:a.y},startB={x:b.x,y:b.y};
-  const duration=170,started=performance.now();
+async function lifeMergePair(a,b){
+  const cluster=state.clusters.get(a.clusterId);
+  if(!cluster)return;
+
+  const startA={x:a.x,y:a.y};
+  const startB={x:b.x,y:b.y};
+  const ma=massForParticle(a);
+  const mb=massForParticle(b);
+  const totalMass=ma+mb;
+
+  const target={
+    x:(a.x*ma+b.x*mb)/Math.max(1,totalMass),
+    y:(a.y*ma+b.y*mb)/Math.max(1,totalMass)
+  };
+
+  const value=particleValue100(a)+particleValue100(b);
+  const lineage=(a.lineageCount||1)+(b.lineageCount||1);
+  const termId=a.termId===b.termId?a.termId:null;
+  const duration=190;
+  const started=performance.now();
 
   await new Promise(resolve=>{
     function frame(now){
       const t=Math.min(1,(now-started)/duration);
       const q=t*t;
-      a.x=startA.x+(target.x-startA.x)*q;a.y=startA.y+(target.y-startA.y)*q;
-      b.x=startB.x+(target.x-startB.x)*q;b.y=startB.y+(target.y-startB.y)*q;
-      if(a.el.isConnected){a.el.style.left=a.x+"px";a.el.style.top=a.y+"px";}
-      if(b.el.isConnected){b.el.style.left=b.x+"px";b.el.style.top=b.y+"px";}
-      if(t<1)requestAnimationFrame(frame);else resolve();
+
+      a.x=startA.x+(target.x-startA.x)*q;
+      a.y=startA.y+(target.y-startA.y)*q;
+      b.x=startB.x+(target.x-startB.x)*q;
+      b.y=startB.y+(target.y-startB.y)*q;
+
+      if(a.el.isConnected){
+        a.el.style.left=a.x+"px";
+        a.el.style.top=a.y+"px";
+      }
+
+      if(b.el.isConnected){
+        b.el.style.left=b.x+"px";
+        b.el.style.top=b.y+"px";
+      }
+
+      if(t<1)requestAnimationFrame(frame);
+      else resolve();
     }
+
     requestAnimationFrame(frame);
   });
 
   createBurst(target.x,target.y);
-  const vanish=p=>p.core.animate([{transform:"scale(1)",opacity:1},{transform:"scale(1.32)",opacity:1,offset:.22},{transform:"scale(.02)",opacity:0}],{duration:180,easing:"cubic-bezier(.25,.78,.35,1)",fill:"forwards"}).finished.catch(()=>{});
+
+  const vanish=p=>p.core.animate(
+    [
+      {transform:"scale(1)",opacity:1},
+      {transform:"scale(.08)",opacity:0}
+    ],
+    {
+      duration:120,
+      easing:"ease-in",
+      fill:"forwards"
+    }
+  ).finished.catch(()=>{});
+
   await Promise.all([vanish(a),vanish(b)]);
-  a.alive=b.alive=false;
+
+  a.alive=false;
+  b.alive=false;
+
   if(a.el.isConnected)a.el.remove();
   if(b.el.isConnected)b.el.remove();
+
+  const lifeScale=cluster.mode==="merged"?.58:.78;
+  const child=createBubbleFromValue(
+    value,
+    target.x,
+    target.y,
+    cluster.id,
+    termId,
+    lineage,
+    lifeScale
+  );
+
+  child.vx=(a.vx+b.vx)*.18;
+  child.vy=(a.vy+b.vy)*.18;
+
+  maybeLifeClusterResolved(cluster.id);
 }
+
+function maybeLifeClusterResolved(clusterId){
+  const cluster=state.clusters.get(clusterId);
+  if(!cluster)return;
+
+  const particles=particlesInCluster(clusterId);
+
+  if(particles.length!==1)return;
+
+  const only=particles[0];
+  only.el.classList.remove("aging","seeking","merging");
+  only.seekingId=null;
+
+  if(state.mergeInProgress&&state.mergedClusterId===clusterId){
+    checkMergeResolution();
+    return;
+  }
+
+  if(cluster.termIds.size===1){
+    setStatus(
+      "Bu kümenin balonları birleşti: <strong>"
+      +formatBubbleValue(particleValue100(only))
+      +"</strong>. İstersen başka bir sayı açabilirsin."
+    );
+  }
+}
+
 
 /* =========================================================
    KÜME SINIRLARINI BİRLEŞTİR
@@ -841,23 +1043,7 @@ function showJoinFlash(point){
   setTimeout(()=>{if(flash.isConnected)flash.remove();},520);
 }
 
-async function removeNeutralMarkersFromCluster(clusterId){
-  const particles=particlesInCluster(clusterId);
-  const hasRealBubble=particles.some(p=>p.unit!==0);
-  if(!hasRealBubble)return;
-
-  const neutrals=particles.filter(p=>p.unit===0);
-  for(const p of neutrals){
-    p.locked=true;
-    const animation=p.core.animate(
-      [{transform:"scale(1)",opacity:1},{transform:"scale(.12)",opacity:0}],
-      {duration:150,easing:"ease-in",fill:"forwards"}
-    );
-    try{await animation.finished}catch(_){ }
-    p.alive=false;
-    if(p.el.isConnected)p.el.remove();
-  }
-}
+async function removeNeutralMarkersFromCluster(clusterId){return;}
 
 function mergeBoundaryPairNow(a,b,contactPoint){
   if(!state.mergeInProgress||state.mergedClusterId!==null)return;
@@ -916,7 +1102,11 @@ function updateInteractionText(){
   if(state.mergeInProgress)return;
   const opened=openedTerms();
   if(opened.length===0)setStatus("İstediğin sayıyı aç.");
-  else if(state.clusters.size===1)setStatus("Tek küme açık. <strong>Kümeye veya bir balona tıklarsan kapanır.</strong> İstersen başka sayı açabilirsin.");
+  else if(state.clusters.size===1){
+    const cluster=[...state.clusters.values()][0];
+    if(cluster.termIds.size===1)setStatus("Tek sayı açık. <strong>Kümeye veya balonuna tıklarsan kapanır.</strong> Balonlar kendi yaşamlarını sürdürür.");
+    else setStatus("Ara sonuç kümesi açık. Kapalı sayı varsa onu da açabilirsin.");
+  }
   else if(unopenedTerms().length>0)setStatus(state.clusters.size+" küme açık. <strong>Bir kümeye tıklarsan açık kümeler birbirini çekmeye başlayacak.</strong>");
   else setStatus("Bütün sayılar açık. <strong>Bir kümeye tıkla:</strong> kümeler fiziksel olarak birleşecek ve sonuç otomatik olarak aşağı dolacak.");
 }
@@ -924,7 +1114,7 @@ function updateInteractionText(){
 async function openTerm(termId){
   const term=state.terms.find(t=>t.id===termId);
   if(!term||term.opened||term.opening||term.closing)return;
-  term.opened=true;term.opening=true;
+  term.opened=true;term.opening=true;term.openedAt=performance.now();
   const index=state.terms.findIndex(t=>t.id===termId);
   const source=elementCenterInStage(term.card);
   const anchor=termAnchor(index);
@@ -960,38 +1150,71 @@ async function openTerm(termId){
   await term.openPromise;
 }
 
-async function closeSingleCluster(clusterId){
+async function closeSingleCluster(clusterId,explicit=false){
+  if(!explicit)return;
+
   const cluster=state.clusters.get(clusterId);
-  if(!cluster||state.clusters.size!==1||state.mergeInProgress)return;
-  const termIds=[...cluster.termIds];
-  if(termIds.length!==1)return;
-  const term=state.terms.find(t=>t.id===termIds[0]);
+
+  if(
+    !cluster
+    ||
+    state.clusters.size!==1
+    ||
+    state.mergeInProgress
+    ||
+    cluster.termIds.size!==1
+  )return;
+
+  const termId=[...cluster.termIds][0];
+  const term=state.terms.find(t=>t.id===termId);
+
   if(!term)return;
+
+  /*
+      Kendi kendine kapanma bug'ına karşı:
+      kapanma yalnız gerçek kullanıcı tıklamasından gelir
+      ve açılmanın hemen ardından aynı olay zinciriyle tetiklenemez.
+  */
+  if(performance.now()-(term.openedAt||0)<650)return;
+
   if(term.openPromise)await term.openPromise;
+
   term.closing=true;
+
   const target=elementCenterInStage(term.card);
   const particles=particlesInCluster(cluster.id);
+
   for(const p of particles){
+    p.locked=true;
     p.vx=(target.x-p.x)*.10;
     p.vy=(target.y-p.y)*.10;
   }
+
   await sleep(430);
+
   for(const p of particles){
     p.alive=false;
     if(p.el.isConnected)p.el.remove();
   }
+
   deleteCluster(cluster.id);
-  term.opened=false;term.closing=false;term.clusterId=null;
+
+  term.opened=false;
+  term.closing=false;
+  term.clusterId=null;
   term.card.classList.remove("gone");
+
   updateInteractionText();
 }
 
-async function handleClusterClick(clusterId){
-  if(state.finalFlowing)return;
-  if(state.mergeInProgress)return;
+async function handleClusterClick(clusterId,explicit=false){
+  if(!explicit||state.finalFlowing||state.mergeInProgress)return;
   const cluster=state.clusters.get(clusterId);
   if(!cluster)return;
-  if(state.clusters.size===1){await closeSingleCluster(clusterId);return;}
+  if(state.clusters.size===1){
+    await closeSingleCluster(clusterId,true);
+    return;
+  }
   await beginClusterMerge([...state.clusters.values()]);
 }
 
@@ -1020,28 +1243,22 @@ function clearSplittable(){
 
 function checkMergeResolution(){
   if(!state.mergeInProgress||state.mergedClusterId===null||state.finalFlowing)return;
+
   const cluster=state.clusters.get(state.mergedClusterId);
-  if(!cluster)return;
-  if(performance.now()-cluster.joinedAt<700)return;
 
-  clearSplittable();
-  const particles=particlesInCluster(cluster.id).filter(p=>p.alive&&p.unit!==0);
-  const signs=new Set(particles.map(p=>p.sign));
+  if(!cluster||cluster.resolving)return;
 
-  if(signs.size<=1){
-    resolveMergedCluster(cluster);
-    return;
-  }
+  const particles=particlesInCluster(cluster.id).filter(p=>p.alive);
 
-  /* Farklı büyüklükte zıt balonlar kaldıysa parçalama pedagojisi devam eder. */
-  const minUnit=currentConfig().minUnit;
-  let marked=0;
-  for(const p of particles){
-    if(p.unit<=minUnit)continue;
-    const hasOppositeSmaller=particles.some(q=>q.sign===-p.sign&&q.unit<p.unit);
-    if(hasOppositeSmaller){p.splittable=true;p.el.classList.add("splittable");marked++;}
-  }
-  if(marked)setStatus("Zıt işaretliler farklı büyüklükte kaldı. <strong>Parlayan büyük balona tıkla.</strong>");
+  if(particles.length!==1)return;
+
+  cluster.resolving=true;
+
+  resolveMergedCluster(cluster)
+    .finally(()=>{
+      const still=state.clusters.get(cluster.id);
+      if(still)still.resolving=false;
+    });
 }
 
 function mergeValue100(){
@@ -1122,12 +1339,18 @@ async function splitBubble(p){
   setStatus("Büyük balon 10 küçük balona ayrıldı. Simülasyon yeniden denge arıyor…");
 }
 
-async function onBubbleClick(p){
-  if(p.splittable){await splitBubble(p);return;}
+async function onBubbleClick(p,explicit=false){
+  if(!explicit||state.finalFlowing)return;
+
   if(state.mergeInProgress)return;
+
   const cluster=state.clusters.get(p.clusterId);
-  if(cluster)await handleClusterClick(cluster.id);
+
+  if(cluster){
+    await handleClusterClick(cluster.id,true);
+  }
 }
+
 
 /* =========================================================
    SONUÇ KUTUSU
@@ -1135,7 +1358,7 @@ async function onBubbleClick(p){
 function getBottomFrameContactPoint(p){
   const sr=stage.getBoundingClientRect(),fr=resultFrame.getBoundingClientRect();
   const left=fr.left-sr.left,top=fr.top-sr.top,cx=left+fr.width/2;
-  const r=radiusForUnit(p.unit);
+  const r=radiusForParticle(p);
   const half=Math.max(12,fr.width/2-r*.75-10);
   const offset=Math.max(-half,Math.min(half,(p.x-cx)*.28));
   return{x:cx+offset,y:top-r*.72};
@@ -1167,37 +1390,56 @@ function fallToResult(p,startTime,duration,onImpact){
 
 async function flowFinalResult(cluster){
   if(state.finalFlowing)return;
-  state.finalFlowing=true;
-  const result=mergeValue100();
+
   const particles=particlesInCluster(cluster.id).filter(p=>p.alive);
+
+  if(particles.length!==1)return;
+
+  const resultBubble=particles[0];
+  const result=particleValue100(resultBubble);
+
+  state.finalFlowing=true;
+  resultBubble.locked=true;
+
   if(cluster.band)cluster.band.style.opacity="0";
+
+  setStatus(
+    "Bütün balonlar birleşti. Sonuç balonu: <strong>"
+    +formatBubbleValue(result)
+    +"</strong>."
+  );
+
+  /*
+      Çocuk son birleşmiş balonu kısa bir süre görsün.
+  */
+  await sleep(650);
+
   resultFrame.classList.add("show","gravity-active");
   counterValue.textContent="0";
-  await sleep(180);
 
-  const queue=particles.slice().sort((a,b)=>b.unit-a.unit||b.y-a.y);
-  let running=0,delay=0,previousUnit=queue[0]?.unit??0;
-  const stagger=queue.length<=8?115:queue.length<=16?92:queue.length<=28?76:62;
-  const base=performance.now()+35;
-  const jobs=[];
+  await sleep(160);
 
-  for(const p of queue){
-    p.locked=true;
-    if(p.unit!==previousUnit){delay+=140;previousUnit=p.unit;}
-    jobs.push(fallToResult(p,base+delay,320+Math.min(150,Math.max(0,getBottomFrameContactPoint(p).y-p.y)*.2),absorbed=>{
-      running+=absorbed.sign*absorbed.unit;
-      counterValue.textContent=formatCounter(running);
+  await fallToResult(
+    resultBubble,
+    performance.now()+20,
+    620,
+    ()=>{
+      counterValue.textContent=formatBubbleValue(result);
       counterBump();
-    }));
-    delay+=stagger;
-  }
+    }
+  );
 
-  await Promise.all(jobs);
-  counterValue.textContent=formatSigned(result);
+  counterValue.textContent=formatBubbleValue(result);
   counterBump();
   resultFrame.classList.remove("gravity-active");
-  setStatus("Sonuç: <strong>"+formatSigned(result)+"</strong>.");
+
+  setStatus(
+    "Sonuç: <strong>"
+    +formatBubbleValue(result)
+    +"</strong>."
+  );
 }
+
 
 /* =========================================================
    YENİ İŞLEM / RENDER
