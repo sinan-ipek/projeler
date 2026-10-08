@@ -10,17 +10,15 @@
   --text:#1d2433;
   --muted:#6f7787;
   --accent:#7c3aed;
-  --stage-gray:#e5e8ed;
-  --band-stroke:#8993a2;
+  --stage:#e5e8ed;
+  --band:#8993a2;
   --band-fill:rgba(255,255,255,.72);
   --shadow:0 18px 45px rgba(42,50,70,.12);
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
 body{
-  display:flex;
-  justify-content:center;
-  padding:24px;
+  display:flex;justify-content:center;padding:24px;
   font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
   color:var(--text);
   background:
@@ -45,37 +43,44 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
 .new-btn{margin-left:4px;color:var(--accent)}
 .home-btn{display:inline-flex;align-items:center;justify-content:center}
 .board{position:relative;min-height:680px;overflow:hidden;border:1px solid rgba(255,255,255,.72);border-radius:30px;background:rgba(255,255,255,.82);backdrop-filter:blur(14px);box-shadow:var(--shadow)}
-.stage{position:relative;width:100%;height:650px;overflow:hidden;background:radial-gradient(circle at 50% 18%,rgba(255,255,255,.44),transparent 34%),var(--stage-gray);transition:height .28s ease}
+.stage{position:relative;width:100%;height:650px;overflow:hidden;background:radial-gradient(circle at 50% 18%,rgba(255,255,255,.44),transparent 34%),var(--stage);transition:height .28s ease}
 .stage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(93,102,120,.03))}
-.soft-orb{position:absolute;width:340px;height:340px;border-radius:50%;filter:blur(30px);opacity:.08;pointer-events:none;z-index:0}
-.soft-orb.one{left:-100px;top:20px;background:#60a5fa}.soft-orb.two{right:-120px;bottom:10px;background:#c084fc}
 .settings-panel{position:absolute;top:14px;right:18px;z-index:100;display:grid;gap:7px;padding:8px 10px;border-radius:13px;background:rgba(255,255,255,.93);box-shadow:0 6px 18px rgba(40,48,67,.09);backdrop-filter:blur(8px)}
-.setting-row{display:grid;grid-template-columns:58px 116px;align-items:center;gap:8px;font-size:12px;font-weight:750;color:#4b5565}.setting-label{display:flex;align-items:center;justify-content:flex-end;gap:4px;white-space:nowrap}.setting-value{min-width:19px;text-align:right;color:var(--accent);font-variant-numeric:tabular-nums}.setting-slider{width:116px;accent-color:var(--accent);cursor:pointer}
+.setting-row{display:grid;grid-template-columns:58px 116px;align-items:center;gap:8px;font-size:12px;font-weight:750;color:#4b5565}
+.setting-label{display:flex;align-items:center;justify-content:flex-end;gap:4px;white-space:nowrap}.setting-value{min-width:19px;text-align:right;color:var(--accent);font-variant-numeric:tabular-nums}.setting-slider{width:116px;accent-color:var(--accent);cursor:pointer}
 .term-layer{position:absolute;inset:0;z-index:35;pointer-events:none}
 .term-card{position:absolute;top:148px;transform:translate(-50%,-50%);min-width:94px;padding:15px 16px;border:0;border-radius:18px;background:#fff;color:var(--text);font-size:clamp(24px,3vw,40px);font-weight:850;letter-spacing:-.04em;box-shadow:0 14px 30px rgba(30,38,56,.14);cursor:grab;z-index:45;pointer-events:auto;touch-action:none;transition:left .28s ease,transform .18s ease,opacity .25s ease,box-shadow .2s ease}
 .term-card:hover{transform:translate(-50%,-52%) scale(1.025)}.term-card.dragging{cursor:grabbing;z-index:90;transition:none;box-shadow:0 20px 40px rgba(30,38,56,.22)}.term-card.gone{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.72)}
 .dynamic-plus{position:absolute;top:148px;transform:translate(-50%,-50%);font-size:clamp(38px,4.8vw,60px);font-weight:500;color:#343b4b;opacity:.34;pointer-events:none;z-index:34}
 .band-layer{position:absolute;inset:0;width:100%;height:100%;z-index:8;overflow:visible;pointer-events:none}
-.cluster-band{fill:var(--band-fill);stroke:var(--band-stroke);stroke-width:2.4;vector-effect:non-scaling-stroke;filter:drop-shadow(0 5px 9px rgba(55,65,81,.10));pointer-events:visiblePainted;cursor:pointer;transition:stroke .18s ease,fill .18s ease,opacity .18s ease}
-.cluster-band.single{stroke:#7f8999}.cluster-band.mergeable{stroke:#70798a;filter:drop-shadow(0 5px 9px rgba(55,65,81,.10)) drop-shadow(0 0 7px rgba(124,58,237,.16))}.cluster-band.approaching{stroke:#6d65a8;fill:rgba(255,255,255,.78)}
-.band-join-flash{position:absolute;width:18px;height:18px;border-radius:50%;z-index:70;pointer-events:none;transform:translate(-50%,-50%) scale(.2);border:2px solid rgba(255,255,255,.98);box-shadow:0 0 0 2px rgba(124,58,237,.22),0 0 18px rgba(124,58,237,.45),0 0 32px rgba(255,255,255,.95);animation:bandJoin .44s ease-out forwards}
-.band-join-flash::after{content:"";position:absolute;inset:4px;border-radius:50%;background:#fff;box-shadow:0 0 14px #fff}
-@keyframes bandJoin{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.9)}}
-.bubble-wrap{position:absolute;transform:translate(-50%,-50%);z-index:18;will-change:left,top,transform,opacity}.bubble-core{display:grid;place-items:center;border-radius:999px;font-weight:850;letter-spacing:-.03em;border:1px solid rgba(255,255,255,.88);box-shadow:0 5px 12px rgba(35,45,70,.12),inset 0 1px 0 rgba(255,255,255,.82);user-select:none;-webkit-user-select:none;touch-action:manipulation;cursor:pointer;will-change:transform,filter,box-shadow}
-.bubble-wrap.unit-100 .bubble-core{width:60px;height:60px;font-size:21px}.bubble-wrap.unit-10 .bubble-core{width:46px;height:46px;font-size:15px}body[data-mode="medium"] .bubble-wrap.unit-10 .bubble-core{width:36px;height:36px;font-size:12px}.bubble-wrap.unit-1 .bubble-core{width:32px;height:32px;font-size:10px}.bubble-wrap.unit-0 .bubble-core{width:44px;height:44px;font-size:15px;color:#6b7280;background:linear-gradient(145deg,#f8fafc,#e5e7eb)}
-.bubble-wrap.positive .bubble-core{color:#1748a5;background:radial-gradient(circle at 35% 28%,#fff 0 9%,#edf6ff 22%,#d8eaff 74%,#c9def9 100%)}.bubble-wrap.negative .bubble-core{color:#a41436;background:radial-gradient(circle at 35% 28%,#fff 0 9%,#fff0f3 22%,#ffdce3 74%,#f7cbd5 100%)}
-.bubble-wrap.splittable .bubble-core{outline:3px solid rgba(124,58,237,.25);box-shadow:0 8px 18px rgba(124,58,237,.22);animation:splitPulse 1.15s ease-in-out infinite}@keyframes splitPulse{0%,100%{filter:saturate(1)}50%{filter:saturate(1.15) brightness(1.04)}}
-.annihilation-burst{position:absolute;width:0;height:0;pointer-events:none;z-index:80}.burst-core{position:absolute;left:0;top:0;width:20px;height:20px;transform:translate(-50%,-50%) scale(.1);border-radius:50%;background:radial-gradient(circle,#fff 0%,#fff 20%,#e6efff 35%,rgba(147,114,255,.65) 52%,rgba(124,58,237,.20) 69%,transparent 77%);box-shadow:0 0 18px rgba(255,255,255,1),0 0 34px rgba(124,58,237,.72);animation:burstCore .33s ease-out forwards}@keyframes burstCore{0%{transform:translate(-50%,-50%) scale(.15);opacity:.3}35%{transform:translate(-50%,-50%) scale(2);opacity:1}100%{transform:translate(-50%,-50%) scale(4);opacity:0}}
-.burst-ring{position:absolute;left:0;top:0;width:24px;height:24px;transform:translate(-50%,-50%) scale(.2);border-radius:50%;border:2px solid rgba(255,255,255,.95)}.burst-ring.one{animation:ringOne .38s ease-out forwards}.burst-ring.two{animation:ringTwo .48s .035s ease-out forwards}@keyframes ringOne{from{transform:translate(-50%,-50%) scale(.2);opacity:1}to{transform:translate(-50%,-50%) scale(3.2);opacity:0}}@keyframes ringTwo{from{transform:translate(-50%,-50%) scale(.2);opacity:.65}to{transform:translate(-50%,-50%) scale(4.8);opacity:0}}
-.burst-spark{position:absolute;left:-2.5px;top:-2.5px;width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 8px rgba(255,255,255,.95);animation:sparkFly .38s ease-out forwards}@keyframes sparkFly{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--sx),var(--sy)) scale(.1);opacity:0}}
-.result-frame{position:absolute;left:50%;bottom:20px;width:174px;height:96px;transform:translateX(-50%) scale(.58);opacity:0;border:2px solid rgba(124,58,237,.24);border-radius:25px;background:rgba(255,255,255,.98);box-shadow:0 16px 38px rgba(30,38,56,.18);pointer-events:none;z-index:95;transition:opacity .25s ease,transform .38s cubic-bezier(.16,1.08,.34,1),box-shadow .3s ease,border-color .3s ease}.result-frame.show{opacity:1;transform:translateX(-50%) scale(1)}.result-frame.gravity-active{border-color:rgba(124,58,237,.38);box-shadow:0 16px 38px rgba(30,38,56,.18),0 -5px 28px rgba(124,58,237,.10)}.counter-value{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(35px,5vw,55px);font-weight:900;letter-spacing:-.05em}.counter-value.bump{animation:counterBump .16s ease-out}@keyframes counterBump{0%{transform:scale(1)}45%{transform:scale(1.08)}100%{transform:scale(1)}}
-.statusbar{min-height:90px;border-top:1px solid rgba(42,50,70,.13);display:flex;align-items:center;justify-content:center;padding:18px 24px 22px;background:rgba(255,255,255,.86)}.status{margin:0;text-align:center;font-size:15px;line-height:1.45;color:var(--muted)}.status strong{color:var(--text)}
-@media(max-width:720px){body{padding:10px}.board{border-radius:22px}.settings-panel{top:10px;right:10px;padding:7px 8px}.setting-row{grid-template-columns:52px 90px;gap:6px;font-size:11px}.setting-slider{width:90px}.term-card{top:140px;min-width:70px;padding:12px 9px;font-size:clamp(20px,6vw,29px)}.dynamic-plus{top:140px;font-size:36px}.bubble-wrap.unit-100 .bubble-core{width:52px;height:52px;font-size:18px}.bubble-wrap.unit-10 .bubble-core{width:41px;height:41px;font-size:14px}body[data-mode="medium"] .bubble-wrap.unit-10 .bubble-core{width:32px;height:32px;font-size:11px}.bubble-wrap.unit-1 .bubble-core{width:28px;height:28px;font-size:9px}.bubble-wrap.unit-0 .bubble-core{width:40px;height:40px;font-size:14px}.result-frame{width:158px;height:84px;bottom:18px}}
-
+.cluster-band{fill:var(--band-fill);stroke:var(--band);stroke-width:2.4;vector-effect:non-scaling-stroke;filter:drop-shadow(0 5px 9px rgba(55,65,81,.10));pointer-events:visiblePainted;cursor:pointer;transition:stroke .18s ease,fill .18s ease,opacity .18s ease}
+.cluster-band.single{stroke:#7f8999}.cluster-band.mergeable{stroke:#6d65a8;fill:rgba(255,255,255,.78);filter:drop-shadow(0 5px 9px rgba(55,65,81,.10)) drop-shadow(0 0 7px rgba(124,58,237,.16))}
+.band-join-flash,.merge-flash{position:absolute;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%) scale(.2);z-index:80;border:2px solid rgba(255,255,255,.98);box-shadow:0 0 0 2px rgba(124,58,237,.22),0 0 18px rgba(124,58,237,.45),0 0 32px rgba(255,255,255,.95);animation:flash .46s ease-out forwards}
+.band-join-flash{width:18px;height:18px}.merge-flash{width:24px;height:24px}
+@keyframes flash{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}100%{opacity:0;transform:translate(-50%,-50%) scale(3)}}
+.bubble-wrap{position:absolute;transform:translate(-50%,-50%);z-index:18;will-change:left,top,transform,opacity}
+.bubble-core{display:grid;place-items:center;border-radius:999px;font-weight:850;letter-spacing:-.03em;border:1px solid rgba(255,255,255,.88);box-shadow:0 5px 12px rgba(35,45,70,.12),inset 0 1px 0 rgba(255,255,255,.82);user-select:none;-webkit-user-select:none;touch-action:manipulation;cursor:pointer;will-change:transform,filter,box-shadow;width:var(--diameter);height:var(--diameter);font-size:var(--font-size);transition:width .18s ease,height .18s ease,font-size .18s ease,background .2s ease,color .2s ease}
+.bubble-wrap.positive .bubble-core{color:#1748a5;background:radial-gradient(circle at 35% 28%,#fff 0 9%,#edf6ff 22%,#d8eaff 74%,#c9def9 100%)}
+.bubble-wrap.negative .bubble-core{color:#a41436;background:radial-gradient(circle at 35% 28%,#fff 0 9%,#fff0f3 22%,#ffdce3 74%,#f7cbd5 100%)}
+.bubble-wrap.neutral .bubble-core{color:#616977;background:radial-gradient(circle at 35% 28%,#fff 0 9%,#f7f8fa 28%,#dde1e7 100%)}
 .bubble-wrap.aging .bubble-core{animation:agingPulse .62s ease-in-out infinite alternate;filter:saturate(1.08)}
 .bubble-wrap.seeking .bubble-core{box-shadow:0 0 0 4px rgba(124,58,237,.08),0 0 19px rgba(124,58,237,.23),inset 0 1px 0 rgba(255,255,255,.82)}
+.bubble-wrap.splittable .bubble-core{
+  outline:3px solid rgba(124,58,237,.30);
+  box-shadow:0 0 0 5px rgba(124,58,237,.07),0 0 24px rgba(124,58,237,.28),inset 0 1px 0 rgba(255,255,255,.82);
+  animation:splitPulse 1.0s ease-in-out infinite alternate;
+}
+@keyframes splitPulse{from{transform:scale(1)}to{transform:scale(1.07)}}
 .bubble-wrap.merging{z-index:72}.bubble-wrap.merging .bubble-core{animation:none;filter:brightness(1.08)}
+.bubble-wrap.final-result{z-index:88}
+.bubble-wrap.final-result .bubble-core{
+  box-shadow:0 0 0 6px rgba(124,58,237,.09),0 0 32px rgba(124,58,237,.30),inset 0 1px 0 rgba(255,255,255,.9);
+  animation:finalResultPulse 1.35s ease-in-out infinite alternate;
+}
+@keyframes finalResultPulse{from{transform:scale(1)}to{transform:scale(1.075)}}
 @keyframes agingPulse{from{transform:scale(1)}to{transform:scale(1.055)}}
+.statusbar{min-height:90px;border-top:1px solid rgba(42,50,70,.13);display:flex;align-items:center;justify-content:center;padding:18px 24px 22px;background:rgba(255,255,255,.86)}.status{margin:0;text-align:center;font-size:15px;line-height:1.45;color:var(--muted)}.status strong{color:var(--text)}
+@media(max-width:720px){body{padding:10px}.board{border-radius:22px}.settings-panel{top:10px;right:10px;padding:7px 8px}.setting-row{grid-template-columns:52px 90px;gap:6px;font-size:11px}.setting-slider{width:90px}.term-card{top:140px;min-width:70px;padding:12px 9px;font-size:clamp(20px,6vw,29px)}.dynamic-plus{top:140px;font-size:36px}}
 </style>
 </head>
 <body data-mode="basic">
@@ -83,7 +88,7 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
   <div class="topbar">
     <div class="titlebox">
       <h1>Bulutlarla Toplama</h1>
-      <p>Baloncuklar birbirini çeker; zıt işaretliler temas edince yok olur.</p>
+      <p>Baloncuklar fiziksel olarak etkileşir; sayısal birleşme yalnız sonuç aşamasında gerçekleşir.</p>
     </div>
     <div class="controls">
       <a class="home-btn" href="../index.html">Home</a>
@@ -96,9 +101,6 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
 
   <div class="board" id="board">
     <div class="stage" id="stage">
-      <div class="soft-orb one"></div>
-      <div class="soft-orb two"></div>
-
       <div class="settings-panel" id="settingsPanel">
         <div class="setting-row">
           <span class="setting-label">a = <span class="setting-value" id="aValue">20</span></span>
@@ -110,20 +112,10 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
         </div>
       </div>
 
-      <svg class="band-layer" id="bandLayer" aria-hidden="true">
-        <g id="clusterBandGroup"></g>
-      </svg>
-
+      <svg class="band-layer" id="bandLayer" aria-hidden="true"><g id="clusterBandGroup"></g></svg>
       <div class="term-layer" id="termLayer"></div>
-
-      <div class="result-frame" id="resultFrame">
-        <div class="counter-value" id="counterValue">0</div>
-      </div>
     </div>
-
-    <div class="statusbar">
-      <p class="status" id="status"></p>
-    </div>
+    <div class="statusbar"><p class="status" id="status"></p></div>
   </div>
 </div>
 
@@ -131,15 +123,10 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
 (() => {
 "use strict";
 
-/* =========================================================
-   DOM
-   ========================================================= */
 const stage=document.getElementById("stage");
 const board=document.getElementById("board");
 const termLayer=document.getElementById("termLayer");
 const clusterBandGroup=document.getElementById("clusterBandGroup");
-const resultFrame=document.getElementById("resultFrame");
-const counterValue=document.getElementById("counterValue");
 const statusEl=document.getElementById("status");
 const newBtn=document.getElementById("newBtn");
 const settingsPanel=document.getElementById("settingsPanel");
@@ -149,9 +136,6 @@ const countSlider=document.getElementById("countSlider");
 const countValue=document.getElementById("countValue");
 const levelButtons=[...document.querySelectorAll(".level-btn")];
 
-/* =========================================================
-   SABİTLER
-   ========================================================= */
 const LEVELS={
   basic:{precision:0,minUnit:100},
   medium:{precision:1,minUnit:10},
@@ -159,19 +143,18 @@ const LEVELS={
 };
 
 const PHYSICS={
-  damping:.89,
-  centerCohesion:.00115,
-  pairAttraction:.00115,
+  damping:.91,
+  centerCohesion:.00055,
+  attraction:.00068,
   sameSizeMultiplier:1.75,
-  oppositeColorMultiplier:2.65,
+  oppositeSignMultiplier:2.55,
   overlapSpring:.075,
-  nearContactSpring:.012,
-  tangentialSlide:.0017,
-  clusterAttraction:.022,
-  clusterAttractionMax:.38,
-  clusterRepulsion:.035,
-  maxSpeed:8.5,
-  settleSpeed:.18,
+  nearContactSpring:.010,
+  tangentialSlide:.0019,
+  clusterAttraction:.023,
+  clusterAttractionMax:.40,
+  clusterRepulsion:.032,
+  maxSpeed:8.8,
   boundaryOffset:7,
   mergeGap:5,
   lifeSeekAt:.68,
@@ -184,19 +167,21 @@ const state={
   operandCount:2,
   terms:[],
   clusters:new Map(),
-  particles:[],
+  bubbles:[],
   nextTermId:1,
   nextClusterId:1,
-  nextParticleId:1,
+  nextBubbleId:1,
   mergeInProgress:false,
   mergeClusterIds:[],
   mergedClusterId:null,
-  mergeTermIds:[],
   drag:null,
   generation:0,
   lastPhysicsTime:performance.now(),
+  finalAggregation:false,
+  finalDone:false,
+  finalClusterId:null,
   resolutionCheckAt:0,
-  finalFlowing:false
+  explicitCloseArmedAt:0
 };
 
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -205,19 +190,14 @@ const randomSign=()=>Math.random()<.5?-1:1;
 const currentConfig=()=>LEVELS[state.level];
 const setStatus=html=>statusEl.innerHTML=html;
 
-/* =========================================================
-   SAYI / FORMAT
-   ========================================================= */
 function generateValue100(){
   const a=Math.max(5,Math.min(50,state.limitA));
   if(state.level==="basic")return randomSign()*randomInt(1,a-1)*100;
   if(state.level==="medium"){
-    let n;
-    do{n=randomInt(1,a*10-1)}while(n%10===0);
+    let n;do{n=randomInt(1,a*10-1)}while(n%10===0);
     return randomSign()*n*10;
   }
-  let n;
-  do{n=randomInt(1,a*100-1)}while(n%10===0);
+  let n;do{n=randomInt(1,a*100-1)}while(n%10===0);
   return randomSign()*n;
 }
 
@@ -226,92 +206,45 @@ function formatSigned(value100,precision=currentConfig().precision){
   return(value100>0?"+":"−")+(Math.abs(value100)/100).toFixed(precision).replace(".",",");
 }
 
-function formatCounter(value100){
+function formatBubbleValue(value100){
   if(value100===0)return"0";
-  const precision=value100%100===0?0:value100%10===0?1:2;
-  return(value100>0?"+":"−")+(Math.abs(value100)/100).toFixed(precision).replace(".",",");
-}
-
-function bubbleLabel(sign,unit){
-  if(unit===0)return"0";
-  const s=sign>0?"+":"−";
-  return unit===100?s+"1":unit===10?s+"0,1":s+"0,01";
+  const p=value100%100===0?0:value100%10===0?1:2;
+  return(value100>0?"+":"−")+(Math.abs(value100)/100).toFixed(p).replace(".",",");
 }
 
 function decomposeValue(value100){
-  if(value100===0)return[{sign:0,unit:0}];
+  if(value100===0)return[0];
   const sign=value100>0?1:-1;
-  const pieces=[];
+  const out=[];
   let rest=Math.abs(value100);
-  const ones=Math.floor(rest/100);
-  rest%=100;
-  const tenths=Math.floor(rest/10);
-  const hundredths=rest%10;
-  for(let i=0;i<ones;i++)pieces.push({sign,unit:100});
-  for(let i=0;i<tenths;i++)pieces.push({sign,unit:10});
-  for(let i=0;i<hundredths;i++)pieces.push({sign,unit:1});
-  return pieces;
+  const ones=Math.floor(rest/100);rest%=100;
+  const tenths=Math.floor(rest/10);const hundredths=rest%10;
+  for(let i=0;i<ones;i++)out.push(sign*100);
+  for(let i=0;i<tenths;i++)out.push(sign*10);
+  for(let i=0;i<hundredths;i++)out.push(sign);
+  return out;
 }
 
-function radiusForUnit(unit){
+function bubbleRadius(value100){
   const mobile=innerWidth<=720;
-  if(unit===100)return mobile?26:30;
-  if(unit===10){
-    if(state.level==="medium")return mobile?16:18;
-    return mobile?20.5:23;
-  }
-  if(unit===1)return mobile?14:16;
-  return mobile?20:22;
-}
-
-function particleValue100(p){
-  return Number.isFinite(p.value100)?p.value100:p.sign*p.unit;
-}
-
-function unitForValue(value100){
   const a=Math.abs(value100);
-  if(a>=100)return 100;
-  if(a>=10)return 10;
-  if(a>0)return 1;
-  return 0;
-}
-
-function radiusForParticle(p){
-  const value=Math.abs(particleValue100(p));
-  const unit=unitForValue(value);
-  const base=radiusForUnit(unit);
-  const atomic=Math.max(1,value/Math.max(1,currentConfig().minUnit));
-  const extra=Math.min(innerWidth<=720?13:17,Math.log2(atomic+1)*(innerWidth<=720?2.6:3.2));
+  let base;
+  if(a>=100)base=mobile?25:29;
+  else if(a>=10)base=mobile?19:22;
+  else if(a>0)base=mobile?14:16;
+  else base=mobile?19:21;
+  const unitCount=Math.max(1,a/Math.max(1,currentConfig().minUnit));
+  const extra=Math.min(mobile?13:17,Math.log2(unitCount+1)*(mobile?2.6:3.2));
   return base+extra;
 }
 
-function formatBubbleValue(value100){
-  if(value100===0)return"0";
-  const precision=value100%100===0?0:value100%10===0?1:2;
-  return(value100>0?"+":"−")+(Math.abs(value100)/100).toFixed(precision).replace(".",",");
+function bubbleFontSize(value100){
+  const r=bubbleRadius(value100);
+  return Math.max(10,Math.min(20,r*.55));
 }
 
-function updateBubbleVisual(p){
-  const value=particleValue100(p);
-  const r=radiusForParticle(p);
-  p.sign=Math.sign(value);
-  p.unit=unitForValue(value);
-  p.el.classList.remove("unit-100","unit-10","unit-1","unit-0","positive","negative","neutral");
-  p.el.classList.add("unit-"+p.unit,p.sign>0?"positive":p.sign<0?"negative":"neutral");
-  p.core.textContent=formatBubbleValue(value);
-  p.core.style.width=(r*2)+"px";
-  p.core.style.height=(r*2)+"px";
-  p.core.style.fontSize=Math.max(10,Math.min(20,r*.55))+"px";
-}
+function bubbleMass(b){const r=bubbleRadius(b.value100);return Math.max(1,r*r)}
 
-function massForParticle(p){
-  const r=radiusForParticle(p);
-  return Math.max(1,r*r);
-}
-
-/* =========================================================
-   TERİM KONUMLARI / SAHNE
-   ========================================================= */
 function getCenterRatios(count){
   if(count===1)return[.5];
   if(count===2)return[.28,.72];
@@ -319,1254 +252,803 @@ function getCenterRatios(count){
   return[.10,.365,.635,.90];
 }
 
-function termSegmentWidth(){
-  return Math.max(78,stage.clientWidth/Math.max(1,state.terms.length)-28);
-}
+function termSegmentWidth(){return Math.max(82,stage.clientWidth/Math.max(1,state.terms.length)-30)}
+function termAnchor(index){const count=Math.max(1,state.terms.length),segment=stage.clientWidth/count;return{x:(index+.5)*segment,y:285}}
+function calculateStageHeight(){return innerWidth<=720?650:680}
+function elementCenterInStage(el){const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect();return{x:r.left+r.width/2-s.left,y:r.top+r.height/2-s.top}}
 
-function seedColumnsForTerm(term){
-  const r=30;
-  return Math.max(2,Math.floor(termSegmentWidth()/(r*2)));
-}
-
-function estimateSeedHeight(term){
-  const pieces=decomposeValue(term.value100);
-  const columns=seedColumnsForTerm(term);
-  let rows=0;
-  for(const unit of[100,10,1,0]){
-    const count=pieces.filter(p=>p.unit===unit).length;
-    if(count)rows+=Math.ceil(count/columns)+1;
-  }
-  return Math.max(70,rows*52);
-}
-
-function calculateStageHeight(){
-  let maxH=100;
-  for(const term of state.terms)maxH=Math.max(maxH,estimateSeedHeight(term));
-  return Math.max(650,230+maxH+230);
-}
-
-function termAnchor(index){
-  const count=Math.max(1,state.terms.length);
-  const segment=stage.clientWidth/count;
-  const term=state.terms[index];
-  return{x:(index+.5)*segment,y:220+estimateSeedHeight(term)/2};
-}
-
-function elementCenterInStage(element){
-  const sr=stage.getBoundingClientRect();
-  const r=element.getBoundingClientRect();
-  return{x:r.left+r.width/2-sr.left,y:r.top+r.height/2-sr.top};
-}
-
-/* =========================================================
-   İLK DOĞUŞ İÇİN PETEK TOHUMU
-   Sonraki hareketleri fizik belirler.
-   ========================================================= */
-function seedLayout(pieces,center,availableWidth){
-  const points=new Array(pieces.length);
-  let cursorY=0;
-  const groups=[];
-
-  for(const unit of[100,10,1,0]){
-    const entries=pieces.map((piece,index)=>({piece,index})).filter(e=>e.piece.unit===unit);
-    if(!entries.length)continue;
-    const r=radiusForUnit(unit);
-    const diameter=2*r;
-    const rowH=Math.sqrt(3)*r;
-    const cols=Math.max(1,Math.floor(Math.max(diameter,availableWidth-r)/diameter));
-    const local=[];
-    let cursor=0,row=0;
-    while(cursor<entries.length){
-      const take=Math.min(cols,entries.length-cursor);
-      const shift=row%2?r:0;
-      for(let col=0;col<take;col++){
-        local.push({entry:entries[cursor++],x:col*diameter+shift,y:row*rowH,r});
-      }
-      row++;
-    }
-    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
-    for(const p of local){
-      minX=Math.min(minX,p.x-p.r);maxX=Math.max(maxX,p.x+p.r);
-      minY=Math.min(minY,p.y-p.r);maxY=Math.max(maxY,p.y+p.r);
-    }
-    const w=maxX-minX,h=maxY-minY;
-    for(const p of local){p.x-=minX+w/2;p.y-=minY;}
-    groups.push({local,w,h,top:cursorY});
-    cursorY+=h+12;
-  }
-
-  const totalH=Math.max(0,cursorY-12);
-  for(const group of groups){
-    for(const p of group.local){
-      points[p.entry.index]={x:center.x+p.x,y:center.y-totalH/2+group.top+p.y};
+function seedLayout(values,center,width){
+  const points=[];
+  const radii=values.map(v=>bubbleRadius(v));
+  const maxR=Math.max(...radii,20);
+  const dx=maxR*2;
+  const dy=Math.sqrt(3)*maxR;
+  const cols=Math.max(1,Math.floor(Math.max(dx,width-maxR)/dx));
+  const rows=Math.ceil(values.length/cols);
+  const totalH=Math.max(maxR*2,(rows-1)*dy+maxR*2);
+  let cursor=0;
+  for(let row=0;row<rows;row++){
+    const take=Math.min(cols,values.length-cursor);
+    const rowW=(take-1)*dx+(row%2?maxR:0);
+    const startX=center.x-rowW/2;
+    for(let col=0;col<take;col++){
+      points[cursor++]={x:startX+col*dx+(row%2?maxR:0),y:center.y-totalH/2+maxR+row*dy};
     }
   }
   return points;
 }
 
-/* =========================================================
-   VERİ MODELLERİ
-   ========================================================= */
-function makeTerm(value100,opened=false,clusterId=null){
-  return{id:state.nextTermId++,value100,opened,opening:false,closing:false,openPromise:null,clusterId,card:null,openedAt:0};
-}
-
-function createCluster(termIds,anchor){
-  const id=state.nextClusterId++;
-  const cluster={id,termIds:new Set(termIds),anchor:{...anchor},mode:"free",band:null,joinedAt:0};
-  state.clusters.set(id,cluster);
-  ensureClusterBand(cluster);
-  return cluster;
-}
-
-function ensureClusterBand(cluster){
-  if(cluster.band&&cluster.band.isConnected)return cluster.band;
-  const path=document.createElementNS("http://www.w3.org/2000/svg","path");
-  path.setAttribute("class","cluster-band");
-  path.dataset.clusterId=String(cluster.id);
-  path.addEventListener("click",event=>{
-    event.stopPropagation();
-    if(event.isTrusted)handleClusterClick(cluster.id,true);
-  });
-  clusterBandGroup.appendChild(path);
-  cluster.band=path;
-  return path;
-}
-
-function deleteCluster(clusterId){
-  const cluster=state.clusters.get(clusterId);
-  if(!cluster)return;
-  if(cluster.band&&cluster.band.isConnected)cluster.band.remove();
-  state.clusters.delete(clusterId);
-}
-
-/* =========================================================
-   BALON OLUŞTUR
-   ========================================================= */
-function createBubble(sign,unit,x,y,clusterId,termId,value100=sign*unit,lineageCount=1,lifeScale=1){
-  const wrap=document.createElement("div");
-  wrap.className="bubble-wrap";
-  wrap.style.left=x+"px";
-  wrap.style.top=y+"px";
-
-  const core=document.createElement("div");
-  core.className="bubble-core";
-  wrap.appendChild(core);
-  stage.appendChild(wrap);
-
-  const now=performance.now();
-  const particle={
-    id:state.nextParticleId++,
-    sign,
-    unit,
-    value100,
-    lineageCount,
-    clusterId,
-    termId,
-    x,
-    y,
-    vx:0,
-    vy:0,
-    birth:now,
-    lifeSpan:(1500+Math.random()*1500)*lifeScale,
-    seekingId:null,
-    alive:true,
-    locked:false,
-    splittable:false,
-    el:wrap,
-    core
-  };
-
-  updateBubbleVisual(particle);
-
-  core.addEventListener("click",event=>{
-    event.stopPropagation();
-    if(event.isTrusted)onBubbleClick(particle,true);
-  });
-
-  state.particles.push(particle);
-  return particle;
-}
-
-function createBubbleFromValue(value100,x,y,clusterId,termId,lineageCount=1,lifeScale=1){
-  return createBubble(Math.sign(value100),unitForValue(value100),x,y,clusterId,termId,value100,lineageCount,lifeScale);
-}
-
-function aliveParticles(){return state.particles.filter(p=>p.alive&&p.el.isConnected);}
-function particlesInCluster(clusterId){return aliveParticles().filter(p=>p.clusterId===clusterId);}
-function openedTerms(){return state.terms.filter(t=>t.opened);}
-function unopenedTerms(){return state.terms.filter(t=>!t.opened);}
-function openClusters(){return [...state.clusters.values()].filter(c=>[...c.termIds].some(id=>state.terms.some(t=>t.id===id&&t.opened)));}
-
-/* =========================================================
-   LASTİK BANT — GERÇEK DIŞ ZARF
-   ========================================================= */
-function cross(o,a,b){return(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);}
-
+function cross(o,a,b){return(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x)}
 function convexHull(points){
   if(points.length<=2)return points.slice();
   const sorted=points.slice().sort((a,b)=>a.x===b.x?a.y-b.y:a.x-b.x);
-  const lower=[];
-  for(const p of sorted){while(lower.length>=2&&cross(lower[lower.length-2],lower[lower.length-1],p)<=0)lower.pop();lower.push(p);}
-  const upper=[];
-  for(let i=sorted.length-1;i>=0;i--){const p=sorted[i];while(upper.length>=2&&cross(upper[upper.length-2],upper[upper.length-1],p)<=0)upper.pop();upper.push(p);}
-  lower.pop();upper.pop();
-  return lower.concat(upper);
+  const lower=[];for(const p of sorted){while(lower.length>=2&&cross(lower[lower.length-2],lower[lower.length-1],p)<=0)lower.pop();lower.push(p)}
+  const upper=[];for(let i=sorted.length-1;i>=0;i--){const p=sorted[i];while(upper.length>=2&&cross(upper[upper.length-2],upper[upper.length-1],p)<=0)upper.pop();upper.push(p)}
+  lower.pop();upper.pop();return lower.concat(upper);
 }
-
 function smoothClosedPath(points){
   if(!points.length)return"";
-  const mids=points.map((p,i)=>{const n=points[(i+1)%points.length];return{x:(p.x+n.x)/2,y:(p.y+n.y)/2};});
+  if(points.length===1)return`M ${points[0].x} ${points[0].y}`;
+  const mids=points.map((p,i)=>{const n=points[(i+1)%points.length];return{x:(p.x+n.x)/2,y:(p.y+n.y)/2}});
   let d=`M ${mids[mids.length-1].x.toFixed(2)} ${mids[mids.length-1].y.toFixed(2)}`;
   for(let i=0;i<points.length;i++)d+=` Q ${points[i].x.toFixed(2)} ${points[i].y.toFixed(2)} ${mids[i].x.toFixed(2)} ${mids[i].y.toFixed(2)}`;
   return d+" Z";
 }
-
-function rubberBandPath(cluster){
-  const particles=particlesInCluster(cluster.id);
-  const samples=[];
-  const offset=PHYSICS.boundaryOffset;
-
-  if(!particles.length){
-    const r=30;
-    for(let i=0;i<18;i++){
-      const a=Math.PI*2*i/18;
-      samples.push({x:cluster.anchor.x+Math.cos(a)*r,y:cluster.anchor.y+Math.sin(a)*r});
-    }
-    return smoothClosedPath(samples);
+function rubberBandPath(bubbles,fallback){
+  if(!bubbles.length){
+    if(!fallback)return"";
+    const pts=[];for(let i=0;i<18;i++){const a=Math.PI*2*i/18;pts.push({x:fallback.x+Math.cos(a)*31,y:fallback.y+Math.sin(a)*31})}
+    return smoothClosedPath(pts);
   }
-
-  for(const p of particles){
-    const r=radiusForParticle(p)+offset;
-    const count=p.unit===100?14:12;
-    for(let i=0;i<count;i++){
-      const a=Math.PI*2*i/count;
-      samples.push({x:p.x+Math.cos(a)*r,y:p.y+Math.sin(a)*r});
-    }
+  const samples=[];
+  for(const b of bubbles){
+    const r=bubbleRadius(b.value100)+PHYSICS.boundaryOffset;
+    for(let i=0;i<14;i++){const a=Math.PI*2*i/14;samples.push({x:b.x+Math.cos(a)*r,y:b.y+Math.sin(a)*r})}
   }
   return smoothClosedPath(convexHull(samples));
 }
 
+function makeTerm(value100){return{id:state.nextTermId++,value100,opened:false,opening:false,closing:false,openPromise:null,card:null,clusterId:null,openedAt:0}}
+
+function createCluster(termIds,anchor){
+  const id=state.nextClusterId++;
+  const band=document.createElementNS("http://www.w3.org/2000/svg","path");
+  band.setAttribute("class","cluster-band");
+  band.dataset.clusterId=String(id);
+  band.addEventListener("click",e=>{e.stopPropagation();if(e.isTrusted)handleClusterClick(id,true)});
+  clusterBandGroup.appendChild(band);
+  const cluster={id,termIds:new Set(termIds),anchor:{...anchor},band,mode:"free",createdAt:performance.now()};
+  state.clusters.set(id,cluster);
+  return cluster;
+}
+
+function deleteCluster(id){const c=state.clusters.get(id);if(c?.band?.isConnected)c.band.remove();state.clusters.delete(id)}
+function aliveBubbles(){return state.bubbles.filter(b=>b.alive&&b.el.isConnected)}
+function bubblesInCluster(id){return aliveBubbles().filter(b=>b.clusterId===id)}
+function openedTerms(){return state.terms.filter(t=>t.opened)}
+function unopenedTerms(){return state.terms.filter(t=>!t.opened)}
+
+function updateBubbleVisual(b){
+  const r=bubbleRadius(b.value100);
+  b.el.style.setProperty("--diameter",`${r*2}px`);
+  b.el.style.setProperty("--font-size",`${bubbleFontSize(b.value100)}px`);
+  b.core.textContent=formatBubbleValue(b.value100);
+  b.el.classList.toggle("positive",b.value100>0);
+  b.el.classList.toggle("negative",b.value100<0);
+  b.el.classList.toggle("neutral",b.value100===0);
+}
+
+function createBubble(value100,x,y,clusterId,termId,lineageCount=1,lifeScale=1){
+  const wrap=document.createElement("div");wrap.className="bubble-wrap";wrap.style.left=x+"px";wrap.style.top=y+"px";
+  const core=document.createElement("div");core.className="bubble-core";wrap.appendChild(core);stage.appendChild(wrap);
+  const now=performance.now();
+  const baseLife=1500+Math.random()*1500;
+  const b={id:state.nextBubbleId++,el:wrap,core,value100,x,y,vx:0,vy:0,clusterId,termId,lineageCount,birth:now,lifeSpan:baseLife*lifeScale,alive:true,locked:false,seekingId:null,lastTargetAt:0};
+  updateBubbleVisual(b);
+  core.addEventListener("click",e=>{e.stopPropagation();if(e.isTrusted)onBubbleClick(b,true)});
+  state.bubbles.push(b);
+  return b;
+}
+
 function clusterStats(cluster){
-  const particles=particlesInCluster(cluster.id);
-  if(!particles.length)return{center:{...cluster.anchor},mass:1,radius:30,avgRadius:30};
-  let sx=0,sy=0,mass=0,rs=0;
-  for(const p of particles){
-    const m=massForParticle(p);
-    sx+=p.x*m;sy+=p.y*m;mass+=m;rs+=radiusForParticle(p);
-  }
-  const center={x:sx/mass,y:sy/mass};
-  let radius=0;
-  for(const p of particles)radius=Math.max(radius,Math.hypot(p.x-center.x,p.y-center.y)+radiusForParticle(p)+PHYSICS.boundaryOffset);
-  return{center,mass,radius,avgRadius:rs/particles.length};
+  const bs=bubblesInCluster(cluster.id);
+  if(!bs.length)return{center:{...cluster.anchor},mass:1};
+  let sx=0,sy=0,mass=0;
+  for(const b of bs){const m=bubbleMass(b);sx+=b.x*m;sy+=b.y*m;mass+=m}
+  return{center:{x:sx/mass,y:sy/mass},mass};
+}
+
+function directionalExtent(cluster,center,ux,uy){
+  const bs=bubblesInCluster(cluster.id);if(!bs.length)return 30;
+  let ext=0;for(const b of bs){const projection=(b.x-center.x)*ux+(b.y-center.y)*uy;ext=Math.max(ext,projection+bubbleRadius(b.value100)+PHYSICS.boundaryOffset)}return ext;
 }
 
 function updateBands(){
-  const clusters=[...state.clusters.values()];
-  const onlyOne=clusters.length===1;
-  for(const cluster of clusters){
-    ensureClusterBand(cluster);
-    cluster.band.setAttribute("d",rubberBandPath(cluster));
-    cluster.band.classList.toggle("single",onlyOne&&!state.mergeInProgress);
-    cluster.band.classList.toggle("mergeable",clusters.length>=2&&!state.mergeInProgress);
-    cluster.band.classList.toggle("approaching",cluster.mode==="approaching");
+  const one=state.clusters.size===1&&!state.mergeInProgress;
+  for(const c of state.clusters.values()){
+    const bs=bubblesInCluster(c.id);
+    c.band.setAttribute("d",rubberBandPath(bs,clusterStats(c).center));
+    c.band.classList.toggle("single",one&&c.termIds.size===1);
+    c.band.classList.toggle("mergeable",state.clusters.size>=2||state.mergeInProgress);
   }
 }
 
-/* =========================================================
-   FİZİK MOTORU
-   ========================================================= */
-function clampMagnitude(x,y,max){
-  const d=Math.hypot(x,y);
-  if(d<=max||d===0)return{x,y};
-  return{x:x/d*max,y:y/d*max};
-}
-
-function nearestParticleInCluster(source,clusterId){
-  let best=null,bestDistance=Infinity;
-  for(const other of particlesInCluster(clusterId)){
+function nearestBubble(source,clusterId){
+  let best=null,bestD=Infinity;
+  for(const other of bubblesInCluster(clusterId)){
     if(other.id===source.id||other.locked||!other.alive)continue;
     const d=Math.hypot(other.x-source.x,other.y-source.y);
-    if(d<bestDistance){bestDistance=d;best=other;}
+    if(d<bestD){bestD=d;best=other}
   }
-  return best;
+  return best?{bubble:best,distance:bestD}:null;
 }
 
-function applyInternalForces(cluster,dt,now=performance.now()){
-  const particles=particlesInCluster(cluster.id).filter(p=>!p.locked);
-  if(!particles.length)return;
+function attractionMultiplier(a,b){
+  let m=1;
+  const ra=bubbleRadius(a.value100),rb=bubbleRadius(b.value100);
+  if(Math.abs(ra-rb)<3)m*=PHYSICS.sameSizeMultiplier;
+  if(a.value100!==0&&b.value100!==0&&Math.sign(a.value100)!==Math.sign(b.value100))m*=PHYSICS.oppositeSignMultiplier;
+  return m;
+}
+
+function sameAtomicMagnitude(a,b){
+  return Math.abs(a.value100)===Math.abs(b.value100)
+    && [100,10,1].includes(Math.abs(a.value100));
+}
+
+function oppositeAtomicPair(a,b){
+  return a.value100!==0
+    && b.value100!==0
+    && Math.sign(a.value100)!==Math.sign(b.value100)
+    && sameAtomicMagnitude(a,b);
+}
+
+function applyInternalForces(cluster,dt,now){
+  const bs=bubblesInCluster(cluster.id).filter(b=>!b.locked);
+  if(!bs.length)return;
+
   const stats=clusterStats(cluster);
+  const finalMode=state.finalAggregation&&state.finalClusterId===cluster.id;
 
-  for(const p of particles){
-    const dx=stats.center.x-p.x;
-    const dy=stats.center.y-p.y;
-    const d=Math.max(1,Math.hypot(dx,dy));
-    const targetRadius=Math.max(45,Math.sqrt(particles.length)*stats.avgRadius*1.08);
-    let strength=PHYSICS.centerCohesion;
-    if(d>targetRadius)strength*=1+(d-targetRadius)/Math.max(40,targetRadius)*2.1;
-    p.vx+=dx*strength*dt;
-    p.vy+=dy*strength*dt;
+  for(const b of bs){
+    if(finalMode&&bs.length>1){
+      const age=(now-b.birth)/Math.max(260,b.lifeSpan);
+      b.el.classList.toggle("aging",age>=PHYSICS.lifeSeekAt);
 
-    const age=(now-p.birth)/Math.max(300,p.lifeSpan);
-    p.el.classList.toggle("aging",age>=PHYSICS.lifeSeekAt&&particles.length>1);
-
-    if(age>=PHYSICS.lifeSeekAt&&particles.length>1){
-      const nearest=nearestParticleInCluster(p,cluster.id);
-      p.seekingId=nearest?nearest.id:null;
-      p.el.classList.toggle("seeking",!!nearest);
+      if(age>=PHYSICS.lifeSeekAt){
+        const targetInfo=nearestBubble(b,cluster.id);
+        if(targetInfo){
+          b.seekingId=targetInfo.bubble.id;
+          b.el.classList.add("seeking");
+        }
+      }else{
+        b.seekingId=null;
+        b.el.classList.remove("seeking");
+      }
     }else{
-      p.seekingId=null;
-      p.el.classList.remove("seeking");
+      b.seekingId=null;
+      b.el.classList.remove("aging","seeking");
     }
+
+    b.vx+=(stats.center.x-b.x)*PHYSICS.centerCohesion*dt;
+    b.vy+=(stats.center.y-b.y)*PHYSICS.centerCohesion*dt;
   }
 
-  for(let i=0;i<particles.length;i++){
-    const a=particles[i];
+  for(let i=0;i<bs.length;i++){
+    const a=bs[i];
 
-    for(let j=i+1;j<particles.length;j++){
-      const b=particles[j];
+    for(let j=i+1;j<bs.length;j++){
+      const b=bs[j];
 
       let dx=b.x-a.x;
       let dy=b.y-a.y;
-      let d=Math.hypot(dx,dy);
+      let d=Math.max(.01,Math.hypot(dx,dy));
 
-      if(d<.01){dx=.01;dy=.01;d=.014;}
+      if(d>250)continue;
 
       const ux=dx/d;
       const uy=dy/d;
-      const ra=radiusForParticle(a);
-      const rb=radiusForParticle(b);
-      const contact=ra+rb;
-      const sameSize=Math.abs(ra-rb)<3;
-      const differentColor=a.sign!==0&&b.sign!==0&&a.sign!==b.sign;
+      const contact=bubbleRadius(a.value100)+bubbleRadius(b.value100);
+      const multiplier=attractionMultiplier(a,b);
+      const near=Math.max(0,1-d/250);
+      let force=PHYSICS.attraction*multiplier*(.3+near*1.7)*dt;
 
-      if(d<contact){
-        const overlap=contact-d;
-        const push=overlap*PHYSICS.overlapSpring*dt;
-        a.vx-=ux*push;a.vy-=uy*push;
-        b.vx+=ux*push;b.vy+=uy*push;
-      }else{
-        let multiplier=1;
-        if(sameSize)multiplier*=PHYSICS.sameSizeMultiplier;
-        if(differentColor)multiplier*=PHYSICS.oppositeColorMultiplier;
-
-        const falloff=1/(1+d/Math.max(16,contact)*.55);
-        let pull=PHYSICS.pairAttraction*multiplier*falloff*dt;
-
-        const ageA=(now-a.birth)/Math.max(300,a.lifeSpan);
-        const ageB=(now-b.birth)/Math.max(300,b.lifeSpan);
+      if(finalMode){
+        const ageA=(now-a.birth)/Math.max(260,a.lifeSpan);
+        const ageB=(now-b.birth)/Math.max(260,b.lifeSpan);
 
         if(a.seekingId===b.id||b.seekingId===a.id){
           const urgency=Math.max(ageA,ageB);
-          pull*=urgency>=PHYSICS.lifeUrgentAt?8:4.3;
-        }
-
-        a.vx+=ux*pull*d*.12;a.vy+=uy*pull*d*.12;
-        b.vx-=ux*pull*d*.12;b.vy-=uy*pull*d*.12;
-
-        if(d<contact*1.42){
-          const turn=((a.id+b.id)&1)?1:-1;
-          const slide=PHYSICS.tangentialSlide*(1-(d-contact)/(contact*.42))*turn*dt;
-          a.vx+=-uy*slide*contact;a.vy+=ux*slide*contact;
-          b.vx-=-uy*slide*contact;b.vy-=ux*slide*contact;
+          force*=urgency>=PHYSICS.lifeUrgentAt?9.5:5.2;
         }
       }
 
-      const ageA=(now-a.birth)/Math.max(300,a.lifeSpan);
-      const ageB=(now-b.birth)/Math.max(300,b.lifeSpan);
-      const lifeReady=
-        (ageA>=PHYSICS.lifeSeekAt&&a.seekingId===b.id)
-        ||
-        (ageB>=PHYSICS.lifeSeekAt&&b.seekingId===a.id);
+      a.vx+=ux*force*d*.08;
+      a.vy+=uy*force*d*.08;
+      b.vx-=ux*force*d*.08;
+      b.vy-=uy*force*d*.08;
 
-      if(lifeReady&&d<=contact+4&&!a.locked&&!b.locked){
-        scheduleLifeMerge(a,b);
+      if(d<contact){
+        const push=(contact-d)*PHYSICS.overlapSpring*dt;
+        a.vx-=ux*push;
+        b.vx+=ux*push;
+        a.vy-=uy*push;
+        b.vy+=uy*push;
+      }else if(d<contact*1.30){
+        const spring=(d-contact)*PHYSICS.nearContactSpring*dt;
+        a.vx+=ux*spring;
+        b.vx-=ux*spring;
+        a.vy+=uy*spring;
+        b.vy-=uy*spring;
+
+        const spin=((a.id+b.id)&1)?1:-1;
+        const slide=PHYSICS.tangentialSlide*spin*contact*dt;
+        a.vx+=-uy*slide;
+        a.vy+=ux*slide;
+        b.vx-=-uy*slide;
+        b.vy-=ux*slide;
+      }
+
+      if(!finalMode){
+        if(oppositeAtomicPair(a,b)&&d<=contact+2&&!a.locked&&!b.locked){
+          scheduleAnnihilation(a,b);
+        }
+      }else{
+        const ageA=(now-a.birth)/Math.max(260,a.lifeSpan);
+        const ageB=(now-b.birth)/Math.max(260,b.lifeSpan);
+        const lifeReady=(ageA>=PHYSICS.lifeSeekAt&&a.seekingId===b.id)||(ageB>=PHYSICS.lifeSeekAt&&b.seekingId===a.id);
+
+        if(lifeReady&&d<=contact+4&&!a.locked&&!b.locked){
+          scheduleFinalMerge(a,b);
+        }
       }
     }
   }
 }
 
-function applyAnchorForce(cluster,dt){
-  if(cluster.mode!=="free")return;
-  const stats=clusterStats(cluster);
-  const dx=cluster.anchor.x-stats.center.x;
-  const dy=cluster.anchor.y-stats.center.y;
-  for(const p of particlesInCluster(cluster.id)){
-    if(p.locked)continue;
-    p.vx+=dx*.00055*dt;
-    p.vy+=dy*.00055*dt;
-  }
-}
-
-function applySeparateClusterRepulsion(dt){
-  const clusters=[...state.clusters.values()].filter(c=>c.mode==="free");
+function applyClusterRepulsion(dt){
+  const clusters=[...state.clusters.values()];
   for(let i=0;i<clusters.length;i++){
     const a=clusters[i],sa=clusterStats(a);
     for(let j=i+1;j<clusters.length;j++){
       const b=clusters[j],sb=clusterStats(b);
-      let dx=sb.center.x-sa.center.x,dy=sb.center.y-sa.center.y;
-      let d=Math.max(1,Math.hypot(dx,dy));
-      const desired=sa.radius+sb.radius+18;
-      if(d>=desired)continue;
-      const ux=dx/d,uy=dy/d;
-      const force=(desired-d)*PHYSICS.clusterRepulsion*dt;
-      for(const p of particlesInCluster(a.id)){p.vx-=ux*force*.5;p.vy-=uy*force*.5;}
-      for(const p of particlesInCluster(b.id)){p.vx+=ux*force*.5;p.vy+=uy*force*.5;}
-    }
-  }
-}
-
-function directionalExtent(cluster,center,ux,uy){
-  const particles=particlesInCluster(cluster.id);
-  if(!particles.length)return 30;
-  let extent=0;
-  for(const p of particles){
-    const projection=(p.x-center.x)*ux+(p.y-center.y)*uy;
-    extent=Math.max(extent,projection+radiusForParticle(p)+PHYSICS.boundaryOffset);
-  }
-  return extent;
-}
-
-function clusterAffinity(a,b){
-  const pa=particlesInCluster(a.id).filter(p=>p.unit!==0);
-  const pb=particlesInCluster(b.id).filter(p=>p.unit!==0);
-  let opposite=false;
-  let oppositeSameSize=false;
-
-  for(const x of pa){
-    for(const y of pb){
-      if(x.sign!==0&&y.sign!==0&&x.sign!==y.sign){
-        opposite=true;
-        if(x.unit===y.unit){
-          oppositeSameSize=true;
-          break;
-        }
-      }
-    }
-    if(oppositeSameSize)break;
-  }
-
-  return oppositeSameSize?1.9:opposite?1.5:1;
-}
-
-function applyCrossClusterBubbleAttraction(a,b,gap,dt){
-  if(gap>145)return;
-
-  const pa=particlesInCluster(a.id).filter(p=>!p.locked&&p.unit!==0);
-  const pb=particlesInCluster(b.id).filter(p=>!p.locked&&p.unit!==0);
-
-  for(const x of pa){
-    for(const y of pb){
-      let dx=y.x-x.x,dy=y.y-x.y;
-      const d=Math.max(1,Math.hypot(dx,dy));
-      const contact=radiusForParticle(x)+radiusForParticle(y);
-      if(d>210)continue;
-
-      const ux=dx/d,uy=dy/d;
-      let multiplier=1;
-      if(x.unit===y.unit)multiplier*=PHYSICS.sameSizeMultiplier;
-      if(x.sign!==0&&y.sign!==0&&x.sign!==y.sign)multiplier*=PHYSICS.oppositeColorMultiplier;
-
-      const nearness=Math.max(0,1-d/220);
-      const force=.0017*multiplier*(.35+nearness*1.65)*dt;
-      x.vx+=ux*force*d*.10;
-      x.vy+=uy*force*d*.10;
-      y.vx-=ux*force*d*.10;
-      y.vy-=uy*force*d*.10;
-
-      if(d<contact*1.25){
-        const spin=((x.id+y.id)&1)?1:-1;
-        const slide=.0011*spin*dt;
-        x.vx+=-uy*slide*contact;
-        x.vy+=ux*slide*contact;
-        y.vx-= -uy*slide*contact;
-        y.vy-=ux*slide*contact;
+      let dx=sb.center.x-sa.center.x,dy=sb.center.y-sa.center.y,d=Math.max(1,Math.hypot(dx,dy));
+      const ux=dx/d,uy=dy/d,ea=directionalExtent(a,sa.center,ux,uy),eb=directionalExtent(b,sb.center,-ux,-uy),gap=d-ea-eb;
+      if(!state.mergeInProgress&&gap<18){
+        const push=(18-gap)*PHYSICS.clusterRepulsion*dt;
+        for(const p of bubblesInCluster(a.id)){p.vx-=ux*push;p.vy-=uy*push}
+        for(const p of bubblesInCluster(b.id)){p.vx+=ux*push;p.vy+=uy*push}
       }
     }
   }
+}
+
+function showFlash(point,className="band-join-flash"){
+  const el=document.createElement("div");el.className=className;el.style.left=point.x+"px";el.style.top=point.y+"px";stage.appendChild(el);setTimeout(()=>el.isConnected&&el.remove(),560);
 }
 
 function applyMergingClusterForces(dt){
   if(!state.mergeInProgress||state.mergedClusterId!==null)return;
   const clusters=state.mergeClusterIds.map(id=>state.clusters.get(id)).filter(Boolean);
-
-  if(clusters.length===1){
-    state.mergedClusterId=clusters[0].id;
-    clusters[0].mode="merged";
-    clusters[0].joinedAt=performance.now();
-    return;
-  }
-
+  if(clusters.length===1){state.mergedClusterId=clusters[0].id;clusters[0].mode="merged";return}
   if(clusters.length<2)return;
-
   let closest=null;
-
   for(let i=0;i<clusters.length;i++){
     const a=clusters[i],sa=clusterStats(a);
-
     for(let j=i+1;j<clusters.length;j++){
       const b=clusters[j],sb=clusterStats(b);
-      let dx=sb.center.x-sa.center.x,dy=sb.center.y-sa.center.y;
-      const d=Math.max(1,Math.hypot(dx,dy));
-      const ux=dx/d,uy=dy/d;
-      const ea=directionalExtent(a,sa.center,ux,uy);
-      const eb=directionalExtent(b,sb.center,-ux,-uy);
-      const gap=d-ea-eb;
-
-      const affinity=clusterAffinity(a,b);
-      const safeGap=Math.max(0,gap);
-      const distanceBoost=1+Math.min(2.5,safeGap/95);
-      const proximity=1/Math.max(10,gap+34);
-      const acceleration=Math.min(
-        PHYSICS.clusterAttractionMax,
-        PHYSICS.clusterAttraction
-          *affinity
-          *distanceBoost
-          *(1+1250*proximity*proximity)
-      );
-
-      for(const p of particlesInCluster(a.id)){
-        if(!p.locked){
-          p.vx+=ux*acceleration*dt;
-          p.vy+=uy*acceleration*dt;
-        }
-      }
-
-      for(const p of particlesInCluster(b.id)){
-        if(!p.locked){
-          p.vx-=ux*acceleration*dt;
-          p.vy-=uy*acceleration*dt;
-        }
-      }
-
-      applyCrossClusterBubbleAttraction(a,b,gap,dt);
-
-      if(!closest||gap<closest.gap){
-        closest={a,b,gap,point:{x:sa.center.x+ux*ea,y:sa.center.y+uy*ea}};
-      }
+      let dx=sb.center.x-sa.center.x,dy=sb.center.y-sa.center.y,d=Math.max(1,Math.hypot(dx,dy));
+      const ux=dx/d,uy=dy/d,ea=directionalExtent(a,sa.center,ux,uy),eb=directionalExtent(b,sb.center,-ux,-uy),gap=d-ea-eb;
+      const distanceBoost=1+Math.min(2.5,Math.max(0,gap)/95);
+      const acceleration=Math.min(PHYSICS.clusterAttractionMax,PHYSICS.clusterAttraction*distanceBoost*(1+1250/Math.max(100,(gap+34)*(gap+34))));
+      for(const p of bubblesInCluster(a.id)){if(!p.locked){p.vx+=ux*acceleration*dt;p.vy+=uy*acceleration*dt}}
+      for(const p of bubblesInCluster(b.id)){if(!p.locked){p.vx-=ux*acceleration*dt;p.vy-=uy*acceleration*dt}}
+      if(!closest||gap<closest.gap)closest={a,b,gap,point:{x:sa.center.x+ux*ea,y:sa.center.y+uy*ea}};
     }
   }
+  if(closest&&closest.gap<=PHYSICS.mergeGap)mergeClusterBoundaries(closest.a,closest.b,closest.point);
+}
 
-  if(closest&&closest.gap<=PHYSICS.mergeGap){
-    mergeBoundaryPairNow(closest.a,closest.b,closest.point);
+function mergeClusterBoundaries(a,b,point){
+  if(!state.clusters.has(a.id)||!state.clusters.has(b.id))return;
+  showFlash(point,"band-join-flash");
+  const sa=clusterStats(a),sb=clusterStats(b),m=sa.mass+sb.mass;
+  const anchor={x:(sa.center.x*sa.mass+sb.center.x*sb.mass)/Math.max(1,m),y:(sa.center.y*sa.mass+sb.center.y*sb.mass)/Math.max(1,m)};
+  const merged=createCluster([...a.termIds,...b.termIds],anchor);merged.mode="approaching";
+  for(const bubble of aliveBubbles())if(bubble.clusterId===a.id||bubble.clusterId===b.id)bubble.clusterId=merged.id;
+  for(const term of state.terms)if(term.clusterId===a.id||term.clusterId===b.id)term.clusterId=merged.id;
+  deleteCluster(a.id);deleteCluster(b.id);
+  state.mergeClusterIds=state.mergeClusterIds.filter(id=>id!==a.id&&id!==b.id);state.mergeClusterIds.push(merged.id);
+  if(state.mergeClusterIds.length===1){
+    merged.mode="free";
+    state.mergedClusterId=merged.id;
+    state.mergeInProgress=false;
+    state.mergeClusterIds=[];
+
+    if(allOriginalTermsOpened()){
+      setStatus("Tüm kümeler birleşti. Önce zıt eş balonlar sadeleşecek; sonra sonuç balonu oluşacak…");
+      setTimeout(checkFinalReadiness,260);
+    }else{
+      state.mergedClusterId=null;
+      setStatus("Açık kümeler birleşti. Kapalı sayı varsa onu da açabilirsin.");
+    }
+  }else{
+    setStatus("İki sınır birleşti. Yeni küme diğer kümeleri çekmeye devam ediyor…");
   }
 }
 
-function integrateParticles(dt){
-  for(const p of aliveParticles()){
-    if(p.locked)continue;
-    p.vx*=Math.pow(PHYSICS.damping,dt);
-    p.vy*=Math.pow(PHYSICS.damping,dt);
-    const limited=clampMagnitude(p.vx,p.vy,PHYSICS.maxSpeed);
-    p.vx=limited.x;p.vy=limited.y;
-    p.x+=p.vx*dt;
-    p.y+=p.vy*dt;
-
-    const r=radiusForParticle(p)+8;
-    p.x=Math.max(r,Math.min(stage.clientWidth-r,p.x));
-    p.y=Math.max(190+r,Math.min(stage.clientHeight-125-r,p.y));
-
-    p.el.style.left=p.x+"px";
-    p.el.style.top=p.y+"px";
-  }
-}
-
-function physicsFrame(now){
-  const dt=Math.min(1.7,Math.max(.35,(now-state.lastPhysicsTime)/16.667));
-  state.lastPhysicsTime=now;
-
-  for(const cluster of state.clusters.values()){
-    applyInternalForces(cluster,dt,now);
-    applyAnchorForce(cluster,dt);
-  }
-  applySeparateClusterRepulsion(dt);
-  applyMergingClusterForces(dt);
-  integrateParticles(dt);
-  updateBands();
-
-  if(now>=state.resolutionCheckAt){
-    state.resolutionCheckAt=now+180;
-    checkMergeResolution();
-  }
-
-  requestAnimationFrame(physicsFrame);
-}
-
-/* =========================================================
-   PATLAMA
-   ========================================================= */
-function createBurst(x,y){
-  const burst=document.createElement("div");
-  burst.className="annihilation-burst";
-  burst.style.left=x+"px";burst.style.top=y+"px";
-  for(const cls of["burst-core","burst-ring one","burst-ring two"]){const el=document.createElement("div");el.className=cls;burst.appendChild(el);}
-  for(let i=0;i<10;i++){
-    const spark=document.createElement("div");spark.className="burst-spark";
-    const a=Math.PI*2*i/10,d=28+(i%3)*7;
-    spark.style.setProperty("--sx",Math.cos(a)*d+"px");spark.style.setProperty("--sy",Math.sin(a)*d+"px");
-    burst.appendChild(spark);
-  }
-  stage.appendChild(burst);
-  setTimeout(()=>{if(burst.isConnected)burst.remove();},620);
-}
-
-function scheduleLifeMerge(a,b){
+function scheduleAnnihilation(a,b){
   if(a.locked||b.locked||!a.alive||!b.alive||a.clusterId!==b.clusterId)return;
   a.locked=b.locked=true;
   a.el.classList.add("merging");
   b.el.classList.add("merging");
-  lifeMergePair(a,b);
+  annihilatePair(a,b);
 }
 
-async function lifeMergePair(a,b){
-  const cluster=state.clusters.get(a.clusterId);
-  if(!cluster)return;
-
+async function annihilatePair(a,b){
+  const target={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
   const startA={x:a.x,y:a.y};
   const startB={x:b.x,y:b.y};
-  const ma=massForParticle(a);
-  const mb=massForParticle(b);
-  const totalMass=ma+mb;
-
-  const target={
-    x:(a.x*ma+b.x*mb)/Math.max(1,totalMass),
-    y:(a.y*ma+b.y*mb)/Math.max(1,totalMass)
-  };
-
-  const value=particleValue100(a)+particleValue100(b);
-  const lineage=(a.lineageCount||1)+(b.lineageCount||1);
-  const termId=a.termId===b.termId?a.termId:null;
-  const duration=190;
   const started=performance.now();
+  const duration=165;
 
   await new Promise(resolve=>{
     function frame(now){
       const t=Math.min(1,(now-started)/duration);
       const q=t*t;
-
       a.x=startA.x+(target.x-startA.x)*q;
       a.y=startA.y+(target.y-startA.y)*q;
       b.x=startB.x+(target.x-startB.x)*q;
       b.y=startB.y+(target.y-startB.y)*q;
 
-      if(a.el.isConnected){
-        a.el.style.left=a.x+"px";
-        a.el.style.top=a.y+"px";
-      }
-
-      if(b.el.isConnected){
-        b.el.style.left=b.x+"px";
-        b.el.style.top=b.y+"px";
-      }
+      if(a.el.isConnected){a.el.style.left=a.x+"px";a.el.style.top=a.y+"px"}
+      if(b.el.isConnected){b.el.style.left=b.x+"px";b.el.style.top=b.y+"px"}
 
       if(t<1)requestAnimationFrame(frame);
       else resolve();
     }
-
     requestAnimationFrame(frame);
   });
 
-  createBurst(target.x,target.y);
+  showFlash(target,"merge-flash");
 
   const vanish=p=>p.core.animate(
     [
       {transform:"scale(1)",opacity:1},
-      {transform:"scale(.08)",opacity:0}
+      {transform:"scale(1.28)",opacity:1,offset:.25},
+      {transform:"scale(.02)",opacity:0}
     ],
-    {
-      duration:120,
-      easing:"ease-in",
-      fill:"forwards"
-    }
+    {duration:190,easing:"cubic-bezier(.25,.78,.35,1)",fill:"forwards"}
   ).finished.catch(()=>{});
 
   await Promise.all([vanish(a),vanish(b)]);
 
   a.alive=false;
   b.alive=false;
-
   if(a.el.isConnected)a.el.remove();
   if(b.el.isConnected)b.el.remove();
 
-  const lifeScale=cluster.mode==="merged"?.58:.78;
-  const child=createBubbleFromValue(
-    value,
-    target.x,
-    target.y,
-    cluster.id,
-    termId,
-    lineage,
-    lifeScale
-  );
-
-  child.vx=(a.vx+b.vx)*.18;
-  child.vy=(a.vy+b.vy)*.18;
-
-  maybeLifeClusterResolved(cluster.id);
+  setTimeout(checkFinalReadiness,90);
 }
 
-function maybeLifeClusterResolved(clusterId){
-  const cluster=state.clusters.get(clusterId);
-  if(!cluster)return;
-
-  const particles=particlesInCluster(clusterId);
-
-  if(particles.length!==1)return;
-
-  const only=particles[0];
-  only.el.classList.remove("aging","seeking","merging");
-  only.seekingId=null;
-
-  if(state.mergeInProgress&&state.mergedClusterId===clusterId){
-    checkMergeResolution();
-    return;
-  }
-
-  if(cluster.termIds.size===1){
-    setStatus(
-      "Bu kümenin balonları birleşti: <strong>"
-      +formatBubbleValue(particleValue100(only))
-      +"</strong>. İstersen başka bir sayı açabilirsin."
-    );
-  }
+function scheduleFinalMerge(a,b){
+  if(!state.finalAggregation||a.locked||b.locked||!a.alive||!b.alive||a.clusterId!==b.clusterId)return;
+  a.locked=b.locked=true;
+  a.el.classList.add("merging");
+  b.el.classList.add("merging");
+  finalMergePair(a,b);
 }
 
+async function finalMergePair(a,b){
+  const cluster=state.clusters.get(a.clusterId);
+  if(!cluster||!state.finalAggregation)return;
 
-/* =========================================================
-   KÜME SINIRLARINI BİRLEŞTİR
-   ========================================================= */
-function showJoinFlash(point){
-  const flash=document.createElement("div");
-  flash.className="band-join-flash";
-  flash.style.left=point.x+"px";flash.style.top=point.y+"px";
-  stage.appendChild(flash);
-  setTimeout(()=>{if(flash.isConnected)flash.remove();},520);
-}
-
-async function removeNeutralMarkersFromCluster(clusterId){return;}
-
-function mergeBoundaryPairNow(a,b,contactPoint){
-  if(!state.mergeInProgress||state.mergedClusterId!==null)return;
-  if(!state.clusters.has(a.id)||!state.clusters.has(b.id))return;
-
-  showJoinFlash(contactPoint);
-
-  const sa=clusterStats(a);
-  const sb=clusterStats(b);
-  const totalMass=sa.mass+sb.mass;
-  const anchor={
-    x:(sa.center.x*sa.mass+sb.center.x*sb.mass)/Math.max(1,totalMass),
-    y:(sa.center.y*sa.mass+sb.center.y*sb.mass)/Math.max(1,totalMass)
+  const startA={x:a.x,y:a.y};
+  const startB={x:b.x,y:b.y};
+  const ma=bubbleMass(a);
+  const mb=bubbleMass(b);
+  const total=ma+mb;
+  const target={
+    x:(a.x*ma+b.x*mb)/Math.max(1,total),
+    y:(a.y*ma+b.y*mb)/Math.max(1,total)
   };
+  const value=a.value100+b.value100;
+  const lineage=(a.lineageCount||1)+(b.lineageCount||1);
+  const started=performance.now();
+  const duration=190;
 
-  const merged=createCluster([...a.termIds,...b.termIds],anchor);
-  merged.mode="approaching";
-  merged.joinedAt=0;
-
-  for(const p of aliveParticles()){
-    if(p.clusterId===a.id||p.clusterId===b.id)p.clusterId=merged.id;
-  }
-
-  for(const term of state.terms){
-    if(term.clusterId===a.id||term.clusterId===b.id)term.clusterId=merged.id;
-  }
-
-  deleteCluster(a.id);
-  deleteCluster(b.id);
-
-  state.mergeClusterIds=state.mergeClusterIds.filter(id=>id!==a.id&&id!==b.id);
-  state.mergeClusterIds.push(merged.id);
-
-  /*
-      Ara toplam 0'ı temsil eden nötr balon,
-      gerçek balonlarla aynı kümeye girdiğinde
-      yalnızca gösterim işareti olduğu için kaybolur.
-  */
-  removeNeutralMarkersFromCluster(merged.id);
-
-  if(state.mergeClusterIds.length===1){
-    merged.mode="merged";
-    merged.joinedAt=performance.now();
-    state.mergedClusterId=merged.id;
-    setStatus("Tüm açık kümelerin sınırları birleşti. Baloncuklar boşlukları doldurarak dengeye geliyor…");
-  }else{
-    setStatus("İki lastik sınır birleşti. Yeni küme kalan kümeleri çekmeye devam ediyor…");
-  }
-}
-
-/* =========================================================
-   AÇ / KAPAT
-   ========================================================= */
-function updateInteractionText(){
-  if(state.finalFlowing)return;
-  if(state.mergeInProgress)return;
-  const opened=openedTerms();
-  if(opened.length===0)setStatus("İstediğin sayıyı aç.");
-  else if(state.clusters.size===1){
-    const cluster=[...state.clusters.values()][0];
-    if(cluster.termIds.size===1)setStatus("Tek sayı açık. <strong>Kümeye veya balonuna tıklarsan kapanır.</strong> Balonlar kendi yaşamlarını sürdürür.");
-    else setStatus("Ara sonuç kümesi açık. Kapalı sayı varsa onu da açabilirsin.");
-  }
-  else if(unopenedTerms().length>0)setStatus(state.clusters.size+" küme açık. <strong>Bir kümeye tıklarsan açık kümeler birbirini çekmeye başlayacak.</strong>");
-  else setStatus("Bütün sayılar açık. <strong>Bir kümeye tıkla:</strong> kümeler fiziksel olarak birleşecek ve sonuç otomatik olarak aşağı dolacak.");
-}
-
-async function openTerm(termId){
-  const term=state.terms.find(t=>t.id===termId);
-  if(!term||term.opened||term.opening||term.closing)return;
-  term.opened=true;term.opening=true;term.openedAt=performance.now();
-  const index=state.terms.findIndex(t=>t.id===termId);
-  const source=elementCenterInStage(term.card);
-  const anchor=termAnchor(index);
-  const cluster=createCluster([term.id],anchor);
-  term.clusterId=cluster.id;
-  term.card.classList.add("gone");
-  updateInteractionText();
-
-  const pieces=decomposeValue(term.value100);
-  const points=seedLayout(pieces,anchor,termSegmentWidth());
-  const generation=state.generation;
-  term.openPromise=(async()=>{
-    const jobs=[];
-    for(let i=0;i<pieces.length;i++){
-      if(generation!==state.generation)break;
-      const piece=pieces[i];
-      const p=createBubble(piece.sign,piece.unit,source.x,source.y,cluster.id,term.id);
-      const target=points[i];
-      const delay=i*5;
-      jobs.push(new Promise(resolve=>{
-        setTimeout(()=>{
-          const dx=target.x-p.x,dy=target.y-p.y;
-          p.vx=dx*.06;p.vy=dy*.06;
-          resolve();
-        },delay);
-      }));
-    }
-    await Promise.all(jobs);
-    await sleep(480);
-    term.opening=false;term.openPromise=null;
-    updateInteractionText();
-  })();
-  await term.openPromise;
-}
-
-async function closeSingleCluster(clusterId,explicit=false){
-  if(!explicit)return;
-
-  const cluster=state.clusters.get(clusterId);
-
-  if(
-    !cluster
-    ||
-    state.clusters.size!==1
-    ||
-    state.mergeInProgress
-    ||
-    cluster.termIds.size!==1
-  )return;
-
-  const termId=[...cluster.termIds][0];
-  const term=state.terms.find(t=>t.id===termId);
-
-  if(!term)return;
-
-  /*
-      Kendi kendine kapanma bug'ına karşı:
-      kapanma yalnız gerçek kullanıcı tıklamasından gelir
-      ve açılmanın hemen ardından aynı olay zinciriyle tetiklenemez.
-  */
-  if(performance.now()-(term.openedAt||0)<650)return;
-
-  if(term.openPromise)await term.openPromise;
-
-  term.closing=true;
-
-  const target=elementCenterInStage(term.card);
-  const particles=particlesInCluster(cluster.id);
-
-  for(const p of particles){
-    p.locked=true;
-    p.vx=(target.x-p.x)*.10;
-    p.vy=(target.y-p.y)*.10;
-  }
-
-  await sleep(430);
-
-  for(const p of particles){
-    p.alive=false;
-    if(p.el.isConnected)p.el.remove();
-  }
-
-  deleteCluster(cluster.id);
-
-  term.opened=false;
-  term.closing=false;
-  term.clusterId=null;
-  term.card.classList.remove("gone");
-
-  updateInteractionText();
-}
-
-async function handleClusterClick(clusterId,explicit=false){
-  if(!explicit||state.finalFlowing||state.mergeInProgress)return;
-  const cluster=state.clusters.get(clusterId);
-  if(!cluster)return;
-  if(state.clusters.size===1){
-    await closeSingleCluster(clusterId,true);
-    return;
-  }
-  await beginClusterMerge([...state.clusters.values()]);
-}
-
-/* =========================================================
-   KÜME BİRLEŞMESİNİ BAŞLAT
-   ========================================================= */
-async function beginClusterMerge(clusters){
-  if(state.mergeInProgress||clusters.length<2)return;
-  state.mergeInProgress=true;
-  state.mergeClusterIds=clusters.map(c=>c.id);
-  state.mergeTermIds=[...new Set(clusters.flatMap(c=>[...c.termIds]))];
-  state.mergedClusterId=null;
-  for(const cluster of clusters)cluster.mode="approaching";
-  setStatus("Kümeler birbirini çekiyor. Yaklaştıkça çekim artacak ve lastik sınırlar birleşecek…");
-}
-
-/* =========================================================
-   ÇÖZÜM DENETİMİ
-   ========================================================= */
-function clearSplittable(){
-  for(const p of aliveParticles()){
-    p.splittable=false;
-    p.el.classList.remove("splittable");
-  }
-}
-
-function checkMergeResolution(){
-  if(!state.mergeInProgress||state.mergedClusterId===null||state.finalFlowing)return;
-
-  const cluster=state.clusters.get(state.mergedClusterId);
-
-  if(!cluster||cluster.resolving)return;
-
-  const particles=particlesInCluster(cluster.id).filter(p=>p.alive);
-
-  if(particles.length!==1)return;
-
-  cluster.resolving=true;
-
-  resolveMergedCluster(cluster)
-    .finally(()=>{
-      const still=state.clusters.get(cluster.id);
-      if(still)still.resolving=false;
-    });
-}
-
-function mergeValue100(){
-  return state.mergeTermIds.reduce((sum,id)=>{
-    const term=state.terms.find(t=>t.id===id);
-    return sum+(term?term.value100:0);
-  },0);
-}
-
-async function resolveMergedCluster(cluster){
-  if(!state.mergeInProgress||state.finalFlowing)return;
-  const mergeSet=new Set(state.mergeTermIds);
-  const otherTerms=state.terms.filter(t=>!mergeSet.has(t.id));
-  const hasUnopened=otherTerms.some(t=>!t.opened);
-  const hasOtherClusters=[...state.clusters.keys()].some(id=>id!==cluster.id);
-
-  if(!hasUnopened&&!hasOtherClusters&&state.terms.every(t=>t.opened)){
-    await flowFinalResult(cluster);
-    return;
-  }
-
-  await settleIntermediateCluster(cluster);
-}
-
-async function settleIntermediateCluster(cluster){
-  if(!state.mergeInProgress)return;
-  const mergeSet=new Set(state.mergeTermIds);
-  const indices=state.terms.map((t,i)=>mergeSet.has(t.id)?i:-1).filter(i=>i>=0);
-  if(!indices.length)return;
-  const insertIndex=Math.min(...indices);
-  const value=mergeValue100();
-  const newTerm=makeTerm(value,true,cluster.id);
-
-  for(const p of particlesInCluster(cluster.id))p.termId=newTerm.id;
-  if(value===0&&particlesInCluster(cluster.id).length===0){
-    createBubble(0,0,cluster.anchor.x,cluster.anchor.y,cluster.id,newTerm.id);
-  }
-
-  cluster.termIds=new Set([newTerm.id]);
-  cluster.mode="free";
-  cluster.anchor={...clusterStats(cluster).center};
-
-  const remaining=state.terms.filter(t=>!mergeSet.has(t.id));
-  remaining.splice(insertIndex,0,newTerm);
-  state.terms=remaining;
-
-  state.mergeInProgress=false;
-  state.mergeClusterIds=[];
-  state.mergeTermIds=[];
-  state.mergedClusterId=null;
-  stage.style.height=calculateStageHeight()+"px";
-  renderTerms();
-  updateInteractionText();
-}
-
-/* =========================================================
-   PARÇALAMA
-   ========================================================= */
-const nextSmallerUnit=unit=>unit===100?10:unit===10?1:null;
-
-async function splitBubble(p){
-  if(!p.alive||!p.splittable)return;
-  const next=nextSmallerUnit(p.unit);
-  if(!next||next<currentConfig().minUnit)return;
-  p.splittable=false;p.el.classList.remove("splittable");
-  const x=p.x,y=p.y,sign=p.sign,clusterId=p.clusterId,termId=p.termId;
-  p.alive=false;
-  const shrink=p.core.animate([{transform:"scale(1)",opacity:1},{transform:"scale(.1)",opacity:0}],{duration:170,easing:"ease-in",fill:"forwards"});
-  try{await shrink.finished}catch(_){ }
-  if(p.el.isConnected)p.el.remove();
-
-  for(let i=0;i<10;i++){
-    const angle=Math.PI*2*i/10;
-    const r=radiusForUnit(next)*1.5;
-    const child=createBubble(sign,next,x+Math.cos(angle)*r,y+Math.sin(angle)*r,clusterId,termId);
-    child.vx=Math.cos(angle)*1.2;child.vy=Math.sin(angle)*1.2;
-  }
-  setStatus("Büyük balon 10 küçük balona ayrıldı. Simülasyon yeniden denge arıyor…");
-}
-
-async function onBubbleClick(p,explicit=false){
-  if(!explicit||state.finalFlowing)return;
-
-  if(state.mergeInProgress)return;
-
-  const cluster=state.clusters.get(p.clusterId);
-
-  if(cluster){
-    await handleClusterClick(cluster.id,true);
-  }
-}
-
-
-/* =========================================================
-   SONUÇ KUTUSU
-   ========================================================= */
-function getBottomFrameContactPoint(p){
-  const sr=stage.getBoundingClientRect(),fr=resultFrame.getBoundingClientRect();
-  const left=fr.left-sr.left,top=fr.top-sr.top,cx=left+fr.width/2;
-  const r=radiusForParticle(p);
-  const half=Math.max(12,fr.width/2-r*.75-10);
-  const offset=Math.max(-half,Math.min(half,(p.x-cx)*.28));
-  return{x:cx+offset,y:top-r*.72};
-}
-
-function counterBump(){counterValue.classList.remove("bump");void counterValue.offsetWidth;counterValue.classList.add("bump");}
-
-function fallToResult(p,startTime,duration,onImpact){
-  return new Promise(resolve=>{
-    const start={x:p.x,y:p.y};
-    const target=getBottomFrameContactPoint(p);
-    const control={x:start.x+(target.x-start.x)*.25,y:start.y+(target.y-start.y)*.52};
+  await new Promise(resolve=>{
     function frame(now){
-      if(now<startTime){requestAnimationFrame(frame);return;}
-      const t=Math.max(0,Math.min(1,(now-startTime)/duration));
-      const q=.1*t+.9*t*t;
-      const inv=1-q;
-      p.x=inv*inv*start.x+2*inv*q*control.x+q*q*target.x;
-      p.y=inv*inv*start.y+2*inv*q*control.y+q*q*target.y;
-      if(p.el.isConnected){p.el.style.left=p.x+"px";p.el.style.top=p.y+"px";}
-      if(t<1){requestAnimationFrame(frame);return;}
-      p.core.animate([{transform:"scale(1)",opacity:1},{transform:"scale(.05)",opacity:0}],{duration:80,easing:"ease-in",fill:"forwards"}).finished.catch(()=>{}).then(()=>{
-        p.alive=false;if(p.el.isConnected)p.el.remove();onImpact(p);resolve();
-      });
+      const t=Math.min(1,(now-started)/duration);
+      const q=t*t;
+      a.x=startA.x+(target.x-startA.x)*q;
+      a.y=startA.y+(target.y-startA.y)*q;
+      b.x=startB.x+(target.x-startB.x)*q;
+      b.y=startB.y+(target.y-startB.y)*q;
+
+      if(a.el.isConnected){a.el.style.left=a.x+"px";a.el.style.top=a.y+"px"}
+      if(b.el.isConnected){b.el.style.left=b.x+"px";b.el.style.top=b.y+"px"}
+
+      if(t<1)requestAnimationFrame(frame);
+      else resolve();
     }
     requestAnimationFrame(frame);
   });
+
+  showFlash(target,"merge-flash");
+
+  const vanish=p=>p.core.animate(
+    [
+      {transform:"scale(1)",opacity:1},
+      {transform:"scale(.06)",opacity:0}
+    ],
+    {duration:115,easing:"ease-in",fill:"forwards"}
+  ).finished.catch(()=>{});
+
+  await Promise.all([vanish(a),vanish(b)]);
+
+  a.alive=false;
+  b.alive=false;
+  if(a.el.isConnected)a.el.remove();
+  if(b.el.isConnected)b.el.remove();
+
+  const child=createBubble(value,target.x,target.y,cluster.id,null,lineage,.42);
+  child.birth=performance.now()-child.lifeSpan*.70;
+  child.vx=(a.vx+b.vx)*.15;
+  child.vy=(a.vy+b.vy)*.15;
+
+  maybeFinishFinalAggregation(cluster.id);
 }
 
-async function flowFinalResult(cluster){
-  if(state.finalFlowing)return;
+function clearSplittableMarks(){
+  for(const b of aliveBubbles()){
+    b.el.classList.remove("splittable");
+    b.splittable=false;
+  }
+}
 
-  const particles=particlesInCluster(cluster.id).filter(p=>p.alive);
+function atomicUnit(value100){
+  return Math.abs(value100);
+}
 
-  if(particles.length!==1)return;
+function markNeededSplits(cluster){
+  clearSplittableMarks();
+  const bs=bubblesInCluster(cluster.id).filter(b=>b.alive&&b.value100!==0);
+  const minUnit=currentConfig().minUnit;
+  let marked=0;
 
-  const resultBubble=particles[0];
-  const result=particleValue100(resultBubble);
+  for(const b of bs){
+    const unit=atomicUnit(b.value100);
+    if(unit<=minUnit)continue;
 
-  state.finalFlowing=true;
-  resultBubble.locked=true;
+    const hasOppositeSmaller=bs.some(other=>
+      Math.sign(other.value100)===-Math.sign(b.value100)
+      && atomicUnit(other.value100)<unit
+    );
 
-  if(cluster.band)cluster.band.style.opacity="0";
-
-  setStatus(
-    "Bütün balonlar birleşti. Sonuç balonu: <strong>"
-    +formatBubbleValue(result)
-    +"</strong>."
-  );
-
-  /*
-      Çocuk son birleşmiş balonu kısa bir süre görsün.
-  */
-  await sleep(650);
-
-  resultFrame.classList.add("show","gravity-active");
-  counterValue.textContent="0";
-
-  await sleep(160);
-
-  await fallToResult(
-    resultBubble,
-    performance.now()+20,
-    620,
-    ()=>{
-      counterValue.textContent=formatBubbleValue(result);
-      counterBump();
+    if(hasOppositeSmaller){
+      b.splittable=true;
+      b.el.classList.add("splittable");
+      marked++;
     }
-  );
+  }
 
-  counterValue.textContent=formatBubbleValue(result);
-  counterBump();
-  resultFrame.classList.remove("gravity-active");
-
-  setStatus(
-    "Sonuç: <strong>"
-    +formatBubbleValue(result)
-    +"</strong>."
-  );
+  return marked;
 }
 
+function hasCancelablePair(cluster){
+  const bs=bubblesInCluster(cluster.id).filter(b=>!b.locked&&b.alive);
+  for(let i=0;i<bs.length;i++){
+    for(let j=i+1;j<bs.length;j++){
+      if(oppositeAtomicPair(bs[i],bs[j]))return true;
+    }
+  }
+  return false;
+}
 
-/* =========================================================
-   YENİ İŞLEM / RENDER
-   ========================================================= */
+function checkFinalReadiness(){
+  if(state.finalDone||state.finalAggregation||state.mergeInProgress)return;
+  if(!allOriginalTermsOpened()||state.clusters.size!==1)return;
+
+  const cluster=[...state.clusters.values()][0];
+  state.finalClusterId=cluster.id;
+
+  const bs=bubblesInCluster(cluster.id).filter(b=>b.alive);
+
+  if(bs.some(b=>b.locked))return;
+
+  if(bs.length===0){
+    const center=clusterStats(cluster).center;
+    const zero=createBubble(0,center.x,center.y,cluster.id,null,1,.35);
+    zero.birth=performance.now()-zero.lifeSpan*.8;
+    finishFinalResult(cluster,zero);
+    return;
+  }
+
+  const signs=new Set(bs.filter(b=>b.value100!==0).map(b=>Math.sign(b.value100)));
+
+  if(signs.size<=1){
+    startFinalAggregation(cluster);
+    return;
+  }
+
+  if(hasCancelablePair(cluster)){
+    setStatus("Zıt eş balonlar birbirini bulup yok ediyor…");
+    return;
+  }
+
+  const marked=markNeededSplits(cluster);
+
+  if(marked){
+    setStatus("Zıt işaretliler farklı büyüklükte kaldı. <strong>Parlayan büyük balona tıkla.</strong>");
+  }
+}
+
+function startFinalAggregation(cluster){
+  if(state.finalAggregation||state.finalDone)return;
+
+  clearSplittableMarks();
+  state.finalAggregation=true;
+  state.finalClusterId=cluster.id;
+
+  const bs=bubblesInCluster(cluster.id).filter(b=>b.alive);
+
+  if(bs.length===1){
+    finishFinalResult(cluster,bs[0]);
+    return;
+  }
+
+  const now=performance.now();
+
+  for(const b of bs){
+    b.birth=now-b.lifeSpan*(.70+Math.random()*.08);
+    b.el.classList.add("aging");
+  }
+
+  setStatus("Sadeleştirme tamamlandı. <strong>Şimdi sayısal birleşme başladı:</strong> kalan balonlar tek sonuç balonunu oluşturuyor…");
+}
+
+function maybeFinishFinalAggregation(clusterId){
+  if(!state.finalAggregation||state.finalClusterId!==clusterId)return;
+
+  const cluster=state.clusters.get(clusterId);
+  if(!cluster)return;
+
+  const bs=bubblesInCluster(clusterId).filter(b=>b.alive);
+
+  if(bs.length===1){
+    finishFinalResult(cluster,bs[0]);
+  }
+}
+
+function finishFinalResult(cluster,bubble){
+  if(state.finalDone)return;
+
+  state.finalAggregation=false;
+  state.finalDone=true;
+  state.finalClusterId=cluster.id;
+
+  bubble.locked=true;
+  bubble.seekingId=null;
+  bubble.el.classList.remove("aging","seeking","merging");
+  bubble.el.classList.add("final-result");
+
+  cluster.mode="final";
+  cluster.anchor={x:bubble.x,y:bubble.y};
+
+  setStatus("Sonuç balonu: <strong>"+formatBubbleValue(bubble.value100)+"</strong>.");
+}
+
+async function splitBubble(b){
+  if(!b.alive||!b.splittable||state.finalAggregation||state.finalDone)return;
+
+  const unit=atomicUnit(b.value100);
+  const next=unit===100?10:unit===10?1:null;
+
+  if(!next||next<currentConfig().minUnit)return;
+
+  clearSplittableMarks();
+
+  const sign=Math.sign(b.value100);
+  const clusterId=b.clusterId;
+  const termId=b.termId;
+  const x=b.x;
+  const y=b.y;
+
+  b.locked=true;
+
+  await b.core.animate(
+    [
+      {transform:"scale(1)",opacity:1},
+      {transform:"scale(.08)",opacity:0}
+    ],
+    {duration:150,easing:"ease-in",fill:"forwards"}
+  ).finished.catch(()=>{});
+
+  b.alive=false;
+  if(b.el.isConnected)b.el.remove();
+
+  const childValue=sign*next;
+  const radius=bubbleRadius(childValue);
+
+  for(let i=0;i<10;i++){
+    const angle=Math.PI*2*i/10;
+    const ring=radius*1.45;
+    const child=createBubble(
+      childValue,
+      x+Math.cos(angle)*ring,
+      y+Math.sin(angle)*ring,
+      clusterId,
+      termId,
+      1,
+      1
+    );
+    child.vx=Math.cos(angle)*1.1;
+    child.vy=Math.sin(angle)*1.1;
+  }
+
+  setStatus("Büyük balon 10 küçük balona ayrıldı. Zıt eş balonlar yeniden birbirini arıyor…");
+  setTimeout(checkFinalReadiness,160);
+}
+
+function integrate(dt){
+  for(const b of aliveBubbles()){
+    if(b.locked)continue;
+    b.vx*=Math.pow(PHYSICS.damping,dt);b.vy*=Math.pow(PHYSICS.damping,dt);
+    const speed=Math.hypot(b.vx,b.vy);if(speed>PHYSICS.maxSpeed){b.vx=b.vx/speed*PHYSICS.maxSpeed;b.vy=b.vy/speed*PHYSICS.maxSpeed}
+    b.x+=b.vx*dt;b.y+=b.vy*dt;
+    const r=bubbleRadius(b.value100)+7;
+    b.x=Math.max(r,Math.min(stage.clientWidth-r,b.x));
+    b.y=Math.max(190+r,Math.min(stage.clientHeight-125-r,b.y));
+    b.el.style.left=b.x+"px";b.el.style.top=b.y+"px";
+  }
+}
+
+function physicsFrame(now){
+  const dt=Math.min(1.7,Math.max(.35,(now-state.lastPhysicsTime)/16.667));state.lastPhysicsTime=now;
+  for(const cluster of state.clusters.values())applyInternalForces(cluster,dt,now);
+  applyClusterRepulsion(dt);applyMergingClusterForces(dt);integrate(dt);updateBands();
+
+  if(now>=state.resolutionCheckAt){
+    state.resolutionCheckAt=now+180;
+    checkFinalReadiness();
+  }
+
+  requestAnimationFrame(physicsFrame);
+}
+
+function updateInteractionText(){
+  if(state.finalDone)return;
+  if(state.finalAggregation){
+    setStatus("Sonuç balonu oluşuyor…");
+    return;
+  }
+  if(state.mergeInProgress)return;
+
+  if(state.clusters.size===0){
+    setStatus("İstediğin sayıyı aç.");
+  }else if(state.clusters.size===1){
+    const c=[...state.clusters.values()][0];
+
+    if(c.termIds.size===1){
+      setStatus("Tek sayı açık. <strong>Kümeye veya balonuna tıklarsan kapanır.</strong>");
+    }else if(unopenedTerms().length>0){
+      setStatus("Açık sayılar tek kümede. Kapalı sayı varsa onu da açabilirsin.");
+    }else{
+      setStatus("Tüm sayılar aynı kümede. Zıt balonlar sadeleşiyor…");
+    }
+  }else if(unopenedTerms().length>0){
+    setStatus(state.clusters.size+" küme açık. <strong>Bir kümeye tıklarsan açık kümeler birleşir.</strong>");
+  }else{
+    setStatus("Bütün sayılar açık. <strong>Bir kümeye tıkla:</strong> kümeler birleşecek; sadeleşme bitince sonuç balonu oluşacak.");
+  }
+}
+async function openTerm(termId){
+  const term=state.terms.find(t=>t.id===termId);if(!term||term.opened||term.opening||term.closing)return;
+  term.opened=true;term.opening=true;term.openedAt=performance.now();state.explicitCloseArmedAt=performance.now()+700;
+  const index=state.terms.findIndex(t=>t.id===termId),source=elementCenterInStage(term.card),anchor=termAnchor(index);
+  const cluster=createCluster([term.id],anchor);term.clusterId=cluster.id;term.card.classList.add("gone");
+  const values=decomposeValue(term.value100),points=seedLayout(values,anchor,termSegmentWidth()),generation=state.generation;
+  for(let i=0;i<values.length;i++){
+    if(generation!==state.generation)break;
+    const b=createBubble(values[i],source.x,source.y,cluster.id,term.id,1,1);
+    const target=points[i];b.vx=(target.x-source.x)*.075;b.vy=(target.y-source.y)*.075;
+  }
+  await sleep(420);if(generation!==state.generation)return;term.opening=false;updateInteractionText();
+}
+
+async function closeSingleCluster(clusterId,explicit=false){
+  if(!explicit||performance.now()<state.explicitCloseArmedAt)return;
+  const cluster=state.clusters.get(clusterId);if(!cluster||state.clusters.size!==1||state.mergeInProgress||cluster.termIds.size!==1)return;
+  const termId=[...cluster.termIds][0],term=state.terms.find(t=>t.id===termId);if(!term)return;
+  term.closing=true;const target=elementCenterInStage(term.card),bs=bubblesInCluster(cluster.id);
+  for(const b of bs){b.locked=true;b.vx=(target.x-b.x)*.11;b.vy=(target.y-b.y)*.11}
+  await sleep(360);
+  for(const b of bs){b.alive=false;if(b.el.isConnected)b.el.remove()}
+  deleteCluster(cluster.id);term.opened=false;term.opening=false;term.closing=false;term.clusterId=null;term.card.classList.remove("gone");updateInteractionText();
+}
+
+async function handleClusterClick(clusterId,explicit=false){
+  if(!explicit||state.finalDone||state.finalAggregation||state.mergeInProgress)return;
+  const cluster=state.clusters.get(clusterId);if(!cluster)return;
+  if(state.clusters.size===1){await closeSingleCluster(clusterId,true);return}
+  beginClusterMerge([...state.clusters.values()]);
+}
+
+function beginClusterMerge(clusters){
+  if(state.mergeInProgress||clusters.length<2)return;
+  state.mergeInProgress=true;state.mergeClusterIds=clusters.map(c=>c.id);state.mergedClusterId=null;
+  for(const c of clusters)c.mode="approaching";
+  setStatus("Kümeler birbirini çekiyor. Sınırlar temas edince birleşecek; balonların yaşam döngüsü tek kümede devam edecek…");
+}
+
+function allOriginalTermsOpened(){return state.terms.every(t=>t.opened)}
+
+async function onBubbleClick(b,explicit=false){
+  if(!explicit||state.finalDone)return;
+
+  if(b.splittable){
+    await splitBubble(b);
+    return;
+  }
+
+  if(state.finalAggregation)return;
+
+  const cluster=state.clusters.get(b.clusterId);
+  if(!cluster)return;
+  if(!state.mergeInProgress)await handleClusterClick(cluster.id,true);
+}
+
 function clearSimulation(){
-  for(const p of state.particles)if(p.el&&p.el.isConnected)p.el.remove();
-  state.particles=[];
-  for(const cluster of state.clusters.values())if(cluster.band&&cluster.band.isConnected)cluster.band.remove();
-  state.clusters.clear();
-  document.querySelectorAll(".annihilation-burst,.band-join-flash").forEach(el=>el.remove());
+  for(const b of state.bubbles)if(b.el?.isConnected)b.el.remove();state.bubbles=[];
+  for(const c of state.clusters.values())if(c.band?.isConnected)c.band.remove();state.clusters.clear();
+  document.querySelectorAll(".band-join-flash,.merge-flash").forEach(el=>el.remove());
 }
 
 function newProblem(){
-  state.generation++;
-  clearSimulation();
-  state.terms=[];
-  state.nextTermId=1;
-  state.nextClusterId=1;
-  state.nextParticleId=1;
-  state.mergeInProgress=false;
-  state.mergeClusterIds=[];
-  state.mergedClusterId=null;
-  state.mergeTermIds=[];
-  state.finalFlowing=false;
-  resultFrame.className="result-frame";
-  counterValue.textContent="0";
-
-  for(let i=0;i<state.operandCount;i++)state.terms.push(makeTerm(generateValue100(),false,null));
-  document.body.dataset.mode=state.level;
-  stage.style.height=calculateStageHeight()+"px";
-  renderTerms();
-  updateInteractionText();
+  state.generation++;clearSimulation();state.terms=[];state.nextTermId=1;state.nextClusterId=1;state.nextBubbleId=1;state.mergeInProgress=false;state.mergeClusterIds=[];state.mergedClusterId=null;state.finalAggregation=false;state.finalDone=false;state.finalClusterId=null;state.resolutionCheckAt=0;state.explicitCloseArmedAt=0;
+  for(let i=0;i<state.operandCount;i++)state.terms.push(makeTerm(generateValue100()));
+  document.body.dataset.mode=state.level;stage.style.height=calculateStageHeight()+"px";renderTerms();updateInteractionText();
 }
 
 function renderTerms(){
-  termLayer.innerHTML="";
-  const centers=getCenterRatios(state.terms.length);
+  termLayer.innerHTML="";const centers=getCenterRatios(state.terms.length);
   for(let index=0;index<state.terms.length;index++){
-    const term=state.terms[index];
-    const card=document.createElement("button");
-    card.className="term-card";
-    card.style.left=(centers[index]*100)+"%";
-    card.textContent=formatSigned(term.value100);
-    card.dataset.termId=String(term.id);
-    installCardPointerHandlers(card,term.id);
-    termLayer.appendChild(card);
-    term.card=card;
-    if(term.opened)card.classList.add("gone");
-
-    if(index<state.terms.length-1){
-      const plus=document.createElement("div");
-      plus.className="dynamic-plus";plus.textContent="+";
-      plus.style.left=(((centers[index]+centers[index+1])/2)*100)+"%";
-      termLayer.appendChild(plus);
-    }
+    const term=state.terms[index],card=document.createElement("button");card.className="term-card";card.style.left=(centers[index]*100)+"%";card.textContent=formatSigned(term.value100);card.dataset.termId=String(term.id);installCardPointerHandlers(card,term.id);termLayer.appendChild(card);term.card=card;if(term.opened)card.classList.add("gone");
+    if(index<state.terms.length-1){const plus=document.createElement("div");plus.className="dynamic-plus";plus.textContent="+";plus.style.left=(((centers[index]+centers[index+1])/2)*100)+"%";termLayer.appendChild(plus)}
   }
 }
 
 function installCardPointerHandlers(card,termId){
   card.addEventListener("pointerdown",event=>{
-    const term=state.terms.find(t=>t.id===termId);
-    if(!term||term.opened||term.opening||term.closing)return;
-    event.preventDefault();
-    card.setPointerCapture(event.pointerId);
+    const term=state.terms.find(t=>t.id===termId);if(!term||term.opened||term.opening||term.closing)return;
+    event.preventDefault();card.setPointerCapture(event.pointerId);
     const canDrag=!state.mergeInProgress&&openedTerms().length===0;
-    state.drag={termId,pointerId:event.pointerId,startX:event.clientX,startLeft:card.offsetLeft,moved:false,canDrag};
-    if(canDrag)card.classList.add("dragging");
+    state.drag={termId,pointerId:event.pointerId,startX:event.clientX,startLeft:card.offsetLeft,moved:false,canDrag};if(canDrag)card.classList.add("dragging");
   });
-
   card.addEventListener("pointermove",event=>{
-    const d=state.drag;
-    if(!d||d.termId!==termId||d.pointerId!==event.pointerId||!d.canDrag)return;
-    const dx=event.clientX-d.startX;
-    if(Math.abs(dx)>6)d.moved=true;
-    card.style.left=Math.max(45,Math.min(stage.clientWidth-45,d.startLeft+dx))+"px";
+    const d=state.drag;if(!d||d.termId!==termId||d.pointerId!==event.pointerId||!d.canDrag)return;
+    const dx=event.clientX-d.startX;if(Math.abs(dx)>6)d.moved=true;card.style.left=Math.max(45,Math.min(stage.clientWidth-45,d.startLeft+dx))+"px";
   });
-
   card.addEventListener("pointerup",event=>{
-    const d=state.drag;
-    if(!d||d.termId!==termId||d.pointerId!==event.pointerId)return;
-    card.classList.remove("dragging");
-    state.drag=null;
-
+    const d=state.drag;if(!d||d.termId!==termId||d.pointerId!==event.pointerId)return;card.classList.remove("dragging");state.drag=null;
     if(d.canDrag&&d.moved){
-      const centers=getCenterRatios(state.terms.length).map(r=>r*stage.clientWidth);
-      const x=card.offsetLeft;
-      let targetIndex=0,best=Infinity;
-      centers.forEach((cx,i)=>{const dist=Math.abs(cx-x);if(dist<best){best=dist;targetIndex=i;}});
-      const currentIndex=state.terms.findIndex(t=>t.id===termId);
-      const[item]=state.terms.splice(currentIndex,1);
-      state.terms.splice(targetIndex,0,item);
-      renderTerms();
-      setStatus("Sıra değişti. Şimdi istediğin sayıyı aç.");
-    }else{
-      openTerm(termId);
-    }
+      const centers=getCenterRatios(state.terms.length).map(r=>r*stage.clientWidth),x=card.offsetLeft;let targetIndex=0,best=Infinity;
+      centers.forEach((cx,i)=>{const dist=Math.abs(cx-x);if(dist<best){best=dist;targetIndex=i}});
+      const currentIndex=state.terms.findIndex(t=>t.id===termId),[item]=state.terms.splice(currentIndex,1);state.terms.splice(targetIndex,0,item);renderTerms();setStatus("Sıra değişti. Şimdi istediğin sayıyı aç.");
+    }else openTerm(termId);
   });
-
-  card.addEventListener("pointercancel",()=>{
-    card.classList.remove("dragging");
-    state.drag=null;
-    if(openedTerms().length===0)renderTerms();
-  });
+  card.addEventListener("pointercancel",()=>{card.classList.remove("dragging");state.drag=null;if(openedTerms().length===0)renderTerms()});
 }
 
-/* =========================================================
-   KONTROLLER
-   ========================================================= */
-newBtn.addEventListener("click",event=>{event.stopPropagation();newProblem();});
-for(const button of levelButtons){
-  button.addEventListener("click",event=>{
-    event.stopPropagation();
-    state.level=button.dataset.level;
-    levelButtons.forEach(item=>item.classList.toggle("active",item===button));
-    newProblem();
-  });
-}
-settingsPanel.addEventListener("click",event=>event.stopPropagation());
-aSlider.addEventListener("input",event=>{state.limitA=Number(event.target.value);aValue.textContent=String(state.limitA);});
-aSlider.addEventListener("change",event=>{event.stopPropagation();state.limitA=Number(event.target.value);aValue.textContent=String(state.limitA);newProblem();});
-countSlider.addEventListener("input",event=>{state.operandCount=Number(event.target.value);countValue.textContent=String(state.operandCount);});
-countSlider.addEventListener("change",event=>{event.stopPropagation();state.operandCount=Number(event.target.value);countValue.textContent=String(state.operandCount);newProblem();});
-window.addEventListener("resize",()=>{
-  if(state.mergeInProgress)return;
-  stage.style.height=calculateStageHeight()+"px";
-  renderTerms();
-});
+newBtn.addEventListener("click",e=>{e.stopPropagation();newProblem()});
+for(const button of levelButtons)button.addEventListener("click",e=>{e.stopPropagation();state.level=button.dataset.level;levelButtons.forEach(item=>item.classList.toggle("active",item===button));newProblem()});
+settingsPanel.addEventListener("click",e=>e.stopPropagation());
+aSlider.addEventListener("input",e=>{state.limitA=Number(e.target.value);aValue.textContent=String(state.limitA)});
+aSlider.addEventListener("change",e=>{e.stopPropagation();state.limitA=Number(e.target.value);aValue.textContent=String(state.limitA);newProblem()});
+countSlider.addEventListener("input",e=>{state.operandCount=Number(e.target.value);countValue.textContent=String(state.operandCount)});
+countSlider.addEventListener("change",e=>{e.stopPropagation();state.operandCount=Number(e.target.value);countValue.textContent=String(state.operandCount);newProblem()});
+window.addEventListener("resize",()=>{if(state.mergeInProgress)return;stage.style.height=calculateStageHeight()+"px";renderTerms()});
 
 requestAnimationFrame(physicsFrame);
 newProblem();
@@ -1574,4 +1056,5 @@ newProblem();
 </script>
 <script src="/projeler/shared-ui.js?v=20261004-1"></script>
 </body>
+</html>
 </html>
