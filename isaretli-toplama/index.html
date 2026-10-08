@@ -51,9 +51,9 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
 .term-layer{position:absolute;inset:0;z-index:35;pointer-events:none}
 .term-card{position:absolute;top:148px;transform:translate(-50%,-50%);min-width:94px;padding:15px 16px;border:0;border-radius:18px;background:#fff;color:var(--text);font-size:clamp(24px,3vw,40px);font-weight:850;letter-spacing:-.04em;box-shadow:0 14px 30px rgba(30,38,56,.14);cursor:grab;z-index:45;pointer-events:auto;touch-action:none;transition:left .28s ease,transform .18s ease,opacity .25s ease,box-shadow .2s ease}
 .term-card:hover{transform:translate(-50%,-52%) scale(1.025)}.term-card.dragging{cursor:grabbing;z-index:90;transition:none;box-shadow:0 20px 40px rgba(30,38,56,.22)}.term-card.gone{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.72)}
-.dynamic-plus{position:absolute;top:148px;transform:translate(-50%,-50%);font-size:clamp(38px,4.8vw,60px);font-weight:500;color:#343b4b;opacity:.34;pointer-events:none;z-index:34}
+.dynamic-plus{position:absolute;top:148px;transform:translate(-50%,-50%);font-size:clamp(38px,4.8vw,60px);font-weight:500;color:#343b4b;opacity:.34;pointer-events:none;z-index:34;transition:opacity .22s ease,transform .22s ease}.dynamic-plus.fade-away{opacity:0;transform:translate(-50%,-50%) scale(.78)}
 .band-layer{position:absolute;inset:0;width:100%;height:100%;z-index:8;overflow:visible;pointer-events:none}
-.cluster-band{fill:var(--band-fill);stroke:var(--band);stroke-width:2.4;vector-effect:non-scaling-stroke;filter:drop-shadow(0 5px 9px rgba(55,65,81,.10));pointer-events:visiblePainted;cursor:pointer;transition:stroke .18s ease,fill .18s ease,opacity .18s ease}
+.cluster-band{fill:var(--band-fill);stroke:var(--band);stroke-width:2.4;vector-effect:non-scaling-stroke;filter:drop-shadow(0 5px 9px rgba(55,65,81,.10));pointer-events:visiblePainted;cursor:grab;touch-action:none;transition:stroke .18s ease,fill .18s ease,opacity .18s ease}.cluster-band.dragging{cursor:grabbing;stroke:#6257aa;filter:drop-shadow(0 7px 13px rgba(72,61,135,.20))}
 .cluster-band.single{stroke:#7f8999}.cluster-band.mergeable{stroke:#6d65a8;fill:rgba(255,255,255,.78);filter:drop-shadow(0 5px 9px rgba(55,65,81,.10)) drop-shadow(0 0 7px rgba(124,58,237,.16))}
 .band-join-flash,.merge-flash{position:absolute;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%) scale(.2);z-index:80;border:2px solid rgba(255,255,255,.98);box-shadow:0 0 0 2px rgba(124,58,237,.22),0 0 18px rgba(124,58,237,.45),0 0 32px rgba(255,255,255,.95);animation:flash .46s ease-out forwards}
 .band-join-flash{width:18px;height:18px}.merge-flash{width:24px;height:24px}
@@ -71,7 +71,7 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
   animation:splitPulse 1.0s ease-in-out infinite alternate;
 }
 @keyframes splitPulse{from{transform:scale(1)}to{transform:scale(1.07)}}
-.bubble-wrap.merging{z-index:72}.bubble-wrap.merging .bubble-core{animation:none;filter:brightness(1.08)}
+.bubble-wrap.merging{z-index:72}.bubble-wrap.merging .bubble-core{animation:none;filter:brightness(1.08)}.bubble-wrap.annihilation-focus{z-index:78}.bubble-wrap.annihilation-focus .bubble-core{box-shadow:0 0 0 4px rgba(255,255,255,.55),0 0 24px rgba(124,58,237,.36),inset 0 1px 0 rgba(255,255,255,.9)}
 .bubble-wrap.final-result{z-index:88}
 .bubble-wrap.final-result .bubble-core{
   box-shadow:0 0 0 6px rgba(124,58,237,.09),0 0 32px rgba(124,58,237,.30),inset 0 1px 0 rgba(255,255,255,.9);
@@ -158,7 +158,10 @@ const PHYSICS={
   boundaryOffset:7,
   mergeGap:5,
   lifeSeekAt:.68,
-  lifeUrgentAt:.86
+  lifeUrgentAt:.86,
+  dragSpring:.020,
+  dragVelocityCoupling:.055,
+  dragInertia:.045
 };
 
 const state={
@@ -181,7 +184,9 @@ const state={
   finalDone:false,
   finalClusterId:null,
   resolutionCheckAt:0,
-  explicitCloseArmedAt:0
+  explicitCloseArmedAt:0,
+  finalReady:false,
+  clusterDrag:null
 };
 
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -315,10 +320,20 @@ function createCluster(termIds,anchor){
   const band=document.createElementNS("http://www.w3.org/2000/svg","path");
   band.setAttribute("class","cluster-band");
   band.dataset.clusterId=String(id);
-  band.addEventListener("click",e=>{e.stopPropagation();if(e.isTrusted)handleClusterClick(id,true)});
   clusterBandGroup.appendChild(band);
-  const cluster={id,termIds:new Set(termIds),anchor:{...anchor},band,mode:"free",createdAt:performance.now()};
+
+  const cluster={
+    id,
+    termIds:new Set(termIds),
+    anchor:{...anchor},
+    band,
+    mode:"free",
+    createdAt:performance.now(),
+    annihilating:false
+  };
+
   state.clusters.set(id,cluster);
+  installClusterPointerHandlers(band,id,null);
   return cluster;
 }
 
@@ -345,9 +360,196 @@ function createBubble(value100,x,y,clusterId,termId,lineageCount=1,lifeScale=1){
   const baseLife=1500+Math.random()*1500;
   const b={id:state.nextBubbleId++,el:wrap,core,value100,x,y,vx:0,vy:0,clusterId,termId,lineageCount,birth:now,lifeSpan:baseLife*lifeScale,alive:true,locked:false,seekingId:null,lastTargetAt:0};
   updateBubbleVisual(b);
-  core.addEventListener("click",e=>{e.stopPropagation();if(e.isTrusted)onBubbleClick(b,true)});
   state.bubbles.push(b);
+  installClusterPointerHandlers(core,clusterId,b.id);
   return b;
+}
+
+function stagePointFromEvent(event){
+  const rect=stage.getBoundingClientRect();
+  return{x:event.clientX-rect.left,y:event.clientY-rect.top};
+}
+
+function installClusterPointerHandlers(element,clusterId,bubbleId=null){
+  element.addEventListener("pointerdown",event=>{
+    if(event.button!==undefined&&event.button!==0)return;
+
+    const cluster=state.clusters.get(clusterId);
+    if(!cluster)return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const point=stagePointFromEvent(event);
+    const stats=clusterStats(cluster);
+
+    state.clusterDrag={
+      clusterId,
+      bubbleId,
+      pointerId:event.pointerId,
+      startX:point.x,
+      startY:point.y,
+      lastX:point.x,
+      lastY:point.y,
+      lastTime:performance.now(),
+      targetX:stats.center.x,
+      targetY:stats.center.y,
+      offsetX:stats.center.x-point.x,
+      offsetY:stats.center.y-point.y,
+      pointerVX:0,
+      pointerVY:0,
+      pointerAX:0,
+      pointerAY:0,
+      moved:false,
+      localOffsets:new Map(
+        bubblesInCluster(clusterId).map(b=>[
+          b.id,
+          {x:b.x-stats.center.x,y:b.y-stats.center.y}
+        ])
+      )
+    };
+
+    cluster.band?.classList.add("dragging");
+
+    try{element.setPointerCapture?.(event.pointerId)}catch(_){}
+  });
+}
+
+function updateClusterDrag(event){
+  const drag=state.clusterDrag;
+  if(!drag||drag.pointerId!==event.pointerId)return;
+
+  event.preventDefault();
+
+  const point=stagePointFromEvent(event);
+  const now=performance.now();
+  const frameScale=Math.max(.45,(now-drag.lastTime)/16.667);
+
+  const vx=(point.x-drag.lastX)/frameScale;
+  const vy=(point.y-drag.lastY)/frameScale;
+
+  drag.pointerAX=vx-drag.pointerVX;
+  drag.pointerAY=vy-drag.pointerVY;
+  drag.pointerVX=drag.pointerVX*.55+vx*.45;
+  drag.pointerVY=drag.pointerVY*.55+vy*.45;
+
+  drag.lastX=point.x;
+  drag.lastY=point.y;
+  drag.lastTime=now;
+  drag.targetX=point.x+drag.offsetX;
+  drag.targetY=point.y+drag.offsetY;
+
+  if(Math.hypot(point.x-drag.startX,point.y-drag.startY)>6){
+    drag.moved=true;
+  }
+}
+
+async function finishClusterDrag(event){
+  const drag=state.clusterDrag;
+  if(!drag||drag.pointerId!==event.pointerId)return;
+
+  state.clusterDrag=null;
+
+  const cluster=state.clusters.get(drag.clusterId);
+  cluster?.band?.classList.remove("dragging");
+
+  if(!cluster)return;
+
+  if(!drag.moved){
+    if(drag.bubbleId!==null){
+      const bubble=aliveBubbles().find(b=>b.id===drag.bubbleId);
+
+      if(bubble&&bubble.splittable){
+        await splitBubble(bubble);
+        return;
+      }
+    }
+
+    await handleClusterTap(cluster.id);
+  }
+}
+
+window.addEventListener("pointermove",updateClusterDrag,{passive:false});
+window.addEventListener("pointerup",finishClusterDrag);
+window.addEventListener("pointercancel",finishClusterDrag);
+
+function applyClusterDragForces(dt){
+  const drag=state.clusterDrag;
+  if(!drag)return;
+
+  const cluster=state.clusters.get(drag.clusterId);
+
+  if(!cluster){
+    state.clusterDrag=null;
+    return;
+  }
+
+  const bubbles=bubblesInCluster(cluster.id).filter(b=>!b.locked);
+  if(!bubbles.length)return;
+
+  const stats=clusterStats(cluster);
+
+  for(const bubble of bubbles){
+    const local=drag.localOffsets.get(bubble.id)||{
+      x:bubble.x-stats.center.x,
+      y:bubble.y-stats.center.y
+    };
+
+    const desiredX=drag.targetX+local.x;
+    const desiredY=drag.targetY+local.y;
+
+    const mass=Math.max(1,bubbleMass(bubble));
+    const response=Math.max(.45,Math.min(1.35,900/mass));
+
+    bubble.vx+=(desiredX-bubble.x)*PHYSICS.dragSpring*response*dt;
+    bubble.vy+=(desiredY-bubble.y)*PHYSICS.dragSpring*response*dt;
+
+    bubble.vx+=drag.pointerVX*PHYSICS.dragVelocityCoupling*response*dt;
+    bubble.vy+=drag.pointerVY*PHYSICS.dragVelocityCoupling*response*dt;
+
+    bubble.vx-=drag.pointerAX*PHYSICS.dragInertia/response*dt;
+    bubble.vy-=drag.pointerAY*PHYSICS.dragInertia/response*dt;
+  }
+
+  cluster.anchor.x=drag.targetX;
+  cluster.anchor.y=drag.targetY;
+}
+
+async function handleClusterTap(clusterId){
+  const cluster=state.clusters.get(clusterId);
+  if(!cluster)return;
+
+  if(
+    state.clusters.size===1
+    &&
+    allOriginalTermsOpened()
+    &&
+    state.finalReady
+    &&
+    !state.finalAggregation
+    &&
+    !state.finalDone
+  ){
+    startFinalAggregation(cluster);
+    return;
+  }
+
+  if(
+    state.clusters.size===1
+    &&
+    cluster.termIds.size===1
+    &&
+    unopenedTerms().length>0
+    &&
+    !cluster.annihilating
+    &&
+    !state.finalAggregation
+  ){
+    await closeSingleCluster(clusterId,true);
+    return;
+  }
+
+  updateInteractionText();
 }
 
 function clusterStats(cluster){
@@ -490,9 +692,8 @@ function applyInternalForces(cluster,dt,now){
       }
 
       if(!finalMode){
-        if(oppositeAtomicPair(a,b)&&d<=contact+2&&!a.locked&&!b.locked){
-          scheduleAnnihilation(a,b);
-        }
+        /* Atomik balonlar son birleşme iznine kadar birbirleriyle toplanmaz.
+           Zıt eş balonların yok edilmesini ayrı öğretim dizisi yönetir. */
       }else{
         const ageA=(now-a.birth)/Math.max(260,a.lifeSpan);
         const ageB=(now-b.birth)/Math.max(260,b.lifeSpan);
@@ -508,16 +709,61 @@ function applyInternalForces(cluster,dt,now){
 
 function applyClusterRepulsion(dt){
   const clusters=[...state.clusters.values()];
+
   for(let i=0;i<clusters.length;i++){
-    const a=clusters[i],sa=clusterStats(a);
+    const a=clusters[i];
+    if(!state.clusters.has(a.id))continue;
+
+    const sa=clusterStats(a);
+
     for(let j=i+1;j<clusters.length;j++){
-      const b=clusters[j],sb=clusterStats(b);
-      let dx=sb.center.x-sa.center.x,dy=sb.center.y-sa.center.y,d=Math.max(1,Math.hypot(dx,dy));
-      const ux=dx/d,uy=dy/d,ea=directionalExtent(a,sa.center,ux,uy),eb=directionalExtent(b,sb.center,-ux,-uy),gap=d-ea-eb;
-      if(!state.mergeInProgress&&gap<18){
-        const push=(18-gap)*PHYSICS.clusterRepulsion*dt;
-        for(const p of bubblesInCluster(a.id)){p.vx-=ux*push;p.vy-=uy*push}
-        for(const p of bubblesInCluster(b.id)){p.vx+=ux*push;p.vy+=uy*push}
+      const b=clusters[j];
+      if(!state.clusters.has(b.id))continue;
+
+      const sb=clusterStats(b);
+      let dx=sb.center.x-sa.center.x;
+      let dy=sb.center.y-sa.center.y;
+      const distance=Math.max(1,Math.hypot(dx,dy));
+      const ux=dx/distance;
+      const uy=dy/distance;
+      const extentA=directionalExtent(a,sa.center,ux,uy);
+      const extentB=directionalExtent(b,sb.center,-ux,-uy);
+      const gap=distance-extentA-extentB;
+
+      if(gap<=PHYSICS.mergeGap){
+        mergeClusterBoundaries(
+          a,
+          b,
+          {
+            x:sa.center.x+ux*extentA,
+            y:sa.center.y+uy*extentA
+          }
+        );
+        return;
+      }
+
+      if(gap<12){
+        const push=(12-gap)*PHYSICS.clusterRepulsion*.32*dt;
+        const draggingA=state.clusterDrag?.clusterId===a.id;
+        const draggingB=state.clusterDrag?.clusterId===b.id;
+
+        if(!draggingA){
+          for(const p of bubblesInCluster(a.id)){
+            if(!p.locked){
+              p.vx-=ux*push;
+              p.vy-=uy*push;
+            }
+          }
+        }
+
+        if(!draggingB){
+          for(const p of bubblesInCluster(b.id)){
+            if(!p.locked){
+              p.vx+=ux*push;
+              p.vy+=uy*push;
+            }
+          }
+        }
       }
     }
   }
@@ -528,85 +774,180 @@ function showFlash(point,className="band-join-flash"){
 }
 
 function applyMergingClusterForces(dt){
-  if(!state.mergeInProgress||state.mergedClusterId!==null)return;
-  const clusters=state.mergeClusterIds.map(id=>state.clusters.get(id)).filter(Boolean);
-  if(clusters.length===1){state.mergedClusterId=clusters[0].id;clusters[0].mode="merged";return}
-  if(clusters.length<2)return;
-  let closest=null;
-  for(let i=0;i<clusters.length;i++){
-    const a=clusters[i],sa=clusterStats(a);
-    for(let j=i+1;j<clusters.length;j++){
-      const b=clusters[j],sb=clusterStats(b);
-      let dx=sb.center.x-sa.center.x,dy=sb.center.y-sa.center.y,d=Math.max(1,Math.hypot(dx,dy));
-      const ux=dx/d,uy=dy/d,ea=directionalExtent(a,sa.center,ux,uy),eb=directionalExtent(b,sb.center,-ux,-uy),gap=d-ea-eb;
-      const distanceBoost=1+Math.min(2.5,Math.max(0,gap)/95);
-      const acceleration=Math.min(PHYSICS.clusterAttractionMax,PHYSICS.clusterAttraction*distanceBoost*(1+1250/Math.max(100,(gap+34)*(gap+34))));
-      for(const p of bubblesInCluster(a.id)){if(!p.locked){p.vx+=ux*acceleration*dt;p.vy+=uy*acceleration*dt}}
-      for(const p of bubblesInCluster(b.id)){if(!p.locked){p.vx-=ux*acceleration*dt;p.vy-=uy*acceleration*dt}}
-      if(!closest||gap<closest.gap)closest={a,b,gap,point:{x:sa.center.x+ux*ea,y:sa.center.y+uy*ea}};
-    }
-  }
-  if(closest&&closest.gap<=PHYSICS.mergeGap)mergeClusterBoundaries(closest.a,closest.b,closest.point);
+  /* Kümeler uzaktan otomatik olarak birleşmez. */
 }
 
 function mergeClusterBoundaries(a,b,point){
-  if(!state.clusters.has(a.id)||!state.clusters.has(b.id))return;
-  showFlash(point,"band-join-flash");
-  const sa=clusterStats(a),sb=clusterStats(b),m=sa.mass+sb.mass;
-  const anchor={x:(sa.center.x*sa.mass+sb.center.x*sb.mass)/Math.max(1,m),y:(sa.center.y*sa.mass+sb.center.y*sb.mass)/Math.max(1,m)};
-  const merged=createCluster([...a.termIds,...b.termIds],anchor);merged.mode="approaching";
-  for(const bubble of aliveBubbles())if(bubble.clusterId===a.id||bubble.clusterId===b.id)bubble.clusterId=merged.id;
-  for(const term of state.terms)if(term.clusterId===a.id||term.clusterId===b.id)term.clusterId=merged.id;
-  deleteCluster(a.id);deleteCluster(b.id);
-  state.mergeClusterIds=state.mergeClusterIds.filter(id=>id!==a.id&&id!==b.id);state.mergeClusterIds.push(merged.id);
-  if(state.mergeClusterIds.length===1){
-    merged.mode="free";
-    state.mergedClusterId=merged.id;
-    state.mergeInProgress=false;
-    state.mergeClusterIds=[];
+  if(
+    !state.clusters.has(a.id)
+    ||
+    !state.clusters.has(b.id)
+    ||
+    state.finalAggregation
+    ||
+    state.finalDone
+  )return;
 
-    if(allOriginalTermsOpened()){
-      setStatus("Tüm kümeler birleşti. Önce zıt eş balonlar sadeleşecek; sonra sonuç balonu oluşacak…");
-      setTimeout(checkFinalReadiness,260);
-    }else{
-      state.mergedClusterId=null;
-      setStatus("Açık kümeler birleşti. Kapalı sayı varsa onu da açabilirsin.");
+  showFlash(point,"band-join-flash");
+
+  const sa=clusterStats(a);
+  const sb=clusterStats(b);
+  const totalMass=sa.mass+sb.mass;
+
+  const anchor={
+    x:(sa.center.x*sa.mass+sb.center.x*sb.mass)/Math.max(1,totalMass),
+    y:(sa.center.y*sa.mass+sb.center.y*sb.mass)/Math.max(1,totalMass)
+  };
+
+  const merged=createCluster([...a.termIds,...b.termIds],anchor);
+
+  for(const bubble of aliveBubbles()){
+    if(bubble.clusterId===a.id||bubble.clusterId===b.id){
+      bubble.clusterId=merged.id;
     }
-  }else{
-    setStatus("İki sınır birleşti. Yeni küme diğer kümeleri çekmeye devam ediyor…");
   }
+
+  for(const term of state.terms){
+    if(term.clusterId===a.id||term.clusterId===b.id){
+      term.clusterId=merged.id;
+    }
+  }
+
+  if(state.clusterDrag?.clusterId===a.id||state.clusterDrag?.clusterId===b.id){
+    const drag=state.clusterDrag;
+    const stats=clusterStats(merged);
+
+    drag.clusterId=merged.id;
+    drag.targetX=stats.center.x;
+    drag.targetY=stats.center.y;
+    drag.offsetX=stats.center.x-drag.lastX;
+    drag.offsetY=stats.center.y-drag.lastY;
+    drag.localOffsets=new Map(
+      bubblesInCluster(merged.id).map(p=>[
+        p.id,
+        {x:p.x-stats.center.x,y:p.y-stats.center.y}
+      ])
+    );
+  }
+
+  deleteCluster(a.id);
+  deleteCluster(b.id);
+
+  state.finalReady=false;
+  state.mergeInProgress=false;
+  state.mergeClusterIds=[];
+  state.mergedClusterId=null;
+
+  updatePlusSigns();
+
+  setStatus(
+    state.clusters.size===1&&allOriginalTermsOpened()
+      ? "Tüm kümeler tek küme oldu. Zıt eş balonlar sadeleşiyor…"
+      : "İki küme temas etti; lastik sınırlar birleşti. Zıt eş balonlar sadeleşiyor…"
+  );
+
+  setTimeout(()=>runAnnihilationSequence(merged.id),70);
 }
 
-function scheduleAnnihilation(a,b){
-  if(a.locked||b.locked||!a.alive||!b.alive||a.clusterId!==b.clusterId)return;
+function collectCancelablePairs(clusterId){
+  const bubbles=bubblesInCluster(clusterId)
+    .filter(b=>b.alive&&!b.locked&&[100,10,1].includes(Math.abs(b.value100)));
+
+  const candidates=[];
+
+  for(let i=0;i<bubbles.length;i++){
+    for(let j=i+1;j<bubbles.length;j++){
+      const a=bubbles[i];
+      const b=bubbles[j];
+
+      if(!oppositeAtomicPair(a,b))continue;
+
+      candidates.push({
+        a,
+        b,
+        distance:Math.hypot(a.x-b.x,a.y-b.y)
+      });
+    }
+  }
+
+  candidates.sort((x,y)=>x.distance-y.distance);
+
+  const used=new Set();
+  const pairs=[];
+
+  for(const item of candidates){
+    if(used.has(item.a.id)||used.has(item.b.id))continue;
+
+    used.add(item.a.id);
+    used.add(item.b.id);
+    pairs.push([item.a,item.b]);
+  }
+
+  return pairs;
+}
+
+function scheduleAnnihilation(a,b,slow=false){
+  if(
+    a.locked
+    ||
+    b.locked
+    ||
+    !a.alive
+    ||
+    !b.alive
+    ||
+    a.clusterId!==b.clusterId
+  )return Promise.resolve();
+
   a.locked=b.locked=true;
   a.el.classList.add("merging");
   b.el.classList.add("merging");
-  annihilatePair(a,b);
+
+  if(slow){
+    a.el.classList.add("annihilation-focus");
+    b.el.classList.add("annihilation-focus");
+  }
+
+  return annihilatePair(a,b,{slow});
 }
 
-async function annihilatePair(a,b){
-  const target={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+async function annihilatePair(a,b,{slow=false}={}){
+  if(!a.alive||!b.alive)return;
+
+  const target={
+    x:(a.x+b.x)/2,
+    y:(a.y+b.y)/2
+  };
+
   const startA={x:a.x,y:a.y};
   const startB={x:b.x,y:b.y};
   const started=performance.now();
-  const duration=165;
+  const duration=slow?640:155;
 
   await new Promise(resolve=>{
     function frame(now){
       const t=Math.min(1,(now-started)/duration);
-      const q=t*t;
+      const q=slow?t*t*(3-2*t):t*t;
+
       a.x=startA.x+(target.x-startA.x)*q;
       a.y=startA.y+(target.y-startA.y)*q;
       b.x=startB.x+(target.x-startB.x)*q;
       b.y=startB.y+(target.y-startB.y)*q;
 
-      if(a.el.isConnected){a.el.style.left=a.x+"px";a.el.style.top=a.y+"px"}
-      if(b.el.isConnected){b.el.style.left=b.x+"px";b.el.style.top=b.y+"px"}
+      if(a.el.isConnected){
+        a.el.style.left=a.x+"px";
+        a.el.style.top=a.y+"px";
+      }
+
+      if(b.el.isConnected){
+        b.el.style.left=b.x+"px";
+        b.el.style.top=b.y+"px";
+      }
 
       if(t<1)requestAnimationFrame(frame);
       else resolve();
     }
+
     requestAnimationFrame(frame);
   });
 
@@ -615,20 +956,88 @@ async function annihilatePair(a,b){
   const vanish=p=>p.core.animate(
     [
       {transform:"scale(1)",opacity:1},
-      {transform:"scale(1.28)",opacity:1,offset:.25},
+      {transform:"scale(1.30)",opacity:1,offset:.25},
       {transform:"scale(.02)",opacity:0}
     ],
-    {duration:190,easing:"cubic-bezier(.25,.78,.35,1)",fill:"forwards"}
+    {
+      duration:slow?260:170,
+      easing:"cubic-bezier(.25,.78,.35,1)",
+      fill:"forwards"
+    }
   ).finished.catch(()=>{});
 
   await Promise.all([vanish(a),vanish(b)]);
 
   a.alive=false;
   b.alive=false;
+
   if(a.el.isConnected)a.el.remove();
   if(b.el.isConnected)b.el.remove();
+}
 
-  setTimeout(checkFinalReadiness,90);
+async function runAnnihilationSequence(clusterId){
+  const cluster=state.clusters.get(clusterId);
+
+  if(
+    !cluster
+    ||
+    cluster.annihilating
+    ||
+    state.finalAggregation
+    ||
+    state.finalDone
+  )return;
+
+  cluster.annihilating=true;
+  clearSplittableMarks();
+
+  try{
+    while(state.clusters.has(clusterId)){
+      const pairs=collectCancelablePairs(clusterId);
+
+      if(!pairs.length)break;
+
+      if(pairs.length>3){
+        const bulk=pairs.slice(0,pairs.length-3);
+
+        setStatus(
+          bulk.length+
+          " zıt çift aynı anda yok oluyor…"
+        );
+
+        await Promise.all(
+          bulk.map(([a,b])=>scheduleAnnihilation(a,b,false))
+        );
+
+        await sleep(110);
+        continue;
+      }
+
+      setStatus(
+        "Kalan zıt balonlar birbirine yaklaşıp <strong>teker teker</strong> yok oluyor…"
+      );
+
+      for(const [a,b] of pairs){
+        if(
+          !state.clusters.has(clusterId)
+          ||
+          !a.alive
+          ||
+          !b.alive
+        )break;
+
+        await scheduleAnnihilation(a,b,true);
+        await sleep(170);
+      }
+
+      break;
+    }
+  }finally{
+    const current=state.clusters.get(clusterId);
+    if(current)current.annihilating=false;
+  }
+
+  checkFinalReadiness();
 }
 
 function scheduleFinalMerge(a,b){
@@ -747,65 +1156,103 @@ function hasCancelablePair(cluster){
 }
 
 function checkFinalReadiness(){
-  if(state.finalDone||state.finalAggregation||state.mergeInProgress)return;
-  if(!allOriginalTermsOpened()||state.clusters.size!==1)return;
+  if(
+    state.finalDone
+    ||
+    state.finalAggregation
+    ||
+    state.clusters.size!==1
+    ||
+    !allOriginalTermsOpened()
+  )return;
 
   const cluster=[...state.clusters.values()][0];
+
+  if(cluster.annihilating)return;
+
   state.finalClusterId=cluster.id;
 
-  const bs=bubblesInCluster(cluster.id).filter(b=>b.alive);
+  const bubbles=bubblesInCluster(cluster.id).filter(b=>b.alive);
 
-  if(bs.some(b=>b.locked))return;
+  if(bubbles.some(b=>b.locked))return;
 
-  if(bs.length===0){
-    const center=clusterStats(cluster).center;
-    const zero=createBubble(0,center.x,center.y,cluster.id,null,1,.35);
-    zero.birth=performance.now()-zero.lifeSpan*.8;
-    finishFinalResult(cluster,zero);
-    return;
-  }
-
-  const signs=new Set(bs.filter(b=>b.value100!==0).map(b=>Math.sign(b.value100)));
+  const signs=new Set(
+    bubbles
+      .filter(b=>b.value100!==0)
+      .map(b=>Math.sign(b.value100))
+  );
 
   if(signs.size<=1){
-    startFinalAggregation(cluster);
+    state.finalReady=true;
+    clearSplittableMarks();
+
+    setStatus(
+      bubbles.length===0
+        ? "Sadeleştirme tamamlandı. <strong>Tek kümeye tıkla:</strong> 0 sonuç balonu oluşsun."
+        : "Sadeleştirme tamamlandı. <strong>Tek kümeye tıkla:</strong> son sayı-birleşmesine izin ver."
+    );
+
     return;
   }
 
+  state.finalReady=false;
+
   if(hasCancelablePair(cluster)){
-    setStatus("Zıt eş balonlar birbirini bulup yok ediyor…");
+    runAnnihilationSequence(cluster.id);
     return;
   }
 
   const marked=markNeededSplits(cluster);
 
   if(marked){
-    setStatus("Zıt işaretliler farklı büyüklükte kaldı. <strong>Parlayan büyük balona tıkla.</strong>");
+    setStatus(
+      "Zıt işaretliler farklı büyüklükte kaldı. <strong>Parlayan büyük balona tıkla.</strong>"
+    );
   }
 }
 
 function startFinalAggregation(cluster){
-  if(state.finalAggregation||state.finalDone)return;
+  if(
+    state.finalAggregation
+    ||
+    state.finalDone
+    ||
+    !state.finalReady
+    ||
+    state.clusters.size!==1
+    ||
+    !allOriginalTermsOpened()
+  )return;
 
   clearSplittableMarks();
+  state.finalReady=false;
   state.finalAggregation=true;
   state.finalClusterId=cluster.id;
 
-  const bs=bubblesInCluster(cluster.id).filter(b=>b.alive);
+  const bubbles=bubblesInCluster(cluster.id).filter(b=>b.alive);
 
-  if(bs.length===1){
-    finishFinalResult(cluster,bs[0]);
+  if(bubbles.length===0){
+    const center=clusterStats(cluster).center;
+    const zero=createBubble(0,center.x,center.y,cluster.id,null,1,.35);
+    finishFinalResult(cluster,zero);
+    return;
+  }
+
+  if(bubbles.length===1){
+    finishFinalResult(cluster,bubbles[0]);
     return;
   }
 
   const now=performance.now();
 
-  for(const b of bs){
-    b.birth=now-b.lifeSpan*(.70+Math.random()*.08);
-    b.el.classList.add("aging");
+  for(const bubble of bubbles){
+    bubble.birth=now-bubble.lifeSpan*(.70+Math.random()*.08);
+    bubble.el.classList.add("aging");
   }
 
-  setStatus("Sadeleştirme tamamlandı. <strong>Şimdi sayısal birleşme başladı:</strong> kalan balonlar tek sonuç balonunu oluşturuyor…");
+  setStatus(
+    "Son birleşmeye izin verildi. Atomik balonlar şimdi birleşerek <strong>tek sonuç balonunu</strong> oluşturuyor…"
+  );
 }
 
 function maybeFinishFinalAggregation(clusterId){
@@ -887,8 +1334,12 @@ async function splitBubble(b){
     child.vy=Math.sin(angle)*1.1;
   }
 
-  setStatus("Büyük balon 10 küçük balona ayrıldı. Zıt eş balonlar yeniden birbirini arıyor…");
-  setTimeout(checkFinalReadiness,160);
+  setStatus("Büyük balon 10 küçük balona ayrıldı. Zıt eş balonlar yeniden sadeleştiriliyor…");
+  state.finalReady=false;
+  setTimeout(()=>{
+    const cluster=state.clusters.get(clusterId);
+    if(cluster)runAnnihilationSequence(cluster.id);
+  },120);
 }
 
 function integrate(dt){
@@ -907,7 +1358,10 @@ function integrate(dt){
 function physicsFrame(now){
   const dt=Math.min(1.7,Math.max(.35,(now-state.lastPhysicsTime)/16.667));state.lastPhysicsTime=now;
   for(const cluster of state.clusters.values())applyInternalForces(cluster,dt,now);
-  applyClusterRepulsion(dt);applyMergingClusterForces(dt);integrate(dt);updateBands();
+  applyClusterDragForces(dt);
+  applyClusterRepulsion(dt);
+  integrate(dt);
+  updateBands();
 
   if(now>=state.resolutionCheckAt){
     state.resolutionCheckAt=now+180;
@@ -919,35 +1373,55 @@ function physicsFrame(now){
 
 function updateInteractionText(){
   if(state.finalDone)return;
+
   if(state.finalAggregation){
-    setStatus("Sonuç balonu oluşuyor…");
+    setStatus("Sonuç balonu oluşuyor… Kümeyi sürüklemeye devam edebilirsin.");
     return;
   }
-  if(state.mergeInProgress)return;
 
   if(state.clusters.size===0){
     setStatus("İstediğin sayıyı aç.");
-  }else if(state.clusters.size===1){
-    const c=[...state.clusters.values()][0];
-
-    if(c.termIds.size===1){
-      setStatus("Tek sayı açık. <strong>Kümeye veya balonuna tıklarsan kapanır.</strong>");
-    }else if(unopenedTerms().length>0){
-      setStatus("Açık sayılar tek kümede. Kapalı sayı varsa onu da açabilirsin.");
-    }else{
-      setStatus("Tüm sayılar aynı kümede. Zıt balonlar sadeleşiyor…");
-    }
-  }else if(unopenedTerms().length>0){
-    setStatus(state.clusters.size+" küme açık. <strong>Bir kümeye tıklarsan açık kümeler birleşir.</strong>");
-  }else{
-    setStatus("Bütün sayılar açık. <strong>Bir kümeye tıkla:</strong> kümeler birleşecek; sadeleşme bitince sonuç balonu oluşacak.");
+    return;
   }
+
+  if(state.clusters.size===1){
+    const cluster=[...state.clusters.values()][0];
+
+    if(allOriginalTermsOpened()&&state.finalReady){
+      setStatus(
+        "Tek küme hazır. <strong>Kısa tıkla:</strong> son sayı-birleşmesine izin ver. İstersen önce kümeyi sürükleyebilirsin."
+      );
+      return;
+    }
+
+    if(cluster.termIds.size===1&&unopenedTerms().length>0){
+      setStatus(
+        "Kümeyi istediğin yere sürükleyebilirsin. Kısa tıklarsan bu tek açık sayı kapanır."
+      );
+      return;
+    }
+
+    if(unopenedTerms().length>0){
+      setStatus(
+        "Birleşmiş kümeyi de sürükleyebilirsin. Kapalı sayı varsa onu aç; başka kümeye temas ederse sınırlar birleşir."
+      );
+      return;
+    }
+
+    setStatus("Tüm sayılar tek kümede. Zıt balonların sadeleşmesi tamamlanıyor…");
+    return;
+  }
+
+  setStatus(
+    state.clusters.size+
+    " ayrı küme açık. <strong>Bir kümeyi sürükleyip diğerine temas ettir:</strong> sınırlar temas ettiği anda birleşir."
+  );
 }
 async function openTerm(termId){
   const term=state.terms.find(t=>t.id===termId);if(!term||term.opened||term.opening||term.closing)return;
   term.opened=true;term.opening=true;term.openedAt=performance.now();state.explicitCloseArmedAt=performance.now()+700;
   const index=state.terms.findIndex(t=>t.id===termId),source=elementCenterInStage(term.card),anchor=termAnchor(index);
-  const cluster=createCluster([term.id],anchor);term.clusterId=cluster.id;term.card.classList.add("gone");
+  const cluster=createCluster([term.id],anchor);term.clusterId=cluster.id;term.card.classList.add("gone");updatePlusSigns();
   const values=decomposeValue(term.value100),points=seedLayout(values,anchor,termSegmentWidth()),generation=state.generation;
   for(let i=0;i<values.length;i++){
     if(generation!==state.generation)break;
@@ -969,34 +1443,26 @@ async function closeSingleCluster(clusterId,explicit=false){
 }
 
 async function handleClusterClick(clusterId,explicit=false){
-  if(!explicit||state.finalDone||state.finalAggregation||state.mergeInProgress)return;
-  const cluster=state.clusters.get(clusterId);if(!cluster)return;
-  if(state.clusters.size===1){await closeSingleCluster(clusterId,true);return}
-  beginClusterMerge([...state.clusters.values()]);
+  if(!explicit)return;
+  await handleClusterTap(clusterId);
 }
 
-function beginClusterMerge(clusters){
-  if(state.mergeInProgress||clusters.length<2)return;
-  state.mergeInProgress=true;state.mergeClusterIds=clusters.map(c=>c.id);state.mergedClusterId=null;
-  for(const c of clusters)c.mode="approaching";
-  setStatus("Kümeler birbirini çekiyor. Sınırlar temas edince birleşecek; balonların yaşam döngüsü tek kümede devam edecek…");
+function beginClusterMerge(){
+  /* Tıklama ile küme birleştirme kaldırıldı.
+     Birleşmenin tek nedeni iki dinamik sınırın fiziksel temasıdır. */
 }
 
 function allOriginalTermsOpened(){return state.terms.every(t=>t.opened)}
 
 async function onBubbleClick(b,explicit=false){
-  if(!explicit||state.finalDone)return;
+  if(!explicit||!b?.alive)return;
 
   if(b.splittable){
     await splitBubble(b);
     return;
   }
 
-  if(state.finalAggregation)return;
-
-  const cluster=state.clusters.get(b.clusterId);
-  if(!cluster)return;
-  if(!state.mergeInProgress)await handleClusterClick(cluster.id,true);
+  await handleClusterTap(b.clusterId);
 }
 
 function clearSimulation(){
@@ -1006,17 +1472,60 @@ function clearSimulation(){
 }
 
 function newProblem(){
-  state.generation++;clearSimulation();state.terms=[];state.nextTermId=1;state.nextClusterId=1;state.nextBubbleId=1;state.mergeInProgress=false;state.mergeClusterIds=[];state.mergedClusterId=null;state.finalAggregation=false;state.finalDone=false;state.finalClusterId=null;state.resolutionCheckAt=0;state.explicitCloseArmedAt=0;
+  state.generation++;clearSimulation();state.terms=[];state.nextTermId=1;state.nextClusterId=1;state.nextBubbleId=1;state.mergeInProgress=false;state.mergeClusterIds=[];state.mergedClusterId=null;state.finalAggregation=false;state.finalDone=false;state.finalClusterId=null;state.finalReady=false;state.clusterDrag=null;state.resolutionCheckAt=0;state.explicitCloseArmedAt=0;
   for(let i=0;i<state.operandCount;i++)state.terms.push(makeTerm(generateValue100()));
   document.body.dataset.mode=state.level;stage.style.height=calculateStageHeight()+"px";renderTerms();updateInteractionText();
 }
 
+function updatePlusSigns(){
+  const openIds=new Set(
+    state.terms
+      .filter(term=>term.opened)
+      .map(term=>term.id)
+  );
+
+  document.querySelectorAll(".dynamic-plus").forEach(plus=>{
+    const left=Number(plus.dataset.leftTermId);
+    const right=Number(plus.dataset.rightTermId);
+
+    plus.classList.toggle(
+      "fade-away",
+      openIds.has(left)&&openIds.has(right)
+    );
+  });
+}
+
 function renderTerms(){
-  termLayer.innerHTML="";const centers=getCenterRatios(state.terms.length);
+  termLayer.innerHTML="";
+  const centers=getCenterRatios(state.terms.length);
+
   for(let index=0;index<state.terms.length;index++){
-    const term=state.terms[index],card=document.createElement("button");card.className="term-card";card.style.left=(centers[index]*100)+"%";card.textContent=formatSigned(term.value100);card.dataset.termId=String(term.id);installCardPointerHandlers(card,term.id);termLayer.appendChild(card);term.card=card;if(term.opened)card.classList.add("gone");
-    if(index<state.terms.length-1){const plus=document.createElement("div");plus.className="dynamic-plus";plus.textContent="+";plus.style.left=(((centers[index]+centers[index+1])/2)*100)+"%";termLayer.appendChild(plus)}
+    const term=state.terms[index];
+    const card=document.createElement("button");
+
+    card.className="term-card";
+    card.style.left=(centers[index]*100)+"%";
+    card.textContent=formatSigned(term.value100);
+    card.dataset.termId=String(term.id);
+
+    installCardPointerHandlers(card,term.id);
+    termLayer.appendChild(card);
+    term.card=card;
+
+    if(term.opened)card.classList.add("gone");
+
+    if(index<state.terms.length-1){
+      const plus=document.createElement("div");
+      plus.className="dynamic-plus";
+      plus.textContent="+";
+      plus.style.left=(((centers[index]+centers[index+1])/2)*100)+"%";
+      plus.dataset.leftTermId=String(term.id);
+      plus.dataset.rightTermId=String(state.terms[index+1].id);
+      termLayer.appendChild(plus);
+    }
   }
+
+  updatePlusSigns();
 }
 
 function installCardPointerHandlers(card,termId){
@@ -1056,5 +1565,4 @@ newProblem();
 </script>
 <script src="/projeler/shared-ui.js?v=20261004-1"></script>
 </body>
-</html>
 </html>
