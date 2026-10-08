@@ -56,10 +56,10 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
 .cluster-band{
   fill:var(--band-fill);
   stroke:var(--band);
-  stroke-width:3.1;
+  stroke-width:2.8;
   stroke-linecap:round;
   stroke-linejoin:round;
-  stroke-dasharray:1 7;
+  stroke-dasharray:1 5.5;
   vector-effect:non-scaling-stroke;
   filter:drop-shadow(0 5px 9px rgba(55,65,81,.10));
   pointer-events:visiblePainted;
@@ -76,7 +76,7 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
 .cluster-band.single{stroke:#7f8999}.cluster-band.mergeable{stroke:#6d65a8;fill:rgba(255,255,255,.78);filter:drop-shadow(0 5px 9px rgba(55,65,81,.10)) drop-shadow(0 0 7px rgba(124,58,237,.16))}
 .match-line{
   position:absolute;
-  height:3px;
+  height:4px;
   border-radius:999px;
   transform-origin:0 50%;
   pointer-events:none;
@@ -84,20 +84,45 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
   opacity:0;
   background:linear-gradient(90deg,rgba(37,99,235,.20),rgba(37,99,235,.92),#fff,rgba(225,29,72,.92),rgba(225,29,72,.20));
   box-shadow:0 0 8px rgba(124,58,237,.34),0 0 16px rgba(255,255,255,.82);
-  animation:matchLineAppear .12s ease-out forwards
+  animation:matchLineAppear .16s ease-out forwards,matchLinePulse .52s .16s ease-in-out infinite alternate
+}
+.match-line::before{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:0;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:#fff;
+  box-shadow:0 0 8px #fff,0 0 15px rgba(124,58,237,.85);
+  animation:matchSparkTravel .62s .08s ease-in-out infinite alternate
 }
 .match-line::after{
   content:"";
   position:absolute;
-  inset:-3px 0;
+  inset:-4px 0;
   border-radius:999px;
   background:inherit;
-  filter:blur(5px);
-  opacity:.34
+  filter:blur(6px);
+  opacity:.38
 }
 @keyframes matchLineAppear{
   from{opacity:0;filter:blur(3px)}
   to{opacity:.98;filter:blur(0)}
+}
+@keyframes matchLinePulse{
+  from{
+    box-shadow:0 0 7px rgba(124,58,237,.30),0 0 13px rgba(255,255,255,.72)
+  }
+  to{
+    box-shadow:0 0 13px rgba(124,58,237,.58),0 0 24px rgba(255,255,255,.98)
+  }
+}
+@keyframes matchSparkTravel{
+  from{left:4%;opacity:.72}
+  to{left:96%;opacity:1}
 }
 .annihilation-burst{position:absolute;width:0;height:0;pointer-events:none;z-index:84}
 .burst-core{
@@ -157,7 +182,28 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
   animation:splitPulse .72s ease-in-out infinite alternate;
 }
 @keyframes splitPulse{from{transform:scale(1)}to{transform:scale(1.07)}}
-.bubble-wrap.merging{z-index:72}.bubble-wrap.merging .bubble-core{animation:none;filter:brightness(1.08)}.bubble-wrap.annihilation-focus{z-index:78}.bubble-wrap.annihilation-focus .bubble-core{box-shadow:0 0 0 4px rgba(255,255,255,.55),0 0 24px rgba(124,58,237,.36),inset 0 1px 0 rgba(255,255,255,.9)}
+.bubble-wrap.merging{z-index:72}
+.bubble-wrap.merging .bubble-core{
+  animation:annihilationCharge .48s ease-in-out infinite alternate;
+  box-shadow:
+    0 0 0 4px rgba(255,255,255,.28),
+    0 0 17px rgba(124,58,237,.28),
+    inset 0 1px 0 rgba(255,255,255,.90)
+}
+@keyframes annihilationCharge{
+  from{
+    box-shadow:
+      0 0 0 3px rgba(255,255,255,.20),
+      0 0 12px rgba(124,58,237,.20),
+      inset 0 1px 0 rgba(255,255,255,.90)
+  }
+  to{
+    box-shadow:
+      0 0 0 5px rgba(255,255,255,.48),
+      0 0 26px rgba(124,58,237,.50),
+      inset 0 1px 0 rgba(255,255,255,.96)
+  }
+}.bubble-wrap.annihilation-focus{z-index:78}.bubble-wrap.annihilation-focus .bubble-core{box-shadow:0 0 0 4px rgba(255,255,255,.55),0 0 24px rgba(124,58,237,.36),inset 0 1px 0 rgba(255,255,255,.9)}
 .bubble-wrap.final-result{z-index:88}
 .bubble-wrap.final-result .bubble-core{
   box-shadow:0 0 0 6px rgba(124,58,237,.09),0 0 32px rgba(124,58,237,.30),inset 0 1px 0 rgba(255,255,255,.9);
@@ -240,14 +286,15 @@ const PHYSICS={
   clusterAttraction:.023,
   clusterAttractionMax:.40,
   clusterRepulsion:.032,
-  maxSpeed:8.8,
-  boundaryOffset:7,
+  maxSpeed:9.6,
+  dragMaxSpeed:16.5,
+  boundaryOffset:4.5,
   mergeGap:5,
   lifeSeekAt:.68,
   lifeUrgentAt:.86,
-  dragSpring:.020,
-  dragVelocityCoupling:.055,
-  dragInertia:.045
+  dragSpring:.038,
+  dragVelocityCoupling:.095,
+  dragInertia:.028
 };
 
 const state={
@@ -388,48 +435,156 @@ function smoothClosedPath(points){
 function rubberBandPath(bubbles,fallback){
   if(!bubbles.length){
     if(!fallback)return"";
-    const pts=[];
-    for(let i=0;i<36;i++){
-      const angle=Math.PI*2*i/36;
-      pts.push({
-        x:fallback.x+Math.cos(angle)*30,
-        y:fallback.y+Math.sin(angle)*30
+
+    const points=[];
+    for(let i=0;i<48;i++){
+      const angle=Math.PI*2*i/48;
+      points.push({
+        x:fallback.x+Math.cos(angle)*27,
+        y:fallback.y+Math.sin(angle)*27
       });
     }
-    return smoothClosedPath(pts);
+    return denseClosedPath(points);
+  }
+
+  let totalMass=0;
+  let centerX=0;
+  let centerY=0;
+
+  for(const bubble of bubbles){
+    const mass=bubbleMass(bubble);
+    totalMass+=mass;
+    centerX+=bubble.x*mass;
+    centerY+=bubble.y*mass;
   }
 
   const center={
-    x:bubbles.reduce((sum,b)=>sum+b.x,0)/bubbles.length,
-    y:bubbles.reduce((sum,b)=>sum+b.y,0)/bubbles.length
+    x:centerX/Math.max(1,totalMass),
+    y:centerY/Math.max(1,totalMass)
   };
 
   const points=[];
-  const steps=56;
+  const steps=84;
+  let lastRadius=26;
 
   for(let i=0;i<steps;i++){
     const angle=Math.PI*2*i/steps;
     const ux=Math.cos(angle);
     const uy=Math.sin(angle);
-    let support=-Infinity;
 
-    for(const b of bubbles){
-      const radius=bubbleRadius(b.value100)+PHYSICS.boundaryOffset;
-      const projection=
-        (b.x-center.x)*ux+
-        (b.y-center.y)*uy+
-        radius;
+    let farthest=-Infinity;
 
-      support=Math.max(support,projection);
+    for(const bubble of bubbles){
+      const radius=
+        bubbleRadius(bubble.value100)+
+        PHYSICS.boundaryOffset;
+
+      const cx=bubble.x-center.x;
+      const cy=bubble.y-center.y;
+
+      const along=cx*ux+cy*uy;
+
+      const perpendicularSquared=Math.max(
+        0,
+        cx*cx+
+        cy*cy-
+        along*along
+      );
+
+      const radiusSquared=radius*radius;
+
+      if(perpendicularSquared>radiusSquared){
+        continue;
+      }
+
+      const halfChord=Math.sqrt(
+        Math.max(
+          0,
+          radiusSquared-
+          perpendicularSquared
+        )
+      );
+
+      const exitDistance=
+        along+
+        halfChord;
+
+      if(exitDistance>0){
+        farthest=Math.max(
+          farthest,
+          exitDistance
+        );
+      }
     }
 
+    if(!Number.isFinite(farthest)){
+      farthest=lastRadius;
+    }
+
+    const maxNeighborChange=14;
+
+    farthest=Math.max(
+      lastRadius-maxNeighborChange,
+      Math.min(
+        lastRadius+maxNeighborChange,
+        farthest
+      )
+    );
+
+    lastRadius=farthest;
+
     points.push({
-      x:center.x+ux*support,
-      y:center.y+uy*support
+      x:center.x+ux*farthest,
+      y:center.y+uy*farthest
     });
   }
 
-  return smoothClosedPath(points);
+  for(let pass=0;pass<2;pass++){
+    const copy=points.map(point=>({...point}));
+
+    for(let i=0;i<points.length;i++){
+      const previous=
+        copy[(i-1+copy.length)%copy.length];
+
+      const current=
+        copy[i];
+
+      const next=
+        copy[(i+1)%copy.length];
+
+      points[i].x=
+        previous.x*.18+
+        current.x*.64+
+        next.x*.18;
+
+      points[i].y=
+        previous.y*.18+
+        current.y*.64+
+        next.y*.18;
+    }
+  }
+
+  return denseClosedPath(points);
+}
+
+function denseClosedPath(points){
+  if(!points.length)return"";
+
+  let d=
+    "M "+
+    points[0].x.toFixed(2)+
+    " "+
+    points[0].y.toFixed(2);
+
+  for(let i=1;i<points.length;i++){
+    d+=
+      " L "+
+      points[i].x.toFixed(2)+
+      " "+
+      points[i].y.toFixed(2);
+  }
+
+  return d+" Z";
 }
 
 function makeTerm(value100){return{id:state.nextTermId++,value100,opened:false,opening:false,closing:false,openPromise:null,card:null,clusterId:null,openedAt:0}}
@@ -937,12 +1092,12 @@ function createAnnihilationBurst(x,y){
     burst.appendChild(element);
   }
 
-  for(let i=0;i<10;i++){
+  for(let i=0;i<16;i++){
     const spark=document.createElement("div");
     spark.className="burst-spark";
 
-    const angle=Math.PI*2*i/10;
-    const distance=24+(i%3)*7;
+    const angle=Math.PI*2*i/16;
+    const distance=27+(i%4)*7;
 
     spark.style.setProperty("--sx",Math.cos(angle)*distance+"px");
     spark.style.setProperty("--sy",Math.sin(angle)*distance+"px");
@@ -1104,7 +1259,7 @@ async function annihilatePair(a,b,{slow=false}={}){
 
   const line=createMatchLine(a,b);
 
-  await sleep(slow?105:70);
+  await sleep(slow?145:120);
 
   const startA={x:a.x,y:a.y};
   const startB={x:b.x,y:b.y};
@@ -1135,7 +1290,7 @@ async function annihilatePair(a,b,{slow=false}={}){
     y:(startB.y+target.y)/2-ny*curve
   };
 
-  const duration=slow?420:255;
+  const duration=slow?500:365;
   const started=performance.now();
 
   await new Promise(resolve=>{
@@ -1199,7 +1354,7 @@ async function annihilatePair(a,b,{slow=false}={}){
       {transform:"scale(.02)",opacity:0}
     ],
     {
-      duration:slow?205:185,
+      duration:slow?255:235,
       easing:"cubic-bezier(.25,.78,.35,1)",
       fill:"forwards"
     }
@@ -1248,7 +1403,7 @@ async function runAnnihilationSequence(clusterId){
           bulk.map(([a,b])=>scheduleAnnihilation(a,b,false))
         );
 
-        await sleep(135);
+        await sleep(155);
         continue;
       }
 
@@ -1266,7 +1421,7 @@ async function runAnnihilationSequence(clusterId){
         )break;
 
         await scheduleAnnihilation(a,b,true);
-        await sleep(105);
+        await sleep(120);
       }
 
       break;
@@ -1638,7 +1793,15 @@ function integrate(dt){
   for(const b of aliveBubbles()){
     if(b.locked)continue;
     b.vx*=Math.pow(PHYSICS.damping,dt);b.vy*=Math.pow(PHYSICS.damping,dt);
-    const speed=Math.hypot(b.vx,b.vy);if(speed>PHYSICS.maxSpeed){b.vx=b.vx/speed*PHYSICS.maxSpeed;b.vy=b.vy/speed*PHYSICS.maxSpeed}
+    const speed=Math.hypot(b.vx,b.vy);
+    const speedLimit=
+      state.clusterDrag?.clusterId===b.clusterId
+        ?PHYSICS.dragMaxSpeed
+        :PHYSICS.maxSpeed;
+    if(speed>speedLimit){
+      b.vx=b.vx/speed*speedLimit;
+      b.vy=b.vy/speed*speedLimit;
+    }
     b.x+=b.vx*dt;b.y+=b.vy*dt;
     const r=bubbleRadius(b.value100)+7;
     b.x=Math.max(r,Math.min(stage.clientWidth-r,b.x));
