@@ -53,8 +53,89 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
 .term-card:hover{transform:translate(-50%,-52%) scale(1.025)}.term-card.dragging{cursor:grabbing;z-index:90;transition:none;box-shadow:0 20px 40px rgba(30,38,56,.22)}.term-card.gone{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.72)}
 .dynamic-plus{position:absolute;top:148px;transform:translate(-50%,-50%);font-size:clamp(38px,4.8vw,60px);font-weight:500;color:#343b4b;opacity:.34;pointer-events:none;z-index:34;transition:opacity .22s ease,transform .22s ease}.dynamic-plus.fade-away{opacity:0;transform:translate(-50%,-50%) scale(.78)}
 .band-layer{position:absolute;inset:0;width:100%;height:100%;z-index:8;overflow:visible;pointer-events:none}
-.cluster-band{fill:var(--band-fill);stroke:var(--band);stroke-width:2.4;vector-effect:non-scaling-stroke;filter:drop-shadow(0 5px 9px rgba(55,65,81,.10));pointer-events:visiblePainted;cursor:grab;touch-action:none;transition:stroke .18s ease,fill .18s ease,opacity .18s ease}.cluster-band.dragging{cursor:grabbing;stroke:#6257aa;filter:drop-shadow(0 7px 13px rgba(72,61,135,.20))}
+.cluster-band{
+  fill:var(--band-fill);
+  stroke:var(--band);
+  stroke-width:3.1;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-dasharray:1 7;
+  vector-effect:non-scaling-stroke;
+  filter:drop-shadow(0 5px 9px rgba(55,65,81,.10));
+  pointer-events:visiblePainted;
+  cursor:grab;
+  touch-action:none;
+  transition:stroke .18s ease,fill .18s ease,opacity .18s ease,stroke-dashoffset .18s ease
+}
+.cluster-band.dragging{
+  cursor:grabbing;
+  stroke:#6257aa;
+  stroke-dashoffset:4;
+  filter:drop-shadow(0 7px 13px rgba(72,61,135,.20))
+}
 .cluster-band.single{stroke:#7f8999}.cluster-band.mergeable{stroke:#6d65a8;fill:rgba(255,255,255,.78);filter:drop-shadow(0 5px 9px rgba(55,65,81,.10)) drop-shadow(0 0 7px rgba(124,58,237,.16))}
+.match-line{
+  position:absolute;
+  height:3px;
+  border-radius:999px;
+  transform-origin:0 50%;
+  pointer-events:none;
+  z-index:76;
+  opacity:0;
+  background:linear-gradient(90deg,rgba(37,99,235,.20),rgba(37,99,235,.92),#fff,rgba(225,29,72,.92),rgba(225,29,72,.20));
+  box-shadow:0 0 8px rgba(124,58,237,.34),0 0 16px rgba(255,255,255,.82);
+  animation:matchLineAppear .12s ease-out forwards
+}
+.match-line::after{
+  content:"";
+  position:absolute;
+  inset:-3px 0;
+  border-radius:999px;
+  background:inherit;
+  filter:blur(5px);
+  opacity:.34
+}
+@keyframes matchLineAppear{
+  from{opacity:0;filter:blur(3px)}
+  to{opacity:.98;filter:blur(0)}
+}
+.annihilation-burst{position:absolute;width:0;height:0;pointer-events:none;z-index:84}
+.burst-core{
+  position:absolute;left:0;top:0;width:18px;height:18px;
+  transform:translate(-50%,-50%) scale(.1);border-radius:50%;
+  background:radial-gradient(circle,#fff 0 20%,#eef4ff 28%,rgba(147,114,255,.72) 50%,rgba(124,58,237,.22) 68%,transparent 78%);
+  box-shadow:0 0 18px #fff,0 0 34px rgba(124,58,237,.72);
+  animation:burstCore .34s ease-out forwards
+}
+.burst-ring{
+  position:absolute;left:0;top:0;width:22px;height:22px;
+  transform:translate(-50%,-50%) scale(.2);
+  border-radius:50%;border:2px solid rgba(255,255,255,.96)
+}
+.burst-ring.one{animation:ringOne .38s ease-out forwards}
+.burst-ring.two{animation:ringTwo .50s .035s ease-out forwards}
+.burst-spark{
+  position:absolute;left:-2px;top:-2px;width:4px;height:4px;border-radius:50%;
+  background:#fff;box-shadow:0 0 8px rgba(255,255,255,.96);
+  animation:sparkFly .40s ease-out forwards
+}
+@keyframes burstCore{
+  0%{transform:translate(-50%,-50%) scale(.15);opacity:.25}
+  38%{transform:translate(-50%,-50%) scale(2);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(4);opacity:0}
+}
+@keyframes ringOne{
+  from{transform:translate(-50%,-50%) scale(.2);opacity:1}
+  to{transform:translate(-50%,-50%) scale(3.2);opacity:0}
+}
+@keyframes ringTwo{
+  from{transform:translate(-50%,-50%) scale(.2);opacity:.70}
+  to{transform:translate(-50%,-50%) scale(4.8);opacity:0}
+}
+@keyframes sparkFly{
+  from{transform:translate(0,0) scale(1);opacity:1}
+  to{transform:translate(var(--sx),var(--sy)) scale(.1);opacity:0}
+}
 .band-join-flash,.merge-flash{position:absolute;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%) scale(.2);z-index:80;border:2px solid rgba(255,255,255,.98);box-shadow:0 0 0 2px rgba(124,58,237,.22),0 0 18px rgba(124,58,237,.45),0 0 32px rgba(255,255,255,.95);animation:flash .46s ease-out forwards}
 .band-join-flash{width:18px;height:18px}.merge-flash{width:24px;height:24px}
 @keyframes flash{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}100%{opacity:0;transform:translate(-50%,-50%) scale(3)}}
@@ -149,8 +230,8 @@ const LEVELS={
 
 const PHYSICS={
   damping:.91,
-  centerCohesion:.00055,
-  attraction:.00068,
+  centerCohesion:.00064,
+  attraction:.00086,
   sameSizeMultiplier:1.75,
   oppositeSignMultiplier:2.55,
   overlapSpring:.075,
@@ -239,12 +320,12 @@ function bubbleRadius(value100){
   const mobile=innerWidth<=720;
   const a=Math.abs(value100);
   let base;
-  if(a>=100)base=mobile?25:29;
-  else if(a>=10)base=mobile?19:22;
-  else if(a>0)base=mobile?14:16;
-  else base=mobile?19:21;
+  if(a>=100)base=mobile?21:24;
+  else if(a>=10)base=mobile?16:18;
+  else if(a>0)base=mobile?12:13;
+  else base=mobile?16:18;
   const unitCount=Math.max(1,a/Math.max(1,currentConfig().minUnit));
-  const extra=Math.min(mobile?13:17,Math.log2(unitCount+1)*(mobile?2.6:3.2));
+  const extra=Math.min(mobile?10:13,Math.log2(unitCount+1)*(mobile?2.1:2.55));
   return base+extra;
 }
 
@@ -307,15 +388,48 @@ function smoothClosedPath(points){
 function rubberBandPath(bubbles,fallback){
   if(!bubbles.length){
     if(!fallback)return"";
-    const pts=[];for(let i=0;i<18;i++){const a=Math.PI*2*i/18;pts.push({x:fallback.x+Math.cos(a)*31,y:fallback.y+Math.sin(a)*31})}
+    const pts=[];
+    for(let i=0;i<36;i++){
+      const angle=Math.PI*2*i/36;
+      pts.push({
+        x:fallback.x+Math.cos(angle)*30,
+        y:fallback.y+Math.sin(angle)*30
+      });
+    }
     return smoothClosedPath(pts);
   }
-  const samples=[];
-  for(const b of bubbles){
-    const r=bubbleRadius(b.value100)+PHYSICS.boundaryOffset;
-    for(let i=0;i<14;i++){const a=Math.PI*2*i/14;samples.push({x:b.x+Math.cos(a)*r,y:b.y+Math.sin(a)*r})}
+
+  const center={
+    x:bubbles.reduce((sum,b)=>sum+b.x,0)/bubbles.length,
+    y:bubbles.reduce((sum,b)=>sum+b.y,0)/bubbles.length
+  };
+
+  const points=[];
+  const steps=56;
+
+  for(let i=0;i<steps;i++){
+    const angle=Math.PI*2*i/steps;
+    const ux=Math.cos(angle);
+    const uy=Math.sin(angle);
+    let support=-Infinity;
+
+    for(const b of bubbles){
+      const radius=bubbleRadius(b.value100)+PHYSICS.boundaryOffset;
+      const projection=
+        (b.x-center.x)*ux+
+        (b.y-center.y)*uy+
+        radius;
+
+      support=Math.max(support,projection);
+    }
+
+    points.push({
+      x:center.x+ux*support,
+      y:center.y+uy*support
+    });
   }
-  return smoothClosedPath(convexHull(samples));
+
+  return smoothClosedPath(points);
 }
 
 function makeTerm(value100){return{id:state.nextTermId++,value100,opened:false,opening:false,closing:false,openPromise:null,card:null,clusterId:null,openedAt:0}}
@@ -783,6 +897,66 @@ function applyClusterRepulsion(dt){
   }
 }
 
+function quadraticBezier(a,c,b,t){
+  const u=1-t;
+  return{
+    x:u*u*a.x+2*u*t*c.x+t*t*b.x,
+    y:u*u*a.y+2*u*t*c.y+t*t*b.y
+  };
+}
+
+function createMatchLine(a,b){
+  const line=document.createElement("div");
+  line.className="match-line";
+  stage.appendChild(line);
+  updateMatchLine(line,a.x,a.y,b.x,b.y);
+  return line;
+}
+
+function updateMatchLine(line,x1,y1,x2,y2){
+  const dx=x2-x1;
+  const dy=y2-y1;
+  const length=Math.hypot(dx,dy);
+  const angle=Math.atan2(dy,dx)*180/Math.PI;
+
+  line.style.left=x1+"px";
+  line.style.top=y1+"px";
+  line.style.width=length+"px";
+  line.style.transform="translateY(-50%) rotate("+angle+"deg)";
+}
+
+function createAnnihilationBurst(x,y){
+  const burst=document.createElement("div");
+  burst.className="annihilation-burst";
+  burst.style.left=x+"px";
+  burst.style.top=y+"px";
+
+  for(const className of["burst-core","burst-ring one","burst-ring two"]){
+    const element=document.createElement("div");
+    element.className=className;
+    burst.appendChild(element);
+  }
+
+  for(let i=0;i<10;i++){
+    const spark=document.createElement("div");
+    spark.className="burst-spark";
+
+    const angle=Math.PI*2*i/10;
+    const distance=24+(i%3)*7;
+
+    spark.style.setProperty("--sx",Math.cos(angle)*distance+"px");
+    spark.style.setProperty("--sy",Math.sin(angle)*distance+"px");
+
+    burst.appendChild(spark);
+  }
+
+  stage.appendChild(burst);
+
+  setTimeout(()=>{
+    if(burst.isConnected)burst.remove();
+  },620);
+}
+
 function showFlash(point,className="band-join-flash"){
   const el=document.createElement("div");el.className=className;el.style.left=point.x+"px";el.style.top=point.y+"px";stage.appendChild(el);setTimeout(()=>el.isConnected&&el.remove(),560);
 }
@@ -928,35 +1102,84 @@ function scheduleAnnihilation(a,b,slow=false){
 async function annihilatePair(a,b,{slow=false}={}){
   if(!a.alive||!b.alive)return;
 
-  const target={
-    x:(a.x+b.x)/2,
-    y:(a.y+b.y)/2
-  };
+  const line=createMatchLine(a,b);
+
+  await sleep(slow?105:70);
 
   const startA={x:a.x,y:a.y};
   const startB={x:b.x,y:b.y};
+
+  const target={
+    x:(startA.x+startB.x)/2,
+    y:(startA.y+startB.y)/2
+  };
+
+  const dx=startB.x-startA.x;
+  const dy=startB.y-startA.y;
+  const length=Math.max(1,Math.hypot(dx,dy));
+  const nx=-dy/length;
+  const ny=dx/length;
+
+  const curve=Math.min(
+    slow?13:9,
+    length*(slow?.05:.035)
+  );
+
+  const controlA={
+    x:(startA.x+target.x)/2+nx*curve,
+    y:(startA.y+target.y)/2+ny*curve
+  };
+
+  const controlB={
+    x:(startB.x+target.x)/2-nx*curve,
+    y:(startB.y+target.y)/2-ny*curve
+  };
+
+  const duration=slow?420:255;
   const started=performance.now();
-  const duration=slow?640:155;
 
   await new Promise(resolve=>{
     function frame(now){
-      const t=Math.min(1,(now-started)/duration);
-      const q=slow?t*t*(3-2*t):t*t;
+      const t=Math.max(0,Math.min(1,(now-started)/duration));
 
-      a.x=startA.x+(target.x-startA.x)*q;
-      a.y=startA.y+(target.y-startA.y)*q;
-      b.x=startB.x+(target.x-startB.x)*q;
-      b.y=startB.y+(target.y-startB.y)*q;
+      const q=
+        slow
+          ?t*t*(3-2*t)
+          :.10*t+.90*t*t;
+
+      const pa=quadraticBezier(startA,controlA,target,q);
+      const pb=quadraticBezier(startB,controlB,target,q);
+
+      a.x=pa.x;
+      a.y=pa.y;
+      b.x=pb.x;
+      b.y=pb.y;
 
       if(a.el.isConnected){
-        a.el.style.left=a.x+"px";
-        a.el.style.top=a.y+"px";
+        a.el.style.left=pa.x+"px";
+        a.el.style.top=pa.y+"px";
       }
 
       if(b.el.isConnected){
-        b.el.style.left=b.x+"px";
-        b.el.style.top=b.y+"px";
+        b.el.style.left=pb.x+"px";
+        b.el.style.top=pb.y+"px";
       }
+
+      if(line.isConnected){
+        updateMatchLine(line,pa.x,pa.y,pb.x,pb.y);
+      }
+
+      const near=Math.max(0,(q-.38)/.62);
+
+      const filter=
+        "brightness("+
+        (1.04+near*.42)+
+        ") saturate("+
+        (1.05+near*.28)+
+        ")";
+
+      a.core.style.filter=filter;
+      b.core.style.filter=filter;
 
       if(t<1)requestAnimationFrame(frame);
       else resolve();
@@ -965,16 +1188,18 @@ async function annihilatePair(a,b,{slow=false}={}){
     requestAnimationFrame(frame);
   });
 
-  showFlash(target,"merge-flash");
+  if(line.isConnected)line.remove();
+
+  createAnnihilationBurst(target.x,target.y);
 
   const vanish=p=>p.core.animate(
     [
       {transform:"scale(1)",opacity:1},
-      {transform:"scale(1.30)",opacity:1,offset:.25},
+      {transform:"scale(1.28)",opacity:1,offset:.24},
       {transform:"scale(.02)",opacity:0}
     ],
     {
-      duration:slow?260:170,
+      duration:slow?205:185,
       easing:"cubic-bezier(.25,.78,.35,1)",
       fill:"forwards"
     }
@@ -1023,7 +1248,7 @@ async function runAnnihilationSequence(clusterId){
           bulk.map(([a,b])=>scheduleAnnihilation(a,b,false))
         );
 
-        await sleep(110);
+        await sleep(135);
         continue;
       }
 
@@ -1041,7 +1266,7 @@ async function runAnnihilationSequence(clusterId){
         )break;
 
         await scheduleAnnihilation(a,b,true);
-        await sleep(170);
+        await sleep(105);
       }
 
       break;
@@ -1535,7 +1760,7 @@ async function onBubbleClick(b,explicit=false){
 function clearSimulation(){
   for(const b of state.bubbles)if(b.el?.isConnected)b.el.remove();state.bubbles=[];
   for(const c of state.clusters.values())if(c.band?.isConnected)c.band.remove();state.clusters.clear();
-  document.querySelectorAll(".band-join-flash,.merge-flash").forEach(el=>el.remove());
+  document.querySelectorAll(".band-join-flash,.merge-flash,.match-line,.annihilation-burst").forEach(el=>el.remove());
 }
 
 function newProblem(){
