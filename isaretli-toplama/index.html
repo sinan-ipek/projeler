@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>İşaretli Toplama</title>
+<title>İşaretli Toplama — Baloncuk Simülasyonu</title>
 <style>
 :root{
   --bg:#f5f7fb;
   --text:#1d2433;
   --muted:#6f7787;
   --accent:#7c3aed;
-  --stage-gray:#e6e9ee;
-  --band-stroke:#9ca5b3;
-  --band-fill:rgba(255,255,255,.74);
+  --stage-gray:#e5e8ed;
+  --band-stroke:#8993a2;
+  --band-fill:rgba(255,255,255,.72);
   --shadow:0 18px 45px rgba(42,50,70,.12);
 }
 *{box-sizing:border-box}
@@ -29,9 +29,8 @@ body{
     var(--bg);
   -webkit-tap-highlight-color:transparent;
 }
-button,.particle-core,input{-webkit-tap-highlight-color:transparent}
-.particle-core{user-select:none;-webkit-user-select:none;touch-action:manipulation}
-.app{width:min(1060px,100%)}
+button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
+.app{width:min(1080px,100%)}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
 .titlebox h1{margin:0;font-size:clamp(24px,3vw,38px);letter-spacing:-.04em}
 .titlebox p{margin:6px 0 0;color:var(--muted);font-size:14px}
@@ -45,114 +44,33 @@ button,.particle-core,input{-webkit-tap-highlight-color:transparent}
 .level-btn.active{color:#fff;background:var(--text);box-shadow:0 8px 20px rgba(29,36,51,.18)}
 .new-btn{margin-left:4px;color:var(--accent)}
 .home-btn{display:inline-flex;align-items:center;justify-content:center}
-.board{
-  position:relative;min-height:640px;overflow:hidden;border:1px solid rgba(255,255,255,.72);border-radius:30px;
-  background:rgba(255,255,255,.82);backdrop-filter:blur(14px);box-shadow:var(--shadow);
-}
-.stage{
-  position:relative;width:100%;height:620px;overflow:hidden;background:
-    radial-gradient(circle at 50% 20%,rgba(255,255,255,.42),transparent 34%),
-    var(--stage-gray);
-  transition:height .28s ease;
-}
-.stage::after{
-  content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
-  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(93,102,120,.03));
-}
-.soft-orb{position:absolute;width:340px;height:340px;border-radius:50%;filter:blur(30px);opacity:.09;pointer-events:none;z-index:0}
-.soft-orb.one{left:-100px;top:20px;background:#60a5fa}
-.soft-orb.two{right:-120px;bottom:10px;background:#c084fc}
-.settings-panel{
-  position:absolute;top:14px;right:18px;z-index:90;display:grid;gap:7px;padding:8px 10px;border-radius:13px;
-  background:rgba(255,255,255,.92);box-shadow:0 6px 18px rgba(40,48,67,.09);backdrop-filter:blur(8px);
-}
-.setting-row{display:grid;grid-template-columns:58px 116px;align-items:center;gap:8px;font-size:12px;font-weight:750;color:#4b5565}
-.setting-label{display:flex;align-items:center;justify-content:flex-end;gap:4px;white-space:nowrap}
-.setting-value{min-width:19px;text-align:right;color:var(--accent);font-variant-numeric:tabular-nums}
-.setting-slider{width:116px;accent-color:var(--accent);cursor:pointer}
-.term-layer{position:absolute;inset:0;z-index:30;pointer-events:none}
-.term-card{
-  position:absolute;top:150px;transform:translate(-50%,-50%);min-width:94px;padding:15px 16px;border:0;border-radius:18px;
-  background:#fff;color:var(--text);font-size:clamp(24px,3vw,40px);font-weight:850;letter-spacing:-.04em;
-  box-shadow:0 14px 30px rgba(30,38,56,.14);cursor:grab;z-index:40;pointer-events:auto;touch-action:none;
-  transition:left .28s ease,transform .18s ease,opacity .25s ease,box-shadow .2s ease;
-}
-.term-card:hover{transform:translate(-50%,-52%) scale(1.025)}
-.term-card.dragging{cursor:grabbing;z-index:70;transition:none;box-shadow:0 20px 40px rgba(30,38,56,.22)}
-.term-card.gone{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.72)}
-.dynamic-plus{
-  position:absolute;top:150px;transform:translate(-50%,-50%);font-size:clamp(38px,4.8vw,60px);font-weight:500;
-  color:#343b4b;opacity:.34;pointer-events:none;z-index:25;transition:left .28s ease,opacity .3s ease;
-}
-.band-layer{position:absolute;inset:0;width:100%;height:100%;z-index:7;overflow:visible;pointer-events:none}
-.rubber-band{
-  fill:var(--band-fill);stroke:var(--band-stroke);stroke-width:2.4;vector-effect:non-scaling-stroke;
-  filter:drop-shadow(0 5px 8px rgba(55,65,81,.08));pointer-events:visiblePainted;cursor:pointer;
-  transition:opacity .18s ease,stroke .18s ease,filter .18s ease;
-}
-.rubber-band.single-open{stroke:#8e98a8;filter:drop-shadow(0 5px 8px rgba(55,65,81,.08)) drop-shadow(0 0 5px rgba(255,255,255,.8))}
-.rubber-band.multi-open{stroke:#7e8797;filter:drop-shadow(0 5px 8px rgba(55,65,81,.09)) drop-shadow(0 0 6px rgba(124,58,237,.14))}
-.rubber-band.hidden-band{opacity:0;pointer-events:none}
-.merge-band{fill:rgba(255,255,255,.78);stroke:#7f8794;stroke-width:2.6;opacity:0;pointer-events:none}
-.merge-band.visible{opacity:1}
-.band-break{
-  position:absolute;width:18px;height:18px;border-radius:50%;z-index:55;pointer-events:none;
-  transform:translate(-50%,-50%) scale(.15);border:2px solid rgba(255,255,255,.96);
-  box-shadow:0 0 0 2px rgba(124,58,237,.22),0 0 18px rgba(124,58,237,.38),0 0 30px rgba(255,255,255,.9);
-  animation:bandBreak .42s ease-out forwards;
-}
-.band-break::after{content:"";position:absolute;inset:4px;border-radius:50%;background:#fff;box-shadow:0 0 14px #fff}
-@keyframes bandBreak{0%{opacity:0;transform:translate(-50%,-50%) scale(.15)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.7)}}
-.particle-wrap{position:absolute;transform:translate(-50%,-50%);z-index:16;will-change:left,top,transform,opacity}
-.particle-core{
-  display:grid;place-items:center;border-radius:999px;font-weight:850;letter-spacing:-.03em;border:1px solid rgba(255,255,255,.86);
-  box-shadow:0 5px 12px rgba(35,45,70,.12),inset 0 1px 0 rgba(255,255,255,.8);will-change:transform,box-shadow,filter;
-}
-.particle-wrap.unit-100 .particle-core{width:60px;height:60px;font-size:21px}
-.particle-wrap.unit-10 .particle-core{width:46px;height:46px;font-size:15px}
-body[data-mode="medium"] .particle-wrap.unit-10 .particle-core{width:36px;height:36px;font-size:12px}
-.particle-wrap.unit-1 .particle-core{width:32px;height:32px;font-size:10px}
-.particle-wrap.unit-0 .particle-core{width:44px;height:44px;font-size:15px;color:#6b7280;background:linear-gradient(145deg,#f8fafc,#e5e7eb)}
-.particle-wrap.positive .particle-core{color:#1748a5;background:radial-gradient(circle at 35% 28%,#fff 0 9%,#edf6ff 22%,#d8eaff 74%,#c9def9 100%)}
-.particle-wrap.negative .particle-core{color:#a41436;background:radial-gradient(circle at 35% 28%,#fff 0 9%,#fff0f3 22%,#ffdce3 74%,#f7cbd5 100%)}
-.particle-wrap.matching{z-index:48}
-.particle-wrap.matching .particle-core{filter:brightness(1.12) saturate(1.18)}
-.particle-wrap.positive.matching .particle-core{box-shadow:0 0 0 4px rgba(37,99,235,.12),0 0 24px rgba(37,99,235,.52),0 0 45px rgba(37,99,235,.22)}
-.particle-wrap.negative.matching .particle-core{box-shadow:0 0 0 4px rgba(225,29,72,.12),0 0 24px rgba(225,29,72,.52),0 0 45px rgba(225,29,72,.22)}
-.particle-wrap.splittable .particle-core{cursor:pointer;outline:3px solid rgba(124,58,237,.25);box-shadow:0 8px 18px rgba(124,58,237,.22);animation:splitPulse 1.15s ease-in-out infinite}
-.particle-wrap.gravity-fall .particle-core{outline:none}
-@keyframes splitPulse{0%,100%{filter:saturate(1)}50%{filter:saturate(1.15) brightness(1.035)}}
-.match-line{position:absolute;height:3px;border-radius:999px;transform-origin:0 50%;pointer-events:none;z-index:44;opacity:0;background:linear-gradient(90deg,rgba(37,99,235,.18),rgba(37,99,235,.82),rgba(255,255,255,1),rgba(225,29,72,.82),rgba(225,29,72,.18));box-shadow:0 0 8px rgba(124,58,237,.28),0 0 14px rgba(255,255,255,.75);animation:lineAppear .10s ease-out forwards}
-@keyframes lineAppear{from{opacity:0;filter:blur(2px)}to{opacity:.95;filter:blur(0)}}
-.annihilation-burst{position:absolute;width:0;height:0;pointer-events:none;z-index:60}
-.burst-core{position:absolute;left:0;top:0;width:20px;height:20px;transform:translate(-50%,-50%) scale(.1);border-radius:50%;background:radial-gradient(circle,#fff 0%,#fff 20%,#e6efff 35%,rgba(147,114,255,.65) 52%,rgba(124,58,237,.20) 69%,transparent 77%);box-shadow:0 0 18px rgba(255,255,255,1),0 0 34px rgba(124,58,237,.72);animation:burstCore .33s ease-out forwards}
-@keyframes burstCore{0%{transform:translate(-50%,-50%) scale(.15);opacity:.3}35%{transform:translate(-50%,-50%) scale(2);opacity:1}100%{transform:translate(-50%,-50%) scale(4);opacity:0}}
-.burst-ring{position:absolute;left:0;top:0;width:24px;height:24px;transform:translate(-50%,-50%) scale(.2);border-radius:50%;border:2px solid rgba(255,255,255,.95)}
-.burst-ring.one{animation:ringOne .38s ease-out forwards}.burst-ring.two{animation:ringTwo .48s .035s ease-out forwards}
-@keyframes ringOne{from{transform:translate(-50%,-50%) scale(.2);opacity:1}to{transform:translate(-50%,-50%) scale(3.2);opacity:0}}
-@keyframes ringTwo{from{transform:translate(-50%,-50%) scale(.2);opacity:.65}to{transform:translate(-50%,-50%) scale(4.8);opacity:0}}
-.burst-spark{position:absolute;left:-2.5px;top:-2.5px;width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 8px rgba(255,255,255,.95);animation:sparkFly .38s ease-out forwards}
-@keyframes sparkFly{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--sx),var(--sy)) scale(.1);opacity:0}}
-.result-frame{
-  position:absolute;left:50%;bottom:20px;width:174px;height:96px;transform:translateX(-50%) scale(.58);opacity:0;
-  border:2px solid rgba(124,58,237,.24);border-radius:25px;background:rgba(255,255,255,.98);box-shadow:0 16px 38px rgba(30,38,56,.18);
-  pointer-events:none;z-index:70;transition:opacity .25s ease,transform .38s cubic-bezier(.16,1.08,.34,1),box-shadow .3s ease,border-color .3s ease;
-}
-.result-frame.show{opacity:1;transform:translateX(-50%) scale(1)}
-.result-frame.gravity-active{border-color:rgba(124,58,237,.38);box-shadow:0 16px 38px rgba(30,38,56,.18),0 -5px 28px rgba(124,58,237,.10)}
-.counter-value{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(35px,5vw,55px);font-weight:900;letter-spacing:-.05em}
-.counter-value.bump{animation:counterBump .16s ease-out}
-@keyframes counterBump{0%{transform:scale(1)}45%{transform:scale(1.08)}100%{transform:scale(1)}}
-.statusbar{min-height:90px;border-top:1px solid rgba(42,50,70,.13);display:flex;align-items:center;justify-content:center;padding:18px 24px 22px;background:rgba(255,255,255,.86)}
-.status{margin:0;text-align:center;font-size:15px;line-height:1.45;color:var(--muted)}
-.status strong{color:var(--text)}
-@media(max-width:720px){
-  body{padding:10px}.board{border-radius:22px}.settings-panel{top:10px;right:10px;padding:7px 8px}.setting-row{grid-template-columns:52px 90px;gap:6px;font-size:11px}.setting-slider{width:90px}
-  .term-card{top:140px;min-width:70px;padding:12px 9px;font-size:clamp(20px,6vw,29px)}.dynamic-plus{top:140px;font-size:36px}
-  .particle-wrap.unit-100 .particle-core{width:52px;height:52px;font-size:18px}.particle-wrap.unit-10 .particle-core{width:41px;height:41px;font-size:14px}
-  body[data-mode="medium"] .particle-wrap.unit-10 .particle-core{width:32px;height:32px;font-size:11px}.particle-wrap.unit-1 .particle-core{width:28px;height:28px;font-size:9px}
-  .particle-wrap.unit-0 .particle-core{width:40px;height:40px;font-size:14px}.result-frame{width:158px;height:84px;bottom:18px}
-}
+.board{position:relative;min-height:680px;overflow:hidden;border:1px solid rgba(255,255,255,.72);border-radius:30px;background:rgba(255,255,255,.82);backdrop-filter:blur(14px);box-shadow:var(--shadow)}
+.stage{position:relative;width:100%;height:650px;overflow:hidden;background:radial-gradient(circle at 50% 18%,rgba(255,255,255,.44),transparent 34%),var(--stage-gray);transition:height .28s ease}
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(93,102,120,.03))}
+.soft-orb{position:absolute;width:340px;height:340px;border-radius:50%;filter:blur(30px);opacity:.08;pointer-events:none;z-index:0}
+.soft-orb.one{left:-100px;top:20px;background:#60a5fa}.soft-orb.two{right:-120px;bottom:10px;background:#c084fc}
+.settings-panel{position:absolute;top:14px;right:18px;z-index:100;display:grid;gap:7px;padding:8px 10px;border-radius:13px;background:rgba(255,255,255,.93);box-shadow:0 6px 18px rgba(40,48,67,.09);backdrop-filter:blur(8px)}
+.setting-row{display:grid;grid-template-columns:58px 116px;align-items:center;gap:8px;font-size:12px;font-weight:750;color:#4b5565}.setting-label{display:flex;align-items:center;justify-content:flex-end;gap:4px;white-space:nowrap}.setting-value{min-width:19px;text-align:right;color:var(--accent);font-variant-numeric:tabular-nums}.setting-slider{width:116px;accent-color:var(--accent);cursor:pointer}
+.term-layer{position:absolute;inset:0;z-index:35;pointer-events:none}
+.term-card{position:absolute;top:148px;transform:translate(-50%,-50%);min-width:94px;padding:15px 16px;border:0;border-radius:18px;background:#fff;color:var(--text);font-size:clamp(24px,3vw,40px);font-weight:850;letter-spacing:-.04em;box-shadow:0 14px 30px rgba(30,38,56,.14);cursor:grab;z-index:45;pointer-events:auto;touch-action:none;transition:left .28s ease,transform .18s ease,opacity .25s ease,box-shadow .2s ease}
+.term-card:hover{transform:translate(-50%,-52%) scale(1.025)}.term-card.dragging{cursor:grabbing;z-index:90;transition:none;box-shadow:0 20px 40px rgba(30,38,56,.22)}.term-card.gone{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.72)}
+.dynamic-plus{position:absolute;top:148px;transform:translate(-50%,-50%);font-size:clamp(38px,4.8vw,60px);font-weight:500;color:#343b4b;opacity:.34;pointer-events:none;z-index:34}
+.band-layer{position:absolute;inset:0;width:100%;height:100%;z-index:8;overflow:visible;pointer-events:none}
+.cluster-band{fill:var(--band-fill);stroke:var(--band-stroke);stroke-width:2.4;vector-effect:non-scaling-stroke;filter:drop-shadow(0 5px 9px rgba(55,65,81,.10));pointer-events:visiblePainted;cursor:pointer;transition:stroke .18s ease,fill .18s ease,opacity .18s ease}
+.cluster-band.single{stroke:#7f8999}.cluster-band.mergeable{stroke:#70798a;filter:drop-shadow(0 5px 9px rgba(55,65,81,.10)) drop-shadow(0 0 7px rgba(124,58,237,.16))}.cluster-band.approaching{stroke:#6d65a8;fill:rgba(255,255,255,.78)}
+.band-join-flash{position:absolute;width:18px;height:18px;border-radius:50%;z-index:70;pointer-events:none;transform:translate(-50%,-50%) scale(.2);border:2px solid rgba(255,255,255,.98);box-shadow:0 0 0 2px rgba(124,58,237,.22),0 0 18px rgba(124,58,237,.45),0 0 32px rgba(255,255,255,.95);animation:bandJoin .44s ease-out forwards}
+.band-join-flash::after{content:"";position:absolute;inset:4px;border-radius:50%;background:#fff;box-shadow:0 0 14px #fff}
+@keyframes bandJoin{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.9)}}
+.bubble-wrap{position:absolute;transform:translate(-50%,-50%);z-index:18;will-change:left,top,transform,opacity}.bubble-core{display:grid;place-items:center;border-radius:999px;font-weight:850;letter-spacing:-.03em;border:1px solid rgba(255,255,255,.88);box-shadow:0 5px 12px rgba(35,45,70,.12),inset 0 1px 0 rgba(255,255,255,.82);user-select:none;-webkit-user-select:none;touch-action:manipulation;cursor:pointer;will-change:transform,filter,box-shadow}
+.bubble-wrap.unit-100 .bubble-core{width:60px;height:60px;font-size:21px}.bubble-wrap.unit-10 .bubble-core{width:46px;height:46px;font-size:15px}body[data-mode="medium"] .bubble-wrap.unit-10 .bubble-core{width:36px;height:36px;font-size:12px}.bubble-wrap.unit-1 .bubble-core{width:32px;height:32px;font-size:10px}.bubble-wrap.unit-0 .bubble-core{width:44px;height:44px;font-size:15px;color:#6b7280;background:linear-gradient(145deg,#f8fafc,#e5e7eb)}
+.bubble-wrap.positive .bubble-core{color:#1748a5;background:radial-gradient(circle at 35% 28%,#fff 0 9%,#edf6ff 22%,#d8eaff 74%,#c9def9 100%)}.bubble-wrap.negative .bubble-core{color:#a41436;background:radial-gradient(circle at 35% 28%,#fff 0 9%,#fff0f3 22%,#ffdce3 74%,#f7cbd5 100%)}
+.bubble-wrap.splittable .bubble-core{outline:3px solid rgba(124,58,237,.25);box-shadow:0 8px 18px rgba(124,58,237,.22);animation:splitPulse 1.15s ease-in-out infinite}@keyframes splitPulse{0%,100%{filter:saturate(1)}50%{filter:saturate(1.15) brightness(1.04)}}
+.annihilation-burst{position:absolute;width:0;height:0;pointer-events:none;z-index:80}.burst-core{position:absolute;left:0;top:0;width:20px;height:20px;transform:translate(-50%,-50%) scale(.1);border-radius:50%;background:radial-gradient(circle,#fff 0%,#fff 20%,#e6efff 35%,rgba(147,114,255,.65) 52%,rgba(124,58,237,.20) 69%,transparent 77%);box-shadow:0 0 18px rgba(255,255,255,1),0 0 34px rgba(124,58,237,.72);animation:burstCore .33s ease-out forwards}@keyframes burstCore{0%{transform:translate(-50%,-50%) scale(.15);opacity:.3}35%{transform:translate(-50%,-50%) scale(2);opacity:1}100%{transform:translate(-50%,-50%) scale(4);opacity:0}}
+.burst-ring{position:absolute;left:0;top:0;width:24px;height:24px;transform:translate(-50%,-50%) scale(.2);border-radius:50%;border:2px solid rgba(255,255,255,.95)}.burst-ring.one{animation:ringOne .38s ease-out forwards}.burst-ring.two{animation:ringTwo .48s .035s ease-out forwards}@keyframes ringOne{from{transform:translate(-50%,-50%) scale(.2);opacity:1}to{transform:translate(-50%,-50%) scale(3.2);opacity:0}}@keyframes ringTwo{from{transform:translate(-50%,-50%) scale(.2);opacity:.65}to{transform:translate(-50%,-50%) scale(4.8);opacity:0}}
+.burst-spark{position:absolute;left:-2.5px;top:-2.5px;width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 8px rgba(255,255,255,.95);animation:sparkFly .38s ease-out forwards}@keyframes sparkFly{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--sx),var(--sy)) scale(.1);opacity:0}}
+.result-frame{position:absolute;left:50%;bottom:20px;width:174px;height:96px;transform:translateX(-50%) scale(.58);opacity:0;border:2px solid rgba(124,58,237,.24);border-radius:25px;background:rgba(255,255,255,.98);box-shadow:0 16px 38px rgba(30,38,56,.18);pointer-events:none;z-index:95;transition:opacity .25s ease,transform .38s cubic-bezier(.16,1.08,.34,1),box-shadow .3s ease,border-color .3s ease}.result-frame.show{opacity:1;transform:translateX(-50%) scale(1)}.result-frame.gravity-active{border-color:rgba(124,58,237,.38);box-shadow:0 16px 38px rgba(30,38,56,.18),0 -5px 28px rgba(124,58,237,.10)}.counter-value{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(35px,5vw,55px);font-weight:900;letter-spacing:-.05em}.counter-value.bump{animation:counterBump .16s ease-out}@keyframes counterBump{0%{transform:scale(1)}45%{transform:scale(1.08)}100%{transform:scale(1)}}
+.statusbar{min-height:90px;border-top:1px solid rgba(42,50,70,.13);display:flex;align-items:center;justify-content:center;padding:18px 24px 22px;background:rgba(255,255,255,.86)}.status{margin:0;text-align:center;font-size:15px;line-height:1.45;color:var(--muted)}.status strong{color:var(--text)}
+@media(max-width:720px){body{padding:10px}.board{border-radius:22px}.settings-panel{top:10px;right:10px;padding:7px 8px}.setting-row{grid-template-columns:52px 90px;gap:6px;font-size:11px}.setting-slider{width:90px}.term-card{top:140px;min-width:70px;padding:12px 9px;font-size:clamp(20px,6vw,29px)}.dynamic-plus{top:140px;font-size:36px}.bubble-wrap.unit-100 .bubble-core{width:52px;height:52px;font-size:18px}.bubble-wrap.unit-10 .bubble-core{width:41px;height:41px;font-size:14px}body[data-mode="medium"] .bubble-wrap.unit-10 .bubble-core{width:32px;height:32px;font-size:11px}.bubble-wrap.unit-1 .bubble-core{width:28px;height:28px;font-size:9px}.bubble-wrap.unit-0 .bubble-core{width:40px;height:40px;font-size:14px}.result-frame{width:158px;height:84px;bottom:18px}}
 </style>
 </head>
 <body data-mode="basic">
@@ -160,7 +78,7 @@ body[data-mode="medium"] .particle-wrap.unit-10 .particle-core{width:36px;height
   <div class="topbar">
     <div class="titlebox">
       <h1>Bulutlarla Toplama</h1>
-      <p>Baloncukları aç, kümeleri birleştir, zıt birimleri yok et.</p>
+      <p>Baloncuklar birbirini çeker; zıt işaretliler temas edince yok olur.</p>
     </div>
     <div class="controls">
       <a class="home-btn" href="../index.html">Home</a>
@@ -188,14 +106,19 @@ body[data-mode="medium"] .particle-wrap.unit-10 .particle-core{width:36px;height
       </div>
 
       <svg class="band-layer" id="bandLayer" aria-hidden="true">
-        <g id="termBandGroup"></g>
-        <path id="mergeBand" class="rubber-band merge-band"></path>
+        <g id="clusterBandGroup"></g>
       </svg>
 
       <div class="term-layer" id="termLayer"></div>
-      <div class="result-frame" id="resultFrame"><div class="counter-value" id="counterValue">0</div></div>
+
+      <div class="result-frame" id="resultFrame">
+        <div class="counter-value" id="counterValue">0</div>
+      </div>
     </div>
-    <div class="statusbar"><p class="status" id="status"></p></div>
+
+    <div class="statusbar">
+      <p class="status" id="status"></p>
+    </div>
   </div>
 </div>
 
@@ -203,11 +126,13 @@ body[data-mode="medium"] .particle-wrap.unit-10 .particle-core{width:36px;height
 (() => {
 "use strict";
 
+/* =========================================================
+   DOM
+   ========================================================= */
 const stage=document.getElementById("stage");
 const board=document.getElementById("board");
 const termLayer=document.getElementById("termLayer");
-const termBandGroup=document.getElementById("termBandGroup");
-const mergeBand=document.getElementById("mergeBand");
+const clusterBandGroup=document.getElementById("clusterBandGroup");
 const resultFrame=document.getElementById("resultFrame");
 const counterValue=document.getElementById("counterValue");
 const statusEl=document.getElementById("status");
@@ -219,10 +144,31 @@ const countSlider=document.getElementById("countSlider");
 const countValue=document.getElementById("countValue");
 const levelButtons=[...document.querySelectorAll(".level-btn")];
 
+/* =========================================================
+   SABİTLER
+   ========================================================= */
 const LEVELS={
   basic:{precision:0,minUnit:100},
   medium:{precision:1,minUnit:10},
   advanced:{precision:2,minUnit:1}
+};
+
+const PHYSICS={
+  damping:.89,
+  centerCohesion:.00115,
+  pairAttraction:.00115,
+  sameSizeMultiplier:1.75,
+  oppositeColorMultiplier:2.65,
+  overlapSpring:.075,
+  nearContactSpring:.012,
+  tangentialSlide:.0017,
+  clusterAttraction:.0065,
+  clusterAttractionMax:.15,
+  clusterRepulsion:.035,
+  maxSpeed:7.5,
+  settleSpeed:.18,
+  boundaryOffset:7,
+  mergeGap:5
 };
 
 const state={
@@ -230,18 +176,20 @@ const state={
   limitA:20,
   operandCount:2,
   terms:[],
-  nextTermId:1,
+  clusters:new Map(),
   particles:[],
-  particleSerial:0,
-  mergeIds:[],
-  mergeFinal:false,
+  nextTermId:1,
+  nextClusterId:1,
+  nextParticleId:1,
   mergeInProgress:false,
-  mergeBandVisible:false,
-  hiddenBandIds:new Set(),
-  activeMatchPromises:new Set(),
+  mergeClusterIds:[],
+  mergedClusterId:null,
+  mergeTermIds:[],
   drag:null,
   generation:0,
-  mergeCenter:null
+  lastPhysicsTime:performance.now(),
+  resolutionCheckAt:0,
+  finalFlowing:false
 };
 
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -250,6 +198,9 @@ const randomSign=()=>Math.random()<.5?-1:1;
 const currentConfig=()=>LEVELS[state.level];
 const setStatus=html=>statusEl.innerHTML=html;
 
+/* =========================================================
+   SAYI / FORMAT
+   ========================================================= */
 function generateValue100(){
   const a=Math.max(5,Math.min(50,state.limitA));
   if(state.level==="basic")return randomSign()*randomInt(1,a-1)*100;
@@ -274,14 +225,14 @@ function formatCounter(value100){
   return(value100>0?"+":"−")+(Math.abs(value100)/100).toFixed(precision).replace(".",",");
 }
 
-function particleLabel(sign,unit){
+function bubbleLabel(sign,unit){
   if(unit===0)return"0";
   const s=sign>0?"+":"−";
   return unit===100?s+"1":unit===10?s+"0,1":s+"0,01";
 }
 
 function decomposeValue(value100){
-  if(value100===0)return[{sign:0,unit:0,neutral:true}];
+  if(value100===0)return[{sign:0,unit:0}];
   const sign=value100>0?1:-1;
   const pieces=[];
   let rest=Math.abs(value100);
@@ -295,7 +246,7 @@ function decomposeValue(value100){
   return pieces;
 }
 
-function particleRadiusByUnit(unit){
+function radiusForUnit(unit){
   const mobile=innerWidth<=720;
   if(unit===100)return mobile?26:30;
   if(unit===10){
@@ -306,11 +257,52 @@ function particleRadiusByUnit(unit){
   return mobile?20:22;
 }
 
+function massForParticle(p){
+  const r=radiusForUnit(p.unit);
+  return Math.max(1,r*r);
+}
+
+/* =========================================================
+   TERİM KONUMLARI / SAHNE
+   ========================================================= */
 function getCenterRatios(count){
   if(count===1)return[.5];
   if(count===2)return[.28,.72];
   if(count===3)return[.17,.50,.83];
   return[.10,.365,.635,.90];
+}
+
+function termSegmentWidth(){
+  return Math.max(78,stage.clientWidth/Math.max(1,state.terms.length)-28);
+}
+
+function seedColumnsForTerm(term){
+  const r=30;
+  return Math.max(2,Math.floor(termSegmentWidth()/(r*2)));
+}
+
+function estimateSeedHeight(term){
+  const pieces=decomposeValue(term.value100);
+  const columns=seedColumnsForTerm(term);
+  let rows=0;
+  for(const unit of[100,10,1,0]){
+    const count=pieces.filter(p=>p.unit===unit).length;
+    if(count)rows+=Math.ceil(count/columns)+1;
+  }
+  return Math.max(70,rows*52);
+}
+
+function calculateStageHeight(){
+  let maxH=100;
+  for(const term of state.terms)maxH=Math.max(maxH,estimateSeedHeight(term));
+  return Math.max(650,230+maxH+230);
+}
+
+function termAnchor(index){
+  const count=Math.max(1,state.terms.length);
+  const segment=stage.clientWidth/count;
+  const term=state.terms[index];
+  return{x:(index+.5)*segment,y:220+estimateSeedHeight(term)/2};
 }
 
 function elementCenterInStage(element){
@@ -320,364 +312,926 @@ function elementCenterInStage(element){
 }
 
 /* =========================================================
-   TEMAS EDEN ALTIGEN PAKETLEME
+   İLK DOĞUŞ İÇİN PETEK TOHUMU
+   Sonraki hareketleri fizik belirler.
    ========================================================= */
-
-function buildHexLayout(items,availableWidth){
-  if(!items.length)return{points:[],width:0,height:0};
-  const points=new Array(items.length);
+function seedLayout(pieces,center,availableWidth){
+  const points=new Array(pieces.length);
+  let cursorY=0;
   const groups=[];
 
   for(const unit of[100,10,1,0]){
-    const entries=items.map((item,index)=>({item,index})).filter(entry=>entry.item.unit===unit);
+    const entries=pieces.map((piece,index)=>({piece,index})).filter(e=>e.piece.unit===unit);
     if(!entries.length)continue;
-
-    const radius=particleRadiusByUnit(unit);
-    const diameter=radius*2;
-    const rowHeight=Math.sqrt(3)*radius;
-    let columns=Math.max(1,Math.floor((Math.max(availableWidth,diameter)-radius)/diameter));
-    if(columns===1)columns=1;
-
+    const r=radiusForUnit(unit);
+    const diameter=2*r;
+    const rowH=Math.sqrt(3)*r;
+    const cols=Math.max(1,Math.floor(Math.max(diameter,availableWidth-r)/diameter));
     const local=[];
-    let row=0;
-    let cursor=0;
+    let cursor=0,row=0;
     while(cursor<entries.length){
-      const take=Math.min(columns,entries.length-cursor);
-      const offset=columns>1&&row%2===1?radius:0;
+      const take=Math.min(cols,entries.length-cursor);
+      const shift=row%2?r:0;
       for(let col=0;col<take;col++){
-        local.push({
-          entry:entries[cursor++],
-          x:col*diameter+offset,
-          y:row*rowHeight,
-          radius
-        });
+        local.push({entry:entries[cursor++],x:col*diameter+shift,y:row*rowH,r});
       }
       row++;
     }
-
     let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
     for(const p of local){
-      minX=Math.min(minX,p.x-p.radius);
-      maxX=Math.max(maxX,p.x+p.radius);
-      minY=Math.min(minY,p.y-p.radius);
-      maxY=Math.max(maxY,p.y+p.radius);
+      minX=Math.min(minX,p.x-p.r);maxX=Math.max(maxX,p.x+p.r);
+      minY=Math.min(minY,p.y-p.r);maxY=Math.max(maxY,p.y+p.r);
     }
-    const width=maxX-minX;
-    const height=maxY-minY;
-    for(const p of local){
-      p.x-=minX+width/2;
-      p.y-=minY;
-    }
-    groups.push({unit,points:local,width,height});
+    const w=maxX-minX,h=maxY-minY;
+    for(const p of local){p.x-=minX+w/2;p.y-=minY;}
+    groups.push({local,w,h,top:cursorY});
+    cursorY+=h+12;
   }
 
-  const groupGap=14;
-  let totalHeight=0;
-  let maxWidth=0;
-  groups.forEach((group,index)=>{
-    group.top=totalHeight;
-    totalHeight+=group.height;
-    if(index<groups.length-1)totalHeight+=groupGap;
-    maxWidth=Math.max(maxWidth,group.width);
-  });
-
+  const totalH=Math.max(0,cursorY-12);
   for(const group of groups){
-    for(const p of group.points){
-      points[p.entry.index]={
-        x:p.x,
-        y:group.top+p.y-totalHeight/2
-      };
+    for(const p of group.local){
+      points[p.entry.index]={x:center.x+p.x,y:center.y-totalH/2+group.top+p.y};
     }
   }
-
-  return{points,width:maxWidth,height:totalHeight};
-}
-
-function layoutAtCenter(items,center,availableWidth){
-  const layout=buildHexLayout(items,availableWidth);
-  return{
-    ...layout,
-    points:layout.points.map(point=>({x:center.x+point.x,y:center.y+point.y}))
-  };
-}
-
-function estimateHexHeight(items,availableWidth){
-  return buildHexLayout(items,availableWidth).height||70;
-}
-
-function makeTerm(value100,opened=false,manualCenter=null){
-  return{
-    id:state.nextTermId++,
-    value100,
-    opened,
-    opening:false,
-    closing:false,
-    openPromise:null,
-    card:null,
-    band:null,
-    manualCenter
-  };
-}
-
-function termAvailableWidth(){
-  const width=Math.max(320,stage.clientWidth||board.clientWidth||900);
-  return Math.max(72,width/Math.max(1,state.terms.length)-32);
-}
-
-function getTermCenter(index){
-  const term=state.terms[index];
-  if(term&&term.manualCenter)return{x:term.manualCenter.x,y:term.manualCenter.y};
-  const width=stage.clientWidth;
-  const count=Math.max(1,state.terms.length);
-  return{x:(index+.5)*(width/count),y:245};
-}
-
-function getTermGeometry(index){
-  const term=state.terms[index];
-  const width=termAvailableWidth();
-  const pieces=decomposeValue(term.value100);
-  const height=estimateHexHeight(pieces,width);
-  const center=getTermCenter(index);
-  if(!term.manualCenter)center.y=210+height/2;
-  return{center,width,height};
-}
-
-function maxTermContentHeight(){
-  const width=termAvailableWidth();
-  let max=70;
-  for(const term of state.terms)max=Math.max(max,estimateHexHeight(decomposeValue(term.value100),width));
-  return max;
-}
-
-function calculateRequiredStageHeight(){
-  const clusterBottom=210+maxTermContentHeight();
-  const allPieces=[];
-  for(const term of state.terms)allPieces.push(...decomposeValue(term.value100));
-  const approxParticles=allPieces.map((piece,index)=>({id:index,unit:piece.unit,sign:piece.sign,alive:true}));
-  const mergeWidth=Math.max(180,Math.min((stage.clientWidth||900)*.62,Math.ceil(Math.sqrt(Math.max(1,approxParticles.length)*1.35))*60+30));
-  const mergeHeight=estimateHexHeight(allPieces,mergeWidth);
-  return Math.max(620,clusterBottom+215,195+mergeHeight+190);
+  return points;
 }
 
 /* =========================================================
-   LASTİK BANT: DIŞ ZARF
+   VERİ MODELLERİ
    ========================================================= */
-
-function cross(o,a,b){
-  return(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);
+function makeTerm(value100,opened=false,clusterId=null){
+  return{id:state.nextTermId++,value100,opened,opening:false,closing:false,openPromise:null,clusterId,card:null};
 }
+
+function createCluster(termIds,anchor){
+  const id=state.nextClusterId++;
+  const cluster={id,termIds:new Set(termIds),anchor:{...anchor},mode:"free",band:null,joinedAt:0};
+  state.clusters.set(id,cluster);
+  ensureClusterBand(cluster);
+  return cluster;
+}
+
+function ensureClusterBand(cluster){
+  if(cluster.band&&cluster.band.isConnected)return cluster.band;
+  const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+  path.setAttribute("class","cluster-band");
+  path.dataset.clusterId=String(cluster.id);
+  path.addEventListener("click",event=>{
+    event.stopPropagation();
+    handleClusterClick(cluster.id);
+  });
+  clusterBandGroup.appendChild(path);
+  cluster.band=path;
+  return path;
+}
+
+function deleteCluster(clusterId){
+  const cluster=state.clusters.get(clusterId);
+  if(!cluster)return;
+  if(cluster.band&&cluster.band.isConnected)cluster.band.remove();
+  state.clusters.delete(clusterId);
+}
+
+/* =========================================================
+   BALON OLUŞTUR
+   ========================================================= */
+function createBubble(sign,unit,x,y,clusterId,termId){
+  const wrap=document.createElement("div");
+  wrap.className="bubble-wrap unit-"+unit+" "+(sign>0?"positive":sign<0?"negative":"neutral");
+  wrap.style.left=x+"px";
+  wrap.style.top=y+"px";
+
+  const core=document.createElement("div");
+  core.className="bubble-core";
+  core.textContent=bubbleLabel(sign,unit);
+  wrap.appendChild(core);
+  stage.appendChild(wrap);
+
+  const particle={
+    id:state.nextParticleId++,sign,unit,clusterId,termId,x,y,vx:0,vy:0,alive:true,locked:false,splittable:false,el:wrap,core
+  };
+
+  core.addEventListener("click",event=>{
+    event.stopPropagation();
+    onBubbleClick(particle);
+  });
+
+  state.particles.push(particle);
+  return particle;
+}
+
+function aliveParticles(){return state.particles.filter(p=>p.alive&&p.el.isConnected);}
+function particlesInCluster(clusterId){return aliveParticles().filter(p=>p.clusterId===clusterId);}
+function openedTerms(){return state.terms.filter(t=>t.opened);}
+function unopenedTerms(){return state.terms.filter(t=>!t.opened);}
+function openClusters(){return [...state.clusters.values()].filter(c=>[...c.termIds].some(id=>state.terms.some(t=>t.id===id&&t.opened)));}
+
+/* =========================================================
+   LASTİK BANT — GERÇEK DIŞ ZARF
+   ========================================================= */
+function cross(o,a,b){return(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);}
 
 function convexHull(points){
   if(points.length<=2)return points.slice();
   const sorted=points.slice().sort((a,b)=>a.x===b.x?a.y-b.y:a.x-b.x);
   const lower=[];
-  for(const p of sorted){
-    while(lower.length>=2&&cross(lower[lower.length-2],lower[lower.length-1],p)<=0)lower.pop();
-    lower.push(p);
-  }
+  for(const p of sorted){while(lower.length>=2&&cross(lower[lower.length-2],lower[lower.length-1],p)<=0)lower.pop();lower.push(p);}
   const upper=[];
-  for(let i=sorted.length-1;i>=0;i--){
-    const p=sorted[i];
-    while(upper.length>=2&&cross(upper[upper.length-2],upper[upper.length-1],p)<=0)upper.pop();
-    upper.push(p);
-  }
+  for(let i=sorted.length-1;i>=0;i--){const p=sorted[i];while(upper.length>=2&&cross(upper[upper.length-2],upper[upper.length-1],p)<=0)upper.pop();upper.push(p);}
   lower.pop();upper.pop();
   return lower.concat(upper);
 }
 
 function smoothClosedPath(points){
   if(!points.length)return"";
-  if(points.length===1){
-    const p=points[0];
-    return`M ${p.x} ${p.y}`;
-  }
-  const mids=points.map((p,i)=>{
-    const n=points[(i+1)%points.length];
-    return{x:(p.x+n.x)/2,y:(p.y+n.y)/2};
-  });
+  const mids=points.map((p,i)=>{const n=points[(i+1)%points.length];return{x:(p.x+n.x)/2,y:(p.y+n.y)/2};});
   let d=`M ${mids[mids.length-1].x.toFixed(2)} ${mids[mids.length-1].y.toFixed(2)}`;
-  for(let i=0;i<points.length;i++){
-    d+=` Q ${points[i].x.toFixed(2)} ${points[i].y.toFixed(2)} ${mids[i].x.toFixed(2)} ${mids[i].y.toFixed(2)}`;
-  }
+  for(let i=0;i<points.length;i++)d+=` Q ${points[i].x.toFixed(2)} ${points[i].y.toFixed(2)} ${mids[i].x.toFixed(2)} ${mids[i].y.toFixed(2)}`;
   return d+" Z";
 }
 
-function rubberBandPath(particles,fallbackCenter=null){
+function rubberBandPath(cluster){
+  const particles=particlesInCluster(cluster.id);
+  const samples=[];
+  const offset=PHYSICS.boundaryOffset;
+
   if(!particles.length){
-    if(!fallbackCenter)return"";
-    const r=31;
-    const samples=[];
+    const r=30;
     for(let i=0;i<18;i++){
       const a=Math.PI*2*i/18;
-      samples.push({x:fallbackCenter.x+Math.cos(a)*r,y:fallbackCenter.y+Math.sin(a)*r});
+      samples.push({x:cluster.anchor.x+Math.cos(a)*r,y:cluster.anchor.y+Math.sin(a)*r});
     }
     return smoothClosedPath(samples);
   }
 
-  const samples=[];
-  const offset=7;
-  for(const particle of particles){
-    if(!particle.alive)continue;
-    const radius=particleRadiusByUnit(particle.unit)+offset;
-    const count=particle.unit===100?14:12;
+  for(const p of particles){
+    const r=radiusForUnit(p.unit)+offset;
+    const count=p.unit===100?14:12;
     for(let i=0;i<count;i++){
-      const angle=Math.PI*2*i/count;
-      samples.push({
-        x:particle.x+Math.cos(angle)*radius,
-        y:particle.y+Math.sin(angle)*radius
-      });
+      const a=Math.PI*2*i/count;
+      samples.push({x:p.x+Math.cos(a)*r,y:p.y+Math.sin(a)*r});
     }
   }
   return smoothClosedPath(convexHull(samples));
 }
 
-function particlesForTerm(termId){
-  return aliveParticles().filter(p=>p.sourceTermId===termId);
+function clusterStats(cluster){
+  const particles=particlesInCluster(cluster.id);
+  if(!particles.length)return{center:{...cluster.anchor},mass:1,radius:30,avgRadius:30};
+  let sx=0,sy=0,mass=0,rs=0;
+  for(const p of particles){
+    const m=massForParticle(p);
+    sx+=p.x*m;sy+=p.y*m;mass+=m;rs+=radiusForUnit(p.unit);
+  }
+  const center={x:sx/mass,y:sy/mass};
+  let radius=0;
+  for(const p of particles)radius=Math.max(radius,Math.hypot(p.x-center.x,p.y-center.y)+radiusForUnit(p.unit)+PHYSICS.boundaryOffset);
+  return{center,mass,radius,avgRadius:rs/particles.length};
 }
 
-function activeMergeParticles(){
-  const ids=new Set(state.mergeIds);
-  return aliveParticles().filter(p=>ids.has(p.sourceTermId));
-}
-
-function updateBandClasses(){
-  const opened=openedTerms();
-  for(const term of state.terms){
-    if(!term.band)continue;
-    term.band.classList.remove("single-open","multi-open","hidden-band");
-    if(!term.opened){term.band.style.opacity="0";continue;}
-    if(state.hiddenBandIds.has(term.id)){term.band.classList.add("hidden-band");continue;}
-    term.band.style.opacity="1";
-    if(opened.length===1)term.band.classList.add("single-open");
-    else if(opened.length>=2)term.band.classList.add("multi-open");
+function updateBands(){
+  const clusters=[...state.clusters.values()];
+  const onlyOne=clusters.length===1;
+  for(const cluster of clusters){
+    ensureClusterBand(cluster);
+    cluster.band.setAttribute("d",rubberBandPath(cluster));
+    cluster.band.classList.toggle("single",onlyOne&&!state.mergeInProgress);
+    cluster.band.classList.toggle("mergeable",clusters.length>=2&&!state.mergeInProgress);
+    cluster.band.classList.toggle("approaching",cluster.mode==="approaching");
   }
-}
-
-function updateBoundaries(){
-  for(let index=0;index<state.terms.length;index++){
-    const term=state.terms[index];
-    if(!term.band||!term.opened)continue;
-    const parts=particlesForTerm(term.id);
-    const fallback=getTermGeometry(index).center;
-    term.band.setAttribute("d",rubberBandPath(parts,fallback));
-  }
-
-  if(state.mergeBandVisible){
-    mergeBand.setAttribute("d",rubberBandPath(activeMergeParticles(),state.mergeCenter));
-    mergeBand.classList.add("visible");
-  }else{
-    mergeBand.classList.remove("visible");
-    mergeBand.setAttribute("d","");
-  }
-  requestAnimationFrame(updateBoundaries);
 }
 
 /* =========================================================
-   PARÇACIK
+   FİZİK MOTORU
    ========================================================= */
+function clampMagnitude(x,y,max){
+  const d=Math.hypot(x,y);
+  if(d<=max||d===0)return{x,y};
+  return{x:x/d*max,y:y/d*max};
+}
 
-function createParticle(sign,unit,x,y,sourceTermId){
-  const wrapper=document.createElement("div");
-  wrapper.className="particle-wrap unit-"+unit+" "+(sign>0?"positive":sign<0?"negative":"neutral");
-  wrapper.style.left=x+"px";
-  wrapper.style.top=y+"px";
-  const core=document.createElement("div");
-  core.className="particle-core";
-  core.textContent=particleLabel(sign,unit);
-  wrapper.appendChild(core);
-  stage.appendChild(wrapper);
-  const id=state.particleSerial++;
-  const particle={id,el:wrapper,core,sign,unit,sourceTermId,x,y,vx:0,vy:0,alive:true,locked:false,splittable:false};
-  core.addEventListener("click",event=>{
-    event.stopPropagation();
-    onParticleClick(particle);
+function applyInternalForces(cluster,dt){
+  const particles=particlesInCluster(cluster.id).filter(p=>!p.locked&&p.unit!==0);
+  if(!particles.length)return;
+  const stats=clusterStats(cluster);
+
+  /* Elastik dış zarın içe doğru gerilimi + küme kohezyonu */
+  for(const p of particles){
+    const dx=stats.center.x-p.x;
+    const dy=stats.center.y-p.y;
+    const d=Math.max(1,Math.hypot(dx,dy));
+    const targetRadius=Math.max(45,Math.sqrt(particles.length)*stats.avgRadius*1.08);
+    let strength=PHYSICS.centerCohesion;
+    if(d>targetRadius)strength*=1+(d-targetRadius)/Math.max(40,targetRadius)*2.1;
+    p.vx+=dx*strength*dt;
+    p.vy+=dy*strength*dt;
+  }
+
+  /* Bütün balonlar birbirini çeker. */
+  for(let i=0;i<particles.length;i++){
+    const a=particles[i];
+    for(let j=i+1;j<particles.length;j++){
+      const b=particles[j];
+      let dx=b.x-a.x,dy=b.y-a.y;
+      let d=Math.hypot(dx,dy);
+      if(d<.01){dx=.01;dy=.01;d=.014;}
+      const ux=dx/d,uy=dy/d;
+      const contact=radiusForUnit(a.unit)+radiusForUnit(b.unit);
+      const sameSize=a.unit===b.unit;
+      const differentColor=a.sign!==0&&b.sign!==0&&a.sign!==b.sign;
+
+      /* Çakışma varsa kuvvetli elastik itme. */
+      if(d<contact){
+        const overlap=contact-d;
+        const push=overlap*PHYSICS.overlapSpring*dt;
+        a.vx-=ux*push;a.vy-=uy*push;
+        b.vx+=ux*push;b.vy+=uy*push;
+      }else{
+        let multiplier=1;
+        if(sameSize)multiplier*=PHYSICS.sameSizeMultiplier;
+        if(differentColor)multiplier*=PHYSICS.oppositeColorMultiplier;
+        const range=Math.max(170,contact*5.5);
+        const falloff=1/(1+d/contact*.55);
+        const pull=PHYSICS.pairAttraction*multiplier*falloff*dt;
+        a.vx+=ux*pull*d*.12;a.vy+=uy*pull*d*.12;
+        b.vx-=ux*pull*d*.12;b.vy-=uy*pull*d*.12;
+
+        /* Yakın balonlar birbirinin etrafından kayabilsin. */
+        if(d<contact*1.42){
+          const sign=((a.id+b.id)&1)?1:-1;
+          const slide=PHYSICS.tangentialSlide*(1-(d-contact)/(contact*.42))*sign*dt;
+          a.vx+=-uy*slide*contact;a.vy+=ux*slide*contact;
+          b.vx-= -uy*slide*contact;b.vy-=ux*slide*contact;
+        }
+      }
+
+      /* Zıt renk ve aynı büyüklük temas edince patlar. */
+      if(differentColor&&sameSize&&d<=contact+1.5&&!a.locked&&!b.locked){
+        scheduleAnnihilation(a,b);
+      }
+    }
+  }
+}
+
+function applyAnchorForce(cluster,dt){
+  if(cluster.mode!=="free")return;
+  const stats=clusterStats(cluster);
+  const dx=cluster.anchor.x-stats.center.x;
+  const dy=cluster.anchor.y-stats.center.y;
+  for(const p of particlesInCluster(cluster.id)){
+    if(p.locked)continue;
+    p.vx+=dx*.00055*dt;
+    p.vy+=dy*.00055*dt;
+  }
+}
+
+function applySeparateClusterRepulsion(dt){
+  const clusters=[...state.clusters.values()].filter(c=>c.mode==="free");
+  for(let i=0;i<clusters.length;i++){
+    const a=clusters[i],sa=clusterStats(a);
+    for(let j=i+1;j<clusters.length;j++){
+      const b=clusters[j],sb=clusterStats(b);
+      let dx=sb.center.x-sa.center.x,dy=sb.center.y-sa.center.y;
+      let d=Math.max(1,Math.hypot(dx,dy));
+      const desired=sa.radius+sb.radius+18;
+      if(d>=desired)continue;
+      const ux=dx/d,uy=dy/d;
+      const force=(desired-d)*PHYSICS.clusterRepulsion*dt;
+      for(const p of particlesInCluster(a.id)){p.vx-=ux*force*.5;p.vy-=uy*force*.5;}
+      for(const p of particlesInCluster(b.id)){p.vx+=ux*force*.5;p.vy+=uy*force*.5;}
+    }
+  }
+}
+
+function directionalExtent(cluster,center,ux,uy){
+  const particles=particlesInCluster(cluster.id);
+  if(!particles.length)return 30;
+  let extent=0;
+  for(const p of particles){
+    const projection=(p.x-center.x)*ux+(p.y-center.y)*uy;
+    extent=Math.max(extent,projection+radiusForUnit(p.unit)+PHYSICS.boundaryOffset);
+  }
+  return extent;
+}
+
+function clusterAffinity(a,b){
+  const pa=particlesInCluster(a.id).filter(p=>p.unit!==0);
+  const pb=particlesInCluster(b.id).filter(p=>p.unit!==0);
+  let opposite=false;
+  let oppositeSameSize=false;
+
+  for(const x of pa){
+    for(const y of pb){
+      if(x.sign!==0&&y.sign!==0&&x.sign!==y.sign){
+        opposite=true;
+        if(x.unit===y.unit){
+          oppositeSameSize=true;
+          break;
+        }
+      }
+    }
+    if(oppositeSameSize)break;
+  }
+
+  return oppositeSameSize?1.9:opposite?1.5:1;
+}
+
+function applyCrossClusterBubbleAttraction(a,b,gap,dt){
+  if(gap>145)return;
+
+  const pa=particlesInCluster(a.id).filter(p=>!p.locked&&p.unit!==0);
+  const pb=particlesInCluster(b.id).filter(p=>!p.locked&&p.unit!==0);
+
+  for(const x of pa){
+    for(const y of pb){
+      let dx=y.x-x.x,dy=y.y-x.y;
+      const d=Math.max(1,Math.hypot(dx,dy));
+      const contact=radiusForUnit(x.unit)+radiusForUnit(y.unit);
+      if(d>210)continue;
+
+      const ux=dx/d,uy=dy/d;
+      let multiplier=1;
+      if(x.unit===y.unit)multiplier*=PHYSICS.sameSizeMultiplier;
+      if(x.sign!==0&&y.sign!==0&&x.sign!==y.sign)multiplier*=PHYSICS.oppositeColorMultiplier;
+
+      const nearness=Math.max(0,1-d/220);
+      const force=.0017*multiplier*(.35+nearness*1.65)*dt;
+      x.vx+=ux*force*d*.10;
+      x.vy+=uy*force*d*.10;
+      y.vx-=ux*force*d*.10;
+      y.vy-=uy*force*d*.10;
+
+      if(d<contact*1.25){
+        const spin=((x.id+y.id)&1)?1:-1;
+        const slide=.0011*spin*dt;
+        x.vx+=-uy*slide*contact;
+        x.vy+=ux*slide*contact;
+        y.vx-= -uy*slide*contact;
+        y.vy-=ux*slide*contact;
+      }
+    }
+  }
+}
+
+function applyMergingClusterForces(dt){
+  if(!state.mergeInProgress||state.mergedClusterId!==null)return;
+  const clusters=state.mergeClusterIds.map(id=>state.clusters.get(id)).filter(Boolean);
+
+  if(clusters.length===1){
+    state.mergedClusterId=clusters[0].id;
+    clusters[0].mode="merged";
+    clusters[0].joinedAt=performance.now();
+    return;
+  }
+
+  if(clusters.length<2)return;
+
+  let closest=null;
+
+  for(let i=0;i<clusters.length;i++){
+    const a=clusters[i],sa=clusterStats(a);
+
+    for(let j=i+1;j<clusters.length;j++){
+      const b=clusters[j],sb=clusterStats(b);
+      let dx=sb.center.x-sa.center.x,dy=sb.center.y-sa.center.y;
+      const d=Math.max(1,Math.hypot(dx,dy));
+      const ux=dx/d,uy=dy/d;
+      const ea=directionalExtent(a,sa.center,ux,uy);
+      const eb=directionalExtent(b,sb.center,-ux,-uy);
+      const gap=d-ea-eb;
+
+      const affinity=clusterAffinity(a,b);
+      const proximity=1/Math.max(10,gap+34);
+      const acceleration=Math.min(
+        PHYSICS.clusterAttractionMax,
+        PHYSICS.clusterAttraction*affinity*(1+900*proximity*proximity)
+      );
+
+      for(const p of particlesInCluster(a.id)){
+        if(!p.locked){
+          p.vx+=ux*acceleration*dt;
+          p.vy+=uy*acceleration*dt;
+        }
+      }
+
+      for(const p of particlesInCluster(b.id)){
+        if(!p.locked){
+          p.vx-=ux*acceleration*dt;
+          p.vy-=uy*acceleration*dt;
+        }
+      }
+
+      applyCrossClusterBubbleAttraction(a,b,gap,dt);
+
+      if(!closest||gap<closest.gap){
+        closest={a,b,gap,point:{x:sa.center.x+ux*ea,y:sa.center.y+uy*ea}};
+      }
+    }
+  }
+
+  if(closest&&closest.gap<=PHYSICS.mergeGap){
+    mergeBoundaryPairNow(closest.a,closest.b,closest.point);
+  }
+}
+
+function integrateParticles(dt){
+  for(const p of aliveParticles()){
+    if(p.locked)continue;
+    p.vx*=Math.pow(PHYSICS.damping,dt);
+    p.vy*=Math.pow(PHYSICS.damping,dt);
+    const limited=clampMagnitude(p.vx,p.vy,PHYSICS.maxSpeed);
+    p.vx=limited.x;p.vy=limited.y;
+    p.x+=p.vx*dt;
+    p.y+=p.vy*dt;
+
+    const r=radiusForUnit(p.unit)+8;
+    p.x=Math.max(r,Math.min(stage.clientWidth-r,p.x));
+    p.y=Math.max(190+r,Math.min(stage.clientHeight-125-r,p.y));
+
+    p.el.style.left=p.x+"px";
+    p.el.style.top=p.y+"px";
+  }
+}
+
+function physicsFrame(now){
+  const dt=Math.min(1.7,Math.max(.35,(now-state.lastPhysicsTime)/16.667));
+  state.lastPhysicsTime=now;
+
+  for(const cluster of state.clusters.values()){
+    applyInternalForces(cluster,dt);
+    applyAnchorForce(cluster,dt);
+  }
+  applySeparateClusterRepulsion(dt);
+  applyMergingClusterForces(dt);
+  integrateParticles(dt);
+  updateBands();
+
+  if(now>=state.resolutionCheckAt){
+    state.resolutionCheckAt=now+180;
+    checkMergeResolution();
+  }
+
+  requestAnimationFrame(physicsFrame);
+}
+
+/* =========================================================
+   PATLAMA
+   ========================================================= */
+function createBurst(x,y){
+  const burst=document.createElement("div");
+  burst.className="annihilation-burst";
+  burst.style.left=x+"px";burst.style.top=y+"px";
+  for(const cls of["burst-core","burst-ring one","burst-ring two"]){const el=document.createElement("div");el.className=cls;burst.appendChild(el);}
+  for(let i=0;i<10;i++){
+    const spark=document.createElement("div");spark.className="burst-spark";
+    const a=Math.PI*2*i/10,d=28+(i%3)*7;
+    spark.style.setProperty("--sx",Math.cos(a)*d+"px");spark.style.setProperty("--sy",Math.sin(a)*d+"px");
+    burst.appendChild(spark);
+  }
+  stage.appendChild(burst);
+  setTimeout(()=>{if(burst.isConnected)burst.remove();},620);
+}
+
+function scheduleAnnihilation(a,b){
+  if(a.locked||b.locked||!a.alive||!b.alive)return;
+  a.locked=b.locked=true;
+  annihilatePair(a,b);
+}
+
+async function annihilatePair(a,b){
+  const target={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+  const startA={x:a.x,y:a.y},startB={x:b.x,y:b.y};
+  const duration=170,started=performance.now();
+
+  await new Promise(resolve=>{
+    function frame(now){
+      const t=Math.min(1,(now-started)/duration);
+      const q=t*t;
+      a.x=startA.x+(target.x-startA.x)*q;a.y=startA.y+(target.y-startA.y)*q;
+      b.x=startB.x+(target.x-startB.x)*q;b.y=startB.y+(target.y-startB.y)*q;
+      if(a.el.isConnected){a.el.style.left=a.x+"px";a.el.style.top=a.y+"px";}
+      if(b.el.isConnected){b.el.style.left=b.x+"px";b.el.style.top=b.y+"px";}
+      if(t<1)requestAnimationFrame(frame);else resolve();
+    }
+    requestAnimationFrame(frame);
   });
-  state.particles.push(particle);
-  return particle;
-}
 
-function aliveParticles(){
-  return state.particles.filter(p=>p.alive&&p.el.isConnected);
-}
-
-async function moveParticle(particle,x,y,duration=700,delay=0){
-  if(!particle.alive||!particle.el.isConnected)return;
-  const oldX=particle.x,oldY=particle.y;
-  particle.x=x;particle.y=y;
-  particle.el.style.left=x+"px";particle.el.style.top=y+"px";
-  const animation=particle.el.animate([
-    {transform:`translate(calc(-50% + ${oldX-x}px),calc(-50% + ${oldY-y}px))`},
-    {transform:"translate(-50%,-50%)"}
-  ],{duration,delay,easing:"cubic-bezier(.18,.72,.22,1)",fill:"both"});
-  try{await animation.finished}catch(_){ }
-  if(!particle.el.isConnected)return;
-  particle.el.style.transform="translate(-50%,-50%)";
-  animation.cancel();
-}
-
-function quadraticBezier(p0,p1,p2,t){
-  const inv=1-t;
-  return{x:inv*inv*p0.x+2*inv*t*p1.x+t*t*p2.x,y:inv*inv*p0.y+2*inv*t*p1.y+t*t*p2.y};
+  createBurst(target.x,target.y);
+  const vanish=p=>p.core.animate([{transform:"scale(1)",opacity:1},{transform:"scale(1.32)",opacity:1,offset:.22},{transform:"scale(.02)",opacity:0}],{duration:180,easing:"cubic-bezier(.25,.78,.35,1)",fill:"forwards"}).finished.catch(()=>{});
+  await Promise.all([vanish(a),vanish(b)]);
+  a.alive=b.alive=false;
+  if(a.el.isConnected)a.el.remove();
+  if(b.el.isConnected)b.el.remove();
 }
 
 /* =========================================================
-   YENİ İŞLEM / ÇİZİM
+   KÜME SINIRLARINI BİRLEŞTİR
    ========================================================= */
+function showJoinFlash(point){
+  const flash=document.createElement("div");
+  flash.className="band-join-flash";
+  flash.style.left=point.x+"px";flash.style.top=point.y+"px";
+  stage.appendChild(flash);
+  setTimeout(()=>{if(flash.isConnected)flash.remove();},520);
+}
 
-function clearParticles(){
+async function removeNeutralMarkersFromCluster(clusterId){
+  const particles=particlesInCluster(clusterId);
+  const hasRealBubble=particles.some(p=>p.unit!==0);
+  if(!hasRealBubble)return;
+
+  const neutrals=particles.filter(p=>p.unit===0);
+  for(const p of neutrals){
+    p.locked=true;
+    const animation=p.core.animate(
+      [{transform:"scale(1)",opacity:1},{transform:"scale(.12)",opacity:0}],
+      {duration:150,easing:"ease-in",fill:"forwards"}
+    );
+    try{await animation.finished}catch(_){ }
+    p.alive=false;
+    if(p.el.isConnected)p.el.remove();
+  }
+}
+
+function mergeBoundaryPairNow(a,b,contactPoint){
+  if(!state.mergeInProgress||state.mergedClusterId!==null)return;
+  if(!state.clusters.has(a.id)||!state.clusters.has(b.id))return;
+
+  showJoinFlash(contactPoint);
+
+  const sa=clusterStats(a);
+  const sb=clusterStats(b);
+  const totalMass=sa.mass+sb.mass;
+  const anchor={
+    x:(sa.center.x*sa.mass+sb.center.x*sb.mass)/Math.max(1,totalMass),
+    y:(sa.center.y*sa.mass+sb.center.y*sb.mass)/Math.max(1,totalMass)
+  };
+
+  const merged=createCluster([...a.termIds,...b.termIds],anchor);
+  merged.mode="approaching";
+  merged.joinedAt=0;
+
+  for(const p of aliveParticles()){
+    if(p.clusterId===a.id||p.clusterId===b.id)p.clusterId=merged.id;
+  }
+
+  for(const term of state.terms){
+    if(term.clusterId===a.id||term.clusterId===b.id)term.clusterId=merged.id;
+  }
+
+  deleteCluster(a.id);
+  deleteCluster(b.id);
+
+  state.mergeClusterIds=state.mergeClusterIds.filter(id=>id!==a.id&&id!==b.id);
+  state.mergeClusterIds.push(merged.id);
+
+  /*
+      Ara toplam 0'ı temsil eden nötr balon,
+      gerçek balonlarla aynı kümeye girdiğinde
+      yalnızca gösterim işareti olduğu için kaybolur.
+  */
+  removeNeutralMarkersFromCluster(merged.id);
+
+  if(state.mergeClusterIds.length===1){
+    merged.mode="merged";
+    merged.joinedAt=performance.now();
+    state.mergedClusterId=merged.id;
+    setStatus("Tüm açık kümelerin sınırları birleşti. Baloncuklar boşlukları doldurarak dengeye geliyor…");
+  }else{
+    setStatus("İki lastik sınır birleşti. Yeni küme kalan kümeleri çekmeye devam ediyor…");
+  }
+}
+
+/* =========================================================
+   AÇ / KAPAT
+   ========================================================= */
+function updateInteractionText(){
+  if(state.finalFlowing)return;
+  if(state.mergeInProgress)return;
+  const opened=openedTerms();
+  if(opened.length===0)setStatus("İstediğin sayıyı aç.");
+  else if(state.clusters.size===1)setStatus("Tek küme açık. <strong>Kümeye veya bir balona tıklarsan kapanır.</strong> İstersen başka sayı açabilirsin.");
+  else if(unopenedTerms().length>0)setStatus(state.clusters.size+" küme açık. <strong>Bir kümeye tıklarsan açık kümeler birbirini çekmeye başlayacak.</strong>");
+  else setStatus("Bütün sayılar açık. <strong>Bir kümeye tıkla:</strong> kümeler fiziksel olarak birleşecek ve sonuç otomatik olarak aşağı dolacak.");
+}
+
+async function openTerm(termId){
+  const term=state.terms.find(t=>t.id===termId);
+  if(!term||term.opened||term.opening||term.closing)return;
+  term.opened=true;term.opening=true;
+  const index=state.terms.findIndex(t=>t.id===termId);
+  const source=elementCenterInStage(term.card);
+  const anchor=termAnchor(index);
+  const cluster=createCluster([term.id],anchor);
+  term.clusterId=cluster.id;
+  term.card.classList.add("gone");
+  updateInteractionText();
+
+  const pieces=decomposeValue(term.value100);
+  const points=seedLayout(pieces,anchor,termSegmentWidth());
+  const generation=state.generation;
+  term.openPromise=(async()=>{
+    const jobs=[];
+    for(let i=0;i<pieces.length;i++){
+      if(generation!==state.generation)break;
+      const piece=pieces[i];
+      const p=createBubble(piece.sign,piece.unit,source.x,source.y,cluster.id,term.id);
+      const target=points[i];
+      const delay=i*5;
+      jobs.push(new Promise(resolve=>{
+        setTimeout(()=>{
+          const dx=target.x-p.x,dy=target.y-p.y;
+          p.vx=dx*.06;p.vy=dy*.06;
+          resolve();
+        },delay);
+      }));
+    }
+    await Promise.all(jobs);
+    await sleep(480);
+    term.opening=false;term.openPromise=null;
+    updateInteractionText();
+  })();
+  await term.openPromise;
+}
+
+async function closeSingleCluster(clusterId){
+  const cluster=state.clusters.get(clusterId);
+  if(!cluster||state.clusters.size!==1||state.mergeInProgress)return;
+  const termIds=[...cluster.termIds];
+  if(termIds.length!==1)return;
+  const term=state.terms.find(t=>t.id===termIds[0]);
+  if(!term)return;
+  if(term.openPromise)await term.openPromise;
+  term.closing=true;
+  const target=elementCenterInStage(term.card);
+  const particles=particlesInCluster(cluster.id);
+  for(const p of particles){
+    p.vx=(target.x-p.x)*.10;
+    p.vy=(target.y-p.y)*.10;
+  }
+  await sleep(430);
+  for(const p of particles){
+    p.alive=false;
+    if(p.el.isConnected)p.el.remove();
+  }
+  deleteCluster(cluster.id);
+  term.opened=false;term.closing=false;term.clusterId=null;
+  term.card.classList.remove("gone");
+  updateInteractionText();
+}
+
+async function handleClusterClick(clusterId){
+  if(state.finalFlowing)return;
+  if(state.mergeInProgress)return;
+  const cluster=state.clusters.get(clusterId);
+  if(!cluster)return;
+  if(state.clusters.size===1){await closeSingleCluster(clusterId);return;}
+  await beginClusterMerge([...state.clusters.values()]);
+}
+
+/* =========================================================
+   KÜME BİRLEŞMESİNİ BAŞLAT
+   ========================================================= */
+async function beginClusterMerge(clusters){
+  if(state.mergeInProgress||clusters.length<2)return;
+  state.mergeInProgress=true;
+  state.mergeClusterIds=clusters.map(c=>c.id);
+  state.mergeTermIds=[...new Set(clusters.flatMap(c=>[...c.termIds]))];
+  state.mergedClusterId=null;
+  for(const cluster of clusters)cluster.mode="approaching";
+  setStatus("Kümeler birbirini çekiyor. Yaklaştıkça çekim artacak ve lastik sınırlar birleşecek…");
+}
+
+/* =========================================================
+   ÇÖZÜM DENETİMİ
+   ========================================================= */
+function clearSplittable(){
+  for(const p of aliveParticles()){
+    p.splittable=false;
+    p.el.classList.remove("splittable");
+  }
+}
+
+function checkMergeResolution(){
+  if(!state.mergeInProgress||state.mergedClusterId===null||state.finalFlowing)return;
+  const cluster=state.clusters.get(state.mergedClusterId);
+  if(!cluster)return;
+  if(performance.now()-cluster.joinedAt<700)return;
+
+  clearSplittable();
+  const particles=particlesInCluster(cluster.id).filter(p=>p.alive&&p.unit!==0);
+  const signs=new Set(particles.map(p=>p.sign));
+
+  if(signs.size<=1){
+    resolveMergedCluster(cluster);
+    return;
+  }
+
+  /* Farklı büyüklükte zıt balonlar kaldıysa parçalama pedagojisi devam eder. */
+  const minUnit=currentConfig().minUnit;
+  let marked=0;
+  for(const p of particles){
+    if(p.unit<=minUnit)continue;
+    const hasOppositeSmaller=particles.some(q=>q.sign===-p.sign&&q.unit<p.unit);
+    if(hasOppositeSmaller){p.splittable=true;p.el.classList.add("splittable");marked++;}
+  }
+  if(marked)setStatus("Zıt işaretliler farklı büyüklükte kaldı. <strong>Parlayan büyük balona tıkla.</strong>");
+}
+
+function mergeValue100(){
+  return state.mergeTermIds.reduce((sum,id)=>{
+    const term=state.terms.find(t=>t.id===id);
+    return sum+(term?term.value100:0);
+  },0);
+}
+
+async function resolveMergedCluster(cluster){
+  if(!state.mergeInProgress||state.finalFlowing)return;
+  const mergeSet=new Set(state.mergeTermIds);
+  const otherTerms=state.terms.filter(t=>!mergeSet.has(t.id));
+  const hasUnopened=otherTerms.some(t=>!t.opened);
+  const hasOtherClusters=[...state.clusters.keys()].some(id=>id!==cluster.id);
+
+  if(!hasUnopened&&!hasOtherClusters&&state.terms.every(t=>t.opened)){
+    await flowFinalResult(cluster);
+    return;
+  }
+
+  await settleIntermediateCluster(cluster);
+}
+
+async function settleIntermediateCluster(cluster){
+  if(!state.mergeInProgress)return;
+  const mergeSet=new Set(state.mergeTermIds);
+  const indices=state.terms.map((t,i)=>mergeSet.has(t.id)?i:-1).filter(i=>i>=0);
+  if(!indices.length)return;
+  const insertIndex=Math.min(...indices);
+  const value=mergeValue100();
+  const newTerm=makeTerm(value,true,cluster.id);
+
+  for(const p of particlesInCluster(cluster.id))p.termId=newTerm.id;
+  if(value===0&&particlesInCluster(cluster.id).length===0){
+    createBubble(0,0,cluster.anchor.x,cluster.anchor.y,cluster.id,newTerm.id);
+  }
+
+  cluster.termIds=new Set([newTerm.id]);
+  cluster.mode="free";
+  cluster.anchor={...clusterStats(cluster).center};
+
+  const remaining=state.terms.filter(t=>!mergeSet.has(t.id));
+  remaining.splice(insertIndex,0,newTerm);
+  state.terms=remaining;
+
+  state.mergeInProgress=false;
+  state.mergeClusterIds=[];
+  state.mergeTermIds=[];
+  state.mergedClusterId=null;
+  stage.style.height=calculateStageHeight()+"px";
+  renderTerms();
+  updateInteractionText();
+}
+
+/* =========================================================
+   PARÇALAMA
+   ========================================================= */
+const nextSmallerUnit=unit=>unit===100?10:unit===10?1:null;
+
+async function splitBubble(p){
+  if(!p.alive||!p.splittable)return;
+  const next=nextSmallerUnit(p.unit);
+  if(!next||next<currentConfig().minUnit)return;
+  p.splittable=false;p.el.classList.remove("splittable");
+  const x=p.x,y=p.y,sign=p.sign,clusterId=p.clusterId,termId=p.termId;
+  p.alive=false;
+  const shrink=p.core.animate([{transform:"scale(1)",opacity:1},{transform:"scale(.1)",opacity:0}],{duration:170,easing:"ease-in",fill:"forwards"});
+  try{await shrink.finished}catch(_){ }
+  if(p.el.isConnected)p.el.remove();
+
+  for(let i=0;i<10;i++){
+    const angle=Math.PI*2*i/10;
+    const r=radiusForUnit(next)*1.5;
+    const child=createBubble(sign,next,x+Math.cos(angle)*r,y+Math.sin(angle)*r,clusterId,termId);
+    child.vx=Math.cos(angle)*1.2;child.vy=Math.sin(angle)*1.2;
+  }
+  setStatus("Büyük balon 10 küçük balona ayrıldı. Simülasyon yeniden denge arıyor…");
+}
+
+async function onBubbleClick(p){
+  if(p.splittable){await splitBubble(p);return;}
+  if(state.mergeInProgress)return;
+  const cluster=state.clusters.get(p.clusterId);
+  if(cluster)await handleClusterClick(cluster.id);
+}
+
+/* =========================================================
+   SONUÇ KUTUSU
+   ========================================================= */
+function getBottomFrameContactPoint(p){
+  const sr=stage.getBoundingClientRect(),fr=resultFrame.getBoundingClientRect();
+  const left=fr.left-sr.left,top=fr.top-sr.top,cx=left+fr.width/2;
+  const r=radiusForUnit(p.unit);
+  const half=Math.max(12,fr.width/2-r*.75-10);
+  const offset=Math.max(-half,Math.min(half,(p.x-cx)*.28));
+  return{x:cx+offset,y:top-r*.72};
+}
+
+function counterBump(){counterValue.classList.remove("bump");void counterValue.offsetWidth;counterValue.classList.add("bump");}
+
+function fallToResult(p,startTime,duration,onImpact){
+  return new Promise(resolve=>{
+    const start={x:p.x,y:p.y};
+    const target=getBottomFrameContactPoint(p);
+    const control={x:start.x+(target.x-start.x)*.25,y:start.y+(target.y-start.y)*.52};
+    function frame(now){
+      if(now<startTime){requestAnimationFrame(frame);return;}
+      const t=Math.max(0,Math.min(1,(now-startTime)/duration));
+      const q=.1*t+.9*t*t;
+      const inv=1-q;
+      p.x=inv*inv*start.x+2*inv*q*control.x+q*q*target.x;
+      p.y=inv*inv*start.y+2*inv*q*control.y+q*q*target.y;
+      if(p.el.isConnected){p.el.style.left=p.x+"px";p.el.style.top=p.y+"px";}
+      if(t<1){requestAnimationFrame(frame);return;}
+      p.core.animate([{transform:"scale(1)",opacity:1},{transform:"scale(.05)",opacity:0}],{duration:80,easing:"ease-in",fill:"forwards"}).finished.catch(()=>{}).then(()=>{
+        p.alive=false;if(p.el.isConnected)p.el.remove();onImpact(p);resolve();
+      });
+    }
+    requestAnimationFrame(frame);
+  });
+}
+
+async function flowFinalResult(cluster){
+  if(state.finalFlowing)return;
+  state.finalFlowing=true;
+  const result=mergeValue100();
+  const particles=particlesInCluster(cluster.id).filter(p=>p.alive);
+  if(cluster.band)cluster.band.style.opacity="0";
+  resultFrame.classList.add("show","gravity-active");
+  counterValue.textContent="0";
+  await sleep(180);
+
+  const queue=particles.slice().sort((a,b)=>b.unit-a.unit||b.y-a.y);
+  let running=0,delay=0,previousUnit=queue[0]?.unit??0;
+  const stagger=queue.length<=8?115:queue.length<=16?92:queue.length<=28?76:62;
+  const base=performance.now()+35;
+  const jobs=[];
+
+  for(const p of queue){
+    p.locked=true;
+    if(p.unit!==previousUnit){delay+=140;previousUnit=p.unit;}
+    jobs.push(fallToResult(p,base+delay,320+Math.min(150,Math.max(0,getBottomFrameContactPoint(p).y-p.y)*.2),absorbed=>{
+      running+=absorbed.sign*absorbed.unit;
+      counterValue.textContent=formatCounter(running);
+      counterBump();
+    }));
+    delay+=stagger;
+  }
+
+  await Promise.all(jobs);
+  counterValue.textContent=formatSigned(result);
+  counterBump();
+  resultFrame.classList.remove("gravity-active");
+  setStatus("Sonuç: <strong>"+formatSigned(result)+"</strong>.");
+}
+
+/* =========================================================
+   YENİ İŞLEM / RENDER
+   ========================================================= */
+function clearSimulation(){
   for(const p of state.particles)if(p.el&&p.el.isConnected)p.el.remove();
   state.particles=[];
-  document.querySelectorAll(".match-line,.annihilation-burst,.band-break").forEach(el=>el.remove());
-}
-
-function resetMergeState(){
-  state.mergeIds=[];
-  state.mergeFinal=false;
-  state.mergeInProgress=false;
-  state.mergeBandVisible=false;
-  state.hiddenBandIds=new Set();
-  state.activeMatchPromises=new Set();
-  state.mergeCenter=null;
-  mergeBand.classList.remove("visible");
-  mergeBand.setAttribute("d","");
-  mergeBand.removeAttribute("style");
-  resultFrame.className="result-frame";
-  counterValue.className="counter-value";
-  counterValue.textContent="0";
+  for(const cluster of state.clusters.values())if(cluster.band&&cluster.band.isConnected)cluster.band.remove();
+  state.clusters.clear();
+  document.querySelectorAll(".annihilation-burst,.band-join-flash").forEach(el=>el.remove());
 }
 
 function newProblem(){
   state.generation++;
-  clearParticles();
+  clearSimulation();
   state.terms=[];
   state.nextTermId=1;
-  state.particleSerial=0;
+  state.nextClusterId=1;
+  state.nextParticleId=1;
+  state.mergeInProgress=false;
+  state.mergeClusterIds=[];
+  state.mergedClusterId=null;
+  state.mergeTermIds=[];
+  state.finalFlowing=false;
+  resultFrame.className="result-frame";
+  counterValue.textContent="0";
+
   for(let i=0;i<state.operandCount;i++)state.terms.push(makeTerm(generateValue100(),false,null));
-  resetMergeState();
   document.body.dataset.mode=state.level;
-  stage.style.height=calculateRequiredStageHeight()+"px";
+  stage.style.height=calculateStageHeight()+"px";
   renderTerms();
-  setStatus("İstediğin sayıyı aç. Tek açık kümeye tıklarsan yeniden kapanır.");
+  updateInteractionText();
 }
 
 function renderTerms(){
   termLayer.innerHTML="";
-  termBandGroup.innerHTML="";
   const centers=getCenterRatios(state.terms.length);
-
   for(let index=0;index<state.terms.length;index++){
     const term=state.terms[index];
-
-    const band=document.createElementNS("http://www.w3.org/2000/svg","path");
-    band.setAttribute("class","rubber-band");
-    band.dataset.termId=String(term.id);
-    band.addEventListener("click",event=>{
-      event.stopPropagation();
-      handleClusterClick(term.id);
-    });
-    termBandGroup.appendChild(band);
-    term.band=band;
-
     const card=document.createElement("button");
     card.className="term-card";
     card.style.left=(centers[index]*100)+"%";
@@ -686,19 +1240,15 @@ function renderTerms(){
     installCardPointerHandlers(card,term.id);
     termLayer.appendChild(card);
     term.card=card;
-
     if(term.opened)card.classList.add("gone");
 
     if(index<state.terms.length-1){
       const plus=document.createElement("div");
-      plus.className="dynamic-plus";
-      plus.textContent="+";
+      plus.className="dynamic-plus";plus.textContent="+";
       plus.style.left=(((centers[index]+centers[index+1])/2)*100)+"%";
       termLayer.appendChild(plus);
     }
   }
-
-  updateClusterInteractions();
 }
 
 function installCardPointerHandlers(card,termId){
@@ -748,755 +1298,9 @@ function installCardPointerHandlers(card,termId){
   });
 }
 
-function openedTerms(){return state.terms.filter(term=>term.opened);}
-function unopenedTerms(){return state.terms.filter(term=>!term.opened);}
-
-function updateClusterInteractions(){
-  updateBandClasses();
-  if(state.mergeInProgress)return;
-  const opened=openedTerms();
-  if(opened.length===0)setStatus("İstediğin sayıyı aç.");
-  else if(opened.length===1)setStatus("Tek bir küme açık. <strong>Kümeye ya da bir balonuna tıklarsan kapanır.</strong> İstersen başka sayı açabilirsin.");
-  else if(unopenedTerms().length>0)setStatus(opened.length+" küme açık. <strong>Açık kümelerden birine tıklarsan açık kümeler birleşir.</strong>");
-  else setStatus("Bütün sayılar açık. <strong>Bir kümeye tıkla:</strong> kümeler birleşecek ve sonuç otomatik olarak aşağı dolacak.");
-}
-
-async function openTerm(termId){
-  const term=state.terms.find(t=>t.id===termId);
-  if(!term||term.opened||term.opening||term.closing)return;
-  const generation=state.generation;
-  term.opened=true;
-  term.opening=true;
-  const index=state.terms.findIndex(t=>t.id===termId);
-  const source=elementCenterInStage(term.card);
-  const pieces=decomposeValue(term.value100);
-  const geometry=getTermGeometry(index);
-  if(!term.manualCenter)term.manualCenter={x:geometry.center.x,y:geometry.center.y};
-  const layout=layoutAtCenter(pieces,term.manualCenter,geometry.width);
-  term.card.classList.add("gone");
-  updateClusterInteractions();
-
-  term.openPromise=(async()=>{
-    await Promise.all(pieces.map((piece,i)=>{
-      if(generation!==state.generation)return Promise.resolve();
-      const p=createParticle(piece.sign,piece.unit,source.x,source.y,term.id);
-      return moveParticle(p,layout.points[i].x,layout.points[i].y,620,i*7);
-    }));
-    if(generation!==state.generation)return;
-    term.opening=false;
-    term.openPromise=null;
-    updateClusterInteractions();
-  })();
-
-  await term.openPromise;
-}
-
-async function waitForTermsToOpen(terms){
-  const waits=terms.map(t=>t.openPromise).filter(Boolean);
-  if(waits.length)await Promise.all(waits);
-}
-
-async function closeSingleTerm(term){
-  if(term.openPromise)await term.openPromise;
-  if(!term.opened||state.mergeInProgress)return;
-  term.closing=true;
-  const target=elementCenterInStage(term.card);
-  const particles=particlesForTerm(term.id);
-  await Promise.all(particles.map((p,i)=>moveParticle(p,target.x,target.y,360,i*4)));
-  await Promise.all(particles.map(async p=>{
-    if(!p.el.isConnected)return;
-    const a=p.core.animate([{transform:"scale(1)",opacity:1},{transform:"scale(.05)",opacity:0}],{duration:100,fill:"forwards"});
-    try{await a.finished}catch(_){ }
-    p.alive=false;
-    if(p.el.isConnected)p.el.remove();
-  }));
-  term.opened=false;
-  term.closing=false;
-  term.manualCenter=null;
-  term.card.classList.remove("gone");
-  if(term.band)term.band.style.opacity="0";
-  updateClusterInteractions();
-}
-
-async function handleClusterClick(termId){
-  if(state.mergeInProgress)return;
-  const term=state.terms.find(t=>t.id===termId);
-  if(!term||!term.opened||term.closing)return;
-  const opened=openedTerms();
-  if(opened.length===1){await closeSingleTerm(term);return;}
-  if(opened.length>=2)await mergeOpenTerms(opened);
-}
-
 /* =========================================================
-   AĞIRLIK MERKEZİ / KÜME YARIÇAPI
+   KONTROLLER
    ========================================================= */
-
-function clusterStats(termId){
-  const particles=particlesForTerm(termId);
-  if(!particles.length){
-    const index=state.terms.findIndex(t=>t.id===termId);
-    const center=index>=0?getTermGeometry(index).center:{x:stage.clientWidth/2,y:260};
-    return{center,mass:1,radius:30};
-  }
-  let sx=0,sy=0,mass=0;
-  for(const p of particles){
-    const r=particleRadiusByUnit(p.unit);
-    const w=Math.max(1,r*r);
-    sx+=p.x*w;sy+=p.y*w;mass+=w;
-  }
-  const center={x:sx/mass,y:sy/mass};
-  let radius=0;
-  for(const p of particles)radius=Math.max(radius,Math.hypot(p.x-center.x,p.y-center.y)+particleRadiusByUnit(p.unit)+7);
-  return{center,mass,radius};
-}
-
-function combinedCenter(terms){
-  let sx=0,sy=0,total=0;
-  for(const term of terms){
-    const stats=clusterStats(term.id);
-    sx+=stats.center.x*stats.mass;
-    sy+=stats.center.y*stats.mass;
-    total+=stats.mass;
-  }
-  return{x:sx/Math.max(1,total),y:sy/Math.max(1,total)};
-}
-
-function directionalExtent(termId,center,ux,uy){
-  const particles=particlesForTerm(termId);
-  if(!particles.length)return 30;
-  let extent=0;
-  for(const p of particles){
-    const projection=(p.x-center.x)*ux+(p.y-center.y)*uy;
-    extent=Math.max(extent,projection+particleRadiusByUnit(p.unit)+7);
-  }
-  return extent;
-}
-
-function computeApproachTargets(terms,mergeCenter){
-  const result=new Map();
-  if(terms.length===2){
-    const a=clusterStats(terms[0].id),b=clusterStats(terms[1].id);
-    const dx=b.center.x-a.center.x,dy=b.center.y-a.center.y;
-    const d=Math.max(1,Math.hypot(dx,dy));
-    const ux=dx/d,uy=dy/d;
-    const aFront=directionalExtent(terms[0].id,a.center,ux,uy);
-    const bFront=directionalExtent(terms[1].id,b.center,-ux,-uy);
-    const separation=Math.min(d,Math.max(18,aFront+bFront-5));
-    const total=a.mass+b.mass;
-    const aDist=separation*(b.mass/total);
-    const bDist=separation*(a.mass/total);
-    result.set(terms[0].id,{x:mergeCenter.x-ux*aDist,y:mergeCenter.y-uy*aDist});
-    result.set(terms[1].id,{x:mergeCenter.x+ux*bDist,y:mergeCenter.y+uy*bDist});
-  }else{
-    for(const term of terms){
-      const stats=clusterStats(term.id);
-      result.set(term.id,{x:stats.center.x+(mergeCenter.x-stats.center.x)*.68,y:stats.center.y+(mergeCenter.y-stats.center.y)*.68});
-    }
-  }
-  return result;
-}
-
-function contactPointForTerms(terms){
-  if(terms.length===2){
-    const a=clusterStats(terms[0].id),b=clusterStats(terms[1].id);
-    const dx=b.center.x-a.center.x,dy=b.center.y-a.center.y;
-    const d=Math.max(1,Math.hypot(dx,dy));
-    const ux=dx/d,uy=dy/d;
-    const aFront=directionalExtent(terms[0].id,a.center,ux,uy);
-    return{x:a.center.x+ux*aFront,y:a.center.y+uy*aFront};
-  }
-  return state.mergeCenter||combinedCenter(terms);
-}
-
-function showBandBreak(point){
-  const flash=document.createElement("div");
-  flash.className="band-break";
-  flash.style.left=point.x+"px";
-  flash.style.top=point.y+"px";
-  stage.appendChild(flash);
-  setTimeout(()=>{if(flash.isConnected)flash.remove();},500);
-}
-
-async function removeNeutralMarkers(){
-  const neutrals=activeMergeParticles().filter(p=>p.unit===0&&p.alive);
-  if(!neutrals.length)return;
-  await Promise.all(neutrals.map(async p=>{
-    const a=p.core.animate([{transform:"scale(1)",opacity:1},{transform:"scale(.15)",opacity:0}],{duration:150,easing:"ease-in",fill:"forwards"});
-    try{await a.finished}catch(_){ }
-    p.alive=false;
-    if(p.el.isConnected)p.el.remove();
-  }));
-}
-
-/* =========================================================
-   KÜMELERİN YAKLAŞMASI
-   ========================================================= */
-
-async function approachClusters(terms,mergeCenter){
-  const targetCenters=computeApproachTargets(terms,mergeCenter);
-  const jobs=[];
-  for(const term of terms){
-    const stats=clusterStats(term.id);
-    const targetCenter=targetCenters.get(term.id);
-    const dx=targetCenter.x-stats.center.x;
-    const dy=targetCenter.y-stats.center.y;
-    const particles=particlesForTerm(term.id);
-    for(const p of particles)jobs.push(moveParticle(p,p.x+dx,p.y+dy,620,0));
-  }
-  await Promise.all(jobs);
-}
-
-/* =========================================================
-   BİRLEŞME ALTIGEN HEDEFLERİ
-   ========================================================= */
-
-function interleaveForContact(particles){
-  const result=[];
-  for(const unit of[100,10,1,0]){
-    const group=particles.filter(p=>p.unit===unit);
-    if(unit===0){result.push(...group);continue;}
-    const pos=group.filter(p=>p.sign>0);
-    const neg=group.filter(p=>p.sign<0);
-    let i=0,j=0;
-    while(i<pos.length||j<neg.length){
-      if(i<pos.length)result.push(pos[i++]);
-      if(j<neg.length)result.push(neg[j++]);
-    }
-  }
-  return result;
-}
-
-function compactMergeWidth(particles){
-  const active=particles.filter(p=>p.alive);
-  if(!active.length)return 180;
-  const unit100=active.filter(p=>p.unit===100).length;
-  const dominantRadius=unit100?particleRadiusByUnit(100):Math.max(...active.map(p=>particleRadiusByUnit(p.unit)));
-  const idealColumns=Math.max(2,Math.ceil(Math.sqrt(Math.max(1,active.length)*1.35)));
-  const ideal=idealColumns*dominantRadius*2+dominantRadius;
-  return Math.max(180,Math.min(stage.clientWidth*.62,ideal));
-}
-
-function clampMergeCenter(rawCenter,particles){
-  const ordered=interleaveForContact(particles);
-  const width=compactMergeWidth(ordered);
-  const layout=buildHexLayout(ordered,width);
-  const halfW=layout.width/2+12;
-  const halfH=layout.height/2+12;
-  const margin=14;
-  const minX=halfW+margin;
-  const maxX=stage.clientWidth-halfW-margin;
-  const x=minX<=maxX?Math.max(minX,Math.min(maxX,rawCenter.x)):stage.clientWidth/2;
-  const minY=195+halfH;
-  const maxY=Math.max(minY,stage.clientHeight-135-halfH);
-  const y=Math.max(minY,Math.min(maxY,rawCenter.y));
-  return{x,y};
-}
-
-function mergeTargetMap(particles,center){
-  const ordered=interleaveForContact(particles);
-  const width=compactMergeWidth(ordered);
-  const layout=layoutAtCenter(ordered,center,width);
-  const map=new Map();
-  ordered.forEach((p,i)=>map.set(p.id,layout.points[i]));
-  return map;
-}
-
-/* =========================================================
-   YAY / ÇEKİM SİMÜLASYONU
-   ========================================================= */
-
-function contactDistance(a,b){
-  return particleRadiusByUnit(a.unit)+particleRadiusByUnit(b.unit);
-}
-
-function springPack(particles,targetMap,duration=900,allowMatches=true){
-  return new Promise(resolve=>{
-    const active=particles.filter(p=>p.alive);
-    for(const p of active){p.vx=0;p.vy=0;}
-    const started=performance.now();
-    let last=started;
-    let scanTick=0;
-
-    function frame(now){
-      const elapsed=now-started;
-      const dt=Math.min(2,(now-last)/16.67);
-      last=now;
-      const alive=active.filter(p=>p.alive&&!p.locked);
-
-      for(const p of alive){
-        const target=targetMap.get(p.id);
-        if(target){
-          p.vx+=(target.x-p.x)*.026*dt;
-          p.vy+=(target.y-p.y)*.026*dt;
-        }
-      }
-
-      for(let i=0;i<alive.length;i++){
-        const a=alive[i];
-        for(let j=i+1;j<alive.length;j++){
-          const b=alive[j];
-          let dx=b.x-a.x,dy=b.y-a.y;
-          let d=Math.hypot(dx,dy);
-          if(d<.001){dx=.01;dy=.01;d=.014;}
-          const ux=dx/d,uy=dy/d;
-          const contact=contactDistance(a,b);
-
-          if(d<contact){
-            const push=(contact-d)*.032*dt;
-            a.vx-=ux*push;a.vy-=uy*push;
-            b.vx+=ux*push;b.vy+=uy*push;
-          }else if(a.sign===b.sign&&a.sign!==0&&d<contact*1.8){
-            const pull=(d-contact)*.0028*dt;
-            a.vx+=ux*pull;a.vy+=uy*pull;
-            b.vx-=ux*pull;b.vy-=uy*pull;
-          }else if(a.sign===-b.sign&&a.unit===b.unit&&a.unit!==0&&d<contact*2.0){
-            const pull=(d-contact)*.0062*dt;
-            a.vx+=ux*pull;a.vy+=uy*pull;
-            b.vx-=ux*pull;b.vy-=uy*pull;
-          }
-        }
-      }
-
-      for(const p of alive){
-        p.vx*=Math.pow(.78,dt);
-        p.vy*=Math.pow(.78,dt);
-        p.x+=p.vx*dt;
-        p.y+=p.vy*dt;
-        p.el.style.left=p.x+"px";
-        p.el.style.top=p.y+"px";
-      }
-
-      if(allowMatches&&scanTick++%2===0)scanForContactMatches();
-
-      if(elapsed<duration){
-        requestAnimationFrame(frame);
-      }else{
-        resolve();
-      }
-    }
-    requestAnimationFrame(frame);
-  });
-}
-
-/* =========================================================
-   ZIT BALONLARIN TEMASLA PATLAMASI
-   ========================================================= */
-
-function createMatchLine(a,b){
-  const line=document.createElement("div");
-  line.className="match-line";
-  stage.appendChild(line);
-  updateMatchLine(line,a.x,a.y,b.x,b.y);
-  return line;
-}
-
-function updateMatchLine(line,x1,y1,x2,y2){
-  const dx=x2-x1,dy=y2-y1;
-  const length=Math.hypot(dx,dy);
-  const angle=Math.atan2(dy,dx)*180/Math.PI;
-  line.style.left=x1+"px";
-  line.style.top=y1+"px";
-  line.style.width=length+"px";
-  line.style.transform=`translateY(-50%) rotate(${angle}deg)`;
-}
-
-function createAnnihilationBurst(x,y){
-  const burst=document.createElement("div");
-  burst.className="annihilation-burst";
-  burst.style.left=x+"px";
-  burst.style.top=y+"px";
-  for(const className of["burst-core","burst-ring one","burst-ring two"]){
-    const el=document.createElement("div");
-    el.className=className;
-    burst.appendChild(el);
-  }
-  for(let i=0;i<10;i++){
-    const spark=document.createElement("div");
-    spark.className="burst-spark";
-    const angle=Math.PI*2*i/10,distance=28+(i%3)*7;
-    spark.style.setProperty("--sx",Math.cos(angle)*distance+"px");
-    spark.style.setProperty("--sy",Math.sin(angle)*distance+"px");
-    burst.appendChild(spark);
-  }
-  stage.appendChild(burst);
-  setTimeout(()=>{if(burst.isConnected)burst.remove();},600);
-}
-
-async function annihilatePair(a,b){
-  if(!a.alive||!b.alive||a.locked||b.locked)return;
-  a.locked=b.locked=true;
-  a.el.classList.add("matching");
-  b.el.classList.add("matching");
-  const line=createMatchLine(a,b);
-  const startA={x:a.x,y:a.y},startB={x:b.x,y:b.y};
-  const target={x:(startA.x+startB.x)/2,y:(startA.y+startB.y)/2};
-  const dx=startB.x-startA.x,dy=startB.y-startA.y;
-  const len=Math.max(1,Math.hypot(dx,dy));
-  const nx=-dy/len,ny=dx/len;
-  const curve=Math.min(12,len*.05);
-  const cA={x:(startA.x+target.x)/2+nx*curve,y:(startA.y+target.y)/2+ny*curve};
-  const cB={x:(startB.x+target.x)/2-nx*curve,y:(startB.y+target.y)/2-ny*curve};
-
-  await new Promise(resolve=>{
-    const duration=250,started=performance.now();
-    function frame(now){
-      let t=Math.max(0,Math.min(1,(now-started)/duration));
-      const q=.12*t+.88*t*t;
-      const pa=quadraticBezier(startA,cA,target,q),pb=quadraticBezier(startB,cB,target,q);
-      a.x=pa.x;a.y=pa.y;b.x=pb.x;b.y=pb.y;
-      a.el.style.left=pa.x+"px";a.el.style.top=pa.y+"px";
-      b.el.style.left=pb.x+"px";b.el.style.top=pb.y+"px";
-      updateMatchLine(line,pa.x,pa.y,pb.x,pb.y);
-      if(t<1)requestAnimationFrame(frame);else resolve();
-    }
-    requestAnimationFrame(frame);
-  });
-
-  if(line.isConnected)line.remove();
-  createAnnihilationBurst(target.x,target.y);
-  const vanish=p=>p.core.animate([
-    {transform:"scale(1)",opacity:1},
-    {transform:"scale(1.30)",opacity:1,offset:.22},
-    {transform:"scale(.02)",opacity:0}
-  ],{duration:180,easing:"cubic-bezier(.25,.78,.35,1)",fill:"forwards"}).finished.catch(()=>{});
-  await Promise.all([vanish(a),vanish(b)]);
-  a.alive=b.alive=false;
-  if(a.el.isConnected)a.el.remove();
-  if(b.el.isConnected)b.el.remove();
-}
-
-function scanForContactMatches(){
-  if(!state.mergeInProgress)return;
-  const alive=activeMergeParticles().filter(p=>!p.locked&&p.alive&&p.unit!==0);
-  const candidates=[];
-  for(let i=0;i<alive.length;i++){
-    for(let j=i+1;j<alive.length;j++){
-      const a=alive[i],b=alive[j];
-      if(a.unit!==b.unit||a.sign!==-b.sign)continue;
-      const distance=Math.hypot(a.x-b.x,a.y-b.y);
-      const threshold=contactDistance(a,b)+3;
-      if(distance<=threshold)candidates.push({a,b,distance});
-    }
-  }
-  candidates.sort((x,y)=>x.distance-y.distance);
-  for(const c of candidates){
-    if(c.a.locked||c.b.locked||!c.a.alive||!c.b.alive)continue;
-    const promise=annihilatePair(c.a,c.b).finally(()=>state.activeMatchPromises.delete(promise));
-    state.activeMatchPromises.add(promise);
-  }
-}
-
-async function finishRemainingMatchesForUnit(unit){
-  while(true){
-    const positives=activeMergeParticles().filter(p=>p.alive&&!p.locked&&p.unit===unit&&p.sign>0);
-    const negatives=activeMergeParticles().filter(p=>p.alive&&!p.locked&&p.unit===unit&&p.sign<0);
-    if(!positives.length||!negatives.length)break;
-    let bestA=null,bestB=null,best=Infinity;
-    for(const a of positives){
-      for(const b of negatives){
-        const d=Math.hypot(a.x-b.x,a.y-b.y);
-        if(d<best){best=d;bestA=a;bestB=b;}
-      }
-    }
-    if(!bestA||!bestB)break;
-    await annihilatePair(bestA,bestB);
-    await sleep(35);
-  }
-}
-
-/* =========================================================
-   KÜME BİRLEŞİMİ
-   ========================================================= */
-
-async function mergeOpenTerms(terms){
-  if(state.mergeInProgress||terms.length<2)return;
-  const generation=state.generation;
-  state.mergeInProgress=true;
-  state.mergeIds=terms.map(t=>t.id);
-  state.mergeFinal=state.terms.every(t=>t.opened);
-  state.activeMatchPromises=new Set();
-  updateClusterInteractions();
-
-  await waitForTermsToOpen(terms);
-  if(generation!==state.generation)return;
-
-  const rawMergeCenter=combinedCenter(terms);
-  state.mergeCenter=clampMergeCenter(rawMergeCenter,activeMergeParticles());
-  setStatus(state.mergeFinal?"Kümeler ortak ağırlık merkezinde birleşiyor…":"Açık kümeler ortak ağırlık merkezinde birleşiyor; kapalı sayılar bekliyor…");
-
-  await approachClusters(terms,state.mergeCenter);
-  if(generation!==state.generation)return;
-
-  const contact=contactPointForTerms(terms);
-  showBandBreak(contact);
-  state.hiddenBandIds=new Set(state.mergeIds);
-  state.mergeBandVisible=true;
-  updateBandClasses();
-  await sleep(110);
-  await removeNeutralMarkers();
-
-  const particles=activeMergeParticles();
-  let targets=mergeTargetMap(particles,state.mergeCenter);
-  await springPack(particles,targets,920,true);
-
-  if(state.activeMatchPromises.size)await Promise.all([...state.activeMatchPromises]);
-  await finishRemainingMatchesForUnit(100);
-  await finishRemainingMatchesForUnit(10);
-  await finishRemainingMatchesForUnit(1);
-
-  const survivors=activeMergeParticles().filter(p=>p.alive&&!p.locked);
-  targets=mergeTargetMap(survivors,state.mergeCenter);
-  await springPack(survivors,targets,520,false);
-
-  evaluateMergeState();
-}
-
-function clearSplittableMarks(){
-  for(const p of aliveParticles()){
-    p.splittable=false;
-    p.el.classList.remove("splittable");
-  }
-}
-
-function evaluateMergeState(){
-  clearSplittableMarks();
-  const alive=activeMergeParticles().filter(p=>p.unit!==0);
-  const signs=new Set(alive.map(p=>p.sign));
-
-  if(signs.size<=1){
-    setStatus(state.mergeFinal?"Birleşme tamamlandı; sonuç otomatik olarak aşağı doluyor.":"Baloncuklar yapıştı. Ara küme oluşuyor; kapalı sayı olduğu için sonuç aşağı inmiyor.");
-    setTimeout(()=>finishResolvedMerge(),170);
-    return;
-  }
-
-  const minimumUnit=currentConfig().minUnit;
-  let marked=0;
-  for(const p of alive){
-    if(p.unit<=minimumUnit)continue;
-    const oppositeSmaller=alive.some(other=>other.sign===-p.sign&&other.unit<p.unit);
-    if(oppositeSmaller){
-      p.splittable=true;
-      p.el.classList.add("splittable");
-      marked++;
-    }
-  }
-  if(marked)setStatus("Eş olmayan basamaklar kaldı. <strong>Parlayan büyük balona tıkla.</strong>");
-}
-
-const nextSmallerUnit=unit=>unit===100?10:unit===10?1:null;
-
-async function splitParticle(particle){
-  if(!particle.alive||!particle.splittable||!state.mergeInProgress)return;
-  const nextUnit=nextSmallerUnit(particle.unit);
-  if(!nextUnit||nextUnit<currentConfig().minUnit)return;
-  clearSplittableMarks();
-  const x=particle.x,y=particle.y,sign=particle.sign,sourceTermId=particle.sourceTermId;
-  particle.alive=false;
-  const shrink=particle.core.animate([{transform:"scale(1)",opacity:1},{transform:"scale(.1)",opacity:0}],{duration:180,easing:"ease-in",fill:"forwards"});
-  try{await shrink.finished}catch(_){ }
-  if(particle.el.isConnected)particle.el.remove();
-
-  const childItems=Array.from({length:10},()=>({sign,unit:nextUnit}));
-  const local=layoutAtCenter(childItems,{x,y},Math.max(170,particleRadiusByUnit(nextUnit)*10));
-  const children=[];
-  const openingJobs=[];
-  for(let i=0;i<10;i++){
-    const child=createParticle(sign,nextUnit,x,y,sourceTermId);
-    children.push(child);
-    openingJobs.push(moveParticle(child,local.points[i].x,local.points[i].y,360,i*7));
-  }
-  await Promise.all(openingJobs);
-
-  let targets=mergeTargetMap(activeMergeParticles().filter(p=>p.alive&&!p.locked),state.mergeCenter);
-  await springPack(activeMergeParticles(),targets,650,true);
-  if(state.activeMatchPromises.size)await Promise.all([...state.activeMatchPromises]);
-  await finishRemainingMatchesForUnit(nextUnit);
-  const survivors=activeMergeParticles().filter(p=>p.alive&&!p.locked);
-  targets=mergeTargetMap(survivors,state.mergeCenter);
-  await springPack(survivors,targets,420,false);
-  evaluateMergeState();
-}
-
-async function onParticleClick(particle){
-  if(particle.splittable&&state.mergeInProgress){
-    await splitParticle(particle);
-    return;
-  }
-  if(!state.mergeInProgress){
-    const term=state.terms.find(t=>t.id===particle.sourceTermId);
-    if(term&&term.opened)await handleClusterClick(term.id);
-  }
-}
-
-function mergeValue100(){
-  return state.mergeIds.reduce((sum,id)=>{
-    const term=state.terms.find(t=>t.id===id);
-    return sum+(term?term.value100:0);
-  },0);
-}
-
-async function finishResolvedMerge(){
-  if(!state.mergeInProgress)return;
-  if(state.mergeFinal)await flowFinalResult();
-  else await settleIntermediateCluster();
-}
-
-/* =========================================================
-   ARA KÜME: AŞAĞI GİTMEZ
-   ========================================================= */
-
-async function settleIntermediateCluster(){
-  const generation=state.generation;
-  const ids=new Set(state.mergeIds);
-  const indices=state.terms.map((term,index)=>ids.has(term.id)?index:-1).filter(index=>index>=0);
-  if(!indices.length)return;
-  const insertIndex=Math.min(...indices);
-  const result=mergeValue100();
-  const survivors=activeMergeParticles();
-  const center={...state.mergeCenter};
-  const newTerm=makeTerm(result,true,center);
-
-  if(result===0&&survivors.length===0){
-    const zero=createParticle(0,0,center.x,center.y,newTerm.id);
-    zero.x=center.x;zero.y=center.y;
-  }else{
-    for(const p of survivors)p.sourceTermId=newTerm.id;
-  }
-
-  const remaining=state.terms.filter(term=>!ids.has(term.id));
-  remaining.splice(insertIndex,0,newTerm);
-  state.terms=remaining;
-
-  state.mergeIds=[];
-  state.mergeFinal=false;
-  state.mergeInProgress=false;
-  state.mergeBandVisible=false;
-  state.hiddenBandIds=new Set();
-  state.mergeCenter=null;
-  mergeBand.classList.remove("visible");
-  mergeBand.setAttribute("d","");
-
-  stage.style.height=calculateRequiredStageHeight()+"px";
-  renderTerms();
-  updateClusterInteractions();
-
-  if(generation!==state.generation)return;
-}
-
-/* =========================================================
-   SONUÇ KUTUSU
-   ========================================================= */
-
-function getBottomFrameContactPoint(particle){
-  const sr=stage.getBoundingClientRect(),fr=resultFrame.getBoundingClientRect();
-  const left=fr.left-sr.left,top=fr.top-sr.top,cx=left+fr.width/2;
-  const radius=particleRadiusByUnit(particle.unit);
-  const half=Math.max(12,fr.width/2-radius*.75-10);
-  const offset=Math.max(-half,Math.min(half,(particle.x-cx)*.28));
-  return{x:cx+offset,y:top-radius*.72};
-}
-
-function distanceToFrame(particle){
-  const target=getBottomFrameContactPoint(particle);
-  return Math.hypot(particle.x-target.x,particle.y-target.y);
-}
-
-function createResultQueue(particles){
-  return particles.slice().sort((a,b)=>{
-    if(a.unit!==b.unit)return b.unit-a.unit;
-    if(Math.abs(b.y-a.y)>2)return b.y-a.y;
-    return distanceToFrame(a)-distanceToFrame(b);
-  });
-}
-
-function orderedFallDown(particle,startTime,duration,onImpact){
-  return new Promise(resolve=>{
-    if(!particle.alive){resolve();return;}
-    particle.el.classList.add("gravity-fall");
-    const start={x:particle.x,y:particle.y};
-    const target=getBottomFrameContactPoint(particle);
-    const control={x:start.x+(target.x-start.x)*.25,y:start.y+(target.y-start.y)*.5};
-    function frame(now){
-      if(now<startTime){requestAnimationFrame(frame);return;}
-      let t=Math.max(0,Math.min(1,(now-startTime)/duration));
-      const q=.1*t+.9*t*t;
-      const pos=quadraticBezier(start,control,target,q);
-      particle.x=pos.x;particle.y=pos.y;
-      particle.el.style.left=pos.x+"px";particle.el.style.top=pos.y+"px";
-      if(t<1){requestAnimationFrame(frame);return;}
-      particle.core.animate([
-        {transform:"scale(1)",opacity:1},
-        {transform:"scale(.5)",opacity:.75,offset:.45},
-        {transform:"scale(.05)",opacity:0}
-      ],{duration:75,easing:"ease-in",fill:"forwards"}).finished.catch(()=>{}).then(()=>{
-        particle.alive=false;
-        if(particle.el.isConnected)particle.el.remove();
-        onImpact(particle);
-        resolve();
-      });
-    }
-    requestAnimationFrame(frame);
-  });
-}
-
-function counterBump(){
-  counterValue.classList.remove("bump");
-  void counterValue.offsetWidth;
-  counterValue.classList.add("bump");
-}
-
-async function flowFinalResult(){
-  const result=mergeValue100();
-  const particles=activeMergeParticles().filter(p=>p.alive);
-  mergeBand.style.transition="opacity .24s ease";
-  mergeBand.style.opacity="0";
-  resultFrame.classList.add("show");
-  counterValue.textContent="0";
-  await sleep(220);
-
-  if(particles.length){
-    resultFrame.classList.add("gravity-active");
-    const queue=createResultQueue(particles);
-    let running=0,delay=0,previousUnit=queue[0].unit;
-    const stagger=queue.length<=8?120:queue.length<=16?100:queue.length<=26?82:68;
-    const base=performance.now()+40;
-    const jobs=[];
-    for(const particle of queue){
-      if(particle.unit!==previousUnit){delay+=150;previousUnit=particle.unit;}
-      const target=getBottomFrameContactPoint(particle);
-      const vertical=Math.max(30,target.y-particle.y);
-      const duration=300+Math.min(150,vertical*.22);
-      const start=base+delay;
-      jobs.push(orderedFallDown(particle,start,duration,absorbed=>{
-        running+=absorbed.sign*absorbed.unit;
-        counterValue.textContent=formatCounter(running);
-        counterBump();
-      }));
-      delay+=stagger;
-    }
-    await Promise.all(jobs);
-  }
-
-  counterValue.textContent=formatSigned(result);
-  counterBump();
-  resultFrame.classList.remove("gravity-active");
-  for(const term of state.terms){
-    if(term.band)term.band.style.opacity="0";
-    if(term.card)term.card.classList.add("gone");
-  }
-  state.mergeInProgress=false;
-  state.mergeIds=[];
-  state.mergeFinal=false;
-  state.mergeBandVisible=false;
-  state.hiddenBandIds=new Set();
-  state.mergeCenter=null;
-  setStatus("Sonuç: <strong>"+formatSigned(result)+"</strong>.");
-}
-
-/* =========================================================
-   OLAYLAR
-   ========================================================= */
-
 newBtn.addEventListener("click",event=>{event.stopPropagation();newProblem();});
 for(const button of levelButtons){
   button.addEventListener("click",event=>{
@@ -1513,11 +1317,11 @@ countSlider.addEventListener("input",event=>{state.operandCount=Number(event.tar
 countSlider.addEventListener("change",event=>{event.stopPropagation();state.operandCount=Number(event.target.value);countValue.textContent=String(state.operandCount);newProblem();});
 window.addEventListener("resize",()=>{
   if(state.mergeInProgress)return;
-  stage.style.height=calculateRequiredStageHeight()+"px";
+  stage.style.height=calculateStageHeight()+"px";
   renderTerms();
 });
 
-requestAnimationFrame(updateBoundaries);
+requestAnimationFrame(physicsFrame);
 newProblem();
 })();
 </script>
