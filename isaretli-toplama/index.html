@@ -162,10 +162,10 @@ const PHYSICS={
   overlapSpring:.075,
   nearContactSpring:.012,
   tangentialSlide:.0017,
-  clusterAttraction:.0065,
-  clusterAttractionMax:.15,
+  clusterAttraction:.022,
+  clusterAttractionMax:.38,
   clusterRepulsion:.035,
-  maxSpeed:7.5,
+  maxSpeed:8.5,
   settleSpeed:.18,
   boundaryOffset:7,
   mergeGap:5
@@ -702,10 +702,15 @@ function applyMergingClusterForces(dt){
       const gap=d-ea-eb;
 
       const affinity=clusterAffinity(a,b);
+      const safeGap=Math.max(0,gap);
+      const distanceBoost=1+Math.min(2.5,safeGap/95);
       const proximity=1/Math.max(10,gap+34);
       const acceleration=Math.min(
         PHYSICS.clusterAttractionMax,
-        PHYSICS.clusterAttraction*affinity*(1+900*proximity*proximity)
+        PHYSICS.clusterAttraction
+          *affinity
+          *distanceBoost
+          *(1+1250*proximity*proximity)
       );
 
       for(const p of particlesInCluster(a.id)){
