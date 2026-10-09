@@ -446,11 +446,15 @@ const LEVELS={
 
 const PHYSICS={
   damping:.91,
-  centerCohesion:.00118,
-  attraction:.00195,
+  birthDamping:.82,
+  birthDuration:520,
+  birthSpring:.0085,
+  centerCohesion:.00155,
+  attraction:.00265,
   sameSizeMultiplier:1,
   oppositeSignMultiplier:1,
   overlapSpring:.088,
+  birthOverlapSpring:.050,
   nearContactSpring:.010,
   tangentialSlide:.0019,
   clusterAttraction:.023,
@@ -657,7 +661,7 @@ function seedLayout(values,center,width){
     for(let col=0;col<take;col++){
       const rawX=startX+col*dx+(row%2?maxR:0);
       const rawY=center.y-totalH/2+maxR+row*dy;
-      const birthSpread=.52;
+      const birthSpread=.30;
 
       points[cursor++]={
         x:center.x+(rawX-center.x)*birthSpread,
@@ -1257,8 +1261,48 @@ function applyInternalForces(cluster,dt,now){
       b.el.classList.remove("aging","seeking");
     }
 
-    b.vx+=(stats.center.x-b.x)*PHYSICS.centerCohesion*dt;
-    b.vy+=(stats.center.y-b.y)*PHYSICS.centerCohesion*dt;
+    const birthAge=
+      now-
+      b.birth;
+
+    if(
+      b.birthTarget
+      &&
+      birthAge<
+      PHYSICS.birthDuration
+    ){
+      b.vx+=
+        (
+          b.birthTarget.x-
+          b.x
+        )*
+        PHYSICS.birthSpring*
+        dt;
+
+      b.vy+=
+        (
+          b.birthTarget.y-
+          b.y
+        )*
+        PHYSICS.birthSpring*
+        dt;
+    }
+
+    b.vx+=
+      (
+        stats.center.x-
+        b.x
+      )*
+      PHYSICS.centerCohesion*
+      dt;
+
+    b.vy+=
+      (
+        stats.center.y-
+        b.y
+      )*
+      PHYSICS.centerCohesion*
+      dt;
   }
 
   for(let i=0;i<bs.length;i++){
@@ -1296,7 +1340,28 @@ function applyInternalForces(cluster,dt,now){
       b.vy-=uy*force*d*.08;
 
       if(d<contact){
-        const push=(contact-d)*PHYSICS.overlapSpring*dt;
+        const inBirthPhase=
+          now-
+          a.birth<
+          PHYSICS.birthDuration
+          ||
+          now-
+          b.birth<
+          PHYSICS.birthDuration;
+
+        const overlapStrength=
+          inBirthPhase
+            ?PHYSICS.birthOverlapSpring
+            :PHYSICS.overlapSpring;
+
+        const push=
+          (
+            contact-
+            d
+          )*
+          overlapStrength*
+          dt;
+
         a.vx-=ux*push;
         b.vx+=ux*push;
         a.vy-=uy*push;
@@ -2767,10 +2832,28 @@ async function splitBubble(b){
   },120);
 }
 
-function integrate(dt){
+function integrate(dt,now){
   for(const b of aliveBubbles()){
     if(b.locked)continue;
-    b.vx*=Math.pow(PHYSICS.damping,dt);b.vy*=Math.pow(PHYSICS.damping,dt);
+
+    const damping=
+      now-
+      b.birth<
+      PHYSICS.birthDuration
+        ?PHYSICS.birthDamping
+        :PHYSICS.damping;
+
+    b.vx*=
+      Math.pow(
+        damping,
+        dt
+      );
+
+    b.vy*=
+      Math.pow(
+        damping,
+        dt
+      );
     const speed=Math.hypot(b.vx,b.vy);
     const speedLimit=
       state.clusterDrag?.clusterId===b.clusterId
@@ -2793,7 +2876,7 @@ function physicsFrame(now){
   for(const cluster of state.clusters.values())applyInternalForces(cluster,dt,now);
   applyClusterDragForces(dt);
   applyClusterRepulsion(dt);
-  integrate(dt);
+  integrate(dt,now);
   updateBands();
 
   if(now>=state.resolutionCheckAt){
@@ -2873,8 +2956,38 @@ async function openTerm(termId){
   const values=decomposeValue(term.value100),points=seedLayout(values,anchor,termSegmentWidth()),generation=state.generation;
   for(let i=0;i<values.length;i++){
     if(generation!==state.generation)break;
-    const b=createBubble(values[i],source.x,source.y,cluster.id,term.id,1,1);
-    const target=points[i];b.vx=(target.x-source.x)*.052;b.vy=(target.y-source.y)*.052;
+    const b=createBubble(
+      values[i],
+      source.x,
+      source.y,
+      cluster.id,
+      term.id,
+      1,
+      1
+    );
+
+    const target=points[i];
+
+    b.birthTarget={
+      x:target.x,
+      y:target.y
+    };
+
+    /*
+      Eski ani fırlama yerine yalnız küçük bir ilk hareket.
+      Asıl açılmayı aşağıdaki kısa ömürlü birthSpring yapar.
+    */
+    b.vx=
+      (anchor.x-source.x)*
+      .010+
+      (target.x-anchor.x)*
+      .004;
+
+    b.vy=
+      (anchor.y-source.y)*
+      .010+
+      (target.y-anchor.y)*
+      .004;
   }
   await sleep(300);
 
