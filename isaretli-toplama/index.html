@@ -50,8 +50,90 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
 .setting-label{display:flex;align-items:center;justify-content:flex-end;gap:4px;white-space:nowrap}.setting-value{min-width:19px;text-align:right;color:var(--accent);font-variant-numeric:tabular-nums}.setting-slider{width:116px;accent-color:var(--accent);cursor:pointer}
 .term-layer{position:absolute;inset:0;z-index:35;pointer-events:none}
 .term-card{position:absolute;top:148px;transform:translate(-50%,-50%);min-width:94px;padding:15px 16px;border:0;border-radius:18px;background:#fff;color:var(--text);font-size:clamp(24px,3vw,40px);font-weight:850;letter-spacing:-.04em;box-shadow:0 14px 30px rgba(30,38,56,.14);cursor:grab;z-index:45;pointer-events:auto;touch-action:none;transition:left .28s ease,transform .18s ease,opacity .25s ease,box-shadow .2s ease}
-.term-card:hover{transform:translate(-50%,-52%) scale(1.025)}.term-card.dragging{cursor:grabbing;z-index:90;transition:none;box-shadow:0 20px 40px rgba(30,38,56,.22)}.term-card.gone{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.72)}
-.dynamic-plus{position:absolute;top:148px;transform:translate(-50%,-50%);font-size:clamp(38px,4.8vw,60px);font-weight:500;color:#343b4b;opacity:.34;pointer-events:none;z-index:34;transition:opacity .22s ease,transform .22s ease}.dynamic-plus.fade-away{opacity:0;transform:translate(-50%,-50%) scale(.78)}
+.term-card:hover{transform:translate(-50%,-52%) scale(1.025)}
+.term-card.dragging{cursor:grabbing;z-index:90;transition:none;box-shadow:0 20px 40px rgba(30,38,56,.22)}
+.term-card.opened{cursor:default}
+.term-card.opened:hover{transform:translate(-50%,-50%)}
+
+.dynamic-plus,
+.equation-equals{
+  position:absolute;
+  top:148px;
+  transform:translate(-50%,-50%);
+  font-size:clamp(34px,4.5vw,56px);
+  font-weight:500;
+  color:#343b4b;
+  opacity:.52;
+  pointer-events:none;
+  z-index:34;
+}
+
+.result-box{
+  position:absolute;
+  top:148px;
+  transform:translate(-50%,-50%);
+  width:108px;
+  height:68px;
+  display:grid;
+  place-items:center;
+  border:3px solid #737d8c;
+  border-radius:10px;
+  background:rgba(255,255,255,.94);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.98),0 8px 20px rgba(40,48,67,.10);
+  color:#242b38;
+  font-size:clamp(24px,3vw,38px);
+  font-weight:850;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-.03em;
+  z-index:50;
+  pointer-events:none;
+  transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease,background .18s ease;
+}
+
+.result-box::before,
+.result-box::after{
+  position:absolute;
+  top:50%;
+  transform:translateY(-53%);
+  color:#5e6878;
+  font-size:42px;
+  font-weight:400;
+  line-height:1;
+  opacity:.72;
+}
+.result-box::before{content:"[";left:-17px}
+.result-box::after{content:"]";right:-17px}
+
+.result-counter{
+  min-width:76px;
+  text-align:center;
+}
+
+.result-box.receiving{
+  border-color:#7c3aed;
+  background:#fff;
+  box-shadow:0 0 0 5px rgba(124,58,237,.08),0 0 24px rgba(124,58,237,.22),inset 0 1px 0 rgba(255,255,255,.98);
+}
+
+.result-box.bump{
+  animation:resultBoxBump .18s ease-out;
+}
+
+.result-box.done{
+  border-color:#475569;
+  box-shadow:0 0 0 5px rgba(71,85,105,.07),0 8px 20px rgba(40,48,67,.11),inset 0 1px 0 rgba(255,255,255,.98);
+}
+
+@keyframes resultBoxBump{
+  0%{transform:translate(-50%,-50%) scale(1)}
+  45%{transform:translate(-50%,-50%) scale(1.08)}
+  100%{transform:translate(-50%,-50%) scale(1)}
+}
+
+.bubble-wrap.result-flying{z-index:49}
+.bubble-wrap.result-flying .bubble-core{
+  box-shadow:0 0 0 3px rgba(255,255,255,.30),0 0 14px rgba(124,58,237,.18),inset 0 1px 0 rgba(255,255,255,.90);
+}
 .band-layer{
   position:absolute;
   inset:0;
@@ -293,7 +375,19 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
 @keyframes finalResultPulse{from{transform:scale(1)}to{transform:scale(1.075)}}
 @keyframes agingPulse{from{transform:scale(1)}to{transform:scale(1.055)}}
 .statusbar{min-height:90px;border-top:1px solid rgba(42,50,70,.13);display:flex;align-items:center;justify-content:center;padding:18px 24px 22px;background:rgba(255,255,255,.86)}.status{margin:0;text-align:center;font-size:15px;line-height:1.45;color:var(--muted)}.status strong{color:var(--text)}
-@media(max-width:720px){body{padding:10px}.board{border-radius:22px}.settings-panel{top:10px;right:10px;padding:7px 8px}.setting-row{grid-template-columns:52px 90px;gap:6px;font-size:11px}.setting-slider{width:90px}.term-card{top:140px;min-width:70px;padding:12px 9px;font-size:clamp(20px,6vw,29px)}.dynamic-plus{top:140px;font-size:36px}}
+@media(max-width:720px){
+  body{padding:10px}
+  .board{border-radius:22px}
+  .settings-panel{top:10px;right:10px;padding:7px 8px}
+  .setting-row{grid-template-columns:52px 90px;gap:6px;font-size:11px}
+  .setting-slider{width:90px}
+  .term-card{top:140px;min-width:70px;padding:12px 9px;font-size:clamp(20px,6vw,29px)}
+  .dynamic-plus,.equation-equals{top:140px;font-size:32px}
+  .result-box{top:140px;width:82px;height:58px;border-width:2px;font-size:24px}
+  .result-box::before,.result-box::after{font-size:34px}
+  .result-box::before{left:-14px}
+  .result-box::after{right:-14px}
+}
 </style>
 </head>
 <body data-mode="basic">
@@ -400,6 +494,9 @@ const state={
   resolutionCheckAt:0,
   explicitCloseArmedAt:0,
   finalReady:false,
+  resultCollecting:false,
+  resultValue100:0,
+  resultHasValue:false,
   clusterDrag:null
 };
 
@@ -464,15 +561,87 @@ function bubbleFontSize(value100){
 
 function bubbleMass(b){const r=bubbleRadius(b.value100);return Math.max(1,r*r)}
 
-function getCenterRatios(count){
-  if(count===1)return[.5];
-  if(count===2)return[.28,.72];
-  if(count===3)return[.17,.50,.83];
-  return[.10,.365,.635,.90];
+function getEquationLayout(count){
+  const mobile=innerWidth<=720;
+
+  if(count===1){
+    return{
+      terms:[mobile?.24:.28],
+      equals:mobile?.57:.62,
+      result:mobile?.78:.79
+    };
+  }
+
+  if(count===2){
+    return{
+      terms:mobile?[.16,.41]:[.18,.43],
+      equals:mobile?.61:.62,
+      result:mobile?.80:.80
+    };
+  }
+
+  if(count===3){
+    return{
+      terms:mobile?[.10,.29,.48]:[.11,.30,.49],
+      equals:mobile?.62:.63,
+      result:mobile?.81:.81
+    };
+  }
+
+  return{
+    terms:mobile?[.07,.21,.35,.49]:[.07,.22,.37,.52],
+    equals:mobile?.62:.64,
+    result:mobile?.81:.82
+  };
 }
 
-function termSegmentWidth(){return Math.max(82,stage.clientWidth/Math.max(1,state.terms.length)-30)}
-function termAnchor(index){const count=Math.max(1,state.terms.length),segment=stage.clientWidth/count;return{x:(index+.5)*segment,y:285}}
+function getCenterRatios(count){
+  return getEquationLayout(count).terms;
+}
+
+function termSegmentWidth(){
+  return Math.max(
+    74,
+    stage.clientWidth/
+    Math.max(1,state.terms.length)*
+    .72
+  );
+}
+
+function termAnchor(index){
+  const ratios=getCenterRatios(
+    Math.max(1,state.terms.length)
+  );
+
+  return{
+    x:ratios[
+      Math.min(index,ratios.length-1)
+    ]*stage.clientWidth,
+    y:285
+  };
+}
+
+function formatResultValue(value100){
+  if(value100===0)return"0";
+
+  const absolute=Math.abs(value100);
+
+  const precision=
+    absolute%100===0
+      ?0
+      :absolute%10===0
+        ?1
+        :2;
+
+  const magnitude=
+    (absolute/100)
+    .toFixed(precision)
+    .replace(".",",");
+
+  return value100<0
+    ?"−"+magnitude
+    :magnitude;
+}
 function calculateStageHeight(){return innerWidth<=720?650:680}
 function elementCenterInStage(el){const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect();return{x:r.left+r.width/2-s.left,y:r.top+r.height/2-s.top}}
 
@@ -970,9 +1139,11 @@ async function handleClusterTap(clusterId){
     &&
     !state.finalAggregation
     &&
+    !state.resultCollecting
+    &&
     !state.finalDone
   ){
-    startFinalAggregation(cluster);
+    startResultCollection(cluster);
     return;
   }
 
@@ -986,6 +1157,8 @@ async function handleClusterTap(clusterId){
     !cluster.annihilating
     &&
     !state.finalAggregation
+    &&
+    !state.resultCollecting
   ){
     return closeSingleCluster(clusterId,true);
   }
@@ -2079,6 +2252,8 @@ function checkFinalReadiness(){
     ||
     state.finalAggregation
     ||
+    state.resultCollecting
+    ||
     state.clusters.size!==1
     ||
     !allOriginalTermsOpened()
@@ -2106,8 +2281,8 @@ function checkFinalReadiness(){
 
     setStatus(
       bubbles.length===0
-        ? "Sadeleştirme tamamlandı. <strong>Tek kümeye tıkla:</strong> 0 sonuç balonu oluşsun."
-        : "Sadeleştirme tamamlandı. <strong>Tek kümeye tıkla:</strong> son sayı-birleşmesine izin ver."
+        ? "Sadeleştirme tamamlandı. <strong>Tek kümeye tıkla:</strong> sonuç kutusuna 0 yazılsın."
+        : "Sadeleştirme tamamlandı. <strong>Tek kümeye tıkla:</strong> kalan balonlar sonuç kutusuna girsin."
     );
 
     return;
@@ -2137,9 +2312,263 @@ function checkFinalReadiness(){
   }
 }
 
-function startFinalAggregation(cluster){
+function resultBoxElement(){
+  return document.getElementById("resultBox");
+}
+
+function resultCounterElement(){
+  return document.getElementById("resultCounter");
+}
+
+function resultTargetPoint(){
+  const box=resultBoxElement();
+
+  if(!box){
+    return{
+      x:stage.clientWidth*.82,
+      y:148
+    };
+  }
+
+  const stageRect=stage.getBoundingClientRect();
+  const boxRect=box.getBoundingClientRect();
+
+  return{
+    x:boxRect.left+boxRect.width/2-stageRect.left,
+    y:boxRect.top+boxRect.height/2-stageRect.top
+  };
+}
+
+function renderResultCounter(){
+  const counter=resultCounterElement();
+  if(!counter)return;
+
+  counter.textContent=
+    state.resultHasValue
+      ?formatResultValue(state.resultValue100)
+      :"";
+}
+
+function bumpResultBox(){
+  const box=resultBoxElement();
+  if(!box)return;
+
+  box.classList.remove("bump");
+  void box.offsetWidth;
+  box.classList.add("bump");
+}
+
+function cubicBezierPoint(p0,p1,p2,p3,t){
+  const u=1-t;
+
+  return{
+    x:
+      u*u*u*p0.x+
+      3*u*u*t*p1.x+
+      3*u*t*t*p2.x+
+      t*t*t*p3.x,
+
+    y:
+      u*u*u*p0.y+
+      3*u*u*t*p1.y+
+      3*u*t*t*p2.y+
+      t*t*t*p3.y
+  };
+}
+
+async function flyBubbleToResult(
+  bubble,
+  delay,
+  duration
+){
+  await sleep(delay);
+
   if(
-    state.finalAggregation
+    !state.resultCollecting
+    ||
+    !bubble.alive
+    ||
+    state.generation!==bubble.resultGeneration
+  ){
+    return;
+  }
+
+  bubble.locked=true;
+
+  bubble.el.classList.add(
+    "result-flying"
+  );
+
+  bubble.el.classList.remove(
+    "aging",
+    "seeking",
+    "merging",
+    "annihilation-focus"
+  );
+
+  const start={
+    x:bubble.x,
+    y:bubble.y
+  };
+
+  const target=resultTargetPoint();
+
+  const lane=
+    ((bubble.id%5)-2)*
+    10;
+
+  const control1={
+    x:
+      start.x+
+      (target.x-start.x)*
+      .34+
+      lane,
+
+    y:
+      start.y-
+      Math.min(
+        72,
+        Math.max(
+          20,
+          (start.y-target.y)*
+          .10
+        )
+      )
+  };
+
+  const control2={
+    x:
+      target.x+
+      lane*
+      .28,
+
+    y:
+      target.y+
+      74
+  };
+
+  const started=performance.now();
+
+  await new Promise(resolve=>{
+    function frame(now){
+      if(
+        !bubble.alive
+        ||
+        state.generation!==bubble.resultGeneration
+      ){
+        resolve();
+        return;
+      }
+
+      const t=
+        Math.max(
+          0,
+          Math.min(
+            1,
+            (now-started)/
+            duration
+          )
+        );
+
+      const q=
+        t*t*
+        (3-2*t);
+
+      const point=
+        cubicBezierPoint(
+          start,
+          control1,
+          control2,
+          target,
+          q
+        );
+
+      bubble.x=point.x;
+      bubble.y=point.y;
+
+      bubble.el.style.left=
+        point.x+"px";
+
+      bubble.el.style.top=
+        point.y+"px";
+
+      const finalPhase=
+        Math.max(
+          0,
+          (q-.68)/
+          .32
+        );
+
+      bubble.core.style.transform=
+        "scale("+
+        (1-finalPhase*.82)+
+        ")";
+
+      bubble.core.style.opacity=
+        String(
+          1-finalPhase*.92
+        );
+
+      if(t<1){
+        requestAnimationFrame(frame);
+      }else{
+        resolve();
+      }
+    }
+
+    requestAnimationFrame(frame);
+  });
+
+  if(!bubble.alive)return;
+
+  state.resultValue100+=
+    bubble.value100;
+
+  state.resultHasValue=true;
+
+  renderResultCounter();
+  bumpResultBox();
+
+  bubble.alive=false;
+
+  if(bubble.el.isConnected){
+    bubble.el.remove();
+  }
+}
+
+function resultQueueForCluster(cluster){
+  const target=resultTargetPoint();
+
+  return bubblesInCluster(cluster.id)
+    .filter(bubble=>bubble.alive)
+    .sort((a,b)=>{
+      const unitDifference=
+        Math.abs(b.value100)-
+        Math.abs(a.value100);
+
+      if(unitDifference!==0){
+        return unitDifference;
+      }
+
+      const distanceA=
+        Math.hypot(
+          a.x-target.x,
+          a.y-target.y
+        );
+
+      const distanceB=
+        Math.hypot(
+          b.x-target.x,
+          b.y-target.y
+        );
+
+      return distanceA-distanceB;
+    });
+}
+
+async function startResultCollection(cluster){
+  if(
+    state.resultCollecting
     ||
     state.finalDone
     ||
@@ -2148,72 +2577,142 @@ function startFinalAggregation(cluster){
     state.clusters.size!==1
     ||
     !allOriginalTermsOpened()
-  )return;
+  ){
+    return;
+  }
 
   clearSplittableMarks();
+
   state.finalReady=false;
-  state.finalAggregation=true;
+  state.resultCollecting=true;
+  state.resultValue100=0;
+  state.resultHasValue=false;
   state.finalClusterId=cluster.id;
 
-  const bubbles=bubblesInCluster(cluster.id).filter(b=>b.alive);
+  renderResultCounter();
 
-  if(bubbles.length===0){
-    const center=clusterStats(cluster).center;
-    const zero=createBubble(0,center.x,center.y,cluster.id,null,1,.35);
-    finishFinalResult(cluster,zero);
+  const box=resultBoxElement();
+
+  if(box){
+    box.classList.remove("done");
+    box.classList.add("receiving");
+  }
+
+  const queue=
+    resultQueueForCluster(cluster);
+
+  if(!queue.length){
+    await sleep(180);
+
+    state.resultValue100=0;
+    state.resultHasValue=true;
+
+    renderResultCounter();
+    bumpResultBox();
+
+    state.resultCollecting=false;
+    state.finalDone=true;
+
+    if(box){
+      box.classList.remove("receiving");
+      box.classList.add("done");
+    }
+
+    deleteCluster(cluster.id);
+
+    setStatus(
+      "Sonuç: <strong>0</strong>."
+    );
+
     return;
   }
 
-  if(bubbles.length===1){
-    finishFinalResult(cluster,bubbles[0]);
+  const count=queue.length;
+
+  const stagger=
+    count<=8
+      ?105
+      :count<=16
+        ?78
+        :count<=30
+          ?58
+          :42;
+
+  const duration=
+    count<=16
+      ?340
+      :315;
+
+  let delay=0;
+
+  let previousUnit=
+    Math.abs(
+      queue[0].value100
+    );
+
+  const generation=
+    state.generation;
+
+  const jobs=[];
+
+  setStatus(
+    "Kalan balonlar <strong>büyük birimlerden küçüklere doğru</strong> sonuç kutusuna giriyor…"
+  );
+
+  for(const bubble of queue){
+    const unit=
+      Math.abs(
+        bubble.value100
+      );
+
+    if(unit!==previousUnit){
+      delay+=95;
+      previousUnit=unit;
+    }
+
+    bubble.resultGeneration=
+      generation;
+
+    jobs.push(
+      flyBubbleToResult(
+        bubble,
+        delay,
+        duration
+      )
+    );
+
+    delay+=stagger;
+  }
+
+  await Promise.all(jobs);
+
+  if(generation!==state.generation){
     return;
   }
 
-  const now=performance.now();
+  state.resultCollecting=false;
+  state.finalDone=true;
 
-  for(const bubble of bubbles){
-    bubble.birth=now-bubble.lifeSpan*(.70+Math.random()*.08);
-    bubble.el.classList.add("aging");
+  if(box){
+    box.classList.remove("receiving");
+    box.classList.add("done");
+  }
+
+  if(state.clusters.has(cluster.id)){
+    deleteCluster(cluster.id);
   }
 
   setStatus(
-    "Son birleşmeye izin verildi. Atomik balonlar şimdi birleşerek <strong>tek sonuç balonunu</strong> oluşturuyor…"
+    "Sonuç: <strong>"+
+    formatResultValue(
+      state.resultValue100
+    )+
+    "</strong>."
   );
 }
 
-function maybeFinishFinalAggregation(clusterId){
-  if(!state.finalAggregation||state.finalClusterId!==clusterId)return;
-
-  const cluster=state.clusters.get(clusterId);
-  if(!cluster)return;
-
-  const bs=bubblesInCluster(clusterId).filter(b=>b.alive);
-
-  if(bs.length===1){
-    finishFinalResult(cluster,bs[0]);
-  }
-}
-
-function finishFinalResult(cluster,bubble){
-  if(state.finalDone)return;
-
-  state.finalAggregation=false;
-  state.finalDone=true;
-  state.finalClusterId=cluster.id;
-
-  bubble.locked=false;
-  bubble.seekingId=null;
-  bubble.el.classList.remove("aging","seeking","merging");
-  bubble.el.classList.add("final-result");
-
-  cluster.mode="final";
-  cluster.anchor={x:bubble.x,y:bubble.y};
-
-  setStatus("Sonuç balonu: <strong>"+formatBubbleValue(bubble.value100)+"</strong>.");
-}
-
 async function splitBubble(b){
-  if(!b.alive||!b.splittable||state.finalAggregation||state.finalDone)return;
+  if(!b.alive||!b.splittable||state.finalAggregation||state.resultCollecting||state.finalDone)return;
 
   const unit=atomicUnit(b.value100);
   const next=unit===100?10:unit===10?1:null;
@@ -2313,8 +2812,12 @@ function physicsFrame(now){
 function updateInteractionText(){
   if(state.finalDone)return;
 
+  if(state.resultCollecting){
+    setStatus("Balonlar sonuç kutusuna giriyor; kutu her balonu sayıyor…");
+    return;
+  }
+
   if(state.finalAggregation){
-    setStatus("Sonuç balonu oluşuyor… Kümeyi sürüklemeye devam edebilirsin.");
     return;
   }
 
@@ -2328,7 +2831,7 @@ function updateInteractionText(){
 
     if(allOriginalTermsOpened()&&state.finalReady){
       setStatus(
-        "Tek küme hazır. <strong>Kısa tıkla:</strong> son sayı-birleşmesine izin ver. İstersen önce kümeyi sürükleyebilirsin."
+        "Tek küme hazır. <strong>Kısa tıkla:</strong> kalan balonlar sonuç kutusuna girsin. İstersen önce kümeyi sürükleyebilirsin."
       );
       return;
     }
@@ -2369,7 +2872,7 @@ async function openTerm(termId){
   );
 
   term.clusterId=cluster.id;
-  term.card.classList.add("gone");
+  term.card.classList.add("opened");
   updatePlusSigns();
   const values=decomposeValue(term.value100),points=seedLayout(values,anchor,termSegmentWidth()),generation=state.generation;
   for(let i=0;i<values.length;i++){
@@ -2413,7 +2916,7 @@ async function closeSingleCluster(clusterId,explicit=false){
   for(const b of bs){b.locked=true;b.vx=(target.x-b.x)*.11;b.vy=(target.y-b.y)*.11}
   await sleep(360);
   for(const b of bs){b.alive=false;if(b.el.isConnected)b.el.remove()}
-  deleteCluster(cluster.id);term.opened=false;term.opening=false;term.closing=false;term.clusterId=null;term.card.classList.remove("gone");updateInteractionText();
+  deleteCluster(cluster.id);term.opened=false;term.opening=false;term.closing=false;term.clusterId=null;term.card.classList.remove("opened");updateInteractionText();
 }
 
 async function handleClusterClick(clusterId,explicit=false){
@@ -2446,59 +2949,193 @@ function clearSimulation(){
 }
 
 function newProblem(){
-  state.generation++;clearSimulation();state.terms=[];state.nextTermId=1;state.nextClusterId=1;state.nextBubbleId=1;state.mergeInProgress=false;state.mergeClusterIds=[];state.mergedClusterId=null;state.finalAggregation=false;state.finalDone=false;state.finalClusterId=null;state.finalReady=false;state.clusterDrag=null;stage.classList.remove("annihilation-focus-mode");state.resolutionCheckAt=0;state.explicitCloseArmedAt=0;
+  state.generation++;clearSimulation();state.terms=[];state.nextTermId=1;state.nextClusterId=1;state.nextBubbleId=1;state.mergeInProgress=false;state.mergeClusterIds=[];state.mergedClusterId=null;state.finalAggregation=false;state.finalDone=false;state.finalClusterId=null;state.finalReady=false;state.resultCollecting=false;state.resultValue100=0;state.resultHasValue=false;state.clusterDrag=null;stage.classList.remove("annihilation-focus-mode");state.resolutionCheckAt=0;state.explicitCloseArmedAt=0;
   for(let i=0;i<state.operandCount;i++)state.terms.push(makeTerm(generateValue100()));
   document.body.dataset.mode=state.level;stage.style.height=calculateStageHeight()+"px";renderTerms();updateInteractionText();
 }
 
 function updatePlusSigns(){
-  const openIds=new Set(
-    state.terms
-      .filter(term=>term.opened)
-      .map(term=>term.id)
-  );
-
-  document.querySelectorAll(".dynamic-plus").forEach(plus=>{
-    const left=Number(plus.dataset.leftTermId);
-    const right=Number(plus.dataset.rightTermId);
-
-    plus.classList.toggle(
-      "fade-away",
-      openIds.has(left)&&openIds.has(right)
+  document
+    .querySelectorAll(
+      ".dynamic-plus"
+    )
+    .forEach(
+      plus=>
+        plus.classList.remove(
+          "fade-away"
+        )
     );
-  });
 }
 
 function renderTerms(){
   termLayer.innerHTML="";
-  const centers=getCenterRatios(state.terms.length);
 
-  for(let index=0;index<state.terms.length;index++){
-    const term=state.terms[index];
-    const card=document.createElement("button");
+  const layout=
+    getEquationLayout(
+      state.terms.length
+    );
 
-    card.className="term-card";
-    card.style.left=(centers[index]*100)+"%";
-    card.textContent=formatSigned(term.value100);
-    card.dataset.termId=String(term.id);
+  const centers=
+    layout.terms;
 
-    installCardPointerHandlers(card,term.id);
-    termLayer.appendChild(card);
+  for(
+    let index=0;
+    index<state.terms.length;
+    index++
+  ){
+    const term=
+      state.terms[index];
+
+    const card=
+      document.createElement(
+        "button"
+      );
+
+    card.className=
+      "term-card";
+
+    card.style.left=
+      centers[index]*
+      100+
+      "%";
+
+    card.textContent=
+      formatSigned(
+        term.value100
+      );
+
+    card.dataset.termId=
+      String(
+        term.id
+      );
+
+    installCardPointerHandlers(
+      card,
+      term.id
+    );
+
+    termLayer.appendChild(
+      card
+    );
+
     term.card=card;
 
-    if(term.opened)card.classList.add("gone");
+    if(term.opened){
+      card.classList.add(
+        "opened"
+      );
+    }
 
-    if(index<state.terms.length-1){
-      const plus=document.createElement("div");
-      plus.className="dynamic-plus";
+    if(
+      index<
+      state.terms.length-1
+    ){
+      const plus=
+        document.createElement(
+          "div"
+        );
+
+      plus.className=
+        "dynamic-plus";
+
       plus.textContent="+";
-      plus.style.left=(((centers[index]+centers[index+1])/2)*100)+"%";
-      plus.dataset.leftTermId=String(term.id);
-      plus.dataset.rightTermId=String(state.terms[index+1].id);
-      termLayer.appendChild(plus);
+
+      plus.style.left=
+        (
+          (
+            centers[index]+
+            centers[index+1]
+          )/
+          2*
+          100
+        )+
+        "%";
+
+      plus.dataset.leftTermId=
+        String(
+          term.id
+        );
+
+      plus.dataset.rightTermId=
+        String(
+          state.terms[
+            index+1
+          ].id
+        );
+
+      termLayer.appendChild(
+        plus
+      );
     }
   }
 
+  const equals=
+    document.createElement(
+      "div"
+    );
+
+  equals.className=
+    "equation-equals";
+
+  equals.textContent="=";
+
+  equals.style.left=
+    layout.equals*
+    100+
+    "%";
+
+  termLayer.appendChild(
+    equals
+  );
+
+  const resultBox=
+    document.createElement(
+      "div"
+    );
+
+  resultBox.className=
+    "result-box";
+
+  resultBox.id=
+    "resultBox";
+
+  resultBox.style.left=
+    layout.result*
+    100+
+    "%";
+
+  if(state.resultCollecting){
+    resultBox.classList.add(
+      "receiving"
+    );
+  }
+
+  if(state.finalDone){
+    resultBox.classList.add(
+      "done"
+    );
+  }
+
+  const counter=
+    document.createElement(
+      "span"
+    );
+
+  counter.className=
+    "result-counter";
+
+  counter.id=
+    "resultCounter";
+
+  resultBox.appendChild(
+    counter
+  );
+
+  termLayer.appendChild(
+    resultBox
+  );
+
+  renderResultCounter();
   updatePlusSigns();
 }
 
