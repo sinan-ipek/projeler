@@ -52,8 +52,19 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
 .term-card{position:absolute;top:148px;transform:translate(-50%,-50%);min-width:94px;padding:15px 16px;border:0;border-radius:18px;background:#fff;color:var(--text);font-size:clamp(24px,3vw,40px);font-weight:850;letter-spacing:-.04em;box-shadow:0 14px 30px rgba(30,38,56,.14);cursor:grab;z-index:45;pointer-events:auto;touch-action:none;transition:left .28s ease,transform .18s ease,opacity .25s ease,box-shadow .2s ease}
 .term-card:hover{transform:translate(-50%,-52%) scale(1.025)}
 .term-card.dragging{cursor:grabbing;z-index:90;transition:none;box-shadow:0 20px 40px rgba(30,38,56,.22)}
-.term-card.opened{cursor:default}
-.term-card.opened:hover{transform:translate(-50%,-50%)}
+.term-card.opened{
+  cursor:default;
+  color:#7c8491;
+  background:#eef1f5;
+  border:1px solid rgba(101,110,125,.16);
+  opacity:.72;
+  box-shadow:0 5px 12px rgba(30,38,56,.06);
+  filter:saturate(.62);
+}
+.term-card.opened:hover{
+  transform:translate(-50%,-50%);
+  box-shadow:0 5px 12px rgba(30,38,56,.06);
+}
 
 .dynamic-plus,
 .equation-equals{
@@ -90,19 +101,6 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
   transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease,background .18s ease;
 }
 
-.result-box::before,
-.result-box::after{
-  position:absolute;
-  top:50%;
-  transform:translateY(-53%);
-  color:#5e6878;
-  font-size:42px;
-  font-weight:400;
-  line-height:1;
-  opacity:.72;
-}
-.result-box::before{content:"[";left:-17px}
-.result-box::after{content:"]";right:-17px}
 
 .result-counter{
   min-width:76px;
@@ -384,9 +382,6 @@ button,input,.bubble-core{-webkit-tap-highlight-color:transparent}
   .term-card{top:140px;min-width:70px;padding:12px 9px;font-size:clamp(20px,6vw,29px)}
   .dynamic-plus,.equation-equals{top:140px;font-size:32px}
   .result-box{top:140px;width:82px;height:58px;border-width:2px;font-size:24px}
-  .result-box::before,.result-box::after{font-size:34px}
-  .result-box::before{left:-14px}
-  .result-box::after{right:-14px}
 }
 </style>
 </head>
@@ -2873,6 +2868,7 @@ async function openTerm(termId){
 
   term.clusterId=cluster.id;
   term.card.classList.add("opened");
+  term.card.setAttribute("aria-disabled","true");
   updatePlusSigns();
   const values=decomposeValue(term.value100),points=seedLayout(values,anchor,termSegmentWidth()),generation=state.generation;
   for(let i=0;i<values.length;i++){
@@ -2916,7 +2912,7 @@ async function closeSingleCluster(clusterId,explicit=false){
   for(const b of bs){b.locked=true;b.vx=(target.x-b.x)*.11;b.vy=(target.y-b.y)*.11}
   await sleep(360);
   for(const b of bs){b.alive=false;if(b.el.isConnected)b.el.remove()}
-  deleteCluster(cluster.id);term.opened=false;term.opening=false;term.closing=false;term.clusterId=null;term.card.classList.remove("opened");updateInteractionText();
+  deleteCluster(cluster.id);term.opened=false;term.opening=false;term.closing=false;term.clusterId=null;term.card.classList.remove("opened");term.card.removeAttribute("aria-disabled");updateInteractionText();
 }
 
 async function handleClusterClick(clusterId,explicit=false){
@@ -3023,6 +3019,11 @@ function renderTerms(){
     if(term.opened){
       card.classList.add(
         "opened"
+      );
+
+      card.setAttribute(
+        "aria-disabled",
+        "true"
       );
     }
 
