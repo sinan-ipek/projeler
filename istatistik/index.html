@@ -24,13 +24,22 @@ const cache=new Map();
 const date=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
 const plus=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 async function count(path,first,last){
- const key=path+'|'+date(first)+'|'+date(last);
+ const suffix=first&&last?'?start='+date(first)+'&end='+date(last):'';
+ const key=path+'|'+suffix;
  if(cache.has(key))return cache.get(key);
- const url='https://'+base+'.goatcounter.com/counter/'+encodeURIComponent(path)+'.json?start='+date(first)+'&end='+date(last);
- const job=fetch(url,{mode:'cors',credentials:'omit'}).then(async r=>{
-  if(r.status===404)throw Error('Sayaç yolu bulunamadı: '+path);
-  if(!r.ok)throw Error('Veri okunamadı ('+r.status+').');
-  const j=await r.json();return Number(String(j.count||'0').replace(/[^0-9]/g,''))||0;
+ const url='https://'+base+'.goatcounter.com/counter/'+encodeURIComponent(path)+'.json'+suffix;
+ const job=fetch(url,{mode:'cors',credentials:'omit'}).then(async response=>{
+   if(response.status===404){
+     if(suffix){
+       const lifetime=await count(path);
+       if(lifetime===0)return 0;
+       throw Error('GoatCounter bu sayfanın tarihli sayımına erişim vermiyor: '+path);
+     }
+     return 0;
+   }
+   if(!response.ok)throw Error('Veri okunamadı ('+response.status+').');
+   const result=await response.json();
+   return Number(String(result.count??'0').replace(/[^0-9]/g,''))||0;
  });
  cache.set(key,job);return job;
 }
@@ -54,44 +63,42 @@ function plot(values,labels){
 }
 let seq=0, pages=[];
 async function update(){
- if(!base){$('status').textContent='GoatCounter hesap kodunun bağlanması bekleniyor.';return;}
+ if(!base){$('status').textContent='GoatCounter hesabı bağlanmadı.';return;}
  const id=++seq;
  const ratio=Number($('zoom').value)/1000;
  const span=Math.min(maxDays,Math.round(7*Math.pow(maxDays/7,ratio)));
  $('period').textContent=span>=maxDays?'Başlangıçtan beri':'Son '+span+' gün';
  const first=plus(today,1-span);
- const buckets=Math.min(10,span),step=span/buckets;
  $('status').textContent='Veriler yükleniyor…';
- try{
-  const ranges=[];
-  for(let i=0;i<buckets;i++){
-    const left=plus(first,Math.floor(i*step));
-    const right=plus(first,Math.max(Math.floor(i*step),Math.floor((i+1)*step)-1));
-    ranges.push([left,right]);
-  }
-  const data=[];
-  for(const [left,right] of ranges){
-    if(seq!==id)return;
-    let total=0;
-    for(let j=0;j<pages.length;j+=6){
-      const counts=await Promise.all(pages.slice(j,j+6).map(p=>count(p.path,left,right).catch(e=>{if(String(e).includes('Sayaç yolu bulunamadı'))return 0;throw e})));
-      total+=counts.reduce((a,b)=>a+b,0);
-    }
-    data.push(total);
-  }
+ try {
+  // Önce doğrulanabilir toplamları getir; tarih sorgusu başarısız olsa bile sıfır uydurma.
+  const all=await Promise.all(pages.map(async p=>({title:p.title,path:p.path,n:await count(p.path)})));
   if(seq!==id)return;
-  plot(data,[date(first),date(today)]);
-  const results=[];
-  for(let i=0;i<pages.length;i+=5){
-   const batch=await Promise.all(pages.slice(i,i+5).map(async p=>({title:p.title,n:await count(p.path,first,today).catch(e=>{if(String(e).includes('Sayaç yolu bulunamadı'))return 0;throw e})})));
-   results.push(...batch);if(seq!==id)return;
-  }
-  results.sort((a,b)=>b.n-a.n);
+  const nonzero=all.filter(p=>p.n>0).sort((a,b)=>b.n-a.n);
   $('pages').replaceChildren();
-  for(const p of results){const row=document.createElement('tr'),name=document.createElement('td'),n=document.createElement('td');name.textContent=p.title;n.textContent=fmt(p.n);row.append(name,n);$('pages').append(row);}
-  $('total').textContent='— '+fmt(data.reduce((a,b)=>a+b,0));
-  $('status').textContent='Ziyaret sayıları GoatCounter verilerinden hesaplandı.';
- }catch(e){if(seq===id)$('status').textContent='İstatistik okunamadı. GoatCounter ayarlarında ziyaret sayaçlarının herkese açık olmasına izin verilmeli. ('+e.message+')';}
+  for(const p of nonzero){
+    const row=document.createElement('tr'),name=document.createElement('td'),n=document.createElement('td');
+    name.textContent=p.title;n.textContent=fmt(p.n);row.append(name,n);$('pages').append(row);
+  }
+  $('total').textContent='— '+fmt(nonzero.reduce((a,p)=>a+p.n,0));
+  if(!nonzero.length){$('status').textContent='Henüz ziyaret kaydı yok.';plot([0,0],[date(first),date(today)]);return;}
+  const buckets=Math.min(14,span),step=span/buckets;
+  const data=[];
+  for(let i=0;i<buckets;i++){
+   const left=plus(first,Math.floor(i*step));
+   const right=plus(first,Math.max(Math.floor(i*step),Math.floor((i+1)*step)-1));
+   const nums=await Promise.all(nonzero.map(p=>count(p.path,left,right)));
+   if(seq!==id)return;
+   data.push(nums.reduce((a,b)=>a+b,0));
+  }
+  plot(data,[date(first),date(today)]);
+  $('status').textContent='Sayfa listesinde başlangıçtan beri toplam ziyaretler gösteriliyor.';
+ }catch(err){
+  if(seq!==id)return;
+  $('line').setAttribute('points','');
+  $('ticks').replaceChildren();$('dates').replaceChildren();
+  $('status').textContent='Sayfa toplamları yukarıda doğru gösteriliyor. Günlük grafik için GoatCounter tarih sorgusu henüz kullanılamıyor. '+err.message;
+ }
 }
 $('zoom').addEventListener('input',()=>{clearTimeout(window._zoomWait);window._zoomWait=setTimeout(update,160)});
 homePages().then(p=>{pages=p;update()}).catch(e=>{$('status').textContent='Sayfa listesi okunamadı: '+e.message});
