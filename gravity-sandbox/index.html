@@ -33,7 +33,9 @@ button:hover{background:#f5f8fc}
 #error{display:none;position:absolute;top:35%;left:12%;right:12%;z-index:9;background:white;border:1px solid #ddd;border-radius:12px;padding:25px}
 #planetMenu{display:none;position:fixed;z-index:20;min-width:150px;padding:5px;background:#fff;border:1px solid #c8d2dd;border-radius:10px;box-shadow:0 9px 24px #40506440}
 #planetMenu button{width:100%;border:0;box-shadow:none;min-height:38px;text-align:left;padding:8px 11px;color:#b43840}
-#planetMenu button:hover{background:#fff0f0}
+#planetMenu button:hover{background:#eef3fb}
+#planetMenu #deletePlanet{color:#b43840}
+#planetMenu button:disabled{opacity:.4;cursor:not-allowed;background:#fff}
 #message{position:absolute;right:14px;bottom:14px;background:#ffffffd9;border:1px solid #d8e0e8;border-radius:9px;padding:8px 11px;color:#617184;font-size:12px;pointer-events:none;z-index:4}
 @media(max-width:720px){#message{top:auto;bottom:76px;right:12px}#stepbox{top:122px}#help{font-size:11px}}
 #planetInfo{display:none;position:absolute;z-index:9;pointer-events:none;max-width:205px;background:#ffe17a;color:#332a12;border:1px solid #cb9f26;border-radius:9px;box-shadow:0 4px 14px #65552845;padding:8px 11px;font:600 13px/1.35 Arial,sans-serif}
@@ -80,7 +82,7 @@ button:hover{background:#f5f8fc}
     <p>Boş bir yere <strong>çift tıkla</strong>. Gezegenin yanındaki <strong>sarı kutu</strong> sıradaki adımı gösterir: yatay konum → yükseklik → büyüklük (kütle) → hızın yatay bileşeni → hızın düşey bileşeni.</p>
     <p>Her aşamayı tıklayarak geç. İstediğin aşamada <strong>Enter</strong> ile kabul et; <strong>Esc</strong> ile iptal et. Ayarlamadığın başlangıç hızı sıfır kalır.</p>
     <h3>Gezegenleri değiştir</h3>
-    <p>Simülasyonu duraklat, sonra bir gezegene tıkla. Konumunu, büyüklüğünü veya hızını değiştirebilirsin. Gezegenin üstüne sağ tıklayarak ya da seçip <strong>Delete</strong> tuşuna basarak silebilirsin.</p>
+    <p>Simülasyonu duraklat, sonra bir gezegene tıkla. Konumunu, büyüklüğünü veya hızını değiştirebilirsin. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
     <p><strong>Ctrl+C:</strong> Seçili gezegenin konumunu, hızını, yarıçapını, kütlesini ve rengini hafızaya al. <strong>Ctrl+V:</strong> Aynı özelliklerle, fareyle gösterdiğin yatay konuma yeni bir gezegen yapıştır. İstediğin kadar tekrarla.</p>
     <h3>Kamerayı kullan</h3>
     <ul>
@@ -101,7 +103,7 @@ button:hover{background:#f5f8fc}
   </section>
 </div>
 <div id="planetInfo" aria-live="polite"></div>
-<div id="planetMenu" role="menu"><button type="button" id="deletePlanet" role="menuitem">Gezegeni sil</button></div>
+<div id="planetMenu" role="menu"><button type="button" id="copyPlanet" role="menuitem">Kopyala</button><button type="button" id="pastePlanet" role="menuitem">Yapıştır</button><button type="button" id="deletePlanet" role="menuitem">Gezegeni sil</button></div>
 <div id="message">Çift tıkla: yeni gezegen</div>
 <section id="stepbox" aria-live="polite">
   <strong id="stepTitle"></strong>
@@ -174,9 +176,27 @@ let darkMode=false;
 const planetInfo=$('planetInfo');
 let hoveredBody=null;
 let menuBody=null;
+let menuPoint=null;
 const planetMenu=$('planetMenu');
-function closePlanetMenu(){planetMenu.style.display='none';menuBody=null}
+function closePlanetMenu(){planetMenu.style.display='none';menuBody=null;menuPoint=null}
 function selectPlanet(body){selectedBody=body}
+function copyPlanet(body){
+ if(!body||!bodies.includes(body))return;
+ copiedPlanet={p:body.p.clone(),v:body.v.clone(),r:body.r,m:body.m,color:body.color};
+ $('message').textContent='Gezegen kopyalandı · Ctrl+V veya sağ tık ile yapıştır';
+}
+function pastePlanet(point=null){
+ if(!copiedPlanet)return;
+ if(editor)finishEditor(false);
+ stopPhysics();
+ const p=copiedPlanet.p.clone();
+ if(point){p.x=clamp(point.x,-88,88);p.z=clamp(point.z,-88,88)}
+ else p.x=clamp(p.x+4,-88,88);
+ const b=makeBody(copiedPlanet.r,copiedPlanet.color,p,copiedPlanet.v);
+ b.m=copiedPlanet.m;
+ bodies.push(b);updateTrail(b);selectPlanet(b);hoveredBody=b;
+ $('message').textContent='Gezegen yapıştırıldı · Ctrl+V veya sağ tık: tekrar yapıştır';
+}
 function deletePlanet(body){
  if(!body)return;
  closePlanetMenu();
@@ -193,6 +213,12 @@ function deletePlanet(body){
  acc=0;
  $('message').textContent='Gezegen silindi · Çift tıkla: yeni gezegen';
 }
+$('copyPlanet').addEventListener('click',()=>{
+ const b=menuBody;closePlanetMenu();copyPlanet(b);
+});
+$('pastePlanet').addEventListener('click',()=>{
+ const point=menuPoint?.clone()||null;closePlanetMenu();pastePlanet(point);
+});
 $('deletePlanet').addEventListener('click',()=>{
  const b=menuBody;
  deletePlanet(b);
@@ -483,9 +509,14 @@ window.addEventListener('keyup',e=>{if(e.key==='Alt'){altHeld=false;updateLens()
 canvas.addEventListener('contextmenu',e=>{
  e.preventDefault();
  const found=bodyAt(e);
+ const point=onPlane(e,0);
  closePlanetMenu();
- if(!found)return;
- selectPlanet(found);menuBody=found;
+ if(found)selectPlanet(found);
+ menuBody=found;
+ menuPoint=point?point.clone():null;
+ $('copyPlanet').style.display=found?'block':'none';
+ $('deletePlanet').style.display=found?'block':'none';
+ $('pastePlanet').disabled=!copiedPlanet;
  const left=Math.min(e.clientX,innerWidth-170);
  const top=Math.min(e.clientY,innerHeight-58);
  planetMenu.style.left=Math.max(4,left)+'px';
@@ -530,25 +561,14 @@ window.addEventListener('keydown',e=>{
  // Henüz hız aşamasına geçilmediyse yeni gezegenin başlangıç hızı sıfırdır.
  if((e.ctrlKey||e.metaKey)&&e.code==='KeyC'){
    const b=editor?editor.b:(hoveredBody||selectedBody);
-   if(b&&bodies.includes(b)){
-     copiedPlanet={p:b.p.clone(),v:b.v.clone(),r:b.r,m:b.m,color:b.color};
-     e.preventDefault();
-     $('message').textContent='Gezegen kopyalandı · Ctrl+V ile yapıştır';
-   }
+   if(b&&bodies.includes(b)){e.preventDefault();copyPlanet(b)}
    return;
  }
  if((e.ctrlKey||e.metaKey)&&e.code==='KeyV'){
    if(copiedPlanet){
      e.preventDefault();
-     if(editor)finishEditor(false);
-     stopPhysics();
      const point=onPlane({clientX:pointer.x,clientY:pointer.y},0);
-     const p=copiedPlanet.p.clone();
-     if(point){p.x=clamp(point.x,-88,88);p.z=clamp(point.z,-88,88)}
-     else p.x=clamp(p.x+4,-88,88);
-     const b=makeBody(copiedPlanet.r,copiedPlanet.color,p,copiedPlanet.v);
-     b.m=copiedPlanet.m;bodies.push(b);updateTrail(b);selectPlanet(b);hoveredBody=b;
-     $('message').textContent='Gezegen yapıştırıldı · Ctrl+V: tekrar yapıştır';
+     pastePlanet(point);
    }
    return;
  }
