@@ -28,6 +28,7 @@ async function count(path,first,last){
  if(cache.has(key))return cache.get(key);
  const url='https://'+base+'.goatcounter.com/counter/'+encodeURIComponent(path)+'.json?start='+date(first)+'&end='+date(last);
  const job=fetch(url,{mode:'cors',credentials:'omit'}).then(async r=>{
+  if(r.status===404)return 0;
   if(!r.ok)throw Error('Veri okunamadı ('+r.status+').');
   const j=await r.json();return Number(String(j.count||'0').replace(/[^0-9]/g,''))||0;
  });
@@ -59,14 +60,24 @@ async function update(){
  const span=Math.min(maxDays,Math.round(7*Math.pow(maxDays/7,ratio)));
  $('period').textContent=span>=maxDays?'Başlangıçtan beri':'Son '+span+' gün';
  const first=plus(today,1-span);
- const buckets=Math.min(24,span),step=span/buckets;
+ const buckets=Math.min(10,span),step=span/buckets;
  $('status').textContent='Veriler yükleniyor…';
  try{
-  const data=[];
+  const ranges=[];
   for(let i=0;i<buckets;i++){
-   if(seq!==id)return;
-   const left=plus(first,Math.floor(i*step)),right=plus(first,Math.floor((i+1)*step)-1);
-   data.push(await count('TOTAL',left,right<left?left:right));
+    const left=plus(first,Math.floor(i*step));
+    const right=plus(first,Math.max(Math.floor(i*step),Math.floor((i+1)*step)-1));
+    ranges.push([left,right]);
+  }
+  const data=[];
+  for(const [left,right] of ranges){
+    if(seq!==id)return;
+    let total=0;
+    for(let j=0;j<pages.length;j+=6){
+      const counts=await Promise.all(pages.slice(j,j+6).map(p=>count(p.path,left,right)));
+      total+=counts.reduce((a,b)=>a+b,0);
+    }
+    data.push(total);
   }
   if(seq!==id)return;
   plot(data,[date(first),date(today)]);
@@ -79,7 +90,7 @@ async function update(){
   $('pages').replaceChildren();
   for(const p of results){const row=document.createElement('tr'),name=document.createElement('td'),n=document.createElement('td');name.textContent=p.title;n.textContent=fmt(p.n);row.append(name,n);$('pages').append(row);}
   $('total').textContent='— '+fmt(data.reduce((a,b)=>a+b,0));
-  $('status').textContent='GoatCounter verileri birkaç saat gecikmeli güncellenebilir.';
+  $('status').textContent='Ziyaret sayıları GoatCounter verilerinden hesaplandı.';
  }catch(e){if(seq===id)$('status').textContent='İstatistik okunamadı. GoatCounter ayarlarında ziyaret sayaçlarının herkese açık olmasına izin verilmeli. ('+e.message+')';}
 }
 $('zoom').addEventListener('input',()=>{clearTimeout(window._zoomWait);window._zoomWait=setTimeout(update,160)});
