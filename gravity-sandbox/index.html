@@ -82,7 +82,7 @@ button:hover{background:#f5f8fc}
     <p>Boş bir yere <strong>çift tıkla</strong>. Gezegenin yanındaki <strong>sarı kutu</strong> sıradaki adımı gösterir: yatay konum → yükseklik → büyüklük (kütle) → hızın yatay bileşeni → hızın düşey bileşeni.</p>
     <p>Her aşamayı tıklayarak geç. İstediğin aşamada <strong>Enter</strong> ile kabul et; <strong>Esc</strong> ile iptal et. Ayarlamadığın başlangıç hızı sıfır kalır.</p>
     <h3>Gezegenleri değiştir</h3>
-    <p>Bir gezegene sol tıkla: yalnızca seçilir. Düzenlemek için gezegene sağ tıkla ve <strong>Edit</strong> seç. Konumunu, yüksekliğini, büyüklüğünü ve hızını sırayla değiştirebilirsin. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
+    <p>Bir gezegene sol tıkla: çevresinde sarı bir halka belirir ve seçilir. Boş alana tıklarsan seçim kalkar. Düzenlemek için gezegene sağ tıkla ve <strong>Edit</strong> seç. Konumunu, yüksekliğini, büyüklüğünü ve hızını sırayla değiştirebilirsin. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
     <p><strong>Ctrl+C:</strong> Seçili gezegenin konumunu, hızını, yarıçapını, kütlesini ve rengini hafızaya al. <strong>Ctrl+V:</strong> Aynı özelliklerle, fareyle gösterdiğin yatay konuma yeni bir gezegen yapıştır. İstediğin kadar tekrarla.</p>
     <h3>Kamerayı kullan</h3>
     <ul>
@@ -180,7 +180,21 @@ let menuPoint=null;
 let menuPointer=null;
 const planetMenu=$('planetMenu');
 function closePlanetMenu(){planetMenu.style.display='none';menuBody=null;menuPoint=null;menuPointer=null}
-function selectPlanet(body){selectedBody=body}
+// Seçim işareti: gezegenin çevresindeki ince, ışıklı 3B halka.
+const selectionRing=new THREE.Mesh(
+ new THREE.TorusGeometry(1,0.035,8,100),
+ new THREE.MeshBasicMaterial({color:0xffcc24,depthTest:false,transparent:true,opacity:.98})
+);
+selectionRing.renderOrder=100;selectionRing.visible=false;scene.add(selectionRing);
+function selectPlanet(body){selectedBody=body;selectionRing.visible=!!body}
+function updateSelectionRing(){
+ const b=selectedBody;
+ if(!b||!bodies.includes(b)){selectionRing.visible=false;return}
+ selectionRing.visible=true;
+ selectionRing.position.copy(b.p);
+ selectionRing.quaternion.copy(camera.quaternion);
+ selectionRing.scale.setScalar(b.r*1.32);
+}
 function copyPlanet(body){
  if(!body||!bodies.includes(body))return;
  copiedPlanet={p:body.p.clone(),v:body.v.clone(),r:body.r,m:body.m,color:body.color};
@@ -209,7 +223,7 @@ function deletePlanet(body){
  if(index<0)return;
  bodies.splice(index,1);
  removeBody(body);
- if(selectedBody===body)selectedBody=null;
+ if(selectedBody===body)selectPlanet(null);
  if(hoveredBody===body)hoveredBody=null;
  acc=0;
  $('message').textContent='Gezegen silindi · Çift tıkla: yeni gezegen';
@@ -302,7 +316,7 @@ function updateTrail(b){
  b.g.setDrawRange(0,n);
  b.trace.visible=trailsVisible;
 }
-function init(){closePlanetMenu();selectedBody=null;hoveredBody=null;if(editor)finishEditor(false);for(const b of bodies)removeBody(b);
+function init(){closePlanetMenu();selectPlanet(null);hoveredBody=null;if(editor)finishEditor(false);for(const b of bodies)removeBody(b);
  bodies=[
  makeBody(4.3,0xf4bb40,new THREE.Vector3(0,originHeight,0),new THREE.Vector3()),
  makeBody(1.4,0x499ef6,new THREE.Vector3(24,originHeight,0),new THREE.Vector3(0,0,12)),
@@ -551,7 +565,7 @@ canvas.addEventListener('pointerdown',e=>{
 },true);
 canvas.addEventListener('click',e=>{
  if(editor||e.button!==0||e.detail>1)return;
- const found=bodyAt(e);if(found)selectPlanet(found)
+ const found=bodyAt(e);selectPlanet(found)
 });
 $('cancel').addEventListener('click',()=>finishEditor(false));
 $('toggleTrails').addEventListener('click',toggleTrails);
@@ -598,7 +612,7 @@ function animate(now){requestAnimationFrame(animate);
  const delta=Math.min((now-previous)/1000,.05);previous=now;
  if(running&&!editor){acc+=delta*animationSpeed;let n=0;while(acc>=DT&&n<40){step();acc-=DT;n++}if(n===40)acc=0}
  for(const b of bodies)updateVisual(b);
- controls.update();updatePlanetInfo();renderer.render(scene,camera);updateLens();
+ controls.update();updateSelectionRing();updatePlanetInfo();renderer.render(scene,camera);updateLens();
 }
 init();requestAnimationFrame(animate);
 } catch(error){const box=document.getElementById('error');box.style.display='block';box.textContent='3D motor yüklenemedi: '+error.message+'. İnternet bağlantısını ve WebGL desteğini kontrol edin.';console.error(error)}
