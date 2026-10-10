@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gravity Sandbox</title>
+<style>
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;font-family:Arial,Helvetica,sans-serif;background:#eef1f4;color:#263545}
+#viewport{position:absolute;inset:0;touch-action:none}
+#viewport canvas{width:100%;height:100%;display:block;touch-action:none}
+#toolbar{position:absolute;top:14px;left:14px;z-index:5;display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:calc(100% - 28px)}
+button{font:inherit;background:#fff;border:1px solid #c8d2dd;border-radius:9px;color:#273849;padding:10px 14px;cursor:pointer;min-height:44px;box-shadow:0 3px 12px #8194a51c}
+button:hover{background:#f5f8fc}
+/* Minimal kamera ve hız kontrolleri: ayrı panel yok. */
+#settings{position:absolute;right:14px;top:73px;z-index:5;display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap;max-width:calc(100vw - 28px)}
+#settings .cameras{display:flex;gap:5px}
+#settings .cameras button{padding:5px 8px;min-height:30px;border-radius:7px;font-size:12px;box-shadow:none;background:#ffffffd9}
+#settings .mini-slider{display:flex;align-items:center;gap:4px;min-height:30px}
+#settings input[type=range]{width:84px;min-width:0;accent-color:#668ab1;cursor:pointer}
+#settings output{font-size:10px;min-width:23px;text-align:right;color:#66798b;font-variant-numeric:tabular-nums}
+#settings label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@media(max-width:720px){#settings{top:64px;right:10px;gap:5px}#settings .cameras button{font-size:11px;padding:4px 6px}#settings input[type=range]{width:62px}}
+#stepbox{max-width:min(355px,calc(100vw - 28px))}}
+#stepbox{display:none;position:absolute;top:72px;left:14px;z-index:5;max-width:min(355px,calc(100vw - 28px));background:#fffffff2;border:1px solid #cad4df;border-radius:12px;padding:12px 14px;box-shadow:0 6px 20px #4c61762e;line-height:1.55}
+#stepbox strong{font-size:15px}
+#stepbox p{font-size:13px;color:#4e6176;margin:5px 0 8px}
+#stepbox footer{display:flex;align-items:center;gap:9px;justify-content:space-between}
+#stepCount{font-size:12px;color:#68778a}
+#help{position:absolute;bottom:12px;left:12px;z-index:4;background:#ffffffdc;border:1px solid #d8e0e8;border-radius:8px;padding:9px 11px;font-size:12px;color:#536274;line-height:1.6;max-width:calc(100vw - 24px)}
+#magnifier{position:fixed;width:292px;height:292px;display:none;pointer-events:none;z-index:12;border:3px solid #7692a8;border-radius:50%;background:white;box-shadow:0 8px 30px #31465b55;overflow:hidden}
+#magnifier canvas{width:100%;height:100%;display:block}
+#error{display:none;position:absolute;top:35%;left:12%;right:12%;z-index:9;background:white;border:1px solid #ddd;border-radius:12px;padding:25px}
+#planetMenu{display:none;position:fixed;z-index:20;min-width:150px;padding:5px;background:#fff;border:1px solid #c8d2dd;border-radius:10px;box-shadow:0 9px 24px #40506440}
+#planetMenu button{width:100%;border:0;box-shadow:none;min-height:38px;text-align:left;padding:8px 11px;color:#b43840}
+#planetMenu button:hover{background:#fff0f0}
+#message{position:absolute;right:14px;bottom:14px;background:#ffffffd9;border:1px solid #d8e0e8;border-radius:9px;padding:8px 11px;color:#617184;font-size:12px;pointer-events:none;z-index:4}
+@media(max-width:720px){#message{top:auto;bottom:76px;right:12px}#stepbox{top:122px}#help{font-size:11px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.181.1/examples/jsm/"}}</script>
+</head>
+<body>
+<div id="viewport"></div>
+<div id="toolbar"><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button></div>
+<div id="settings" aria-label="Kamera ve simülasyon kontrolleri">
+  <div class="cameras">
+    <button id="topView" type="button" title="Üstten görüş" aria-label="Üstten görüş">Üstten</button>
+    <button id="sideView" type="button" title="Yandan görüş" aria-label="Yandan görüş">Yandan</button>
+  </div>
+  <div class="mini-slider" title="Animasyon hızı">
+    <label for="speedRange">Animasyon hızı</label>
+    <input id="speedRange" type="range" min="0.1" max="5" step="0.1" value="1" aria-label="Animasyon hızı">
+    <output id="speedValue" for="speedRange">1×</output>
+  </div>
+  <div class="mini-slider" title="Yörünge gösterim uzunluğu">
+    <label for="trailRange">Yörünge gösterim uzunluğu</label>
+    <input id="trailRange" type="range" min="10" max="1000" step="10" value="520" aria-label="Yörünge gösterim uzunluğu">
+    <output id="trailValue" for="trailRange">520</output>
+  </div>
+</div>
+<div id="planetMenu" role="menu"><button type="button" id="deletePlanet" role="menuitem">Gezegeni sil</button></div>
+<div id="message">Çift tıkla: yeni gezegen</div>
+<section id="stepbox" aria-live="polite">
+  <strong id="stepTitle"></strong>
+  <p id="stepHelp"></p>
+  <footer><span id="stepCount"></span><button id="cancel">İptal (Esc)</button></footer>
+</section>
+<div id="help">Çift tıkla: gezegen ekle · Duraklatıp gezegene tıkla: düzenle · Sol sürükle: kamera · Sağ sürükle: kaydır · Tekerlek: yakınlaştır · Boşluk: oynat/duraklat · Alt: büyüteç · Esc: iptal · Sağ tık / Delete: gezegeni sil</div>
+<div id="magnifier" aria-hidden="true"><canvas id="magnifierCanvas" width="584" height="584"></canvas></div><div id="error"></div>
+<script type="module">
+try {
+const THREE=await import('three');
+const {OrbitControls}=await import('three/addons/controls/OrbitControls.js');
+const $=id=>document.getElementById(id);
+const holder=$('viewport');
+const scene=new THREE.Scene();scene.background=new THREE.Color('#f9fbfd');
+const camera=new THREE.PerspectiveCamera(52,1,.2,1600);camera.position.set(88,103,135);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.VSMShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+holder.appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.target.set(0,12,0);controls.enableDamping=true;controls.dampingFactor=.065;
+controls.minDistance=22;controls.maxDistance=450;
+controls.mouseButtons={LEFT:THREE.MOUSE.ROTATE,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.PAN};
+controls.rotateSpeed=.72;controls.update();
+function resize(){const width=Math.max(1,holder.clientWidth),height=Math.max(1,holder.clientHeight);camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height)}
+window.addEventListener('resize',resize);resize();
+scene.add(new THREE.HemisphereLight(0xffffff,0xe6e9ed,1.18));
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(180,180),new THREE.MeshStandardMaterial({color:0xfcfdff,roughness:1}));
+floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+const gridMinor=new THREE.GridHelper(180,36,0xcad3dc,0xd7dee6);
+gridMinor.position.y=.014;gridMinor.material.transparent=true;gridMinor.material.opacity=.48;gridMinor.material.depthWrite=false;scene.add(gridMinor);
+const gridMajor=new THREE.GridHelper(180,18,0x899cac,0xb6c2ce);
+gridMajor.position.y=.02;gridMajor.material.transparent=true;gridMajor.material.opacity=.9;gridMajor.material.depthWrite=false;scene.add(gridMajor);
+const roomMat=new THREE.LineBasicMaterial({color:0xaebac6,transparent:true,opacity:.56});
+const room=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(180,90,180)),roomMat);
+room.position.y=45;scene.add(room);
+const sunLight=new THREE.DirectionalLight(0xffffff,3.1);
+sunLight.position.set(0,180,0);sunLight.target.position.set(0,0,0);sunLight.castShadow=true;
+sunLight.shadow.mapSize.set(4096,4096);
+sunLight.shadow.camera.left=-95;sunLight.shadow.camera.right=95;
+sunLight.shadow.camera.top=95;sunLight.shadow.camera.bottom=-95;
+sunLight.shadow.camera.near=1;sunLight.shadow.camera.far=240;
+sunLight.shadow.bias=-.0001;sunLight.shadow.normalBias=.018;
+sunLight.shadow.radius=24;sunLight.shadow.blurSamples=72;
+sunLight.shadow.camera.updateProjectionMatrix();scene.add(sunLight,sunLight.target);
+const sphere=new THREE.SphereGeometry(1,40,28);
+const originHeight=22,G=5,DT=1/120,EPS2=1.44,MAX_TRAIL=1000;
+const DENSITY=700/(4.3**3);
+const planetColors=[0x499ef6,0xef705e,0x55c78a,0x9875e3,0xedae63,0x43b8c8];
+let bodies=[],running=false,acc=0,trailTick=0,editor=null,pointer={x:0,y:0};
+let trailsVisible=true;
+let selectedBody=null;
+let hoveredBody=null;
+let menuBody=null;
+const planetMenu=$('planetMenu');
+function closePlanetMenu(){planetMenu.style.display='none';menuBody=null}
+function selectPlanet(body){selectedBody=body}
+function deletePlanet(body){
+ if(!body)return;
+ closePlanetMenu();
+ if(editor){
+  // Editing a different object should not be committed accidentally.
+  finishEditor(false);
+ }
+ const index=bodies.indexOf(body);
+ if(index<0)return;
+ bodies.splice(index,1);
+ removeBody(body);
+ if(selectedBody===body)selectedBody=null;
+ if(hoveredBody===body)hoveredBody=null;
+ acc=0;
+ $('message').textContent='Gezegen silindi · Çift tıkla: yeni gezegen';
+}
+$('deletePlanet').addEventListener('click',()=>{
+ const b=menuBody;
+ deletePlanet(b);
+});
+window.addEventListener('pointerdown',e=>{
+ if(!planetMenu.contains(e.target))closePlanetMenu();
+},true);
+
+let animationSpeed=1;
+let trailDisplayLength=520;
+$('topView').addEventListener('click',()=>{
+ const t=controls.target.clone();camera.position.copy(t).add(new THREE.Vector3(0,165,0.01));controls.update();
+});
+$('sideView').addEventListener('click',()=>{
+ const t=controls.target.clone();camera.position.copy(t).add(new THREE.Vector3(0,0,170));controls.update();
+});
+$('speedRange').addEventListener('input',e=>{
+ animationSpeed=Number(e.target.value);
+ $('speedValue').textContent=animationSpeed.toLocaleString('tr-TR',{maximumFractionDigits:1})+'×';
+});
+$('trailRange').addEventListener('input',e=>{
+ trailDisplayLength=Number(e.target.value);
+ $('trailValue').textContent=String(trailDisplayLength);
+ for(const b of bodies)updateTrail(b);
+});
+function toggleTrails(){
+ trailsVisible=!trailsVisible;
+ for(const b of bodies){b.trace.visible=trailsVisible; if(trailsVisible)updateTrail(b)}
+ const button=$('toggleTrails');
+ button.textContent=trailsVisible?'Yörüngeyi gizle':'Yörüngeyi göster';
+ button.setAttribute('aria-pressed',String(trailsVisible));
+}
+const raycaster=new THREE.Raycaster(),ndc=new THREE.Vector2(),plane=new THREE.Plane(),intersection=new THREE.Vector3();
+const vectorColor=0x187bb9;
+const escapeColor=0xd52c35;
+// Bir cismin mevcut konumundaki toplam (yumuşatılmış) Newton potansiyeli.
+// v_escape = sqrt(-2 * Phi); yeni/duzenlenen cismin kendi kutlesi dahil edilmez.
+function escapeSpeedFor(body){
+ let potential=0;
+ for(const other of bodies){
+  if(other===body)continue;
+  const distanceSq=body.p.distanceToSquared(other.p)+EPS2;
+  potential-=G*other.m/Math.sqrt(distanceSq);
+ }
+ return Math.sqrt(Math.max(0,-2*potential));
+}
+function massFromRadius(r){return DENSITY*r*r*r}
+function makeBody(r,color,pos,vel){
+ const mesh=new THREE.Mesh(sphere,new THREE.MeshStandardMaterial({color,roughness:.72,metalness:0}));
+ mesh.scale.setScalar(r);mesh.position.copy(pos);mesh.castShadow=pos.y>0;mesh.receiveShadow=true;scene.add(mesh);
+ const g=new THREE.BufferGeometry();
+ const positions=new Float32Array(MAX_TRAIL*3);
+ g.setAttribute('position',new THREE.BufferAttribute(positions,3).setUsage(THREE.DynamicDrawUsage));
+ g.setDrawRange(0,0);
+ const mat=new THREE.LineBasicMaterial({color,transparent:true,opacity:.94,depthTest:false,depthWrite:false});
+ const trace=new THREE.Line(g,mat);trace.frustumCulled=false;trace.renderOrder=15;trace.visible=trailsVisible;scene.add(trace);
+ return {m:massFromRadius(r),r,color,p:pos.clone(),v:vel.clone(),mesh,trace,g,mat,trail:[pos.clone()]};
+}
+function removeBody(b){scene.remove(b.mesh,b.trace);b.mesh.material.dispose();b.g.dispose();b.mat.dispose()}
+function updateTrail(b){
+ const attr=b.g.getAttribute('position');
+ const n=Math.min(b.trail.length,MAX_TRAIL,trailDisplayLength);
+ for(let i=0;i<n;i++){const p=b.trail[b.trail.length-n+i];attr.setXYZ(i,p.x,p.y,p.z)}
+ attr.needsUpdate=true;
+ b.g.setDrawRange(0,n);
+ b.trace.visible=trailsVisible;
+}
+function init(){closePlanetMenu();selectedBody=null;hoveredBody=null;if(editor)finishEditor(false);for(const b of bodies)removeBody(b);
+ bodies=[
+ makeBody(4.3,0xf4bb40,new THREE.Vector3(0,originHeight,0),new THREE.Vector3()),
+ makeBody(1.4,0x499ef6,new THREE.Vector3(24,originHeight,0),new THREE.Vector3(0,0,12)),
+ makeBody(1.8,0xef705e,new THREE.Vector3(-38,originHeight,0),new THREE.Vector3(0,0,-9.5)),
+ makeBody(1,0x55c78a,new THREE.Vector3(0,originHeight+12,52),new THREE.Vector3(-7.7,0,0))];
+ acc=0;trailTick=0;
+ for(const b of bodies)updateTrail(b);
+}
+function accelerations(){
+ const a=bodies.map(()=>new THREE.Vector3());
+ for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
+  const d=new THREE.Vector3().subVectors(bodies[j].p,bodies[i].p);
+  const r2=d.lengthSq()+EPS2,fac=G/(r2*Math.sqrt(r2));
+  a[i].addScaledVector(d,fac*bodies[j].m);
+  a[j].addScaledVector(d,-fac*bodies[i].m);
+ }
+ return a;
+}
+function step(){let a=accelerations();
+ for(let i=0;i<bodies.length;i++){const b=bodies[i];b.v.addScaledVector(a[i],DT*.5);b.p.addScaledVector(b.v,DT)}
+ a=accelerations();for(let i=0;i<bodies.length;i++)bodies[i].v.addScaledVector(a[i],DT*.5);
+ if(++trailTick%4===0)for(const b of bodies){b.trail.push(b.p.clone());if(b.trail.length>MAX_TRAIL)b.trail.shift();updateTrail(b)}
+}
+function updateVisual(b){b.mesh.position.copy(b.p);b.mesh.scale.setScalar(b.r);b.mesh.castShadow=b.p.y>0}
+function pointerNDC(e){const rect=renderer.domElement.getBoundingClientRect();ndc.x=((e.clientX-rect.left)/rect.width)*2-1;ndc.y=-((e.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(ndc,camera)}
+function onPlane(e,y=0){pointerNDC(e);plane.set(new THREE.Vector3(0,1,0),-y);return raycaster.ray.intersectPlane(plane,intersection)?intersection.clone():null}
+function bodyAt(e){pointerNDC(e);const hits=raycaster.intersectObjects(bodies.map(b=>b.mesh),false);return hits.length?bodies.find(b=>b.mesh===hits[0].object):null}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+const labels=[
+ ['Konum','Fareyle masada istediğin noktaya git. Gölge o noktayı gösterecek. Tıkla.'],
+ ['Yükseklik','Fareyi yukarı-aşağı oynatarak gezegeni yükselt veya alçalt. Tıkla.'],
+ ['Yarıçap / kütle','Fareyi yukarı-aşağı hareket ettirerek yarıçapı değiştir. Kütle yarıçapın küpüyle değişir. Tıkla.'],
+ ['Yatay hız','Fareyi hareket ettirerek hız okunun tabana paralel yönünü ve uzunluğunu belirle. Tıkla.'],
+ ['Dikey hız','Fareyi yukarı-aşağı hareket ettirerek hız okunun ucunu yükselt veya alçalt. Tıkla.']
+];
+const helper=new THREE.Group();scene.add(helper);
+const dottedMaterial=new THREE.LineDashedMaterial({color:0x7b8998,dashSize:.85,gapSize:.55,transparent:true,opacity:.8});
+const dropGeometry=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]);
+const dropLine=new THREE.Line(dropGeometry,dottedMaterial);helper.add(dropLine);
+const marker=new THREE.Mesh(new THREE.RingGeometry(.65,.9,40),new THREE.MeshBasicMaterial({color:0x428fb8,side:THREE.DoubleSide,transparent:true,opacity:.95}));
+marker.rotation.x=-Math.PI/2;marker.position.y=.045;helper.add(marker);
+const arrow=new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(),1,vectorColor,1.4,.7);
+helper.add(arrow);
+// Hız vektörünün taban düzlemindeki izdüşümü: ışık tam tepeden gelir.
+const vectorShadow=new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,.09,0),1,0x586c7a,1.4,.7);
+vectorShadow.line.material.transparent=true;
+vectorShadow.line.material.opacity=.5;
+vectorShadow.cone.material.transparent=true;
+vectorShadow.cone.material.opacity=.5;
+vectorShadow.line.material.depthWrite=false;
+vectorShadow.cone.material.depthWrite=false;
+helper.add(vectorShadow);
+helper.visible=false;
+function showEditor(){if(!editor){$('stepbox').style.display='none';helper.visible=false;return}
+ const [title,description]=labels[editor.phase];
+ $('stepbox').style.display='block';$('stepTitle').textContent=(editor.existing?'Gezegeni düzenle — ':'Gezegen ekle — ')+title;
+ $('stepHelp').textContent=description;
+ $('stepCount').textContent=`Aşama ${editor.phase+1}/5 · Sonraki tıklama ${editor.phase===4?'tamamlar':'ilerletir'}`;
+ helper.visible=true;
+}
+function updateHelpers(){if(!editor)return;
+ const b=editor.b,p=b.p;
+ marker.position.set(p.x,.055,p.z);
+ const pts=[new THREE.Vector3(p.x,0,p.z),new THREE.Vector3(p.x,p.y,p.z)];
+ dropGeometry.setFromPoints(pts);dropLine.computeLineDistances();
+ const speed=b.v.length();
+ const escapeSpeed=escapeSpeedFor(b);
+ const escaping=editor.phase>=3 && speed>escapeSpeed+1e-9;
+ arrow.setColor(escaping?escapeColor:vectorColor);
+ if(editor.phase>=3){
+  const label=labels[editor.phase][1];
+  $('stepHelp').textContent=label+'  Hız: '+speed.toFixed(2)+' · Kaçış hızı: '+escapeSpeed.toFixed(2)+(escaping?' · KAÇIŞ HIZI AŞILDI':'');
+ }
+ const visible=editor.phase>=3 && speed>.015;
+ arrow.visible=visible;
+ const groundVelocity=new THREE.Vector3(b.v.x,0,b.v.z);
+ const groundSpeed=groundVelocity.length();
+ vectorShadow.visible=visible&&groundSpeed>.015&&p.y>0;
+ if(visible){
+  arrow.position.copy(p);arrow.setDirection(b.v.clone().normalize());
+  const length=clamp(speed*1.9,1,65);
+  arrow.setLength(length,Math.min(3,length*.22),Math.min(1.6,length*.12));
+  if(vectorShadow.visible){
+   const groundLength=length*groundSpeed/speed;
+   vectorShadow.position.set(p.x,.09,p.z);
+   vectorShadow.setDirection(groundVelocity.normalize());
+   vectorShadow.setLength(groundLength,Math.min(2.5,groundLength*.2),Math.min(1.4,groundLength*.12));
+  }
+ }
+}
+function stopPhysics(){running=false;acc=0;$('play').textContent='▶ Başlat'}
+function beginEditor(existing,e){
+ if(editor)finishEditor(false);
+ stopPhysics();
+ const candidate=existing||makeBody(1.6,planetColors[bodies.length%planetColors.length],new THREE.Vector3(0,originHeight,0),new THREE.Vector3());
+ const original=existing?{p:existing.p.clone(),v:existing.v.clone(),r:existing.r,m:existing.m,trail:existing.trail.map(p=>p.clone())}:null;
+ // Düzenleme, gezegenin mevcut konumundan ve mevcut hızından başlar.
+ // Fareye tıklandığı an bir konum/hız sıçraması oluşmaması için
+ // fare konumunun düzlem üzerindeki başlangıç karşılığını saklıyoruz.
+ editor={existing:!!existing,b:candidate,original,phase:0,
+   anchorY:e.clientY,anchorPos:candidate.p.clone(),anchorV:candidate.v.clone(),
+   anchorRadius:candidate.r,anchorPlane:onPlane(e,0)};
+ controls.enabled=false;renderer.domElement.style.cursor='none';
+ showEditor();
+ if(!existing)updateFromMouse(e);
+ else updateVisual(candidate);
+ updateHelpers();
+}
+function updateFromMouse(e){if(!editor)return;
+ const ed=editor,b=ed.b,dy=e.clientY-ed.anchorY;
+ if(ed.phase===0){
+  const p=onPlane(e,0);
+  if(p){
+   if(ed.existing && ed.anchorPlane){
+    // Fare sadece yer değiştirme miktarını belirler; ilk konum değişmez.
+    b.p.x=clamp(ed.anchorPos.x+p.x-ed.anchorPlane.x,-88,88);
+    b.p.z=clamp(ed.anchorPos.z+p.z-ed.anchorPlane.z,-88,88);
+   }else{
+    b.p.x=clamp(p.x,-88,88);b.p.z=clamp(p.z,-88,88);
+   }
+  }
+ }
+ else if(ed.phase===1){b.p.y=clamp(ed.anchorPos.y-dy*.16,-45,130)}
+ else if(ed.phase===2){b.r=clamp(ed.anchorRadius-dy*.025,.35,8);b.m=massFromRadius(b.r)}
+ else if(ed.phase===3){
+  const p=onPlane(e,b.p.y);
+  if(p && ed.anchorPlane){
+   // Hız vektörü mevcut hızından başlayarak göreli olarak değişir.
+   b.v.x=clamp(ed.anchorV.x+(p.x-ed.anchorPlane.x)*.42,-60,60);
+   b.v.z=clamp(ed.anchorV.z+(p.z-ed.anchorPlane.z)*.42,-60,60);
+  }
+ }
+ else if(ed.phase===4){b.v.y=clamp(ed.anchorV.y-dy*.22,-40,40)}
+ updateVisual(b);updateHelpers();
+}
+function advance(e){if(!editor)return;
+ updateFromMouse(e);const ed=editor;
+ if(ed.phase===4){finishEditor(true);return}
+ ed.phase++;
+ ed.anchorY=e.clientY;
+ ed.anchorPos=ed.b.p.clone();ed.anchorV=ed.b.v.clone();ed.anchorRadius=ed.b.r;
+ ed.anchorPlane=onPlane(e,ed.phase===3?ed.b.p.y:0);
+ showEditor();updateHelpers();
+}
+function finishEditor(save){if(!editor)return;
+ const ed=editor,b=ed.b;
+ if(save){
+   if(!ed.existing){bodies.push(b)}
+   b.m=massFromRadius(b.r);
+   b.trail=[b.p.clone()];updateTrail(b);
+ }else if(ed.existing){
+   b.p.copy(ed.original.p);b.v.copy(ed.original.v);b.r=ed.original.r;b.m=ed.original.m;
+   b.trail=ed.original.trail;updateTrail(b);updateVisual(b);
+ }else {
+   removeBody(b);
+   if(selectedBody===b)selectedBody=null;
+   if(hoveredBody===b)hoveredBody=null;
+ }
+ editor=null;controls.enabled=true;renderer.domElement.style.cursor='auto';showEditor();
+}
+const canvas=renderer.domElement;
+const magnifier=$('magnifier'), magnifierCanvas=$('magnifierCanvas');
+const magnifierCtx=magnifierCanvas.getContext('2d');
+let altHeld=false, lensPointer={x:0,y:0}, overCanvas=false;
+const LENS_SIZE=292, LENS_ZOOM=2.4;
+function updateLens(){
+ if(!altHeld||!overCanvas){magnifier.style.display='none';return;}
+ const rect=canvas.getBoundingClientRect();
+ const px=lensPointer.x-rect.left, py=lensPointer.y-rect.top;
+ if(px<0||py<0||px>rect.width||py>rect.height){magnifier.style.display='none';return;}
+ magnifier.style.display='block';
+ const left=Math.max(8,Math.min(innerWidth-LENS_SIZE-8,lensPointer.x+26));
+ const top=Math.max(8,Math.min(innerHeight-LENS_SIZE-8,lensPointer.y-LENS_SIZE-30));
+ magnifier.style.left=left+'px';magnifier.style.top=top+'px';
+ const cw=magnifierCanvas.width,ch=magnifierCanvas.height;
+ const srcW=(LENS_SIZE/LENS_ZOOM)*canvas.width/rect.width;
+ const srcH=(LENS_SIZE/LENS_ZOOM)*canvas.height/rect.height;
+ const centerX=px*canvas.width/rect.width,centerY=py*canvas.height/rect.height;
+ magnifierCtx.clearRect(0,0,cw,ch);
+ magnifierCtx.fillStyle='#f9fbfd';magnifierCtx.fillRect(0,0,cw,ch);
+ // Canvas sınırlarında taşan alanı kırpmadan doğru perspektifte göster.
+ const sx=centerX-srcW/2,sy=centerY-srcH/2;
+ const clippedX=Math.max(0,sx),clippedY=Math.max(0,sy);
+ const clippedRight=Math.min(canvas.width,sx+srcW),clippedBottom=Math.min(canvas.height,sy+srcH);
+ if(clippedRight>clippedX&&clippedBottom>clippedY){
+   magnifierCtx.drawImage(canvas,clippedX,clippedY,clippedRight-clippedX,clippedBottom-clippedY,
+     (clippedX-sx)/srcW*cw,(clippedY-sy)/srcH*ch,
+     (clippedRight-clippedX)/srcW*cw,(clippedBottom-clippedY)/srcH*ch);
+ }
+ magnifierCtx.strokeStyle='#687d8d';magnifierCtx.lineWidth=1.5;
+ magnifierCtx.beginPath();magnifierCtx.moveTo(cw/2-9,ch/2);magnifierCtx.lineTo(cw/2+9,ch/2);
+ magnifierCtx.moveTo(cw/2,ch/2-9);magnifierCtx.lineTo(cw/2,ch/2+9);magnifierCtx.stroke();
+}
+canvas.addEventListener('pointerenter',e=>{overCanvas=true;lensPointer={x:e.clientX,y:e.clientY}});
+canvas.addEventListener('pointerleave',()=>{overCanvas=false;updateLens()});
+window.addEventListener('blur',()=>{altHeld=false;updateLens()});
+window.addEventListener('keyup',e=>{if(e.key==='Alt'){altHeld=false;updateLens()}});
+canvas.addEventListener('contextmenu',e=>{
+ e.preventDefault();
+ const found=bodyAt(e);
+ closePlanetMenu();
+ if(!found)return;
+ selectPlanet(found);menuBody=found;
+ const left=Math.min(e.clientX,innerWidth-170);
+ const top=Math.min(e.clientY,innerHeight-58);
+ planetMenu.style.left=Math.max(4,left)+'px';
+ planetMenu.style.top=Math.max(4,top)+'px';
+ planetMenu.style.display='block';
+});
+canvas.addEventListener('dblclick',e=>{
+ e.preventDefault();e.stopPropagation();
+ if(e.button!==0)return;
+ const found=bodyAt(e);
+ if(found)selectPlanet(found);
+ beginEditor(found,e);
+});
+canvas.addEventListener('pointermove',e=>{
+ pointer.x=e.clientX;pointer.y=e.clientY;
+ lensPointer={x:e.clientX,y:e.clientY};
+ if(editor)updateFromMouse(e);
+ else hoveredBody=bodyAt(e);
+});
+canvas.addEventListener('pointerdown',e=>{
+ if(e.button!==0||!editor)return;
+ e.stopImmediatePropagation();e.preventDefault();
+ advance(e);
+},true);
+canvas.addEventListener('click',e=>{
+ if(editor||running||e.button!==0||e.detail>1)return;
+ const found=bodyAt(e);if(found){selectPlanet(found);beginEditor(found,e)}
+});
+$('cancel').addEventListener('click',()=>finishEditor(false));
+$('toggleTrails').addEventListener('click',toggleTrails);
+function toggleRunning(){if(editor)finishEditor(true);running=!running;$('play').textContent=running?'❚❚ Duraklat':'▶ Başlat'}
+$('play').addEventListener('click',toggleRunning);
+$('reset').addEventListener('click',()=>{stopPhysics();init()});
+window.addEventListener('keydown',e=>{
+ if(e.code==='Escape'||e.key==='Escape'){
+   if(editor){e.preventDefault();e.stopPropagation();finishEditor(false)}
+   closePlanetMenu();
+   return;
+ }
+ if(e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement||e.target instanceof HTMLSelectElement)return;
+ // Enter, hangi aşamada olunursa olunsun o anki ayarları kesinleştirir.
+ // Henüz hız aşamasına geçilmediyse yeni gezegenin başlangıç hızı sıfırdır.
+ if(e.code==='Enter'||e.key==='Enter'){
+   if(editor){e.preventDefault();e.stopPropagation();finishEditor(true)}
+   return;
+ }
+ if(e.key==='Alt'){altHeld=true;updateLens()}
+ if(e.code==='Delete'||e.code==='Backspace'){
+   // During editing Delete removes that existing planet; otherwise the
+   // last selected planet or the one under the cursor is removed.
+   const victim=editor?(editor.existing?editor.b:null):(hoveredBody||selectedBody);
+   if(victim&&bodies.includes(victim)){e.preventDefault();deletePlanet(victim)}
+ }
+ if(e.code==='Space'){e.preventDefault();closePlanetMenu();toggleRunning()}
+});
+let previous=performance.now();
+function animate(now){requestAnimationFrame(animate);
+ const delta=Math.min((now-previous)/1000,.05);previous=now;
+ if(running&&!editor){acc+=delta*animationSpeed;let n=0;while(acc>=DT&&n<40){step();acc-=DT;n++}if(n===40)acc=0}
+ for(const b of bodies)updateVisual(b);
+ controls.update();renderer.render(scene,camera);updateLens();
+}
+init();requestAnimationFrame(animate);
+} catch(error){const box=document.getElementById('error');box.style.display='block';box.textContent='3D motor yüklenemedi: '+error.message+'. İnternet bağlantısını ve WebGL desteğini kontrol edin.';console.error(error)}
+</script>
+</body>
+</html>
