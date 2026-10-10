@@ -4,6 +4,11 @@
   const SUPABASE_URL = 'https://wtgvrjacvmduodnaskjg.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_bEsvEKhBm0aJVAYvQBgeaA_tN4cnSxj';
 
+  const visitScript = document.createElement('script');
+  visitScript.src = '/projeler/analytics.js?v=20261010';
+  visitScript.async = true;
+  document.head.appendChild(visitScript);
+
   const APP_NAMES = {
     '3b-ay':'3B Ay',
     'Whiteboard':'Beyaz Tahta (eski sürüm)',
