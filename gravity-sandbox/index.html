@@ -87,7 +87,7 @@ button:hover{background:#f5f8fc}
     <p>Boş bir yere <strong>çift tıkla</strong>. Gezegenin yanındaki <strong>küçük açık sarı kutu</strong> sıradaki adımı gösterir: “konumu ayarla” → “yüksekliği ayarla” → “büyüklüğü ayarla” → “hız yatay bileşeni ayarla” → “hız dikey bileşeni ayarla” → “enter”.</p>
     <p>Her aşamayı tıklayarak geç. Son “enter” aşamasında <strong>Enter</strong> ile kabul et (istersen daha erken de Enter'a basabilirsin). Kutunun altında her zaman <strong>iptal için esc</strong> ve <strong>kabul için enter</strong> yazar. İptal etmek için <strong>Esc</strong> tuşunu kullan. Ayarlamadığın başlangıç hızı sıfır kalır.</p>
     <h3>Gezegenleri değiştir</h3>
-    <p>Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için gezegene sağ tıkla ve <strong>Edit ▸</strong> alt menüsünden yalnızca değiştirmek istediğin özelliği seç: konum, yükseklik, büyüklük, yatay hız veya düşey hız. Fareyle ayarla; tıklayarak ya da Enter ile kaydet, Esc ile iptal et. Yeni gezegen oluştururken önceki sıralı aşamalar aynen devam eder. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
+    <p>Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için sağ tıkla ve <strong>Düzenle ▸</strong> menüsünden <strong>Konum, Büyüklük</strong> veya <strong>Hız</strong> seç. Konumda önce yatay konumu, sonraki tıklamada yüksekliği; hızda önce yatay hız bileşenini, sonraki tıklamada düşey hız bileşenini ayarlarsın. Büyüklük tek aşamalıdır. Son tıklamayla veya herhangi bir aşamada Enter ile kabul, Esc ile iptal edebilirsin. Yeni gezegen oluştururken önceki sıralı aşamalar aynen devam eder. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
     <p><strong>Ctrl+C:</strong> Seçili gezegenin konumunu, hızını, yarıçapını, kütlesini ve rengini hafızaya al. <strong>Ctrl+V:</strong> Aynı özelliklerle, fareyle gösterdiğin yatay konuma yeni bir gezegen yapıştır. İstediğin kadar tekrarla.</p>
     <h3>Kamerayı kullan</h3>
     <ul>
@@ -108,7 +108,7 @@ button:hover{background:#f5f8fc}
   </section>
 </div>
 <div id="planetInfo" aria-live="polite"><span id="planetInfoText"></span><small class="infoHint">iptal için <b>esc</b><br>kabul için <b>enter</b></small></div>
-<div id="planetMenu" role="menu"><button type="button" id="editPlanet" role="menuitem" aria-expanded="false">Edit ▸</button><div id="editSubmenu" role="menu" style="display:none"><button type="button" data-edit-phase="0" role="menuitem">Edit konum</button><button type="button" data-edit-phase="1" role="menuitem">Edit yükseklik</button><button type="button" data-edit-phase="2" role="menuitem">Edit büyüklük</button><button type="button" data-edit-phase="3" role="menuitem">Edit yatay hız bileşeni</button><button type="button" data-edit-phase="4" role="menuitem">Edit düşey hız bileşeni</button></div><button type="button" id="copyPlanet" role="menuitem">Kopyala</button><button type="button" id="pastePlanet" role="menuitem">Yapıştır</button><button type="button" id="deletePlanet" role="menuitem">Sil</button></div>
+<div id="planetMenu" role="menu"><button type="button" id="editPlanet" role="menuitem" aria-expanded="false">Düzenle ▸</button><div id="editSubmenu" role="menu" style="display:none"><button type="button" data-edit-phase="0" role="menuitem">Konum</button><button type="button" data-edit-phase="2" role="menuitem">Büyüklük</button><button type="button" data-edit-phase="3" role="menuitem">Hız</button></div><button type="button" id="copyPlanet" role="menuitem">Kopyala</button><button type="button" id="pastePlanet" role="menuitem">Yapıştır</button><button type="button" id="deletePlanet" role="menuitem">Sil</button></div>
 <div id="message">Çift tıkla: yeni gezegen</div>
 <section id="stepbox" aria-live="polite">
   <strong id="stepTitle"></strong>
@@ -397,7 +397,7 @@ function showEditor(){if(!editor){$('stepbox').style.display='none';helper.visib
  const [title,description]=labels[Math.min(editor.phase,4)];
  $('stepbox').style.display='none';$('stepTitle').textContent=(editor.existing?'Gezegeni düzenle — ':'Gezegen ekle — ')+title;
  $('stepHelp').textContent=description;
- $('stepCount').textContent=editor.singleEdit?'Tek özellik düzenleniyor':`Aşama ${editor.phase+1}/6`;
+ $('stepCount').textContent=editor.editGroup?'Seçili özellik düzenleniyor':`Aşama ${editor.phase+1}/6`;
  helper.visible=true;
  planetInfo.style.display='block';
  $('planetInfoText').textContent=conciseLabels[editor.phase];
@@ -454,7 +454,7 @@ function beginEditor(existing,e,editPhase=null){
  // Düzenleme, gezegenin mevcut konumundan ve mevcut hızından başlar.
  // Fareye tıklandığı an bir konum/hız sıçraması oluşmaması için
  // fare konumunun düzlem üzerindeki başlangıç karşılığını saklıyoruz.
- editor={existing:!!existing,b:candidate,original,phase:editPhase===null?0:editPhase,singleEdit:existing&&editPhase!==null,
+ editor={existing:!!existing,b:candidate,original,phase:editPhase===null?0:editPhase,editGroup:!existing||editPhase===null?null:(editPhase===0?'position':editPhase===3?'velocity':'size'),
    anchorY:e.clientY,anchorPos:candidate.p.clone(),anchorV:candidate.v.clone(),
    anchorRadius:candidate.r,anchorPlane:onPlane(e,0)};
  controls.enabled=false;renderer.domElement.style.cursor='none';
@@ -492,7 +492,7 @@ function updateFromMouse(e){if(!editor)return;
 }
 function advance(e){if(!editor)return;
  updateFromMouse(e);const ed=editor;
- if(ed.singleEdit){finishEditor(true);return}
+ if(ed.editGroup==='size'||ed.editGroup==='position'&&ed.phase===1||ed.editGroup==='velocity'&&ed.phase===4){finishEditor(true);return}
  if(ed.phase===5)return;
  ed.phase++;
  ed.anchorY=e.clientY;
