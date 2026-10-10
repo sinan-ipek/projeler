@@ -12,7 +12,6 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;font-family:Arial,Helv
 #toolbar{position:absolute;top:14px;left:14px;z-index:5;display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:calc(100% - 28px)}
 button{font:inherit;background:#fff;border:1px solid #c8d2dd;border-radius:9px;color:#273849;padding:10px 14px;cursor:pointer;min-height:44px;box-shadow:0 3px 12px #8194a51c}
 button:hover{background:#f5f8fc}
-#homeBtn{display:inline-flex;align-items:center;justify-content:center;background:#ffd43b;color:#29231b;border:1px solid #e9b526;border-radius:9px;min-height:44px;padding:10px 14px;text-decoration:none;font-weight:700;box-shadow:0 3px 12px #8194a51c}#homeBtn:hover{background:#ffca16}
 /* Minimal kamera ve hız kontrolleri: ayrı panel yok. */
 #settings{position:absolute;right:14px;top:73px;z-index:5;display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap;max-width:calc(100vw - 28px)}
 #settings .cameras{display:flex;gap:5px}
@@ -37,12 +36,23 @@ button:hover{background:#f5f8fc}
 #planetMenu button:hover{background:#fff0f0}
 #message{position:absolute;right:14px;bottom:14px;background:#ffffffd9;border:1px solid #d8e0e8;border-radius:9px;padding:8px 11px;color:#617184;font-size:12px;pointer-events:none;z-index:4}
 @media(max-width:720px){#message{top:auto;bottom:76px;right:12px}#stepbox{top:122px}#help{font-size:11px}}
+#helpButton{width:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:20px}
+#helpOverlay{position:fixed;inset:0;background:#2030405a;display:none;align-items:center;justify-content:center;z-index:10020;padding:20px}
+#helpOverlay.open{display:flex}
+#helpPanel{width:min(460px,100%);max-height:min(85vh,750px);overflow:auto;background:#fff;border-radius:15px;padding:23px 25px;box-shadow:0 18px 50px #25354455;color:#263545;font-size:14px;line-height:1.65}
+#helpPanel h2{margin:0 0 9px;font-size:21px}
+#helpPanel h3{font-size:15px;margin:18px 0 6px}
+#helpPanel p{margin:0 0 9px}
+#helpPanel ul{margin:4px 0 10px;padding-left:20px}
+#helpPanel li{margin:4px 0}
+#helpPanel .helpTop{display:flex;justify-content:space-between;align-items:center;gap:12px}
+#closeHelp{min-height:32px;padding:3px 11px;font-size:20px;box-shadow:none}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.181.1/examples/jsm/"}}</script>
 </head>
 <body>
 <div id="viewport"></div>
-<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana sayfaya dön" title="Ana sayfa">⌂ Home</a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button></div>
+<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa">⌂</a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
 <div id="settings" aria-label="Kamera ve simülasyon kontrolleri">
   <div class="cameras">
     <button id="topView" type="button" title="Üstten görüş" aria-label="Üstten görüş">Üstten</button>
@@ -59,6 +69,33 @@ button:hover{background:#f5f8fc}
     <output id="trailValue" for="trailRange">520</output>
   </div>
 </div>
+<div id="helpOverlay" aria-hidden="true">
+  <section id="helpPanel" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="helpTop"><h2 id="helpTitle">Gravity Sandbox</h2><button id="closeHelp" type="button" aria-label="Yardımı kapat">×</button></div>
+    <p>Burada gezegenler oluşturabilir ve birbirlerini nasıl çektiklerini izleyebilirsin. Gezegenlerin hareketi kütleçekimine göre hesaplanır.</p>
+    <h3>Gezegen oluştur</h3>
+    <p>Boş bir yere <strong>çift tıkla</strong>. Sonraki tıklamalarla sırasıyla gezegenin yerini, yüksekliğini, büyüklüğünü ve hızını ayarla.</p>
+    <p>İstediğin aşamada <strong>Enter</strong> ile gezegeni oluştur. Ayarlamadığın hız sıfır kalır. <strong>Esc</strong> ile vazgeç.</p>
+    <h3>Gezegenleri değiştir</h3>
+    <p>Simülasyonu duraklat, sonra bir gezegene tıkla. Konumunu, büyüklüğünü veya hızını değiştirebilirsin. Gezegenin üstüne sağ tıklayarak ya da seçip <strong>Delete</strong> tuşuna basarak silebilirsin.</p>
+    <h3>Kamerayı kullan</h3>
+    <ul>
+      <li><strong>Sol fare tuşuyla sürükle:</strong> Kamerayı döndür.</li>
+      <li><strong>Sağ fare tuşuyla sürükle:</strong> Görüntüyü kaydır.</li>
+      <li><strong>Fare tekerleği:</strong> Yaklaş veya uzaklaş.</li>
+      <li><strong>Alt tuşu:</strong> Büyüteci aç.</li>
+      <li><strong>Üstten / Yandan:</strong> Hazır kamera açılarına geç.</li>
+    </ul>
+    <h3>Diğer kontroller</h3>
+    <ul>
+      <li><strong>▶ / ❚❚ veya Boşluk:</strong> Başlat ya da duraklat.</li>
+      <li><strong>Sıfırla:</strong> Başlangıçtaki gezegenlere dön.</li>
+      <li><strong>Yörünge:</strong> Gezegenlerin izlerini göster veya gizle.</li>
+      <li><strong>Kısa sürgüler:</strong> Animasyon hızını ve yörünge izi uzunluğunu ayarla.</li>
+      <li><strong>Kırmızı hız oku:</strong> Hesaplanan kaçış hızı aşıldı.</li>
+    </ul>
+  </section>
+</div>
 <div id="planetMenu" role="menu"><button type="button" id="deletePlanet" role="menuitem">Gezegeni sil</button></div>
 <div id="message">Çift tıkla: yeni gezegen</div>
 <section id="stepbox" aria-live="polite">
@@ -68,6 +105,18 @@ button:hover{background:#f5f8fc}
 </section>
 <div id="help">Çift tıkla: gezegen ekle · Duraklatıp gezegene tıkla: düzenle · Sol sürükle: kamera · Sağ sürükle: kaydır · Tekerlek: yakınlaştır · Boşluk: oynat/duraklat · Alt: büyüteç · Esc: iptal · Sağ tık / Delete: gezegeni sil</div>
 <div id="magnifier" aria-hidden="true"><canvas id="magnifierCanvas" width="584" height="584"></canvas></div><div id="error"></div>
+<script>
+(function(){
+ const btn=document.getElementById('helpButton'),overlay=document.getElementById('helpOverlay'),close=document.getElementById('closeHelp');
+ let previousFocus=null;
+ function show(){previousFocus=document.activeElement;overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');close.focus()}
+ function hide(){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');if(previousFocus&&previousFocus.focus)previousFocus.focus()}
+ btn.addEventListener('click',show);
+ close.addEventListener('click',hide);
+ overlay.addEventListener('click',e=>{if(e.target===overlay)hide()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('open')){e.preventDefault();e.stopImmediatePropagation();hide()}},true);
+})();
+</script>
 <script type="module">
 try {
 const THREE=await import('three');
@@ -472,5 +521,6 @@ function animate(now){requestAnimationFrame(animate);
 init();requestAnimationFrame(animate);
 } catch(error){const box=document.getElementById('error');box.style.display='block';box.textContent='3D motor yüklenemedi: '+error.message+'. İnternet bağlantısını ve WebGL desteğini kontrol edin.';console.error(error)}
 </script>
+<script src="/projeler/shared-ui.js?v=20261004-1"></script>
 </body>
 </html>
