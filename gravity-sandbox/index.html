@@ -84,8 +84,7 @@ button:hover{background:#f5f8fc}
     <div class="helpTop"><h2 id="helpTitle">Gravity Sandbox</h2><button id="closeHelp" type="button" aria-label="Yardımı kapat">×</button></div>
     <p>Burada gezegenler oluşturabilir ve birbirlerini nasıl çektiklerini izleyebilirsin. Gezegenlerin hareketi kütleçekimine göre hesaplanır.</p>
     <h3>Gezegen oluştur</h3>
-    <p>Boş bir yere <strong>çift tıkla</strong>. Gezegenin yanındaki <strong>küçük açık sarı kutu</strong> sıradaki adımı gösterir: “konumu ayarla” → “yüksekliği ayarla” → “büyüklüğü ayarla” → “hız yatay bileşeni ayarla” → “hız dikey bileşeni ayarla” → “enter”.</p>
-    <p>Her aşamayı tıklayarak geç. Son “enter” aşamasında <strong>Enter</strong> ile kabul et (istersen daha erken de Enter'a basabilirsin). Kutunun altında her zaman <strong>iptal için esc</strong> ve <strong>kabul için enter</strong> yazar. İptal etmek için <strong>Esc</strong> tuşunu kullan. Ayarlamadığın başlangıç hızı sıfır kalır.</p>
+    <p>Boş alana <strong>çift tıkla</strong>: gezegen hemen oluşur ve seçilir. Yükseklik sıfır, büyüklük ilk mavi gezegenle aynıdır. Yatay hızı en büyük gezegenin çevresinde saat yönünde, kaçış hızının yarısı kadar; düşey hızı sıfırdır.</p>
     <h3>Gezegenleri değiştir</h3>
     <p>Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için sağ tıkla ve <strong>Düzenle ▸</strong> menüsünden <strong>Konum, Büyüklük</strong> veya <strong>Hız</strong> seç. Konumda önce yatay konumu, sonraki tıklamada yüksekliği; hızda önce yatay hız bileşenini, sonraki tıklamada düşey hız bileşenini ayarlarsın. Büyüklük tek aşamalıdır. Son tıklamayla veya herhangi bir aşamada Enter ile kabul, Esc ile iptal edebilirsin. Yeni gezegen oluştururken önceki sıralı aşamalar aynen devam eder. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
     <p><strong>Ctrl+C:</strong> Seçili gezegenin konumunu, hızını, yarıçapını, kütlesini ve rengini hafızaya al. <strong>Ctrl+V:</strong> Aynı özelliklerle, fareyle gösterdiğin yatay konuma yeni bir gezegen yapıştır. İstediğin kadar tekrarla.</p>
@@ -107,7 +106,7 @@ button:hover{background:#f5f8fc}
     </ul>
   </section>
 </div>
-<div id="planetInfo" aria-live="polite"><span id="planetInfoText"></span><small class="infoHint">iptal için <b>esc</b><br>kabul için <b>enter</b></small></div>
+<div id="planetInfo" aria-hidden="true" style="display:none"><span id="planetInfoText"></span></div>
 <div id="planetMenu" role="menu"><button type="button" id="editPlanet" role="menuitem" aria-expanded="false">Düzenle ▸</button><div id="editSubmenu" role="menu" style="display:none"><button type="button" data-edit-phase="0" role="menuitem">Konum</button><button type="button" data-edit-phase="2" role="menuitem">Büyüklük</button><button type="button" data-edit-phase="3" role="menuitem">Hız</button></div><button type="button" id="copyPlanet" role="menuitem">Kopyala</button><button type="button" id="pastePlanet" role="menuitem">Yapıştır</button><button type="button" id="deletePlanet" role="menuitem">Sil</button></div>
 <div id="message">Çift tıkla: yeni gezegen</div>
 <section id="stepbox" aria-live="polite">
@@ -399,9 +398,7 @@ function showEditor(){if(!editor){$('stepbox').style.display='none';helper.visib
  $('stepHelp').textContent=description;
  $('stepCount').textContent=editor.editGroup?'Seçili özellik düzenleniyor':`Aşama ${editor.phase+1}/6`;
  helper.visible=true;
- planetInfo.style.display='block';
- $('planetInfoText').textContent=conciseLabels[editor.phase];
- updatePlanetInfo();
+ planetInfo.style.display='none';
 }
 const conciseLabels=['konumu ayarla','yüksekliği ayarla','büyüklüğü ayarla','hız yatay bileşeni ayarla','hız dikey bileşeni ayarla','enter'];
 
@@ -572,12 +569,28 @@ canvas.addEventListener('contextmenu',e=>{
  planetMenu.style.top=Math.max(4,top)+'px';
  planetMenu.style.display='block';
 });
+function createPlanetAt(e){
+ const point=onPlane(e,0);
+ if(!point)return;
+ if(editor)finishEditor(false);
+ const largest=bodies.reduce((best,b)=>!best||b.m>best.m?b:best,null);
+ const pos=new THREE.Vector3(clamp(point.x,-88,88),0,clamp(point.z,-88,88));
+ const body=makeBody(1.4,0x499ef6,pos,new THREE.Vector3());
+ if(largest){
+  const dx=pos.x-largest.p.x,dz=pos.z-largest.p.z;
+  const distance=Math.hypot(dx,dz);
+  if(distance>1e-8){
+   const speed=escapeSpeedFor(body)*0.5;
+   body.v.set(-dz/distance*speed,0,dx/distance*speed);
+  }
+ }
+ bodies.push(body);updateTrail(body);selectPlanet(body);hoveredBody=body;
+ $('message').textContent='Gezegen oluşturuldu · Düzenlemek için sağ tıkla';
+}
 canvas.addEventListener('dblclick',e=>{
  e.preventDefault();e.stopPropagation();
- if(e.button!==0)return;
- const found=bodyAt(e);
- if(found)selectPlanet(found);
- else beginEditor(null,e);
+ if(e.button!==0||bodyAt(e))return;
+ createPlanetAt(e);
 });
 canvas.addEventListener('pointermove',e=>{
  pointer.x=e.clientX;pointer.y=e.clientY;
