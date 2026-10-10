@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ziyaret İstatistikleri</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font:14px system-ui,Arial,sans-serif}main{width:min(430px,94vw);margin:38px auto 60px}h1{font-size:18px;font-weight:600;margin:0 0 22px}#period{text-align:right;font-variant-numeric:tabular-nums;font-size:13px;margin-bottom:10px}svg{display:block;width:100%;height:auto}input[type=range]{width:100%;accent-color:#2866ab;cursor:pointer;margin-top:12px}.ends{display:flex;justify-content:space-between;color:#666;font-size:12px}h2{font-size:14px;font-weight:600;margin:31px 0 12px}table{width:100%;border-collapse:collapse}td{padding:7px 1px;border-bottom:1px solid #eee}td:last-child{text-align:right;font-variant-numeric:tabular-nums}#status{color:#666;font-size:12px;line-height:1.6;min-height:34px}#total{font-variant-numeric:tabular-nums}a{color:inherit} .back{position:absolute;top:12px;left:14px;font-size:12px;text-decoration:none;color:#555} .back:hover{text-decoration:underline}</style></head>
+<body><a class="back" href="/projeler/">← Ana sayfa</a><main><h1>Ziyaretler <span id="total"></span></h1>
+<div id="period">Son 7 gün</div>
+<svg viewBox="0 0 350 190" role="img" aria-label="Günlük ziyaret grafiği">
+<path d="M43 12 V155 H340" stroke="#111" stroke-width="2" fill="none" id="axes"/>
+<g id="ticks"></g><polyline id="line" fill="none" stroke="#2465b1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points=""/>
+<g id="dates"></g>
+</svg><input id="zoom" type="range" min="0" max="1000" value="0" step="1" aria-label="Zaman aralığını büyüt veya küçült"/>
+<div class="ends"><span>7 gün</span><span>Başlangıçtan beri</span></div>
+<h2>Sayfalar</h2><table><tbody id="pages"></tbody></table><p id="status" role="status">İstatistikler hazırlanıyor…</p>
+</main><script src="/projeler/analytics.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),fmt=n=>Number(n).toLocaleString('tr-TR');
+const base=window.SI_ANALYTICS?.code||'';
+const begin='2026-10-10'; // İlk veri toplanmaya başladığında asıl ilk ziyaret tarihine uyarlanacak.
+const today=new Date();today.setHours(12,0,0,0);
+const start=new Date(begin+'T12:00:00');
+const maxDays=Math.max(7,Math.round((today-start)/86400000)+1);
+const cache=new Map();
+const date=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
+const plus=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+async function count(path,first,last){
+ const key=path+'|'+date(first)+'|'+date(last);
+ if(cache.has(key))return cache.get(key);
+ const url='https://'+base+'.goatcounter.com/counter/'+encodeURIComponent(path)+'.json?start='+date(first)+'&end='+date(last);
+ const job=fetch(url,{mode:'cors',credentials:'omit'}).then(async r=>{
+  if(!r.ok)throw Error('Veri okunamadı ('+r.status+').');
+  const j=await r.json();return Number(String(j.count||'0').replace(/[^0-9]/g,''))||0;
+ });
+ cache.set(key,job);return job;
+}
+async function homePages(){
+ const html=await fetch('/projeler/index.html').then(r=>r.text());
+ const doc=new DOMParser().parseFromString(html,'text/html');
+ return [{title:'Öğren (ana sayfa)',path:'/projeler/'},...Array.from(doc.querySelectorAll('a.btn-card')).map(a=>{
+ const href=a.getAttribute('href')||'';
+ return {title:a.textContent.trim(),path:'/projeler/'+href.split('?')[0].replace(/index\.html$/,'')};
+ }).filter(x=>!x.path.includes('://'))];
+}
+function plot(values,labels){
+ const max=Math.max(1,...values),ceil=Math.max(5,Math.ceil(max/5)*5);
+ const ticks=$('ticks');ticks.replaceChildren();
+ for(let i=0;i<=4;i++){let val=Math.round(i*ceil/4),y=155-i*32;
+  let tx=document.createElementNS('http://www.w3.org/2000/svg','text');tx.setAttribute('x','35');tx.setAttribute('y',y+4);tx.setAttribute('text-anchor','end');tx.setAttribute('font-size','11');tx.textContent=val;ticks.append(tx);}
+ $('line').setAttribute('points',values.map((v,i)=>(49+i*282/Math.max(1,values.length-1))+','+(151-(v/ceil)*128)).join(' '));
+ const g=$('dates');g.replaceChildren();
+ for(const [i,label] of [[0,labels[0]||''],[labels.length-1,labels.at(-1)||'']]){
+ const tx=document.createElementNS('http://www.w3.org/2000/svg','text');tx.setAttribute('x',49+i*282/Math.max(1,labels.length-1));tx.setAttribute('y','174');tx.setAttribute('font-size','10');tx.setAttribute('text-anchor',i?'end':'start');tx.textContent=label;g.append(tx);}
+}
+let seq=0, pages=[];
+async function update(){
+ if(!base){$('status').textContent='GoatCounter hesap kodunun bağlanması bekleniyor.';return;}
+ const id=++seq;
+ const ratio=Number($('zoom').value)/1000;
+ const span=Math.min(maxDays,Math.round(7*Math.pow(maxDays/7,ratio)));
+ $('period').textContent=span>=maxDays?'Başlangıçtan beri':'Son '+span+' gün';
+ const first=plus(today,1-span);
+ const buckets=Math.min(24,span),step=span/buckets;
+ $('status').textContent='Veriler yükleniyor…';
+ try{
+  const data=[];
+  for(let i=0;i<buckets;i++){
+   if(seq!==id)return;
+   const left=plus(first,Math.floor(i*step)),right=plus(first,Math.floor((i+1)*step)-1);
+   data.push(await count('TOTAL',left,right<left?left:right));
+  }
+  if(seq!==id)return;
+  plot(data,[date(first),date(today)]);
+  const results=[];
+  for(let i=0;i<pages.length;i+=5){
+   const batch=await Promise.all(pages.slice(i,i+5).map(async p=>({title:p.title,n:await count(p.path,first,today).catch(()=>0)})));
+   results.push(...batch);if(seq!==id)return;
+  }
+  results.sort((a,b)=>b.n-a.n);
+  $('pages').replaceChildren();
+  for(const p of results){const row=document.createElement('tr'),name=document.createElement('td'),n=document.createElement('td');name.textContent=p.title;n.textContent=fmt(p.n);row.append(name,n);$('pages').append(row);}
+  $('total').textContent='— '+fmt(data.reduce((a,b)=>a+b,0));
+  $('status').textContent='GoatCounter verileri birkaç saat gecikmeli güncellenebilir.';
+ }catch(e){if(seq===id)$('status').textContent='İstatistik okunamadı. GoatCounter ayarlarında ziyaret sayaçlarının herkese açık olmasına izin verilmeli. ('+e.message+')';}
+}
+$('zoom').addEventListener('input',()=>{clearTimeout(window._zoomWait);window._zoomWait=setTimeout(update,160)});
+homePages().then(p=>{pages=p;update()}).catch(e=>{$('status').textContent='Sayfa listesi okunamadı: '+e.message});
+</script></body></html>
