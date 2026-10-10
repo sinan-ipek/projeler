@@ -102,7 +102,6 @@ button:hover{background:#f5f8fc}
       <li><strong>Sıfırla:</strong> Başlangıçtaki gezegenlere dön.</li>
       <li><strong>Yörünge:</strong> Gezegenlerin izlerini göster veya gizle.</li>
       <li><strong>Kısa sürgüler:</strong> Animasyon hızını ve yörünge izi uzunluğunu ayarla.</li>
-      <li><strong>Kırmızı gezegen:</strong> Gezegenin hızı kaçış hızına ulaşmıştır. Hızı tekrar eşik altına inerse eski rengine döner.</li>
       <li><strong>Kırmızı hız oku:</strong> Hesaplanan kaçış hızı aşıldı.</li>
     </ul>
   </section>
@@ -363,13 +362,7 @@ function step(){let a=accelerations();
  a=accelerations();for(let i=0;i<bodies.length;i++)bodies[i].v.addScaledVector(a[i],DT*.5);
  if(++trailTick%4===0)for(const b of bodies){b.trail.push(b.p.clone());if(b.trail.length>MAX_TRAIL)b.trail.shift();updateTrail(b)}
 }
-function updateVisual(b){
- b.mesh.position.copy(b.p);b.mesh.scale.setScalar(b.r);b.mesh.castShadow=b.p.y>0;
- // Güncel toplam hız kaçış hızına ulaştığında gezegeni kırmızı göster.
- // Eşiğin altına dönerse gezegenin özgün rengi geri gelir.
- const escaping=b.v.lengthSq()>=Math.pow(escapeSpeedFor(b),2)&&b.v.lengthSq()>1e-12;
- b.mesh.material.color.setHex(escaping?0xff2626:b.color);
-}
+function updateVisual(b){b.mesh.position.copy(b.p);b.mesh.scale.setScalar(b.r);b.mesh.castShadow=b.p.y>0}
 function pointerNDC(e){const rect=renderer.domElement.getBoundingClientRect();ndc.x=((e.clientX-rect.left)/rect.width)*2-1;ndc.y=-((e.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(ndc,camera)}
 function onPlane(e,y=0){pointerNDC(e);plane.set(new THREE.Vector3(0,1,0),-y);return raycaster.ray.intersectPlane(plane,intersection)?intersection.clone():null}
 function bodyAt(e){pointerNDC(e);const hits=raycaster.intersectObjects(bodies.map(b=>b.mesh),false);return hits.length?bodies.find(b=>b.mesh===hits[0].object):null}
@@ -628,15 +621,17 @@ window.addEventListener('keydown',e=>{
  if(e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement||e.target instanceof HTMLSelectElement)return;
  // Enter, hangi aşamada olunursa olunsun o anki ayarları kesinleştirir.
  // Henüz hız aşamasına geçilmediyse yeni gezegenin başlangıç hızı sıfırdır.
- if((e.ctrlKey||e.metaKey)&&e.code==='KeyC'){
-   const b=editor?editor.b:(selectedBody||hoveredBody);
-   if(b&&bodies.includes(b)){e.preventDefault();copyPlanet(b)}
+ // Tarayıcının varsayılan kopyala/yapıştır işlemi yerine seçili gezegeni kullan.
+ const key=String(e.key||'').toLowerCase();
+ if((e.ctrlKey||e.metaKey)&&!e.altKey&&(key==='c'||e.code==='KeyC')){
+   const b=editor?editor.b:selectedBody;
+   if(b&&bodies.includes(b)){e.preventDefault();e.stopPropagation();copyPlanet(b)}
    return;
  }
- if((e.ctrlKey||e.metaKey)&&e.code==='KeyV'){
+ if((e.ctrlKey||e.metaKey)&&!e.altKey&&(key==='v'||e.code==='KeyV')){
    if(copiedPlanet){
-     e.preventDefault();
-     const point=onPlane({clientX:pointer.x,clientY:pointer.y},0);
+     e.preventDefault();e.stopPropagation();
+     const point=overCanvas?onPlane({clientX:pointer.x,clientY:pointer.y},0):null;
      pastePlanet(point);
    }
    return;
