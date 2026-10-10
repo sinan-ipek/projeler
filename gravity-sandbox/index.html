@@ -82,7 +82,7 @@ button:hover{background:#f5f8fc}
     <p>Boş bir yere <strong>çift tıkla</strong>. Gezegenin yanındaki <strong>sarı kutu</strong> sıradaki adımı gösterir: yatay konum → yükseklik → büyüklük (kütle) → hızın yatay bileşeni → hızın düşey bileşeni.</p>
     <p>Her aşamayı tıklayarak geç. İstediğin aşamada <strong>Enter</strong> ile kabul et; <strong>Esc</strong> ile iptal et. Ayarlamadığın başlangıç hızı sıfır kalır.</p>
     <h3>Gezegenleri değiştir</h3>
-    <p>Simülasyonu duraklat, sonra bir gezegene tıkla. Konumunu, büyüklüğünü veya hızını değiştirebilirsin. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
+    <p>Bir gezegene sol tıkla: yalnızca seçilir. Düzenlemek için gezegene sağ tıkla ve <strong>Edit</strong> seç. Konumunu, yüksekliğini, büyüklüğünü ve hızını sırayla değiştirebilirsin. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
     <p><strong>Ctrl+C:</strong> Seçili gezegenin konumunu, hızını, yarıçapını, kütlesini ve rengini hafızaya al. <strong>Ctrl+V:</strong> Aynı özelliklerle, fareyle gösterdiğin yatay konuma yeni bir gezegen yapıştır. İstediğin kadar tekrarla.</p>
     <h3>Kamerayı kullan</h3>
     <ul>
@@ -103,7 +103,7 @@ button:hover{background:#f5f8fc}
   </section>
 </div>
 <div id="planetInfo" aria-live="polite"></div>
-<div id="planetMenu" role="menu"><button type="button" id="copyPlanet" role="menuitem">Kopyala</button><button type="button" id="pastePlanet" role="menuitem">Yapıştır</button><button type="button" id="deletePlanet" role="menuitem">Gezegeni sil</button></div>
+<div id="planetMenu" role="menu"><button type="button" id="editPlanet" role="menuitem">Edit</button><button type="button" id="copyPlanet" role="menuitem">Kopyala</button><button type="button" id="pastePlanet" role="menuitem">Yapıştır</button><button type="button" id="deletePlanet" role="menuitem">Gezegeni sil</button></div>
 <div id="message">Çift tıkla: yeni gezegen</div>
 <section id="stepbox" aria-live="polite">
   <strong id="stepTitle"></strong>
@@ -177,8 +177,9 @@ const planetInfo=$('planetInfo');
 let hoveredBody=null;
 let menuBody=null;
 let menuPoint=null;
+let menuPointer=null;
 const planetMenu=$('planetMenu');
-function closePlanetMenu(){planetMenu.style.display='none';menuBody=null;menuPoint=null}
+function closePlanetMenu(){planetMenu.style.display='none';menuBody=null;menuPoint=null;menuPointer=null}
 function selectPlanet(body){selectedBody=body}
 function copyPlanet(body){
  if(!body||!bodies.includes(body))return;
@@ -213,6 +214,11 @@ function deletePlanet(body){
  acc=0;
  $('message').textContent='Gezegen silindi · Çift tıkla: yeni gezegen';
 }
+$('editPlanet').addEventListener('click',()=>{
+ const b=menuBody,pt=menuPointer;
+ closePlanetMenu();
+ if(b&&bodies.includes(b)&&pt)beginEditor(b,pt);
+});
 $('copyPlanet').addEventListener('click',()=>{
  const b=menuBody;closePlanetMenu();copyPlanet(b);
 });
@@ -514,6 +520,8 @@ canvas.addEventListener('contextmenu',e=>{
  if(found)selectPlanet(found);
  menuBody=found;
  menuPoint=point?point.clone():null;
+ menuPointer={clientX:e.clientX,clientY:e.clientY};
+ $('editPlanet').style.display=found?'block':'none';
  $('copyPlanet').style.display=found?'block':'none';
  $('deletePlanet').style.display=found?'block':'none';
  $('pastePlanet').disabled=!copiedPlanet;
@@ -528,7 +536,7 @@ canvas.addEventListener('dblclick',e=>{
  if(e.button!==0)return;
  const found=bodyAt(e);
  if(found)selectPlanet(found);
- beginEditor(found,e);
+ else beginEditor(null,e);
 });
 canvas.addEventListener('pointermove',e=>{
  pointer.x=e.clientX;pointer.y=e.clientY;
@@ -543,7 +551,7 @@ canvas.addEventListener('pointerdown',e=>{
 },true);
 canvas.addEventListener('click',e=>{
  if(editor||e.button!==0||e.detail>1)return;
- const found=bodyAt(e);if(found){selectPlanet(found);if(!running)beginEditor(found,e)}
+ const found=bodyAt(e);if(found)selectPlanet(found)
 });
 $('cancel').addEventListener('click',()=>finishEditor(false));
 $('toggleTrails').addEventListener('click',toggleTrails);
