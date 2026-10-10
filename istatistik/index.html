@@ -28,7 +28,7 @@ async function count(path,first,last){
  if(cache.has(key))return cache.get(key);
  const url='https://'+base+'.goatcounter.com/counter/'+encodeURIComponent(path)+'.json?start='+date(first)+'&end='+date(last);
  const job=fetch(url,{mode:'cors',credentials:'omit'}).then(async r=>{
-  if(r.status===404)return 0;
+  if(r.status===404)throw Error('Sayaç yolu bulunamadı: '+path);
   if(!r.ok)throw Error('Veri okunamadı ('+r.status+').');
   const j=await r.json();return Number(String(j.count||'0').replace(/[^0-9]/g,''))||0;
  });
@@ -39,7 +39,7 @@ async function homePages(){
  const doc=new DOMParser().parseFromString(html,'text/html');
  return [{title:'Öğren (ana sayfa)',path:'/projeler/'},...Array.from(doc.querySelectorAll('a.btn-card')).map(a=>{
  const href=a.getAttribute('href')||'';
- return {title:a.textContent.trim(),path:'/projeler/'+href.split('?')[0].replace(/index\.html$/,'')};
+ return {title:a.textContent.trim(),path:('/projeler/'+href.split('?')[0].replace(/index\.html$/,'')).replace(/\/$/,'')};
  }).filter(x=>!x.path.includes('://'))];
 }
 function plot(values,labels){
@@ -74,7 +74,7 @@ async function update(){
     if(seq!==id)return;
     let total=0;
     for(let j=0;j<pages.length;j+=6){
-      const counts=await Promise.all(pages.slice(j,j+6).map(p=>count(p.path,left,right)));
+      const counts=await Promise.all(pages.slice(j,j+6).map(p=>count(p.path,left,right).catch(e=>{if(String(e).includes('Sayaç yolu bulunamadı'))return 0;throw e})));
       total+=counts.reduce((a,b)=>a+b,0);
     }
     data.push(total);
@@ -83,7 +83,7 @@ async function update(){
   plot(data,[date(first),date(today)]);
   const results=[];
   for(let i=0;i<pages.length;i+=5){
-   const batch=await Promise.all(pages.slice(i,i+5).map(async p=>({title:p.title,n:await count(p.path,first,today).catch(()=>0)})));
+   const batch=await Promise.all(pages.slice(i,i+5).map(async p=>({title:p.title,n:await count(p.path,first,today).catch(e=>{if(String(e).includes('Sayaç yolu bulunamadı'))return 0;throw e})})));
    results.push(...batch);if(seq!==id)return;
   }
   results.sort((a,b)=>b.n-a.n);
