@@ -34,6 +34,9 @@ button:hover{background:#f5f8fc}
 #planetMenu{display:none;position:fixed;z-index:20;min-width:150px;padding:5px;background:#fff;border:1px solid #c8d2dd;border-radius:10px;box-shadow:0 9px 24px #40506440}
 #planetMenu button{width:100%;border:0;box-shadow:none;min-height:38px;text-align:left;padding:8px 11px;color:#b43840}
 #planetMenu button:hover{background:#eef3fb}
+#planetMenu #editSubmenu{margin:2px 0 5px 8px;padding:3px 0 3px 7px;border-left:2px solid #becbdb}
+#planetMenu #editSubmenu button{font-size:12px;min-height:33px;color:#34475e}
+#planetMenu #editPlanet{color:#34475e}
 #planetMenu #deletePlanet{color:#b43840}
 #planetMenu button:disabled{opacity:.4;cursor:not-allowed;background:#fff}
 #message{position:absolute;right:14px;bottom:14px;background:#ffffffd9;border:1px solid #d8e0e8;border-radius:9px;padding:8px 11px;color:#617184;font-size:12px;pointer-events:none;z-index:4}
@@ -84,7 +87,7 @@ button:hover{background:#f5f8fc}
     <p>Boş bir yere <strong>çift tıkla</strong>. Gezegenin yanındaki <strong>küçük açık sarı kutu</strong> sıradaki adımı gösterir: “konumu ayarla” → “yüksekliği ayarla” → “büyüklüğü ayarla” → “hız yatay bileşeni ayarla” → “hız dikey bileşeni ayarla” → “enter”.</p>
     <p>Her aşamayı tıklayarak geç. Son “enter” aşamasında <strong>Enter</strong> ile kabul et (istersen daha erken de Enter'a basabilirsin). Kutunun altında her zaman <strong>iptal için esc</strong> ve <strong>kabul için enter</strong> yazar. İptal etmek için <strong>Esc</strong> tuşunu kullan. Ayarlamadığın başlangıç hızı sıfır kalır.</p>
     <h3>Gezegenleri değiştir</h3>
-    <p>Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için gezegene sağ tıkla ve <strong>Edit</strong> seç. Konumunu, yüksekliğini, büyüklüğünü ve hızını sırayla değiştirebilirsin. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
+    <p>Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için gezegene sağ tıkla ve <strong>Edit ▸</strong> alt menüsünden yalnızca değiştirmek istediğin özelliği seç: konum, yükseklik, büyüklük, yatay hız veya düşey hız. Fareyle ayarla; tıklayarak ya da Enter ile kaydet, Esc ile iptal et. Yeni gezegen oluştururken önceki sıralı aşamalar aynen devam eder. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
     <p><strong>Ctrl+C:</strong> Seçili gezegenin konumunu, hızını, yarıçapını, kütlesini ve rengini hafızaya al. <strong>Ctrl+V:</strong> Aynı özelliklerle, fareyle gösterdiğin yatay konuma yeni bir gezegen yapıştır. İstediğin kadar tekrarla.</p>
     <h3>Kamerayı kullan</h3>
     <ul>
@@ -105,7 +108,7 @@ button:hover{background:#f5f8fc}
   </section>
 </div>
 <div id="planetInfo" aria-live="polite"><span id="planetInfoText"></span><small class="infoHint">iptal için <b>esc</b><br>kabul için <b>enter</b></small></div>
-<div id="planetMenu" role="menu"><button type="button" id="editPlanet" role="menuitem">Edit</button><button type="button" id="copyPlanet" role="menuitem">Kopyala</button><button type="button" id="pastePlanet" role="menuitem">Yapıştır</button><button type="button" id="deletePlanet" role="menuitem">Sil</button></div>
+<div id="planetMenu" role="menu"><button type="button" id="editPlanet" role="menuitem" aria-expanded="false">Edit ▸</button><div id="editSubmenu" role="menu" style="display:none"><button type="button" data-edit-phase="0" role="menuitem">Edit konum</button><button type="button" data-edit-phase="1" role="menuitem">Edit yükseklik</button><button type="button" data-edit-phase="2" role="menuitem">Edit büyüklük</button><button type="button" data-edit-phase="3" role="menuitem">Edit yatay hız bileşeni</button><button type="button" data-edit-phase="4" role="menuitem">Edit düşey hız bileşeni</button></div><button type="button" id="copyPlanet" role="menuitem">Kopyala</button><button type="button" id="pastePlanet" role="menuitem">Yapıştır</button><button type="button" id="deletePlanet" role="menuitem">Sil</button></div>
 <div id="message">Çift tıkla: yeni gezegen</div>
 <section id="stepbox" aria-live="polite">
   <strong id="stepTitle"></strong>
@@ -181,7 +184,7 @@ let menuBody=null;
 let menuPoint=null;
 let menuPointer=null;
 const planetMenu=$('planetMenu');
-function closePlanetMenu(){planetMenu.style.display='none';menuBody=null;menuPoint=null;menuPointer=null}
+function closePlanetMenu(){planetMenu.style.display='none';$('editSubmenu').style.display='none';$('editPlanet').setAttribute('aria-expanded','false');menuBody=null;menuPoint=null;menuPointer=null}
 // Seçim işareti: gezegenin çevresindeki ince, ışıklı 3B halka.
 // Çizgi ekranda daima 1 piksel kalınlıkta; gezegenin boyutu yalnız yarıçapı etkiler.
 const selectionPoints=[];
@@ -242,10 +245,16 @@ function deletePlanet(body){
  $('message').textContent='Gezegen silindi · Çift tıkla: yeni gezegen';
 }
 $('editPlanet').addEventListener('click',()=>{
- const b=menuBody,pt=menuPointer;
- closePlanetMenu();
- if(b&&bodies.includes(b)&&pt)beginEditor(b,pt);
+ const sub=$('editSubmenu'),opening=sub.style.display==='none';
+ sub.style.display=opening?'block':'none';
+ $('editPlanet').setAttribute('aria-expanded',String(opening));
+ planetMenu.style.top=Math.max(4,Math.min(parseFloat(planetMenu.style.top)||0,innerHeight-planetMenu.offsetHeight-8))+'px';
 });
+document.querySelectorAll('[data-edit-phase]').forEach(button=>button.addEventListener('click',()=>{
+ const body=menuBody,pt=menuPointer,phase=Number(button.dataset.editPhase);
+ closePlanetMenu();
+ if(body&&bodies.includes(body)&&pt)beginEditor(body,pt,phase);
+}));
 $('copyPlanet').addEventListener('click',()=>{
  const b=menuBody;closePlanetMenu();copyPlanet(b);
 });
@@ -388,7 +397,7 @@ function showEditor(){if(!editor){$('stepbox').style.display='none';helper.visib
  const [title,description]=labels[Math.min(editor.phase,4)];
  $('stepbox').style.display='none';$('stepTitle').textContent=(editor.existing?'Gezegeni düzenle — ':'Gezegen ekle — ')+title;
  $('stepHelp').textContent=description;
- $('stepCount').textContent=`Aşama ${editor.phase+1}/6`;
+ $('stepCount').textContent=editor.singleEdit?'Tek özellik düzenleniyor':`Aşama ${editor.phase+1}/6`;
  helper.visible=true;
  planetInfo.style.display='block';
  $('planetInfoText').textContent=conciseLabels[editor.phase];
@@ -437,7 +446,7 @@ function updateHelpers(){if(!editor)return;
  }
 }
 function stopPhysics(){running=false;acc=0;$('play').textContent='▶ Başlat'}
-function beginEditor(existing,e){
+function beginEditor(existing,e,editPhase=null){
  if(editor)finishEditor(false);
  stopPhysics();
  const candidate=existing||makeBody(1.6,planetColors[bodies.length%planetColors.length],new THREE.Vector3(0,originHeight,0),new THREE.Vector3());
@@ -445,7 +454,7 @@ function beginEditor(existing,e){
  // Düzenleme, gezegenin mevcut konumundan ve mevcut hızından başlar.
  // Fareye tıklandığı an bir konum/hız sıçraması oluşmaması için
  // fare konumunun düzlem üzerindeki başlangıç karşılığını saklıyoruz.
- editor={existing:!!existing,b:candidate,original,phase:0,
+ editor={existing:!!existing,b:candidate,original,phase:editPhase===null?0:editPhase,singleEdit:existing&&editPhase!==null,
    anchorY:e.clientY,anchorPos:candidate.p.clone(),anchorV:candidate.v.clone(),
    anchorRadius:candidate.r,anchorPlane:onPlane(e,0)};
  controls.enabled=false;renderer.domElement.style.cursor='none';
@@ -483,6 +492,7 @@ function updateFromMouse(e){if(!editor)return;
 }
 function advance(e){if(!editor)return;
  updateFromMouse(e);const ed=editor;
+ if(ed.singleEdit){finishEditor(true);return}
  if(ed.phase===5)return;
  ed.phase++;
  ed.anchorY=e.clientY;
@@ -556,8 +566,8 @@ canvas.addEventListener('contextmenu',e=>{
  $('copyPlanet').style.display=found?'block':'none';
  $('deletePlanet').style.display=found?'block':'none';
  $('pastePlanet').disabled=!copiedPlanet;
- const left=Math.min(e.clientX,innerWidth-170);
- const top=Math.min(e.clientY,innerHeight-58);
+ const left=Math.min(e.clientX,innerWidth-235);
+ const top=Math.min(e.clientY,innerHeight-165);
  planetMenu.style.left=Math.max(4,left)+'px';
  planetMenu.style.top=Math.max(4,top)+'px';
  planetMenu.style.display='block';
@@ -599,7 +609,7 @@ window.addEventListener('keydown',e=>{
  // Enter, hangi aşamada olunursa olunsun o anki ayarları kesinleştirir.
  // Henüz hız aşamasına geçilmediyse yeni gezegenin başlangıç hızı sıfırdır.
  if((e.ctrlKey||e.metaKey)&&e.code==='KeyC'){
-   const b=editor?editor.b:(hoveredBody||selectedBody);
+   const b=editor?editor.b:(selectedBody||hoveredBody);
    if(b&&bodies.includes(b)){e.preventDefault();copyPlanet(b)}
    return;
  }
