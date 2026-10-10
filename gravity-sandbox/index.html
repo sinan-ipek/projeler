@@ -182,9 +182,15 @@ let menuPointer=null;
 const planetMenu=$('planetMenu');
 function closePlanetMenu(){planetMenu.style.display='none';menuBody=null;menuPoint=null;menuPointer=null}
 // Seçim işareti: gezegenin çevresindeki ince, ışıklı 3B halka.
-const selectionRing=new THREE.Mesh(
- new THREE.TorusGeometry(1,0.075,10,100),
- new THREE.MeshBasicMaterial({color:0x203b60,depthTest:false,transparent:true,opacity:.98})
+// Çizgi ekranda daima 1 piksel kalınlıkta; gezegenin boyutu yalnız yarıçapı etkiler.
+const selectionPoints=[];
+for(let i=0;i<128;i++){
+ const angle=i*Math.PI*2/128;
+ selectionPoints.push(new THREE.Vector3(Math.cos(angle),Math.sin(angle),0));
+}
+const selectionRing=new THREE.LineLoop(
+ new THREE.BufferGeometry().setFromPoints(selectionPoints),
+ new THREE.LineBasicMaterial({color:0x203b60,depthTest:false,transparent:true,opacity:.98})
 );
 selectionRing.renderOrder=100;selectionRing.visible=false;scene.add(selectionRing);
 function selectPlanet(body){selectedBody=body;selectionRing.visible=!!body}
