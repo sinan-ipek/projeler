@@ -1,7 +1,7 @@
 /* İstatistik altyapısı — GoatCounter hesap kodu bağlanana kadar pasiftir. */
 (() => {
   'use strict';
-  const code = ''; // Hesap kurulduğunda yalnızca herkese açık GoatCounter site kodu yazılacak.
+  const code = 'sinan-ipek'; // Hesap kurulduğunda yalnızca herkese açık GoatCounter site kodu yazılacak.
   const valid = /^[a-z0-9-]{2,64}$/.test(code);
   window.SI_ANALYTICS = {code: valid ? code : '', ready: valid};
   if (!valid || location.pathname.startsWith('/projeler/istatistik')) return;
