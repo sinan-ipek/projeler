@@ -575,7 +575,8 @@ function createPlanetAt(e){
  if(editor)finishEditor(false);
  const largest=bodies.reduce((best,b)=>!best||b.m>best.m?b:best,null);
  const pos=new THREE.Vector3(clamp(point.x,-88,88),0,clamp(point.z,-88,88));
- const body=makeBody(1.4,0x499ef6,pos,new THREE.Vector3());
+ const color=planetColors[Math.floor(Math.random()*planetColors.length)];
+ const body=makeBody(1.4,color,pos,new THREE.Vector3());
  if(largest){
   const dx=pos.x-largest.p.x,dz=pos.z-largest.p.z;
   const distance=Math.hypot(dx,dz);
