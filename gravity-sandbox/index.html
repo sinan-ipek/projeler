@@ -100,7 +100,7 @@ button:hover{background:#f5f8fc}
     <ul>
       <li><strong>▶ / ❚❚ veya Boşluk:</strong> Başlat ya da duraklat.</li>
       <li><strong>Sıfırla:</strong> Başlangıçtaki gezegenlere dön.</li>
-      <li><strong>Yörünge:</strong> Gezegenlerin izlerini göster veya gizle.</li><li><strong>Hızlar:</strong> Tüm gezegenlerin hız vektörlerini oklarla gösterir; tekrar tıklayınca gizler.</li><li><strong>Yapışma:</strong> Temasta iki gezegen yaklaşık 0,7 saniyelik kaynaşma ve esneme animasyonuyla birleşir. Açıkken birbirine değen gezegenler birleşir. Kütleleri toplanır; konumları kütle merkezine, hızları momentumun korunmasına göre hesaplanır. Renkleri kütlelerine göre karıştırılır. Tekrar tıklarsan birleşme kapanır.</li>
+      <li><strong>Yörünge:</strong> Gezegenlerin izlerini göster veya gizle.</li><li><strong>Hızlar:</strong> Tüm gezegenlerin hız vektörlerini oklarla gösterir; tekrar tıklayınca gizler.</li><li><strong>Yapışma:</strong> Açıkken birbirine değen gezegenler birleşir. Kütleleri toplanır; konumları kütle merkezine, hızları momentumun korunmasına göre hesaplanır. Renkleri kütlelerine göre karıştırılır. Tekrar tıklarsan birleşme kapanır.</li>
       <li><strong>Kısa sürgüler:</strong> Animasyon hızını ve yörünge izi uzunluğunu ayarla.</li>
       <li><strong>Kırmızı hız oku:</strong> Hesaplanan kaçış hızı aşıldı.</li>
     </ul>
@@ -351,7 +351,7 @@ function updateTrail(b){
  b.g.setDrawRange(0,n);
  b.trace.visible=trailsVisible;
 }
-function init(){clearMergeAnimations();closePlanetMenu();selectPlanet(null);hoveredBody=null;if(editor)finishEditor(false);for(const b of bodies)removeBody(b);
+function init(){closePlanetMenu();selectPlanet(null);hoveredBody=null;if(editor)finishEditor(false);for(const b of bodies)removeBody(b);
  bodies=[
  makeBody(4.3,0xf4bb40,new THREE.Vector3(0,originHeight,0),new THREE.Vector3()),
  makeBody(1.4,0x499ef6,new THREE.Vector3(24,originHeight,0),new THREE.Vector3(0,0,12)),
@@ -371,53 +371,6 @@ function accelerations(){
  return a;
 }
 // Tam esnek olmayan çarpışma: kütle ve toplam doğrusal momentum korunur.
-// Birleşme sonucu fiziksel olarak anında oluşur; görüntüsü 0,7 saniyede kaynaşır.
-const mergeAnimations=[];
-function beginMergeAnimation(a,b,result){
- const ghosts=[a,b].map(source=>{
-  const mesh=new THREE.Mesh(sphere,new THREE.MeshStandardMaterial({color:source.color,roughness:.72}));
-  mesh.position.copy(source.p);mesh.scale.setScalar(source.r);mesh.castShadow=true;
-  scene.add(mesh);
-  return {mesh,from:source.p.clone(),radius:source.r};
- });
- result.mesh.visible=false;
- mergeAnimations.push({result,ghosts,elapsed:0,duration:.7});
-}
-function animateMerges(dt){
- for(let i=mergeAnimations.length-1;i>=0;i--){
-  const item=mergeAnimations[i];
-  item.elapsed+=dt;
-  const t=Math.min(1,item.elapsed/item.duration);
-  const smooth=t*t*(3-2*t);
-  const target=item.result.p;
-  // İlk yarıda iki eski küre merkeze yaklaşırken hafifçe küçülür.
-  for(const ghost of item.ghosts){
-   const u=Math.min(1,t/.68);
-   ghost.mesh.position.lerpVectors(ghost.from,target,u*u*(3-2*u));
-   const factor=1-.78*u*u*(3-2*u);
-   ghost.mesh.scale.setScalar(ghost.radius*factor);
-   ghost.mesh.visible=t<.68;
-  }
-  // Yeni küre önce esneyerek belirir, sonra hafifçe salınıp yuvarlaklaşır.
-  if(bodies.includes(item.result)&&t>=.34){
-   const appear=Math.min(1,(t-.34)/.31);
-   const bounce=t<.65?0:Math.sin((t-.65)/.35*Math.PI*2)*Math.pow(1-(t-.65)/.35,2)*.055;
-   const stretch=t<.65?.16*(1-appear):.08*Math.pow(1-(t-.65)/.35,2);
-   item.result.mesh.visible=true;
-   const r=item.result.r*Math.max(.12,appear)*(1+bounce);
-   item.result.mesh.scale.set(r*(1+stretch),r*(1-stretch*.5),r*(1-stretch*.5));
-  }
-  if(t>=1||!bodies.includes(item.result)){
-   for(const ghost of item.ghosts){scene.remove(ghost.mesh);ghost.mesh.material.dispose()}
-   if(bodies.includes(item.result)){item.result.mesh.visible=true;item.result.mesh.scale.setScalar(item.result.r)}
-   mergeAnimations.splice(i,1);
-  }
- }
-}
-function clearMergeAnimations(){
- for(const item of mergeAnimations)for(const ghost of item.ghosts){scene.remove(ghost.mesh);ghost.mesh.material.dispose()}
- mergeAnimations.length=0;
-}
 function mergeTouchingBodies(){
  let merged=true;
  while(merged){
@@ -435,7 +388,6 @@ function mergeTouchingBodies(){
    const wasSelected=selectedBodies.has(a)||selectedBodies.has(b);
    const newBody=makeBody(radius,color,pos,vel);
    newBody.m=total;
-   beginMergeAnimation(a,b,newBody);
    bodies.splice(j,1);bodies.splice(i,1,newBody);
    selectedBodies.delete(a);selectedBodies.delete(b);
    if(wasSelected)selectedBodies.add(newBody);
@@ -793,7 +745,7 @@ function animate(now){requestAnimationFrame(animate);
  const delta=Math.min((now-previous)/1000,.05);previous=now;
  if(running&&!editor){acc+=delta*animationSpeed;let n=0;while(acc>=DT&&n<40){step();acc-=DT;n++}if(n===40)acc=0}
  for(const b of bodies)updateVisual(b);
- controls.update();updateSelectionRing();updatePlanetInfo();animateMerges(delta);renderer.render(scene,camera);updateLens();
+ controls.update();updateSelectionRing();updatePlanetInfo();renderer.render(scene,camera);updateLens();
 }
 init();requestAnimationFrame(animate);
 } catch(error){const box=document.getElementById('error');box.style.display='block';box.textContent='3D motor yüklenemedi: '+error.message+'. İnternet bağlantısını ve WebGL desteğini kontrol edin.';console.error(error)}
