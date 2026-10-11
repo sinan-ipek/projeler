@@ -63,11 +63,16 @@ button:hover{background:#f5f8fc}
 </head>
 <body>
 <div id="viewport"></div>
-<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleForces" type="button" aria-pressed="false">Kuvvetler</button><button id="toggleCenter" type="button" aria-pressed="false">Kütle Merkezi</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="toggleSurface" type="button" aria-pressed="false">Uzay</button><button id="toggleFieldArrows" type="button" aria-pressed="false">Alan Okları</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
+<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleForces" type="button" aria-pressed="false">Kuvvetler</button><button id="toggleCenter" type="button" aria-pressed="false">Kütle Merkezi</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="toggleSurface" type="button" aria-pressed="false">Uzay</button><button id="toggleFriction" type="button" aria-pressed="false" style="display:none">Sürtünmesiz</button><button id="toggleFieldArrows" type="button" aria-pressed="false">Alan Okları</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
 <div id="settings" aria-label="Kamera ve simülasyon kontrolleri">
   <div class="cameras">
     <button id="topView" type="button" title="Üstten görüş" aria-label="Üstten görüş">Üstten</button>
     <button id="sideView" type="button" title="Yandan görüş" aria-label="Yandan görüş">Yandan</button>
+  </div>
+  <div class="mini-slider" id="frictionSlider" title="Yüzey sürtünmesi" style="display:none">
+    <label for="frictionRange">Sürtünme miktarı</label>
+    <input id="frictionRange" type="range" min="0" max="100" step="1" value="45" aria-label="Sürtünme miktarı">
+    <output id="frictionValue" for="frictionRange">45%</output>
   </div>
   <div class="mini-slider" title="Animasyon hızı">
     <label for="speedRange">Animasyon hızı</label>
@@ -382,6 +387,7 @@ function addPreset(id,center){
   surfaceMode=true;
   $('toggleSurface').setAttribute('aria-pressed','true');
   $('toggleSurface').textContent='Gezegen';
+  updateFrictionControls();
   gravityField.visible=fieldArrowsVisible;
   // Tüm atışlar x-y düzleminde, z=0 üzerinde gerçekleşir.
   // Hızlar g=12 ölçeğinde sınıf deneylerine uygun uçuşlar verir.
@@ -510,6 +516,14 @@ let forcesVisible=false;
 let centerVisible=false;
 let mergingEnabled=false;
 let surfaceMode=false;
+let frictionEnabled=false;
+let frictionAmount=.45;
+function updateFrictionControls(){
+ $('toggleFriction').style.display=surfaceMode?'':'none';
+ $('toggleFriction').textContent=frictionEnabled?'Sürtünmeli':'Sürtünmesiz';
+ $('toggleFriction').setAttribute('aria-pressed',String(frictionEnabled));
+ $('frictionSlider').style.display=surfaceMode&&frictionEnabled?'flex':'none';
+}
 let fieldArrowsVisible=false;
 const SURFACE_GRAVITY=12,GROUND_BOUNCE=.72;
 // Paralel ve eşit aşağı yönlü alanı ince çizgiler ve ok uçlarıyla göster.
@@ -687,7 +701,8 @@ function mergeTouchingBodies(){
 }
 function resolveGroundCollisions(){
  for(const b of bodies){
-  if(b.p.y>=b.r)continue;
+  const touching=b.p.y<=b.r+1e-5;
+  if(!touching)continue;
   b.p.y=b.r;
   if(mergingEnabled){
    // Zemine yapışma: düşey hızı ve yatay kaymayı tamamen durdur.
@@ -695,6 +710,14 @@ function resolveGroundCollisions(){
   }else if(b.v.y<0){
    b.v.y=-b.v.y*GROUND_BOUNCE;
    if(b.v.y<.4)b.v.y=0;
+  }
+  if(frictionEnabled&&!mergingEnabled){
+   // Coulomb tipi sürtünme: yalnızca zemine temas ederken yatay hız azaltılır.
+   // 0–100% sürgü, sürtünme katsayısını 0–1.5 aralığında ayarlar.
+   const speed=Math.hypot(b.v.x,b.v.z);
+   const loss=frictionAmount*1.5*SURFACE_GRAVITY*DT;
+   if(speed<=loss){b.v.x=0;b.v.z=0}
+   else if(speed>0){const ratio=(speed-loss)/speed;b.v.x*=ratio;b.v.z*=ratio}
   }
  }
 }
@@ -1019,11 +1042,20 @@ $('toggleFieldArrows').addEventListener('click',()=>{
  $('toggleFieldArrows').textContent=fieldArrowsVisible?'Alan Oklarını Gizle':'Alan Okları';
  gravityField.visible=surfaceMode&&fieldArrowsVisible;
 });
+$('toggleFriction').addEventListener('click',()=>{
+ frictionEnabled=!frictionEnabled;
+ updateFrictionControls();
+});
+$('frictionRange').addEventListener('input',e=>{
+ frictionAmount=Number(e.target.value)/100;
+ $('frictionValue').textContent=e.target.value+'%';
+});
 $('toggleSurface').addEventListener('click',()=>{
  surfaceMode=!surfaceMode;
  $('toggleSurface').setAttribute('aria-pressed',String(surfaceMode));
  $('toggleSurface').textContent=surfaceMode?'Gezegen':'Uzay';
  gravityField.visible=surfaceMode&&fieldArrowsVisible;
+ updateFrictionControls();
  if(surfaceMode)resolveGroundCollisions();
  acc=0;
  $('message').textContent=surfaceMode?'Gezegen yüzeyi: sabit aşağı çekim · Yapışma: zemine tutunma':'Uzay: cisimler birbirlerini çekiyor';
