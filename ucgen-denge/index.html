@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Üçgen Denge Laboratuvarı</title><style>
+:root{color-scheme:dark;font-family:Inter,system-ui,Segoe UI,sans-serif}*{box-sizing:border-box}body{margin:0;background:#09111e;color:#e6edf7}#app{height:100vh;min-height:600px;position:relative}canvas{display:block;width:100%;height:100%;touch-action:none}.panel{position:absolute;top:18px;left:18px;width:min(335px,calc(100vw - 36px));background:#101e32ed;border:1px solid #354761;border-radius:17px;padding:17px;box-shadow:0 12px 40px #0007;backdrop-filter:blur(12px)}h1{font-size:19px;margin:0 0 6px}p{font-size:12px;line-height:1.55;color:#a5bbd2;margin:7px 0 12px}.small{font-size:12px;color:#b2c6d9}.line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:11px 0}.line label{font-size:13px}.value{font-variant-numeric:tabular-nums;color:#9debd3;font-weight:700}input[type=range]{width:100%;accent-color:#59cfaa}button{border:1px solid #48617b;border-radius:10px;padding:10px 12px;color:#e8f4ff;background:#1d334f;cursor:pointer;font-weight:650}button:hover{background:#2d4c6e}.main{background:#167c73;border-color:#33bba9}.btns{display:flex;gap:8px;flex-wrap:wrap}.btns button{flex:1}#status{background:#14243a;border-radius:10px;padding:10px;font-size:12px;margin-top:12px;line-height:1.5}#hint{position:absolute;right:18px;bottom:18px;text-align:right;font-size:12px;color:#acbdd0;background:#0e1c30ca;padding:11px;border-radius:10px;pointer-events:none}#editor{display:none;position:absolute;right:20px;top:20px;background:#14243a;border:1px solid #45617a;border-radius:12px;padding:12px;width:205px}#editor h3{margin:0 0 6px;font-size:14px}#editor input{width:100%;margin-top:8px}#editor button{margin-top:8px;width:100%}.toggle{display:flex;align-items:center;gap:8px;font-size:12px;margin-top:10px}.toggle input{accent-color:#57d5ad}.foot{color:#8199b2;font-size:11px;margin-top:10px}@media(max-width:700px){.panel{top:8px;left:8px;padding:11px;width:270px}h1{font-size:16px}#hint{font-size:10px;right:8px;bottom:8px}#editor{right:8px;top:345px}}
+#pivotPopup{display:none;position:absolute;z-index:10;left:50%;top:50%;transform:translate(-50%,-50%);width:min(510px,90vw);padding:17px 19px;background:#14243af7;border:1px solid #5a819b;border-radius:18px;box-shadow:0 20px 75px #000b}#pivotPopup h2{font-size:17px;margin:0 0 5px}#pivotPopup p{margin:0 0 9px}#pivotSvg{width:100%;aspect-ratio:1.3;background:#0c1a2b;border:1px solid #35506e;border-radius:10px;touch-action:none;cursor:crosshair}.pivotBack{display:none;position:absolute;inset:0;z-index:9;background:#0005}#pivotPopup .small{margin-top:6px}#app{overflow:hidden}#hint{max-width:360px}
+
+/* Geometri editörü */
+#pivotPopup{width:min(1040px,94vw);height:min(850px,94vh);padding:18px 22px;display:none;flex-direction:column;gap:8px}
+#pivotPopup[style*="display: block"]{display:flex!important}
+#pivotPopup h2{margin:0;font-size:20px}#pivotPopup p{margin:0 0 2px}
+#pivotSvg{width:100%;height:100%;flex:1;min-height:200px;aspect-ratio:auto;cursor:crosshair;user-select:none}
+#geoToolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#geoToolbar button,#geoToolbar select{padding:8px 11px;font-size:12px;border:1px solid #48617b;border-radius:9px;background:#1d334f;color:#e8f4ff}body.day #geoToolbar select{background:#e3eef9;color:#15324a}#geoToolbar button.selected{border-color:#67f3cf;background:#126659;color:white}
+#geoToolbar .toolSpacer{flex:1}#geoHelp{font-size:12px;color:#bdd0e6;min-height:18px}
+#pivotPopup .small{margin-top:0}#themeBtn{width:100%;margin-top:12px}
+body.day{background:#dbeaf4;color:#1b334d}body.day .panel,body.day #editor{background:#f8fbffed;color:#1c3148;border-color:#b3c9dc}
+body.day .panel p,body.day .small,body.day .foot{color:#516980}body.day #status{background:#deebf5;color:#223c52}
+body.day button{background:#e3eef9;color:#15324a;border-color:#a0bbd0}body.day button.main{background:#187c70;color:#fff}
+body.day #hint{background:#f5faffdd;color:#274661}body.day #pivotPopup{background:#f8fcff;color:#16334a;border-color:#9ab9d0}
+body.day #pivotSvg{background:#f0f6fd;border-color:#bdd1e1}body.day #geoHelp{color:#3e5e77}
+@media(max-width:700px){#pivotPopup{width:96vw;height:93vh;padding:11px}#pivotPopup h2{font-size:16px}#geoToolbar button{padding:7px;font-size:11px}}
+
+.geo-context,.geo-weight{position:absolute;z-index:20;display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid #8aa6bf;border-radius:10px;background:#eff7ff;color:#17364b;box-shadow:0 10px 30px #0005}.geo-context[hidden],.geo-weight[hidden]{display:none}.geo-context button,.geo-weight button{padding:7px 14px;text-align:left;color:#17364b;background:#dcecf8;border:1px solid #a2bed3;border-radius:7px}.geo-weight input{width:110px;margin:7px}#pivotPopup{position:absolute}#pivotSvg{touch-action:none}
+</style></head><body><div id="app"><div class="panel"><h1>△ Üçgen Denge Laboratuvarı</h1><p>Üçgenin görünümünü seç, asılma noktasını düzenle, köşelere kütle ekle ve yerçekiminin dengeyi nasıl belirlediğini gör.</p><div class="line"><label>Simülasyon</label><span id="runLabel" class="value">Durduruldu</span></div><div class="btns"><button id="run" class="main">▶ Simülasyona başla</button><button id="reset">↺ Başlangıç konumu</button></div><div class="line"><label>Yerçekimi etkisi</label><span id="gravValue" class="value">1,0×</span></div><input id="grav" type="range" min="0" max="2" step="0.1" value="1"><div class="line"><label>Sönümleme</label><span id="dampValue" class="value">0,9</span></div><input id="damp" type="range" min="0" max="3" step="0.1" value="0.9"><label class="toggle"><input id="showCOM" type="checkbox">Gerçek ağırlık merkezini göster</label><label class="toggle"><input id="freePivot" type="checkbox" checked>G noktasını şekillerin içinde sınırla</label><button id="shapeBtn" aria-pressed="true">Tel çerçeve</button><button id="themeBtn">Gece modu</button><div id="status">Asılma noktasını değiştirip başlatabilirsin.</div><div class="foot">Model: 1 g/birim² yüzey yoğunluğu; doğru parçasında varsayılan çizgisel yoğunluk 0,08 g/birimdir; nokta kütleleri isteğe bağlıdır. Kütle dağılımı, yerçekimi torku ve atalet tensörü hesaplanır.</div></div><div id="editor"><h3 id="editTitle">A köşesi</h3><span class="small">Köşe kütlesi (gram)</span><div class="line"><button id="minus">−</button><span class="value" id="massLabel">1 g</span><button id="plus">+</button></div><input id="massSlider" type="range" min="0" max="20" step="1" value="1"><button id="close">Kapat</button></div><div id="hint">🖱 Üçgeni sürükle ve fırlat: ataletle dönsün · Boşlukta sürükle: kamera<br>Shift + üçgeni sürükle: üçgeni ve askıyı taşı<br>G noktasına tıkla: 2B geometri editörünü aç<br>Köşeye tıkla: kütleyi düzenle · Tekerlek: yakınlaş</div><div class="pivotBack" id="pivotBack"></div><section id="pivotPopup" role="dialog" aria-label="Geometri editörü"><h2>Geometri editörü</h2><div id="geoToolbar"><button data-tool="select" class="selected">Seç</button><button data-tool="pivot">G yerleştir</button><button data-tool="midpoint">Orta nokta</button><select id="newShape" aria-label="Şekil seç"><option value="segment">Doğru parçası</option><option value="point">Nokta</option><option value="triangle">Üçgen</option><option value="quadrilateral">Dörtgen</option><option value="square">Kare</option><option value="rectangle">Dikdörtgen</option><option value="trapezoid">Yamuk</option><option value="circle">Daire</option><option value="pentagon">Beşgen</option><option value="hexagon">Altıgen</option></select><button id="addShape" title="Seçilen öğeyi ekle">+</button><button id="clearGeo">Temizle</button><span class="toolSpacer"></span><button id="closeGeo">Kapat</button></div><div id="geoContext" class="geo-context" hidden><button id="ctxWeight">Ağırlık…</button><button id="ctxUnion">Birleştir</button><button id="ctxDelete">Sil</button></div><div id="weightPopup" class="geo-weight" hidden><label>Ağırlık (g) <input id="weightInput" type="number" min="0" max="100000" step="0.1" value="0"></label><button id="weightSave">Uygula</button><button id="weightCancel">İptal</button></div><svg id="pivotSvg" viewBox="0 0 800 560" preserveAspectRatio="none" aria-label="Büyütülebilir üçgen geometri çizim editörü"></svg></section></div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"}}</script>
+<script src="https://cdn.jsdelivr.net/npm/polygon-clipping@0.15.7/dist/polygon-clipping.umd.min.js"></script><script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const app=document.querySelector('#app'),scene=new THREE.Scene();scene.background=new THREE.Color(0x09111e);
+const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.1,150);camera.position.set(5.9,5.1,8.4);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);app.prepend(renderer.domElement);
+const orbit=new OrbitControls(camera,renderer.domElement);orbit.enableDamping=true;orbit.target.set(0,0,0);orbit.minDistance=2;orbit.maxDistance=32;
+scene.add(new THREE.HemisphereLight(0xa9c6ff,0x314150,2));const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(2,8,5);scene.add(light);
+const grid=new THREE.GridHelper(30,30,0x314c6a,0x1b3046);grid.position.y=-3.2;scene.add(grid);const axes=new THREE.AxesHelper(.6);axes.position.set(-3,-3,-3);scene.add(axes);
+const themeBtn=document.querySelector('#themeBtn');let daytime=true;
+function applyTheme(){document.body.classList.toggle('day',daytime);scene.background.set(daytime?0xdcecf8:0x09111e);grid.material.color.set(daytime?0x7999ba:0x314c6a);cableMat.color.set(daytime?0x000000:0x66eccc);themeBtn.textContent=daytime?'Gece modu':'Gündüz modu';}
+themeBtn.addEventListener('click',()=>{daytime=!daytime;applyTheme()});
+const V=[new THREE.Vector3(-2,-1.05,0),new THREE.Vector3(2,-.88,0),new THREE.Vector3(.15,1.9,0)];const colors=[0xff797b,0xffc36b,0x8fb3ff];const names=['A','B','C'];const masses=[1,1,1];let pivot=new THREE.Vector3(0,0,0);let active=false,edited=-1,dragPivot=false;let q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/2);let omega=new THREE.Vector3();const anchor=new THREE.Vector3(0,1.3,0);const group=new THREE.Group();scene.add(group);
+const legacyRods=[];let showFilled=true;const clickable=[];const rodMat=new THREE.MeshStandardMaterial({color:0xddeeff,metalness:.6,roughness:.26});const edgepts=[V[0],V[1],V[2],V[0]];
+for(let i=0;i<3;i++){let a=V[i],b=V[(i+1)%3],d=b.clone().sub(a),mesh=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,d.length(),12),rodMat);mesh.position.copy(a).add(b).multiplyScalar(.5);mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());group.add(mesh);mesh.userData.frame=true;clickable.push(mesh);const handle=new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,b.clone().sub(a).length(),8),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));handle.position.copy(mesh.position);handle.quaternion.copy(mesh.quaternion);handle.userData.frame=true;group.add(handle);clickable.push(handle);legacyRods.push({mesh,handle,i})}
+// Gösterim seçeneği: kütlesiz yüzey yalnızca görseldir ve kenarlara ek olarak sürüklenebilir.
+const faceGeometry=new THREE.BufferGeometry();
+faceGeometry.setAttribute('position',new THREE.Float32BufferAttribute(V.flatMap(v=>[v.x,v.y,v.z]),3));
+faceGeometry.setIndex([0,1,2]);faceGeometry.computeVertexNormals();
+const face=new THREE.Mesh(faceGeometry,new THREE.MeshStandardMaterial({color:0x51b9d6,side:THREE.DoubleSide,transparent:true,opacity:.28,depthWrite:false,metalness:.05,roughness:.55}));
+face.visible=true;face.userData.frame=true;group.add(face);clickable.push(face);
+const shapeBtn=document.querySelector('#shapeBtn');
+shapeBtn.addEventListener('click',()=>{showFilled=!showFilled;face.visible=showFilled&&geoDocument.shapes.includes(initialShape);shapeBtn.textContent=showFilled?'Tel çerçeve':'İçi dolu üçgen';shapeBtn.setAttribute('aria-pressed',String(showFilled));});
+const spheres=[],labels=[];for(let i=0;i<3;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(.16,24,16),new THREE.MeshStandardMaterial({color:colors[i],roughness:.3,metalness:.15}));s.position.copy(V[i]);s.userData.corner=i;group.add(s);clickable.push(s);spheres.push(s);const sprite=makeLabel(names[i]);sprite.position.copy(V[i]).add(new THREE.Vector3(0,.34,0));group.add(sprite);labels.push(sprite)}
+function makeLabel(text){const c=document.createElement('canvas');c.width=128;c.height=64;const cx=c.getContext('2d');cx.fillStyle='#eaf2ff';cx.font='bold 42px sans-serif';cx.textAlign='center';cx.fillText(text,64,47);let t=new THREE.CanvasTexture(c),s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false}));s.scale.set(.4,.2,1);return s}
+const pivotBall=new THREE.Mesh(new THREE.SphereGeometry(.125,24,24),new THREE.MeshStandardMaterial({color:0x49ffcd,emissive:0x086650,emissiveIntensity:.55}));scene.add(pivotBall);pivotBall.userData.pivot=true;clickable.push(pivotBall);const Glabel=makeLabel('G');scene.add(Glabel);
+const comMarker=new THREE.Mesh(new THREE.SphereGeometry(.095,18,18),new THREE.MeshBasicMaterial({color:0xff3fe2}));scene.add(comMarker);const cableMat=new THREE.LineDashedMaterial({color:0x66eccc,dashSize:.12,gapSize:.08,transparent:true,opacity:.9});let cable=new THREE.Line(new THREE.BufferGeometry(),cableMat);scene.add(cable);
+const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();function setPointer(e){const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1)}
+function totalMass(){return allMassEntries().reduce((a,e)=>a+e.m,0)}function com(){const es=allMassEntries(),t=totalMass();if(t<=0)return pivot.clone();return es.reduce((v,e)=>v.addScaledVector(e.pos,e.m/t),new THREE.Vector3())}
+function update(){group.position.copy(anchor);group.quaternion.copy(q);group.position.add(pivot.clone().applyQuaternion(q).negate());pivotBall.position.copy(anchor);Glabel.position.copy(anchor).add(new THREE.Vector3(.1,.3,0));comMarker.visible=document.querySelector('#showCOM').checked&&totalMass()>0;comMarker.position.copy(com().sub(pivot).applyQuaternion(q).add(anchor));cable.geometry.dispose();cable.geometry=new THREE.BufferGeometry().setFromPoints([anchor.clone().add(new THREE.Vector3(0,2.6,0)),anchor]);cable.computeLineDistances();spheres.forEach((s,i)=>s.scale.setScalar(.7+Math.cbrt(Math.max(0,masses[i]))*.3));document.querySelector('#status').innerHTML=`Toplam kütle: <b>${totalMass()} g</b> · G ile kütle merkezinin uzaklığı: <b>${com().distanceTo(pivot).toFixed(3)}</b> birim<br>${totalMass()===0?'Kütle yok: yerçekimi torku da yok.':com().distanceTo(pivot)<.012?'✓ Askı noktası kütle merkezinde: yerçekimi torku sıfır.':'Kütle merkezi askının dışında: üçgen yerçekimiyle dönebilir.'}`}
+function inertia(){// 3x3 atalet tensörü, kütlesiz tel varsayımı. Numerik olarak pozitif tanımlı yapmak için küçük düzenleyici.
+ const I=new THREE.Matrix3().set(.00001,0,0,0,.00001,0,0,0,.00001);const a=I.elements;allMassEntries().forEach(({pos:v,m})=>{let r=v.clone().sub(pivot),x=r.x,y=r.y,z=r.z;a[0]+=m*(y*y+z*z);a[4]+=m*(x*x+z*z);a[8]+=m*(x*x+y*y);a[3]-=m*x*y;a[1]-=m*x*y;a[6]-=m*x*z;a[2]-=m*x*z;a[7]-=m*y*z;a[5]-=m*y*z});return I}
+// Eşit kütleli noktasal yüklerde düzgün dönüş için dünya koordinatlarındaki açısal momentum formu.
+function tick(dt){if(!active||totalMass()===0||drag)return;const grav=+document.querySelector('#grav').value*3.4,damp=+document.querySelector('#damp').value;const r=com().sub(pivot).applyQuaternion(q);const torque=r.clone().cross(new THREE.Vector3(0,-grav*totalMass(),0));const R=new THREE.Matrix4().makeRotationFromQuaternion(q),rot=new THREE.Matrix3().setFromMatrix4(R);const It=inertia(),W=rot.clone().multiply(It).multiply(rot.clone().transpose());const L=omega.clone().applyMatrix3(W);let gyro=omega.clone().cross(L);let acc=torque.sub(gyro).addScaledVector(omega,-damp).applyMatrix3(W.clone().invert());omega.addScaledVector(acc,dt);if(omega.length()>20)omega.setLength(20);const angle=omega.length()*dt;if(angle>1e-9){const dq=new THREE.Quaternion().setFromAxisAngle(omega.clone().normalize(),angle);q.premultiply(dq).normalize()}}
+let last=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.04);last=now;for(let i=0;i<4;i++)tick(dt/4);update();orbit.update();renderer.render(scene,camera)}requestAnimationFrame(frame);
+function pause(){active=false;document.querySelector('#run').textContent='▶ Simülasyona devam et';document.querySelector('#runLabel').textContent='Durduruldu'}function toggle(){active=!active;document.querySelector('#run').textContent=active?'⏸ Simülasyonu durdur':'▶ Simülasyona devam et';document.querySelector('#runLabel').textContent=active?'Çalışıyor':'Durduruldu';}document.querySelector('#run').onclick=toggle;
+document.querySelector('#reset').onclick=()=>{ // Yalnızca duruşu sıfırla: kütleler, G ve çalışma durumu değişmez.
+ drag=null;orbit.enabled=true;q.setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/2);omega.set(0,0,0);update();
+};
+for(let id of ['grav','damp'])document.querySelector('#'+id).oninput=e=>document.querySelector('#'+id+'Value').textContent=(+e.target.value).toFixed(1).replace('.',',')+(id==='grav'?'×':'');
+const editor=document.querySelector('#editor');function showEditor(i){edited=i;editor.style.display='block';document.querySelector('#editTitle').textContent=names[i]+' köşesinin kütlesi';syncEditor()}function syncEditor(){document.querySelector('#massLabel').textContent=masses[edited]+' g';document.querySelector('#massSlider').value=masses[edited]}function edit(v){if(edited<0)return;masses[edited]=Math.max(0,Math.min(20,v));cachedMassEntries=null;syncEditor();update()}document.querySelector('#plus').onclick=()=>edit(masses[edited]+1);document.querySelector('#minus').onclick=()=>edit(masses[edited]-1);document.querySelector('#massSlider').oninput=e=>edit(+e.target.value);document.querySelector('#close').onclick=()=>editor.style.display='none';
+// Ortak geometri verisi yerel koordinatlarda tutulur; 2B ve 3B aynı modeli gösterir.
+const popup=document.querySelector('#pivotPopup'),back=document.querySelector('#pivotBack'),svg=document.querySelector('#pivotSvg');
+// İki boyutlu geometri editörü: kamera dönüşümü yerel üçgen koordinatlarını korur.
+const VW=800,VH=560;let geoCenter={x:0,y:0},geoScale=112,geoTool='select',segmentStart=null;
+const geoDocument={segments:[],points:[],shapes:[]};
+const initialShape={id:'initial',type:'triangle',color:0x58bdd3,vertices:V,initial:true,mass:0};geoDocument.shapes.push(initialShape);
+const selectedShapes=new Set();let contextTarget=null;const ctx=document.querySelector('#geoContext');const wp=document.querySelector('#weightPopup');
+function hideMenus(){ctx.hidden=true;wp.hidden=true}
+function pickObject(v){const vertex=geoHitVertex(v);if(vertex)return {kind:'vertex',object:vertex.shape.vertices[vertex.index],shape:vertex.shape,index:vertex.index,vertex};const shape=geoHitShape(v);if(shape)return {kind:'shape',object:shape};for(const point of geoPoints)if(geoDistancePx(v,point)<13)return {kind:'point',object:point};for(const seg of geoSegments){const d=seg.b.clone().sub(seg.a),t=THREE.MathUtils.clamp(v.clone().sub(seg.a).dot(d)/Math.max(1e-9,d.lengthSq()),0,1);if(geoDistancePx(v,seg.a.clone().addScaledVector(d,t))<10)return {kind:'segment',object:seg}}return null}
+function recalcPhysicalMesh(){
+ const alive=geoDocument.shapes.includes(initialShape);
+ for(let i=0;i<3;i++){spheres[i].visible=alive;labels[i].visible=alive;spheres[i].position.copy(V[i]);labels[i].position.copy(V[i]).add(new THREE.Vector3(0,.34,0))}
+ face.visible=alive&&showFilled;const arr=face.geometry.attributes.position;for(let i=0;i<3;i++)arr.setXYZ(i,V[i].x,V[i].y,0);arr.needsUpdate=true;face.geometry.computeVertexNormals();
+ legacyRods.forEach(({mesh,handle,i})=>{const a=V[i],b=V[(i+1)%3],d=b.clone().sub(a),length=d.length();for(const obj of [mesh,handle]){obj.visible=alive;obj.position.copy(a).add(b).multiplyScalar(.5);obj.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.clone().normalize());obj.scale.y=length/obj.geometry.parameters.height}});
+}
+// Uniform surface density (g per square world-unit). 3-point degree-2 triangle
+// quadrature reproduces the exact centre of mass and planar inertia for polygons.
+const SURFACE_DENSITY=1;
+function geometryOfShape(shape){
+ const geom=shape.polygons?new THREE.ShapeGeometry(shape.polygons.flatMap(poly=>{
+  const outer=new THREE.Shape(poly[0].map(([x,y])=>new THREE.Vector2(x,y)));
+  poly.slice(1).forEach(h=>outer.holes.push(new THREE.Path(h.map(([x,y])=>new THREE.Vector2(x,y)))));
+  return [outer];
+ })):new THREE.ShapeGeometry(new THREE.Shape(shape.vertices.map(v=>new THREE.Vector2(v.x,v.y))));
+ return geom;
+}
+function surfaceMassEntries(shape){
+ if(shape.vertices.length<3)return [];
+ const g=geometryOfShape(shape),pos=g.getAttribute('position'),index=g.getIndex(),entries=[];
+ const count=index?index.count:pos.count;
+ for(let k=0;k<count;k+=3){
+  const vertex=j=>{const i=index?index.getX(j):j;return new THREE.Vector3(pos.getX(i),pos.getY(i),0)};
+  const a=vertex(k),b=vertex(k+1),c=vertex(k+2);
+  const area=Math.abs((b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x))/2;
+  if(area<1e-12)continue;
+  const weight=area*SURFACE_DENSITY/3;
+  entries.push({pos:a.clone().multiplyScalar(2/3).addScaledVector(b,1/6).addScaledVector(c,1/6),m:weight});
+  entries.push({pos:b.clone().multiplyScalar(2/3).addScaledVector(a,1/6).addScaledVector(c,1/6),m:weight});
+  entries.push({pos:c.clone().multiplyScalar(2/3).addScaledVector(a,1/6).addScaledVector(b,1/6),m:weight});
+ }
+ g.dispose();return entries;
+}
+let cachedMassEntries=null;
+function allMassEntries(){
+ if(cachedMassEntries)return cachedMassEntries;
+ let entries=[];
+ if(geoDocument.shapes.includes(initialShape))V.forEach((v,i)=>entries.push({pos:v,m:masses[i]}));
+ for(const shape of geoDocument.shapes){
+  entries.push(...surfaceMassEntries(shape));
+  if(shape.mass>0)entries.push({pos:shape.polygons?multiCentroid(shape.polygons):polygonCentroid(shape.vertices),m:shape.mass});
+  if(!shape.initial)for(const v of shape.vertices)if(v.mass>0)entries.push({pos:v,m:v.mass});
+ }
+ for(const seg of geoSegments){const m=seg.mass===null||seg.mass===undefined?seg.a.distanceTo(seg.b)*0.08:seg.mass;if(m>0){const d=seg.b.clone().sub(seg.a);entries.push({pos:seg.a.clone().addScaledVector(d,.2113248654),m:m/2},{pos:seg.a.clone().addScaledVector(d,.7886751346),m:m/2})}}
+ for(const pt of geoPoints)if((pt.mass||0)>0)entries.push({pos:pt,m:pt.mass});
+ cachedMassEntries=entries;return entries;
+}
+function multiCentroid(polys){let area=0,out=new THREE.Vector3();for(const poly of polys)for(let k=0;k<poly.length;k++){const verts=poly[k].map(([x,y])=>new THREE.Vector3(x,y,0));let a=0;for(let i=0;i<verts.length;i++){const u=verts[i],v=verts[(i+1)%verts.length];a+=u.x*v.y-v.x*u.y}a=Math.abs(a)/2*(k===0?1:-1);out.addScaledVector(polygonCentroid(verts),a);area+=a}return area>1e-9?out.divideScalar(area):new THREE.Vector3()}
+function polygonCentroid(v){if(!v.length)return new THREE.Vector3();let twice=0,cx=0,cy=0;for(let i=0;i<v.length;i++){const a=v[i],b=v[(i+1)%v.length],d=a.x*b.y-b.x*a.y;twice+=d;cx+=(a.x+b.x)*d;cy+=(a.y+b.y)*d}if(Math.abs(twice)<1e-10)return v.reduce((r,p)=>r.add(p),new THREE.Vector3()).multiplyScalar(1/v.length);return new THREE.Vector3(cx/(3*twice),cy/(3*twice),0)}
+
+let selectedShape=null,dragVertex=null,dragTransform=null;const shapeNames={triangle:"Üçgen",quadrilateral:"Dörtgen",square:"Kare",rectangle:"Dikdörtgen",trapezoid:"Yamuk",circle:"Daire",pentagon:"Beşgen",hexagon:"Altıgen"};
+const geoSegments=geoDocument.segments,geoPoints=geoDocument.points;
+const geometryLayer=new THREE.Group();group.add(geometryLayer);
+const guideLineMaterial=new THREE.MeshBasicMaterial({color:0xa357b7,depthTest:false});
+const guidePointMaterial=new THREE.MeshBasicMaterial({color:0xffd26f,depthTest:false});
+let geoPan=null,geoDrawDrag=null;
+// Geometri nesneleri üçgenin yerel düzleminde, çerçeve ile birlikte hareket eder.
+function refreshGeometry3D(){
+ while(geometryLayer.children.length){const child=geometryLayer.children[0];geometryLayer.remove(child);child.geometry?.dispose();}
+ const addLine=(a,b)=>{const d=b.clone().sub(a);if(d.lengthSq()<1e-10)return;const mesh=new THREE.Mesh(new THREE.CylinderGeometry(.014,.014,d.length(),10),guideLineMaterial);mesh.position.copy(a).add(b).multiplyScalar(.5);mesh.position.z=.045;mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());mesh.renderOrder=2;geometryLayer.add(mesh)};
+ for(const seg of geoSegments){
+  addLine(seg.a,seg.b);
+  for(const end of [seg.a,seg.b]){
+   const dot=new THREE.Mesh(new THREE.SphereGeometry(.074,14,12),guidePointMaterial);
+   dot.position.copy(end);dot.position.z=.10;dot.renderOrder=4;geometryLayer.add(dot);
+  }
+ }
+ for(const shape of geoDocument.shapes){
+  if(shape.initial)continue;
+  const verts=shape.vertices;
+  if(shape.polygons){for(const poly of shape.polygons){const ring=poly[0];if(ring.length<3)continue;const outer=ring.map(([x,y])=>new THREE.Vector2(x,y));const sh=new THREE.Shape(outer);for(const hole of poly.slice(1))sh.holes.push(new THREE.Path(hole.map(([x,y])=>new THREE.Vector2(x,y))));const mesh=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshBasicMaterial({color:shape.color,side:THREE.DoubleSide,transparent:true,opacity:.24,depthWrite:false}));mesh.position.z=.025;geometryLayer.add(mesh);for(const r of poly)for(let j=0;j<r.length;j++)addLine(new THREE.Vector3(...r[j],0),new THREE.Vector3(...r[(j+1)%r.length],0))}continue}
+  if(verts.length>=3){
+   const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.Float32BufferAttribute(verts.flatMap(v=>[v.x,v.y,.023]),3));
+   const triangles=[];for(let j=1;j<verts.length-1;j++)triangles.push(0,j,j+1);
+   geom.setIndex(triangles);geom.computeVertexNormals();
+   const surface=new THREE.Mesh(geom,new THREE.MeshBasicMaterial({color:shape.color,side:THREE.DoubleSide,transparent:true,opacity:.24,depthWrite:false}));surface.renderOrder=1;geometryLayer.add(surface);
+  }
+  for(let j=0;j<verts.length;j++)addLine(verts[j],verts[(j+1)%verts.length]);
+ }
+ for(const p of geoPoints){const mesh=new THREE.Mesh(new THREE.SphereGeometry(.072,12,10),guidePointMaterial);mesh.position.copy(p);mesh.position.z=.07;mesh.renderOrder=3;geometryLayer.add(mesh)}
+}
+function geometryChanged(){cachedMassEntries=null;recalcPhysicalMesh();refreshGeometry3D();drawPopup();update()}
+
+const sx=x=>VW/2+(x-geoCenter.x)*geoScale,sy=y=>VH/2-(y-geoCenter.y)*geoScale;
+function geoWorld(px,py){return new THREE.Vector3(geoCenter.x+(px-VW/2)/geoScale,geoCenter.y-(py-VH/2)/geoScale,0)}
+function svgPos(e){let r=svg.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*VW,y:(e.clientY-r.top)/r.height*VH}}
+function geoDistancePx(a,b){return Math.hypot((a.x-b.x)*geoScale,(a.y-b.y)*geoScale)}
+function segMid(s){return s.a.clone().add(s.b).multiplyScalar(.5)}
+function geoSnap(v){let best=v,dist=13;const candidates=[...V,...geoPoints,...geoDocument.shapes.flatMap(s=>s.vertices),...geoSegments.flatMap(s=>[s.a,s.b,segMid(s)])];if(segmentStart)candidates.push(segmentStart);for(const p of candidates){let d=geoDistancePx(v,p);if(d<dist){best=p;dist=d}}return best.clone()}
+function svgCircle(v,r,fill,stroke='#ffffff',extra=''){return `<circle cx="${sx(v.x)}" cy="${sy(v.y)}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="1.7" ${extra}/>`}
+function shapeBounds(shape){const vs=shape.vertices;return {xmin:Math.min(...vs.map(v=>v.x)),xmax:Math.max(...vs.map(v=>v.x)),ymin:Math.min(...vs.map(v=>v.y)),ymax:Math.max(...vs.map(v=>v.y))}}
+function getBoxHandles(shape){const b=shapeBounds(shape),xm=(b.xmin+b.xmax)/2,ym=(b.ymin+b.ymax)/2;return [{x:b.xmin,y:b.ymin},{x:b.xmax,y:b.ymin},{x:b.xmax,y:b.ymax},{x:b.xmin,y:b.ymax},{x:xm,y:b.ymax+42/geoScale}]}
+function syncPolygon(shape){if(shape.polygons){const ring=shape.polygons[0]?.[0];if(ring&&ring.length===shape.vertices.length)shape.vertices.forEach((v,i)=>ring[i]=[v.x,v.y]);}}
+function hitBoxHandle(v){for(const shape of [...selectedShapes].reverse()){if(!geoDocument.shapes.includes(shape))continue;const handles=getBoxHandles(shape);for(let i=0;i<handles.length;i++){if(geoDistancePx(v,handles[i])<12)return {shape,index:i}}}return null}
+function transformObject(shape,mode,start,current,index){const d=current.clone().sub(start);if(mode==='move'){shape.vertices.forEach((v,i)=>v.copy(dragTransform.orig[i]).add(d))}else if(mode==='scale'){const b=dragTransform.bounds,opposite=getBoxHandles({vertices:dragTransform.orig})[(index+2)%4];const h=dragTransform.handles[index];let scalex=(current.x-opposite.x)/(h.x-opposite.x||1),scaley=(current.y-opposite.y)/(h.y-opposite.y||1);scalex=Math.sign(scalex)*Math.max(.03,Math.abs(scalex));scaley=Math.sign(scaley)*Math.max(.03,Math.abs(scaley));shape.vertices.forEach((v,i)=>v.set(opposite.x+(dragTransform.orig[i].x-opposite.x)*scalex,opposite.y+(dragTransform.orig[i].y-opposite.y)*scaley,0))}else if(mode==='rotate'){const c=dragTransform.center,a0=Math.atan2(start.y-c.y,start.x-c.x),a1=Math.atan2(current.y-c.y,current.x-c.x),a=a1-a0,co=Math.cos(a),si=Math.sin(a);shape.vertices.forEach((v,i)=>{const x=dragTransform.orig[i].x-c.x,y=dragTransform.orig[i].y-c.y;v.set(c.x+x*co-y*si,c.y+x*si+y*co,0)})}syncPolygon(shape)}
+function drawPopup(){
+ let lines='';
+ const ink=daytime?'#1e3854':'#e5f1fc';let pts=V.map(v=>`${sx(v.x)},${sy(v.y)}`).join(' ');
+ if(geoDocument.shapes.includes(initialShape))lines+=`<polygon points="${pts}" fill="${daytime?'#59bba522':'#59d4b51c'}" stroke="${ink}" stroke-width="3"/>`;
+ geoDocument.shapes.forEach(shape=>{
+  if(shape.initial)return;
+  const verts=shape.vertices;
+  const coords=verts.map(v=>`${sx(v.x)},${sy(v.y)}`).join(' ');
+  const stroke=selectedShapes.has(shape)?'#e67e22':'#a357b7';
+  if(shape.polygons){for(const poly of shape.polygons){let path='';poly.forEach(r=>{path+=r.map(([x,y],i)=>(i?'L':'M')+sx(x)+' '+sy(y)).join(' ')+' Z '});lines+=`<path d="${path}" fill="#58bdd336" fill-rule="evenodd" stroke="${stroke}" stroke-width="3"/>`}}else lines+=`<polygon points="${coords}" fill="${shape.color}36" stroke="${stroke}" stroke-width="${selectedShapes.has(shape)?4:2.6}"/>`;
+  if(selectedShapes.has(shape))verts.forEach((v,i)=>{lines+=svgCircle(v,8,'#ffffff','#ad4dba');});
+ });
+ for(const shape of selectedShapes){if(!geoDocument.shapes.includes(shape))continue;const b=shapeBounds(shape),x=sx(b.xmin),y=sy(b.ymax),w=(b.xmax-b.xmin)*geoScale,h=(b.ymax-b.ymin)*geoScale;lines+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#ef8b21" stroke-width="1.7" stroke-dasharray="7 5"/>`;const hs=getBoxHandles(shape);hs.forEach((h,i)=>{if(i===4){lines+=`<line x1="${sx((b.xmin+b.xmax)/2)}" y1="${sy(b.ymax)}" x2="${sx(h.x)}" y2="${sy(h.y)}" stroke="#ef8b21" stroke-width="2"/>`;lines+=svgCircle(new THREE.Vector3(h.x,h.y,0),9,'#ef8b21','#fff')}else lines+=`<rect x="${sx(h.x)-6}" y="${sy(h.y)-6}" width="12" height="12" rx="1" fill="#fff" stroke="#ef8b21" stroke-width="2"/>`})}
+ geoSegments.forEach((s,i)=>{lines+=`<line x1="${sx(s.a.x)}" y1="${sy(s.a.y)}" x2="${sx(s.b.x)}" y2="${sy(s.b.y)}" stroke="#e9a4ff" stroke-width="2.6"/>`;lines+=svgCircle(s.a,7,'#f3bdff','#78478b');lines+=svgCircle(s.b,7,'#f3bdff','#78478b');});
+ if(segmentStart)lines+=svgCircle(segmentStart,8,'#e9a4ff');
+ geoPoints.forEach((v,i)=>{lines+=svgCircle(v,6,'#ffe291','#634d16');});
+ if(geoDocument.shapes.includes(initialShape))V.forEach((v,i)=>{lines+=svgCircle(v,9,'#'+colors[i].toString(16).padStart(6,'0'));lines+=`<text x="${sx(v.x)+13}" y="${sy(v.y)-13}" fill="${ink}" font-size="17">${names[i]} (${masses[i]} g)</text>`});
+ lines+=svgCircle(pivot,10,'#49ffcd','#fff');lines+=`<text x="${sx(pivot.x)+13}" y="${sy(pivot.y)+24}" font-size="17" fill="${daytime?'#087e6c':'#49ffcd'}">G</text>`;
+ svg.innerHTML=lines;
+}
+function openPopup(){popup.style.display='flex';back.style.display='block';drawPopup()}
+function closePopup(){hideMenus();popup.style.display='none';back.style.display='none';segmentStart=null;geoPan=null;geoDrawDrag=null;dragVertex=null;dragTransform=null}
+back.addEventListener('pointerdown',closePopup);document.querySelector('#closeGeo').onclick=closePopup;
+function geoMessage(t){}
+function setGeoTool(tool){geoTool=tool;segmentStart=null;document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('selected',b.dataset.tool===tool));geoMessage(tool==='pivot'?'G için tıkla veya sürükle. Orta noktalara otomatik yapışır.':tool==='segment'?'İlk uç noktayı, ardından ikinci uç noktayı tıkla. Köşelere ve orta noktalara yapışır.':'Orta noktasını işaretlemek istediğin doğru parçasına tıkla.');drawPopup()}
+document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>setGeoTool(b.dataset.tool));
+document.querySelector('#clearGeo').onclick=()=>{geoSegments.length=0;geoPoints.length=0;geoDocument.shapes.length=0;selectedShapes.clear();selectedShape=null;segmentStart=null;masses.fill(0);geometryChanged()};
+
+function createShape(type){
+ const n=({triangle:3,quadrilateral:4,square:4,rectangle:4,trapezoid:4,circle:48,pentagon:5,hexagon:6})[type]||3;
+ const shift=geoDocument.shapes.length*.28;
+ const cx=shift,cy=shift;
+ let coords=[];
+ if(type==='rectangle')coords=[[-1.55,-.85],[1.55,-.85],[1.55,.85],[-1.55,.85]];
+ else if(type==='square')coords=[[-1,-1],[1,-1],[1,1],[-1,1]];
+ else if(type==='trapezoid')coords=[[-1.5,-1],[1.5,-1],[.85,1],[-.85,1]];
+ else if(type==='quadrilateral')coords=[[-1.5,-.8],[1.4,-1],[.9,1.1],[-1.1,.85]];
+ else for(let i=0;i<n;i++){const angle=Math.PI/2+2*Math.PI*i/n;coords.push([1.25*Math.cos(angle),1.25*Math.sin(angle)])}
+ const shape={id:Date.now()+Math.random(),type,color:0x58bdd3,vertices:coords.map(([x,y])=>new THREE.Vector3(x+cx,y+cy,0))};
+ geoDocument.shapes.push(shape);selectedShape=shape;selectedShapes.clear();selectedShapes.add(shape);setGeoTool('select');geometryChanged();
+}
+document.querySelector('#addShape').onclick=()=>{const type=document.querySelector('#newShape').value;if(type==='segment'){const n=geoSegments.length;const cy=.25*n;const seg={a:new THREE.Vector3(-1.2,cy,0),b:new THREE.Vector3(1.2,cy,0),mass:null};geoSegments.push(seg);selectedShapes.clear();selectedShape=null;setGeoTool('select');geometryChanged();return}if(type==='point'){setGeoTool('point');return}createShape(type)};
+
+function geoHitVertex(v){let result=null,best=14;for(const shape of geoDocument.shapes)for(let i=0;i<shape.vertices.length;i++){const d=geoDistancePx(v,shape.vertices[i]);if(d<best){best=d;result={shape,index:i}}}return result}
+function geoHitShape(v){for(let i=geoDocument.shapes.length-1;i>=0;i--){const s=geoDocument.shapes[i],a=s.vertices;if(s.polygons){let insideAny=false;for(const poly of s.polygons){const contains=ring=>{let yes=false;for(let j=0,k=ring.length-1;j<ring.length;k=j++){const a=ring[j],b=ring[k];if(((a[1]>v.y)!==(b[1]>v.y))&&(v.x<(b[0]-a[0])*(v.y-a[1])/(b[1]-a[1])+a[0]))yes=!yes}return yes};if(contains(poly[0])&&!poly.slice(1).some(contains))insideAny=true}if(insideAny)return s;continue}let inside=false;for(let j=0,k=a.length-1;j<a.length;k=j++){if(((a[j].y>v.y)!==(a[k].y>v.y))&&(v.x<(a[k].x-a[j].x)*(v.y-a[j].y)/(a[k].y-a[j].y)+a[j].x))inside=!inside}if(inside)return s}return null}
+svg.addEventListener('contextmenu',e=>e.preventDefault());
+svg.addEventListener('wheel',e=>{e.preventDefault();const t=svgPos(e),before=geoWorld(t.x,t.y);geoScale=THREE.MathUtils.clamp(geoScale*Math.exp(-e.deltaY*.0014),25,1500);const after=geoWorld(t.x,t.y);geoCenter.x+=before.x-after.x;geoCenter.y+=before.y-after.y;drawPopup()},{passive:false});
+function setPivotFromGeo(v){pivot.copy(document.querySelector('#freePivot').checked?barycentricClamp(v):v);drawPopup();update()}
+function midNearestSegment(v){let candidate=null,best=15;for(const seg of [...geoSegments,...[0,1,2].map(i=>({a:V[i],b:V[(i+1)%3]}))]){const d=seg.b.clone().sub(seg.a);let t=THREE.MathUtils.clamp(v.clone().sub(seg.a).dot(d)/d.lengthSq(),0,1);const nearest=seg.a.clone().addScaledVector(d,t);let dis=geoDistancePx(v,nearest);if(dis<best){best=dis;candidate=seg}}return candidate}
+function geoApply(e){const pt=svgPos(e);let v=geoSnap(geoWorld(pt.x,pt.y));if(geoTool==='pivot'){setPivotFromGeo(v);return}
+ if(geoTool==='segment'){if(!segmentStart){segmentStart=v;geoMessage('Şimdi doğru parçasının ikinci uç noktasını tıkla.')}else{if(segmentStart.distanceTo(v)>1e-5)geoSegments.push({a:segmentStart.clone(),b:v.clone(),mass:null});segmentStart=null;geometryChanged();geoMessage('Doğru parçası çizildi. Yeni bir parça çizebilirsin.')}drawPopup();return}
+ if(geoTool==='point'){if(!geoPoints.some(p=>p.distanceTo(v)<1e-6))geoPoints.push(v.clone());geometryChanged();return}
+ if(geoTool==='midpoint'){const seg=midNearestSegment(v);if(seg){const m=segMid(seg);if(!geoPoints.some(p=>p.distanceTo(m)<1e-6))geoPoints.push(m);geometryChanged();geoMessage('Orta nokta tam geometrik konumuna yerleştirildi.')}else geoMessage('Bir doğru parçasının yakınına tıkla.');drawPopup()}}
+svg.addEventListener('pointerdown',e=>{if(e.button===2){e.preventDefault();const v=geoWorld(svgPos(e).x,svgPos(e).y),hit=pickObject(v);if(hit){contextTarget=hit;if(hit.kind==='vertex'&&!selectedShapes.has(hit.shape)){selectedShapes.clear();selectedShapes.add(hit.shape)}if(hit.kind==='shape'&&!selectedShapes.has(hit.object)){selectedShapes.clear();selectedShapes.add(hit.object)}const rect=popup.getBoundingClientRect();ctx.style.left=Math.min(e.clientX-rect.left,rect.width-175)+'px';ctx.style.top=Math.min(e.clientY-rect.top,rect.height-145)+'px';ctx.hidden=false;wp.hidden=true;document.querySelector('#ctxUnion').disabled=selectedShapes.size<2;drawPopup();return}hideMenus();geoPan={pos:svgPos(e),center:{...geoCenter}};svg.setPointerCapture(e.pointerId);return}if(e.button!==0)return;hideMenus();const v=geoWorld(svgPos(e).x,svgPos(e).y);const endpoint=geoSegments.flatMap(seg=>[{seg,key:'a'},{seg,key:'b'}]).find(t=>geoDistancePx(v,t.seg[t.key])<12);if(endpoint&&geoTool!=='pivot'){dragTransform={shape:endpoint.seg,mode:'endpoint',key:endpoint.key,start:v.clone()};svg.setPointerCapture(e.pointerId);return}// Köşe düzenleme doğrudan sürüklemeyle yapılır. Köşeyle çakışan
+// bounding-box tutamacı yalnızca Shift ile öncelik kazanır.
+const directVertex=geoTool!=='pivot'?geoHitVertex(v):null;
+if(directVertex&&!e.shiftKey){
+ dragVertex=directVertex;selectedShape=directVertex.shape;
+ if(!e.ctrlKey)selectedShapes.clear();
+ selectedShapes.add(directVertex.shape);
+ drawPopup();svg.setPointerCapture(e.pointerId);return;
+}
+const boxHandle=hitBoxHandle(v);if(boxHandle&&geoTool!=='pivot'){const shape=boxHandle.shape,b=shapeBounds(shape);dragTransform={shape,mode:boxHandle.index===4?'rotate':'scale',index:boxHandle.index,start:v.clone(),orig:shape.vertices.map(p=>p.clone()),bounds:b,handles:getBoxHandles(shape),center:new THREE.Vector3((b.xmin+b.xmax)/2,(b.ymin+b.ymax)/2,0)};svg.setPointerCapture(e.pointerId);return}const hit=pickObject(v);if(geoTool==='pivot'){geoDrawDrag={start:svgPos(e),didMove:false};svg.setPointerCapture(e.pointerId);geoApply(e);return}if(hit){if(hit.kind==='vertex'){selectedShapes.clear();selectedShapes.add(hit.shape);selectedShape=hit.shape;}if(hit.kind==='shape'){selectedShape=hit.object;if(e.ctrlKey){if(selectedShapes.has(hit.object))selectedShapes.delete(hit.object);else selectedShapes.add(hit.object)}else{selectedShapes.clear();selectedShapes.add(hit.object)}const b=shapeBounds(hit.object);if(!e.ctrlKey)dragTransform={shape:hit.object,mode:'move',index:-1,start:v.clone(),orig:hit.object.vertices.map(p=>p.clone()),bounds:b,center:new THREE.Vector3((b.xmin+b.xmax)/2,(b.ymin+b.ymax)/2,0)};svg.setPointerCapture(e.pointerId)}else if(hit.kind==='segment'){dragTransform={shape:hit.object,mode:'segment-move',start:v.clone(),orig:[hit.object.a.clone(),hit.object.b.clone()]};svg.setPointerCapture(e.pointerId)}drawPopup();return}if(!e.ctrlKey){selectedShapes.clear();drawPopup()}geoDrawDrag={start:svgPos(e),didMove:false};svg.setPointerCapture(e.pointerId);if(geoTool==='pivot')geoApply(e)});
+svg.addEventListener('pointermove',e=>{if(dragTransform&&(e.buttons&1)){const now=geoWorld(svgPos(e).x,svgPos(e).y),t=dragTransform;if(t.mode==='endpoint')t.shape[t.key].copy(now);else if(t.mode==='segment-move'){const delta=now.clone().sub(t.start);t.shape.a.copy(t.orig[0]).add(delta);t.shape.b.copy(t.orig[1]).add(delta)}else transformObject(t.shape,t.mode,t.start,now,t.index);geometryChanged();return}if(dragVertex&&(e.buttons&1)){const pos=svgPos(e);dragVertex.shape.vertices[dragVertex.index].copy(geoWorld(pos.x,pos.y));syncPolygon(dragVertex.shape);geometryChanged();return}if(geoPan){const a=svgPos(e);geoCenter.x=geoPan.center.x-(a.x-geoPan.pos.x)/geoScale;geoCenter.y=geoPan.center.y+(a.y-geoPan.pos.y)/geoScale;drawPopup();return}if(geoDrawDrag&&geoTool==='pivot'&&(e.buttons&1)){geoDrawDrag.didMove=true;geoApply(e)}});
+svg.addEventListener('pointerup',e=>{if(dragTransform){dragTransform=null;return}if(dragVertex){dragVertex=null;return}if(geoPan){geoPan=null;return}if(geoDrawDrag&&geoTool!=='pivot'&&e.button===0)geoApply(e);geoDrawDrag=null});
+svg.addEventListener('pointercancel',()=>{geoPan=null;geoDrawDrag=null;dragVertex=null;dragTransform=null});
+
+const ctxWeight=document.querySelector('#ctxWeight');
+ctxWeight.onclick=()=>{if(!contextTarget)return;ctx.hidden=true;wp.hidden=false;wp.style.left=ctx.style.left;wp.style.top=ctx.style.top;document.querySelector('#weightInput').value=contextTarget.kind==='vertex'&&contextTarget.shape===initialShape?masses[contextTarget.index]:(contextTarget.object.mass||0)};
+document.querySelector('#weightCancel').onclick=()=>hideMenus();
+document.querySelector('#weightSave').onclick=()=>{if(contextTarget){const m=Number(document.querySelector('#weightInput').value);if(Number.isFinite(m)&&m>=0){if(contextTarget.kind==='vertex'&&contextTarget.shape===initialShape)masses[contextTarget.index]=m;else contextTarget.object.mass=m;geometryChanged()}}hideMenus()};
+document.querySelector('#ctxDelete').onclick=()=>{if(!contextTarget)return;const targets=contextTarget.kind==='vertex'?[contextTarget.shape]:contextTarget.kind==='shape'&&selectedShapes.has(contextTarget.object)?[...selectedShapes]:[contextTarget.object];for(const obj of targets){if(geoDocument.shapes.includes(obj)){geoDocument.shapes.splice(geoDocument.shapes.indexOf(obj),1);if(obj===initialShape)masses.fill(0)}else if(geoSegments.includes(obj))geoSegments.splice(geoSegments.indexOf(obj),1);else if(geoPoints.includes(obj))geoPoints.splice(geoPoints.indexOf(obj),1)}selectedShapes.clear();selectedShape=null;hideMenus();geometryChanged()};
+function getClipPolygons(s){return s.polygons||[[s.vertices.map(v=>[v.x,v.y])]]}
+document.querySelector('#ctxUnion').onclick=()=>{
+ const shapes=[...selectedShapes].filter(s=>geoDocument.shapes.includes(s)&&s.vertices.length>=3);
+ if(shapes.length<2)return;
+ if(!window.polygonClipping){alert('Birleştirme kütüphanesi yüklenemedi. İnternet bağlantısını denetle.');return}
+ try{const merged=window.polygonClipping.union(...shapes.map(getClipPolygons));if(!merged.length)return;
+ const mass=shapes.reduce((sum,s)=>sum+(s.mass||0)+(s.initial?masses.reduce((a,b)=>a+b,0):s.vertices.reduce((a,v)=>a+(v.mass||0),0)),0);
+ for(const sh of shapes)geoDocument.shapes.splice(geoDocument.shapes.indexOf(sh),1);
+ if(shapes.includes(initialShape))masses.fill(0);
+ const shape={id:Date.now(),type:'union',polygons:merged,color:0x58bdd3,mass,vertices:merged[0][0].map(([x,y])=>new THREE.Vector3(x,y,0))};geoDocument.shapes.push(shape);selectedShapes.clear();selectedShapes.add(shape);selectedShape=shape;hideMenus();geometryChanged()}
+ catch(err){console.error(err);alert('Birleştirme yapılamadı: '+err.message)}
+};
+
+// G sınırı sabit başlangıç üçgeni yerine güncel şekillerin birleşimidir.
+// Tek tek şekilleri taramak kesişen/çok parçalı birleşimleri de kapsar.
+function pivotWithinGeometry(v){
+ return geoHitShape(v)!==null;
+}
+function geometryBoundaryRings(shape){
+ if(shape.polygons)return shape.polygons.flatMap(poly=>poly.map(ring=>ring.map(([x,y])=>new THREE.Vector3(x,y,0))));
+ return shape.vertices?.length>=3?[shape.vertices]:[];
+}
+function barycentricClamp(v){
+ const shapes=geoDocument.shapes.filter(s=>s.polygons||s.vertices?.length>=3);
+ if(!shapes.length || pivotWithinGeometry(v))return v;
+ let closest=null,dist=Infinity;
+ for(const shape of shapes)for(const ring of geometryBoundaryRings(shape))for(let i=0;i<ring.length;i++){
+  const a=ring[i],b=ring[(i+1)%ring.length],edge=b.clone().sub(a),len=edge.lengthSq();
+  if(len<1e-12)continue;
+  const t=THREE.MathUtils.clamp(v.clone().sub(a).dot(edge)/len,0,1);
+  const candidate=a.clone().addScaledVector(edge,t),d=v.distanceToSquared(candidate);
+  if(d<dist){dist=d;closest=candidate}
+ }
+ return closest||v;
+}
+// Tuş basılı tutma esnasında fare üçgenin pozisyonunu doğrudan belirler.
+// Simülasyonun çalışma durumu değişmez; bırakıldığında gerçek fizik hareketi sürdürür.
+let drag=null,startX=0,startY=0,moved=false,mouseDown=null,pivotPress=false;
+// G kenar veya köşeyle çakışsa bile ekran üzerindeki konumu önceliklidir.
+// Bu ayrıca çok ince askı işaretinin kolay seçilmesini sağlar.
+function overPivot(e){
+ const pos=pivotBall.getWorldPosition(new THREE.Vector3()).project(camera);
+ if(pos.z < -1 || pos.z > 1)return false;
+ const rect=renderer.domElement.getBoundingClientRect();
+ const x=rect.left+(pos.x+1)*rect.width/2;
+ const y=rect.top+(1-pos.y)*rect.height/2;
+ return Math.hypot(e.clientX-x,e.clientY-y)<=17;
+}
+const plane=new THREE.Plane(),intersection=new THREE.Vector3();
+function worldPoint(e,at,normal){setPointer(e);ray.setFromCamera(pointer,camera);plane.setFromNormalAndCoplanarPoint(normal,at);return ray.ray.intersectPlane(plane,intersection)?intersection.clone():null}
+renderer.domElement.addEventListener('pointerdown',e=>{
+ if(e.button!==0)return;startX=e.clientX;startY=e.clientY;moved=false;pivotPress=overPivot(e);if(pivotPress){orbit.enabled=false;renderer.domElement.setPointerCapture(e.pointerId);return;}setPointer(e);ray.setFromCamera(pointer,camera);
+ const hits=ray.intersectObjects(clickable,false);const hit=hits[0];mouseDown=hit?.object||null;
+ if(!hit)return;
+ const corner=hit.object.userData.corner;const isPivot=!!hit.object.userData.pivot;
+ if(isPivot)return; // Kısa tıklama G düzenleyicisini açar.
+ const translating=e.shiftKey,normal=camera.getWorldDirection(new THREE.Vector3()).negate();
+ const pt=worldPoint(e,hit.point,normal);
+ drag={kind:translating?'translate':'rotate',corner:Number.isInteger(corner)?corner:-1,normal,point:pt,old:pt,initialQ:q.clone(),initialAnchor:anchor.clone(),initialOmega:omega.clone(),lastQ:q.clone(),lastTime:performance.now(),throwOmega:new THREE.Vector3(),hasMotion:false};
+ orbit.enabled=false;renderer.domElement.setPointerCapture(e.pointerId);
+});
+renderer.domElement.addEventListener('pointermove',e=>{
+ if(Math.hypot(e.clientX-startX,e.clientY-startY)>4)moved=true;
+ if(!drag)return;
+ const pt=worldPoint(e,drag.point,drag.normal);if(!pt)return;
+ if(drag.kind==='translate')anchor.copy(drag.initialAnchor).add(pt.clone().sub(drag.point));
+ else{
+  // Sürüklenen köşe kameraya paralel ekranda fareyi takip eder; askı noktası sabit kalır.
+  const origin=anchor;const initial=drag.corner>=0?V[drag.corner].clone().sub(pivot).applyQuaternion(drag.initialQ).add(drag.initialAnchor):drag.point;
+  const from=initial.clone().sub(origin),to=initial.clone().add(pt.clone().sub(drag.point)).sub(origin);
+  if(from.lengthSq()>1e-5&&to.lengthSq()>1e-5){const delta=new THREE.Quaternion().setFromUnitVectors(from.normalize(),to.normalize());q.copy(delta.multiply(drag.initialQ)).normalize()}
+ }
+ // Fare hareketinden dünyanın koordinatlarında açısal hız çıkarılır.
+ // Böylece fare bırakıldığı anda fizik çözümleyicisi hareketi devam ettirir.
+ if(drag.kind==='rotate'){
+  const now=performance.now(),seconds=(now-drag.lastTime)/1000;
+  if(seconds>0.002 && seconds<0.20){
+   const dq=q.clone().multiply(drag.lastQ.clone().invert()).normalize();
+   if(dq.w<0){dq.x*=-1;dq.y*=-1;dq.z*=-1;dq.w*=-1}
+   const angle=2*Math.acos(THREE.MathUtils.clamp(dq.w,-1,1));
+   const sinHalf=Math.sqrt(Math.max(0,1-dq.w*dq.w));
+   if(angle>0.00001 && sinHalf>1e-6){
+    const rate=new THREE.Vector3(dq.x,dq.y,dq.z).multiplyScalar(angle/(sinHalf*seconds));
+    rate.clampLength(0,14);
+    if(!drag.hasMotion)drag.throwOmega.copy(rate);
+    else drag.throwOmega.lerp(rate,0.65);
+    drag.hasMotion=true;
+   }
+  }
+  drag.lastQ.copy(q);drag.lastTime=now;
+ }
+ omega.set(0,0,0);update();
+});
+renderer.domElement.addEventListener('pointerup' ,e=>{
+ if(pivotPress){pivotPress=false;orbit.enabled=true;if(!moved&&overPivot(e))openPopup();return;}
+ if(drag){if(drag.kind==='rotate'&&drag.hasMotion){const age=(performance.now()-drag.lastTime)/1000;if(age<0.16)omega.copy(drag.throwOmega);else omega.set(0,0,0);}else omega.set(0,0,0);drag=null;orbit.enabled=true;return}
+ if(moved)return;setPointer(e);ray.setFromCamera(pointer,camera);let hits=ray.intersectObjects(clickable,false);let h=hits[0];
+ if(h?.object.userData.pivot){openPopup();return}
+ if(h&&Number.isInteger(h.object.userData.corner))showEditor(h.object.userData.corner);
+});
+renderer.domElement.addEventListener('pointercancel',()=>{drag=null;pivotPress=false;orbit.enabled=true});
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});applyTheme();update();
+</script></body></html>
