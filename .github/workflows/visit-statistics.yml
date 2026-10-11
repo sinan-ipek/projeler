@@ -1,0 +1,31 @@
+name: Update visit statistics
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: visit-statistics
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download GoatCounter statistics
+        env:
+          GOATCOUNTER_API_TOKEN: ${{ secrets.GOATCOUNTER_API_TOKEN }}
+        run: python scripts/update-visit-stats.py
+      - name: Publish updated statistics
+        run: |
+          if [ -n "$(git status --porcelain istatistik/data.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add istatistik/data.json
+            git commit -m "Update public visit statistics"
+            git push
+          fi
