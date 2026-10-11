@@ -193,6 +193,8 @@ button:hover{background:#f5f8fc}
   const clean=value.trim();
   if(translations[clean]!==undefined)return value.replace(clean,translations[clean]);
   // Dynamic counter/status messages produced by the physics module.
+  const presetPrefix=Object.keys(translations).find(k=>value.startsWith(k+' eklendi · '));
+  if(presetPrefix)value=translations[presetPrefix]+value.slice(presetPrefix.length);
   return value
    .replace(/^Aşama (\d+)\/6$/,(_,n)=>'Step '+n+'/6')
    .replace(/^Gezegeni düzenle — /,'Edit planet — ')
