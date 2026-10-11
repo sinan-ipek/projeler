@@ -372,7 +372,7 @@ function accelerations(){
 }
 // Kısa, çizgisel birleşme parlaması; fiziğe müdahale etmez.
 const mergeBursts=[];
-const BURST_DURATION=.32;
+const BURST_DURATION=.48;
 function disposeBurst(burst){
  scene.remove(burst.lines);
  burst.lines.geometry.dispose();
@@ -385,7 +385,7 @@ function clearMergeBursts(){
 function createMergeBurst(pos,radius){
  // Her birleşmede yalnızca 12 ışın; ek parçacık ya da gölge yok.
  if(mergeBursts.length>=32)disposeBurst(mergeBursts.shift());
- const count=12,coordinates=new Float32Array(count*6),directions=[];
+ const count=16,coordinates=new Float32Array(count*6),directions=[];
  for(let i=0;i<count;i++){
   const a=2*Math.PI*(i+.15*Math.random())/count;
   const y=(Math.random()-.5)*.65;
@@ -395,7 +395,7 @@ function createMergeBurst(pos,radius){
  const geometry=new THREE.BufferGeometry();
  geometry.setAttribute('position',new THREE.BufferAttribute(coordinates,3).setUsage(THREE.DynamicDrawUsage));
  const material=new THREE.LineBasicMaterial({
-  color:0xffbf45,transparent:true,opacity:1,depthTest:false,depthWrite:false
+  color:0xffe6a1,transparent:true,opacity:1,depthTest:false,depthWrite:false
  });
  const lines=new THREE.LineSegments(geometry,material);
  lines.position.copy(pos);lines.renderOrder=90;lines.frustumCulled=false;
@@ -409,16 +409,15 @@ function updateMergeBursts(dt){
   const t=Math.min(1,burst.elapsed/BURST_DURATION);
   if(t>=1){disposeBurst(burst);mergeBursts.splice(i,1);continue}
   const attr=burst.lines.geometry.getAttribute('position');
-  const extent=burst.radius*(.35+1.4*t);
-  const inner=burst.radius*(.65+.9*t);
-  const length=extent*(1-t);
+  const inner=burst.radius*(1.03+1.4*t);
+  const length=burst.radius*(2.15*(1-t)**.65);
   for(let j=0;j<burst.directions.length;j++){
    const dir=burst.directions[j];
    attr.setXYZ(j*2,dir.x*inner,dir.y*inner,dir.z*inner);
    attr.setXYZ(j*2+1,dir.x*(inner+length),dir.y*(inner+length),dir.z*(inner+length));
   }
   attr.needsUpdate=true;
-  burst.lines.material.opacity=(1-t)**1.4;
+  burst.lines.material.opacity=t<.18?1:Math.pow((1-t)/.82,1.2);
  }
 }
 // Tam esnek olmayan çarpışma: kütle ve toplam doğrusal momentum korunur.
