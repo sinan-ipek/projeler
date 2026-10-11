@@ -232,25 +232,14 @@ button:hover{background:#f5f8fc}
   for(const child of root.childNodes)walk(child);
  }
  const help=document.querySelector('#helpPanel p:nth-of-type(2)');
- let helpNode=null;
- for(const p of document.querySelectorAll('#helpPanel p')){
-  if(p.textContent.startsWith('Bir gezegene sol tıkla')){helpNode=p;break}
- }
- const helpPanel=document.getElementById('helpPanel');
- const helpTop=helpPanel.querySelector('.helpTop');
- const turkishHelpNodes=Array.from(helpPanel.children).filter(el=>el!==helpTop);
- const turkishHelpFragment=document.createDocumentFragment();
- for(const el of turkishHelpNodes)turkishHelpFragment.appendChild(el);
- let currentHelpLanguage='tr';
+ let helpPanel=null,helpTop=null,turkishHelpNodes=[],currentHelpLanguage='tr';
  function setHelpLanguage(){
-  if(currentHelpLanguage===language)return;
+  if(!helpPanel||currentHelpLanguage===language)return;
   for(const el of [...helpPanel.children])if(el!==helpTop)el.remove();
   if(language==='en')helpPanel.insertAdjacentHTML('beforeend',helpEnglish);
-  else helpPanel.appendChild(turkishHelpFragment);
+  else for(const el of turkishHelpNodes)helpPanel.appendChild(el);
   currentHelpLanguage=language;
  }
- // Restore original Turkish children before the first rendering.
- helpPanel.appendChild(turkishHelpFragment);
  function sync(){
   if(translating)return;translating=true;
   setHelpLanguage();
@@ -274,6 +263,9 @@ button:hover{background:#f5f8fc}
   }
  };
  document.addEventListener('DOMContentLoaded',()=>{
+  helpPanel=document.getElementById('helpPanel');
+  helpTop=helpPanel.querySelector('.helpTop');
+  turkishHelpNodes=Array.from(helpPanel.children).filter(el=>el!==helpTop);
   const btn=document.getElementById('languageButton');
   btn.addEventListener('click',()=>{language=language==='tr'?'en':'tr';try{localStorage.setItem(key,language)}catch(e){};sync()});
   const observer=new MutationObserver(()=>{if(!translating)queueMicrotask(sync)});
