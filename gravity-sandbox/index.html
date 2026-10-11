@@ -62,7 +62,7 @@ button:hover{background:#f5f8fc}
 </head>
 <body>
 <div id="viewport"></div>
-<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa">⌂</a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
+<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa">⌂</a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
 <div id="settings" aria-label="Kamera ve simülasyon kontrolleri">
   <div class="cameras">
     <button id="topView" type="button" title="Üstten görüş" aria-label="Üstten görüş">Üstten</button>
@@ -100,7 +100,7 @@ button:hover{background:#f5f8fc}
     <ul>
       <li><strong>▶ / ❚❚ veya Boşluk:</strong> Başlat ya da duraklat.</li>
       <li><strong>Sıfırla:</strong> Başlangıçtaki gezegenlere dön.</li>
-      <li><strong>Yörünge:</strong> Gezegenlerin izlerini göster veya gizle.</li><li><strong>Hızlar:</strong> Tüm gezegenlerin hız vektörlerini oklarla gösterir; tekrar tıklayınca gizler.</li>
+      <li><strong>Yörünge:</strong> Gezegenlerin izlerini göster veya gizle.</li><li><strong>Hızlar:</strong> Tüm gezegenlerin hız vektörlerini oklarla gösterir; tekrar tıklayınca gizler.</li><li><strong>Yapışma:</strong> Açıkken birbirine değen gezegenler birleşir. Kütleleri toplanır; konumları kütle merkezine, hızları momentumun korunmasına göre hesaplanır. Renkleri kütlelerine göre karıştırılır. Tekrar tıklarsan birleşme kapanır.</li>
       <li><strong>Kısa sürgüler:</strong> Animasyon hızını ve yörünge izi uzunluğunu ayarla.</li>
       <li><strong>Kırmızı hız oku:</strong> Hesaplanan kaçış hızı aşıldı.</li>
     </ul>
@@ -328,6 +328,7 @@ function escapeSpeedFor(body){
 }
 function massFromRadius(r){return DENSITY*r*r*r}
 let velocitiesVisible=false;
+let mergingEnabled=false;
 function makeBody(r,color,pos,vel){
  const mesh=new THREE.Mesh(sphere,new THREE.MeshStandardMaterial({color,roughness:.72,metalness:0}));
  mesh.scale.setScalar(r);mesh.position.copy(pos);mesh.castShadow=pos.y>0;mesh.receiveShadow=true;scene.add(mesh);
@@ -341,7 +342,7 @@ function makeBody(r,color,pos,vel){
  velocityArrow.visible=false;scene.add(velocityArrow);
  return {m:massFromRadius(r),r,color,p:pos.clone(),v:vel.clone(),mesh,trace,g,mat,trail:[pos.clone()],velocityArrow};
 }
-function removeBody(b){scene.remove(b.mesh,b.trace,b.velocityArrow);b.mesh.material.dispose();b.g.dispose();b.mat.dispose();b.velocityArrow.dispose()}
+function removeBody(b){scene.remove(b.mesh,b.trace,b.velocityArrow);b.mesh.material.dispose();b.g.dispose();b.mat.dispose();b.velocityArrow.line.material.dispose();b.velocityArrow.cone.material.dispose()}
 function updateTrail(b){
  const attr=b.g.getAttribute('position');
  const n=Math.min(b.trail.length,MAX_TRAIL,trailDisplayLength);
@@ -369,9 +370,38 @@ function accelerations(){
  }
  return a;
 }
+// Tam esnek olmayan çarpışma: kütle ve toplam doğrusal momentum korunur.
+function mergeTouchingBodies(){
+ let merged=true;
+ while(merged){
+  merged=false;
+  outer:for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
+   const a=bodies[i],b=bodies[j];
+   if(a.p.distanceToSquared(b.p)>(a.r+b.r)**2)continue;
+   const total=a.m+b.m;
+   const pos=a.p.clone().multiplyScalar(a.m).addScaledVector(b.p,b.m).divideScalar(total);
+   const vel=a.v.clone().multiplyScalar(a.m).addScaledVector(b.v,b.m).divideScalar(total);
+   const ca=new THREE.Color(a.color),cb=new THREE.Color(b.color);
+   // Kütle ağırlıklı renk karışımı.
+   const color=ca.multiplyScalar(a.m/total).add(cb.multiplyScalar(b.m/total)).getHex();
+   const radius=Math.cbrt(total/DENSITY);
+   const wasSelected=selectedBodies.has(a)||selectedBodies.has(b);
+   const newBody=makeBody(radius,color,pos,vel);
+   newBody.m=total;
+   bodies.splice(j,1);bodies.splice(i,1,newBody);
+   selectedBodies.delete(a);selectedBodies.delete(b);
+   if(wasSelected)selectedBodies.add(newBody);
+   selectedBody=selectedBodies.size?[...selectedBodies].at(-1):null;
+   if(hoveredBody===a||hoveredBody===b)hoveredBody=newBody;
+   removeBody(a);removeBody(b);updateTrail(newBody);syncSelections();
+   merged=true;break outer;
+  }
+ }
+}
 function step(){let a=accelerations();
  for(let i=0;i<bodies.length;i++){const b=bodies[i];b.v.addScaledVector(a[i],DT*.5);b.p.addScaledVector(b.v,DT)}
  a=accelerations();for(let i=0;i<bodies.length;i++)bodies[i].v.addScaledVector(a[i],DT*.5);
+ if(mergingEnabled)mergeTouchingBodies();
  if(++trailTick%4===0)for(const b of bodies){b.trail.push(b.p.clone());if(b.trail.length>MAX_TRAIL)b.trail.shift();updateTrail(b)}
 }
 function updateVisual(b){
@@ -663,6 +693,12 @@ $('toggleVelocities').addEventListener('click',()=>{
  $('toggleVelocities').setAttribute('aria-pressed',String(velocitiesVisible));
  $('toggleVelocities').textContent=velocitiesVisible?'Hızları gizle':'Hızlar';
  if(!velocitiesVisible)for(const b of bodies)b.velocityArrow.visible=false;
+});
+$('toggleMerging').addEventListener('click',()=>{
+ mergingEnabled=!mergingEnabled;
+ $('toggleMerging').setAttribute('aria-pressed',String(mergingEnabled));
+ $('toggleMerging').textContent=mergingEnabled?'Yapışma: açık':'Yapışma';
+ if(mergingEnabled&&!running&&!editor)mergeTouchingBodies();
 });
 function toggleRunning(){if(editor)finishEditor(true);running=!running;$('play').textContent=running?'❚❚ Duraklat':'▶ Başlat'}
 $('play').addEventListener('click',toggleRunning);
