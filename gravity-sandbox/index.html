@@ -281,6 +281,7 @@ let animationSpeed=1;
 let trailDisplayLength=520;
 $('themeButton').addEventListener('click',()=>{
  darkMode=!darkMode;
+ for(const burst of mergeBursts)burst.lines.material.color.setHex(darkMode?0xffdc42:0x633b20);
  scene.background.set(darkMode?0x0d1523:0xf9fbfd);
  floor.material.color.set(darkMode?0x17263a:0xfcfdff);
  gridMinor.material.color.set(darkMode?0x55718d:0xd7dee6);
@@ -383,9 +384,9 @@ function clearMergeBursts(){
  mergeBursts.length=0;
 }
 function createMergeBurst(pos,radius){
- // Her birleşmede yalnızca 12 ışın; ek parçacık ya da gölge yok.
+ // Her birleşmede yalnızca 8 ışın; ek parçacık ya da gölge yok.
  if(mergeBursts.length>=32)disposeBurst(mergeBursts.shift());
- const count=16,coordinates=new Float32Array(count*6),directions=[];
+ const count=8,coordinates=new Float32Array(count*6),directions=[];
  for(let i=0;i<count;i++){
   const a=2*Math.PI*(i+.15*Math.random())/count;
   const y=(Math.random()-.5)*.65;
@@ -395,7 +396,7 @@ function createMergeBurst(pos,radius){
  const geometry=new THREE.BufferGeometry();
  geometry.setAttribute('position',new THREE.BufferAttribute(coordinates,3).setUsage(THREE.DynamicDrawUsage));
  const material=new THREE.LineBasicMaterial({
-  color:0xffe6a1,transparent:true,opacity:1,depthTest:false,depthWrite:false
+  color:darkMode?0xffdc42:0x633b20,transparent:true,opacity:1,depthTest:false,depthWrite:false
  });
  const lines=new THREE.LineSegments(geometry,material);
  lines.position.copy(pos);lines.renderOrder=90;lines.frustumCulled=false;
