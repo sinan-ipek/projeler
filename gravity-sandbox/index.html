@@ -477,7 +477,8 @@ function beginEditor(existing,e,editPhase=null){
  // fare konumunun düzlem üzerindeki başlangıç karşılığını saklıyoruz.
  const group=existing?[...selectedBodies].filter(b=>bodies.includes(b)):[];if(existing&&!group.includes(candidate))group.push(candidate);
  const groupOriginal=group.map(b=>({b,p:b.p.clone(),v:b.v.clone(),r:b.r,m:b.m,trail:b.trail.map(p=>p.clone())}));
- editor={existing:!!existing,b:candidate,original,groupOriginal,phase:editPhase===null?0:editPhase,editGroup:!existing||editPhase===null?null:(editPhase===0?'position':editPhase===3?'velocity':'size'),
+ const groupBaseline=groupOriginal.map(o=>({...o,p:o.p.clone(),v:o.v.clone()}));
+ editor={existing:!!existing,b:candidate,original,groupOriginal,groupBaseline,phase:editPhase===null?0:editPhase,editGroup:!existing||editPhase===null?null:(editPhase===0?'position':editPhase===3?'velocity':'size'),
    anchorY:e.clientY,anchorPos:candidate.p.clone(),anchorV:candidate.v.clone(),
    anchorRadius:candidate.r,anchorPlane:onPlane(e,0)};
  controls.enabled=false;renderer.domElement.style.cursor='none';
@@ -513,10 +514,10 @@ function updateFromMouse(e){if(!editor)return;
  else if(ed.phase===4){b.v.y=clamp(ed.anchorV.y-dy*.22,-40,40)}
  // Aynı düzenleme hareketini gruptaki diğer gezegenlere uygula.
  if(ed.existing&&ed.groupOriginal.length>1){
-  const posDelta=b.p.clone().sub(ed.groupOriginal.find(o=>o.b===b).p);
-  const velDelta=b.v.clone().sub(ed.groupOriginal.find(o=>o.b===b).v);
-  const sizeRatio=b.r/ed.groupOriginal.find(o=>o.b===b).r;
-  for(const item of ed.groupOriginal){
+  const posDelta=b.p.clone().sub(ed.groupBaseline.find(o=>o.b===b).p);
+  const velDelta=b.v.clone().sub(ed.groupBaseline.find(o=>o.b===b).v);
+  const sizeRatio=b.r/ed.groupBaseline.find(o=>o.b===b).r;
+  for(const item of ed.groupBaseline){
    if(item.b===b)continue;
    if(ed.phase===0){item.b.p.x=clamp(item.p.x+posDelta.x,-88,88);item.b.p.z=clamp(item.p.z+posDelta.z,-88,88)}
    else if(ed.phase===1)item.b.p.y=clamp(item.p.y+posDelta.y,-45,130);
@@ -533,6 +534,7 @@ function advance(e){if(!editor)return;
  if(ed.editGroup==='size'||ed.editGroup==='position'&&ed.phase===1||ed.editGroup==='velocity'&&ed.phase===4){finishEditor(true);return}
  if(ed.phase===5)return;
  ed.phase++;
+ if(ed.existing)ed.groupBaseline=ed.groupOriginal.map(o=>({b:o.b,p:o.b.p.clone(),v:o.b.v.clone(),r:o.b.r}));
  ed.anchorY=e.clientY;
  ed.anchorPos=ed.b.p.clone();ed.anchorV=ed.b.v.clone();ed.anchorRadius=ed.b.r;
  ed.anchorPlane=onPlane(e,ed.phase===3?ed.b.p.y:0);
