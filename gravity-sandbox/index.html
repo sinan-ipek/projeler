@@ -395,14 +395,15 @@ function clearMergeBursts(){
  mergeBursts.length=0;
 }
 function createMergeBurst(pos,radius){
- // Her birleşmede yalnızca 8 ışın; ek parçacık ya da gölge yok.
+ // 16 ışın Fibonacci küresi üzerinde üç boyuta yaklaşık eşit dağıtılır.
  if(mergeBursts.length>=32)disposeBurst(mergeBursts.shift());
- const count=8,coordinates=new Float32Array(count*6),directions=[];
+ const count=16,coordinates=new Float32Array(count*6),directions=[];
+ const goldenAngle=Math.PI*(3-Math.sqrt(5));
  for(let i=0;i<count;i++){
-  const a=2*Math.PI*(i+.15*Math.random())/count;
-  const y=(Math.random()-.5)*.65;
-  const dir=new THREE.Vector3(Math.cos(a),y,Math.sin(a)).normalize();
-  directions.push(dir);
+  const y=1-(i+.5)*2/count;
+  const horizontal=Math.sqrt(Math.max(0,1-y*y));
+  const angle=i*goldenAngle;
+  directions.push(new THREE.Vector3(Math.cos(angle)*horizontal,y,Math.sin(angle)*horizontal));
  }
  const geometry=new THREE.BufferGeometry();
  geometry.setAttribute('position',new THREE.BufferAttribute(coordinates,3).setUsage(THREE.DynamicDrawUsage));
