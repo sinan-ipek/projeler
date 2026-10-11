@@ -60,10 +60,165 @@ button:hover{background:#f5f8fc}
 #homeBtn{display:flex;align-items:center;justify-content:center;width:44px;height:44px;flex:none;padding:5px;background:#fff;color:#222;border:1px solid #c8d2dd;border-radius:9px;box-shadow:0 3px 12px #8194a51c;text-decoration:none}#homeBtn:hover{background:#f5f8fc}#homeBtn svg{width:30px;height:30px;display:block}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.181.1/examples/jsm/"}}</script>
+<script>
+(function(){
+ const key='gravity-sandbox-language';
+ let language='tr';
+ try{language=localStorage.getItem(key)==='en'?'en':'tr'}catch(e){}
+ const translations={"▶ Başlat":"▶ Start",
+"Sıfırla":"Reset",
+"Yörüngeyi gizle":"Hide trails",
+"Hızlar":"Velocities",
+"Kuvvetler":"Forces",
+"Kütle Merkezi":"Center of Mass",
+"Yapışma":"Merge",
+"Uzay":"Space",
+"Sürtünmesiz":"Frictionless",
+"Alan Okları":"Field Arrows",
+"Üstten":"Top",
+"Yandan":"Side",
+"Sürtünme miktarı":"Friction amount",
+"Animasyon hızı":"Animation speed",
+"Yörünge gösterim uzunluğu":"Trail length",
+"Düzenle ▸":"Edit ▸",
+"Konum":"Position",
+"Yükseklik":"Height",
+"Büyüklük":"Size",
+"Hız":"Velocity",
+"Ekle ▸":"Add ▸",
+"Güneş Sistemi":"Solar System",
+"Çift Yıldız":"Binary Stars",
+"TRAPPIST-1":"TRAPPIST-1",
+"Üç Cisim – Sekiz Yörüngesi":"Three Bodies – Figure Eight",
+"Dönen Eşkenar Üçgen":"Rotating Equilateral Triangle",
+"Lagrange Noktaları":"Lagrange Points",
+"Kaotik Üç Cisim":"Chaotic Three Bodies",
+"Kütleçekim Çökmesi":"Gravitational Collapse",
+"Parçacık Bulutu":"Particle Cloud",
+"Gezegen Halkası":"Planetary Ring",
+"Büyük Çarpışma":"Giant Collision",
+"Yatay Atış":"Horizontal Launch",
+"Düşey Atış":"Vertical Launch",
+"Roket":"Rocket",
+"Eğik Atış":"Projectile Motion",
+"Serbest Düşüş":"Free Fall",
+"Tümünü seç":"Select All",
+"Kopyala":"Copy",
+"Yapıştır":"Paste",
+"Sil":"Delete",
+"İptal (Esc)":"Cancel (Esc)",
+"Burada gezegenler oluşturabilir ve birbirlerini nasıl çektiklerini izleyebilirsin. Gezegenlerin hareketi kütleçekimine göre hesaplanır.":"Create planets and observe how they attract each other. Their motion is calculated using gravitational forces.",
+"Gezegen oluştur":"Create a planet",
+"Boş alana çift tıkla: gezegen hemen oluşur ve seçilir. Yükseklik sıfır, büyüklük ilk mavi gezegenle aynıdır. Yatay hızı en büyük gezegenin çevresinde saat yönünde, kaçış hızının yarısı kadar; düşey hızı sıfırdır.":"Double-click empty space to create and select a planet. Its height starts at zero and its size matches the first blue planet. Its horizontal velocity is set to half the escape speed around the largest planet; its vertical velocity starts at zero.",
+"Gezegenleri değiştir":"Edit planets",
+"Kamerayı kullan":"Camera controls",
+"Sol fare tuşuyla sürükle:":"Left-drag:",
+"Kamerayı döndür.":"Rotate the camera.",
+"Sağ fare tuşuyla sürükle:":"Right-drag:",
+"Görüntüyü kaydır.":"Pan the view.",
+"Fare tekerleği:":"Mouse wheel:",
+"Yaklaş veya uzaklaş.":"Zoom in or out.",
+"Alt tuşu:":"Alt key:",
+"Büyüteci aç.":"Open magnifier.",
+"Koyu veya aydınlık arka plan.":"Toggle dark/light background.",
+"Üstten / Yandan:":"Top / Side:",
+"Hazır kamera açılarına geç.":"Switch to preset camera angles.",
+"Hazır sistemler":"Preset systems",
+"Diğer kontroller":"Other controls",
+"Başlat ya da duraklat.":"Start or pause.",
+"Başlangıçtaki gezegenlere dön.":"Restore the initial planets.",
+"Yörünge:":"Trails:",
+"Gezegenlerin izlerini göster veya gizle.":"Show or hide planet trails.",
+"Kütle Merkezi:":"Center of Mass:",
+"Seçili gezegenlerin; seçim yoksa tüm sistemin kütle merkezini mor halka ile gösterir.":"Show the selected planets’ center of mass, or the whole system’s when none are selected, using a purple ring.",
+"Kuvvetler:":"Forces:",
+"Her gezegene etki eden toplam çekim kuvvetini mor oklarla gösterir. Ok uzunlukları anlık en büyük kuvvete göre ölçeklenir.":"Show the net gravitational force on each planet with a purple arrow. Arrow lengths are scaled to the current maximum force.",
+"Hızlar:":"Velocities:",
+"Tüm gezegenlerin hız vektörlerini oklarla gösterir; tekrar tıklayınca gizler.":"Show velocity vectors as arrows; click again to hide them.",
+"Yapışma:":"Merge:",
+"Açıkken birbirine değen gezegenler anında birleşir. Yalnızca gece modunda kısa sarı ışın efekti gösterilir. Kütleleri toplanır; konumları kütle merkezine, hızları momentumun korunmasına göre hesaplanır. Renkleri kütlelerine göre karıştırılır. Tekrar tıklarsan birleşme kapanır.":"When enabled, touching planets merge immediately. In dark mode a short yellow burst appears. Masses add up, positions follow the center of mass, velocities conserve momentum, and colors blend according to mass. Click again to disable merging.",
+"Kısa sürgüler:":"Sliders:",
+"Animasyon hızını ve yörünge izi uzunluğunu ayarla.":"Adjust simulation speed and trail length.",
+"Kırmızı hız oku:":"Red velocity arrow:",
+"Hesaplanan kaçış hızı aşıldı.":"The calculated escape speed has been exceeded.",
+"Sağ tık →":"Right-click →",
+"Boş alana <strong>çift tıkla</strong>: gezegen hemen oluşur ve seçilir. Yükseklik sıfır, büyüklük ilk mavi gezegenle aynıdır. Yatay hızı en büyük gezegenin çevresinde saat yönünde, kaçış hızının yarısı kadar; düşey hızı sıfırdır.":"Double-click empty space to create and select a planet. It starts at ground height, with the first blue planet’s size, half the escape speed around the largest planet, and zero vertical speed.",
+"Sağ tık → <strong>Ekle ▸</strong> ile on altı hazır sistem oluşturabilirsin. Sistemin merkezi sağ tıkladığın noktadır; mevcut gezegenler korunur. Ekleme sonrası hareketi Başlat ile izle. İdeal yörüngeler diğer cisimlerin çekimi ve sayısal hesaplama nedeniyle zamanla değişebilir.":"Right-click → Add to create sixteen preset systems. The system is centered at your right-click location and existing planets are preserved. Press Start to watch them move. Ideal orbits may drift due to other bodies and numerical integration."};
+ const helpTR="Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. Başka gezegenlere de tıklayarak çoklu seçim yapabilir veya sağ tık menüsündeki <strong>Tümünü seç</strong> seçeneğiyle bütün gezegenleri seçebilirsin. Gezegenler <strong>boş alana tıklayana kadar</strong> seçili kalır. Seçili gezegenlerden birine sağ tıklayıp Düzenle'yi açarsan tümü birlikte düzenlenir: konum ve yükseklikte aynı yer değiştirme, hızda aynı hız değişimi, büyüklükte aynı oran uygulanır. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için sağ tıkla ve <strong>Düzenle ▸</strong> menüsünden <strong>Konum, Yükseklik, Büyüklük</strong> veya <strong>Hız</strong> seç. Konum yalnızca yatay (X/Z) konumu; Yükseklik yalnızca düşey (Y) konumu ayarlar. İkisi de tek aşamalıdır. Hızda önce yatay hız bileşenini, sonraki tıklamada düşey hız bileşenini ayarlarsın. Büyüklük tek aşamalıdır. Son tıklamayla veya herhangi bir aşamada Enter ile kabul, Esc ile iptal edebilirsin. Yeni gezegen oluştururken önceki sıralı aşamalar aynen devam eder. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir; <strong>Sil</strong> seçili bütün gezegenleri kaldırır. veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.";
+ const helpEN="Left-click a planet to select it; a dark blue ring appears in day mode and a yellow ring in night mode. Click more planets to select them together, or right-click and choose <strong>Select All</strong>. The selection stays active until you click empty space. Right-click a selected planet and open <strong>Edit ▸</strong> to edit the whole group. Position and height apply a common displacement, velocity applies the same change, and size applies the same ratio. Choose <strong>Position</strong>, <strong>Height</strong>, <strong>Size</strong>, or <strong>Velocity</strong>. Position changes horizontal X/Z; Height changes vertical Y. Both are single-step controls. Velocity adjusts horizontal and then vertical components in two stages. Finish by clicking or pressing Enter; Esc cancels. New planets use the original sequence of editing steps. Right-click to <strong>Copy</strong>, <strong>Paste</strong>, or <strong>Delete</strong>; Delete removes all selected planets. You can also use the Delete key, Ctrl+C, and Ctrl+V. Right-click empty space to paste there.";
+ const nodes=new WeakMap(),attributes=new WeakMap();
+ let translating=false;
+ function translateText(value){
+  if(translations[value]!==undefined)return translations[value];
+  const clean=value.trim();
+  if(translations[clean]!==undefined)return value.replace(clean,translations[clean]);
+  return value;
+ }
+ function walk(root){
+  if(root.nodeType===3){
+   const el=root.parentElement;
+   if(!el||el.closest('script,style,svg'))return;
+   const text=nodes.get(root)??root.nodeValue;
+   if(!nodes.has(root))nodes.set(root,text);
+   const target=language==='en'?translateText(text):text;
+   if(root.nodeValue!==target)root.nodeValue=target;
+   return;
+  }
+  if(root.nodeType!==1)return;
+  if(root.matches('script,style,svg'))return;
+  for(const attr of ['title','aria-label','placeholder']){
+   if(!root.hasAttribute(attr))continue;
+   let old=attributes.get(root);if(!old){old={};attributes.set(root,old)}
+   if(!(attr in old))old[attr]=root.getAttribute(attr);
+   const value=language==='en'?translateText(old[attr]):old[attr];
+   if(root.getAttribute(attr)!==value)root.setAttribute(attr,value);
+  }
+  for(const child of root.childNodes)walk(child);
+ }
+ const help=document.querySelector('#helpPanel p:nth-of-type(2)');
+ let helpNode=null;
+ // This paragraph contains inline formatting and is translated as a complete block.
+ for(const p of document.querySelectorAll('#helpPanel p')){
+  if(p.textContent.startsWith('Bir gezegene sol tıkla')){helpNode=p;break}
+ }
+ function sync(){
+  if(translating)return;translating=true;
+  if(helpNode){
+   const content=language==='en'?helpEN:helpTR;
+   if(helpNode.innerHTML!==content)helpNode.innerHTML=content;
+  }
+  walk(document.body);
+  document.documentElement.lang=language;
+  const button=document.getElementById('languageButton');
+  if(button){
+   button.textContent=language==='tr'?'🇹🇷':'🇬🇧';
+   button.title=language==='tr'?'Dil: Türkçe (English için tıkla)':'Language: English (Türkçe için tıkla)';
+   button.setAttribute('aria-label',button.title);
+  }
+  translating=false;
+ }
+ window.gravityI18n={
+  get language(){return language},
+  t(value){return language==='en'?translateText(value):value},
+  sync,
+  translateDynamic(value){
+   if(language!=='en')return value;
+   return translateText(value);
+  }
+ };
+ document.addEventListener('DOMContentLoaded',()=>{
+  const btn=document.getElementById('languageButton');
+  btn.addEventListener('click',()=>{language=language==='tr'?'en':'tr';try{localStorage.setItem(key,language)}catch(e){};sync()});
+  const observer=new MutationObserver(()=>{if(!translating)queueMicrotask(sync)});
+  observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['title','aria-label','placeholder']});
+  sync();
+ });
+})();
+</script>
 </head>
 <body>
 <div id="viewport"></div>
-<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="clearCanvas" type="button" aria-label="Tüm cisimleri temizle" title="Tüm cisimleri temizle" style="padding:6px 10px;display:inline-flex;align-items:center;justify-content:center"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v7m4-7v7"/></svg></button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleForces" type="button" aria-pressed="false">Kuvvetler</button><button id="toggleCenter" type="button" aria-pressed="false">Kütle Merkezi</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="toggleSurface" type="button" aria-pressed="false">Uzay</button><button id="toggleFriction" type="button" aria-pressed="false" style="display:none">Sürtünmesiz</button><button id="toggleFieldArrows" type="button" aria-pressed="false" style="display:none">Alan Okları</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
+<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="clearCanvas" type="button" aria-label="Tüm cisimleri temizle" title="Tüm cisimleri temizle" style="padding:6px 10px;display:inline-flex;align-items:center;justify-content:center"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v7m4-7v7"/></svg></button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleForces" type="button" aria-pressed="false">Kuvvetler</button><button id="toggleCenter" type="button" aria-pressed="false">Kütle Merkezi</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="toggleSurface" type="button" aria-pressed="false">Uzay</button><button id="toggleFriction" type="button" aria-pressed="false" style="display:none">Sürtünmesiz</button><button id="toggleFieldArrows" type="button" aria-pressed="false" style="display:none">Alan Okları</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="languageButton" type="button" title="Dil: Türkçe" aria-label="Dil: Türkçe" style="width:44px;padding:0;font-size:24px">🇹🇷</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
 <div id="settings" aria-label="Kamera ve simülasyon kontrolleri">
   <div class="cameras">
     <button id="topView" type="button" title="Üstten görüş" aria-label="Üstten görüş">Üstten</button>
