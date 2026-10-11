@@ -62,7 +62,7 @@ button:hover{background:#f5f8fc}
 </head>
 <body>
 <div id="viewport"></div>
-<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa">⌂</a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
+<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa">⌂</a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleForces" type="button" aria-pressed="false">Kuvvetler</button><button id="toggleCenter" type="button" aria-pressed="false">Kütle Merkezi</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
 <div id="settings" aria-label="Kamera ve simülasyon kontrolleri">
   <div class="cameras">
     <button id="topView" type="button" title="Üstten görüş" aria-label="Üstten görüş">Üstten</button>
@@ -100,7 +100,7 @@ button:hover{background:#f5f8fc}
     <ul>
       <li><strong>▶ / ❚❚ veya Boşluk:</strong> Başlat ya da duraklat.</li>
       <li><strong>Sıfırla:</strong> Başlangıçtaki gezegenlere dön.</li>
-      <li><strong>Yörünge:</strong> Gezegenlerin izlerini göster veya gizle.</li><li><strong>Hızlar:</strong> Tüm gezegenlerin hız vektörlerini oklarla gösterir; tekrar tıklayınca gizler.</li><li><strong>Yapışma:</strong> Açıkken birbirine değen gezegenler anında birleşir. Yalnızca gece modunda kısa sarı ışın efekti gösterilir. Kütleleri toplanır; konumları kütle merkezine, hızları momentumun korunmasına göre hesaplanır. Renkleri kütlelerine göre karıştırılır. Tekrar tıklarsan birleşme kapanır.</li>
+      <li><strong>Yörünge:</strong> Gezegenlerin izlerini göster veya gizle.</li><li><strong>Kütle Merkezi:</strong> Seçili gezegenlerin; seçim yoksa tüm sistemin kütle merkezini mor halka ile gösterir.</li><li><strong>Kuvvetler:</strong> Her gezegene etki eden toplam çekim kuvvetini mor oklarla gösterir. Ok uzunlukları anlık en büyük kuvvete göre ölçeklenir.</li><li><strong>Hızlar:</strong> Tüm gezegenlerin hız vektörlerini oklarla gösterir; tekrar tıklayınca gizler.</li><li><strong>Yapışma:</strong> Açıkken birbirine değen gezegenler anında birleşir. Yalnızca gece modunda kısa sarı ışın efekti gösterilir. Kütleleri toplanır; konumları kütle merkezine, hızları momentumun korunmasına göre hesaplanır. Renkleri kütlelerine göre karıştırılır. Tekrar tıklarsan birleşme kapanır.</li>
       <li><strong>Kısa sürgüler:</strong> Animasyon hızını ve yörünge izi uzunluğunu ayarla.</li>
       <li><strong>Kırmızı hız oku:</strong> Hesaplanan kaçış hızı aşıldı.</li>
     </ul>
@@ -476,7 +476,46 @@ function escapeSpeedFor(body){
 }
 function massFromRadius(r){return DENSITY*r*r*r}
 let velocitiesVisible=false;
+let forcesVisible=false;
+let centerVisible=false;
 let mergingEnabled=false;
+// Seçili gezegenlerin, seçim yoksa bütün gezegenlerin ortak kütle merkezi.
+const centerMarker=new THREE.Group();
+const centerMarkerMaterial=new THREE.MeshBasicMaterial({color:0x9d1f9e,depthTest:false});
+const centerMarkerRing=new THREE.Mesh(new THREE.TorusGeometry(1.2,.085,8,48),centerMarkerMaterial);
+centerMarkerRing.renderOrder=91;
+centerMarker.add(centerMarkerRing);
+const centerMarkerDot=new THREE.Mesh(new THREE.SphereGeometry(.32,12,10),centerMarkerMaterial);
+centerMarkerDot.renderOrder=91;centerMarker.add(centerMarkerDot);
+centerMarker.visible=false;scene.add(centerMarker);
+function updateCenterMarker(){
+ centerMarker.visible=false;
+ if(!centerVisible)return;
+ const set=selectedBodies.size?[...selectedBodies].filter(b=>bodies.includes(b)):bodies;
+ let mass=0;const center=new THREE.Vector3();
+ for(const b of set){if(!(b.m>0))continue;mass+=b.m;center.addScaledVector(b.p,b.m)}
+ if(mass<=0)return;
+ center.divideScalar(mass);centerMarker.position.copy(center);
+ centerMarker.quaternion.copy(camera.quaternion);
+ centerMarker.visible=true;
+}
+function updateForceArrows(){
+ if(!forcesVisible){for(const b of bodies)b.forceArrow.visible=false;return}
+ // Aynı yumuşatılmış Newton çekimini kullan, kuvvet = kütle × ivme.
+ const aa=accelerations();
+ let maxForce=0;
+ const forces=aa.map((a,i)=>{const v=a.multiplyScalar(bodies[i].m);maxForce=Math.max(maxForce,v.length());return v});
+ for(let i=0;i<bodies.length;i++){
+  const b=bodies[i],v=forces[i],strength=v.length();
+  b.forceArrow.visible=strength>1e-10;
+  if(!b.forceArrow.visible)continue;
+  b.forceArrow.position.copy(b.p);
+  b.forceArrow.setDirection(v.normalize());
+  // Görünürlük için göreli ölçek: en kuvvetli ok 25 birim.
+  const length=2+23*Math.sqrt(strength/Math.max(maxForce,1e-10));
+  b.forceArrow.setLength(length,Math.min(2.4,length*.23),Math.min(1.2,length*.13));
+ }
+}
 function makeBody(r,color,pos,vel){
  const mesh=new THREE.Mesh(sphere,new THREE.MeshStandardMaterial({color,roughness:.72,metalness:0}));
  mesh.scale.setScalar(r);mesh.position.copy(pos);mesh.castShadow=pos.y>0;mesh.receiveShadow=true;scene.add(mesh);
@@ -488,9 +527,11 @@ function makeBody(r,color,pos,vel){
  const trace=new THREE.Line(g,mat);trace.frustumCulled=false;trace.renderOrder=15;trace.visible=trailsVisible;scene.add(trace);
  const velocityArrow=new THREE.ArrowHelper(new THREE.Vector3(1,0,0),pos,1,0x0879c7,.8,.4);
  velocityArrow.visible=false;scene.add(velocityArrow);
- return {m:massFromRadius(r),r,color,p:pos.clone(),v:vel.clone(),mesh,trace,g,mat,trail:[pos.clone()],velocityArrow};
+ const forceArrow=new THREE.ArrowHelper(new THREE.Vector3(1,0,0),pos,1,0xbe49a5,.8,.4);
+ forceArrow.visible=false;scene.add(forceArrow);
+ return {m:massFromRadius(r),r,color,p:pos.clone(),v:vel.clone(),mesh,trace,g,mat,trail:[pos.clone()],velocityArrow,forceArrow};
 }
-function removeBody(b){scene.remove(b.mesh,b.trace,b.velocityArrow);b.mesh.material.dispose();b.g.dispose();b.mat.dispose();b.velocityArrow.line.material.dispose();b.velocityArrow.cone.material.dispose()}
+function removeBody(b){scene.remove(b.mesh,b.trace,b.velocityArrow,b.forceArrow);b.mesh.material.dispose();b.g.dispose();b.mat.dispose();b.velocityArrow.line.material.dispose();b.velocityArrow.cone.material.dispose();b.forceArrow.line.material.dispose();b.forceArrow.cone.material.dispose()}
 function updateTrail(b){
  const attr=b.g.getAttribute('position');
  const n=Math.min(b.trail.length,MAX_TRAIL,trailDisplayLength);
@@ -896,6 +937,18 @@ $('toggleVelocities').addEventListener('click',()=>{
  $('toggleVelocities').textContent=velocitiesVisible?'Hızları gizle':'Hızlar';
  if(!velocitiesVisible)for(const b of bodies)b.velocityArrow.visible=false;
 });
+$('toggleForces').addEventListener('click',()=>{
+ forcesVisible=!forcesVisible;
+ $('toggleForces').setAttribute('aria-pressed',String(forcesVisible));
+ $('toggleForces').textContent=forcesVisible?'Kuvvetleri gizle':'Kuvvetler';
+ if(!forcesVisible)for(const b of bodies)b.forceArrow.visible=false;
+});
+$('toggleCenter').addEventListener('click',()=>{
+ centerVisible=!centerVisible;
+ $('toggleCenter').setAttribute('aria-pressed',String(centerVisible));
+ $('toggleCenter').textContent=centerVisible?'Merkezi gizle':'Kütle Merkezi';
+ if(!centerVisible)centerMarker.visible=false;
+});
 $('toggleMerging').addEventListener('click',()=>{
  mergingEnabled=!mergingEnabled;
  $('toggleMerging').setAttribute('aria-pressed',String(mergingEnabled));
@@ -958,7 +1011,7 @@ function animate(now){requestAnimationFrame(animate);
  }
  if(running&&!editor){acc+=delta*animationSpeed;let n=0;while(acc>=DT&&n<40){step();acc-=DT;n++}if(n===40)acc=0}
  for(const b of bodies)updateVisual(b);
- controls.update();updateSelectionRing();updatePlanetInfo();updateMergeBursts(delta);renderer.render(scene,camera);updateLens();
+ controls.update();updateSelectionRing();updatePlanetInfo();updateForceArrows();updateCenterMarker();updateMergeBursts(delta);renderer.render(scene,camera);updateLens();
 }
 init();requestAnimationFrame(animate);
 } catch(error){const box=document.getElementById('error');box.style.display='block';box.textContent='3D motor yüklenemedi: '+error.message+'. İnternet bağlantısını ve WebGL desteğini kontrol edin.';console.error(error)}
