@@ -86,7 +86,7 @@ button:hover{background:#f5f8fc}
     <h3>Gezegen oluştur</h3>
     <p>Boş alana <strong>çift tıkla</strong>: gezegen hemen oluşur ve seçilir. Yükseklik sıfır, büyüklük ilk mavi gezegenle aynıdır. Yatay hızı en büyük gezegenin çevresinde saat yönünde, kaçış hızının yarısı kadar; düşey hızı sıfırdır.</p>
     <h3>Gezegenleri değiştir</h3>
-    <p>Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. Başka gezegenlere de tıklayarak çoklu seçim yapabilir veya sağ tık menüsündeki <strong>Tümünü seç</strong> seçeneğiyle bütün gezegenleri seçebilirsin. Gezegenler <strong>boş alana tıklayana kadar</strong> seçili kalır. Seçili gezegenlerden birine sağ tıklayıp Düzenle'yi açarsan tümü birlikte düzenlenir: konum ve yükseklikte aynı yer değiştirme, hızda aynı hız değişimi, büyüklükte aynı oran uygulanır. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için sağ tıkla ve <strong>Düzenle ▸</strong> menüsünden <strong>Konum, Yükseklik, Büyüklük</strong> veya <strong>Hız</strong> seç. Konum yalnızca yatay (X/Z) konumu; Yükseklik yalnızca düşey (Y) konumu ayarlar. İkisi de tek aşamalıdır. Hızda önce yatay hız bileşenini, sonraki tıklamada düşey hız bileşenini ayarlarsın. Büyüklük tek aşamalıdır. Son tıklamayla veya herhangi bir aşamada Enter ile kabul, Esc ile iptal edebilirsin. Yeni gezegen oluştururken önceki sıralı aşamalar aynen devam eder. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
+    <p>Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. Başka gezegenlere de tıklayarak çoklu seçim yapabilir veya sağ tık menüsündeki <strong>Tümünü seç</strong> seçeneğiyle bütün gezegenleri seçebilirsin. Gezegenler <strong>boş alana tıklayana kadar</strong> seçili kalır. Seçili gezegenlerden birine sağ tıklayıp Düzenle'yi açarsan tümü birlikte düzenlenir: konum ve yükseklikte aynı yer değiştirme, hızda aynı hız değişimi, büyüklükte aynı oran uygulanır. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için sağ tıkla ve <strong>Düzenle ▸</strong> menüsünden <strong>Konum, Yükseklik, Büyüklük</strong> veya <strong>Hız</strong> seç. Konum yalnızca yatay (X/Z) konumu; Yükseklik yalnızca düşey (Y) konumu ayarlar. İkisi de tek aşamalıdır. Hızda önce yatay hız bileşenini, sonraki tıklamada düşey hız bileşenini ayarlarsın. Büyüklük tek aşamalıdır. Son tıklamayla veya herhangi bir aşamada Enter ile kabul, Esc ile iptal edebilirsin. Yeni gezegen oluştururken önceki sıralı aşamalar aynen devam eder. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir; <strong>Sil</strong> seçili bütün gezegenleri kaldırır. veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
     <p><strong>Ctrl+C:</strong> Seçili gezegenin konumunu, hızını, yarıçapını, kütlesini ve rengini hafızaya al. <strong>Ctrl+V:</strong> Aynı özelliklerle, fareyle gösterdiğin yatay konuma yeni bir gezegen yapıştır. İstediğin kadar tekrarla.</p>
     <h3>Kamerayı kullan</h3>
     <ul>
@@ -377,8 +377,18 @@ $('pastePlanet').addEventListener('click',()=>{
  const point=menuPoint?.clone()||null;closePlanetMenu();pastePlanet(point);
 });
 $('deletePlanet').addEventListener('click',()=>{
- const b=menuBody;
- deletePlanet(b);
+ const targets=[...selectedBodies].filter(b=>bodies.includes(b));
+ if(!targets.length&&menuBody&&bodies.includes(menuBody))targets.push(menuBody);
+ closePlanetMenu();
+ if(editor)finishEditor(false);
+ for(const b of targets){
+  const index=bodies.indexOf(b);
+  if(index<0)continue;
+  bodies.splice(index,1);removeBody(b);
+  if(hoveredBody===b)hoveredBody=null;
+ }
+ selectedBodies.clear();selectedBody=null;syncSelections();acc=0;
+ $('message').textContent=targets.length+' gezegen silindi · Çift tıkla: yeni gezegen';
 });
 window.addEventListener('pointerdown',e=>{
  if(!planetMenu.contains(e.target))closePlanetMenu();
@@ -811,7 +821,7 @@ canvas.addEventListener('contextmenu',e=>{
  menuPointer={clientX:e.clientX,clientY:e.clientY};
  $('editPlanet').style.display=found?'block':'none';
  $('copyPlanet').style.display=found?'block':'none';
- $('deletePlanet').style.display=found?'block':'none';
+ $('deletePlanet').style.display=(found||selectedBodies.size)?'block':'none';
  $('pastePlanet').disabled=!copiedPlanet;
  $('selectAllPlanets').disabled=bodies.length===0;
  const left=Math.min(e.clientX,innerWidth-235);
