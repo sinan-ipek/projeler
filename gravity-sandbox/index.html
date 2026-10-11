@@ -86,7 +86,7 @@ button:hover{background:#f5f8fc}
     <h3>Gezegen oluştur</h3>
     <p>Boş alana <strong>çift tıkla</strong>: gezegen hemen oluşur ve seçilir. Yükseklik sıfır, büyüklük ilk mavi gezegenle aynıdır. Yatay hızı en büyük gezegenin çevresinde saat yönünde, kaçış hızının yarısı kadar; düşey hızı sıfırdır.</p>
     <h3>Gezegenleri değiştir</h3>
-    <p>Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için sağ tıkla ve <strong>Düzenle ▸</strong> menüsünden <strong>Konum, Büyüklük</strong> veya <strong>Hız</strong> seç. Konumda önce yatay konumu, sonraki tıklamada yüksekliği; hızda önce yatay hız bileşenini, sonraki tıklamada düşey hız bileşenini ayarlarsın. Büyüklük tek aşamalıdır. Son tıklamayla veya herhangi bir aşamada Enter ile kabul, Esc ile iptal edebilirsin. Yeni gezegen oluştururken önceki sıralı aşamalar aynen devam eder. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
+    <p>Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. <strong>Ctrl+sol tık</strong> ile birden fazla gezegen seçebilir veya seçimden çıkarabilirsin. Seçili gezegenlerden birine sağ tıklayıp Düzenle'yi açarsan tümü birlikte düzenlenir: konumda aynı yer değiştirme, hızda aynı hız değişimi, büyüklükte aynı oran uygulanır. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için sağ tıkla ve <strong>Düzenle ▸</strong> menüsünden <strong>Konum, Büyüklük</strong> veya <strong>Hız</strong> seç. Konumda önce yatay konumu, sonraki tıklamada yüksekliği; hızda önce yatay hız bileşenini, sonraki tıklamada düşey hız bileşenini ayarlarsın. Büyüklük tek aşamalıdır. Son tıklamayla veya herhangi bir aşamada Enter ile kabul, Esc ile iptal edebilirsin. Yeni gezegen oluştururken önceki sıralı aşamalar aynen devam eder. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
     <p><strong>Ctrl+C:</strong> Seçili gezegenin konumunu, hızını, yarıçapını, kütlesini ve rengini hafızaya al. <strong>Ctrl+V:</strong> Aynı özelliklerle, fareyle gösterdiğin yatay konuma yeni bir gezegen yapıştır. İstediğin kadar tekrarla.</p>
     <h3>Kamerayı kullan</h3>
     <ul>
@@ -184,30 +184,41 @@ let menuPoint=null;
 let menuPointer=null;
 const planetMenu=$('planetMenu');
 function closePlanetMenu(){planetMenu.style.display='none';$('editSubmenu').style.display='none';$('editPlanet').setAttribute('aria-expanded','false');menuBody=null;menuPoint=null;menuPointer=null}
-// Seçim işareti: gezegenin çevresindeki ince, ışıklı 3B halka.
-// Çizgi ekranda daima 1 piksel kalınlıkta; gezegenin boyutu yalnız yarıçapı etkiler.
-const selectionPoints=[];
-for(let i=0;i<128;i++){
- const angle=i*Math.PI*2/128;
- selectionPoints.push(new THREE.Vector3(Math.cos(angle),Math.sin(angle),0));
+// Ctrl+sol tık ile çoklu seçim. Her gezegenin kendi seçim halkası vardır.
+const selectedBodies=new Set();
+const selectionRings=new Map();
+function makeSelectionRing(){
+ const ring=document.createElement('div');
+ ring.style.cssText='position:absolute;display:none;pointer-events:none;z-index:8;border:2px solid #203b60;border-radius:50%;box-sizing:border-box;';
+ holder.appendChild(ring);return ring;
 }
-const selectionRing=document.createElement('div');
-selectionRing.style.cssText='position:absolute;display:none;pointer-events:none;z-index:8;border:2px solid #203b60;border-radius:50%;box-sizing:border-box;';
-holder.appendChild(selectionRing);
-function selectPlanet(body){selectedBody=body;selectionRing.style.display=body?'block':'none'}
+function syncSelections(){
+ for(const [b,ring] of selectionRings)if(!selectedBodies.has(b)||!bodies.includes(b)){ring.remove();selectionRings.delete(b)}
+ for(const b of selectedBodies)if(bodies.includes(b)&&!selectionRings.has(b))selectionRings.set(b,makeSelectionRing());
+}
+function selectPlanet(body,additive=false){
+ if(!additive)selectedBodies.clear();
+ if(body){
+  if(additive&&selectedBodies.has(body))selectedBodies.delete(body);
+  else selectedBodies.add(body);
+ }
+ selectedBody=selectedBodies.size?[...selectedBodies].at(-1):null;
+ syncSelections();
+}
 function updateSelectionRing(){
- const b=selectedBody;
- if(!b||!bodies.includes(b)){selectionRing.style.display='none';return}
- const center=b.p.clone().project(camera);
- if(center.z>1||center.z< -1){selectionRing.style.display='none';return}
+ syncSelections();
  const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
- const edge=b.p.clone().addScaledVector(right,b.r*1.34).project(camera);
  const width=renderer.domElement.clientWidth,height=renderer.domElement.clientHeight;
- const cx=(center.x*.5+.5)*width,cy=(-center.y*.5+.5)*height;
- const radius=Math.max(8,Math.abs(edge.x-center.x)*width/2);
- selectionRing.style.display='block';
- selectionRing.style.width=selectionRing.style.height=(radius*2)+'px';
- selectionRing.style.left=(cx-radius)+'px';selectionRing.style.top=(cy-radius)+'px';
+ for(const [b,ring] of selectionRings){
+  const center=b.p.clone().project(camera);
+  if(center.z>1||center.z< -1){ring.style.display='none';continue}
+  const edge=b.p.clone().addScaledVector(right,b.r*1.34).project(camera);
+  const cx=(center.x*.5+.5)*width,cy=(-center.y*.5+.5)*height;
+  const radius=Math.max(8,Math.abs(edge.x-center.x)*width/2);
+  ring.style.display='block';
+  ring.style.width=ring.style.height=(radius*2)+'px';
+  ring.style.left=(cx-radius)+'px';ring.style.top=(cy-radius)+'px';
+ }
 }
 
 function copyPlanet(body){
@@ -238,7 +249,7 @@ function deletePlanet(body){
  if(index<0)return;
  bodies.splice(index,1);
  removeBody(body);
- if(selectedBody===body)selectPlanet(null);
+ if(selectedBodies.has(body)){selectedBodies.delete(body);selectedBody=selectedBodies.size?[...selectedBodies].at(-1):null;syncSelections()}
  if(hoveredBody===body)hoveredBody=null;
  acc=0;
  $('message').textContent='Gezegen silindi · Çift tıkla: yeni gezegen';
@@ -277,7 +288,7 @@ $('themeButton').addEventListener('click',()=>{
  gridMinor.material.color.set(darkMode?0x55718d:0xd7dee6);
  gridMajor.material.color.set(darkMode?0x7d9fbc:0xb6c2ce);
  room.material.color.set(darkMode?0x7f99b5:0xaebac6);
- selectionRing.style.borderColor=darkMode?'#ffdb3a':'#203b60';
+ for(const ring of selectionRings.values())ring.style.borderColor=darkMode?'#ffdb3a':'#203b60';
  $('themeButton').textContent=darkMode?'☀':'☾';
  $('themeButton').title=darkMode?'Aydınlık arka plan':'Koyu arka plan';
 });
@@ -464,7 +475,9 @@ function beginEditor(existing,e,editPhase=null){
  // Düzenleme, gezegenin mevcut konumundan ve mevcut hızından başlar.
  // Fareye tıklandığı an bir konum/hız sıçraması oluşmaması için
  // fare konumunun düzlem üzerindeki başlangıç karşılığını saklıyoruz.
- editor={existing:!!existing,b:candidate,original,phase:editPhase===null?0:editPhase,editGroup:!existing||editPhase===null?null:(editPhase===0?'position':editPhase===3?'velocity':'size'),
+ const group=existing?[...selectedBodies].filter(b=>bodies.includes(b)):[];if(existing&&!group.includes(candidate))group.push(candidate);
+ const groupOriginal=group.map(b=>({b,p:b.p.clone(),v:b.v.clone(),r:b.r,m:b.m,trail:b.trail.map(p=>p.clone())}));
+ editor={existing:!!existing,b:candidate,original,groupOriginal,phase:editPhase===null?0:editPhase,editGroup:!existing||editPhase===null?null:(editPhase===0?'position':editPhase===3?'velocity':'size'),
    anchorY:e.clientY,anchorPos:candidate.p.clone(),anchorV:candidate.v.clone(),
    anchorRadius:candidate.r,anchorPlane:onPlane(e,0)};
  controls.enabled=false;renderer.domElement.style.cursor='none';
@@ -498,6 +511,21 @@ function updateFromMouse(e){if(!editor)return;
   }
  }
  else if(ed.phase===4){b.v.y=clamp(ed.anchorV.y-dy*.22,-40,40)}
+ // Aynı düzenleme hareketini gruptaki diğer gezegenlere uygula.
+ if(ed.existing&&ed.groupOriginal.length>1){
+  const posDelta=b.p.clone().sub(ed.groupOriginal.find(o=>o.b===b).p);
+  const velDelta=b.v.clone().sub(ed.groupOriginal.find(o=>o.b===b).v);
+  const sizeRatio=b.r/ed.groupOriginal.find(o=>o.b===b).r;
+  for(const item of ed.groupOriginal){
+   if(item.b===b)continue;
+   if(ed.phase===0){item.b.p.x=clamp(item.p.x+posDelta.x,-88,88);item.b.p.z=clamp(item.p.z+posDelta.z,-88,88)}
+   else if(ed.phase===1)item.b.p.y=clamp(item.p.y+posDelta.y,-45,130);
+   else if(ed.phase===2){item.b.r=clamp(item.r*sizeRatio,.35,8);item.b.m=massFromRadius(item.b.r)}
+   else if(ed.phase===3){item.b.v.x=clamp(item.v.x+velDelta.x,-60,60);item.b.v.z=clamp(item.v.z+velDelta.z,-60,60)}
+   else if(ed.phase===4)item.b.v.y=clamp(item.v.y+velDelta.y,-40,40);
+   updateVisual(item.b);
+  }
+ }
  updateVisual(b);updateHelpers();
 }
 function advance(e){if(!editor)return;
@@ -514,14 +542,21 @@ function finishEditor(save){if(!editor)return;
  const ed=editor,b=ed.b;
  if(save){
    if(!ed.existing){bodies.push(b)}
-   b.m=massFromRadius(b.r);
-   b.trail=[b.p.clone()];updateTrail(b);
+   for(const item of ed.existing?ed.groupOriginal:[{b}]){
+    item.b.m=massFromRadius(item.b.r);
+    item.b.trail=[item.b.p.clone()];updateTrail(item.b);
+   }
  }else if(ed.existing){
    b.p.copy(ed.original.p);b.v.copy(ed.original.v);b.r=ed.original.r;b.m=ed.original.m;
    b.trail=ed.original.trail;updateTrail(b);updateVisual(b);
+   for(const item of ed.groupOriginal){
+    if(item.b===b)continue;
+    item.b.p.copy(item.p);item.b.v.copy(item.v);item.b.r=item.r;item.b.m=item.m;
+    item.b.trail=item.trail;updateTrail(item.b);updateVisual(item.b);
+   }
  }else {
    removeBody(b);
-   if(selectedBody===b)selectedBody=null;
+   if(selectedBodies.has(b)){selectedBodies.delete(b);selectedBody=selectedBodies.size?[...selectedBodies].at(-1):null;syncSelections()}
    if(hoveredBody===b)hoveredBody=null;
  }
  editor=null;controls.enabled=true;renderer.domElement.style.cursor='auto';showEditor();
@@ -568,7 +603,7 @@ canvas.addEventListener('contextmenu',e=>{
  const found=bodyAt(e);
  const point=onPlane(e,0);
  closePlanetMenu();
- if(found)selectPlanet(found);
+ if(found&&!selectedBodies.has(found))selectPlanet(found);
  menuBody=found;
  menuPoint=point?point.clone():null;
  menuPointer={clientX:e.clientX,clientY:e.clientY};
@@ -619,7 +654,7 @@ canvas.addEventListener('pointerdown',e=>{
 },true);
 canvas.addEventListener('click',e=>{
  if(editor||e.button!==0||e.detail>1)return;
- const found=bodyAt(e);selectPlanet(found)
+ const found=bodyAt(e);selectPlanet(found,e.ctrlKey||e.metaKey)
 });
 $('cancel').addEventListener('click',()=>finishEditor(false));
 $('toggleTrails').addEventListener('click',toggleTrails);
