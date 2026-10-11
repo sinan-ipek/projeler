@@ -86,7 +86,7 @@ button:hover{background:#f5f8fc}
     <h3>Gezegen oluştur</h3>
     <p>Boş alana <strong>çift tıkla</strong>: gezegen hemen oluşur ve seçilir. Yükseklik sıfır, büyüklük ilk mavi gezegenle aynıdır. Yatay hızı en büyük gezegenin çevresinde saat yönünde, kaçış hızının yarısı kadar; düşey hızı sıfırdır.</p>
     <h3>Gezegenleri değiştir</h3>
-    <p>Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. <strong>Ctrl+sol tık</strong> ile birden fazla gezegen seçebilir veya seçimden çıkarabilirsin. Seçili gezegenlerden birine sağ tıklayıp Düzenle'yi açarsan tümü birlikte düzenlenir: konumda aynı yer değiştirme, hızda aynı hız değişimi, büyüklükte aynı oran uygulanır. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için sağ tıkla ve <strong>Düzenle ▸</strong> menüsünden <strong>Konum, Büyüklük</strong> veya <strong>Hız</strong> seç. Konumda önce yatay konumu, sonraki tıklamada yüksekliği; hızda önce yatay hız bileşenini, sonraki tıklamada düşey hız bileşenini ayarlarsın. Büyüklük tek aşamalıdır. Son tıklamayla veya herhangi bir aşamada Enter ile kabul, Esc ile iptal edebilirsin. Yeni gezegen oluştururken önceki sıralı aşamalar aynen devam eder. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
+    <p>Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. Başka gezegenlere de tıklayarak çoklu seçim yapabilirsin. Gezegenler <strong>boş alana tıklayana kadar</strong> seçili kalır. Seçili gezegenlerden birine sağ tıklayıp Düzenle'yi açarsan tümü birlikte düzenlenir: konumda aynı yer değiştirme, hızda aynı hız değişimi, büyüklükte aynı oran uygulanır. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için sağ tıkla ve <strong>Düzenle ▸</strong> menüsünden <strong>Konum, Büyüklük</strong> veya <strong>Hız</strong> seç. Konumda önce yatay konumu, sonraki tıklamada yüksekliği; hızda önce yatay hız bileşenini, sonraki tıklamada düşey hız bileşenini ayarlarsın. Büyüklük tek aşamalıdır. Son tıklamayla veya herhangi bir aşamada Enter ile kabul, Esc ile iptal edebilirsin. Yeni gezegen oluştururken önceki sıralı aşamalar aynen devam eder. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
     <p><strong>Ctrl+C:</strong> Seçili gezegenin konumunu, hızını, yarıçapını, kütlesini ve rengini hafızaya al. <strong>Ctrl+V:</strong> Aynı özelliklerle, fareyle gösterdiğin yatay konuma yeni bir gezegen yapıştır. İstediğin kadar tekrarla.</p>
     <h3>Kamerayı kullan</h3>
     <ul>
@@ -196,12 +196,10 @@ function syncSelections(){
  for(const [b,ring] of selectionRings)if(!selectedBodies.has(b)||!bodies.includes(b)){ring.remove();selectionRings.delete(b)}
  for(const b of selectedBodies)if(bodies.includes(b)&&!selectionRings.has(b))selectionRings.set(b,makeSelectionRing());
 }
-function selectPlanet(body,additive=false){
- if(!additive)selectedBodies.clear();
- if(body){
-  if(additive&&selectedBodies.has(body))selectedBodies.delete(body);
-  else selectedBodies.add(body);
- }
+function selectPlanet(body){
+ // Seçimler ancak boş alana tıklanınca temizlenir.
+ if(!body)selectedBodies.clear();
+ else selectedBodies.add(body);
  selectedBody=selectedBodies.size?[...selectedBodies].at(-1):null;
  syncSelections();
 }
@@ -656,7 +654,7 @@ canvas.addEventListener('pointerdown',e=>{
 },true);
 canvas.addEventListener('click',e=>{
  if(editor||e.button!==0||e.detail>1)return;
- const found=bodyAt(e);selectPlanet(found,e.ctrlKey||e.metaKey)
+ const found=bodyAt(e);selectPlanet(found)
 });
 $('cancel').addEventListener('click',()=>finishEditor(false));
 $('toggleTrails').addEventListener('click',toggleTrails);
