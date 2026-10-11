@@ -1,105 +1,100 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ziyaret İstatistikleri</title>
+<html lang="tr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ziyaret İstatistikleri</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font:14px system-ui,Arial,sans-serif}main{width:min(430px,94vw);margin:38px auto 60px}h1{font-size:18px;font-weight:600;margin:0 0 22px}#period{text-align:right;font-variant-numeric:tabular-nums;font-size:13px;margin-bottom:10px}svg{display:block;width:100%;height:auto}input[type=range]{width:100%;accent-color:#2866ab;cursor:pointer;margin-top:12px}.ends{display:flex;justify-content:space-between;color:#666;font-size:12px}h2{font-size:14px;font-weight:600;margin:31px 0 12px}table{width:100%;border-collapse:collapse}td{padding:7px 1px;border-bottom:1px solid #eee}td:last-child{text-align:right;font-variant-numeric:tabular-nums}#status{color:#666;font-size:12px;line-height:1.6;min-height:34px}#total{font-variant-numeric:tabular-nums}a{color:inherit} .back{position:absolute;top:12px;left:14px;font-size:12px;text-decoration:none;color:#555} .back:hover{text-decoration:underline}</style></head>
-<body><a class="back" href="/projeler/">← Ana sayfa</a><main><h1>Ziyaretler <span id="total"></span></h1>
+*{box-sizing:border-box}
+body{font:14px system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:#fff;color:#172036;margin:0}
+main{width:min(390px,calc(100% - 32px));margin:44px auto 60px}
+h1{font-size:18px;margin:0 0 24px;font-weight:600}
+h2{font-size:14px;font-weight:600;margin:26px 0 11px}
+#period{font-size:13px;text-align:right;margin:0 0 3px}
+svg{width:100%;height:auto;display:block}
+#zoom{width:100%;margin:12px 0 0;accent-color:#2362ae;cursor:pointer}
+.ends{display:flex;justify-content:space-between;font-size:11px;color:#666}
+table{width:100%;border-collapse:collapse}
+td{padding:7px 1px;border-bottom:1px solid #eee}
+td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+#status{font-size:12px;line-height:1.6;color:#707b90;margin-top:18px}
+.back{position:absolute;top:12px;left:15px;font-size:12px;text-decoration:none;color:#536070}
+.back:hover{text-decoration:underline}
+</style></head>
+<body><a class="back" href="/projeler/">← Ana sayfa</a>
+<main>
+<h1>Ziyaretler — <span id="total">…</span></h1>
 <div id="period">Son 7 gün</div>
-<svg viewBox="0 0 350 190" role="img" aria-label="Günlük ziyaret grafiği">
-<path d="M43 12 V155 H340" stroke="#111" stroke-width="2" fill="none" id="axes"/>
-<g id="ticks"></g><polyline id="line" fill="none" stroke="#2465b1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points=""/>
+<svg viewBox="0 0 350 185" aria-label="Ziyaret grafiği" role="img">
+<path d="M43 12V153H341" stroke="currentColor" stroke-width="2" fill="none"/>
+<g id="ticks"></g><polyline id="line" stroke="#2465b1" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round" points=""/>
 <g id="dates"></g>
-</svg><input id="zoom" type="range" min="0" max="1000" value="0" step="1" aria-label="Zaman aralığını büyüt veya küçült"/>
+</svg>
+<input type="range" min="0" max="1000" step="1" value="0" id="zoom" aria-label="Zaman ölçeği">
 <div class="ends"><span>7 gün</span><span>Başlangıçtan beri</span></div>
-<h2>Sayfalar</h2><table><tbody id="pages"></tbody></table><p id="status" role="status">İstatistikler hazırlanıyor…</p>
-</main><script src="/projeler/analytics.js"></script>
+<h2>Sayfalar</h2><table><tbody id="pages"></tbody></table>
+<p id="status" role="status">İstatistikler yükleniyor…</p>
+</main>
 <script>
-'use strict';
-const $=id=>document.getElementById(id),fmt=n=>Number(n).toLocaleString('tr-TR');
-const base=window.SI_ANALYTICS?.code||'';
-const begin='2026-10-10'; // İlk veri toplanmaya başladığında asıl ilk ziyaret tarihine uyarlanacak.
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n).toLocaleString('tr-TR');
+const ns='http://www.w3.org/2000/svg';
+const ymd=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+const dayDate=str=>new Date(str+'T12:00:00');
+const addDays=(d,n)=>{const a=new Date(d);a.setDate(a.getDate()+n);return a};
 const today=new Date();today.setHours(12,0,0,0);
-const start=new Date(begin+'T12:00:00');
-const maxDays=Math.max(7,Math.round((today-start)/86400000)+1);
-const cache=new Map();
-const date=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
-const plus=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
-async function count(path,first,last){
- const suffix=first&&last?'?start='+date(first)+'&end='+date(last):'';
- const key=path+'|'+suffix;
- if(cache.has(key))return cache.get(key);
- const url='https://'+base+'.goatcounter.com/counter/'+encodeURIComponent(path)+'.json'+suffix;
- const job=fetch(url,{mode:'cors',credentials:'omit'}).then(async response=>{
-   if(response.status===404){
-     if(suffix){
-       const lifetime=await count(path);
-       if(lifetime===0)return 0;
-       throw Error('GoatCounter bu sayfanın tarihli sayımına erişim vermiyor: '+path);
-     }
-     return 0;
-   }
-   if(!response.ok)throw Error('Veri okunamadı ('+response.status+').');
-   const result=await response.json();
-   return Number(String(result.count??'0').replace(/[^0-9]/g,''))||0;
- });
- cache.set(key,job);return job;
+let dataset=null;
+function svgText(parent,x,y,value,anchor='end'){
+ const t=document.createElementNS(ns,'text');
+ t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('text-anchor',anchor);
+ t.setAttribute('font-size','11');t.setAttribute('fill','currentColor');t.textContent=value;parent.append(t);
 }
-async function homePages(){
- const html=await fetch('/projeler/index.html').then(r=>r.text());
- const doc=new DOMParser().parseFromString(html,'text/html');
- return [{title:'Öğren (ana sayfa)',path:'/projeler/'},...Array.from(doc.querySelectorAll('a.btn-card')).map(a=>{
- const href=a.getAttribute('href')||'';
- return {title:a.textContent.trim(),path:('/projeler/'+href.split('?')[0].replace(/index\.html$/,'')).replace(/\/$/,'')};
- }).filter(x=>!x.path.includes('://'))];
-}
-function plot(values,labels){
- const max=Math.max(1,...values),ceil=Math.max(5,Math.ceil(max/5)*5);
+function draw(series,labels){
+ const high=Math.max(1,...series);
+ const top=Math.max(4,Math.ceil(high/4)*4);
  const ticks=$('ticks');ticks.replaceChildren();
- for(let i=0;i<=4;i++){let val=Math.round(i*ceil/4),y=155-i*32;
-  let tx=document.createElementNS('http://www.w3.org/2000/svg','text');tx.setAttribute('x','35');tx.setAttribute('y',y+4);tx.setAttribute('text-anchor','end');tx.setAttribute('font-size','11');tx.textContent=val;ticks.append(tx);}
- $('line').setAttribute('points',values.map((v,i)=>(49+i*282/Math.max(1,values.length-1))+','+(151-(v/ceil)*128)).join(' '));
- const g=$('dates');g.replaceChildren();
- for(const [i,label] of [[0,labels[0]||''],[labels.length-1,labels.at(-1)||'']]){
- const tx=document.createElementNS('http://www.w3.org/2000/svg','text');tx.setAttribute('x',49+i*282/Math.max(1,labels.length-1));tx.setAttribute('y','174');tx.setAttribute('font-size','10');tx.setAttribute('text-anchor',i?'end':'start');tx.textContent=label;g.append(tx);}
+ for(let i=0;i<=4;i++)svgText(ticks,35,155-i*32+3,fmt(top*i/4));
+ const len=series.length;
+ $('line').setAttribute('points',series.map((n,i)=>(48+(len===1?0:i*284/(len-1)))+','+(151-(n/top)*130)).join(' '));
+ const dates=$('dates');dates.replaceChildren();
+ svgText(dates,48,175,labels[0]||'','start');svgText(dates,332,175,labels[1]||'','end');
 }
-let seq=0, pages=[];
-async function update(){
- if(!base){$('status').textContent='GoatCounter hesabı bağlanmadı.';return;}
- const id=++seq;
- const ratio=Number($('zoom').value)/1000;
- const span=Math.min(maxDays,Math.round(7*Math.pow(maxDays/7,ratio)));
- $('period').textContent=span>=maxDays?'Başlangıçtan beri':'Son '+span+' gün';
- const first=plus(today,1-span);
- $('status').textContent='Veriler yükleniyor…';
- try {
-  // Önce doğrulanabilir toplamları getir; tarih sorgusu başarısız olsa bile sıfır uydurma.
-  const all=await Promise.all(pages.map(async p=>({title:p.title,path:p.path,n:await count(p.path)})));
-  if(seq!==id)return;
-  const nonzero=all.filter(p=>p.n>0).sort((a,b)=>b.n-a.n);
-  $('pages').replaceChildren();
-  for(const p of nonzero){
-    const row=document.createElement('tr'),name=document.createElement('td'),n=document.createElement('td');
-    name.textContent=p.title;n.textContent=fmt(p.n);row.append(name,n);$('pages').append(row);
-  }
-  $('total').textContent='— '+fmt(nonzero.reduce((a,p)=>a+p.n,0));
-  if(!nonzero.length){$('status').textContent='Henüz ziyaret kaydı yok.';plot([0,0],[date(first),date(today)]);return;}
-  const buckets=Math.min(14,span),step=span/buckets;
-  const data=[];
-  for(let i=0;i<buckets;i++){
-   const left=plus(first,Math.floor(i*step));
-   const right=plus(first,Math.max(Math.floor(i*step),Math.floor((i+1)*step)-1));
-   const nums=await Promise.all(nonzero.map(p=>count(p.path,left,right)));
-   if(seq!==id)return;
-   data.push(nums.reduce((a,b)=>a+b,0));
-  }
-  plot(data,[date(first),date(today)]);
-  $('status').textContent='Sayfa listesinde başlangıçtan beri toplam ziyaretler gösteriliyor.';
- }catch(err){
-  if(seq!==id)return;
-  $('line').setAttribute('points','');
-  $('ticks').replaceChildren();$('dates').replaceChildren();
-  $('status').textContent='Sayfa toplamları yukarıda doğru gösteriliyor. Günlük grafik için GoatCounter tarih sorgusu henüz kullanılamıyor. '+err.message;
+function show(){
+ if(!dataset)return;
+ const initial=dayDate(dataset.first_day);
+ const totalDays=Math.max(7,Math.round((today-initial)/86400000)+1);
+ const r=Number($('zoom').value)/1000;
+ const span=Math.min(totalDays,Math.round(7*Math.pow(totalDays/7,r)));
+ const from=addDays(today,1-span);
+ $('period').textContent=span>=totalDays?'Başlangıçtan beri':'Son '+span+' gün';
+ const dates=Array.from({length:span},(_,i)=>ymd(addDays(from,i)));
+ const buckets=Math.min(50,span);
+ const values=[];
+ for(let b=0;b<buckets;b++){
+  const a=Math.floor(b*span/buckets),e=Math.floor((b+1)*span/buckets);
+  let count=0;
+  for(let i=a;i<e;i++)count+=Number(dataset.total_daily?.[dates[i]]||0);
+  values.push(count);
  }
+ draw(values,[ymd(from),ymd(today)]);
+ const rows=(dataset.pages||[]).map(page=>{
+   const n=dates.reduce((sum,day)=>sum+Number(page.daily?.[day]||0),0);
+   return {name:page.title||page.path,number:n};
+ }).filter(p=>p.number>0).sort((a,b)=>b.number-a.number);
+ $('pages').replaceChildren();
+ for(const item of rows){
+  const tr=document.createElement('tr'),left=document.createElement('td'),right=document.createElement('td');
+  left.textContent=item.name;right.textContent=fmt(item.number);tr.append(left,right);$('pages').append(tr);
+ }
+ const sum=dates.reduce((a,d)=>a+Number(dataset.total_daily?.[d]||0),0);
+ $('total').textContent=fmt(sum);
+ $('status').textContent='Son güncelleme: '+new Date(dataset.updated_at).toLocaleString('tr-TR');
 }
-$('zoom').addEventListener('input',()=>{clearTimeout(window._zoomWait);window._zoomWait=setTimeout(update,160)});
-homePages().then(p=>{pages=p;update()}).catch(e=>{$('status').textContent='Sayfa listesi okunamadı: '+e.message});
+$('zoom').addEventListener('input',show);
+fetch('./data.json?updated='+Date.now(),{cache:'no-store'}).then(async r=>{
+ if(!r.ok)throw new Error('Henüz günlük veri dosyası oluşturulmadı.');
+ const d=await r.json();
+ if(!d||!d.first_day||!d.pages||!d.total_daily)throw new Error('Veri biçimi geçersiz.');
+ dataset=d;show();
+}).catch(e=>{$('total').textContent='—';$('status').textContent=e.message+' GitHub görevi ve API anahtarı ayarlandıktan sonra grafik otomatik dolacak.'});
+})();
 </script></body></html>
