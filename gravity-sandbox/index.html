@@ -876,12 +876,14 @@ canvas.addEventListener('contextmenu',e=>{
  const point=onPlane(e,0);
  closePlanetMenu();
  if(found&&!selectedBodies.has(found))selectPlanet(found);
- menuBody=found;
+ // Hazır sistem eklenince grup seçili kalır; boş zeminde sağ tık da Düzenle'yi açabilmeli.
+ const activeBody=found||[...selectedBodies].find(b=>bodies.includes(b))||null;
+ menuBody=activeBody;
  menuPoint=point?point.clone():null;
  menuPointer={clientX:e.clientX,clientY:e.clientY};
- $('editPlanet').style.display=found?'block':'none';
- $('copyPlanet').style.display=found?'block':'none';
- $('deletePlanet').style.display=(found||selectedBodies.size)?'block':'none';
+ $('editPlanet').style.display=activeBody?'block':'none';
+ $('copyPlanet').style.display=activeBody?'block':'none';
+ $('deletePlanet').style.display=activeBody?'block':'none';
  $('pastePlanet').disabled=!copiedPlanet;
  $('selectAllPlanets').disabled=bodies.length===0;
  const left=Math.min(e.clientX,innerWidth-235);
