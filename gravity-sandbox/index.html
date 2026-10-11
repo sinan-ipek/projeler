@@ -63,7 +63,7 @@ button:hover{background:#f5f8fc}
 </head>
 <body>
 <div id="viewport"></div>
-<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleForces" type="button" aria-pressed="false">Kuvvetler</button><button id="toggleCenter" type="button" aria-pressed="false">Kütle Merkezi</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="toggleSurface" type="button" aria-pressed="false">Gezegen Yüzeyi</button><button id="toggleFieldArrows" type="button" aria-pressed="false">Alan Okları</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
+<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleForces" type="button" aria-pressed="false">Kuvvetler</button><button id="toggleCenter" type="button" aria-pressed="false">Kütle Merkezi</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="toggleSurface" type="button" aria-pressed="false">Uzay</button><button id="toggleFieldArrows" type="button" aria-pressed="false">Alan Okları</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
 <div id="settings" aria-label="Kamera ve simülasyon kontrolleri">
   <div class="cameras">
     <button id="topView" type="button" title="Üstten görüş" aria-label="Üstten görüş">Üstten</button>
@@ -381,7 +381,7 @@ function addPreset(id,center){
   // Bu deneylerde yalnızca tekdüze global alan kullanılmalı.
   surfaceMode=true;
   $('toggleSurface').setAttribute('aria-pressed','true');
-  $('toggleSurface').textContent='Gezegen Yüzeyi: açık';
+  $('toggleSurface').textContent='Gezegen Yüzeyi';
   gravityField.visible=fieldArrowsVisible;
   // Tüm atışlar x-y düzleminde, z=0 üzerinde gerçekleşir.
   // Hızlar g=12 ölçeğinde sınıf deneylerine uygun uçuşlar verir.
@@ -1022,7 +1022,7 @@ $('toggleFieldArrows').addEventListener('click',()=>{
 $('toggleSurface').addEventListener('click',()=>{
  surfaceMode=!surfaceMode;
  $('toggleSurface').setAttribute('aria-pressed',String(surfaceMode));
- $('toggleSurface').textContent=surfaceMode?'Gezegen Yüzeyi: açık':'Gezegen Yüzeyi';
+ $('toggleSurface').textContent=surfaceMode?'Gezegen Yüzeyi':'Uzay';
  gravityField.visible=surfaceMode&&fieldArrowsVisible;
  if(surfaceMode)resolveGroundCollisions();
  acc=0;
