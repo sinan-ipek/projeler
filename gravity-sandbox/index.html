@@ -100,7 +100,7 @@ button:hover{background:#f5f8fc}
     <ul>
       <li><strong>▶ / ❚❚ veya Boşluk:</strong> Başlat ya da duraklat.</li>
       <li><strong>Sıfırla:</strong> Başlangıçtaki gezegenlere dön.</li>
-      <li><strong>Yörünge:</strong> Gezegenlerin izlerini göster veya gizle.</li><li><strong>Hızlar:</strong> Tüm gezegenlerin hız vektörlerini oklarla gösterir; tekrar tıklayınca gizler.</li><li><strong>Yapışma:</strong> Açıkken birbirine değen gezegenler birleşir. Kütleleri toplanır; konumları kütle merkezine, hızları momentumun korunmasına göre hesaplanır. Renkleri kütlelerine göre karıştırılır. Tekrar tıklarsan birleşme kapanır.</li>
+      <li><strong>Yörünge:</strong> Gezegenlerin izlerini göster veya gizle.</li><li><strong>Hızlar:</strong> Tüm gezegenlerin hız vektörlerini oklarla gösterir; tekrar tıklayınca gizler.</li><li><strong>Yapışma:</strong> Açıkken birbirine değen gezegenler kısa bir çizgisel ışın efektiyle anında birleşir. Kütleleri toplanır; konumları kütle merkezine, hızları momentumun korunmasına göre hesaplanır. Renkleri kütlelerine göre karıştırılır. Tekrar tıklarsan birleşme kapanır.</li>
       <li><strong>Kısa sürgüler:</strong> Animasyon hızını ve yörünge izi uzunluğunu ayarla.</li>
       <li><strong>Kırmızı hız oku:</strong> Hesaplanan kaçış hızı aşıldı.</li>
     </ul>
@@ -351,7 +351,7 @@ function updateTrail(b){
  b.g.setDrawRange(0,n);
  b.trace.visible=trailsVisible;
 }
-function init(){closePlanetMenu();selectPlanet(null);hoveredBody=null;if(editor)finishEditor(false);for(const b of bodies)removeBody(b);
+function init(){clearMergeBursts();closePlanetMenu();selectPlanet(null);hoveredBody=null;if(editor)finishEditor(false);for(const b of bodies)removeBody(b);
  bodies=[
  makeBody(4.3,0xf4bb40,new THREE.Vector3(0,originHeight,0),new THREE.Vector3()),
  makeBody(1.4,0x499ef6,new THREE.Vector3(24,originHeight,0),new THREE.Vector3(0,0,12)),
@@ -369,6 +369,57 @@ function accelerations(){
   a[j].addScaledVector(d,-fac*bodies[i].m);
  }
  return a;
+}
+// Kısa, çizgisel birleşme parlaması; fiziğe müdahale etmez.
+const mergeBursts=[];
+const BURST_DURATION=.32;
+function disposeBurst(burst){
+ scene.remove(burst.lines);
+ burst.lines.geometry.dispose();
+ burst.lines.material.dispose();
+}
+function clearMergeBursts(){
+ for(const burst of mergeBursts)disposeBurst(burst);
+ mergeBursts.length=0;
+}
+function createMergeBurst(pos,radius){
+ // Her birleşmede yalnızca 12 ışın; ek parçacık ya da gölge yok.
+ if(mergeBursts.length>=32)disposeBurst(mergeBursts.shift());
+ const count=12,coordinates=new Float32Array(count*6),directions=[];
+ for(let i=0;i<count;i++){
+  const a=2*Math.PI*(i+.15*Math.random())/count;
+  const y=(Math.random()-.5)*.65;
+  const dir=new THREE.Vector3(Math.cos(a),y,Math.sin(a)).normalize();
+  directions.push(dir);
+ }
+ const geometry=new THREE.BufferGeometry();
+ geometry.setAttribute('position',new THREE.BufferAttribute(coordinates,3).setUsage(THREE.DynamicDrawUsage));
+ const material=new THREE.LineBasicMaterial({
+  color:0xffbf45,transparent:true,opacity:1,depthTest:false,depthWrite:false
+ });
+ const lines=new THREE.LineSegments(geometry,material);
+ lines.position.copy(pos);lines.renderOrder=90;lines.frustumCulled=false;
+ scene.add(lines);
+ mergeBursts.push({lines,directions,radius:Math.max(radius,.65),elapsed:0});
+}
+function updateMergeBursts(dt){
+ for(let i=mergeBursts.length-1;i>=0;i--){
+  const burst=mergeBursts[i];
+  burst.elapsed+=dt;
+  const t=Math.min(1,burst.elapsed/BURST_DURATION);
+  if(t>=1){disposeBurst(burst);mergeBursts.splice(i,1);continue}
+  const attr=burst.lines.geometry.getAttribute('position');
+  const extent=burst.radius*(.35+1.4*t);
+  const inner=burst.radius*(.65+.9*t);
+  const length=extent*(1-t);
+  for(let j=0;j<burst.directions.length;j++){
+   const dir=burst.directions[j];
+   attr.setXYZ(j*2,dir.x*inner,dir.y*inner,dir.z*inner);
+   attr.setXYZ(j*2+1,dir.x*(inner+length),dir.y*(inner+length),dir.z*(inner+length));
+  }
+  attr.needsUpdate=true;
+  burst.lines.material.opacity=(1-t)**1.4;
+ }
 }
 // Tam esnek olmayan çarpışma: kütle ve toplam doğrusal momentum korunur.
 function mergeTouchingBodies(){
@@ -388,6 +439,7 @@ function mergeTouchingBodies(){
    const wasSelected=selectedBodies.has(a)||selectedBodies.has(b);
    const newBody=makeBody(radius,color,pos,vel);
    newBody.m=total;
+   createMergeBurst(pos,radius);
    bodies.splice(j,1);bodies.splice(i,1,newBody);
    selectedBodies.delete(a);selectedBodies.delete(b);
    if(wasSelected)selectedBodies.add(newBody);
@@ -745,7 +797,7 @@ function animate(now){requestAnimationFrame(animate);
  const delta=Math.min((now-previous)/1000,.05);previous=now;
  if(running&&!editor){acc+=delta*animationSpeed;let n=0;while(acc>=DT&&n<40){step();acc-=DT;n++}if(n===40)acc=0}
  for(const b of bodies)updateVisual(b);
- controls.update();updateSelectionRing();updatePlanetInfo();renderer.render(scene,camera);updateLens();
+ controls.update();updateSelectionRing();updatePlanetInfo();updateMergeBursts(delta);renderer.render(scene,camera);updateLens();
 }
 init();requestAnimationFrame(animate);
 } catch(error){const box=document.getElementById('error');box.style.display='block';box.textContent='3D motor yüklenemedi: '+error.message+'. İnternet bağlantısını ve WebGL desteğini kontrol edin.';console.error(error)}
