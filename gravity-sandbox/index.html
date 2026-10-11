@@ -63,7 +63,7 @@ button:hover{background:#f5f8fc}
 </head>
 <body>
 <div id="viewport"></div>
-<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleForces" type="button" aria-pressed="false">Kuvvetler</button><button id="toggleCenter" type="button" aria-pressed="false">Kütle Merkezi</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
+<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleForces" type="button" aria-pressed="false">Kuvvetler</button><button id="toggleCenter" type="button" aria-pressed="false">Kütle Merkezi</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="toggleSurface" type="button" aria-pressed="false">Gezegen Yüzeyi</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
 <div id="settings" aria-label="Kamera ve simülasyon kontrolleri">
   <div class="cameras">
     <button id="topView" type="button" title="Üstten görüş" aria-label="Üstten görüş">Üstten</button>
@@ -483,6 +483,19 @@ let velocitiesVisible=false;
 let forcesVisible=false;
 let centerVisible=false;
 let mergingEnabled=false;
+let surfaceMode=false;
+const SURFACE_GRAVITY=12,GROUND_BOUNCE=.72;
+// Paralel ve eşit aşağı yönlü alanı ince çizgiler ve ok uçlarıyla göster.
+const gravityField=new THREE.Group();
+const gravityFieldMat=new THREE.LineBasicMaterial({color:0x7aa4c5,transparent:true,opacity:.24,depthWrite:false});
+for(let ix=-3;ix<=3;ix++)for(let iz=-3;iz<=3;iz++){
+ const x=ix*23,z=iz*23;
+ const geo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x,2,z),new THREE.Vector3(x,74,z)]);
+ const line=new THREE.Line(geo,gravityFieldMat);gravityField.add(line);
+ const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,-1,0),new THREE.Vector3(x,30,z),4,0x78a7cd,1.35,.7);
+ gravityField.add(arrow);
+}
+gravityField.visible=false;scene.add(gravityField);
 // Seçili gezegenlerin, seçim yoksa bütün gezegenlerin ortak kütle merkezi.
 const centerMarker=new THREE.Group();
 const centerMarkerMaterial=new THREE.MeshBasicMaterial({color:0x9d1f9e,depthTest:false});
@@ -554,6 +567,7 @@ function init(){clearMergeBursts();closePlanetMenu();selectPlanet(null);hoveredB
  for(const b of bodies)updateTrail(b);
 }
 function accelerations(){
+ if(surfaceMode)return bodies.map(()=>new THREE.Vector3(0,-SURFACE_GRAVITY,0));
  const a=bodies.map(()=>new THREE.Vector3());
  for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
   const d=new THREE.Vector3().subVectors(bodies[j].p,bodies[i].p);
@@ -644,10 +658,24 @@ function mergeTouchingBodies(){
   }
  }
 }
+function resolveGroundCollisions(){
+ for(const b of bodies){
+  if(b.p.y>=b.r)continue;
+  b.p.y=b.r;
+  if(mergingEnabled){
+   // Zemine yapışma: düşey hızı ve yatay kaymayı tamamen durdur.
+   b.v.set(0,0,0);
+  }else if(b.v.y<0){
+   b.v.y=-b.v.y*GROUND_BOUNCE;
+   if(b.v.y<.4)b.v.y=0;
+  }
+ }
+}
 function step(){let a=accelerations();
  for(let i=0;i<bodies.length;i++){const b=bodies[i];b.v.addScaledVector(a[i],DT*.5);b.p.addScaledVector(b.v,DT)}
  a=accelerations();for(let i=0;i<bodies.length;i++)bodies[i].v.addScaledVector(a[i],DT*.5);
- if(mergingEnabled)mergeTouchingBodies();
+ if(surfaceMode)resolveGroundCollisions();
+ else if(mergingEnabled)mergeTouchingBodies();
  if(++trailTick%4===0)for(const b of bodies){b.trail.push(b.p.clone());if(b.trail.length>MAX_TRAIL)b.trail.shift();updateTrail(b)}
 }
 function updateVisual(b){
@@ -955,11 +983,20 @@ $('toggleCenter').addEventListener('click',()=>{
  $('toggleCenter').textContent=centerVisible?'Merkezi gizle':'Kütle Merkezi';
  if(!centerVisible)centerMarker.visible=false;
 });
+$('toggleSurface').addEventListener('click',()=>{
+ surfaceMode=!surfaceMode;
+ $('toggleSurface').setAttribute('aria-pressed',String(surfaceMode));
+ $('toggleSurface').textContent=surfaceMode?'Gezegen Yüzeyi: açık':'Gezegen Yüzeyi';
+ gravityField.visible=surfaceMode;
+ if(surfaceMode)resolveGroundCollisions();
+ acc=0;
+ $('message').textContent=surfaceMode?'Gezegen yüzeyi: sabit aşağı çekim · Yapışma: zemine tutunma':'Uzay: cisimler birbirlerini çekiyor';
+});
 $('toggleMerging').addEventListener('click',()=>{
  mergingEnabled=!mergingEnabled;
  $('toggleMerging').setAttribute('aria-pressed',String(mergingEnabled));
  $('toggleMerging').textContent=mergingEnabled?'Yapışma: açık':'Yapışma';
- if(mergingEnabled&&!running&&!editor)mergeTouchingBodies();
+ if(mergingEnabled&&!surfaceMode&&!running&&!editor)mergeTouchingBodies();
 });
 function toggleRunning(){if(editor)finishEditor(true);running=!running;$('play').textContent=running?'❚❚ Duraklat':'▶ Başlat'}
 $('play').addEventListener('click',toggleRunning);
