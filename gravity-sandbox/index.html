@@ -13,10 +13,10 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;font-family:Arial,Helv
 button{font:inherit;background:#fff;border:1px solid #c8d2dd;border-radius:9px;color:#273849;padding:10px 14px;cursor:pointer;min-height:44px;box-shadow:0 3px 12px #8194a51c}
 button:hover{background:#f5f8fc}
 /* Minimal kamera ve hız kontrolleri: ayrı panel yok. */
-#settings{position:absolute;right:14px;top:73px;z-index:5;display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap;max-width:calc(100vw - 28px)}
+#settings{position:absolute;right:14px;top:73px;z-index:5;display:flex;flex-direction:column;align-items:flex-end;gap:7px;max-width:calc(100vw - 28px)}
 #settings .cameras{display:flex;gap:5px}
 #settings .cameras button{padding:5px 8px;min-height:30px;border-radius:7px;font-size:12px;box-shadow:none;background:#ffffffd9}
-#settings .mini-slider{display:flex;align-items:center;gap:4px;min-height:30px}
+#settings .mini-slider{display:flex;align-items:center;justify-content:flex-end;gap:4px;min-height:30px}
 #settings input[type=range]{width:84px;min-width:0;accent-color:#668ab1;cursor:pointer}
 #settings output{font-size:10px;min-width:23px;text-align:right;color:#66798b;font-variant-numeric:tabular-nums}
 #settings label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
@@ -63,7 +63,7 @@ button:hover{background:#f5f8fc}
 </head>
 <body>
 <div id="viewport"></div>
-<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleForces" type="button" aria-pressed="false">Kuvvetler</button><button id="toggleCenter" type="button" aria-pressed="false">Kütle Merkezi</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="toggleSurface" type="button" aria-pressed="false">Uzay</button><button id="toggleFriction" type="button" aria-pressed="false" style="display:none">Sürtünmesiz</button><button id="toggleFieldArrows" type="button" aria-pressed="false">Alan Okları</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
+<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleForces" type="button" aria-pressed="false">Kuvvetler</button><button id="toggleCenter" type="button" aria-pressed="false">Kütle Merkezi</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="toggleSurface" type="button" aria-pressed="false">Uzay</button><button id="toggleFriction" type="button" aria-pressed="false" style="display:none">Sürtünmesiz</button><button id="toggleFieldArrows" type="button" aria-pressed="false" style="display:none">Alan Okları</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
 <div id="settings" aria-label="Kamera ve simülasyon kontrolleri">
   <div class="cameras">
     <button id="topView" type="button" title="Üstten görüş" aria-label="Üstten görüş">Üstten</button>
@@ -519,6 +519,7 @@ let surfaceMode=false;
 let frictionEnabled=false;
 let frictionAmount=.45;
 function updateFrictionControls(){
+ $('toggleFieldArrows').style.display=surfaceMode?'':'none';
  $('toggleFriction').style.display=surfaceMode?'':'none';
  $('toggleFriction').textContent=frictionEnabled?'Sürtünmeli':'Sürtünmesiz';
  $('toggleFriction').setAttribute('aria-pressed',String(frictionEnabled));
