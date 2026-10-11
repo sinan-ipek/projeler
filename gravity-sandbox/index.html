@@ -34,9 +34,9 @@ button:hover{background:#f5f8fc}
 #planetMenu{display:none;position:fixed;z-index:20;min-width:150px;padding:5px;background:#fff;border:1px solid #c8d2dd;border-radius:10px;box-shadow:0 9px 24px #40506440}
 #planetMenu button{width:100%;border:0;box-shadow:none;min-height:38px;text-align:left;padding:8px 11px;color:#b43840}
 #planetMenu button:hover{background:#eef3fb}
-#planetMenu #editSubmenu{margin:2px 0 5px 8px;padding:3px 0 3px 7px;border-left:2px solid #becbdb}
-#planetMenu #editSubmenu button{font-size:12px;min-height:33px;color:#34475e}
-#planetMenu #editPlanet{color:#34475e}
+#planetMenu #editSubmenu,#planetMenu #addSubmenu{margin:2px 0 5px 8px;padding:3px 0 3px 7px;border-left:2px solid #becbdb}
+#planetMenu #editSubmenu button,#planetMenu #addSubmenu button{font-size:12px;min-height:33px;color:#34475e}
+#planetMenu #editPlanet,#planetMenu #addSystems{color:#34475e}
 #planetMenu #deletePlanet{color:#b43840}
 #planetMenu button:disabled{opacity:.4;cursor:not-allowed;background:#fff}
 #message{position:absolute;right:14px;bottom:14px;background:#ffffffd9;border:1px solid #d8e0e8;border-radius:9px;padding:8px 11px;color:#617184;font-size:12px;pointer-events:none;z-index:4}
@@ -96,7 +96,7 @@ button:hover{background:#f5f8fc}
       <li><strong>Alt tuşu:</strong> Büyüteci aç.</li><li><strong>☾ / ☀:</strong> Koyu veya aydınlık arka plan.</li>
       <li><strong>Üstten / Yandan:</strong> Hazır kamera açılarına geç.</li>
     </ul>
-    <h3>Diğer kontroller</h3>
+    <h3>Hazır sistemler</h3><p>Sağ tık → <strong>Ekle ▸</strong> ile on hazır kütleçekim sistemi oluşturabilirsin. Sistemin merkezi sağ tıkladığın noktadır; mevcut gezegenler korunur. Ekleme sonrası hareketi Başlat ile izle. İdeal yörüngeler diğer cisimlerin çekimi ve sayısal hesaplama nedeniyle zamanla değişebilir.</p><h3>Diğer kontroller</h3>
     <ul>
       <li><strong>▶ / ❚❚ veya Boşluk:</strong> Başlat ya da duraklat.</li>
       <li><strong>Sıfırla:</strong> Başlangıçtaki gezegenlere dön.</li>
@@ -107,7 +107,18 @@ button:hover{background:#f5f8fc}
   </section>
 </div>
 <div id="planetInfo" aria-hidden="true" style="display:none"><span id="planetInfoText"></span></div>
-<div id="planetMenu" role="menu"><button type="button" id="editPlanet" role="menuitem" aria-expanded="false">Düzenle ▸</button><div id="editSubmenu" role="menu" style="display:none"><button type="button" data-edit-phase="0" role="menuitem">Konum</button><button type="button" data-edit-phase="1" role="menuitem">Yükseklik</button><button type="button" data-edit-phase="2" role="menuitem">Büyüklük</button><button type="button" data-edit-phase="3" role="menuitem">Hız</button></div><button type="button" id="selectAllPlanets" role="menuitem">Tümünü seç</button><button type="button" id="copyPlanet" role="menuitem">Kopyala</button><button type="button" id="pastePlanet" role="menuitem">Yapıştır</button><button type="button" id="deletePlanet" role="menuitem">Sil</button></div>
+<div id="planetMenu" role="menu"><button type="button" id="editPlanet" role="menuitem" aria-expanded="false">Düzenle ▸</button><div id="editSubmenu" role="menu" style="display:none"><button type="button" data-edit-phase="0" role="menuitem">Konum</button><button type="button" data-edit-phase="1" role="menuitem">Yükseklik</button><button type="button" data-edit-phase="2" role="menuitem">Büyüklük</button><button type="button" data-edit-phase="3" role="menuitem">Hız</button></div><button type="button" id="addSystems" role="menuitem" aria-expanded="false">Ekle ▸</button><div id="addSubmenu" role="menu" style="display:none">
+<button type="button" data-preset="solar">Güneş Sistemi</button>
+<button type="button" data-preset="binary">Çift Yıldız</button>
+<button type="button" data-preset="trappist">TRAPPIST-1</button>
+<button type="button" data-preset="eight">Üç Cisim – Sekiz Yörüngesi</button>
+<button type="button" data-preset="triangle">Dönen Eşkenar Üçgen</button>
+<button type="button" data-preset="lagrange">Lagrange Noktaları</button>
+<button type="button" data-preset="chaos">Kaotik Üç Cisim</button>
+<button type="button" data-preset="collapse">Kütleçekim Çökmesi</button>
+<button type="button" data-preset="rings">Gezegen Halkası</button>
+<button type="button" data-preset="collision">Büyük Çarpışma</button>
+</div><button type="button" id="selectAllPlanets" role="menuitem">Tümünü seç</button><button type="button" id="copyPlanet" role="menuitem">Kopyala</button><button type="button" id="pastePlanet" role="menuitem">Yapıştır</button><button type="button" id="deletePlanet" role="menuitem">Sil</button></div>
 <div id="message">Çift tıkla: yeni gezegen</div>
 <section id="stepbox" aria-live="polite">
   <strong id="stepTitle"></strong>
@@ -183,7 +194,7 @@ let menuBody=null;
 let menuPoint=null;
 let menuPointer=null;
 const planetMenu=$('planetMenu');
-function closePlanetMenu(){planetMenu.style.display='none';$('editSubmenu').style.display='none';$('editPlanet').setAttribute('aria-expanded','false');menuBody=null;menuPoint=null;menuPointer=null}
+function closePlanetMenu(){planetMenu.style.display='none';$('editSubmenu').style.display='none';$('addSubmenu').style.display='none';$('editPlanet').setAttribute('aria-expanded','false');$('addSystems').setAttribute('aria-expanded','false');menuBody=null;menuPoint=null;menuPointer=null}
 // Ctrl+sol tık ile çoklu seçim. Her gezegenin kendi seçim halkası vardır.
 const selectedBodies=new Set();
 const selectionRings=new Map();
@@ -252,8 +263,15 @@ function deletePlanet(body){
  acc=0;
  $('message').textContent='Gezegen silindi · Çift tıkla: yeni gezegen';
 }
+$('addSystems').addEventListener('click',()=>{
+ const sub=$('addSubmenu'),open=sub.style.display==='none';
+ $('editSubmenu').style.display='none';$('editPlanet').setAttribute('aria-expanded','false');
+ sub.style.display=open?'block':'none';$('addSystems').setAttribute('aria-expanded',String(open));
+ planetMenu.style.top=Math.max(4,Math.min(parseFloat(planetMenu.style.top)||0,innerHeight-planetMenu.offsetHeight-8))+'px';
+});
 $('editPlanet').addEventListener('click',()=>{
  const sub=$('editSubmenu'),opening=sub.style.display==='none';
+ $('addSubmenu').style.display='none';$('addSystems').setAttribute('aria-expanded','false');
  sub.style.display=opening?'block':'none';
  $('editPlanet').setAttribute('aria-expanded',String(opening));
  planetMenu.style.top=Math.max(4,Math.min(parseFloat(planetMenu.style.top)||0,innerHeight-planetMenu.offsetHeight-8))+'px';
@@ -262,6 +280,88 @@ document.querySelectorAll('[data-edit-phase]').forEach(button=>button.addEventLi
  const body=menuBody,pt=menuPointer,phase=Number(button.dataset.editPhase);
  closePlanetMenu();
  if(body&&bodies.includes(body)&&pt)beginEditor(body,pt,phase);
+}));
+// Hazır sistemler; mevcut gezegenler korunur. Parametreler simülasyon birimlerindedir.
+function addPreset(id,center){
+ if(editor)finishEditor(false);
+ stopPhysics();
+ const c=center||new THREE.Vector3(0,0,0);
+ const added=[];
+ const spawn=(r,color,x,y,z,vx=0,vy=0,vz=0,m=null)=>{
+  const b=makeBody(r,color,new THREE.Vector3(c.x+x,c.y+y,c.z+z),new THREE.Vector3(vx,vy,vz));
+  if(m!==null)b.m=m;
+  bodies.push(b);updateTrail(b);added.push(b);return b;
+ };
+ const orbit=(central,dist,r,color,angle,m=null,clockwise=false)=>{
+  const cs=Math.cos(angle),sn=Math.sin(angle);
+  const speed=Math.sqrt(G*central.m*dist*dist/Math.pow(dist*dist+EPS2,1.5));
+  return spawn(r,color,cs*dist,0,sn*dist,(clockwise?1:-1)*sn*speed,0,(clockwise?-1:1)*cs*speed,m);
+ };
+ const star=(m,r,color,x=0,z=0,vx=0,vz=0)=>spawn(r,color,x,0,z,vx,0,vz,m);
+ const palette=[0xc2b6aa,0xf1a847,0x4f9fe8,0xd9735f,0xe3bd83,0xd5bc88,0x79afd5,0x6788df];
+ if(id==='solar'||id==='trappist'){
+  const sun=star(id==='solar'?1050:540,id==='solar'?4.6:3,0xffc849);
+  const distances=id==='solar'?[10,15,21,28,41,54,69,81]:[11,15,19,23,27,31,35];
+  const sizes=id==='solar'?[.65,.87,.95,.77,2.05,1.75,1.35,1.32]:[.73,.82,.86,.91,.94,1,1.03];
+  distances.forEach((d,i)=>orbit(sun,d,sizes[i],palette[i],i*2.39996));
+ }else if(id==='binary'){
+  const m=430,d=18,speed=Math.sqrt(G*m/(4*d));
+  star(m,3.35,0xf9bd49,-d,0,0,-speed);
+  star(m,3.35,0x80bcff,d,0,0,speed);
+  const total=2*m;
+  for(let i=0;i<3;i++){
+   const rad=49+i*12,a=.8+i*2.1,v=Math.sqrt(G*total/rad);
+   spawn(.7,planetColors[i],rad*Math.cos(a),0,rad*Math.sin(a),-v*Math.sin(a),0,v*Math.cos(a));
+  }
+ }else if(id==='eight'){
+  // Chenciner-Montgomery sekiz yörüngesinin klasik başlangıç durumları;
+  // konum ve hızlar Newton ölçek simetrisiyle simülasyona aktarılır.
+  const lengthScale=12,m=140,velocityScale=Math.sqrt(G*m/lengthScale);
+  const q=[[-.97000436,.24308753],[.97000436,-.24308753],[0,0]];
+  const v=[[.466203685,.43236573],[.466203685,.43236573],[-.93240737,-.86473146]];
+  q.forEach((p,i)=>spawn(1.6,[0xe6ab44,0x508de1,0xdf6558][i],p[0]*lengthScale,0,p[1]*lengthScale,v[i][0]*velocityScale,0,v[i][1]*velocityScale,m));
+ }else if(id==='triangle'){
+  const mass=200,R=16;
+  const omega=Math.sqrt(G*mass/(Math.sqrt(3)*R**3));
+  for(let i=0;i<3;i++){const a=i*2*Math.PI/3;spawn(1.9,[0xf3bf55,0x618fd8,0xdd6d5f][i],R*Math.cos(a),0,R*Math.sin(a),-omega*R*Math.sin(a),0,omega*R*Math.cos(a),mass)}
+ }else if(id==='lagrange'){
+  const big=750,small=7,d=31;
+  star(big,4.2,0xf6bb41);
+  const v=Math.sqrt(G*(big+small)/d);
+  spawn(.95,0x5c9dec,d,0,0,0,0,v,small);
+  for(const a of [-Math.PI/3,Math.PI/3])spawn(.55,0x8acf91,d*Math.cos(a),0,d*Math.sin(a),-v*Math.sin(a),0,v*Math.cos(a),.006);
+ }else if(id==='chaos'){
+  const points=[[-16,-8,2.1,210],[17,-6,2,190],[0,19,1.9,165]];
+  for(let i=0;i<3;i++){const [x,z,r,m]=points[i];spawn(r,[0xe9b74a,0x5a91e9,0xdc655f][i],x,0,z,[2.2,-1.8,-.65][i],0,[-1.5,-.8,2.25][i],m)}
+ }else if(id==='collapse'){
+  // Deterministik halka içi başlangıçlar, düşük rastgele hızlar.
+  const count=35,rad=31;
+  for(let i=0;i<count;i++){
+   const a=i*2.3999632,rr=rad*Math.sqrt((i+.5)/count),mass=3+(i%6)*1.3;
+   spawn(.4+(i%3)*.08,planetColors[i%planetColors.length],rr*Math.cos(a),((i%5)-2)*1.1,rr*Math.sin(a),((i*17)%7-3)*.07,0,((i*13)%9-4)*.07,mass);
+  }
+ }else if(id==='rings'){
+  const main=star(950,4.5,0xe5be78);
+  for(let i=0;i<40;i++){
+   const d=15+(i%5)*3.9,a=i*2.3999632;
+   orbit(main,d,.27,planetColors[i%planetColors.length],a,.12);
+  }
+ }else if(id==='collision'){
+  star(350,3.6,0xe7ad54,-19,0,3,0);
+  star(230,3.15,0x5f9ddd,19,1,-4,0);
+ }
+ if(added.length){
+  selectPlanet(null);
+  for(const b of added)selectedBodies.add(b);
+  selectedBody=added[added.length-1];syncSelections();
+ }
+ acc=0;
+ const labels={solar:'Güneş Sistemi',binary:'Çift Yıldız',trappist:'TRAPPIST-1',eight:'Üç Cisim – Sekiz Yörüngesi',triangle:'Dönen Eşkenar Üçgen',lagrange:'Lagrange Noktaları',chaos:'Kaotik Üç Cisim',collapse:'Kütleçekim Çökmesi',rings:'Gezegen Halkası',collision:'Büyük Çarpışma'};
+ $('message').textContent=(labels[id]||'Sistem')+' eklendi · '+added.length+' cisim · Başlat';
+}
+document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>{
+ const id=button.dataset.preset,point=menuPoint?.clone();
+ closePlanetMenu();addPreset(id,point||new THREE.Vector3());
 }));
 $('selectAllPlanets').addEventListener('click',()=>{
  closePlanetMenu();
