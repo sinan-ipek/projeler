@@ -291,12 +291,23 @@ $('themeButton').addEventListener('click',()=>{
  $('themeButton').textContent=darkMode?'☀':'☾';
  $('themeButton').title=darkMode?'Aydınlık arka plan':'Koyu arka plan';
 });
-$('topView').addEventListener('click',()=>{
- const t=controls.target.clone();camera.position.copy(t).add(new THREE.Vector3(0,165,0.01));controls.update();
-});
-$('sideView').addEventListener('click',()=>{
- const t=controls.target.clone();camera.position.copy(t).add(new THREE.Vector3(0,0,170));controls.update();
-});
+// Kamerayı geçerli bakış noktasından hedef açıya yumuşakça döndür.
+let cameraTransition=null;
+function smoothCameraView(top){
+ const target=controls.target.clone();
+ const offset=camera.position.clone().sub(target);
+ const distance=Math.max(controls.minDistance,Math.min(controls.maxDistance,offset.length()));
+ const from=offset.clone().normalize();
+ const to=top?new THREE.Vector3(0,1,.0001).normalize():new THREE.Vector3(0,0,1);
+ cameraTransition={
+  target,from,to,distance,start:performance.now(),duration:850
+ };
+ controls.enabled=false;
+}
+$('topView').addEventListener('click',()=>smoothCameraView(true));
+$('sideView').addEventListener('click',()=>smoothCameraView(false));
+renderer.domElement.addEventListener('pointerdown',()=>{if(cameraTransition){cameraTransition=null;controls.enabled=!editor}});
+
 $('speedRange').addEventListener('input',e=>{
  animationSpeed=Number(e.target.value);
  $('speedValue').textContent=animationSpeed.toLocaleString('tr-TR',{maximumFractionDigits:1})+'×';
@@ -795,6 +806,17 @@ window.addEventListener('keydown',e=>{
 let previous=performance.now();
 function animate(now){requestAnimationFrame(animate);
  const delta=Math.min((now-previous)/1000,.05);previous=now;
+ if(cameraTransition){
+  const tr=cameraTransition;
+  const u=Math.min(1,(now-tr.start)/tr.duration);
+  const eased=u*u*(3-2*u);
+  // Küresel interpolasyon açısal hareketi sabit yarıçapta tutar.
+  const qa=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),tr.from);
+  const qb=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),tr.to);
+  const dir=new THREE.Vector3(0,0,1).applyQuaternion(qa.slerp(qb,eased));
+  camera.position.copy(tr.target).addScaledVector(dir,tr.distance);
+  if(u>=1){cameraTransition=null;controls.enabled=!editor}
+ }
  if(running&&!editor){acc+=delta*animationSpeed;let n=0;while(acc>=DT&&n<40){step();acc-=DT;n++}if(n===40)acc=0}
  for(const b of bodies)updateVisual(b);
  controls.update();updateSelectionRing();updatePlanetInfo();updateMergeBursts(delta);renderer.render(scene,camera);updateLens();
