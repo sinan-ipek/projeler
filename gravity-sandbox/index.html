@@ -86,7 +86,7 @@ button:hover{background:#f5f8fc}
     <h3>Gezegen oluştur</h3>
     <p>Boş alana <strong>çift tıkla</strong>: gezegen hemen oluşur ve seçilir. Yükseklik sıfır, büyüklük ilk mavi gezegenle aynıdır. Yatay hızı en büyük gezegenin çevresinde saat yönünde, kaçış hızının yarısı kadar; düşey hızı sıfırdır.</p>
     <h3>Gezegenleri değiştir</h3>
-    <p>Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. Başka gezegenlere de tıklayarak çoklu seçim yapabilirsin. Gezegenler <strong>boş alana tıklayana kadar</strong> seçili kalır. Seçili gezegenlerden birine sağ tıklayıp Düzenle'yi açarsan tümü birlikte düzenlenir: konumda aynı yer değiştirme, hızda aynı hız değişimi, büyüklükte aynı oran uygulanır. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için sağ tıkla ve <strong>Düzenle ▸</strong> menüsünden <strong>Konum, Büyüklük</strong> veya <strong>Hız</strong> seç. Konumda önce yatay konumu, sonraki tıklamada yüksekliği; hızda önce yatay hız bileşenini, sonraki tıklamada düşey hız bileşenini ayarlarsın. Büyüklük tek aşamalıdır. Son tıklamayla veya herhangi bir aşamada Enter ile kabul, Esc ile iptal edebilirsin. Yeni gezegen oluştururken önceki sıralı aşamalar aynen devam eder. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
+    <p>Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. Başka gezegenlere de tıklayarak çoklu seçim yapabilirsin. Gezegenler <strong>boş alana tıklayana kadar</strong> seçili kalır. Seçili gezegenlerden birine sağ tıklayıp Düzenle'yi açarsan tümü birlikte düzenlenir: konum ve yükseklikte aynı yer değiştirme, hızda aynı hız değişimi, büyüklükte aynı oran uygulanır. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için sağ tıkla ve <strong>Düzenle ▸</strong> menüsünden <strong>Konum, Yükseklik, Büyüklük</strong> veya <strong>Hız</strong> seç. Konum yalnızca yatay (X/Z) konumu; Yükseklik yalnızca düşey (Y) konumu ayarlar. İkisi de tek aşamalıdır. Hızda önce yatay hız bileşenini, sonraki tıklamada düşey hız bileşenini ayarlarsın. Büyüklük tek aşamalıdır. Son tıklamayla veya herhangi bir aşamada Enter ile kabul, Esc ile iptal edebilirsin. Yeni gezegen oluştururken önceki sıralı aşamalar aynen devam eder. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>
     <p><strong>Ctrl+C:</strong> Seçili gezegenin konumunu, hızını, yarıçapını, kütlesini ve rengini hafızaya al. <strong>Ctrl+V:</strong> Aynı özelliklerle, fareyle gösterdiğin yatay konuma yeni bir gezegen yapıştır. İstediğin kadar tekrarla.</p>
     <h3>Kamerayı kullan</h3>
     <ul>
@@ -107,7 +107,7 @@ button:hover{background:#f5f8fc}
   </section>
 </div>
 <div id="planetInfo" aria-hidden="true" style="display:none"><span id="planetInfoText"></span></div>
-<div id="planetMenu" role="menu"><button type="button" id="editPlanet" role="menuitem" aria-expanded="false">Düzenle ▸</button><div id="editSubmenu" role="menu" style="display:none"><button type="button" data-edit-phase="0" role="menuitem">Konum</button><button type="button" data-edit-phase="2" role="menuitem">Büyüklük</button><button type="button" data-edit-phase="3" role="menuitem">Hız</button></div><button type="button" id="copyPlanet" role="menuitem">Kopyala</button><button type="button" id="pastePlanet" role="menuitem">Yapıştır</button><button type="button" id="deletePlanet" role="menuitem">Sil</button></div>
+<div id="planetMenu" role="menu"><button type="button" id="editPlanet" role="menuitem" aria-expanded="false">Düzenle ▸</button><div id="editSubmenu" role="menu" style="display:none"><button type="button" data-edit-phase="0" role="menuitem">Konum</button><button type="button" data-edit-phase="1" role="menuitem">Yükseklik</button><button type="button" data-edit-phase="2" role="menuitem">Büyüklük</button><button type="button" data-edit-phase="3" role="menuitem">Hız</button></div><button type="button" id="copyPlanet" role="menuitem">Kopyala</button><button type="button" id="pastePlanet" role="menuitem">Yapıştır</button><button type="button" id="deletePlanet" role="menuitem">Sil</button></div>
 <div id="message">Çift tıkla: yeni gezegen</div>
 <section id="stepbox" aria-live="polite">
   <strong id="stepTitle"></strong>
@@ -571,7 +571,7 @@ function beginEditor(existing,e,editPhase=null){
  const group=existing?[...selectedBodies].filter(b=>bodies.includes(b)):[];if(existing&&!group.includes(candidate))group.push(candidate);
  const groupOriginal=group.map(b=>({b,p:b.p.clone(),v:b.v.clone(),r:b.r,m:b.m,trail:b.trail.map(p=>p.clone())}));
  const groupBaseline=groupOriginal.map(o=>({...o,p:o.p.clone(),v:o.v.clone()}));
- editor={existing:!!existing,b:candidate,original,groupOriginal,groupBaseline,phase:editPhase===null?0:editPhase,editGroup:!existing||editPhase===null?null:(editPhase===0?'position':editPhase===3?'velocity':'size'),
+ editor={existing:!!existing,b:candidate,original,groupOriginal,groupBaseline,phase:editPhase===null?0:editPhase,editGroup:!existing||editPhase===null?null:(editPhase===0?'position':editPhase===1?'height':editPhase===3?'velocity':'size'),
    anchorY:e.clientY,anchorPos:candidate.p.clone(),anchorV:candidate.v.clone(),
    anchorRadius:candidate.r,anchorPlane:onPlane(e,0)};
  controls.enabled=false;renderer.domElement.style.cursor='none';
@@ -624,7 +624,7 @@ function updateFromMouse(e){if(!editor)return;
 }
 function advance(e){if(!editor)return;
  updateFromMouse(e);const ed=editor;
- if(ed.editGroup==='size'||ed.editGroup==='position'&&ed.phase===1||ed.editGroup==='velocity'&&ed.phase===4){finishEditor(true);return}
+ if(ed.editGroup==='size'||ed.editGroup==='position'||ed.editGroup==='height'||ed.editGroup==='velocity'&&ed.phase===4){finishEditor(true);return}
  if(ed.phase===5)return;
  ed.phase++;
  if(ed.existing)ed.groupBaseline=ed.groupOriginal.map(o=>({b:o.b,p:o.b.p.clone(),v:o.b.v.clone(),r:o.b.r}));
