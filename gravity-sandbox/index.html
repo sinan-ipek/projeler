@@ -278,10 +278,13 @@ $('editPlanet').addEventListener('click',()=>{
  $('editPlanet').setAttribute('aria-expanded',String(opening));
  planetMenu.style.top=Math.max(4,Math.min(parseFloat(planetMenu.style.top)||0,innerHeight-planetMenu.offsetHeight-8))+'px';
 });
-document.querySelectorAll('[data-edit-phase]').forEach(button=>button.addEventListener('click',()=>{
- const body=menuBody,pt=menuPointer,phase=Number(button.dataset.editPhase);
+document.querySelectorAll('[data-edit-phase]').forEach(button=>button.addEventListener('click',e=>{
+ const body=menuBody,phase=Number(button.dataset.editPhase);
+ // Düzenleme ofsetini sağ tık konumundan değil, menüde seçeneğin tıklandığı
+ // gerçek imleç konumundan başlat. Menüye giderken alınan yol cismi oynatmaz.
+ const startPointer={clientX:e.clientX,clientY:e.clientY};
  closePlanetMenu();
- if(body&&bodies.includes(body)&&pt)beginEditor(body,pt,phase);
+ if(body&&bodies.includes(body))beginEditor(body,startPointer,phase);
 }));
 // Hazır sistemler; mevcut gezegenler korunur. Parametreler simülasyon birimlerindedir.
 function addPreset(id,center){
