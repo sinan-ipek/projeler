@@ -384,7 +384,7 @@ function accelerations(){
 }
 // Kısa, çizgisel birleşme parlaması; fiziğe müdahale etmez.
 const mergeBursts=[];
-const BURST_DURATION=.48;
+const BURST_DURATION=.38;
 function disposeBurst(burst){
  scene.remove(burst.lines);
  burst.lines.geometry.dispose();
@@ -422,15 +422,15 @@ function updateMergeBursts(dt){
   const t=Math.min(1,burst.elapsed/BURST_DURATION);
   if(t>=1){disposeBurst(burst);mergeBursts.splice(i,1);continue}
   const attr=burst.lines.geometry.getAttribute('position');
-  const inner=burst.radius*(1.03+1.4*t);
-  const length=burst.radius*(2.15*(1-t)**.65);
+  const inner=burst.radius*(1.02+.18*t);
+  const length=burst.radius*(.72*(1-.25*t));
   for(let j=0;j<burst.directions.length;j++){
    const dir=burst.directions[j];
    attr.setXYZ(j*2,dir.x*inner,dir.y*inner,dir.z*inner);
    attr.setXYZ(j*2+1,dir.x*(inner+length),dir.y*(inner+length),dir.z*(inner+length));
   }
   attr.needsUpdate=true;
-  burst.lines.material.opacity=t<.18?1:Math.pow((1-t)/.82,1.2);
+  burst.lines.material.opacity=t<.2?1:Math.pow((1-t)/.8,1.35);
  }
 }
 // Tam esnek olmayan çarpışma: kütle ve toplam doğrusal momentum korunur.
