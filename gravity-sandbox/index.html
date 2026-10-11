@@ -63,7 +63,7 @@ button:hover{background:#f5f8fc}
 </head>
 <body>
 <div id="viewport"></div>
-<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleForces" type="button" aria-pressed="false">Kuvvetler</button><button id="toggleCenter" type="button" aria-pressed="false">Kütle Merkezi</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="toggleSurface" type="button" aria-pressed="false">Gezegen Yüzeyi</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
+<div id="toolbar"><a id="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a><button id="play">▶ Başlat</button><button id="reset">Sıfırla</button><button id="toggleTrails" type="button" aria-pressed="true">Yörüngeyi gizle</button><button id="toggleVelocities" type="button" aria-pressed="false">Hızlar</button><button id="toggleForces" type="button" aria-pressed="false">Kuvvetler</button><button id="toggleCenter" type="button" aria-pressed="false">Kütle Merkezi</button><button id="toggleMerging" type="button" aria-pressed="false">Yapışma</button><button id="toggleSurface" type="button" aria-pressed="false">Gezegen Yüzeyi</button><button id="toggleFieldArrows" type="button" aria-pressed="false">Alan Okları</button><button id="themeButton" type="button" title="Koyu arka plan" aria-label="Açık/koyu arka plan">☾</button><button id="helpButton" type="button" title="Yardım" aria-label="Yardım">?</button></div>
 <div id="settings" aria-label="Kamera ve simülasyon kontrolleri">
   <div class="cameras">
     <button id="topView" type="button" title="Üstten görüş" aria-label="Üstten görüş">Üstten</button>
@@ -97,7 +97,7 @@ button:hover{background:#f5f8fc}
       <li><strong>Alt tuşu:</strong> Büyüteci aç.</li><li><strong>☾ / ☀:</strong> Koyu veya aydınlık arka plan.</li>
       <li><strong>Üstten / Yandan:</strong> Hazır kamera açılarına geç.</li>
     </ul>
-    <h3>Hazır sistemler</h3><p>Sağ tık → <strong>Ekle ▸</strong> ile on bir hazır kütleçekim sistemi oluşturabilirsin. Sistemin merkezi sağ tıkladığın noktadır; mevcut gezegenler korunur. Ekleme sonrası hareketi Başlat ile izle. İdeal yörüngeler diğer cisimlerin çekimi ve sayısal hesaplama nedeniyle zamanla değişebilir.</p><h3>Diğer kontroller</h3>
+    <h3>Hazır sistemler</h3><p>Sağ tık → <strong>Ekle ▸</strong> ile on altı hazır sistem oluşturabilirsin. Sistemin merkezi sağ tıkladığın noktadır; mevcut gezegenler korunur. Ekleme sonrası hareketi Başlat ile izle. İdeal yörüngeler diğer cisimlerin çekimi ve sayısal hesaplama nedeniyle zamanla değişebilir.</p><h3>Diğer kontroller</h3>
     <ul>
       <li><strong>▶ / ❚❚ veya Boşluk:</strong> Başlat ya da duraklat.</li>
       <li><strong>Sıfırla:</strong> Başlangıçtaki gezegenlere dön.</li>
@@ -120,6 +120,11 @@ button:hover{background:#f5f8fc}
 <button type="button" data-preset="cloud">Parçacık Bulutu</button>
 <button type="button" data-preset="rings">Gezegen Halkası</button>
 <button type="button" data-preset="collision">Büyük Çarpışma</button>
+<button type="button" data-preset="horizontal">Yatay Atış</button>
+<button type="button" data-preset="vertical">Düşey Atış</button>
+<button type="button" data-preset="rocket">Roket</button>
+<button type="button" data-preset="angled">Eğik Atış</button>
+<button type="button" data-preset="freefall">Serbest Düşüş</button>
 </div><button type="button" id="selectAllPlanets" role="menuitem">Tümünü seç</button><button type="button" id="copyPlanet" role="menuitem">Kopyala</button><button type="button" id="pastePlanet" role="menuitem">Yapıştır</button><button type="button" id="deletePlanet" role="menuitem">Sil</button></div>
 <div id="message">Çift tıkla: yeni gezegen</div>
 <section id="stepbox" aria-live="polite">
@@ -372,6 +377,27 @@ function addPreset(id,center){
  }else if(id==='collision'){
   star(350,3.6,0xe7ad54,-19,0,3,0);
   star(230,3.15,0x5f9ddd,19,1,-4,0);
+ }else if(['horizontal','vertical','rocket','angled','freefall'].includes(id)){
+  // Bu deneylerde yalnızca tekdüze global alan kullanılmalı.
+  surfaceMode=true;
+  $('toggleSurface').setAttribute('aria-pressed','true');
+  $('toggleSurface').textContent='Gezegen Yüzeyi: açık';
+  gravityField.visible=fieldArrowsVisible;
+  // Tüm atışlar x-y düzleminde, z=0 üzerinde gerçekleşir.
+  // Hızlar g=12 ölçeğinde sınıf deneylerine uygun uçuşlar verir.
+  const launch={
+   horizontal:{y:37,vx:24,vy:0,r:1.4,color:0x52a1f4},
+   vertical:{y:2,vx:0,vy:29,r:1.4,color:0xe8a64a},
+   angled:{y:2,vx:22,vy:24,r:1.4,color:0x55be8a},
+   freefall:{y:47,vx:0,vy:0,r:1.4,color:0x9b78dc},
+   rocket:{y:2,vx:3.5,vy:4,r:1.7,color:0xf16e59}
+  }[id];
+  const b=spawn(launch.r,launch.color,0,launch.y,0,launch.vx,launch.vy,0,25);
+  if(id==='rocket'){
+   // İlk beş simülasyon saniyesi sabit yukarı ivmeli roket itkisi.
+   // Kütle sabit tutulur; yakıt tüketimi modellenmez.
+   b.rocketBurn=5;b.rocketThrust=28;
+  }
  }
  if(added.length){
   selectPlanet(null);
@@ -379,7 +405,7 @@ function addPreset(id,center){
   selectedBody=added[added.length-1];syncSelections();
  }
  acc=0;
- const labels={solar:'Güneş Sistemi',binary:'Çift Yıldız',trappist:'TRAPPIST-1',eight:'Üç Cisim – Sekiz Yörüngesi',triangle:'Dönen Eşkenar Üçgen',lagrange:'Lagrange Noktaları',chaos:'Kaotik Üç Cisim',collapse:'Kütleçekim Çökmesi',cloud:'Parçacık Bulutu',rings:'Gezegen Halkası',collision:'Büyük Çarpışma'};
+ const labels={solar:'Güneş Sistemi',binary:'Çift Yıldız',trappist:'TRAPPIST-1',eight:'Üç Cisim – Sekiz Yörüngesi',triangle:'Dönen Eşkenar Üçgen',lagrange:'Lagrange Noktaları',chaos:'Kaotik Üç Cisim',collapse:'Kütleçekim Çökmesi',cloud:'Parçacık Bulutu',rings:'Gezegen Halkası',collision:'Büyük Çarpışma',horizontal:'Yatay Atış',vertical:'Düşey Atış',rocket:'Roket',angled:'Eğik Atış',freefall:'Serbest Düşüş'};
  $('message').textContent=(labels[id]||'Sistem')+' eklendi · '+added.length+' cisim · Başlat';
 }
 document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>{
@@ -484,6 +510,7 @@ let forcesVisible=false;
 let centerVisible=false;
 let mergingEnabled=false;
 let surfaceMode=false;
+let fieldArrowsVisible=false;
 const SURFACE_GRAVITY=12,GROUND_BOUNCE=.72;
 // Paralel ve eşit aşağı yönlü alanı ince çizgiler ve ok uçlarıyla göster.
 const gravityField=new THREE.Group();
@@ -567,7 +594,7 @@ function init(){clearMergeBursts();closePlanetMenu();selectPlanet(null);hoveredB
  for(const b of bodies)updateTrail(b);
 }
 function accelerations(){
- if(surfaceMode)return bodies.map(()=>new THREE.Vector3(0,-SURFACE_GRAVITY,0));
+ if(surfaceMode)return bodies.map(b=>new THREE.Vector3(0,-SURFACE_GRAVITY+(b.rocketBurn>0?b.rocketThrust||0:0),0));
  const a=bodies.map(()=>new THREE.Vector3());
  for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
   const d=new THREE.Vector3().subVectors(bodies[j].p,bodies[i].p);
@@ -674,7 +701,10 @@ function resolveGroundCollisions(){
 function step(){let a=accelerations();
  for(let i=0;i<bodies.length;i++){const b=bodies[i];b.v.addScaledVector(a[i],DT*.5);b.p.addScaledVector(b.v,DT)}
  a=accelerations();for(let i=0;i<bodies.length;i++)bodies[i].v.addScaledVector(a[i],DT*.5);
- if(surfaceMode)resolveGroundCollisions();
+ if(surfaceMode){
+  for(const b of bodies)if(b.rocketBurn>0)b.rocketBurn=Math.max(0,b.rocketBurn-DT);
+  resolveGroundCollisions();
+ }
  else if(mergingEnabled)mergeTouchingBodies();
  if(++trailTick%4===0)for(const b of bodies){b.trail.push(b.p.clone());if(b.trail.length>MAX_TRAIL)b.trail.shift();updateTrail(b)}
 }
@@ -983,11 +1013,17 @@ $('toggleCenter').addEventListener('click',()=>{
  $('toggleCenter').textContent=centerVisible?'Merkezi gizle':'Kütle Merkezi';
  if(!centerVisible)centerMarker.visible=false;
 });
+$('toggleFieldArrows').addEventListener('click',()=>{
+ fieldArrowsVisible=!fieldArrowsVisible;
+ $('toggleFieldArrows').setAttribute('aria-pressed',String(fieldArrowsVisible));
+ $('toggleFieldArrows').textContent=fieldArrowsVisible?'Alan Oklarını Gizle':'Alan Okları';
+ gravityField.visible=surfaceMode&&fieldArrowsVisible;
+});
 $('toggleSurface').addEventListener('click',()=>{
  surfaceMode=!surfaceMode;
  $('toggleSurface').setAttribute('aria-pressed',String(surfaceMode));
  $('toggleSurface').textContent=surfaceMode?'Gezegen Yüzeyi: açık':'Gezegen Yüzeyi';
- gravityField.visible=surfaceMode;
+ gravityField.visible=surfaceMode&&fieldArrowsVisible;
  if(surfaceMode)resolveGroundCollisions();
  acc=0;
  $('message').textContent=surfaceMode?'Gezegen yüzeyi: sabit aşağı çekim · Yapışma: zemine tutunma':'Uzay: cisimler birbirlerini çekiyor';
