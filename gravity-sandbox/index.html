@@ -100,7 +100,7 @@ button:hover{background:#f5f8fc}
     <ul>
       <li><strong>▶ / ❚❚ veya Boşluk:</strong> Başlat ya da duraklat.</li>
       <li><strong>Sıfırla:</strong> Başlangıçtaki gezegenlere dön.</li>
-      <li><strong>Yörünge:</strong> Gezegenlerin izlerini göster veya gizle.</li><li><strong>Hızlar:</strong> Tüm gezegenlerin hız vektörlerini oklarla gösterir; tekrar tıklayınca gizler.</li><li><strong>Yapışma:</strong> Açıkken birbirine değen gezegenler kısa bir çizgisel ışın efektiyle anında birleşir. Kütleleri toplanır; konumları kütle merkezine, hızları momentumun korunmasına göre hesaplanır. Renkleri kütlelerine göre karıştırılır. Tekrar tıklarsan birleşme kapanır.</li>
+      <li><strong>Yörünge:</strong> Gezegenlerin izlerini göster veya gizle.</li><li><strong>Hızlar:</strong> Tüm gezegenlerin hız vektörlerini oklarla gösterir; tekrar tıklayınca gizler.</li><li><strong>Yapışma:</strong> Açıkken birbirine değen gezegenler anında birleşir. Yalnızca gece modunda kısa sarı ışın efekti gösterilir. Kütleleri toplanır; konumları kütle merkezine, hızları momentumun korunmasına göre hesaplanır. Renkleri kütlelerine göre karıştırılır. Tekrar tıklarsan birleşme kapanır.</li>
       <li><strong>Kısa sürgüler:</strong> Animasyon hızını ve yörünge izi uzunluğunu ayarla.</li>
       <li><strong>Kırmızı hız oku:</strong> Hesaplanan kaçış hızı aşıldı.</li>
     </ul>
@@ -281,7 +281,7 @@ let animationSpeed=1;
 let trailDisplayLength=520;
 $('themeButton').addEventListener('click',()=>{
  darkMode=!darkMode;
- for(const burst of mergeBursts)burst.lines.material.color.setHex(darkMode?0xffdc42:0x633b20);
+ if(!darkMode)clearMergeBursts();
  scene.background.set(darkMode?0x0d1523:0xf9fbfd);
  floor.material.color.set(darkMode?0x17263a:0xfcfdff);
  gridMinor.material.color.set(darkMode?0x55718d:0xd7dee6);
@@ -395,6 +395,7 @@ function clearMergeBursts(){
  mergeBursts.length=0;
 }
 function createMergeBurst(pos,radius){
+ if(!darkMode)return;
  // 16 ışın Fibonacci küresi üzerinde üç boyuta yaklaşık eşit dağıtılır.
  if(mergeBursts.length>=32)disposeBurst(mergeBursts.shift());
  const count=16,coordinates=new Float32Array(count*6),directions=[];
