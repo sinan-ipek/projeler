@@ -780,7 +780,7 @@ helper.visible=false;
 function showEditor(){if(!editor){$('stepbox').style.display='none';helper.visible=false;planetInfo.style.display='none';return}
  const [title,description]=labels[Math.min(editor.phase,4)];
  $('stepbox').style.display='none';$('stepTitle').textContent=t(editor.existing?'Gezegeni düzenle — ':'Gezegen ekle — ')+t(title);
- $('stepHelp').textContent=t(labels[Math.min(editor.phase,4)][0]+' açıklama');
+ $('stepHelp').textContent=appLanguage==='tr'?description:t(labels[Math.min(editor.phase,4)][0]+' açıklama');
  $('stepCount').textContent=editor.editGroup?t('Seçili özellik düzenleniyor'):(appLanguage==='tr'?`Aşama ${editor.phase+1}/6`:`Step ${editor.phase+1}/6`);
  helper.visible=true;
  planetInfo.style.display='none';
@@ -808,7 +808,7 @@ function updateHelpers(){if(!editor)return;
  arrow.setColor(escaping?escapeColor:vectorColor);
  if(editor.phase>=3){
   const label=labels[Math.min(editor.phase,4)][1];
-  $('stepHelp').textContent=t(labels[Math.min(editor.phase,4)][0]+' açıklama')+'  '+t('Hız: ')+speed.toFixed(2)+' · '+t('Kaçış hızı: ')+escapeSpeed.toFixed(2)+(escaping?' · '+t('KAÇIŞ HIZI AŞILDI'):'');
+  $('stepHelp').textContent=(appLanguage==='tr'?label:t(labels[Math.min(editor.phase,4)][0]+' açıklama'))+'  '+t('Hız: ')+speed.toFixed(2)+' · '+t('Kaçış hızı: ')+escapeSpeed.toFixed(2)+(escaping?' · '+t('KAÇIŞ HIZI AŞILDI'):'');
  }
  const visible=editor.phase>=3 && speed>.015;
  arrow.visible=visible;
@@ -1143,7 +1143,7 @@ function animate(now){requestAnimationFrame(animate);
  for(const b of bodies)updateVisual(b);
  controls.update();updateSelectionRing();updatePlanetInfo();updateForceArrows();updateCenterMarker();updateMergeBursts(delta);renderer.render(scene,camera);updateLens();
 }
-$('languageButton').addEventListener('click',()=>{appLanguage=appLanguage==='tr'?'en':'tr';try{localStorage.setItem('gravity-sandbox-language',appLanguage)}catch(_){}localizeUI()});
+$('languageButton').addEventListener('click',()=>{appLanguage=appLanguage==='tr'?'en':'tr';try{localStorage.setItem('gravity-sandbox-language',appLanguage)}catch(_){}localizeUI();msg('Çift tıkla: yeni gezegen')});
 init();localizeUI();requestAnimationFrame(animate);
 } catch(error){const box=document.getElementById('error');box.style.display='block';box.textContent='3D motor yüklenemedi: '+error.message+'. İnternet bağlantısını ve WebGL desteğini kontrol edin.';console.error(error)}
 </script>
