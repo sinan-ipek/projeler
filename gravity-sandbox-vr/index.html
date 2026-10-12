@@ -21,10 +21,11 @@ button:hover{background:#3678bd}#status{font-size:12px;color:#a8cde8;margin-top:
 <div><button id="play">⏸ Duraklat</button><button id="reset">↻ Sıfırla</button><button id="mode">🌌 Uzay</button><button id="trails">Yörüngeler: Açık</button></div>
 <div id="status">Hazırlanıyor…</div><p id="warning"></p>
 </div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
-import {VRButton} from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/webxr/VRButton.js';
-import {XRControllerModelFactory} from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/webxr/XRControllerModelFactory.js';
+import * as THREE from 'three';
+import {VRButton} from 'three/addons/webxr/VRButton.js';
+import {XRControllerModelFactory} from 'three/addons/webxr/XRControllerModelFactory.js';
 const $=id=>document.getElementById(id);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x090e19);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.01,300);
