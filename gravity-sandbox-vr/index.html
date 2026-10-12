@@ -16,8 +16,8 @@ button:hover{background:#3678bd}#status{font-size:12px;color:#a8cde8;margin-top:
 </head>
 <body>
 <div id="top">
-<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v6 · Manyetik seçim konisi</small></h1>
-<p>Quest 3 tarayıcısında <b>ENTER VR</b> düğmesini kullan. VR içinde kumandayla yüzen düğmeleri işaretleyip tetikle. Tetik: seçim. Grip: tut/fırlat. Grip ile joystick ileri/geri: mesafe. Joystick sağ/sol: manyetik seçim konisini genişlet/daralt. Panelde Yakına Getir düğmesi seçili gezegeni önüne taşır.</p>
+<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v6.1 · Menü ışını ve Yakına Getir</small></h1>
+<p>Quest 3 tarayıcısında <b>ENTER VR</b> düğmesini kullan. VR içinde kumandayla yüzen düğmeleri işaretleyip tetikle. Tetik: seçim. Grip: tut/fırlat. Grip ile joystick ileri/geri: mesafe. Joystick sağ/sol: manyetik seçim konisini genişlet/daralt. Yakına Getir için Grip gerekmez: tetikle gezegeni seçip paneldeki düğmeye bas. Grip ile tutarken de sol kumandadan düğmeye basabilirsin.</p>
 <div><button id="play">⏸ Duraklat</button><button id="reset">↻ Sıfırla</button><button id="mode">🌌 Uzay</button><button id="trails">Yörüngeler: Açık</button></div>
 <div id="status">Hazırlanıyor…</div><p id="warning"></p>
 </div>
@@ -136,7 +136,7 @@ const panel=new THREE.Mesh(new THREE.PlaneGeometry(.85,.60),new THREE.MeshBasicM
 panel.position.set(-.5,1.7,-1.3);panel.renderOrder=20;scene.add(panel);
 const labels=['play','reset','mode','trails','near'];
 function refreshPanel(){
- ctx.clearRect(0,0,720,400);ctx.fillStyle='#15253aeF';ctx.fillRect(0,0,720,505);
+ ctx.clearRect(0,0,720,505);ctx.fillStyle='#15253aeF';ctx.fillRect(0,0,720,505);
  ctx.fillStyle='#e7f4ff';ctx.font='bold 34px system-ui';ctx.fillText('GRAVITY SANDBOX VR',34,60);
  const names=[$('play').textContent,$('reset').textContent,$('mode').textContent,$('trails').textContent,'Yakına Getir'];
  for(let i=0;i<5;i++){
@@ -144,7 +144,7 @@ function refreshPanel(){
   ctx.fillStyle='#285a8d';ctx.beginPath();ctx.roundRect(x,y,310,85,12);ctx.fill();
   ctx.fillStyle='#ffffff';ctx.font='28px system-ui';ctx.fillText(names[i],x+20,y+54);
  }
- ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v6 | Tetik: seç · Grip: taşı · Joystick sağ/sol: koni',20,460);
+ ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v6.1 | Tetik: seç · Grip: taşı · Joystick: koni',20,460);
  panelTexture.needsUpdate=true;
 }
 const raycaster=new THREE.Raycaster(),tempMatrix=new THREE.Matrix4();
@@ -211,7 +211,7 @@ function magneticPick(controller){
  return best?{body:best,distance:bestDistance}:null;
 }
 function bringNear(){
- if(!selectedPlanet||grabbedBody(selectedPlanet))return;
+ if(!selectedPlanet)return;
  const xrCamera=renderer.xr.isPresenting?renderer.xr.getCamera():camera;
  const eyePos=xrCamera.getWorldPosition(new THREE.Vector3());
  const eyeDirection=new THREE.Vector3(0,0,-1).applyQuaternion(xrCamera.getWorldQuaternion(new THREE.Quaternion()));
@@ -219,6 +219,19 @@ function bringNear(){
  world.worldToLocal(target);
  selectedPlanet.pos.copy(target);
  selectedPlanet.v.set(0,0,0);
+ // If held, move the controller's attachment to the new position as well;
+ // otherwise the next frame would snap the planet back to its old grip distance.
+ for(const [controller,g] of grabs){
+  if(g.body!==selectedPlanet)continue;
+  const currentOrigin=new THREE.Vector3().setFromMatrixPosition(controller.matrixWorld);
+  const direction=new THREE.Vector3(0,0,-1).applyQuaternion(new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().extractRotation(controller.matrixWorld)));
+  const pointWorld=selectedPlanet.mesh.parent.localToWorld(selectedPlanet.pos.clone());
+  const toPoint=pointWorld.sub(currentOrigin);
+  g.distance=Math.max(.12,toPoint.dot(direction));
+  g.offset.copy(toPoint.addScaledVector(direction,-g.distance));
+  const now=performance.now()/1000;
+  g.samples=[{p:selectedPlanet.pos.clone(),t:now}];
+ }
  selectedPlanet.history=[];updateTrail(selectedPlanet);
  $('status').textContent='Seçili gezegen yakına getirildi';
 }
@@ -281,7 +294,9 @@ for(let i=0;i<2;i++){
  const coneMesh=new THREE.Mesh(new THREE.ConeGeometry(1,CONE_VISUAL_LENGTH,32,1,true),new THREE.MeshBasicMaterial({color:0x64b6ff,transparent:true,opacity:.09,depthWrite:false,side:THREE.DoubleSide}));
  coneMesh.rotation.x=Math.PI/2;coneMesh.position.z=-CONE_VISUAL_LENGTH/2;
  controller.add(coneMesh);coneVisuals.push(coneMesh);
- controller.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,-MAX_RAY_LENGTH)]),new THREE.LineBasicMaterial({color:0xa9d7ff,transparent:true,opacity:.55})));
+ const pointerBeam=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,-MAX_RAY_LENGTH)]),new THREE.LineBasicMaterial({color:0xc3f0ff,transparent:true,opacity:.9,depthTest:false,depthWrite:false}));
+ pointerBeam.renderOrder=40;
+ controller.add(pointerBeam);
  controller.addEventListener('connected',e=>controllerInputs.set(controller,e.data));
  controller.addEventListener('disconnected',()=>{controllerInputs.delete(controller);releaseGrab(controller)});
  controller.addEventListener('selectstart',()=>{
