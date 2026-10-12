@@ -599,6 +599,92 @@ function updateForceArrows(){
   b.forceArrow.setLength(length,Math.min(2.4,length*.23),Math.min(1.2,length*.13));
  }
 }
+
+function compileShipFunction(source){
+ const input=String(source).replace(/\s+/g,'').toLowerCase();
+ if(!input||input.length>100)throw Error('expression');
+ const tokens=input.match(/(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?|[a-z]+|[()+*\/^\-]/g);
+ if(!tokens||tokens.join('')!==input||tokens.length>70)throw Error('expression');
+ let i=0;const peek=()=>tokens[i],pop=()=>tokens[i++];
+ function atom(){
+  const v=pop();
+  if(v==='('){const n=expr();if(pop()!==')')throw Error(')');return n}
+  if(v==='-'){const n=atom();return t=>-n(t)}
+  if(v==='+')return atom();
+  if(v==='t')return t=>t;
+  if(v==='pi')return ()=>Math.PI;
+  const fn={sin:Math.sin,cos:Math.cos,exp:Math.exp,abs:Math.abs,sqrt:Math.sqrt};
+  if(fn[v]){if(pop()!=='(')throw Error('(');const n=expr();if(pop()!==')')throw Error(')');return t=>fn[v](n(t))}
+  if(v!==undefined&&/^(?:\d|\.)/.test(v)){const n=Number(v);if(Number.isFinite(n))return ()=>n}
+  throw Error('token');
+ }
+ function power(){let a=atom();if(peek()==='^'){pop();const b=power(),old=a;a=t=>Math.pow(old(t),b(t))}return a}
+ function term(){let a=power();while(peek()==='*'||peek()==='/'){const op=pop(),b=power(),old=a;a=op==='*'?t=>old(t)*b(t):t=>old(t)/b(t)}return a}
+ function expr(){let a=term();while(peek()==='+'||peek()==='-'){const op=pop(),b=term(),old=a;a=op==='+'?t=>old(t)+b(t):t=>old(t)-b(t)}return a}
+ const fn=expr();if(i!==tokens.length)throw Error('trailing');
+ for(let t=0;t<=120;t+=.25){const value=fn(t);if(!Number.isFinite(value)||Math.abs(value)>100)throw Error('range')}
+ return {source:input,fn:t=>{const v=fn(t);return Number.isFinite(v)?Math.max(-100,Math.min(100,v)):0}};
+}
+function makeSpacecraft(pos){
+ const craft=new THREE.Group(),shell=new THREE.MeshStandardMaterial({color:0xe7edf2,roughness:.7,metalness:.1});
+ const cylinder=new THREE.Mesh(new THREE.CylinderGeometry(.8,.8,3.6,20),shell);
+ cylinder.rotation.x=Math.PI/2;craft.add(cylinder);
+ const dome=new THREE.Mesh(new THREE.SphereGeometry(.8,20,12,0,Math.PI*2,0,Math.PI/2),shell.clone());
+ dome.rotation.x=Math.PI/2;dome.position.z=1.8;craft.add(dome);
+ for(let i=0;i<3;i++){
+  const a=i*Math.PI*2/3,c=Math.cos(a),si=Math.sin(a),pts=[[.65,-1.9],[1.75,-2.25],[.65,-.55]];
+  const coords=[];
+  for(const [rad,z]of pts)coords.push(rad*c,rad*si,z);
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(coords,3));g.computeVertexNormals();
+  const fin=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0x64768b,side:THREE.DoubleSide}));craft.add(fin);
+ }
+ const nozzle=new THREE.Mesh(new THREE.CylinderGeometry(.62,.62,.24,16),new THREE.MeshStandardMaterial({color:0x424b57}));
+ nozzle.rotation.x=Math.PI/2;nozzle.position.z=-1.9;craft.add(nozzle);
+ craft.position.copy(pos);scene.add(craft);
+ const b=makeBody(2.4,0xbdd5e8,pos,new THREE.Vector3());
+ scene.remove(b.mesh);b.mesh.material.dispose();
+ b.mesh=craft;b.kind='ship';b.m=.01;b.r=2.4;b.orientation=new THREE.Quaternion();
+ b.engines={x:compileShipFunction('0'),y:compileShipFunction('0'),fuel:8,power:8};
+ return b;
+}
+let activeShip=null,activeAxis='x';
+function openShipEditor(ship,axis){
+ stopPhysics();activeShip=ship;activeAxis=axis;
+ $('shipHeading').textContent=t(axis==='z'?'Z Motoru (Yakıt)':axis.toUpperCase()+' Motoru');
+ $('shipFuncLabel').style.display=axis==='z'?'none':'grid';
+ $('shipFuelLabel').style.display=axis==='z'?'grid':'none';
+ $('shipFunc').value=axis==='z'?'0':ship.engines[axis].source;
+ $('shipFuel').value=ship.engines.fuel;$('shipError').textContent='';
+ $('shipOverlay').style.display='flex';
+ (axis==='z'?$('shipFuel'):$('shipFunc')).focus();
+}
+$('shipCancel').addEventListener('click',()=>{$('shipOverlay').style.display='none';activeShip=null});
+$('shipOverlay').addEventListener('click',e=>{if(e.target===$('shipOverlay'))$('shipCancel').click()});
+$('shipForm').addEventListener('submit',e=>{
+ e.preventDefault();if(!activeShip)return;
+ try{
+  if(activeAxis==='z'){
+   const n=Number($('shipFuel').value);
+   if(!Number.isFinite(n)||n<0||n>120)throw Error('range');
+   activeShip.engines.fuel=n;
+  }else activeShip.engines[activeAxis]=compileShipFunction($('shipFunc').value);
+  $('shipOverlay').style.display='none';activeShip=null;
+ }catch(_){$('shipError').textContent=appLanguage==='tr'?'Geçersiz ifade. Fonksiyon ±100 aralığında kalmalı.':'Invalid expression. Thrust must stay within ±100.'}
+});
+$('shipDirButton').addEventListener('click',()=>{
+ $('shipDirections').style.display=$('shipDirections').style.display==='none'?'block':'none';$('shipEngines').style.display='none';
+});
+$('shipEngineButton').addEventListener('click',()=>{
+ $('shipEngines').style.display=$('shipEngines').style.display==='none'?'block':'none';$('shipDirections').style.display='none';
+});
+const directions={right:[1,0,0],left:[-1,0,0],forward:[0,0,-1],back:[0,0,1],up:[0,1,0]};
+document.querySelectorAll('[data-ship-dir]').forEach(btn=>btn.addEventListener('click',()=>{
+ const b=menuBody,vec=directions[btn.dataset.shipDir];closePlanetMenu();
+ if(b?.kind==='ship'){b.orientation.setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3(...vec));updateVisual(b)}
+}));
+document.querySelectorAll('[data-engine]').forEach(btn=>btn.addEventListener('click',()=>{
+ const b=menuBody,axis=btn.dataset.engine;closePlanetMenu();if(b?.kind==='ship')openShipEditor(b,axis);
+}));
 function makeBody(r,color,pos,vel){
  const mesh=new THREE.Mesh(sphere,new THREE.MeshStandardMaterial({color,roughness:.72,metalness:0}));
  mesh.scale.setScalar(r);mesh.position.copy(pos);mesh.castShadow=pos.y>0;mesh.receiveShadow=true;scene.add(mesh);
