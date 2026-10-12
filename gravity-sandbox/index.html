@@ -250,7 +250,7 @@ function updateSelectionRing(){
 function copyPlanet(body){
  if(!body||!bodies.includes(body))return;
  copiedPlanet={p:body.p.clone(),v:body.v.clone(),r:body.r,m:body.m,color:body.color};
- $('message').textContent='Gezegen kopyalandı · Ctrl+V veya sağ tık ile yapıştır';
+ msg('Gezegen kopyalandı · Ctrl+V veya sağ tık ile yapıştır');
 }
 function pastePlanet(point=null){
  if(!copiedPlanet)return;
@@ -262,7 +262,7 @@ function pastePlanet(point=null){
  const b=makeBody(copiedPlanet.r,copiedPlanet.color,p,copiedPlanet.v);
  b.m=copiedPlanet.m;
  bodies.push(b);updateTrail(b);selectPlanet(b);hoveredBody=b;
- $('message').textContent='Gezegen yapıştırıldı · Ctrl+V veya sağ tık: tekrar yapıştır';
+ msg('Gezegen yapıştırıldı · Ctrl+V veya sağ tık: tekrar yapıştır');
 }
 function deletePlanet(body){
  if(!body)return;
@@ -278,7 +278,7 @@ function deletePlanet(body){
  if(selectedBodies.has(body)){selectedBodies.delete(body);selectedBody=selectedBodies.size?[...selectedBodies].at(-1):null;syncSelections()}
  if(hoveredBody===body)hoveredBody=null;
  acc=0;
- $('message').textContent='Gezegen silindi · Çift tıkla: yeni gezegen';
+ msg('Gezegen silindi · Çift tıkla: yeni gezegen');
 }
 $('addSystems').addEventListener('click',()=>{
  const sub=$('addSubmenu'),open=sub.style.display==='none';
@@ -391,7 +391,7 @@ function addPreset(id,center){
   // Bu deneylerde yalnızca tekdüze global alan kullanılmalı.
   surfaceMode=true;
   $('toggleSurface').setAttribute('aria-pressed','true');
-  $('toggleSurface').textContent='Gezegen';
+  $('toggleSurface').textContent=t('Gezegen');
   updateFrictionControls();
   gravityField.visible=fieldArrowsVisible;
   // Tüm atışlar x-y düzleminde, z=0 üzerinde gerçekleşir.
@@ -417,7 +417,7 @@ function addPreset(id,center){
  }
  acc=0;
  const labels={solar:'Güneş Sistemi',binary:'Çift Yıldız',trappist:'TRAPPIST-1',eight:'Üç Cisim – Sekiz Yörüngesi',triangle:'Dönen Eşkenar Üçgen',lagrange:'Lagrange Noktaları',chaos:'Kaotik Üç Cisim',collapse:'Kütleçekim Çökmesi',cloud:'Parçacık Bulutu',rings:'Gezegen Halkası',collision:'Büyük Çarpışma',horizontal:'Yatay Atış',vertical:'Düşey Atış',rocket:'Roket',angled:'Eğik Atış',freefall:'Serbest Düşüş'};
- $('message').textContent=(labels[id]||'Sistem')+' eklendi · '+added.length+' cisim · Başlat';
+ $('message').textContent=appLanguage==='tr'?(labels[id]||'Sistem')+' eklendi · '+added.length+' cisim · Başlat':t(labels[id]||'Sistem')+' added · '+added.length+' bodies · Start';
 }
 document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>{
  const id=button.dataset.preset,point=menuPoint?.clone();
@@ -428,7 +428,7 @@ $('selectAllPlanets').addEventListener('click',()=>{
  for(const b of bodies)selectedBodies.add(b);
  selectedBody=bodies.length?bodies[bodies.length-1]:null;
  syncSelections();
- $('message').textContent=bodies.length+' gezegen seçildi · Düzenlemek için sağ tıkla';
+ $('message').textContent=appLanguage==='tr'?bodies.length+' gezegen seçildi · Düzenlemek için sağ tıkla':bodies.length+' planets selected · Right-click to edit';
 });
 $('copyPlanet').addEventListener('click',()=>{
  const b=menuBody;closePlanetMenu();copyPlanet(b);
@@ -448,7 +448,7 @@ $('deletePlanet').addEventListener('click',()=>{
   if(hoveredBody===b)hoveredBody=null;
  }
  selectedBodies.clear();selectedBody=null;syncSelections();acc=0;
- $('message').textContent=targets.length+' gezegen silindi · Çift tıkla: yeni gezegen';
+ $('message').textContent=appLanguage==='tr'?targets.length+' gezegen silindi · Çift tıkla: yeni gezegen':targets.length+' planets deleted · Double-click to add a planet';
 });
 window.addEventListener('pointerdown',e=>{
  if(!planetMenu.contains(e.target))closePlanetMenu();
@@ -466,7 +466,7 @@ $('themeButton').addEventListener('click',()=>{
  room.material.color.set(darkMode?0x7f99b5:0xaebac6);
  for(const ring of selectionRings.values())ring.style.borderColor=darkMode?'#ffdb3a':'#203b60';
  $('themeButton').textContent=darkMode?'☀':'☾';
- $('themeButton').title=darkMode?'Aydınlık arka plan':'Koyu arka plan';
+ $('themeButton').title=t(darkMode?'Aydınlık arka plan':'Koyu arka plan');
 });
 // Kamerayı geçerli bakış noktasından hedef açıya yumuşakça döndür.
 let cameraTransition=null;
@@ -498,7 +498,7 @@ function toggleTrails(){
  trailsVisible=!trailsVisible;
  for(const b of bodies){b.trace.visible=trailsVisible; if(trailsVisible)updateTrail(b)}
  const button=$('toggleTrails');
- button.textContent=trailsVisible?'Yörüngeyi gizle':'Yörüngeyi göster';
+ button.textContent=t(trailsVisible?'Yörüngeyi gizle':'Yörüngeyi göster');
  button.setAttribute('aria-pressed',String(trailsVisible));
 }
 const raycaster=new THREE.Raycaster(),ndc=new THREE.Vector2(),plane=new THREE.Plane(),intersection=new THREE.Vector3();
@@ -526,7 +526,7 @@ let frictionAmount=.45;
 function updateFrictionControls(){
  $('toggleFieldArrows').style.display=surfaceMode?'':'none';
  $('toggleFriction').style.display=surfaceMode?'':'none';
- $('toggleFriction').textContent=frictionEnabled?'Sürtünmeli':'Sürtünmesiz';
+ $('toggleFriction').textContent=t(frictionEnabled?'Sürtünmeli':'Sürtünmesiz');
  $('toggleFriction').setAttribute('aria-pressed',String(frictionEnabled));
  $('frictionSlider').style.display=surfaceMode&&frictionEnabled?'flex':'none';
 }
@@ -779,9 +779,9 @@ helper.add(vectorShadow);
 helper.visible=false;
 function showEditor(){if(!editor){$('stepbox').style.display='none';helper.visible=false;planetInfo.style.display='none';return}
  const [title,description]=labels[Math.min(editor.phase,4)];
- $('stepbox').style.display='none';$('stepTitle').textContent=(editor.existing?'Gezegeni düzenle — ':'Gezegen ekle — ')+title;
- $('stepHelp').textContent=description;
- $('stepCount').textContent=editor.editGroup?'Seçili özellik düzenleniyor':`Aşama ${editor.phase+1}/6`;
+ $('stepbox').style.display='none';$('stepTitle').textContent=t(editor.existing?'Gezegeni düzenle — ':'Gezegen ekle — ')+t(title);
+ $('stepHelp').textContent=t(labels[Math.min(editor.phase,4)][0]+' açıklama');
+ $('stepCount').textContent=editor.editGroup?t('Seçili özellik düzenleniyor'):(appLanguage==='tr'?`Aşama ${editor.phase+1}/6`:`Step ${editor.phase+1}/6`);
  helper.visible=true;
  planetInfo.style.display='none';
 }
@@ -808,7 +808,7 @@ function updateHelpers(){if(!editor)return;
  arrow.setColor(escaping?escapeColor:vectorColor);
  if(editor.phase>=3){
   const label=labels[Math.min(editor.phase,4)][1];
-  $('stepHelp').textContent=label+'  Hız: '+speed.toFixed(2)+' · Kaçış hızı: '+escapeSpeed.toFixed(2)+(escaping?' · KAÇIŞ HIZI AŞILDI':'');
+  $('stepHelp').textContent=t(labels[Math.min(editor.phase,4)][0]+' açıklama')+'  '+t('Hız: ')+speed.toFixed(2)+' · '+t('Kaçış hızı: ')+escapeSpeed.toFixed(2)+(escaping?' · '+t('KAÇIŞ HIZI AŞILDI'):'');
  }
  const visible=editor.phase>=3 && speed>.015;
  arrow.visible=visible;
@@ -827,7 +827,7 @@ function updateHelpers(){if(!editor)return;
   }
  }
 }
-function stopPhysics(){running=false;acc=0;$('play').textContent='▶ Başlat'}
+function stopPhysics(){running=false;acc=0;$('play').textContent='▶ '+t('Başlat')}
 function beginEditor(existing,e,editPhase=null){
  if(editor)finishEditor(false);
  stopPhysics();
@@ -1000,7 +1000,7 @@ function createPlanetAt(e){
   }
  }
  bodies.push(body);updateTrail(body);selectPlanet(body);hoveredBody=body;
- $('message').textContent='Gezegen oluşturuldu · Düzenlemek için sağ tıkla';
+ msg('Gezegen oluşturuldu · Düzenlemek için sağ tıkla');
 }
 canvas.addEventListener('dblclick',e=>{
  e.preventDefault();e.stopPropagation();
@@ -1027,25 +1027,25 @@ $('toggleTrails').addEventListener('click',toggleTrails);
 $('toggleVelocities').addEventListener('click',()=>{
  velocitiesVisible=!velocitiesVisible;
  $('toggleVelocities').setAttribute('aria-pressed',String(velocitiesVisible));
- $('toggleVelocities').textContent=velocitiesVisible?'Hızları gizle':'Hızlar';
+ $('toggleVelocities').textContent=t(velocitiesVisible?'Hızları gizle':'Hızlar');
  if(!velocitiesVisible)for(const b of bodies)b.velocityArrow.visible=false;
 });
 $('toggleForces').addEventListener('click',()=>{
  forcesVisible=!forcesVisible;
  $('toggleForces').setAttribute('aria-pressed',String(forcesVisible));
- $('toggleForces').textContent=forcesVisible?'Kuvvetleri gizle':'Kuvvetler';
+ $('toggleForces').textContent=t(forcesVisible?'Kuvvetleri gizle':'Kuvvetler');
  if(!forcesVisible)for(const b of bodies)b.forceArrow.visible=false;
 });
 $('toggleCenter').addEventListener('click',()=>{
  centerVisible=!centerVisible;
  $('toggleCenter').setAttribute('aria-pressed',String(centerVisible));
- $('toggleCenter').textContent=centerVisible?'Merkezi gizle':'Kütle Merkezi';
+ $('toggleCenter').textContent=t(centerVisible?'Merkezi gizle':'Kütle Merkezi');
  if(!centerVisible)centerMarker.visible=false;
 });
 $('toggleFieldArrows').addEventListener('click',()=>{
  fieldArrowsVisible=!fieldArrowsVisible;
  $('toggleFieldArrows').setAttribute('aria-pressed',String(fieldArrowsVisible));
- $('toggleFieldArrows').textContent=fieldArrowsVisible?'Alan Oklarını Gizle':'Alan Okları';
+ $('toggleFieldArrows').textContent=t(fieldArrowsVisible?'Alan Oklarını Gizle':'Alan Okları');
  gravityField.visible=surfaceMode&&fieldArrowsVisible;
 });
 $('toggleFriction').addEventListener('click',()=>{
@@ -1059,20 +1059,20 @@ $('frictionRange').addEventListener('input',e=>{
 $('toggleSurface').addEventListener('click',()=>{
  surfaceMode=!surfaceMode;
  $('toggleSurface').setAttribute('aria-pressed',String(surfaceMode));
- $('toggleSurface').textContent=surfaceMode?'Gezegen':'Uzay';
+ $('toggleSurface').textContent=t(surfaceMode?'Gezegen':'Uzay');
  gravityField.visible=surfaceMode&&fieldArrowsVisible;
  updateFrictionControls();
  if(surfaceMode)resolveGroundCollisions();
  acc=0;
- $('message').textContent=surfaceMode?'Gezegen yüzeyi: sabit aşağı çekim · Yapışma: zemine tutunma':'Uzay: cisimler birbirlerini çekiyor';
+ msg(surfaceMode?'Gezegen yüzeyi: sabit aşağı çekim · Yapışma: zemine tutunma':'Uzay: cisimler birbirlerini çekiyor');
 });
 $('toggleMerging').addEventListener('click',()=>{
  mergingEnabled=!mergingEnabled;
  $('toggleMerging').setAttribute('aria-pressed',String(mergingEnabled));
- $('toggleMerging').textContent=mergingEnabled?'Yapışma: açık':'Yapışma';
+ $('toggleMerging').textContent=t(mergingEnabled?'Yapışma: açık':'Yapışma');
  if(mergingEnabled&&!surfaceMode&&!running&&!editor)mergeTouchingBodies();
 });
-function toggleRunning(){if(editor)finishEditor(true);running=!running;$('play').textContent=running?'❚❚ Duraklat':'▶ Başlat'}
+function toggleRunning(){if(editor)finishEditor(true);running=!running;$('play').textContent=running?'❚❚ '+t('Duraklat'):'▶ '+t('Başlat')}
 $('play').addEventListener('click',toggleRunning);
 $('reset').addEventListener('click',()=>{stopPhysics();init()});
 $('clearCanvas').addEventListener('click',()=>{
@@ -1086,7 +1086,7 @@ $('clearCanvas').addEventListener('click',()=>{
  hoveredBody=null;menuBody=null;copiedPlanet=null;
  centerMarker.visible=false;
  acc=0;trailTick=0;
- $('message').textContent='Kanvas temizlendi · Çift tıkla: yeni gezegen';
+ msg('Kanvas temizlendi · Çift tıkla: yeni gezegen');
 });
 window.addEventListener('keydown',e=>{
  if(e.code==='Escape'||e.key==='Escape'){
@@ -1143,7 +1143,8 @@ function animate(now){requestAnimationFrame(animate);
  for(const b of bodies)updateVisual(b);
  controls.update();updateSelectionRing();updatePlanetInfo();updateForceArrows();updateCenterMarker();updateMergeBursts(delta);renderer.render(scene,camera);updateLens();
 }
-init();requestAnimationFrame(animate);
+$('languageButton').addEventListener('click',()=>{appLanguage=appLanguage==='tr'?'en':'tr';try{localStorage.setItem('gravity-sandbox-language',appLanguage)}catch(_){}localizeUI()});
+init();localizeUI();requestAnimationFrame(animate);
 } catch(error){const box=document.getElementById('error');box.style.display='block';box.textContent='3D motor yüklenemedi: '+error.message+'. İnternet bağlantısını ve WebGL desteğini kontrol edin.';console.error(error)}
 </script>
 <script src="/projeler/shared-ui.js?v=20261004-1"></script>
