@@ -26,6 +26,7 @@
     'isaretli-carpma':'İşaretli Çarpma',
     'isaretli-toplama':'İşaretli Toplama',
     'kesir-ondalik-sayi-dogrusu':'Kesir ve Ondalık Sayı Doğrusu',
+    'kok-atolyesi':'Kök',
     'multiply_by_10':'10 ile Çarpma',
     'neg_powers_of_2':"2'nin Negatif Kuvvetleri",
     'oranti':'Orantı',
