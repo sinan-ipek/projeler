@@ -471,6 +471,15 @@ $('themeButton').addEventListener('click',()=>{
 // Kamerayı geçerli bakış noktasından hedef açıya yumuşakça döndür.
 let cameraTransition=null;
 function smoothCameraView(top){
+ // Flush any pending OrbitControls damped pan/rotation BEFORE capturing the
+ // transition start. Keep damping disabled while the scripted camera owns it.
+ if(cameraTransition){
+  controls.enableDamping=cameraTransition.previousDamping;
+  cameraTransition=null;
+ }
+ const previousDamping=controls.enableDamping;
+ controls.enableDamping=false;
+ controls.update();
  const target=controls.target.clone();
  const offset=camera.position.clone().sub(target);
  const distance=Math.max(controls.minDistance,Math.min(controls.maxDistance,offset.length()));
@@ -483,13 +492,17 @@ function smoothCameraView(top){
  cameraTransition={
   target,distance,
   fromPhi:from.phi,toPhi,fromTheta:from.theta,thetaDelta,
-  start:performance.now(),duration:850
+  start:performance.now(),duration:850,previousDamping
  };
  controls.enabled=false;
 }
 $('topView').addEventListener('click',()=>smoothCameraView(true));
 $('sideView').addEventListener('click',()=>smoothCameraView(false));
-renderer.domElement.addEventListener('pointerdown',()=>{if(cameraTransition){cameraTransition=null;controls.enabled=!editor}});
+renderer.domElement.addEventListener('pointerdown',()=>{if(cameraTransition){
+ controls.enableDamping=cameraTransition.previousDamping;
+ cameraTransition=null;
+ controls.enabled=!editor;
+ }});
 
 $('speedRange').addEventListener('input',e=>{
  animationSpeed=Number(e.target.value);
@@ -1171,7 +1184,13 @@ function animate(now){requestAnimationFrame(animate);
   const phi=tr.fromPhi+(tr.toPhi-tr.fromPhi)*eased;
   const offset=new THREE.Vector3().setFromSphericalCoords(tr.distance,phi,theta);
   camera.position.copy(tr.target).add(offset);
-  if(u>=1){cameraTransition=null;controls.enabled=!editor}
+  if(u>=1){
+   controls.target.copy(tr.target);
+   controls.update();
+   controls.enableDamping=tr.previousDamping;
+   cameraTransition=null;
+   controls.enabled=!editor;
+  }
  }
  if(running&&!editor){acc+=delta*animationSpeed;let n=0;while(acc>=DT&&n<40){step();acc-=DT;n++}if(n===40)acc=0}
  for(const b of bodies)updateVisual(b);
