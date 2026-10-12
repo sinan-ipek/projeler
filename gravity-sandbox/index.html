@@ -1107,7 +1107,7 @@ $('frictionRange').addEventListener('input',e=>{
 });
 $('toggleSurface').addEventListener('click',()=>{
  surfaceMode=!surfaceMode;
- if(!surfaceMode)setNightMode(true);
+ setNightMode(!surfaceMode);
  $('toggleSurface').setAttribute('aria-pressed',String(surfaceMode));
  $('toggleSurface').textContent=t(surfaceMode?'Gezegen':'Uzay');
  gravityField.visible=surfaceMode&&fieldArrowsVisible;
