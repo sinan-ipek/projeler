@@ -16,8 +16,8 @@ button:hover{background:#3678bd}#status{font-size:12px;color:#a8cde8;margin-top:
 </head>
 <body>
 <div id="top">
-<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v5 · Seçim / Grip / Joystick</small></h1>
-<p>Quest 3 tarayıcısında <b>ENTER VR</b> düğmesini kullan. VR içinde kumandayla yüzen düğmeleri işaretleyip tetikle. Tetik: seçim. Grip: tutup taşı ve bırakınca fırlat. Grip basılıyken joystick ile mesafeyi değiştir. Simülasyonu durdurman gerekmez.</p>
+<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v6 · Manyetik seçim konisi</small></h1>
+<p>Quest 3 tarayıcısında <b>ENTER VR</b> düğmesini kullan. VR içinde kumandayla yüzen düğmeleri işaretleyip tetikle. Tetik: seçim. Grip: tut/fırlat. Grip ile joystick ileri/geri: mesafe. Joystick sağ/sol: manyetik seçim konisini genişlet/daralt. Panelde Yakına Getir düğmesi seçili gezegeni önüne taşır.</p>
 <div><button id="play">⏸ Duraklat</button><button id="reset">↻ Sıfırla</button><button id="mode">🌌 Uzay</button><button id="trails">Yörüngeler: Açık</button></div>
 <div id="status">Hazırlanıyor…</div><p id="warning"></p>
 </div>
@@ -122,28 +122,29 @@ function syncButtons(){
 }
 function action(name){
  if(name==='play')running=!running
- if(name==='reset'){grabs.clear();hoverBodies.clear();selectedPlanet=null;setup();selectionRing.visible=false}
+ if(name==='reset'){grabs.clear();hoverBodies.clear();magneticTargets.clear();selectedPlanet=null;setup();selectionRing.visible=false}
  if(name==='mode'){planetMode=!planetMode;if(planetMode)for(const b of bodies){b.pos.y=Math.max(b.pos.y,-10+b.radius);b.history=[];updateTrail(b)}}
  if(name==='trails')showTrails=!showTrails;
+ if(name==='near')bringNear();
  syncButtons();
 }
 for(const id of ['play','reset','mode','trails'])$(id).onclick=()=>action(id);
 // VR panel uses a shared canvas texture; buttons remain selectable via controller rays.
-const panelCanvas=document.createElement('canvas');panelCanvas.width=720;panelCanvas.height=400;
+const panelCanvas=document.createElement('canvas');panelCanvas.width=720;panelCanvas.height=505;
 const ctx=panelCanvas.getContext('2d'),panelTexture=new THREE.CanvasTexture(panelCanvas);panelTexture.colorSpace=THREE.SRGBColorSpace;
-const panel=new THREE.Mesh(new THREE.PlaneGeometry(.85,.48),new THREE.MeshBasicMaterial({map:panelTexture,transparent:true,side:THREE.DoubleSide,depthTest:false}));
+const panel=new THREE.Mesh(new THREE.PlaneGeometry(.85,.60),new THREE.MeshBasicMaterial({map:panelTexture,transparent:true,side:THREE.DoubleSide,depthTest:false}));
 panel.position.set(-.5,1.7,-1.3);panel.renderOrder=20;scene.add(panel);
-const labels=['play','reset','mode','trails'];
+const labels=['play','reset','mode','trails','near'];
 function refreshPanel(){
- ctx.clearRect(0,0,720,400);ctx.fillStyle='#15253aeF';ctx.fillRect(0,0,720,400);
+ ctx.clearRect(0,0,720,400);ctx.fillStyle='#15253aeF';ctx.fillRect(0,0,720,505);
  ctx.fillStyle='#e7f4ff';ctx.font='bold 34px system-ui';ctx.fillText('GRAVITY SANDBOX VR',34,60);
- const names=[$('play').textContent,$('reset').textContent,$('mode').textContent,$('trails').textContent];
- for(let i=0;i<4;i++){
+ const names=[$('play').textContent,$('reset').textContent,$('mode').textContent,$('trails').textContent,'Yakına Getir'];
+ for(let i=0;i<5;i++){
   const x=35+(i%2)*345,y=100+Math.floor(i/2)*115;
   ctx.fillStyle='#285a8d';ctx.beginPath();ctx.roundRect(x,y,310,85,12);ctx.fill();
   ctx.fillStyle='#ffffff';ctx.font='28px system-ui';ctx.fillText(names[i],x+20,y+54);
  }
- ctx.font='20px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v5 | Tetik: seç · Grip: tut/fırlat · Joystick: mesafe',14,365);
+ ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v6 | Tetik: seç · Grip: taşı · Joystick sağ/sol: koni',20,460);
  panelTexture.needsUpdate=true;
 }
 const raycaster=new THREE.Raycaster(),tempMatrix=new THREE.Matrix4();
@@ -158,6 +159,10 @@ const selectionRing=new THREE.Mesh(new THREE.RingGeometry(1.22,1.34,64),new THRE
 selectionRing.visible=false;selectionRing.renderOrder=30;world.add(selectionRing);
 const controllerInputs=new Map();
 const MAX_RAY_LENGTH=1000;
+let coneAngle=.045; // radians; joystick right/left changes this from 0 to 15 degrees
+const MAX_CONE=.261799;
+const magneticTargets=new Map();
+const joystickButtons=new Map();
 function updateSelectionRing(){
  selectionRing.visible=!!selectedPlanet&&bodies.includes(selectedPlanet);
  if(!selectionRing.visible)return;
@@ -167,6 +172,53 @@ function updateSelectionRing(){
  selectionRing.quaternion.copy(camera.getWorldQuaternion(new THREE.Quaternion()));
 }
 
+function magneticPick(controller){
+ rayFromController(controller);
+ const exact=raycaster.intersectObjects(bodies.map(b=>b.mesh),false)[0];
+ if(exact){
+  const body=bodies.find(b=>b.mesh===exact.object);
+  magneticTargets.set(controller,body);return {body,distance:exact.distance};
+ }
+ const direction=raycaster.ray.direction,origin=raycaster.ray.origin;
+ let best=null,bestAngle=Infinity,bestDistance=0;
+ for(const b of bodies){
+  const center=b.mesh.getWorldPosition(new THREE.Vector3());
+  const v=center.sub(origin),distance=v.length();
+  if(distance<.0001)continue;
+  const cosine=direction.dot(v)/distance;
+  if(cosine<=0)continue;
+  const error=Math.acos(Math.min(1,Math.max(-1,cosine)));
+  const visibleRadius=Math.asin(Math.min(1,b.radius*SCALE/distance));
+  const allowance=Math.max(coneAngle,visibleRadius);
+  if(error<=allowance&&error<bestAngle){best=b;bestAngle=error;bestDistance=distance}
+ }
+ const previous=magneticTargets.get(controller);
+ if(previous&&bodies.includes(previous)&&best!==previous){
+  const v=previous.mesh.getWorldPosition(new THREE.Vector3()).sub(origin);
+  const d=v.length();
+  if(d>0){
+   const error=Math.acos(THREE.MathUtils.clamp(direction.dot(v)/d,-1,1));
+   const threshold=Math.max(coneAngle,Math.asin(Math.min(1,previous.radius*SCALE/d)));
+   if(error<threshold+THREE.MathUtils.degToRad(1.2)){
+    best=previous;bestDistance=d;
+   }
+  }
+ }
+ magneticTargets.set(controller,best);
+ return best?{body:best,distance:bestDistance}:null;
+}
+function bringNear(){
+ if(!selectedPlanet||grabbedBody(selectedPlanet))return;
+ const xrCamera=renderer.xr.isPresenting?renderer.xr.getCamera():camera;
+ const eyePos=xrCamera.getWorldPosition(new THREE.Vector3());
+ const eyeDirection=new THREE.Vector3(0,0,-1).applyQuaternion(xrCamera.getWorldQuaternion(new THREE.Quaternion()));
+ const target=eyePos.addScaledVector(eyeDirection,1.35);
+ world.worldToLocal(target);
+ selectedPlanet.pos.copy(target);
+ selectedPlanet.v.set(0,0,0);
+ selectedPlanet.history=[];updateTrail(selectedPlanet);
+ $('status').textContent='Seçili gezegen yakına getirildi';
+}
 function rayFromController(controller){
  tempMatrix.identity().extractRotation(controller.matrixWorld);
  raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
@@ -182,6 +234,15 @@ function releaseGrab(controller){
 function updateGrabsAndHover(dt){
  for(const controller of controllers){
   rayFromController(controller);
+  const pad=controllerInputs.get(controller)?.gamepad;
+  const axes=pad?.axes||[];
+  const sideAxis=axes.length>=4?axes[2]:axes.length>=2?axes[0]:0;
+  if(!grabs.has(controller)&&Math.abs(sideAxis)>.18){
+   coneAngle=THREE.MathUtils.clamp(coneAngle+sideAxis*dt*.24,0,MAX_CONE);
+  }
+  const pressed=!!pad?.buttons?.[3]?.pressed;
+  if(pressed&&!joystickButtons.get(controller)&&!grabs.has(controller))bringNear();
+  joystickButtons.set(controller,pressed);
   const g=grabs.get(controller);
   if(g){
    const axes=controllerInputs.get(controller)?.gamepad?.axes||[];
@@ -194,8 +255,8 @@ function updateGrabsAndHover(dt){
    g.samples.push({p:pos.clone(),t:now});
    while(g.samples.length>2&&now-g.samples[0].t>.14)g.samples.shift();
   }else{
-   const hit=raycaster.intersectObjects(bodies.map(b=>b.mesh),false)[0];
-   hoverBodies.set(controller,hit?.object||null);
+   const picked=magneticPick(controller);
+   hoverBodies.set(controller,picked?.body.mesh||null);
   }
  }
  for(const b of bodies){
@@ -215,20 +276,20 @@ for(let i=0;i<2;i++){
   rayFromController(controller);
   const panelHit=raycaster.intersectObject(panel,false)[0];
   if(panelHit?.uv){
-   const px=panelHit.uv.x*720,py=(1-panelHit.uv.y)*400;
-   if(py>=100&&py<=300){
-    const col=px<360?0:1,row=py<215?0:1,x=35+col*345,y=100+row*115;
-    if(px>=x&&px<=x+310&&py>=y&&py<=y+85){action(labels[row*2+col]);return}
+   const px=panelHit.uv.x*720,py=(1-panelHit.uv.y)*505;
+   if(py>=100&&py<=415){
+    const col=px<360?0:1,row=Math.min(2,Math.floor((py-100)/115)),x=35+col*345,y=100+row*115;
+    if(px>=x&&px<=x+310&&py>=y&&py<=y+85&&labels[row*2+col]){action(labels[row*2+col]);return}
    }
   }
-  const hit=raycaster.intersectObjects(bodies.map(b=>b.mesh),false)[0];
-  choosePlanet(hit?bodies.find(b=>b.mesh===hit.object):null);
+  const hit=magneticPick(controller);
+  choosePlanet(hit?.body||null);
  });
  controller.addEventListener('squeezestart',()=>{
   rayFromController(controller);
-  const hit=raycaster.intersectObjects(bodies.map(b=>b.mesh),false)[0];
+  const hit=magneticPick(controller);
   if(!hit)return;
-  const body=bodies.find(b=>b.mesh===hit.object);
+  const body=hit.body;
   if(!body||grabbedBody(body))return;
   choosePlanet(body);
   const center=body.mesh.getWorldPosition(new THREE.Vector3());
@@ -240,7 +301,7 @@ for(let i=0;i<2;i++){
  const grip=renderer.xr.getControllerGrip(i);grip.add(controllerFactory.createControllerModel(grip));scene.add(grip);
 }
 renderer.xr.addEventListener('sessionstart',()=>{$('status').textContent='v2 · Duraklatınca gezegenler tutulabilir'});
-renderer.xr.addEventListener('sessionend',()=>{grabs.clear();hoverBodies.clear();$('status').textContent='VR kapalı · Masaüstü önizlemesi'});
+renderer.xr.addEventListener('sessionend',()=>{grabs.clear();hoverBodies.clear();magneticTargets.clear();$('status').textContent='VR kapalı · Masaüstü önizlemesi'});
 const clock=new THREE.Clock();
 renderer.setAnimationLoop(()=>{
  const dt=Math.min(clock.getDelta(),.05);
