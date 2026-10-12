@@ -16,8 +16,8 @@ button:hover{background:#3678bd}#status{font-size:12px;color:#a8cde8;margin-top:
 </head>
 <body>
 <div id="top">
-<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v3 · Gezegen fırlatma</small></h1>
-<p>Quest 3 tarayıcısında <b>ENTER VR</b> düğmesini kullan. VR içinde kumandayla yüzen düğmeleri işaretleyip tetikle. Duraklatınca gezegeni işaretle; tetikle tutup taşı. Fırlatmak için tutarken kavrama (grip) düğmesine de bas ve hareket sırasında tetiği bırak.</p>
+<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v4 · Canlı seçim ve fırlatma</small></h1>
+<p>Quest 3 tarayıcısında <b>ENTER VR</b> düğmesini kullan. VR içinde kumandayla yüzen düğmeleri işaretleyip tetikle. Simülasyon çalışırken de gezegenleri tek tıkla seçebilir, tetiğe basılı tutarak sürükleyip bırakınca fırlatabilirsin.</p>
 <div><button id="play">⏸ Duraklat</button><button id="reset">↻ Sıfırla</button><button id="mode">🌌 Uzay</button><button id="trails">Yörüngeler: Açık</button></div>
 <div id="status">Hazırlanıyor…</div><p id="warning"></p>
 </div>
@@ -101,11 +101,12 @@ function accelerations(){
 function step(){
  let a=accelerations();
  for(let i=0;i<bodies.length;i++){
-  const b=bodies[i];b.v.addScaledVector(a[i],DT/2);b.pos.addScaledVector(b.v,DT);
+  const b=bodies[i];if(grabbedBody(b))continue;b.v.addScaledVector(a[i],DT/2);b.pos.addScaledVector(b.v,DT);
  }
  a=accelerations();
- for(let i=0;i<bodies.length;i++)bodies[i].v.addScaledVector(a[i],DT/2);
+ for(let i=0;i<bodies.length;i++)if(!grabbedBody(bodies[i]))bodies[i].v.addScaledVector(a[i],DT/2);
  if(planetMode)for(const b of bodies){
+  if(grabbedBody(b))continue;
   const ground=-10+b.radius;
   if(b.pos.y<ground){b.pos.y=ground;if(b.v.y<0){b.v.y=-b.v.y*BOUNCE;if(b.v.y<.4)b.v.y=0}}
  }
@@ -120,8 +121,8 @@ function syncButtons(){
  if(labels.length)refreshPanel();
 }
 function action(name){
- if(name==='play'){running=!running;if(running)for(const controller of [...grabs.keys()])releaseGrab(controller)}
- if(name==='reset'){grabs.clear();throwArmed.clear();hoverBodies.clear();setup()}
+ if(name==='play')running=!running
+ if(name==='reset'){grabs.clear();hoverBodies.clear();selectedPlanet=null;setup()}
  if(name==='mode'){planetMode=!planetMode;if(planetMode)for(const b of bodies){b.pos.y=Math.max(b.pos.y,-10+b.radius);b.history=[];updateTrail(b)}}
  if(name==='trails')showTrails=!showTrails;
  syncButtons();
@@ -142,13 +143,16 @@ function refreshPanel(){
   ctx.fillStyle='#285a8d';ctx.beginPath();ctx.roundRect(x,y,310,85,12);ctx.fill();
   ctx.fillStyle='#ffffff';ctx.font='28px system-ui';ctx.fillText(names[i],x+20,y+54);
  }
- ctx.font='20px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v3 | Tetik: taşı · Kavrama + tetik bırak: fırlat',26,365);
+ ctx.font='20px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v4 | Tek tık: seç · Sürükle-bırak: fırlat',26,365);
  panelTexture.needsUpdate=true;
 }
 const raycaster=new THREE.Raycaster(),tempMatrix=new THREE.Matrix4();
 const controllers=[];
 const grabs=new Map();
-const throwArmed=new Set();
+let selectedPlanet=null;
+const grabbedBody=b=>[...grabs.values()].some(g=>g.body===b);
+const CLICK_TIME=.24, DRAG_DIST=1.1;
+function choosePlanet(b){selectedPlanet=b;$('status').textContent=b?'Gezegen seçildi':'Seçim kaldırıldı'}
 const hoverBodies=new Map();
 function rayFromController(controller){
  tempMatrix.identity().extractRotation(controller.matrixWorld);
@@ -156,46 +160,42 @@ function rayFromController(controller){
  raycaster.ray.direction.set(0,0,-1).applyMatrix4(tempMatrix).normalize();
 }
 function releaseGrab(controller){
- const grabbed=grabs.get(controller);if(!grabbed)return;
- // Holding the grip (squeeze) while releasing the trigger throws the planet.
- // A normal trigger release simply places the planet with zero velocity.
- if(throwArmed.has(controller)&&grabbed.samples.length>=2){
-  const newest=grabbed.samples[grabbed.samples.length-1];
-  let older=grabbed.samples[0];
-  for(let i=grabbed.samples.length-2;i>=0;i--){
-   older=grabbed.samples[i];
-   if(newest.t-older.t>=.075)break;
-  }
-  const span=newest.t-older.t;
-  if(span>.015)grabbed.body.v.copy(newest.p).sub(older.p).divideScalar(span).clampLength(0,40);
- }else grabbed.body.v.set(0,0,0);
- grabbed.body.history=[];updateTrail(grabbed.body);
- grabs.delete(controller);throwArmed.delete(controller);
+ const g=grabs.get(controller);if(!g)return;
+ if(g.dragged){
+  const last=g.samples.at(-1),first=g.samples[0];
+  const dt=last.t-first.t;
+  g.body.v.set(0,0,0);
+  if(dt>.015)g.body.v.copy(last.p).sub(first.p).divideScalar(dt).clampLength(0,40);
+  g.body.history=[];updateTrail(g.body);
+ }else g.body.v.copy(g.initialVelocity);
+ choosePlanet(g.body);grabs.delete(controller);
 }
 function updateGrabsAndHover(){
  for(const controller of controllers){
-  const grabbed=grabs.get(controller);
-  if(grabbed){
-   rayFromController(controller);
-   const pos=raycaster.ray.origin.clone().addScaledVector(raycaster.ray.direction,grabbed.distance).add(grabbed.offset);
-   world.worldToLocal(pos);
-   grabbed.body.pos.copy(pos);grabbed.body.v.set(0,0,0);
-   const now=performance.now()/1000;
-   grabbed.samples.push({p:pos.clone(),t:now});
-   while(grabbed.samples.length>2&&now-grabbed.samples[0].t>.16)grabbed.samples.shift();
+  rayFromController(controller);
+  const g=grabs.get(controller);
+  if(g){
+   const dest=raycaster.ray.origin.clone().addScaledVector(raycaster.ray.direction,g.distance).add(g.offset);
+   world.worldToLocal(dest);
+   if(dest.distanceTo(g.initialPosition)>DRAG_DIST)g.dragged=true;
+   if(g.dragged){
+    g.body.pos.copy(dest);g.body.v.set(0,0,0);
+    const now=performance.now()/1000;
+    g.samples.push({p:dest.clone(),t:now});
+    while(g.samples.length>2&&now-g.samples[0].t>.14)g.samples.shift();
+   }
   }else{
-   rayFromController(controller);
-   const hit=!running?raycaster.intersectObjects(bodies.map(b=>b.mesh),false)[0]:null;
+   const hit=raycaster.intersectObjects(bodies.map(b=>b.mesh),false)[0];
    hoverBodies.set(controller,hit?.object||null);
   }
  }
  for(const b of bodies){
-  const highlighted=[...hoverBodies.values()].includes(b.mesh)||[...grabs.values()].some(g=>g.body===b);
-  b.mesh.material.emissive.setHex(highlighted?0x284866:0x000000);
-  b.mesh.material.emissiveIntensity=highlighted?.7:0;
+  const selected=selectedPlanet===b;
+  const highlighted=selected||[...hoverBodies.values()].includes(b.mesh)||grabbedBody(b);
+  b.mesh.material.emissive.setHex(selected?0x395e7f:highlighted?0x223a56:0);
+  b.mesh.material.emissiveIntensity=highlighted?.75:0;
  }
 }
-
 const controllerFactory=new XRControllerModelFactory();
 for(let i=0;i<2;i++){
  const controller=renderer.xr.getController(i);
@@ -211,27 +211,24 @@ for(let i=0;i<2;i++){
     if(px>=x&&px<=x+310&&py>=y&&py<=y+85){action(labels[row*2+col]);return}
    }
   }
-  // A trigger grabs a planet only while paused; panel interactions take priority.
-  if(running)return;
+  // Trigger works while running or paused.
   const planetHit=raycaster.intersectObjects(bodies.map(b=>b.mesh),false)[0];
-  if(!planetHit)return;
+  if(!planetHit){choosePlanet(null);return;}
   const b=bodies.find(b=>b.mesh===planetHit.object);
-  if(!b||[...grabs.values()].some(g=>g.body===b))return;
+  if(!b||grabbedBody(b))return;
   const distance=planetHit.distance;
   const point=raycaster.ray.origin.clone().addScaledVector(raycaster.ray.direction,distance);
   const center=b.mesh.getWorldPosition(new THREE.Vector3());
-  grabs.set(controller,{body:b,distance,offset:center.sub(point),samples:[]});
-  $('status').textContent='Gezegen tutuldu · Sadece taşı: tetik | Fırlat: kavrama + tetiği bırak';
+  grabs.set(controller,{body:b,distance,offset:center.sub(point),samples:[{p:b.pos.clone(),t:performance.now()/1000}],initialPosition:b.pos.clone(),initialVelocity:b.v.clone(),dragged:false});
+  $('status').textContent='Tıkla: seç · Tetikle sürükle ve bırakınca fırlat';
   hoverBodies.delete(controller);
  });
  controller.addEventListener('selectend',()=>releaseGrab(controller));
- controller.addEventListener('squeezestart',()=>{if(grabs.has(controller))throwArmed.add(controller)});
- controller.addEventListener('squeezeend',()=>throwArmed.delete(controller));
  scene.add(controller);controllers.push(controller);
  const grip=renderer.xr.getControllerGrip(i);grip.add(controllerFactory.createControllerModel(grip));scene.add(grip);
 }
 renderer.xr.addEventListener('sessionstart',()=>{$('status').textContent='v2 · Duraklatınca gezegenler tutulabilir'});
-renderer.xr.addEventListener('sessionend',()=>{grabs.clear();throwArmed.clear();hoverBodies.clear();$('status').textContent='VR kapalı · Masaüstü önizlemesi'});
+renderer.xr.addEventListener('sessionend',()=>{grabs.clear();hoverBodies.clear();$('status').textContent='VR kapalı · Masaüstü önizlemesi'});
 const clock=new THREE.Clock();
 renderer.setAnimationLoop(()=>{
  const dt=Math.min(clock.getDelta(),.05);
