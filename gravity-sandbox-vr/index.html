@@ -16,7 +16,7 @@ button:hover{background:#3678bd}#status{font-size:12px;color:#a8cde8;margin-top:
 </head>
 <body>
 <div id="top">
-<h1>Gravity Sandbox · VR</h1>
+<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v2 · Gezegen taşıma</small></h1>
 <p>Quest 3 tarayıcısında <b>ENTER VR</b> düğmesini kullan. VR içinde kumandayla yüzen düğmeleri işaretleyip tetikle. Duraklatınca gezegeni işaretle, tetiğe basılı tutarak taşı ve bırak.</p>
 <div><button id="play">⏸ Duraklat</button><button id="reset">↻ Sıfırla</button><button id="mode">🌌 Uzay</button><button id="trails">Yörüngeler: Açık</button></div>
 <div id="status">Hazırlanıyor…</div><p id="warning"></p>
@@ -142,7 +142,7 @@ function refreshPanel(){
   ctx.fillStyle='#285a8d';ctx.beginPath();ctx.roundRect(x,y,310,85,12);ctx.fill();
   ctx.fillStyle='#ffffff';ctx.font='28px system-ui';ctx.fillText(names[i],x+20,y+54);
  }
- ctx.font='20px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('Kumandayla seç → tetikle',36,365);
+ ctx.font='20px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v2  |  Duraklat → gezegene nişan al → tetikle ve taşı',26,365);
  panelTexture.needsUpdate=true;
 }
 const raycaster=new THREE.Raycaster(),tempMatrix=new THREE.Matrix4();
@@ -203,14 +203,14 @@ for(let i=0;i<2;i++){
   const distance=planetHit.distance;
   const point=raycaster.ray.origin.clone().addScaledVector(raycaster.ray.direction,distance);
   const center=b.mesh.getWorldPosition(new THREE.Vector3());
-  grabs.set(controller,{body:b,distance,offset:center.sub(point)});
+  grabs.set(controller,{body:b,distance,offset:center.sub(point)});$('status').textContent='Gezegen tutuldu';
   hoverBodies.delete(controller);
  });
  controller.addEventListener('selectend',()=>releaseGrab(controller));
  scene.add(controller);controllers.push(controller);
  const grip=renderer.xr.getControllerGrip(i);grip.add(controllerFactory.createControllerModel(grip));scene.add(grip);
 }
-renderer.xr.addEventListener('sessionstart',()=>{$('status').textContent='VR oturumu açık · Kumandayla paneli kullan'});
+renderer.xr.addEventListener('sessionstart',()=>{$('status').textContent='v2 · Duraklatınca gezegenler tutulabilir'});
 renderer.xr.addEventListener('sessionend',()=>{grabs.clear();hoverBodies.clear();$('status').textContent='VR kapalı · Masaüstü önizlemesi'});
 const clock=new THREE.Clock();
 renderer.setAnimationLoop(()=>{
