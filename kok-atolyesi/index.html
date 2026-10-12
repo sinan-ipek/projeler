@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kök Atölyesi</title>
+<style>
+:root{
+  --bg:#f5f7fb;
+  --panel:#ffffff;
+  --line:#d8deea;
+  --text:#1f2d3d;
+  --muted:#66768c;
+  --accent:#2f64d6;
+  --accent-soft:#e9f0ff;
+  --extract:#c6284b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text)}
+.main{max-width:980px;margin:24px auto;padding:0 16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:18px 18px 22px;box-shadow:0 10px 28px rgba(18,34,60,.06)}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.title{font-size:28px;font-weight:800;letter-spacing:.2px}
+.meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.counter{font-weight:800}
+.level{padding:6px 10px;border-radius:999px;background:#eef3fb;color:#52647d;font-size:13px;font-weight:700}
+button{font:inherit;border:none;cursor:pointer}
+#newBtn{background:var(--accent);color:#fff;border-radius:12px;padding:11px 16px;font-weight:800}
+#newBtn:hover{filter:brightness(.97)}
+.status{margin-top:14px;min-height:24px;color:#4a5d77;font-size:15px}
+.stage{position:relative;margin-top:14px;min-height:290px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.expression{position:relative;width:100%;height:180px;font-size:clamp(28px,4.3vw,52px);line-height:1.1}
+/* Kökün sol kenarı hiçbir çarpan eklenip çıkarıldığında yer değiştirmez. */
+.radical{position:absolute;left:43%;top:16px;display:inline-flex;align-items:baseline;padding-left:54px;min-height:130px;gap:0;white-space:nowrap}
+.outside{position:absolute;right:57%;top:16px;height:130px;display:inline-flex;align-items:baseline;justify-content:flex-end;align-content:center;gap:0;min-width:68px;white-space:nowrap;padding:20px 8px 6px 0}
+.degree{position:absolute;left:3px;top:26%;transform:translateY(-50%);min-width:28px;height:30px;padding:0 3px;border-radius:6px;border:2px solid transparent;background:transparent;color:#2f4260;font-weight:800;font-size:23px;display:grid;place-items:center;transition:background .15s,border-color .15s;z-index:2}
+.degree.implicit{color:transparent}
+.degree:hover,.degree:focus-visible{background:#fff2be;border-color:#f0c645;color:#2f4260;outline:none}
+.rootmark{position:absolute;left:0;top:14px;height:102px;width:56px;color:#213142}.rootmark svg{display:block;width:100%;height:100%}
+.inside{display:inline-flex;align-items:baseline;min-height:130px;margin-top:14px;padding:6px 8px 6px 1px;border-top:4px solid #213142;flex-wrap:wrap;gap:4px;line-height:1.1}
+.factor{display:inline-flex;align-items:center;justify-content:center;min-width:22px;padding:5px 4px;border-radius:10px;border:2px solid transparent;background:transparent;color:#23384d;font-size:1em;transition:.15s}
+.factor.clickable:hover,.factor.clickable:focus-visible{background:var(--accent-soft);border-color:#a9bef4;outline:none}
+.factor.extractable{color:var(--extract);font-weight:800;background:#fff2f5;transition:color .4s ease,background-color .4s ease}
+.factor.finished{opacity:.92}
+.expression.compact .factor{padding-left:0;padding-right:0;min-width:0}
+.expression.compact .inside,.expression.compact .outside-row{gap:0}
+.dot{color:#8a97ab;transition:opacity .24s ease}.dot.fade-out{opacity:0}
+.frac{display:inline-flex;flex-direction:column;align-items:center;min-width:44px;font-size:.76em;line-height:1.15}
+.frac .num{display:flex;align-items:center;justify-content:center;border-bottom:2.5px solid currentColor;padding:0 6px 4px;min-height:26px}
+.frac .den{display:flex;align-items:center;justify-content:center;padding:4px 6px 0;min-height:26px}
+.outside-row{display:inline-flex;align-items:baseline;gap:0}.outside-slot{display:inline-flex;align-items:center;justify-content:center;min-width:1.15em;position:relative}.outside-slot.empty{visibility:hidden}.outside-dot{display:inline-flex;align-items:center;justify-content:center;min-width:.45em;color:#8a97ab}.outside-dot.hidden{visibility:hidden}.factor.colorized{font-weight:800}
+.overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.float-token,.bubble,.burst{position:absolute;pointer-events:none;z-index:20}
+.float-token{transform:translate(-50%,-50%);font-size:clamp(28px,4.3vw,52px);font-weight:800;color:var(--extract);transition:left .44s cubic-bezier(.2,.75,.3,1), top .44s cubic-bezier(.2,.75,.3,1), transform .28s ease, opacity .28s ease}
+.bubble{transform:translate(-50%,-50%);min-width:54px;min-height:54px;padding:6px 12px;border-radius:999px;border:3px solid var(--extract);background:rgba(255,255,255,.96);display:flex;align-items:center;justify-content:center;font-size:clamp(28px,4.3vw,52px);font-weight:800;color:var(--extract);box-shadow:none;opacity:0;transition:opacity .32s ease}
+.burst{width:42px;height:42px;transform:translate(-50%,-50%);opacity:1;animation:fadeBurst .42s ease forwards}
+.burst i{position:absolute;left:50%;top:50%;width:2px;height:11px;background:var(--extract);transform-origin:center -10px;border-radius:4px}
+@keyframes fadeBurst{from{opacity:1;transform:translate(-50%,-50%) scale(.7)}to{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}
+@media (max-width:640px){
+  .main{margin:14px auto}
+  .panel{padding:14px 14px 18px}
+  .title{font-size:24px}
+  .stage{min-height:250px}
+  .radical{left:38%}.outside{right:62%;min-width:0}
+}
+.nav-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}#homeBtn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:#2f64d6;background:#e9f0ff;border-radius:12px;padding:11px 16px;font-weight:800;min-height:44px}#homeBtn:hover{background:#dbe7ff}
+</style>
+</head>
+<body>
+<main class="main">
+  <section class="panel">
+    <div class="toolbar">
+      <div>
+        <div class="title">Kök Atölyesi</div>
+        <div class="meta" style="margin-top:6px">
+          <span class="counter" id="counter"></span>
+          <span class="level" id="level"></span>
+        </div>
+      </div>
+      <div class="nav-actions"><a id="homeBtn" href="../index.html" aria-label="Öğren ana sayfasına dön" title="Ana sayfa">⌂ Home</a><button id="newBtn">Yeni soru</button></div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="stage" id="stage">
+      <svg class="overlay" id="overlay"></svg>
+      <div class="expression">
+        <span class="outside" id="outside"></span>
+        <span class="radical">
+          <button id="degree" class="degree implicit" aria-label="Kök derecesi">2</button>
+          <span class="rootmark" aria-hidden="true"><svg viewBox="0 0 56 96" preserveAspectRatio="none"><path d="M 3 37 L 16 37 L 30 67 L 53 3" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" stroke-linecap="square"/></svg></span>
+          <span class="inside" id="inside"></span>
+        </span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(()=>{
+  'use strict';
+
+  const $ = id => document.getElementById(id);
+  const stage = $('stage');
+  const overlay = $('overlay');
+  const insideEl = $('inside');
+  const outsideEl = $('outside');
+
+  const pools = {
+    1: [
+      {d:2,n:12,label:'Karekök'}, {d:2,n:18,label:'Karekök'}, {d:2,n:20,label:'Karekök'},
+      {d:2,n:24,label:'Karekök'}, {d:2,n:28,label:'Karekök'}, {d:2,n:40,label:'Karekök'},
+      {d:2,n:45,label:'Karekök'}, {d:2,n:50,label:'Karekök'}, {d:2,n:60,label:'Karekök'},
+      {d:2,n:72,label:'Karekök'}, {d:2,n:75,label:'Karekök'}, {d:2,n:80,label:'Karekök'},
+      {d:2,n:90,label:'Karekök'}, {d:2,n:98,label:'Karekök'}, {d:2,n:108,label:'Karekök'}
+    ],
+    2: [
+      {d:3,n:16,label:'Küpkök'}, {d:3,n:24,label:'Küpkök'}, {d:3,n:54,label:'Küpkök'},
+      {d:3,n:81,label:'Küpkök'}, {d:3,n:108,label:'Küpkök'}, {d:3,n:128,label:'Küpkök'},
+      {d:3,n:162,label:'Küpkök'}, {d:3,n:200,label:'Küpkök'}, {d:3,n:250,label:'Küpkök'},
+      {d:3,n:432,label:'Küpkök'}
+    ],
+    3: [
+      {d:2,n:12,vars:{x:2},label:'Değişkenli karekök'},
+      {d:2,n:18,vars:{x:4,y:2},label:'Değişkenli karekök'},
+      {d:2,n:20,vars:{a:2},label:'Değişkenli karekök'},
+      {d:2,n:45,vars:{x:2,y:3},label:'Değişkenli karekök'},
+      {d:3,n:16,vars:{a:3},label:'Değişkenli küpkök'},
+      {d:3,n:54,vars:{x:3},label:'Değişkenli küpkök'},
+      {d:3,n:24,vars:{y:6},label:'Değişkenli küpkök'}
+    ],
+    4: [
+      {d:2,n:72,den:25,label:'Kesirli karekök'},
+      {d:2,n:48,den:75,label:'Kesirli karekök'},
+      {d:2,n:27,den:16,vars:{x:2},label:'Kesirli karekök'},
+      {d:2,n:72,den:50,vars:{a:2},label:'Kesirli karekök'},
+      {d:3,n:54,den:125,label:'Kesirli küpkök'},
+      {d:3,n:16,den:54,vars:{x:3},label:'Kesirli küpkök'},
+      {d:3,n:250,den:16,label:'Kesirli küpkök'}
+    ]
+  };
+
+  let questionNo = 0;
+  let current = null;
+  let phase = 'seed';
+  let inner = [];
+  let outer = [];
+  let nextId = 1;
+  let animating = false;
+  let placementLocked = false;
+  let compactProduct = false;
+  const palette = ['#d7264d','#2a9d55','#7a3dd8','#e07a14','#147ca8','#b5419d'];
+  let plannedSlots = {num:0, den:0};
+  let nextSlotByPart = {num:0, den:0};
+  let nextGroupId = 1;
+
+  function stageNoFromQuestion(n){
+    if(n <= 5) return 1;
+    if(n <= 8) return 2;
+    if(n <= 11) return 3;
+    return 4;
+  }
+
+  function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+  function randomFrom(arr){ return deepClone(arr[Math.floor(Math.random()*arr.length)]); }
+
+  function makeQuestion(n){
+    const stageNo = stageNoFromQuestion(n);
+    return {...randomFrom(pools[stageNo]), stageNo};
+  }
+
+  function primeFactors(n){
+    const out = [];
+    let x = n;
+    for(let p=2; p*p<=x; p++){
+      while(x % p === 0){ out.push(p); x /= p; }
+    }
+    if(x > 1) out.push(x);
+    return out;
+  }
+
+  function token(type, base, side, part='num', exp=1){
+    return {id:nextId++, type, base, side, part, exp};
+  }
+
+  function tokenText(t){
+    if(t.type === 'num') return String(t.base);
+    return String(t.base) + (t.exp > 1 ? `<sup style="font-size:.56em">${t.exp}</sup>` : '');
+  }
+
+  function kindKey(t){
+    return `${t.part}|${t.type}|${t.base}`;
+  }
+
+  function clearExtractionMarks(){
+    inner.forEach(t => {
+      delete t.extractGroupId;
+      delete t.extractColor;
+    });
+  }
+
+  function buildExtractionPlan(){
+    clearExtractionMarks();
+    plannedSlots = {num:0, den:0};
+    nextSlotByPart = {num:0, den:0};
+    nextGroupId = 1;
+
+    const buckets = {};
+    inner.forEach(t => {
+      if(t.exp !== 1) return;
+      const k = kindKey(t);
+      (buckets[k] ||= []).push(t);
+    });
+
+    let colorIndex = 0;
+    Object.keys(buckets).sort().forEach(k => {
+      const groupTokens = buckets[k];
+      const groupCount = Math.floor(groupTokens.length / current.d);
+      if(groupCount <= 0) return;
+      const part = k.split('|')[0];
+      plannedSlots[part] += groupCount;
+      for(let g = 0; g < groupCount; g++){
+        const color = palette[colorIndex % palette.length];
+        colorIndex += 1;
+        const groupId = nextGroupId++;
+        for(let j = 0; j < current.d; j++){
+          const tok = groupTokens[g * current.d + j];
+          tok.extractGroupId = groupId;
+          tok.extractColor = color;
+        }
+      }
+    });
+  }
+
+  function colorOf(t){
+    if(t.side === 'in') return isExtractable(t) ? (t.extractColor || '') : '';
+    return t.color || '';
+  }
+
+  function displayLabel(){
+    const stages = {
+      1:'1. aşama · karekök',
+      2:'2. aşama · küpkök',
+      3:'3. aşama · değişkenler',
+      4:'4. aşama · kesirler'
+    };
+    return stages[current.stageNo];
+  }
+
+  function setStatus(text){ $('status').textContent = text; }
+
+  function startQuestion(){
+    questionNo += 1;
+    current = makeQuestion(questionNo);
+    phase = 'seed';
+    inner = [];
+    outer = [];
+    animating = false;
+    placementLocked = false;
+    compactProduct = false;
+    document.querySelector('.expression').classList.remove('compact');
+    document.querySelector('.radical').style.left = '';
+    outsideEl.style.right = '';
+    plannedSlots = {num:0, den:0};
+    nextSlotByPart = {num:0, den:0};
+    nextGroupId = 1;
+    $('counter').textContent = `Soru ${questionNo}`;
+    $('level').textContent = displayLabel();
+    $('degree').textContent = current.d;
+    $('degree').classList.toggle('implicit', current.d === 2);
+    $('degree').setAttribute('aria-label', `${current.d}. dereceden kök`);
+    setStatus('Kökün içindeki ifadeye bas.');
+    render();
+  }
+
+  function originalInsideTokens(){
+    const arr = [token('num', current.n, 'in', 'num')];
+    for(const [v, exp] of Object.entries(current.vars || {})) arr.push(token('var', v, 'in', 'num', exp));
+    if(current.den) arr.push(token('num', current.den, 'in', 'den'));
+    return arr;
+  }
+
+  function factorizeCurrent(){
+    inner = primeFactors(current.n).map(n => token('num', n, 'in', 'num'));
+    if(current.den) inner.push(...primeFactors(current.den).map(n => token('num', n, 'in', 'den')));
+    for(const [v, exp] of Object.entries(current.vars || {})){
+      for(let i=0;i<exp;i++) inner.push(token('var', v, 'in', 'num'));
+    }
+    buildExtractionPlan();
+    phase = anyExtractable() ? 'extract' : 'merge';
+    setStatus(phase === 'extract' ? 'Renkli grupları dışarı çıkar.' : 'Bir çarpana bas; bulunduğu yerdeki çarpanlar toparlansın.');
+    render();
+    reserveHorizontalSpace();
+    if(phase === 'merge' && !anyMergeable()) readyToCompact();
+  }
+
+  function listForRender(side){
+    if(phase === 'seed') return side === 'in' ? originalInsideTokens() : [];
+    return side === 'in' ? inner : outer;
+  }
+
+  function groupFor(tok){
+    if(!tok.extractGroupId) return [];
+    return inner.filter(t => t.extractGroupId === tok.extractGroupId);
+  }
+
+  function isExtractable(tok){
+    if(phase !== 'extract' || tok.side !== 'in') return false;
+    return !!tok.extractGroupId && groupFor(tok).length === current.d;
+  }
+
+  function anyExtractable(){
+    return inner.some(t => t.side === 'in' && !!t.extractGroupId && groupFor(t).length === current.d);
+  }
+
+  function bucketTokens(side, part){
+    const src = side === 'in' ? inner : outer;
+    return src.filter(t => t.part === part);
+  }
+
+  function bucketHasMergeable(side, part){
+    const bucket = bucketTokens(side, part);
+    if(bucket.length < 2) return false;
+    let numberCount = 0;
+    const vars = {};
+    for(const t of bucket){
+      if(t.type === 'num') numberCount += 1;
+      else vars[t.base] = (vars[t.base] || 0) + 1;
+    }
+    if(numberCount > 1) return true;
+    return Object.values(vars).some(v => v > 1);
+  }
+
+  function anyMergeable(){
+    return bucketHasMergeable('in','num') || bucketHasMergeable('in','den') || bucketHasMergeable('out','num') || bucketHasMergeable('out','den');
+  }
+
+  function tokenClickable(tok){
+    if(animating) return false;
+    if(phase === 'seed') return tok.side === 'in';
+    if(phase === 'extract') return isExtractable(tok);
+    if(phase === 'merge') return bucketHasMergeable(tok.side, tok.part);
+    if(phase === 'format') return true;
+    return false;
+  }
+
+  function tokenClasses(tok){
+    const classes = ['factor'];
+    if(tokenClickable(tok)) classes.push('clickable');
+    if(isExtractable(tok)) classes.push('extractable');
+    if(phase === 'done') classes.push('finished');
+    return classes.join(' ');
+  }
+
+  function renderToken(tok){
+    const btn = document.createElement('button');
+    btn.className = tokenClasses(tok);
+    btn.dataset.id = tok.id;
+    btn.innerHTML = tokenText(tok);
+    const c = colorOf(tok);
+    if(c){
+      btn.classList.add('colorized');
+      btn.style.color = c;
+      if(isExtractable(tok)) btn.style.backgroundColor = c + '18';
+    }
+    btn.disabled = !tokenClickable(tok);
+    btn.onclick = () => handleToken(tok);
+    return btn;
+  }
+
+  function appendBucket(parent, arr, showOne){
+    if(arr.length === 0){
+      if(showOne) parent.appendChild(document.createTextNode('1'));
+      return;
+    }
+    arr.forEach((tok, i) => {
+      if(i > 0 && !compactProduct){
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        dot.textContent = '·';
+        parent.appendChild(dot);
+      }
+      parent.appendChild(renderToken(tok));
+    });
+  }
+
+  function renderOutsidePart(parent, part){
+    const row = document.createElement('span');
+    row.className = 'outside-row';
+    const tokens = outer.filter(t => t.part === part).sort((a,b)=>(a.slot ?? 999)-(b.slot ?? 999));
+    if(phase === 'extract'){
+      const bySlot = {};
+      tokens.forEach(t => bySlot[t.slot] = t);
+      const total = plannedSlots[part] || tokens.length;
+      for(let slot = total - 1; slot >= 0; slot--){
+        if(slot < total - 1){
+          const dot = document.createElement('span');
+          dot.className = 'outside-dot' + ((bySlot[slot] && bySlot[slot+1]) ? '' : ' hidden');
+          dot.textContent = '·';
+          row.appendChild(dot);
+        }
+        const slotEl = document.createElement('span');
+        slotEl.className = 'outside-slot' + (bySlot[slot] ? '' : ' empty');
+        slotEl.dataset.slot = String(slot);
+        slotEl.dataset.part = part;
+        if(bySlot[slot]) slotEl.appendChild(renderToken(bySlot[slot]));
+        else {
+          const ghost = document.createElement('span');
+          ghost.className = 'factor';
+          ghost.textContent = '8';
+          slotEl.appendChild(ghost);
+        }
+        row.appendChild(slotEl);
+      }
+      if(total === 0){
+        const slotEl = document.createElement('span');
+        slotEl.className = 'outside-slot empty';
+        slotEl.dataset.slot = '0';
+        slotEl.dataset.part = part;
+        const ghost = document.createElement('span');
+        ghost.className = 'factor';
+        ghost.textContent = '8';
+        slotEl.appendChild(ghost);
+        row.appendChild(slotEl);
+      }
+    } else {
+      if(tokens.length === 0){
+        parent.appendChild(document.createTextNode(current.den ? '1' : ''));
+        return;
+      }
+      tokens.sort((a,b)=>(a.slot ?? 999)-(b.slot ?? 999)).forEach((tok, idx) => {
+        if(idx > 0 && !compactProduct){
+          const dot = document.createElement('span');
+          dot.className = 'outside-dot';
+          dot.textContent = '·';
+          row.appendChild(dot);
+        }
+        row.appendChild(renderToken(tok));
+      });
+    }
+    parent.appendChild(row);
+  }
+
+  function renderZone(side, el){
+    el.replaceChildren();
+    const arr = listForRender(side);
+    if(side === 'out'){
+      if(current.den){
+        const frac = document.createElement('span');
+        frac.className = 'frac';
+        const num = document.createElement('span');
+        num.className = 'num';
+        const den = document.createElement('span');
+        den.className = 'den';
+        renderOutsidePart(num, 'num');
+        renderOutsidePart(den, 'den');
+        frac.append(num, den);
+        el.appendChild(frac);
+      } else {
+        renderOutsidePart(el, 'num');
+      }
+      return;
+    }
+    if(current.den){
+      const frac = document.createElement('span');
+      frac.className = 'frac';
+      const num = document.createElement('span');
+      num.className = 'num';
+      const den = document.createElement('span');
+      den.className = 'den';
+      appendBucket(num, arr.filter(t => t.part === 'num'), side === 'in' || arr.length > 0);
+      appendBucket(den, arr.filter(t => t.part === 'den'), side === 'in' || arr.length > 0);
+      frac.append(num, den);
+      el.appendChild(frac);
+    } else {
+      appendBucket(el, arr.filter(t => t.part === 'num'), side === 'in');
+    }
+  }
+
+  function render(){
+    renderZone('out', outsideEl);
+    renderZone('in', insideEl);
+  }
+
+  function handleToken(tok){
+    if(animating) return;
+    if(phase === 'seed') factorizeCurrent();
+    else if(phase === 'extract' && isExtractable(tok)) extractGroup(tok);
+    else if(phase === 'merge') simplifyBucket(tok.side, tok.part);
+    else if(phase === 'format') compactAndFinish();
+  }
+
+  function centerOf(el){
+    const stageRect = stage.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    return {x: r.left - stageRect.left + r.width/2, y: r.top - stageRect.top + r.height/2};
+  }
+
+  function average(points){
+    const total = points.reduce((acc,p)=>({x:acc.x+p.x, y:acc.y+p.y}), {x:0,y:0});
+    return {x: total.x/points.length, y: total.y/points.length};
+  }
+
+  function makeFloatClone(node, point, color=''){
+    const clone = document.createElement('div');
+    clone.className = 'float-token';
+    clone.innerHTML = node.innerHTML;
+    clone.style.left = point.x + 'px';
+    clone.style.top = point.y + 'px';
+    if(color) clone.style.color = color;
+    stage.appendChild(clone);
+    return clone;
+  }
+
+  function fadeInternalDots(groupNodes){
+    if(!groupNodes || !groupNodes.length) return;
+    const parent = groupNodes[0].parentElement;
+    if(!parent) return;
+    const selected = new Set(groupNodes);
+    const kids = [...parent.children];
+
+    function nearestFactor(start, step){
+      let i = start + step;
+      while(i >= 0 && i < kids.length){
+        const el = kids[i];
+        if(el.classList && el.classList.contains('factor')) return el;
+        i += step;
+      }
+      return null;
+    }
+
+    kids.forEach((el, idx) => {
+      if(!el.classList.contains('dot')) return;
+      const leftFactor = nearestFactor(idx, -1);
+      const rightFactor = nearestFactor(idx, 1);
+      if(leftFactor && rightFactor && selected.has(leftFactor) && selected.has(rightFactor)){
+        el.classList.add('fade-out');
+      }
+    });
+  }
+
+  function getOutsideTarget(part, slot){
+    const stageRect = stage.getBoundingClientRect();
+    const slotEl = outsideEl.querySelector(`.outside-slot[data-part="${part}"][data-slot="${slot}"]`);
+    const r = slotEl.getBoundingClientRect();
+    return {x: r.left - stageRect.left + r.width/2, y: r.top - stageRect.top + r.height/2};
+  }
+
+  function clearOverlay(){
+    overlay.replaceChildren();
+  }
+
+  function animateBubble(label, start, target, color, done){
+    clearOverlay();
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = label;
+    if(color){ bubble.style.color = color; bubble.style.borderColor = color; }
+    stage.appendChild(bubble);
+    const box = stage.getBoundingClientRect();
+    overlay.setAttribute('viewBox', `0 0 ${box.width} ${box.height}`);
+
+    const rootRect = document.querySelector('.rootmark').getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const rootBottom = rootRect.bottom - stageRect.top;
+    const rootLeft = rootRect.left - stageRect.left;
+    const underY = rootBottom + 12;
+    const turnX = rootLeft + 24;
+
+    // Balon kökün altından geçen hızlı ve tek parçalı bir yay izler.
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', `M ${start.x} ${start.y} C ${start.x-8} ${underY}, ${turnX+28} ${underY}, ${turnX} ${underY} S ${target.x+16} ${target.y+4}, ${target.x} ${target.y}`);
+    path.setAttribute('fill','none');
+    overlay.appendChild(path);
+    const len = path.getTotalLength();
+    const duration = 720;
+    const t0 = performance.now();
+
+    function frame(now){
+      const p = Math.min(1, (now - t0) / duration);
+      const eased = p * p * (3 - 2 * p); // yavaş → hızlı → yavaş
+      const pt = path.getPointAtLength(len * eased);
+      bubble.style.left = pt.x + 'px';
+      bubble.style.top = pt.y + 'px';
+      bubble.style.opacity = String(Math.min(1, p / .12, (1 - p) / .10));
+      if(p < 1) requestAnimationFrame(frame);
+      else {
+        bubble.remove();
+        burst(target, color);
+        setTimeout(() => { clearOverlay(); done(); }, 90);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function burst(point, color=''){
+    const b = document.createElement('div');
+    b.className = 'burst';
+    b.style.left = point.x + 'px';
+    b.style.top = point.y + 'px';
+    for(let i=0;i<8;i++){
+      const ray = document.createElement('i');
+      ray.style.transform = `translate(-50%,-50%) rotate(${i*45}deg)`;
+      if(color) ray.style.background = color;
+      b.appendChild(ray);
+    }
+    stage.appendChild(b);
+    setTimeout(() => b.remove(), 420);
+  }
+
+  function extractGroup(tok){
+    const group = groupFor(tok);
+    if(group.length !== current.d) return;
+    animating = true;
+
+    const nodes = group
+      .map(g => document.querySelector(`[data-id="${g.id}"]`))
+      .filter(Boolean);
+
+    const points = nodes.map(centerOf);
+    const middle = average(points);
+    const tint = colorOf(tok);
+    const clones = nodes.map((node,i) => makeFloatClone(node, points[i], tint));
+    nodes.forEach(node => node.style.opacity = '0');
+    fadeInternalDots(nodes);
+
+    requestAnimationFrame(() => {
+      clones.forEach(clone => {
+        clone.style.opacity = '1';
+        clone.style.left = middle.x + 'px';
+        clone.style.top = middle.y + 'px';
+      });
+    });
+
+    setTimeout(() => {
+      clones.forEach(c => c.remove());
+      const combined = makeFloatClone(nodes[0], middle, tint);
+      combined.innerHTML = tokenText(tok);
+      combined.style.transition = 'none';
+      combined.style.transform = 'translate(-50%,-50%)';
+      setTimeout(() => {
+        combined.remove();
+        const assignedSlot = nextSlotByPart[tok.part]++;
+        const target = getOutsideTarget(tok.part, assignedSlot);
+        animateBubble(tokenText(tok), middle, target, tint, () => {
+        inner = inner.filter(t => !group.some(g => g.id === t.id));
+        const outTok = token(tok.type, tok.base, 'out', tok.part, 1);
+        outTok.slot = assignedSlot;
+        outTok.color = '';
+        outer.push(outTok);
+        animating = false;
+        if(anyExtractable()){
+          phase = 'extract';
+          setStatus('Renkli grupları dışarı çıkar.');
+          render();
+        } else {
+          phase = 'merge';
+          setStatus('Bir çarpana bas; bulunduğu yerdeki çarpanlar toparlansın.');
+          if(!anyMergeable()) readyToCompact();
+          else render();
+        }
+        });
+      }, 340);
+    }, 510);
+  }
+
+  function simplifyBucket(side, part){
+    if(!bucketHasMergeable(side, part)){
+      if(!anyMergeable()) readyToCompact();
+      return;
+    }
+
+    const source = side === 'in' ? inner : outer;
+    const keep = source.filter(t => t.part !== part);
+    const bucket = source.filter(t => t.part === part);
+
+    let numberProduct = 1;
+    let numberCount = 0;
+    const vars = {};
+
+    for(const t of bucket){
+      if(t.type === 'num'){
+        numberProduct *= t.base;
+        numberCount += 1;
+      } else {
+        vars[t.base] = (vars[t.base] || 0) + t.exp;
+      }
+    }
+
+    const result = [];
+    if(numberCount > 0 && (numberProduct !== 1 || Object.keys(vars).length === 0)){
+      result.push(token('num', numberProduct, side, part));
+    }
+    Object.keys(vars).sort().forEach(v => result.push(token('var', v, side, part, vars[v])));
+
+    if(side === 'in') inner = [...keep, ...result];
+    else outer = [...keep, ...result];
+
+    render();
+
+    if(anyMergeable()) setStatus('Bir çarpana daha bas.');
+    else readyToCompact();
+  }
+
+  function readyToCompact(){
+    phase = 'format';
+    render();
+    setStatus('Son yazım için ifadeye tıkla.');
+  }
+
+  function compactAndFinish(){
+    compactProduct = true;
+    document.querySelector('.expression').classList.add('compact');
+    phase = 'done';
+    render();
+    setStatus('İşlem tamamlandı.');
+  }
+
+  // Çarpanlara ayrılmış en geniş gösterimin kaplayacağı yer bir kez ölçülür.
+  // Bundan sonra kökün konumu animasyon süresince sabit kalır.
+  function reserveHorizontalSpace(){
+    if(placementLocked) return;
+    const expression = document.querySelector('.expression');
+    const root = document.querySelector('.radical');
+    const r = expression.getBoundingClientRect();
+    const insideR = insideEl.getBoundingClientRect();
+    const rightOverflow = insideR.right - (r.right - 12);
+    if(rightOverflow > 0){
+      const currentLeft = root.getBoundingClientRect().left - r.left;
+      const shift = Math.min(rightOverflow + 12, Math.max(0,currentLeft - 75));
+      const newLeft = currentLeft-shift;
+      root.style.left = newLeft+'px';
+      outsideEl.style.right = `calc(100% - ${newLeft}px)`;
+    }
+    placementLocked = true;
+  }
+
+  function finish(){
+    phase = 'done';
+    render();
+    setStatus('İşlem tamamlandı.');
+  }
+
+  document.querySelector('.expression').addEventListener('click', () => {
+    if(phase === 'format' && !animating) compactAndFinish();
+  });
+  $('newBtn').onclick = startQuestion;
+  $('degree').onclick = () => {
+    $('degree').classList.remove('implicit');
+    setTimeout(() => { if(current && current.d === 2) $('degree').classList.add('implicit'); }, 900);
+  };
+
+  startQuestion();
+})();
+</script>
+</body>
+</html>
