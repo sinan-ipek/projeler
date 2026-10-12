@@ -474,10 +474,16 @@ function smoothCameraView(top){
  const target=controls.target.clone();
  const offset=camera.position.clone().sub(target);
  const distance=Math.max(controls.minDistance,Math.min(controls.maxDistance,offset.length()));
- const from=offset.clone().normalize();
- const to=top?new THREE.Vector3(0,1,.0001).normalize():new THREE.Vector3(0,0,1);
+ // Azimut ve kutup açısını birlikte yumuşat: üstten görünümün sonunda
+ // yatay yönün birden sıfırlanmasına gerek kalmasın.
+ const from=new THREE.Spherical().setFromVector3(offset);
+ const toPhi=top?0.0001:Math.PI/2;
+ const toTheta=0;
+ const thetaDelta=Math.atan2(Math.sin(toTheta-from.theta),Math.cos(toTheta-from.theta));
  cameraTransition={
-  target,from,to,distance,start:performance.now(),duration:850
+  target,distance,
+  fromPhi:from.phi,toPhi,fromTheta:from.theta,thetaDelta,
+  start:performance.now(),duration:850
  };
  controls.enabled=false;
 }
@@ -1160,11 +1166,11 @@ function animate(now){requestAnimationFrame(animate);
   const tr=cameraTransition;
   const u=Math.min(1,(now-tr.start)/tr.duration);
   const eased=u*u*(3-2*u);
-  // Küresel interpolasyon açısal hareketi sabit yarıçapta tutar.
-  const qa=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),tr.from);
-  const qb=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),tr.to);
-  const dir=new THREE.Vector3(0,0,1).applyQuaternion(qa.slerp(qb,eased));
-  camera.position.copy(tr.target).addScaledVector(dir,tr.distance);
+  // Düşey (phi) ve yatay (theta) dönüşler aynı animasyon süresinde tamamlanır.
+  const theta=tr.fromTheta+tr.thetaDelta*eased;
+  const phi=tr.fromPhi+(tr.toPhi-tr.fromPhi)*eased;
+  const offset=new THREE.Vector3().setFromSphericalCoords(tr.distance,phi,theta);
+  camera.position.copy(tr.target).add(offset);
   if(u>=1){cameraTransition=null;controls.enabled=!editor}
  }
  if(running&&!editor){acc+=delta*animationSpeed;let n=0;while(acc>=DT&&n<40){step();acc-=DT;n++}if(n===40)acc=0}
