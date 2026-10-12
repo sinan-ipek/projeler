@@ -1200,7 +1200,7 @@ function animate(now){requestAnimationFrame(animate);
  controls.update();updateSelectionRing();updatePlanetInfo();updateForceArrows();updateCenterMarker();updateMergeBursts(delta);renderer.render(scene,camera);updateLens();
 }
 $('languageButton').addEventListener('click',()=>{appLanguage=appLanguage==='tr'?'en':'tr';try{localStorage.setItem('gravity-sandbox-language',appLanguage)}catch(_){}localizeUI();msg('Çift tıkla: yeni gezegen')});
-init();localizeUI();requestAnimationFrame(animate);
+init();localizeUI();setNightMode(true);requestAnimationFrame(animate);
 } catch(error){const box=document.getElementById('error');box.style.display='block';box.textContent='3D motor yüklenemedi: '+error.message+'. İnternet bağlantısını ve WebGL desteğini kontrol edin.';console.error(error)}
 </script>
 <script src="/projeler/shared-ui.js?v=20261004-1"></script>
