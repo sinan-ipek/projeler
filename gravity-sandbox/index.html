@@ -456,8 +456,9 @@ window.addEventListener('pointerdown',e=>{
 
 let animationSpeed=1;
 let trailDisplayLength=520;
-$('themeButton').addEventListener('click',()=>{
- darkMode=!darkMode;
+function setNightMode(enabled){
+ if(darkMode===enabled)return;
+ darkMode=enabled;
  if(!darkMode)clearMergeBursts();
  scene.background.set(darkMode?0x0d1523:0xf9fbfd);
  floor.material.color.set(darkMode?0x17263a:0xfcfdff);
@@ -467,7 +468,8 @@ $('themeButton').addEventListener('click',()=>{
  for(const ring of selectionRings.values())ring.style.borderColor=darkMode?'#ffdb3a':'#203b60';
  $('themeButton').textContent=darkMode?'☀':'☾';
  $('themeButton').title=t(darkMode?'Aydınlık arka plan':'Koyu arka plan');
-});
+}
+$('themeButton').addEventListener('click',()=>setNightMode(!darkMode));
 // Kamerayı geçerli bakış noktasından hedef açıya yumuşakça döndür.
 let cameraTransition=null;
 function smoothCameraView(top){
@@ -1105,6 +1107,7 @@ $('frictionRange').addEventListener('input',e=>{
 });
 $('toggleSurface').addEventListener('click',()=>{
  surfaceMode=!surfaceMode;
+ if(!surfaceMode)setNightMode(true);
  $('toggleSurface').setAttribute('aria-pressed',String(surfaceMode));
  $('toggleSurface').textContent=t(surfaceMode?'Gezegen':'Uzay');
  gravityField.visible=surfaceMode&&fieldArrowsVisible;
