@@ -38,7 +38,7 @@ button:hover{background:#f5f8fc}
 #planetMenu #editSubmenu button,#planetMenu #addSubmenu button{font-size:12px;min-height:33px;color:#34475e}
 #planetMenu #editPlanet,#planetMenu #addSystems{color:#34475e}
 #planetMenu #deletePlanet{color:#b43840}
-#shipOverlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#20304088;z-index:10100;padding:15px}#shipForm{background:#fff;color:#273849;border-radius:12px;padding:20px;width:min(400px,100%);display:grid;gap:12px;box-shadow:0 12px 40px #0003}#shipForm label{display:grid;gap:6px}#shipForm input{font:inherit;padding:9px}#shipForm footer{display:flex;justify-content:flex-end;gap:8px}#shipError{color:#a22;font-size:12px}#planetMenu button:disabled{opacity:.4;cursor:not-allowed;background:#fff}
+#planetMenu button:disabled{opacity:.4;cursor:not-allowed;background:#fff}
 #message{position:absolute;right:14px;bottom:14px;background:#ffffffd9;border:1px solid #d8e0e8;border-radius:9px;padding:8px 11px;color:#617184;font-size:12px;pointer-events:none;z-index:4}
 @media(max-width:720px){#message{top:auto;bottom:76px;right:12px}#stepbox{top:122px}#help{font-size:11px}}
 #planetInfo{display:none;position:absolute;z-index:9;pointer-events:none;width:max-content;max-width:195px;background:#ffe5a3;color:#513917;border:1px solid #d4ad65;border-radius:8px;box-shadow:0 3px 10px #61482335;padding:6px 10px;font:600 12px/1.4 Arial,sans-serif;text-align:center}
@@ -90,9 +90,9 @@ button:hover{background:#f5f8fc}
     <div class="helpTop"><h2 id="helpTitle">Gravity Sandbox</h2><button id="closeHelp" type="button" data-tr-aria="Yardımı kapat" aria-label="Yardımı kapat">×</button></div><div id="helpContents"></div>
   </section>
 </div>
-<div id="shipOverlay"><form id="shipForm"><strong id="shipHeading">Motor</strong><label id="shipFuncLabel">İtiş fonksiyonu (t: saniye)<input id="shipFunc" autocomplete="off"></label><label id="shipFuelLabel" style="display:none">Yakıt süresi (saniye)<input id="shipFuel" type="number" min="0" max="120" step=".5"></label><span id="shipError"></span><footer><button type="button" id="shipCancel">İptal</button><button type="submit" id="shipSave">Kaydet</button></footer></form></div><div id="planetInfo" aria-hidden="true" style="display:none"><span id="planetInfoText"></span></div>
-<div id="planetMenu" role="menu"><button type="button" id="editPlanet" role="menuitem" aria-expanded="false" data-tr="Düzenle ▸">Düzenle ▸</button><div id="editSubmenu" role="menu" style="display:none"><button type="button" data-edit-phase="0" role="menuitem" data-tr="Konum">Konum</button><button type="button" data-edit-phase="1" role="menuitem" data-tr="Yükseklik">Yükseklik</button><button type="button" data-edit-phase="2" role="menuitem" data-tr="Büyüklük">Büyüklük</button><button type="button" data-edit-phase="3" role="menuitem" data-tr="Hız">Hız</button><button type="button" data-edit-phase="4" role="menuitem" data-tr="Açı">Açı</button><button type="button" data-edit-phase="5" role="menuitem" data-tr="Sürat">Sürat</button><div id="shipEdit" style="display:none"><button id="shipDirButton" type="button" data-tr="Yönelim ▸">Yönelim ▸</button><div id="shipDirections" style="display:none;padding-left:12px"><button data-ship-dir="right" data-tr="Sağ">Sağ</button><button data-ship-dir="left" data-tr="Sol">Sol</button><button data-ship-dir="forward" data-tr="İleri">İleri</button><button data-ship-dir="back" data-tr="Geri">Geri</button><button data-ship-dir="up" data-tr="Dikey">Dikey</button></div><button id="shipEngineButton" type="button" data-tr="Motor ▸">Motor ▸</button><div id="shipEngines" style="display:none;padding-left:12px"><button data-engine="x" data-tr="X Motoru">X Motoru</button><button data-engine="y" data-tr="Y Motoru">Y Motoru</button><button data-engine="z" data-tr="Z Motoru (Yakıt)">Z Motoru (Yakıt)</button></div></div></div><button type="button" id="addSystems" role="menuitem" aria-expanded="false" data-tr="Ekle ▸">Ekle ▸</button><div id="addSubmenu" role="menu" style="display:none">
-<button type="button" data-preset="ship" data-tr="Uzay Aracı">Uzay Aracı</button><button type="button" data-preset="solar" data-tr="Güneş Sistemi">Güneş Sistemi</button>
+<div id="planetInfo" aria-hidden="true" style="display:none"><span id="planetInfoText"></span></div>
+<div id="planetMenu" role="menu"><button type="button" id="editPlanet" role="menuitem" aria-expanded="false" data-tr="Düzenle ▸">Düzenle ▸</button><div id="editSubmenu" role="menu" style="display:none"><button type="button" data-edit-phase="0" role="menuitem" data-tr="Konum">Konum</button><button type="button" data-edit-phase="1" role="menuitem" data-tr="Yükseklik">Yükseklik</button><button type="button" data-edit-phase="2" role="menuitem" data-tr="Büyüklük">Büyüklük</button><button type="button" data-edit-phase="3" role="menuitem" data-tr="Hız">Hız</button><button type="button" data-edit-phase="4" role="menuitem" data-tr="Açı">Açı</button><button type="button" data-edit-phase="5" role="menuitem" data-tr="Sürat">Sürat</button></div><button type="button" id="addSystems" role="menuitem" aria-expanded="false" data-tr="Ekle ▸">Ekle ▸</button><div id="addSubmenu" role="menu" style="display:none">
+<button type="button" data-preset="solar" data-tr="Güneş Sistemi">Güneş Sistemi</button>
 <button type="button" data-preset="binary" data-tr="Çift Yıldız">Çift Yıldız</button>
 <button type="button" data-preset="trappist" data-tr="TRAPPIST-1">TRAPPIST-1</button>
 <button type="button" data-preset="eight" data-tr="Üç Cisim – Sekiz Yörüngesi">Üç Cisim – Sekiz Yörüngesi</button>
@@ -134,9 +134,8 @@ try {
 const THREE=await import('three');
 const {OrbitControls}=await import('three/addons/controls/OrbitControls.js');
 const $=id=>document.getElementById(id);
-const I18N_DICTIONARY={"Uzay Aracı":"Spacecraft","Yönelim ▸":"Orientation ▸","Motor ▸":"Engines ▸","Sağ":"Right","Sol":"Left","İleri":"Forward","Geri":"Backward","Dikey":"Vertical","X Motoru":"X Engine","Y Motoru":"Y Engine","Z Motoru (Yakıt)":"Z Engine (Fuel)","Hız açıklama":"Move the pointer to adjust horizontal velocity direction and length. Click to confirm.","Açı":"Angle","Açı açıklama":"Move the pointer up/down to change the velocity elevation angle while preserving speed and horizontal heading. Click to confirm.","Sürat":"Speed","Sürat açıklama":"Move the pointer up/down to change speed without changing the velocity direction. Click to confirm.","Boşluk":"Space","Boşluk tuşu":"Space key","Başlat":"Start","Duraklat":"Pause","Sıfırla":"Reset","Yörüngeyi gizle":"Hide Trails","Yörüngeyi göster":"Show Trails","Hızlar":"Velocities","Hızları gizle":"Hide Velocities","Kuvvetler":"Forces","Kuvvetleri gizle":"Hide Forces","Kütle Merkezi":"Center of Mass","Merkezi gizle":"Hide Center","Yapışma":"Merge","Yapışma: açık":"Merge: On","Uzay":"Space","Gezegen":"Planet","Sürtünmesiz":"Frictionless","Sürtünmeli":"Friction On","Alan Okları":"Field Arrows","Alan Oklarını Gizle":"Hide Field Arrows","Üstten":"Top","Yandan":"Side","Düzenle ▸":"Edit ▸","Ekle ▸":"Add ▸","Konum":"Position","Yükseklik":"Height","Büyüklük":"Size","Hız":"Velocity","Tümünü seç":"Select All","Kopyala":"Copy","Yapıştır":"Paste","Sil":"Delete","İptal (Esc)":"Cancel (Esc)","Güneş Sistemi":"Solar System","Çift Yıldız":"Binary Stars","TRAPPIST-1":"TRAPPIST-1","Üç Cisim – Sekiz Yörüngesi":"Three-Body Figure Eight","Dönen Eşkenar Üçgen":"Rotating Equilateral Triangle","Lagrange Noktaları":"Lagrange Points","Kaotik Üç Cisim":"Chaotic Three Bodies","Kütleçekim Çökmesi":"Gravitational Collapse","Parçacık Bulutu":"Particle Cloud","Gezegen Halkası":"Planetary Ring","Büyük Çarpışma":"Giant Collision","Yatay Atış":"Horizontal Launch","Düşey Atış":"Vertical Launch","Roket":"Rocket","Eğik Atış":"Angled Launch","Serbest Düşüş":"Free Fall","Ana Sayfa":"Home","Tüm cisimleri temizle":"Clear Canvas","Kamera ve simülasyon kontrolleri":"Camera and Simulation Controls","Üstten görüş":"Top View","Yandan görüş":"Side View","Yüzey sürtünmesi":"Surface Friction","Sürtünme miktarı":"Friction Amount","Animasyon hızı":"Simulation Speed","Yörünge gösterim uzunluğu":"Trail Length","Yardım":"Help","Yardımı kapat":"Close Help","Koyu arka plan":"Dark Background","Aydınlık arka plan":"Light Background","Açık/koyu arka plan":"Light/Dark Background","Gezegeni düzenle — ":"Edit Planet — ","Gezegen ekle — ":"Add Planet — ","Seçili özellik düzenleniyor":"Editing Selected Property","Konum yönergesi":"Move the pointer over the floor and click to place the planet.","Yükseklik yönergesi":"Move the pointer up/down to change height; click to confirm.","Büyüklük yönergesi":"Move the pointer up/down to change radius (mass scales with volume); click.","Yatay hız yönergesi":"Move the pointer to set the horizontal velocity vector and click.","Dikey hız yönergesi":"Move the pointer up/down to set vertical velocity and click.","Yarıçap / kütle":"Radius / Mass","Yatay hız":"Horizontal Velocity","Dikey hız":"Vertical Velocity","Hız: ":"Speed: ","Kaçış hızı: ":"Escape speed: ","KAÇIŞ HIZI AŞILDI":"ESCAPE SPEED EXCEEDED","Gezegen kopyalandı · Ctrl+V veya sağ tık ile yapıştır":"Planet copied · Ctrl+V or right-click to paste","Gezegen yapıştırıldı · Ctrl+V veya sağ tık: tekrar yapıştır":"Planet pasted · Ctrl+V or right-click to paste again","Gezegen silindi · Çift tıkla: yeni gezegen":"Planet deleted · Double-click to add a planet","Gezegen oluşturuldu · Düzenlemek için sağ tıkla":"Planet created · Right-click to edit","Kanvas temizlendi · Çift tıkla: yeni gezegen":"Canvas cleared · Double-click to add a planet","Gezegen yüzeyi: sabit aşağı çekim · Yapışma: zemine tutunma":"Planet surface: uniform downward gravity · Merge: stick to ground","Uzay: cisimler birbirlerini çekiyor":"Space: bodies attract one another","Çift tıkla: yeni gezegen":"Double-click: New Planet","Çift tıkla: gezegen ekle · Duraklatıp gezegene tıkla: düzenle · Sol sürükle: kamera · Sağ sürükle: kaydır · Tekerlek: yakınlaştır · Boşluk: oynat/duraklat · Alt: büyüteç · Esc: iptal · Sağ tık / Delete: gezegeni sil":"Double-click: add a planet · Pause and click planet: edit · Left-drag: camera · Right-drag: pan · Wheel: zoom · Space: play/pause · Alt: magnifier · Esc: cancel · Right-click / Delete: remove planet","3D motor yüklenemedi: ":"3D engine could not load: ","İnternet bağlantısını ve WebGL desteğini kontrol edin.":"Check your internet connection and WebGL support.","Konum açıklama":"Move the pointer over the floor; the shadow shows the target point. Click.","Yükseklik açıklama":"Move the pointer up or down to raise or lower the planet. Click.","Yarıçap / kütle açıklama":"Move the pointer up or down to change the radius. Mass scales with radius cubed. Click.","Yatay hız açıklama":"Move the pointer to set the horizontal velocity arrow. Click.","Dikey hız açıklama":"Move the pointer up or down to set the vertical velocity component. Click."};
+const I18N_DICTIONARY={"Hız açıklama":"Move the pointer to adjust horizontal velocity direction and length. Click to confirm.","Açı":"Angle","Açı açıklama":"Move the pointer up/down to change the velocity elevation angle while preserving speed and horizontal heading. Click to confirm.","Sürat":"Speed","Sürat açıklama":"Move the pointer up/down to change speed without changing the velocity direction. Click to confirm.","Boşluk":"Space","Boşluk tuşu":"Space key","Başlat":"Start","Duraklat":"Pause","Sıfırla":"Reset","Yörüngeyi gizle":"Hide Trails","Yörüngeyi göster":"Show Trails","Hızlar":"Velocities","Hızları gizle":"Hide Velocities","Kuvvetler":"Forces","Kuvvetleri gizle":"Hide Forces","Kütle Merkezi":"Center of Mass","Merkezi gizle":"Hide Center","Yapışma":"Merge","Yapışma: açık":"Merge: On","Uzay":"Space","Gezegen":"Planet","Sürtünmesiz":"Frictionless","Sürtünmeli":"Friction On","Alan Okları":"Field Arrows","Alan Oklarını Gizle":"Hide Field Arrows","Üstten":"Top","Yandan":"Side","Düzenle ▸":"Edit ▸","Ekle ▸":"Add ▸","Konum":"Position","Yükseklik":"Height","Büyüklük":"Size","Hız":"Velocity","Tümünü seç":"Select All","Kopyala":"Copy","Yapıştır":"Paste","Sil":"Delete","İptal (Esc)":"Cancel (Esc)","Güneş Sistemi":"Solar System","Çift Yıldız":"Binary Stars","TRAPPIST-1":"TRAPPIST-1","Üç Cisim – Sekiz Yörüngesi":"Three-Body Figure Eight","Dönen Eşkenar Üçgen":"Rotating Equilateral Triangle","Lagrange Noktaları":"Lagrange Points","Kaotik Üç Cisim":"Chaotic Three Bodies","Kütleçekim Çökmesi":"Gravitational Collapse","Parçacık Bulutu":"Particle Cloud","Gezegen Halkası":"Planetary Ring","Büyük Çarpışma":"Giant Collision","Yatay Atış":"Horizontal Launch","Düşey Atış":"Vertical Launch","Roket":"Rocket","Eğik Atış":"Angled Launch","Serbest Düşüş":"Free Fall","Ana Sayfa":"Home","Tüm cisimleri temizle":"Clear Canvas","Kamera ve simülasyon kontrolleri":"Camera and Simulation Controls","Üstten görüş":"Top View","Yandan görüş":"Side View","Yüzey sürtünmesi":"Surface Friction","Sürtünme miktarı":"Friction Amount","Animasyon hızı":"Simulation Speed","Yörünge gösterim uzunluğu":"Trail Length","Yardım":"Help","Yardımı kapat":"Close Help","Koyu arka plan":"Dark Background","Aydınlık arka plan":"Light Background","Açık/koyu arka plan":"Light/Dark Background","Gezegeni düzenle — ":"Edit Planet — ","Gezegen ekle — ":"Add Planet — ","Seçili özellik düzenleniyor":"Editing Selected Property","Konum yönergesi":"Move the pointer over the floor and click to place the planet.","Yükseklik yönergesi":"Move the pointer up/down to change height; click to confirm.","Büyüklük yönergesi":"Move the pointer up/down to change radius (mass scales with volume); click.","Yatay hız yönergesi":"Move the pointer to set the horizontal velocity vector and click.","Dikey hız yönergesi":"Move the pointer up/down to set vertical velocity and click.","Yarıçap / kütle":"Radius / Mass","Yatay hız":"Horizontal Velocity","Dikey hız":"Vertical Velocity","Hız: ":"Speed: ","Kaçış hızı: ":"Escape speed: ","KAÇIŞ HIZI AŞILDI":"ESCAPE SPEED EXCEEDED","Gezegen kopyalandı · Ctrl+V veya sağ tık ile yapıştır":"Planet copied · Ctrl+V or right-click to paste","Gezegen yapıştırıldı · Ctrl+V veya sağ tık: tekrar yapıştır":"Planet pasted · Ctrl+V or right-click to paste again","Gezegen silindi · Çift tıkla: yeni gezegen":"Planet deleted · Double-click to add a planet","Gezegen oluşturuldu · Düzenlemek için sağ tıkla":"Planet created · Right-click to edit","Kanvas temizlendi · Çift tıkla: yeni gezegen":"Canvas cleared · Double-click to add a planet","Gezegen yüzeyi: sabit aşağı çekim · Yapışma: zemine tutunma":"Planet surface: uniform downward gravity · Merge: stick to ground","Uzay: cisimler birbirlerini çekiyor":"Space: bodies attract one another","Çift tıkla: yeni gezegen":"Double-click: New Planet","Çift tıkla: gezegen ekle · Duraklatıp gezegene tıkla: düzenle · Sol sürükle: kamera · Sağ sürükle: kaydır · Tekerlek: yakınlaştır · Boşluk: oynat/duraklat · Alt: büyüteç · Esc: iptal · Sağ tık / Delete: gezegeni sil":"Double-click: add a planet · Pause and click planet: edit · Left-drag: camera · Right-drag: pan · Wheel: zoom · Space: play/pause · Alt: magnifier · Esc: cancel · Right-click / Delete: remove planet","3D motor yüklenemedi: ":"3D engine could not load: ","İnternet bağlantısını ve WebGL desteğini kontrol edin.":"Check your internet connection and WebGL support.","Konum açıklama":"Move the pointer over the floor; the shadow shows the target point. Click.","Yükseklik açıklama":"Move the pointer up or down to raise or lower the planet. Click.","Yarıçap / kütle açıklama":"Move the pointer up or down to change the radius. Mass scales with radius cubed. Click.","Yatay hız açıklama":"Move the pointer to set the horizontal velocity arrow. Click.","Dikey hız açıklama":"Move the pointer up or down to set the vertical velocity component. Click."};
 const I18N_HELP={tr:"\n    <p>Burada gezegenler oluşturabilir ve birbirlerini nasıl çektiklerini izleyebilirsin. Gezegenlerin hareketi kütleçekimine göre hesaplanır.</p>\n    <h3>Gezegen oluştur</h3>\n    <p>Boş alana <strong>çift tıkla</strong>: gezegen hemen oluşur ve seçilir. Yükseklik sıfır, büyüklük ilk mavi gezegenle aynıdır. Yatay hızı en büyük gezegenin çevresinde saat yönünde, kaçış hızının yarısı kadar; düşey hızı sıfırdır.</p>\n    <h3>Gezegenleri değiştir</h3>\n    <p>Bir gezegene sol tıkla: gündüz koyu mavi, gece sarı bir halka belirir ve seçilir. Başka gezegenlere de tıklayarak çoklu seçim yapabilir veya sağ tık menüsündeki <strong>Tümünü seç</strong> seçeneğiyle bütün gezegenleri seçebilirsin. Gezegenler <strong>boş alana tıklayana kadar</strong> seçili kalır. Seçili gezegenlerden birine sağ tıklayıp Düzenle'yi açarsan tümü birlikte düzenlenir: konum ve yükseklikte aynı yer değiştirme, hızda aynı hız değişimi, büyüklükte aynı oran uygulanır. Küçük gezegenlerde de halka görünür. Boş alana tıklarsan seçim kalkar. Düzenlemek için sağ tıkla ve <strong>Düzenle ▸</strong> menüsünden <strong>Konum, Yükseklik, Büyüklük</strong> veya <strong>Hız</strong> seç. Konum yalnızca yatay (X/Z) konumu; Yükseklik yalnızca düşey (Y) konumu ayarlar. İkisi de tek aşamalıdır. Hızda önce yatay hız bileşenini, sonraki tıklamada düşey hız bileşenini ayarlarsın. Büyüklük tek aşamalıdır. Son tıklamayla veya herhangi bir aşamada Enter ile kabul, Esc ile iptal edebilirsin. Yeni gezegen oluştururken önceki sıralı aşamalar aynen devam eder. Gezegenin üstüne sağ tıklayarak <strong>Kopyala / Yapıştır / Sil</strong> seçeneklerini kullanabilir; <strong>Sil</strong> seçili bütün gezegenleri kaldırır. veya seçip <strong>Delete</strong> ile silebilirsin. Boş alana sağ tıklayarak da yapıştırabilirsin.</p>\n    <p><strong>Ctrl+C:</strong> Seçili gezegenin konumunu, hızını, yarıçapını, kütlesini ve rengini hafızaya al. <strong>Ctrl+V:</strong> Aynı özelliklerle, fareyle gösterdiğin yatay konuma yeni bir gezegen yapıştır. İstediğin kadar tekrarla.</p>\n    <h3>Kamerayı kullan</h3>\n    <ul>\n      <li><strong>Sol fare tuşuyla sürükle:</strong> Kamerayı döndür.</li>\n      <li><strong>Sağ fare tuşuyla sürükle:</strong> Görüntüyü kaydır.</li>\n      <li><strong>Fare tekerleği:</strong> Yaklaş veya uzaklaş.</li>\n      <li><strong>Alt tuşu:</strong> Büyüteci aç.</li><li><strong>☾ / ☀:</strong> Koyu veya aydınlık arka plan.</li>\n      <li><strong>Üstten / Yandan:</strong> Hazır kamera açılarına geç.</li>\n    </ul>\n    <h3>Hazır sistemler</h3><p>Sağ tık → <strong>Ekle ▸</strong> ile on altı hazır sistem oluşturabilirsin. Sistemin merkezi sağ tıkladığın noktadır; mevcut gezegenler korunur. Ekleme sonrası hareketi Başlat ile izle. İdeal yörüngeler diğer cisimlerin çekimi ve sayısal hesaplama nedeniyle zamanla değişebilir.</p><h3>Diğer kontroller</h3>\n    <ul>\n      <li><strong>▶ / ❚❚ veya Boşluk:</strong> Başlat ya da duraklat.</li>\n      <li><strong>Sıfırla:</strong> Başlangıçtaki gezegenlere dön.</li>\n      <li><strong>Yörünge:</strong> Gezegenlerin izlerini göster veya gizle.</li><li><strong>Kütle Merkezi:</strong> Seçili gezegenlerin; seçim yoksa tüm sistemin kütle merkezini mor halka ile gösterir.</li><li><strong>Kuvvetler:</strong> Her gezegene etki eden toplam çekim kuvvetini mor oklarla gösterir. Ok uzunlukları anlık en büyük kuvvete göre ölçeklenir.</li><li><strong>Hızlar:</strong> Tüm gezegenlerin hız vektörlerini oklarla gösterir; tekrar tıklayınca gizler.</li><li><strong>Yapışma:</strong> Açıkken birbirine değen gezegenler anında birleşir. Yalnızca gece modunda kısa sarı ışın efekti gösterilir. Kütleleri toplanır; konumları kütle merkezine, hızları momentumun korunmasına göre hesaplanır. Renkleri kütlelerine göre karıştırılır. Tekrar tıklarsan birleşme kapanır.</li>\n      <li><strong>Kısa sürgüler:</strong> Animasyon hızını ve yörünge izi uzunluğunu ayarla.</li>\n      <li><strong>Kırmızı hız oku:</strong> Hesaplanan kaçış hızı aşıldı.</li>\n    </ul>",en:"<p>Create planets, move them and see how gravity affects their motion. Switch to Planet mode for a uniform downward gravitational field.</p><h3>Create a planet</h3><p>Double-click empty space to create and select a planet. Its initial height is zero, vertical velocity is zero and its horizontal velocity is based on the largest nearby planet.</p><h3>Select and edit</h3><p>Click planets to select them. Selection rings appear in dark blue by day and yellow at night. Click additional planets to select a group, or choose <strong>Select All</strong> from the right-click menu. Click empty space to clear the selection. Right-click and choose <strong>Edit ▸</strong> to modify <strong>Position</strong> (horizontal X/Z), <strong>Height</strong> (vertical Y), <strong>Size</strong> or <strong>Horizontal Velocity</strong> or <strong>Vertical Velocity</strong>. Position and height use relative pointer movement, so selected bodies do not jump. Group edits apply the same displacement, speed change or scale factor. A click confirms each stage. Press Enter to finish and Esc to cancel.</p><p><strong>Copy / Paste / Delete</strong> are available in the right-click menu. Delete removes every selected object. Ctrl+C and Ctrl+V also work. Right-click on empty space to paste at that point.</p><h3>Camera controls</h3><ul><li><strong>Left-drag:</strong> Orbit camera.</li><li><strong>Right-drag:</strong> Pan.</li><li><strong>Wheel:</strong> Zoom.</li><li><strong>Alt:</strong> Magnifier.</li><li><strong>☾ / ☀:</strong> Light/dark background.</li><li><strong>Top / Side:</strong> Preset camera views.</li></ul><h3>Preset systems</h3><p>Right-click → <strong>Add ▸</strong> to insert one of sixteen preset systems or experiments near the clicked position. Existing bodies stay in the scene. Surface-motion experiments automatically switch to Planet mode. Ideal orbits can drift because of numerical errors or other bodies.</p><h3>Other controls</h3><ul><li><strong>▶ / ❚❚ / Space:</strong> Play or pause.</li><li><strong>Reset:</strong> Restore starting planets.</li><li><strong>Trash:</strong> Clear the whole canvas.</li><li><strong>Trails:</strong> Show/hide paths.</li><li><strong>Velocities:</strong> Show/hide velocity arrows.</li><li><strong>Forces:</strong> Show net gravity force arrows.</li><li><strong>Center of Mass:</strong> Show center of mass of selected bodies or all bodies.</li><li><strong>Merge:</strong> In Space mode touching bodies merge; in Planet mode they stick to the floor.</li><li><strong>Space / Planet:</strong> Toggle mutual gravity and uniform downward gravity.</li><li><strong>Frictionless / Friction On:</strong> Enable ground friction and adjust it using the slider.</li><li><strong>Field Arrows:</strong> Show/hide uniform gravitational field lines in Planet mode.</li><li><strong>Sliders:</strong> Set friction, playback speed and trail length.</li><li><strong>Red velocity arrow:</strong> Escape speed exceeded.</li><li><strong>🇹🇷 / 🇬🇧:</strong> Change interface language.</li></ul>"};
-I18N_HELP.tr+="<h3>Uzay Aracı</h3><p>Sağ tık → Ekle → Uzay Aracı ile silindir gövdeli, yarım küre burunlu ve üç kanatlı bir araç eklenir. Araç gezegenlerden çekim görür, onları çekmez. Düzenle → Yönelim ile yönü seç. Düzenle → Motor altında X ve Y itişlerine örneğin sin(t), cos(t), 2*t formüllerini yaz. t, aracın eklenmesinden itibaren geçen simülasyon süresidir. Z motorunun itişi sabittir; Yakıt, kaç saniye çalışacağını belirler. X ve Y motorlarında işaret, yerel itiş yönünü değiştirir. Motorlar aracı döndürmez.</p>";I18N_HELP.en+="<h3>Spacecraft</h3><p>Right-click → Add → Spacecraft to insert a vehicle with a cylindrical body, hemispherical nose and three fins. Planets attract the craft, but the craft does not attract planets. Choose a global heading under Edit → Orientation. Under Edit → Engines, enter formulas such as sin(t), cos(t) and 2*t for X and Y thrust. t is the elapsed simulation time since insertion. The Z engine has constant thrust; Fuel controls its active duration in seconds. Positive and negative X/Y values reverse the local thrust directions. Engines do not rotate the craft.</p>";
 let appLanguage='tr';
 try{appLanguage=localStorage.getItem('gravity-sandbox-language')==='en'?'en':'tr'}catch(_){}
 function t(key){return appLanguage==='en'?(I18N_DICTIONARY[key]??key):key}
@@ -146,7 +145,7 @@ function localizeUI(){
  document.querySelectorAll('[data-tr]').forEach(el=>{el.textContent=t(el.dataset.tr)});
  document.querySelectorAll('[data-tr-title]').forEach(el=>{el.title=t(el.dataset.trTitle)});
  document.querySelectorAll('[data-tr-aria]').forEach(el=>{el.setAttribute('aria-label',t(el.dataset.trAria))});
- $('helpContents').innerHTML=I18N_HELP[appLanguage];$('shipFuncLabel').firstChild.textContent=appLanguage==='tr'?'İtiş fonksiyonu (t: saniye)':'Thrust function (t: seconds)';$('shipFuelLabel').firstChild.textContent=appLanguage==='tr'?'Yakıt süresi (saniye)':'Fuel duration (seconds)';$('shipCancel').textContent=appLanguage==='tr'?'İptal':'Cancel';$('shipSave').textContent=appLanguage==='tr'?'Kaydet':'Save';
+ $('helpContents').innerHTML=I18N_HELP[appLanguage];
  $('languageButton').innerHTML=appLanguage==='tr'?"<svg viewBox=\"0 0 30 20\" width=\"30\" height=\"20\" aria-hidden=\"true\" style=\"display:block;border-radius:2px\"><rect width=\"30\" height=\"20\" fill=\"#e30a17\"/><circle cx=\"12.5\" cy=\"10\" r=\"6\" fill=\"white\"/><circle cx=\"14.4\" cy=\"10\" r=\"4.8\" fill=\"#e30a17\"/><path d=\"M19.3 6.7 L19.9 9 L22.3 9 L20.35 10.45 L21.1 12.7 L19.3 11.3 L17.5 12.7 L18.25 10.45 L16.3 9 L18.7 9 Z\" fill=\"white\"/></svg>":"<svg viewBox=\"0 0 60 40\" width=\"30\" height=\"20\" aria-hidden=\"true\" style=\"display:block;border-radius:2px\"><rect width=\"60\" height=\"40\" fill=\"#012169\"/><path d=\"M0 0 L60 40 M60 0 L0 40\" stroke=\"#fff\" stroke-width=\"9\"/><path d=\"M0 0 L60 40 M60 0 L0 40\" stroke=\"#c8102e\" stroke-width=\"3.5\"/><path d=\"M30 0 V40 M0 20 H60\" stroke=\"#fff\" stroke-width=\"13\"/><path d=\"M30 0 V40 M0 20 H60\" stroke=\"#c8102e\" stroke-width=\"6\"/></svg>";
  $('languageButton').title=appLanguage==='tr'?'Türkçe / English':'English / Türkçe';
  $('play').textContent=running?'❚❚ '+t('Duraklat'):'▶ '+t('Başlat');
@@ -212,7 +211,7 @@ let menuBody=null;
 let menuPoint=null;
 let menuPointer=null;
 const planetMenu=$('planetMenu');
-function closePlanetMenu(){$('shipDirections').style.display='none';$('shipEngines').style.display='none';planetMenu.style.display='none';$('editSubmenu').style.display='none';$('addSubmenu').style.display='none';$('editPlanet').setAttribute('aria-expanded','false');$('addSystems').setAttribute('aria-expanded','false');menuBody=null;menuPoint=null;menuPointer=null}
+function closePlanetMenu(){planetMenu.style.display='none';$('editSubmenu').style.display='none';$('addSubmenu').style.display='none';$('editPlanet').setAttribute('aria-expanded','false');$('addSystems').setAttribute('aria-expanded','false');menuBody=null;menuPoint=null;menuPointer=null}
 // Ctrl+sol tık ile çoklu seçim. Her gezegenin kendi seçim halkası vardır.
 const selectedBodies=new Set();
 const selectionRings=new Map();
@@ -250,7 +249,7 @@ function updateSelectionRing(){
 
 function copyPlanet(body){
  if(!body||!bodies.includes(body))return;
- copiedPlanet={p:body.p.clone(),v:body.v.clone(),r:body.r,m:body.m,color:body.color,kind:body.kind,orientation:body.orientation?.clone(),engines:body.engines?{...body.engines}:null};
+ copiedPlanet={p:body.p.clone(),v:body.v.clone(),r:body.r,m:body.m,color:body.color};
  msg('Gezegen kopyalandı · Ctrl+V veya sağ tık ile yapıştır');
 }
 function pastePlanet(point=null){
@@ -260,7 +259,7 @@ function pastePlanet(point=null){
  const p=copiedPlanet.p.clone();
  if(point){p.x=clamp(point.x,-88,88);p.z=clamp(point.z,-88,88)}
  else p.x=clamp(p.x+4,-88,88);
- const b=copiedPlanet.kind==='ship'?makeSpacecraft(p):makeBody(copiedPlanet.r,copiedPlanet.color,p,copiedPlanet.v);if(b.kind==='ship'){b.v.copy(copiedPlanet.v);b.orientation.copy(copiedPlanet.orientation);b.engines={...copiedPlanet.engines}}
+ const b=makeBody(copiedPlanet.r,copiedPlanet.color,p,copiedPlanet.v);
  b.m=copiedPlanet.m;
  bodies.push(b);updateTrail(b);selectPlanet(b);hoveredBody=b;
  msg('Gezegen yapıştırıldı · Ctrl+V veya sağ tık: tekrar yapıştır');
@@ -320,7 +319,7 @@ function addPreset(id,center){
  };
  const star=(m,r,color,x=0,z=0,vx=0,vz=0)=>spawn(r,color,x,0,z,vx,0,vz,m);
  const palette=[0xc2b6aa,0xf1a847,0x4f9fe8,0xd9735f,0xe3bd83,0xd5bc88,0x79afd5,0x6788df];
- if(id==='ship'){const b=makeSpacecraft(new THREE.Vector3(c.x,c.y+20,c.z));bodies.push(b);added.push(b);selectPlanet(b)}else if(id==='solar'||id==='trappist'){
+ if(id==='solar'||id==='trappist'){
   const sun=star(id==='solar'?1050:540,id==='solar'?4.6:3,0xffc849);
   const distances=id==='solar'?[10,15,21,28,41,54,69,81]:[11,15,19,23,27,31,35];
   const sizes=id==='solar'?[.65,.87,.95,.77,2.05,1.75,1.35,1.32]:[.73,.82,.86,.91,.94,1,1.03];
@@ -417,7 +416,7 @@ function addPreset(id,center){
   selectedBody=added[added.length-1];syncSelections();
  }
  acc=0;
- const labels={ship:'Uzay Aracı',solar:'Güneş Sistemi',binary:'Çift Yıldız',trappist:'TRAPPIST-1',eight:'Üç Cisim – Sekiz Yörüngesi',triangle:'Dönen Eşkenar Üçgen',lagrange:'Lagrange Noktaları',chaos:'Kaotik Üç Cisim',collapse:'Kütleçekim Çökmesi',cloud:'Parçacık Bulutu',rings:'Gezegen Halkası',collision:'Büyük Çarpışma',horizontal:'Yatay Atış',vertical:'Düşey Atış',rocket:'Roket',angled:'Eğik Atış',freefall:'Serbest Düşüş'};
+ const labels={solar:'Güneş Sistemi',binary:'Çift Yıldız',trappist:'TRAPPIST-1',eight:'Üç Cisim – Sekiz Yörüngesi',triangle:'Dönen Eşkenar Üçgen',lagrange:'Lagrange Noktaları',chaos:'Kaotik Üç Cisim',collapse:'Kütleçekim Çökmesi',cloud:'Parçacık Bulutu',rings:'Gezegen Halkası',collision:'Büyük Çarpışma',horizontal:'Yatay Atış',vertical:'Düşey Atış',rocket:'Roket',angled:'Eğik Atış',freefall:'Serbest Düşüş'};
  $('message').textContent=appLanguage==='tr'?(labels[id]||'Sistem')+' eklendi · '+added.length+' cisim · Başlat':t(labels[id]||'Sistem')+' added · '+added.length+' bodies · Start';
 }
 document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>{
@@ -600,92 +599,6 @@ function updateForceArrows(){
   b.forceArrow.setLength(length,Math.min(2.4,length*.23),Math.min(1.2,length*.13));
  }
 }
-
-function compileShipFunction(source){
- const input=String(source).replace(/\s+/g,'').toLowerCase();
- if(!input||input.length>100)throw Error('expression');
- const tokens=input.match(/(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?|[a-z]+|[()+*\/^\-]/g);
- if(!tokens||tokens.join('')!==input||tokens.length>70)throw Error('expression');
- let i=0;const peek=()=>tokens[i],pop=()=>tokens[i++];
- function atom(){
-  const v=pop();
-  if(v==='('){const n=expr();if(pop()!==')')throw Error(')');return n}
-  if(v==='-'){const n=atom();return t=>-n(t)}
-  if(v==='+')return atom();
-  if(v==='t')return t=>t;
-  if(v==='pi')return ()=>Math.PI;
-  const fn={sin:Math.sin,cos:Math.cos,exp:Math.exp,abs:Math.abs,sqrt:Math.sqrt};
-  if(fn[v]){if(pop()!=='(')throw Error('(');const n=expr();if(pop()!==')')throw Error(')');return t=>fn[v](n(t))}
-  if(v!==undefined&&/^(?:\d|\.)/.test(v)){const n=Number(v);if(Number.isFinite(n))return ()=>n}
-  throw Error('token');
- }
- function power(){let a=atom();if(peek()==='^'){pop();const b=power(),old=a;a=t=>Math.pow(old(t),b(t))}return a}
- function term(){let a=power();while(peek()==='*'||peek()==='/'){const op=pop(),b=power(),old=a;a=op==='*'?t=>old(t)*b(t):t=>old(t)/b(t)}return a}
- function expr(){let a=term();while(peek()==='+'||peek()==='-'){const op=pop(),b=term(),old=a;a=op==='+'?t=>old(t)+b(t):t=>old(t)-b(t)}return a}
- const fn=expr();if(i!==tokens.length)throw Error('trailing');
- for(let t=0;t<=120;t+=.25){const value=fn(t);if(!Number.isFinite(value)||Math.abs(value)>100)throw Error('range')}
- return {source:input,fn:t=>{const v=fn(t);return Number.isFinite(v)?Math.max(-100,Math.min(100,v)):0}};
-}
-function makeSpacecraft(pos){
- const craft=new THREE.Group(),shell=new THREE.MeshStandardMaterial({color:0xe7edf2,roughness:.7,metalness:.1});
- const cylinder=new THREE.Mesh(new THREE.CylinderGeometry(.8,.8,3.6,20),shell);
- cylinder.rotation.x=Math.PI/2;craft.add(cylinder);
- const dome=new THREE.Mesh(new THREE.SphereGeometry(.8,20,12,0,Math.PI*2,0,Math.PI/2),shell.clone());
- dome.rotation.x=Math.PI/2;dome.position.z=1.8;craft.add(dome);
- for(let i=0;i<3;i++){
-  const a=i*Math.PI*2/3,c=Math.cos(a),si=Math.sin(a),pts=[[.65,-1.9],[1.75,-2.25],[.65,-.55]];
-  const coords=[];
-  for(const [rad,z]of pts)coords.push(rad*c,rad*si,z);
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(coords,3));g.computeVertexNormals();
-  const fin=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0x64768b,side:THREE.DoubleSide}));craft.add(fin);
- }
- const nozzle=new THREE.Mesh(new THREE.CylinderGeometry(.62,.62,.24,16),new THREE.MeshStandardMaterial({color:0x424b57}));
- nozzle.rotation.x=Math.PI/2;nozzle.position.z=-1.9;craft.add(nozzle);
- craft.position.copy(pos);scene.add(craft);
- const b=makeBody(2.4,0xbdd5e8,pos,new THREE.Vector3());
- scene.remove(b.mesh);b.mesh.material.dispose();
- b.mesh=craft;b.kind='ship';b.m=.01;b.r=2.4;b.birthTime=simTime;b.orientation=new THREE.Quaternion();
- b.engines={x:compileShipFunction('0'),y:compileShipFunction('0'),fuel:8,power:8};
- return b;
-}
-let activeShip=null,activeAxis='x';
-function openShipEditor(ship,axis){
- stopPhysics();activeShip=ship;activeAxis=axis;
- $('shipHeading').textContent=t(axis==='z'?'Z Motoru (Yakıt)':axis.toUpperCase()+' Motoru');
- $('shipFuncLabel').style.display=axis==='z'?'none':'grid';
- $('shipFuelLabel').style.display=axis==='z'?'grid':'none';
- $('shipFunc').value=axis==='z'?'0':ship.engines[axis].source;
- $('shipFuel').value=ship.engines.fuel;$('shipError').textContent='';
- $('shipOverlay').style.display='flex';
- (axis==='z'?$('shipFuel'):$('shipFunc')).focus();
-}
-$('shipCancel').addEventListener('click',()=>{$('shipOverlay').style.display='none';activeShip=null});
-$('shipOverlay').addEventListener('click',e=>{if(e.target===$('shipOverlay'))$('shipCancel').click()});
-$('shipForm').addEventListener('submit',e=>{
- e.preventDefault();if(!activeShip)return;
- try{
-  if(activeAxis==='z'){
-   const n=Number($('shipFuel').value);
-   if(!Number.isFinite(n)||n<0||n>120)throw Error('range');
-   activeShip.engines.fuel=n;
-  }else activeShip.engines[activeAxis]=compileShipFunction($('shipFunc').value);
-  $('shipOverlay').style.display='none';activeShip=null;
- }catch(_){$('shipError').textContent=appLanguage==='tr'?'Geçersiz ifade. Fonksiyon ±100 aralığında kalmalı.':'Invalid expression. Thrust must stay within ±100.'}
-});
-$('shipDirButton').addEventListener('click',()=>{
- $('shipDirections').style.display=$('shipDirections').style.display==='none'?'block':'none';$('shipEngines').style.display='none';
-});
-$('shipEngineButton').addEventListener('click',()=>{
- $('shipEngines').style.display=$('shipEngines').style.display==='none'?'block':'none';$('shipDirections').style.display='none';
-});
-const directions={right:[1,0,0],left:[-1,0,0],forward:[0,0,-1],back:[0,0,1],up:[0,1,0]};
-document.querySelectorAll('[data-ship-dir]').forEach(btn=>btn.addEventListener('click',()=>{
- const b=menuBody,vec=directions[btn.dataset.shipDir];closePlanetMenu();
- if(b?.kind==='ship'){b.orientation.setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3(...vec));updateVisual(b)}
-}));
-document.querySelectorAll('[data-engine]').forEach(btn=>btn.addEventListener('click',()=>{
- const b=menuBody,axis=btn.dataset.engine;closePlanetMenu();if(b?.kind==='ship')openShipEditor(b,axis);
-}));
 function makeBody(r,color,pos,vel){
  const mesh=new THREE.Mesh(sphere,new THREE.MeshStandardMaterial({color,roughness:.72,metalness:0}));
  mesh.scale.setScalar(r);mesh.position.copy(pos);mesh.castShadow=pos.y>0;mesh.receiveShadow=true;scene.add(mesh);
@@ -701,7 +614,7 @@ function makeBody(r,color,pos,vel){
  forceArrow.visible=false;scene.add(forceArrow);
  return {m:massFromRadius(r),r,color,p:pos.clone(),v:vel.clone(),mesh,trace,g,mat,trail:[pos.clone()],velocityArrow,forceArrow};
 }
-function removeBody(b){scene.remove(b.mesh,b.trace,b.velocityArrow,b.forceArrow);if(b.kind==='ship')b.mesh.traverse(o=>{if(o.isMesh){o.geometry.dispose();o.material.dispose()}});else b.mesh.material.dispose();b.g.dispose();b.mat.dispose();b.velocityArrow.line.material.dispose();b.velocityArrow.cone.material.dispose();b.forceArrow.line.material.dispose();b.forceArrow.cone.material.dispose()}
+function removeBody(b){scene.remove(b.mesh,b.trace,b.velocityArrow,b.forceArrow);b.mesh.material.dispose();b.g.dispose();b.mat.dispose();b.velocityArrow.line.material.dispose();b.velocityArrow.cone.material.dispose();b.forceArrow.line.material.dispose();b.forceArrow.cone.material.dispose()}
 function updateTrail(b){
  const attr=b.g.getAttribute('position');
  const n=Math.min(b.trail.length,MAX_TRAIL,trailDisplayLength);
@@ -716,21 +629,19 @@ function init(){clearMergeBursts();closePlanetMenu();selectPlanet(null);hoveredB
  makeBody(1.4,0x499ef6,new THREE.Vector3(24,originHeight,0),new THREE.Vector3(0,0,12)),
  makeBody(1.8,0xef705e,new THREE.Vector3(-38,originHeight,0),new THREE.Vector3(0,0,-9.5)),
  makeBody(1,0x55c78a,new THREE.Vector3(0,originHeight+12,52),new THREE.Vector3(-7.7,0,0))];
- acc=0;trailTick=0;simTime=0;
+ acc=0;trailTick=0;
  for(const b of bodies)updateTrail(b);
 }
-let simTime=0;
-function shipThrust(b,time){if(b.kind!=='ship')return new THREE.Vector3();const e=b.engines;const elapsed=Math.max(0,time-b.birthTime);return new THREE.Vector3(e.x.fn(elapsed),e.y.fn(elapsed),elapsed<e.fuel?e.power:0).applyQuaternion(b.orientation)}
-function accelerations(time=simTime){
- if(surfaceMode)return bodies.map(b=>new THREE.Vector3(0,-SURFACE_GRAVITY+(b.rocketBurn>0?b.rocketThrust||0:0),0).add(shipThrust(b,time)));
+function accelerations(){
+ if(surfaceMode)return bodies.map(b=>new THREE.Vector3(0,-SURFACE_GRAVITY+(b.rocketBurn>0?b.rocketThrust||0:0),0));
  const a=bodies.map(()=>new THREE.Vector3());
  for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
   const d=new THREE.Vector3().subVectors(bodies[j].p,bodies[i].p);
   const r2=d.lengthSq()+EPS2,fac=G/(r2*Math.sqrt(r2));
-  if(bodies[j].kind!=='ship')a[i].addScaledVector(d,fac*bodies[j].m);
-  if(bodies[i].kind!=='ship')a[j].addScaledVector(d,-fac*bodies[i].m);
+  a[i].addScaledVector(d,fac*bodies[j].m);
+  a[j].addScaledVector(d,-fac*bodies[i].m);
  }
- for(let i=0;i<bodies.length;i++)a[i].add(shipThrust(bodies[i],time));return a;
+ return a;
 }
 // Kısa, çizgisel birleşme parlaması; fiziğe müdahale etmez.
 const mergeBursts=[];
@@ -790,7 +701,7 @@ function mergeTouchingBodies(){
  while(merged){
   merged=false;
   outer:for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
-   const a=bodies[i],b=bodies[j];if(a.kind==='ship'||b.kind==='ship')continue;
+   const a=bodies[i],b=bodies[j];
    if(a.p.distanceToSquared(b.p)>(a.r+b.r)**2)continue;
    const total=a.m+b.m;
    const pos=a.p.clone().multiplyScalar(a.m).addScaledVector(b.p,b.m).divideScalar(total);
@@ -835,18 +746,18 @@ function resolveGroundCollisions(){
   }
  }
 }
-function step(){let a=accelerations(simTime);
+function step(){let a=accelerations();
  for(let i=0;i<bodies.length;i++){const b=bodies[i];b.v.addScaledVector(a[i],DT*.5);b.p.addScaledVector(b.v,DT)}
- a=accelerations(simTime+DT);for(let i=0;i<bodies.length;i++)bodies[i].v.addScaledVector(a[i],DT*.5);
+ a=accelerations();for(let i=0;i<bodies.length;i++)bodies[i].v.addScaledVector(a[i],DT*.5);
  if(surfaceMode){
   for(const b of bodies)if(b.rocketBurn>0)b.rocketBurn=Math.max(0,b.rocketBurn-DT);
   resolveGroundCollisions();
  }
  else if(mergingEnabled)mergeTouchingBodies();
- simTime+=DT;if(++trailTick%4===0)for(const b of bodies){b.trail.push(b.p.clone());if(b.trail.length>MAX_TRAIL)b.trail.shift();updateTrail(b)}
+ if(++trailTick%4===0)for(const b of bodies){b.trail.push(b.p.clone());if(b.trail.length>MAX_TRAIL)b.trail.shift();updateTrail(b)}
 }
 function updateVisual(b){
- b.mesh.position.copy(b.p);if(b.kind==='ship')b.mesh.quaternion.copy(b.orientation);else b.mesh.scale.setScalar(b.r);b.mesh.castShadow=b.p.y>0;
+ b.mesh.position.copy(b.p);b.mesh.scale.setScalar(b.r);b.mesh.castShadow=b.p.y>0;
  const speed=b.v.length();
  b.velocityArrow.visible=velocitiesVisible&&speed>0.001;
  if(b.velocityArrow.visible){
@@ -858,7 +769,7 @@ function updateVisual(b){
 }
 function pointerNDC(e){const rect=renderer.domElement.getBoundingClientRect();ndc.x=((e.clientX-rect.left)/rect.width)*2-1;ndc.y=-((e.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(ndc,camera)}
 function onPlane(e,y=0){pointerNDC(e);plane.set(new THREE.Vector3(0,1,0),-y);return raycaster.ray.intersectPlane(plane,intersection)?intersection.clone():null}
-function bodyAt(e){pointerNDC(e);const hits=raycaster.intersectObjects(bodies.map(b=>b.mesh),true);for(const hit of hits){let o=hit.object;while(o){const b=bodies.find(b=>b.mesh===o);if(b)return b;o=o.parent}}return null}
+function bodyAt(e){pointerNDC(e);const hits=raycaster.intersectObjects(bodies.map(b=>b.mesh),false);return hits.length?bodies.find(b=>b.mesh===hits[0].object):null}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 const labels=[
  ['Konum','Fareyle masada istediğin noktaya git. Gölge o noktayı gösterecek. Tıkla.'],
@@ -945,7 +856,7 @@ function beginEditor(existing,e,editPhase=null){
  // Düzenleme, gezegenin mevcut konumundan ve mevcut hızından başlar.
  // Fareye tıklandığı an bir konum/hız sıçraması oluşmaması için
  // fare konumunun düzlem üzerindeki başlangıç karşılığını saklıyoruz.
- const group=existing?[...selectedBodies].filter(b=>bodies.includes(b)&&b.kind===candidate.kind):[];if(existing&&!group.includes(candidate))group.push(candidate);
+ const group=existing?[...selectedBodies].filter(b=>bodies.includes(b)):[];if(existing&&!group.includes(candidate))group.push(candidate);
  const groupOriginal=group.map(b=>({b,p:b.p.clone(),v:b.v.clone(),r:b.r,m:b.m,trail:b.trail.map(p=>p.clone())}));
  const groupBaseline=groupOriginal.map(o=>({...o,p:o.p.clone(),v:o.v.clone()}));
  editor={existing:!!existing,b:candidate,original,groupOriginal,groupBaseline,phase:editPhase===null?0:editPhase,editGroup:!existing||editPhase===null?null:(editPhase===0?'position':editPhase===1?'height':editPhase===3?'horizontalVelocity':editPhase===4?'angle':editPhase===5?'speed':'size'),
@@ -1042,7 +953,7 @@ function finishEditor(save){if(!editor)return;
  if(save){
    if(!ed.existing){bodies.push(b)}
    for(const item of ed.existing?ed.groupOriginal:[{b}]){
-    if(item.b.kind!=='ship')item.b.m=massFromRadius(item.b.r);
+    item.b.m=massFromRadius(item.b.r);
     item.b.trail=[item.b.p.clone()];updateTrail(item.b);
    }
  }else if(ed.existing){
@@ -1108,7 +1019,7 @@ canvas.addEventListener('contextmenu',e=>{
  menuBody=activeBody;
  menuPoint=point?point.clone():null;
  menuPointer={clientX:e.clientX,clientY:e.clientY};
- $('editPlanet').style.display=activeBody?'block':'none';$('shipEdit').style.display=activeBody?.kind==='ship'?'block':'none';document.querySelectorAll('#editSubmenu [data-edit-phase]').forEach(el=>el.style.display=activeBody?.kind==='ship'&&Number(el.dataset.editPhase)>1?'none':'block');
+ $('editPlanet').style.display=activeBody?'block':'none';
  $('copyPlanet').style.display=activeBody?'block':'none';
  $('deletePlanet').style.display=activeBody?'block':'none';
  $('pastePlanet').disabled=!copiedPlanet;
