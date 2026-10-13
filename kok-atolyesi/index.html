@@ -44,6 +44,7 @@ button{font:inherit;border:none;cursor:pointer}
 .factor.finished{opacity:.92}
 .expression.compact .factor{padding-left:0;padding-right:0;min-width:0}
 .expression.compact .inside,.expression.compact .outside-row{gap:0}
+.factor-group-space{display:inline-flex;align-items:baseline;gap:4px;visibility:hidden}
 .dot{color:#8a97ab;transition:opacity .13s ease}.dot.fade-out{opacity:0}
 .frac{display:inline-flex;flex-direction:column;align-items:center;min-width:44px;font-size:.76em;line-height:1.15}
 .frac .num{display:flex;align-items:center;justify-content:center;border-bottom:2.5px solid currentColor;padding:0 6px 4px;min-height:26px}
@@ -154,6 +155,7 @@ button{font:inherit;border:none;cursor:pointer}
   let nextSlotByPart = {num:0, den:0};
   let nextGroupId = 1;
   let pendingGroups = new Set();
+  let exitingGroups = new Set();
 
   function stageNoFromQuestion(n){
     if(n <= 5) return 1;
@@ -267,6 +269,7 @@ button{font:inherit;border:none;cursor:pointer}
     nextSlotByPart = {num:0, den:0};
     nextGroupId = 1;
     pendingGroups = new Set();
+    exitingGroups = new Set();
     stage.querySelectorAll('.bubble,.float-token,.burst').forEach(el => el.remove());
     $('counter').textContent = `Soru ${questionNo}`;
     $('level').textContent = displayLabel();
@@ -373,20 +376,62 @@ button{font:inherit;border:none;cursor:pointer}
     return btn;
   }
 
+  // Noktalar durum verisi değildir: yalnızca sahnede kalan matematiksel
+  // çarpanların komşuluğundan üretilir. Bekleyen balon TEK çarpandır.
   function appendBucket(parent, arr, showOne){
     if(arr.length === 0){
       if(showOne) parent.appendChild(document.createTextNode('1'));
       return;
     }
-    arr.forEach((tok, i) => {
-      if(i > 0 && !compactProduct){
+
+    const units = [];
+    const visited = new Set();
+    for(const tok of arr){
+      const gid = tok.extractGroupId;
+      if(gid && pendingGroups.has(gid)){
+        if(visited.has(gid)) continue;
+        visited.add(gid);
+        units.push({kind: exitingGroups.has(gid) ? 'departed' : 'bubble',
+          tokens: arr.filter(t => t.extractGroupId === gid)});
+      }else{
+        units.push({kind:'factor', tokens:[tok]});
+      }
+    }
+
+    let previousReal = false;
+    for(const unit of units){
+      const real = unit.kind !== 'departed';
+      if(real && previousReal && !compactProduct){
         const dot = document.createElement('span');
         dot.className = 'dot';
         dot.textContent = '·';
         parent.appendChild(dot);
       }
-      parent.appendChild(renderToken(tok));
-    });
+
+      if(unit.kind === 'factor'){
+        parent.appendChild(renderToken(unit.tokens[0]));
+      }else{
+        // Alanı koru: diğer sayılar balon çıkarken sıçramaz.
+        // Balonun kendisi animasyon katmanında gösteriliyor.
+        const anchor = document.createElement('span');
+        anchor.className = 'factor-group-space';
+        anchor.setAttribute('aria-hidden','true');
+        unit.tokens.forEach((tok,i) => {
+          if(i > 0){
+            const gap = document.createElement('span');
+            gap.className = 'dot';
+            gap.textContent = '·';
+            gap.style.visibility = 'hidden';
+            anchor.appendChild(gap);
+          }
+          const ghost = renderToken(tok);
+          ghost.style.visibility = 'hidden';
+          anchor.appendChild(ghost);
+        });
+        parent.appendChild(anchor);
+      }
+      if(real) previousReal = true;
+    }
   }
 
   function renderOutsidePart(parent, part){
@@ -680,17 +725,25 @@ button{font:inherit;border:none;cursor:pointer}
         bubble.onclick = () => {
           if(animating || session !== questionNo) return;
           animating = true;
-          // Çıkış başlar başlamaz seçili grubun hayalet çarpanlarını ve gereksiz noktaları söndür.
-          group.forEach(g => {
-            const el = insideEl.querySelector(`[data-id="${g.id}"]`);
-            if(el) el.style.visibility = 'hidden';
-          });
-          fadeOrphanProductDots();
+          // İçeride balonun yerini alan tek çarpanı kaldır.
+          // Noktaları yeniden türetmeden önce eski noktaları kısa fade-out ile söndür.
+          exitingGroups.add(tok.extractGroupId);
+          const region = current.den
+            ? insideEl.querySelector(tok.part === 'den' ? '.den' : '.num')
+            : insideEl;
+          if(region){
+            const dots = [...region.querySelectorAll('.dot')];
+            dots.forEach(dot => dot.classList.add('fade-out'));
+          }
+          setTimeout(() => {
+            if(session === questionNo) render();
+          }, 130);
           const assignedSlot = nextSlotByPart[tok.part]++;
           const target = getOutsideTarget(tok.part, assignedSlot);
           animateBubble(tokenText(tok), middle, target, tint, () => {
           if(session !== questionNo) return;
           pendingGroups.delete(tok.extractGroupId);
+          exitingGroups.delete(tok.extractGroupId);
         inner = inner.filter(t => !group.some(g => g.id === t.id));
         const outTok = token(tok.type, tok.base, 'out', tok.part, 1);
         outTok.slot = assignedSlot;
