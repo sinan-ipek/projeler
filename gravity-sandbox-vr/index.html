@@ -180,8 +180,6 @@ function pressMenu(controller,pad){
  }
  lastMenuPress.set(controller,pressed);
 }
-refreshRightMenu();
-
 const labels=['play','reset','mode','trails','near'];
 function refreshPanel(){
  ctx.clearRect(0,0,720,505);ctx.fillStyle='#15253aeF';ctx.fillRect(0,0,720,505);
@@ -454,7 +452,7 @@ renderer.setAnimationLoop(()=>{
  renderer.render(scene,camera);
 });
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-setup();syncButtons();$('status').textContent='Hazır · Quest 3 tarayıcısında ENTER VR düğmesini kullan';
+setup();syncButtons();refreshRightMenu();$('status').textContent='Hazır · Quest 3 tarayıcısında ENTER VR düğmesini kullan';
 if(!navigator.xr)$('warning').textContent='Bu tarayıcıda WebXR görünmüyor. Quest 3 Browser ile aç.';
 </script>
 </body>
