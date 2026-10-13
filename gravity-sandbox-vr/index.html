@@ -137,6 +137,12 @@ panel.position.set(-.5,1.7,-1.3);panel.renderOrder=20;scene.add(panel);
 let handMenuOpen=false;
 let rightController=null;
 const lastMenuPress=new Map();
+let leftController=null;
+function toggleHandMenu(){
+ handMenuOpen=!handMenuOpen;
+ updateHandMenu();
+ $('status').textContent=handMenuOpen?'Menü açık':'Menü kapalı';
+}
 const menuAnchorOffset=new THREE.Vector3(.10,.16,-.36);
 function updateHandMenu(){
  if(!renderer.xr.isPresenting){panel.visible=true;return}
@@ -159,7 +165,7 @@ function refreshPanel(){
   ctx.fillStyle='#ffffff';ctx.font='28px system-ui';ctx.fillText(names[i],x+20,y+54);
  }
  ctx.fillStyle='#99d6ff';ctx.font='bold 24px system-ui';ctx.fillText('Seçili: '+selectedBodies.size,395,65);
- ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v8 | Tetik: secim · Grip: tasima · Sag joystick bas: menu',15,460);
+ ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v9 | Sol MENU: panel · Tetik: sec · Grip: tasi',15,460);
  panelTexture.needsUpdate=true;
 }
 const raycaster=new THREE.Raycaster(),tempMatrix=new THREE.Matrix4();
@@ -315,13 +321,11 @@ function updateGrabsAndHover(dt){
    else if(before===0)next=THREE.MathUtils.degToRad(.7);
    coneAngles.set(controller,next);
   }
-  const pressed=!!pad?.buttons?.[3]?.pressed;
-  if(pressed&&!lastMenuPress.get(controller)&&controller===rightController){
-   handMenuOpen=!handMenuOpen;
-   updateHandMenu();
-   $('status').textContent=handMenuOpen?'Sağ kumanda menüsü açıldı':'Sağ kumanda menüsü kapandı';
-  }
-  lastMenuPress.set(controller,pressed);
+  // On Quest Touch left controllers the application menu is commonly button 4.
+  // WebXR may reserve this button; in that case it will not be reported here.
+  const menuPressed=controller===leftController&&!!(pad?.buttons?.[4]?.pressed||pad?.buttons?.[5]?.pressed);
+  if(menuPressed&&!lastMenuPress.get(controller))toggleHandMenu();
+  lastMenuPress.set(controller,menuPressed);
   const cone=coneVisuals[controllers.indexOf(controller)];
   if(cone){
    const thisAngle=coneAngles.get(controller)||0;
@@ -366,6 +370,7 @@ for(let i=0;i<2;i++){
  controller.addEventListener('connected',e=>{
   controllerInputs.set(controller,e.data);
   if(e.data.handedness==='right')rightController=controller;
+  if(e.data.handedness==='left')leftController=controller;
  });
  controller.addEventListener('disconnected',()=>{controllerInputs.delete(controller);releaseGrab(controller)});
  controller.addEventListener('selectstart',()=>{
@@ -398,7 +403,7 @@ for(let i=0;i<2;i++){
 }
 renderer.xr.addEventListener('sessionstart',()=>{
  handMenuOpen=false;
- $('status').textContent='v8 · Tetik: seçim · Sağ joystick bas: menüyü aç';
+ $('status').textContent='v9 · Sol Menü düğmesi: paneli aç/kapat';
 });
 renderer.xr.addEventListener('sessionend',()=>{
  grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;
