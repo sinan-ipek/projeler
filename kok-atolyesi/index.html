@@ -1114,6 +1114,8 @@ button{font:inherit;border:none;cursor:pointer}
       }else{
         outer=outer.filter(t=>t.incoming || !(t.type==='num' && t.base===1));
       }
+      compactOutsideProduct('num');
+      compactOutsideProduct('den');
       compactProduct=true;
       document.querySelector('.expression').classList.add('compact');
       phase='done';
@@ -1133,6 +1135,8 @@ button{font:inherit;border:none;cursor:pointer}
       return;
     }
     if(compactOutsideProduct()) return;
+    compactOutsideProduct('num');
+    compactOutsideProduct('den');
     compactProduct=true;
     document.querySelector('.expression').classList.add('compact');
     phase='done';render();setStatus('İşlem tamamlandı.');
