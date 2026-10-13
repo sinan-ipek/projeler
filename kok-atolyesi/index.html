@@ -44,7 +44,7 @@ button{font:inherit;border:none;cursor:pointer}
 .factor.finished{opacity:.92}
 .expression.compact .factor{padding-left:0;padding-right:0;min-width:0}
 .expression.compact .inside,.expression.compact .outside-row{gap:0}
-.factor-group-space{display:inline-flex;align-items:baseline;gap:4px;visibility:hidden}
+.factor-group-space{display:inline-flex;align-items:baseline;gap:4px;visibility:hidden;min-width:96px;justify-content:center;flex-shrink:0}
 .dot{color:#8a97ab;transition:opacity .13s ease}.dot.fade-out{opacity:0}
 .frac{display:inline-flex;flex-direction:column;align-items:center;min-width:44px;font-size:.76em;line-height:1.15}
 .frac .num{display:flex;align-items:center;justify-content:center;border-bottom:2.5px solid currentColor;padding:0 6px 4px;min-height:26px}
@@ -418,6 +418,7 @@ button{font:inherit;border:none;cursor:pointer}
         // Balonun kendisi animasyon katmanında gösteriliyor.
         const anchor = document.createElement('span');
         anchor.className = 'factor-group-space';
+        anchor.dataset.groupId = String(unit.tokens[0].extractGroupId);
         anchor.setAttribute('aria-hidden','true');
         unit.tokens.forEach((tok,i) => {
           if(i > 0){
@@ -559,7 +560,18 @@ button{font:inherit;border:none;cursor:pointer}
       document.querySelector('.radical').style.visibility='';
       renderZone('in', insideEl);
     }
-    requestAnimationFrame(alignFormula);
+    requestAnimationFrame(() => {
+      alignFormula();
+      // Her balon, kendi grubunun yer tutucusunun tam merkezinde kalır.
+      stage.querySelectorAll('.bubble.waiting[data-group-id]').forEach(bubble => {
+        const anchor=insideEl.querySelector(`.factor-group-space[data-group-id="${bubble.dataset.groupId}"]`);
+        if(!anchor) return;
+        const rect=anchor.getBoundingClientRect();
+        const stageRect=stage.getBoundingClientRect();
+        bubble.style.left=(rect.left-stageRect.left+rect.width/2)+'px';
+        bubble.style.top=(rect.top-stageRect.top+rect.height/2)+'px';
+      });
+    });
   }
 
   function handleToken(tok){
@@ -742,6 +754,7 @@ button{font:inherit;border:none;cursor:pointer}
         const bubble = document.createElement('button');
         bubble.type = 'button';
         bubble.className = 'bubble waiting';
+        bubble.dataset.groupId = String(tok.extractGroupId);
         bubble.innerHTML = tokenText(tok);
         bubble.setAttribute('aria-label', 'Kök dışına çıkarmak için tıkla');
         bubble.title = 'Dışarı çıkar';
@@ -768,9 +781,10 @@ button{font:inherit;border:none;cursor:pointer}
           setTimeout(() => {
             if(session === questionNo) render();
           }, 130);
+          const start = centerOf(bubble);
           const assignedSlot = nextSlotByPart[tok.part]++;
           const target = getOutsideTarget(tok.part, assignedSlot);
-          animateBubble(tokenText(tok), middle, target, tint, () => {
+          animateBubble(tokenText(tok), start, target, tint, () => {
           if(session !== questionNo) return;
           pendingGroups.delete(tok.extractGroupId);
           exitingGroups.delete(tok.extractGroupId);
