@@ -143,14 +143,14 @@ function toggleHandMenu(){
  updateHandMenu();
  $('status').textContent=handMenuOpen?'Menü açık':'Menü kapalı';
 }
-const menuAnchorOffset=new THREE.Vector3(.10,.16,-.36);
+const menuAnchorOffset=new THREE.Vector3(-.14,.15,-.38);
 function updateHandMenu(){
  if(!renderer.xr.isPresenting){panel.visible=true;return}
- panel.visible=handMenuOpen&&!!rightController;
+ panel.visible=handMenuOpen&&!!leftController;
  if(!panel.visible)return;
- rightController.updateWorldMatrix(true,false);
- panel.position.copy(menuAnchorOffset).applyMatrix4(rightController.matrixWorld);
- panel.quaternion.copy(renderer.xr.getCamera().getWorldQuaternion(new THREE.Quaternion()));
+ leftController.updateWorldMatrix(true,false);
+ panel.position.copy(menuAnchorOffset).applyMatrix4(leftController.matrixWorld);
+ panel.quaternion.setFromRotationMatrix(new THREE.Matrix4().extractRotation(leftController.matrixWorld));
  panel.updateMatrixWorld(true);
 }
 
@@ -165,7 +165,7 @@ function refreshPanel(){
   ctx.fillStyle='#ffffff';ctx.font='28px system-ui';ctx.fillText(names[i],x+20,y+54);
  }
  ctx.fillStyle='#99d6ff';ctx.font='bold 24px system-ui';ctx.fillText('Seçili: '+selectedBodies.size,395,65);
- ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v9 | Sol MENU: panel · Tetik: sec · Grip: tasi',15,460);
+ ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v9.1 | Sol X: menu · Sol kumanda ile doner',15,460);
  panelTexture.needsUpdate=true;
 }
 const raycaster=new THREE.Raycaster(),tempMatrix=new THREE.Matrix4();
@@ -323,7 +323,7 @@ function updateGrabsAndHover(dt){
   }
   // On Quest Touch left controllers the application menu is commonly button 4.
   // WebXR may reserve this button; in that case it will not be reported here.
-  const menuPressed=controller===leftController&&!!(pad?.buttons?.[4]?.pressed||pad?.buttons?.[5]?.pressed);
+  const menuPressed=controller===leftController&&!!pad?.buttons?.[4]?.pressed; // X only; hamburger may be hidden by WebXR
   if(menuPressed&&!lastMenuPress.get(controller))toggleHandMenu();
   lastMenuPress.set(controller,menuPressed);
   const cone=coneVisuals[controllers.indexOf(controller)];
@@ -403,7 +403,7 @@ for(let i=0;i<2;i++){
 }
 renderer.xr.addEventListener('sessionstart',()=>{
  handMenuOpen=false;
- $('status').textContent='v9 · Sol Menü düğmesi: paneli aç/kapat';
+ $('status').textContent='v9.1 · Sol X: menüyü aç/kapat';
 });
 renderer.xr.addEventListener('sessionend',()=>{
  grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;
