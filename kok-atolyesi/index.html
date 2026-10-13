@@ -52,7 +52,7 @@ button{font:inherit;border:none;cursor:pointer}
 .overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .float-token,.bubble,.burst{position:absolute;pointer-events:none;z-index:20}
 .float-token{transform:translate(-50%,-50%);font-size:clamp(28px,4.3vw,52px);font-weight:800;color:var(--extract);transition:left .44s cubic-bezier(.2,.75,.3,1), top .44s cubic-bezier(.2,.75,.3,1), transform .28s ease, opacity .28s ease}
-.bubble{transform:translate(-50%,-50%);min-width:54px;min-height:54px;padding:6px 12px;border-radius:999px;border:3px solid var(--extract);background:rgba(255,255,255,.96);display:flex;align-items:center;justify-content:center;font-size:clamp(28px,4.3vw,52px);font-weight:800;color:var(--extract);box-shadow:none;opacity:0;transition:opacity .32s ease}
+.bubble.waiting{pointer-events:auto;cursor:pointer;opacity:1!important;transition:opacity .25s ease}.bubble.waiting:hover{filter:brightness(1.07)}.bubble{transform:translate(-50%,-50%);min-width:54px;min-height:54px;padding:6px 12px;border-radius:999px;border:3px solid var(--extract);background:rgba(255,255,255,.96);display:flex;align-items:center;justify-content:center;font-size:clamp(28px,4.3vw,52px);font-weight:800;color:var(--extract);box-shadow:none;opacity:0;transition:opacity .32s ease}
 .burst{width:42px;height:42px;transform:translate(-50%,-50%);opacity:1;animation:fadeBurst .42s ease forwards}
 .burst i{position:absolute;left:50%;top:50%;width:2px;height:11px;background:var(--extract);transform-origin:center -10px;border-radius:4px}
 @keyframes fadeBurst{from{opacity:1;transform:translate(-50%,-50%) scale(.7)}to{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}
@@ -551,13 +551,11 @@ button{font:inherit;border:none;cursor:pointer}
     overlay.replaceChildren();
   }
 
-  function animateBubble(label, start, target, color, done){
+  function animateBubble(label, start, target, color, done, bubble){
     clearOverlay();
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble';
-    bubble.innerHTML = label;
-    if(color){ bubble.style.color = color; bubble.style.borderColor = color; }
-    stage.appendChild(bubble);
+    bubble.classList.remove('waiting');
+    bubble.style.pointerEvents = 'none';
+    bubble.onclick = null;
     const box = stage.getBoundingClientRect();
     overlay.setAttribute('viewBox', `0 0 ${box.width} ${box.height}`);
 
@@ -643,7 +641,18 @@ button{font:inherit;border:none;cursor:pointer}
         combined.remove();
         const assignedSlot = nextSlotByPart[tok.part]++;
         const target = getOutsideTarget(tok.part, assignedSlot);
-        animateBubble(tokenText(tok), middle, target, tint, () => {
+        const bubble = document.createElement('button');
+        bubble.type = 'button';
+        bubble.className = 'bubble waiting';
+        bubble.innerHTML = tokenText(tok);
+        bubble.setAttribute('aria-label', 'Kök dışına çıkarmak için tıkla');
+        bubble.title = 'Dışarı çıkar';
+        if(tint){ bubble.style.color = tint; bubble.style.borderColor = tint; }
+        bubble.style.left = middle.x + 'px';
+        bubble.style.top = middle.y + 'px';
+        stage.appendChild(bubble);
+        setStatus('Balona tıkla.');
+        bubble.onclick = () => animateBubble(tokenText(tok), middle, target, tint, () => {
         inner = inner.filter(t => !group.some(g => g.id === t.id));
         const outTok = token(tok.type, tok.base, 'out', tok.part, 1);
         outTok.slot = assignedSlot;
