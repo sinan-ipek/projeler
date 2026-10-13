@@ -504,6 +504,7 @@ button{font:inherit;border:none;cursor:pointer}
         den.className = 'den';
         renderOutsidePart(num, 'num');
         renderOutsidePart(den, 'den');
+        if(!num.textContent.trim() && den.textContent.trim() && phase!=='extract') num.textContent='1';
         frac.append(num, den);
         el.appendChild(frac);
       } else {
@@ -846,7 +847,7 @@ button{font:inherit;border:none;cursor:pointer}
     if(n/g!==1 || (d/g===1 && vars.length===0)) result.push(token('num',n/g,'in','num'));
     result.push(...vars);
     if(d/g!==1) result.push(token('num',d/g,'in','den'));
-    const changed=g>1 || (d===1 && dens.length>0) || (nums.length>1) || (dens.length>1);
+    const changed=g>1 || (d===1 && dens.length>0) || (nums.length>1) || (dens.length>1) || inner.length===0;
     if(changed) inner=result;
     return changed;
   }
@@ -860,6 +861,7 @@ button{font:inherit;border:none;cursor:pointer}
   function compactAndFinish(){
     if(rootUnitStage===1){
       rootUnitStage=2; // 1 çarpmada etkisiz; kök sembolü de kalkar.
+      if(outer.length===0) outer.push(token('num',1,'out','num'));
       render(); phase='done';setStatus('İşlem tamamlandı.');return;
     }
     if(normalizeFraction()){
