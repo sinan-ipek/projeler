@@ -326,7 +326,10 @@ button{font:inherit;border:none;cursor:pointer}
     const pos=inner.findIndex(t=>t.id===tok.id);
     if(pos<0) return;
     const parts=tok.type==='num'
-      ?primeFactors(tok.base).map(n=>token('num',n,'in',tok.part))
+      ?(current.den && Number.isInteger(Math.round(tok.base**(1/current.d))) &&
+          Math.round(tok.base**(1/current.d))**current.d===tok.base
+          ?Array(current.d).fill(Math.round(tok.base**(1/current.d)))
+          :primeFactors(tok.base)).map(n=>token('num',n,'in',tok.part))
       :Array.from({length:tok.exp},()=>token('var',tok.base,'in',tok.part));
     inner.splice(pos,1,...parts);
     buildExtractionPlan();
@@ -756,7 +759,7 @@ button{font:inherit;border:none;cursor:pointer}
     overlay.replaceChildren();
   }
 
-  function animateBubble(label, start, target, color, done, bubble){
+  function animateBubble(label, start, target, color, done, bubble, part){
     clearOverlay();
     bubble.classList.remove('waiting');
     bubble.style.pointerEvents = 'none';
@@ -766,14 +769,15 @@ button{font:inherit;border:none;cursor:pointer}
 
     const rootRect = document.querySelector('.rootmark').getBoundingClientRect();
     const stageRect = stage.getBoundingClientRect();
-    const rootBottom = rootRect.bottom - stageRect.top;
-    const rootLeft = rootRect.left - stageRect.left;
-    const underY = rootBottom + 12;
-    const turnX = rootLeft + 24;
-
-    // Balon kökün altından geçen hızlı ve tek parçalı bir yay izler.
-    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-    path.setAttribute('d', `M ${start.x} ${start.y} C ${start.x-8} ${underY}, ${turnX+28} ${underY}, ${turnX} ${underY} S ${target.x+16} ${target.y+4}, ${target.x} ${target.y}`);
+    const rootLeft=rootRect.left-stageRect.left;
+    const rootTop=rootRect.top-stageRect.top;
+    const rootBottom=rootRect.bottom-stageRect.top;
+    const turnX=rootLeft+24;
+    const fromNorth=current.den && part==='num';
+    const viaY=fromNorth?rootTop-30:rootBottom+14;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',
+      `M ${start.x} ${start.y} C ${start.x-12} ${viaY}, ${turnX+28} ${viaY}, ${turnX} ${viaY} S ${target.x+16} ${target.y+4}, ${target.x} ${target.y}`);
     path.setAttribute('fill','none');
     overlay.appendChild(path);
     const len = path.getTotalLength();
@@ -923,7 +927,7 @@ button{font:inherit;border:none;cursor:pointer}
           if(!anyMergeable()) readyToCompact();
           else render();
         }
-            }, bubble);
+            }, bubble, tok.part);
           });
         };
       }, 340);
