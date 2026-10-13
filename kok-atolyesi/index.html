@@ -284,7 +284,8 @@ button{font:inherit;border:none;cursor:pointer}
     $('degree').textContent = current.d;
     $('degree').classList.toggle('implicit', current.d === 2);
     $('degree').setAttribute('aria-label', `${current.d}. dereceden kök`);
-    setStatus('Kökün içindeki ifadeye bas.');
+    inner=originalInsideTokens();
+    setStatus('Açmak istediğin çarpana tıkla.');
     render();
   }
 
@@ -295,22 +296,32 @@ button{font:inherit;border:none;cursor:pointer}
     return arr;
   }
 
-  function factorizeCurrent(){
-    inner = primeFactors(current.n).map(n => token('num', n, 'in', 'num'));
-    if(current.den) inner.push(...primeFactors(current.den).map(n => token('num', n, 'in', 'den')));
-    for(const [v, exp] of Object.entries(current.vars || {})){
-      for(let i=0;i<exp;i++) inner.push(token('var', v, 'in', 'num'));
+  function canExpand(t){
+    return t.side==='in' && ((t.type==='num' && primeFactors(t.base).length>1) ||
+      (t.type==='var' && t.exp>1));
+  }
+  function expandOnly(tok){
+    if(!canExpand(tok)) return;
+    const pos=inner.findIndex(t=>t.id===tok.id);
+    if(pos<0) return;
+    const parts=tok.type==='num'
+      ?primeFactors(tok.base).map(n=>token('num',n,'in',tok.part))
+      :Array.from({length:tok.exp},()=>token('var',tok.base,'in',tok.part));
+    inner.splice(pos,1,...parts);
+    if(inner.some(canExpand)){
+      render();
+      setStatus('Diğer çarpanları da tek tek açabilirsin.');
+      return;
     }
     buildExtractionPlan();
-    phase = anyExtractable() ? 'extract' : 'merge';
-    setStatus(phase === 'extract' ? 'Renkli grupları dışarı çıkar.' : 'Bir çarpana bas; bulunduğu yerdeki çarpanlar toparlansın.');
+    phase=anyExtractable()?'extract':'merge';
     render();
     reserveHorizontalSpace();
-    if(phase === 'merge' && !anyMergeable()) readyToCompact();
+    if(phase==='merge' && !anyMergeable()) readyToCompact();
   }
 
   function listForRender(side){
-    if(phase === 'seed') return side === 'in' ? originalInsideTokens() : [];
+    if(phase === 'seed') return side === 'in' ? inner : [];
     return side === 'in' ? inner : outer;
   }
 
@@ -352,7 +363,7 @@ button{font:inherit;border:none;cursor:pointer}
 
   function tokenClickable(tok){
     if(animating) return false;
-    if(phase === 'seed') return tok.side === 'in';
+    if(phase === 'seed') return canExpand(tok);
     if(phase === 'extract') return isExtractable(tok);
     if(phase === 'merge') return bucketHasMergeable(tok.side, tok.part);
     if(phase === 'format') return true;
@@ -601,7 +612,7 @@ button{font:inherit;border:none;cursor:pointer}
 
   function handleToken(tok){
     if(animating) return;
-    if(phase === 'seed') factorizeCurrent();
+    if(phase === 'seed') expandOnly(tok);
     else if(phase === 'extract' && isExtractable(tok)) extractGroup(tok);
     else if(phase === 'merge') simplifyBucket(tok.side, tok.part);
     else if(phase === 'format') compactAndFinish();
