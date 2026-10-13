@@ -220,6 +220,14 @@ button{font:inherit;border:none;cursor:pointer}
 
     const buckets = {};
     inner.forEach(t => {
+      if(t.type==='var' && t.exp===current.d && !t.extractGroupId){
+        const gid=nextGroupId++;
+        t.extractGroupId=gid;
+        t.extractColor=palette[(gid-1)%palette.length];
+        plannedSlots[t.part]=Math.max(plannedSlots[t.part],nextSlotByPart[t.part]+1);
+      }
+    });
+    inner.forEach(t => {
       if(t.exp !== 1 || t.extractGroupId) return;
       const k = kindKey(t);
       (buckets[k] ||= []).push(t);
@@ -301,11 +309,9 @@ button{font:inherit;border:none;cursor:pointer}
     $('degree').classList.toggle('implicit', current.d === 2);
     $('degree').setAttribute('aria-label', `${current.d}. dereceden kök`);
     inner=originalInsideTokens();
-    if(!inner.some(canExpand)){
-      buildExtractionPlan();
-      phase=(anyExtractable() || inner.some(canExpand))?'extract':'merge';
-      if(phase==='merge' && !anyMergeable() && !fractionCanReduce()) phase='format';
-    }
+    buildExtractionPlan();
+    phase=anyExtractable()?'extract':inner.some(canExpand)?'seed':'merge';
+    if(phase==='merge' && !anyMergeable() && !fractionCanReduce()) phase='format';
     setStatus('Açmak istediğin çarpana tıkla.');
     render();
   }
@@ -319,7 +325,7 @@ button{font:inherit;border:none;cursor:pointer}
 
   function canExpand(t){
     return t.side==='in' && ((t.type==='num' && primeFactors(t.base).length>1) ||
-      (t.type==='var' && t.exp>1));
+      (t.type==='var' && t.exp>current.d));
   }
   function expandOnly(tok){
     if(!canExpand(tok)) return;
@@ -330,10 +336,11 @@ button{font:inherit;border:none;cursor:pointer}
           Math.round(tok.base**(1/current.d))**current.d===tok.base
           ?Array(current.d).fill(Math.round(tok.base**(1/current.d)))
           :primeFactors(tok.base)).map(n=>token('num',n,'in',tok.part))
-      :Array.from({length:tok.exp},()=>token('var',tok.base,'in',tok.part));
+      :Array.from({length:Math.floor(tok.exp/current.d)},()=>token('var',tok.base,'in',tok.part,current.d))
+        .concat(tok.exp%current.d ? [token('var',tok.base,'in',tok.part,tok.exp%current.d)] : []);
     inner.splice(pos,1,...parts);
     buildExtractionPlan();
-    phase=anyExtractable()?'extract':'merge';
+    phase=(anyExtractable()||inner.some(canExpand))?'extract':'merge';
     render();
     reserveHorizontalSpace();
     if(phase==='merge' && !anyMergeable()) readyToCompact();
@@ -350,12 +357,12 @@ button{font:inherit;border:none;cursor:pointer}
   }
 
   function isExtractable(tok){
-    if(phase !== 'extract' || tok.side !== 'in') return false;
-    return !!tok.extractGroupId && !pendingGroups.has(tok.extractGroupId) && groupFor(tok).length === current.d;
+    if(!['extract','seed'].includes(phase) || tok.side !== 'in') return false;
+    return !!tok.extractGroupId && !pendingGroups.has(tok.extractGroupId) && (groupFor(tok).length === current.d || (tok.type==='var' && tok.exp===current.d && groupFor(tok).length===1));
   }
 
   function anyExtractable(){
-    return inner.some(t => t.side === 'in' && !!t.extractGroupId && !pendingGroups.has(t.extractGroupId) && groupFor(t).length === current.d);
+    return inner.some(t => isExtractable(t));
   }
 
   function bucketTokens(side, part){
@@ -382,7 +389,7 @@ button{font:inherit;border:none;cursor:pointer}
 
   function tokenClickable(tok){
     if(animating) return false;
-    if(phase === 'seed') return canExpand(tok);
+    if(phase === 'seed') return canExpand(tok) || isExtractable(tok);
     if(phase === 'extract') return isExtractable(tok) || canExpand(tok);
     if(phase === 'merge') return bucketHasMergeable(tok.side, tok.part) || (tok.side==='in' && (fractionCanReduce() || rootIsOne())) || (tok.side==='out' && hasOutsideLiteralProduct(tok.part));
     if(phase === 'format') return true;
@@ -734,7 +741,8 @@ button{font:inherit;border:none;cursor:pointer}
 
   function handleToken(tok){
     if(animating) return;
-    if(phase === 'seed') expandOnly(tok);
+    if(phase === 'seed' && isExtractable(tok)) extractGroup(tok);
+    else if(phase === 'seed') expandOnly(tok);
     else if(phase === 'extract' && isExtractable(tok)) extractGroup(tok);
     else if(phase === 'extract' && canExpand(tok)) expandOnly(tok);
     else if(phase === 'merge'){
@@ -884,9 +892,15 @@ button{font:inherit;border:none;cursor:pointer}
     setTimeout(() => b.remove(), 420);
   }
 
+  function packageLabel(group){
+    if(!group.length) return '';
+    const t=group[0];
+    return String(t.base)+'<sup style="font-size:.56em">'+current.d+'</sup>';
+  }
   function extractGroup(tok){
+
     const group = groupFor(tok);
-    if(group.length !== current.d) return;
+    if(group.length !== current.d && !(group.length===1 && tok.type==='var' && tok.exp===current.d)) return;
     animating = true;
     const session = questionNo;
     pendingGroups.add(tok.extractGroupId);
@@ -898,6 +912,7 @@ button{font:inherit;border:none;cursor:pointer}
     const points = nodes.map(centerOf);
     const middle = average(points);
     const tint = colorOf(tok);
+    const packageHtml=packageLabel(group);
     const clones = nodes.map((node,i) => makeFloatClone(node, points[i], tint));
     nodes.forEach(node => node.style.opacity = '0');
     fadeInternalDots(nodes);
@@ -914,7 +929,7 @@ button{font:inherit;border:none;cursor:pointer}
       if(session !== questionNo) return;
       clones.forEach(c => c.remove());
       const combined = makeFloatClone(nodes[0], middle, tint);
-      combined.innerHTML = tokenText(tok);
+      combined.innerHTML = packageHtml;
       combined.style.transition = 'none';
       combined.style.transform = 'translate(-50%,-50%)';
       setTimeout(() => {
@@ -924,7 +939,7 @@ button{font:inherit;border:none;cursor:pointer}
         bubble.type = 'button';
         bubble.className = 'bubble waiting';
         bubble.dataset.groupId = String(tok.extractGroupId);
-        bubble.innerHTML = tokenText(tok);
+        bubble.innerHTML = packageHtml;
         bubble.setAttribute('aria-label', 'Kök dışına çıkarmak için tıkla');
         bubble.title = 'Dışarı çıkar';
         if(tint){ bubble.style.color = tint; bubble.style.borderColor = tint; }
@@ -969,7 +984,7 @@ button{font:inherit;border:none;cursor:pointer}
             }else{
               target=getOutsideTarget(tok.part,assignedSlot);
             }
-            animateBubble(tokenText(tok), start, target, tint, () => {
+            animateBubble(packageHtml, start, target, tint, () => {
           if(session !== questionNo) return;
           pendingGroups.delete(tok.extractGroupId);
           exitingGroups.delete(tok.extractGroupId);
