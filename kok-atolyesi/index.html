@@ -46,7 +46,7 @@ button{font:inherit;border:none;cursor:pointer}
 .expression.compact .inside,.expression.compact .outside-row{gap:0}
 .factor-group-space{display:inline-flex;align-items:baseline;gap:4px;visibility:hidden;min-width:96px;justify-content:center;flex-shrink:0}
 .dot{color:#8a97ab;transition:opacity .13s ease}.dot.fade-out{opacity:0}
-.frac{display:inline-flex;flex-direction:column;align-items:center;min-width:44px;font-size:.76em;line-height:1.15}
+.fraction-action{cursor:pointer}.fraction-action:hover .num{border-bottom-color:#2f64d6}.frac{display:inline-flex;flex-direction:column;align-items:center;min-width:44px;font-size:.76em;line-height:1.15}
 .frac .num{display:flex;align-items:center;justify-content:center;border-bottom:2.5px solid currentColor;padding:0 6px 4px;min-height:26px}
 .frac .den{display:flex;align-items:center;justify-content:center;padding:4px 6px 0;min-height:26px}
 .outside .frac{position:relative}.outside .frac .num{border-bottom-color:transparent}.outside .frac .num{transition:transform .3s cubic-bezier(.25,.1,.25,1)}.outside .frac .num{transform:translateY(-5px)}.outside .frac .num::after{content:'';position:absolute;left:0;right:0;bottom:-2.5px;height:2.5px;background:currentColor;transform-origin:center;animation:outsideFractionBar .42s ease-out both}@keyframes outsideFractionBar{from{transform:scaleX(0);opacity:0}to{transform:scaleX(1);opacity:1}}
@@ -365,7 +365,7 @@ button{font:inherit;border:none;cursor:pointer}
     if(animating) return false;
     if(phase === 'seed') return canExpand(tok);
     if(phase === 'extract') return isExtractable(tok);
-    if(phase === 'merge') return bucketHasMergeable(tok.side, tok.part);
+    if(phase === 'merge') return bucketHasMergeable(tok.side, tok.part) || (tok.side==='in' && fractionCanReduce());
     if(phase === 'format') return true;
     return false;
   }
@@ -541,6 +541,13 @@ button{font:inherit;border:none;cursor:pointer}
       appendBucket(num, arr.filter(t => t.part === 'num'), side === 'in' || arr.length > 0);
       appendBucket(den, arr.filter(t => t.part === 'den'), true);
       frac.append(num, den);
+      if(phase==='merge' && fractionCanReduce()){
+        frac.classList.add('fraction-action');
+        frac.title='Kesri sadeleştir';
+        frac.addEventListener('click',e=>{
+          if(!animating){e.stopPropagation();reduceInnerFraction();}
+        });
+      }
       el.appendChild(frac);
     } else {
       appendBucket(el, arr.filter(t => t.part === 'num'), side === 'in');
@@ -614,7 +621,10 @@ button{font:inherit;border:none;cursor:pointer}
     if(animating) return;
     if(phase === 'seed') expandOnly(tok);
     else if(phase === 'extract' && isExtractable(tok)) extractGroup(tok);
-    else if(phase === 'merge') simplifyBucket(tok.side, tok.part);
+    else if(phase === 'merge'){
+      if(tok.side==='in' && reduceInnerFraction()) return;
+      simplifyBucket(tok.side,tok.part);
+    }
     else if(phase === 'format') compactAndFinish();
   }
 
@@ -887,7 +897,7 @@ button{font:inherit;border:none;cursor:pointer}
 
     render();
 
-    if(anyMergeable()) setStatus('Bir çarpana daha bas.');
+    if(anyMergeable() || fractionCanReduce()) setStatus('Bir çarpana daha bas.');
     else readyToCompact();
   }
 
@@ -910,6 +920,19 @@ button{font:inherit;border:none;cursor:pointer}
     if(!changed) return false;
     inner=result;
     insideFractionCollapsed=d/g===1;
+    return true;
+  }
+  function fractionCanReduce(){
+    if(!current.den || insideFractionCollapsed || phase==='extract' || phase==='seed') return false;
+    const n=inner.filter(t=>t.type==='num'&&t.part==='num').reduce((v,t)=>v*t.base,1);
+    const d=inner.filter(t=>t.type==='num'&&t.part==='den').reduce((v,t)=>v*t.base,1);
+    return gcd(n,d)>1 || !inner.some(t=>t.part==='den');
+  }
+  function reduceInnerFraction(){
+    if(!fractionCanReduce() || !normalizeFraction()) return false;
+    if(phase==='merge' && !anyMergeable()) phase='format';
+    render();
+    setStatus('Kesir sadeleşti. Devam etmek için tıkla.');
     return true;
   }
   function rootIsOne(){return inner.length===1 && inner[0].type==='num' && inner[0].base===1;}
