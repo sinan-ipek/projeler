@@ -544,6 +544,22 @@ button{font:inherit;border:none;cursor:pointer}
     });
   }
 
+  // Balon dışarı çıkarken yalnızca iki gerçek, görünür çarpanı bağlayan noktalar kalır.
+  function fadeOrphanProductDots(){
+    insideEl.querySelectorAll('.num, .den, .inside').forEach(parent => {
+      const children = [...parent.children];
+      // Disabled factors are still numbers; visibility alone determines presence.
+      const isPresent = el => el && el.classList?.contains('factor') &&
+        el.style.visibility !== 'hidden' && el.style.opacity !== '0';
+      children.forEach((dot, i) => {
+        if(!dot.classList?.contains('dot')) return;
+        const left = children.slice(0,i).reverse().find(el => el.classList?.contains('factor'));
+        const right = children.slice(i+1).find(el => el.classList?.contains('factor'));
+        if(!isPresent(left) || !isPresent(right)) dot.classList.add('fade-out');
+      });
+    });
+  }
+
   function getOutsideTarget(part, slot){
     const stageRect = stage.getBoundingClientRect();
     const slotEl = outsideEl.querySelector(`.outside-slot[data-part="${part}"][data-slot="${slot}"]`);
@@ -663,6 +679,12 @@ button{font:inherit;border:none;cursor:pointer}
         bubble.onclick = () => {
           if(animating || session !== questionNo) return;
           animating = true;
+          // Çıkış başlar başlamaz seçili grubun hayalet çarpanlarını ve gereksiz noktaları söndür.
+          group.forEach(g => {
+            const el = insideEl.querySelector(`[data-id="${g.id}"]`);
+            if(el) el.style.visibility = 'hidden';
+          });
+          fadeOrphanProductDots();
           const assignedSlot = nextSlotByPart[tok.part]++;
           const target = getOutsideTarget(tok.part, assignedSlot);
           animateBubble(tokenText(tok), middle, target, tint, () => {
