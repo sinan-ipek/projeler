@@ -862,7 +862,7 @@ button{font:inherit;border:none;cursor:pointer}
 
   function gcd(a,b){while(b){[a,b]=[b,a%b]}return a||1;}
   function normalizeFraction(){
-    if(!current.den) return false;
+    if(!current.den || insideFractionCollapsed) return false;
     const nums=inner.filter(t=>t.type==='num' && t.part==='num');
     const dens=inner.filter(t=>t.type==='num' && t.part==='den');
     const n=nums.reduce((p,t)=>p*t.base,1);
@@ -870,12 +870,16 @@ button{font:inherit;border:none;cursor:pointer}
     const g=gcd(n,d);
     const vars=inner.filter(t=>t.type==='var');
     const result=[];
-    if(n/g!==1 || (d/g===1 && vars.length===0)) result.push(token('num',n/g,'in','num'));
+    if(n/g!==1 || (d/g===1 && vars.length===0)){
+      result.push(token('num',n/g,'in','num'));
+    }
     result.push(...vars);
     if(d/g!==1) result.push(token('num',d/g,'in','den'));
-    const changed=g>1 || (d===1 && dens.length>0) || (nums.length>1) || (dens.length>1) || inner.length===0;
-    if(changed) inner=result;
-    return changed;
+    const changed=g>1 || dens.length===0 || nums.length>1 || dens.length>1;
+    if(!changed) return false;
+    inner=result;
+    insideFractionCollapsed=d/g===1;
+    return true;
   }
   function rootIsOne(){return inner.length===1 && inner[0].type==='num' && inner[0].base===1;}
   function readyToCompact(){
