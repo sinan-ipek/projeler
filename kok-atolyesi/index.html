@@ -285,6 +285,11 @@ button{font:inherit;border:none;cursor:pointer}
     $('degree').classList.toggle('implicit', current.d === 2);
     $('degree').setAttribute('aria-label', `${current.d}. dereceden kök`);
     inner=originalInsideTokens();
+    if(!inner.some(canExpand)){
+      buildExtractionPlan();
+      phase=anyExtractable()?'extract':'merge';
+      if(phase==='merge' && !anyMergeable() && !fractionCanReduce()) phase='format';
+    }
     setStatus('Açmak istediğin çarpana tıkla.');
     render();
   }
