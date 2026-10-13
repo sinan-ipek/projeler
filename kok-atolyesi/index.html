@@ -384,8 +384,10 @@ button{font:inherit;border:none;cursor:pointer}
     if(animating) return false;
     if(phase === 'seed') return canExpand(tok);
     if(phase === 'extract') return isExtractable(tok) || canExpand(tok);
-    if(phase === 'merge') return bucketHasMergeable(tok.side, tok.part) || (tok.side==='in' && fractionCanReduce()) || (tok.side==='out' && hasOutsideLiteralProduct(tok.part));
+    if(phase === 'merge') return bucketHasMergeable(tok.side, tok.part) || (tok.side==='in' && (fractionCanReduce() || rootIsOne())) || (tok.side==='out' && hasOutsideLiteralProduct(tok.part));
     if(phase === 'format') return true;
+    if(phase === 'unit') return tok.side==='in' && tok.type==='num' && tok.base===1;
+    if(phase === 'done' && rootUnitStage===0 && rootIsOne()) return tok.side==='in';
     return false;
   }
 
@@ -706,11 +708,14 @@ button{font:inherit;border:none;cursor:pointer}
     else if(phase === 'extract' && isExtractable(tok)) extractGroup(tok);
     else if(phase === 'extract' && canExpand(tok)) expandOnly(tok);
     else if(phase === 'merge'){
+      if(tok.side==='in' && rootIsOne() && advanceUnitRoot()) return;
       if(tok.side==='out' && compactOutsideProduct(tok.part)) return;
       if(tok.side==='in' && reduceInnerFraction()) return;
       simplifyBucket(tok.side,tok.part);
     }
     else if(phase === 'format') compactAndFinish();
+    else if(phase === 'unit') advanceUnitRoot();
+    else if(phase === 'done' && rootUnitStage===0 && rootIsOne()) advanceUnitRoot();
   }
 
   function centerOf(el){
@@ -1089,31 +1094,45 @@ button{font:inherit;border:none;cursor:pointer}
     return true;
   }
 
-  function compactAndFinish(){
-    if(compactOutsideProduct()) return;
+  function hasActualOutsideFactors(){
+    return outer.some(t=>!t.incoming && !(t.type==='num' && t.base===1));
+  }
+  function advanceUnitRoot(){
+    if(!rootIsOne() && rootUnitStage===0) return false;
+    if(rootUnitStage===0){
+      rootUnitStage=1;
+      phase='unit';
+      render();
+      setStatus('Kök 1 oldu. Bir kez daha 1’e tıkla.');
+      return true;
+    }
     if(rootUnitStage===1){
-      // Kökten gelen 1 kaybolurken dışarıdaki bütün çarpımlar
-      // aynı son yazım aşamasında bitişik cebirsel gösterime döner.
       rootUnitStage=2;
-      if(outer.length===0) outer.push(token('num',1,'out','num'));
+      if(!hasActualOutsideFactors()){
+        outer=outer.filter(t=>t.incoming);
+        outer.push(token('num',1,'out','num'));
+      }else{
+        outer=outer.filter(t=>t.incoming || !(t.type==='num' && t.base===1));
+      }
       compactProduct=true;
       document.querySelector('.expression').classList.add('compact');
       phase='done';
       render();
       setStatus('İşlem tamamlandı.');
-      return;
+      return true;
     }
+    return false;
+  }
+
+  function compactAndFinish(){
+    // Öncelik matematiksel değerindir; yazım biçimi kökün 1 olmasını engellemez.
+    if(advanceUnitRoot())return;
     if(normalizeFraction()){
       render();
       setStatus('Kesir sadeleşti. Devam etmek için tıkla.');
       return;
     }
-    if(rootIsOne()){
-      rootUnitStage=1;
-      render();
-      setStatus('Kökün değeri 1. Yeniden tıkla.');
-      return;
-    }
+    if(compactOutsideProduct()) return;
     compactProduct=true;
     document.querySelector('.expression').classList.add('compact');
     phase='done';render();setStatus('İşlem tamamlandı.');
