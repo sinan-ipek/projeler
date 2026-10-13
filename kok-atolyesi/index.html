@@ -510,7 +510,9 @@ button{font:inherit;border:none;cursor:pointer}
         den.className = 'den';
         renderOutsidePart(num, 'num');
         renderOutsidePart(den, 'den');
-        if(!num.textContent.trim() && den.textContent.trim() && phase!=='extract') num.textContent='1';
+        // Bir kesrin payı ve paydası hiçbir zaman boş olamaz.
+        if(!num.textContent.trim()) num.textContent='1';
+        if(!den.textContent.trim()) den.textContent='1';
         frac.append(num, den);
         el.appendChild(frac);
       } else {
@@ -526,7 +528,7 @@ button{font:inherit;border:none;cursor:pointer}
       const den = document.createElement('span');
       den.className = 'den';
       appendBucket(num, arr.filter(t => t.part === 'num'), side === 'in' || arr.length > 0);
-      appendBucket(den, arr.filter(t => t.part === 'den'), side === 'in' || arr.length > 0);
+      appendBucket(den, arr.filter(t => t.part === 'den'), true);
       frac.append(num, den);
       el.appendChild(frac);
     } else {
@@ -546,14 +548,28 @@ button{font:inherit;border:none;cursor:pointer}
       mark.style.width = desiredWidth+'px';
       radical.style.paddingLeft=(desiredWidth-2)+'px';
     }
-    // Gerçek sayıları aynı taban çizgisine oturt: tahmini top/height yok.
-    const inReference = insideEl.querySelector('.frac') || insideEl.querySelector('.factor');
-    const outReference = outsideEl.querySelector('.frac') || outsideEl.querySelector('.factor');
-    if(inReference && outReference){
-      const ir=inReference.getBoundingClientRect(), or=outReference.getBoundingClientRect();
-      const correction=(ir.top+ir.height/2)-(or.top+or.height/2);
-      const previous=parseFloat(outsideEl.style.top || '16');
-      if(Math.abs(correction)>0.7) outsideEl.style.top=(previous+correction)+'px';
+    // Kesir varsa merkezlerini değil, kesir çizgilerini hizala.
+    const inFraction = insideEl.querySelector('.frac');
+    const outFraction = outsideEl.querySelector('.frac');
+    let correction = 0;
+    if(inFraction && outFraction){
+      const innerBar = inFraction.querySelector('.num');
+      const outerBar = outFraction.querySelector('.num');
+      const ir=innerBar.getBoundingClientRect();
+      const or=outerBar.getBoundingClientRect();
+      correction=ir.bottom-or.bottom;
+    }else{
+      const inReference = inFraction || insideEl.querySelector('.factor');
+      const outReference = outFraction || outsideEl.querySelector('.factor');
+      if(inReference && outReference){
+        const ir=inReference.getBoundingClientRect();
+        const or=outReference.getBoundingClientRect();
+        correction=(ir.top+ir.height/2)-(or.top+or.height/2);
+      }
+    }
+    if(Math.abs(correction)>0.75){
+      const oldTop=parseFloat(outsideEl.style.top || '16');
+      outsideEl.style.top=(oldTop+correction)+'px';
     }
   }
   function render(){
