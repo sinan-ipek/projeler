@@ -558,12 +558,16 @@ button{font:inherit;border:none;cursor:pointer}
   }
   function render(){
     renderZone('out', outsideEl);
+    const radicalElement=document.querySelector('.radical');
+    const rootShape=radicalElement.querySelector('.rootmark');
     if(rootUnitStage===2){
       insideEl.replaceChildren();
-      document.querySelector('.radical').style.visibility='hidden';
-    } else {
-      document.querySelector('.radical').style.visibility='';
-      renderZone('in', insideEl);
+      radicalElement.style.visibility='hidden';
+    }else{
+      radicalElement.style.visibility='';
+      renderZone('in',insideEl);
+      rootShape.style.visibility=rootUnitStage===1?'hidden':'';
+      insideEl.style.borderTopColor=rootUnitStage===1?'transparent':'';
     }
     requestAnimationFrame(() => {
       alignFormula();
