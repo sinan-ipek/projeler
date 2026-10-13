@@ -530,8 +530,9 @@ button{font:inherit;border:none;cursor:pointer}
         renderOutsidePart(num, 'num');
         renderOutsidePart(den, 'den');
         // Bir kesrin payı ve paydası hiçbir zaman boş olamaz.
-        if(!num.textContent.trim()) num.textContent='1';
-        if(!den.textContent.trim()) den.textContent='1';
+        // Gizli slotlarda "8" yazsa bile bunlar gerçek çarpan değildir.
+        if(!outer.some(t=>t.part==='num')) num.replaceChildren(document.createTextNode('1'));
+        if(!outer.some(t=>t.part==='den')) den.replaceChildren(document.createTextNode('1'));
         frac.append(num, den);
         el.appendChild(frac);
       } else {
