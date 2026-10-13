@@ -49,6 +49,7 @@ button{font:inherit;border:none;cursor:pointer}
 .frac{display:inline-flex;flex-direction:column;align-items:center;min-width:44px;font-size:.76em;line-height:1.15}
 .frac .num{display:flex;align-items:center;justify-content:center;border-bottom:2.5px solid currentColor;padding:0 6px 4px;min-height:26px}
 .frac .den{display:flex;align-items:center;justify-content:center;padding:4px 6px 0;min-height:26px}
+.outside .frac{position:relative}.outside .frac .num{transition:transform .3s cubic-bezier(.25,.1,.25,1)}.outside .frac .num{transform:translateY(-5px)}.outside .frac .num::after{content:'';position:absolute;left:0;right:0;bottom:-2.5px;height:2.5px;background:currentColor;transform-origin:center;animation:outsideFractionBar .42s ease-out both}@keyframes outsideFractionBar{from{transform:scaleX(0);opacity:0}to{transform:scaleX(1);opacity:1}}
 .outside-row{display:inline-flex;align-items:baseline;gap:0}.outside-slot{display:inline-flex;align-items:center;justify-content:center;min-width:1.15em;position:relative}.outside-slot.empty{visibility:hidden}.outside-dot{display:inline-flex;align-items:center;justify-content:center;min-width:.45em;color:#8a97ab}.outside-dot.hidden{visibility:hidden}.factor.colorized{font-weight:800}
 .overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .float-token,.bubble,.burst{position:absolute;pointer-events:none;z-index:20}
@@ -151,6 +152,7 @@ button{font:inherit;border:none;cursor:pointer}
   let placementLocked = false;
   let compactProduct = false;
   let rootUnitStage = 0;
+  let outsideFractionStarted = false;
   const palette = ['#d7264d','#2a9d55','#7a3dd8','#e07a14','#147ca8','#b5419d'];
   let plannedSlots = {num:0, den:0};
   let nextSlotByPart = {num:0, den:0};
@@ -264,6 +266,7 @@ button{font:inherit;border:none;cursor:pointer}
     placementLocked = false;
     compactProduct = false;
     rootUnitStage = 0;
+    outsideFractionStarted = false;
     document.querySelector('.expression').classList.remove('compact');
     document.querySelector('.radical').style.left = '';
     outsideEl.style.right = '';
@@ -496,7 +499,7 @@ button{font:inherit;border:none;cursor:pointer}
     el.replaceChildren();
     const arr = listForRender(side);
     if(side === 'out'){
-      if(current.den && (plannedSlots.den > 0 || outer.some(t=>t.part==='den'))){
+      if(current.den && (outsideFractionStarted || outer.some(t=>t.part==='den'))){
         const frac = document.createElement('span');
         frac.className = 'frac';
         const num = document.createElement('span');
@@ -783,8 +786,14 @@ button{font:inherit;border:none;cursor:pointer}
           }, 130);
           const start = centerOf(bubble);
           const assignedSlot = nextSlotByPart[tok.part]++;
-          const target = getOutsideTarget(tok.part, assignedSlot);
-          animateBubble(tokenText(tok), start, target, tint, () => {
+          if(tok.part === 'den' && !outsideFractionStarted){
+            outsideFractionStarted = true;
+            render(); // Kesir çizgisi tam bu anda doğar, pay yukarıya yerleşir.
+          }
+          requestAnimationFrame(() => {
+            if(session !== questionNo) return;
+            const target = getOutsideTarget(tok.part, assignedSlot);
+            animateBubble(tokenText(tok), start, target, tint, () => {
           if(session !== questionNo) return;
           pendingGroups.delete(tok.extractGroupId);
           exitingGroups.delete(tok.extractGroupId);
@@ -804,7 +813,8 @@ button{font:inherit;border:none;cursor:pointer}
           if(!anyMergeable()) readyToCompact();
           else render();
         }
-          }, bubble);
+            }, bubble);
+          });
         };
       }, 340);
     }, 510);
