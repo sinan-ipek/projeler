@@ -55,7 +55,7 @@ button{font:inherit;border:none;cursor:pointer}
 .outside .frac .num{border-bottom:2.5px solid currentColor}
 .outside .frac .num::after{display:none}
 .outside .frac .num,.outside .frac .den{transition:padding .24s ease}
-.outside .frac .empty-fraction-one{position:relative}
+.outside .frac .empty-fraction-one{position:relative}.outside .frac .has-incoming>.empty-fraction-one{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1}
 .outside .frac .dynamic-fraction-row{display:contents}
 .outside .frac .incoming-factor{visibility:hidden}
 .outside-row{display:inline-flex;align-items:baseline;gap:0}.outside-slot{display:inline-flex;align-items:center;justify-content:center;min-width:1.15em;position:relative}.outside-slot.empty{visibility:hidden}.outside-dot{display:inline-flex;align-items:center;justify-content:center;min-width:.45em;color:#8a97ab}.outside-dot.hidden{visibility:hidden}.factor.colorized{font-weight:800}
@@ -483,6 +483,7 @@ button{font:inherit;border:none;cursor:pointer}
       parent.appendChild(one);
     }
     const arriving=tokens.filter(t=>t.incoming);
+    if(arriving.length && !real.length) parent.classList.add('has-incoming');
     // Hedefleri satırın doğal genişliğine dahil et, sabit slotlara yerleştirme.
     // Gelen terim daha görünür değilken yer tutan 1 ortada kalır.
     const row=document.createElement('span');
