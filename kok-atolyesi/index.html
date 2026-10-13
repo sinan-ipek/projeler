@@ -546,7 +546,8 @@ button{font:inherit;border:none;cursor:pointer}
 
   // Balon dışarı çıkarken yalnızca iki gerçek, görünür çarpanı bağlayan noktalar kalır.
   function fadeOrphanProductDots(){
-    insideEl.querySelectorAll('.num, .den, .inside').forEach(parent => {
+    const regions = [insideEl, ...insideEl.querySelectorAll('.num, .den')];
+    regions.forEach(parent => {
       const children = [...parent.children];
       // Disabled factors are still numbers; visibility alone determines presence.
       const isPresent = el => el && el.classList?.contains('factor') &&
