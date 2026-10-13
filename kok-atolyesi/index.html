@@ -665,6 +665,10 @@ button{font:inherit;border:none;cursor:pointer}
     renderZone('out', outsideEl);
     const radicalElement=document.querySelector('.radical');
     const rootShape=radicalElement.querySelector('.rootmark');
+    const degreeElement=radicalElement.querySelector('.degree');
+    // Kök sembolü yoksa kök derecesi de hiçbir koşulda görünmez.
+    degreeElement.style.visibility=rootUnitStage===0?'':'hidden';
+    degreeElement.disabled=rootUnitStage!==0;
     if(rootUnitStage===2){
       insideEl.replaceChildren();
       radicalElement.style.visibility='hidden';
@@ -1113,7 +1117,7 @@ button{font:inherit;border:none;cursor:pointer}
   $('newBtn').onclick = startQuestion;
   $('degree').onclick = () => {
     $('degree').classList.remove('implicit');
-    setTimeout(() => { if(current && current.d === 2) $('degree').classList.add('implicit'); }, 900);
+    setTimeout(() => { if(current && current.d === 2 && rootUnitStage === 0) $('degree').classList.add('implicit'); }, 900);
   };
 
   startQuestion();
