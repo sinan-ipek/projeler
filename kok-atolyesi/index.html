@@ -46,7 +46,7 @@ button{font:inherit;border:none;cursor:pointer}
 .expression.compact .inside,.expression.compact .outside-row{gap:0}
 .factor-group-space{display:inline-flex;align-items:baseline;gap:4px;visibility:hidden;min-width:96px;justify-content:center;flex-shrink:0}
 .dot{color:#8a97ab;transition:opacity .13s ease}.dot.fade-out{opacity:0}
-.fraction-action{cursor:pointer}.fraction-action:hover .num{border-bottom-color:#2f64d6}.frac{display:inline-flex;flex-direction:column;align-items:center;min-width:44px;font-size:.76em;line-height:1.15}
+.fraction-action{cursor:pointer}.fraction-action:hover .num{border-bottom-color:#2f64d6}.empty-fraction-one{display:inline-flex;align-items:center;justify-content:center;min-width:1em}.frac{display:inline-flex;flex-direction:column;align-items:center;min-width:44px;font-size:.76em;line-height:1.15}
 .frac .num{display:flex;align-items:center;justify-content:center;border-bottom:2.5px solid currentColor;padding:0 6px 4px;min-height:26px}
 .frac .den{display:flex;align-items:center;justify-content:center;padding:4px 6px 0;min-height:26px}
 .outside .frac{position:relative}.outside .frac .num{border-bottom-color:transparent}.outside .frac .num{transition:transform .3s cubic-bezier(.25,.1,.25,1)}.outside .frac .num{transform:translateY(-5px)}.outside .frac .num::after{content:'';position:absolute;left:0;right:0;bottom:-2.5px;height:2.5px;background:currentColor;transform-origin:center;animation:outsideFractionBar .42s ease-out both}@keyframes outsideFractionBar{from{transform:scaleX(0);opacity:0}to{transform:scaleX(1);opacity:1}}
@@ -531,8 +531,20 @@ button{font:inherit;border:none;cursor:pointer}
         renderOutsidePart(den, 'den');
         // Bir kesrin payı ve paydası hiçbir zaman boş olamaz.
         // Gizli slotlarda "8" yazsa bile bunlar gerçek çarpan değildir.
-        if(!outer.some(t=>t.part==='num')) num.replaceChildren(document.createTextNode('1'));
-        if(!outer.some(t=>t.part==='den')) den.replaceChildren(document.createTextNode('1'));
+        // Slotları silme: hareket eden balonun hedefi bu görünmez yuvalardır.
+        // Boş kesir bölümündeki 1 yalnızca görsel bir katmandır.
+        if(!outer.some(t=>t.part==='num')){
+          const one=document.createElement('span');
+          one.className='empty-fraction-one';
+          one.textContent='1';
+          num.appendChild(one);
+        }
+        if(!outer.some(t=>t.part==='den')){
+          const one=document.createElement('span');
+          one.className='empty-fraction-one';
+          one.textContent='1';
+          den.appendChild(one);
+        }
         frac.append(num, den);
         el.appendChild(frac);
       } else {
@@ -707,7 +719,9 @@ button{font:inherit;border:none;cursor:pointer}
   function getOutsideTarget(part, slot){
     const stageRect = stage.getBoundingClientRect();
     const slotEl = outsideEl.querySelector(`.outside-slot[data-part="${part}"][data-slot="${slot}"]`);
-    const r = slotEl.getBoundingClientRect();
+    // Eksik slot yüzünden animasyonun kilitlenmesini önle.
+    const fallback=slotEl || outsideEl.querySelector(part==='den'?'.frac .den':'.frac .num') || outsideEl;
+    const r = fallback.getBoundingClientRect();
     return {x: r.left - stageRect.left + r.width/2, y: r.top - stageRect.top + r.height/2};
   }
 
