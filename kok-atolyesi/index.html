@@ -153,6 +153,7 @@ button{font:inherit;border:none;cursor:pointer}
   let plannedSlots = {num:0, den:0};
   let nextSlotByPart = {num:0, den:0};
   let nextGroupId = 1;
+  let pendingGroups = new Set();
 
   function stageNoFromQuestion(n){
     if(n <= 5) return 1;
@@ -265,6 +266,8 @@ button{font:inherit;border:none;cursor:pointer}
     plannedSlots = {num:0, den:0};
     nextSlotByPart = {num:0, den:0};
     nextGroupId = 1;
+    pendingGroups = new Set();
+    stage.querySelectorAll('.bubble,.float-token,.burst').forEach(el => el.remove());
     $('counter').textContent = `Soru ${questionNo}`;
     $('level').textContent = displayLabel();
     $('degree').textContent = current.d;
@@ -307,11 +310,11 @@ button{font:inherit;border:none;cursor:pointer}
 
   function isExtractable(tok){
     if(phase !== 'extract' || tok.side !== 'in') return false;
-    return !!tok.extractGroupId && groupFor(tok).length === current.d;
+    return !!tok.extractGroupId && !pendingGroups.has(tok.extractGroupId) && groupFor(tok).length === current.d;
   }
 
   function anyExtractable(){
-    return inner.some(t => t.side === 'in' && !!t.extractGroupId && groupFor(t).length === current.d);
+    return inner.some(t => t.side === 'in' && !!t.extractGroupId && !pendingGroups.has(t.extractGroupId) && groupFor(t).length === current.d);
   }
 
   function bucketTokens(side, part){
@@ -364,6 +367,7 @@ button{font:inherit;border:none;cursor:pointer}
       btn.style.color = c;
       if(isExtractable(tok)) btn.style.backgroundColor = c + '18';
     }
+    if(tok.extractGroupId && pendingGroups.has(tok.extractGroupId)) btn.style.visibility = 'hidden';
     btn.disabled = !tokenClickable(tok);
     btn.onclick = () => handleToken(tok);
     return btn;
@@ -611,6 +615,8 @@ button{font:inherit;border:none;cursor:pointer}
     const group = groupFor(tok);
     if(group.length !== current.d) return;
     animating = true;
+    const session = questionNo;
+    pendingGroups.add(tok.extractGroupId);
 
     const nodes = group
       .map(g => document.querySelector(`[data-id="${g.id}"]`))
@@ -632,15 +638,15 @@ button{font:inherit;border:none;cursor:pointer}
     });
 
     setTimeout(() => {
+      if(session !== questionNo) return;
       clones.forEach(c => c.remove());
       const combined = makeFloatClone(nodes[0], middle, tint);
       combined.innerHTML = tokenText(tok);
       combined.style.transition = 'none';
       combined.style.transform = 'translate(-50%,-50%)';
       setTimeout(() => {
+        if(session !== questionNo) return;
         combined.remove();
-        const assignedSlot = nextSlotByPart[tok.part]++;
-        const target = getOutsideTarget(tok.part, assignedSlot);
         const bubble = document.createElement('button');
         bubble.type = 'button';
         bubble.className = 'bubble waiting';
@@ -651,17 +657,26 @@ button{font:inherit;border:none;cursor:pointer}
         bubble.style.left = middle.x + 'px';
         bubble.style.top = middle.y + 'px';
         stage.appendChild(bubble);
-        setStatus('Balona tıkla.');
-        bubble.onclick = () => animateBubble(tokenText(tok), middle, target, tint, () => {
+        animating = false;
+        render();
+        setStatus('Balona tıkla veya başka bir renkli grubu paketle.');
+        bubble.onclick = () => {
+          if(animating || session !== questionNo) return;
+          animating = true;
+          const assignedSlot = nextSlotByPart[tok.part]++;
+          const target = getOutsideTarget(tok.part, assignedSlot);
+          animateBubble(tokenText(tok), middle, target, tint, () => {
+          if(session !== questionNo) return;
+          pendingGroups.delete(tok.extractGroupId);
         inner = inner.filter(t => !group.some(g => g.id === t.id));
         const outTok = token(tok.type, tok.base, 'out', tok.part, 1);
         outTok.slot = assignedSlot;
         outTok.color = '';
         outer.push(outTok);
         animating = false;
-        if(anyExtractable()){
+        if(anyExtractable() || pendingGroups.size){
           phase = 'extract';
-          setStatus('Renkli grupları dışarı çıkar.');
+          setStatus('Renkli grupları paketle veya bekleyen balonlara tıkla.');
           render();
         } else {
           phase = 'merge';
@@ -669,7 +684,8 @@ button{font:inherit;border:none;cursor:pointer}
           if(!anyMergeable()) readyToCompact();
           else render();
         }
-        }, bubble);
+          }, bubble);
+        };
       }, 340);
     }, 510);
   }
