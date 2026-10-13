@@ -134,52 +134,26 @@ const panelCanvas=document.createElement('canvas');panelCanvas.width=720;panelCa
 const ctx=panelCanvas.getContext('2d'),panelTexture=new THREE.CanvasTexture(panelCanvas);panelTexture.colorSpace=THREE.SRGBColorSpace;
 const panel=new THREE.Mesh(new THREE.PlaneGeometry(.85,.60),new THREE.MeshBasicMaterial({map:panelTexture,transparent:true,side:THREE.DoubleSide,depthTest:false}));
 panel.position.set(-.5,1.7,-1.3);panel.renderOrder=20;scene.add(panel);
-let leftMenuOpen=false,rightMenuOpen=false;
-let rightController=null,leftController=null;
+let handMenuOpen=false;
+let rightController=null;
 const lastMenuPress=new Map();
-const rightCanvas=document.createElement('canvas');rightCanvas.width=560;rightCanvas.height=380;
-const rightCtx=rightCanvas.getContext('2d');
-const rightTexture=new THREE.CanvasTexture(rightCanvas);rightTexture.colorSpace=THREE.SRGBColorSpace;
-const rightPanel=new THREE.Mesh(new THREE.PlaneGeometry(.62,.43),new THREE.MeshBasicMaterial({map:rightTexture,transparent:true,side:THREE.DoubleSide,depthTest:false}));
-rightPanel.renderOrder=20;rightPanel.visible=false;scene.add(rightPanel);
-const leftOffset=new THREE.Vector3(-.14,.12,-.32),rightOffset=new THREE.Vector3(.14,.12,-.32);
-function refreshRightMenu(){
- rightCtx.clearRect(0,0,560,380);rightCtx.fillStyle='#16283cec';rightCtx.fillRect(0,0,560,380);
- rightCtx.fillStyle='#f5f9ff';rightCtx.font='bold 32px system-ui';rightCtx.fillText('SECILI GEZEGEN',24,55);
- rightCtx.font='23px system-ui';rightCtx.fillText('Secili: '+selectedBodies.size,24,105);
- rightCtx.fillStyle='#316c9e';rightCtx.beginPath();rightCtx.roundRect(24,132,512,100,16);rightCtx.fill();
- rightCtx.fillStyle='#ffffff';rightCtx.font='bold 30px system-ui';rightCtx.fillText('YAKINA GETIR',125,193);
- rightCtx.font='20px system-ui';rightCtx.fillStyle='#b7cee2';rightCtx.fillText('Sag A: menu ac / kapat',24,335);rightTexture.needsUpdate=true;
+let leftController=null;
+function toggleHandMenu(){
+ handMenuOpen=!handMenuOpen;
+ updateHandMenu();
+ $('status').textContent=handMenuOpen?'Menü açık':'Menü kapalı';
 }
-function moveHandPanel(mesh,controller,offset){
- controller.updateWorldMatrix(true,false);
- mesh.position.copy(offset).applyMatrix4(controller.matrixWorld);
- mesh.quaternion.setFromRotationMatrix(new THREE.Matrix4().extractRotation(controller.matrixWorld));
- mesh.updateMatrixWorld(true);
-}
+const menuAnchorOffset=new THREE.Vector3(.10,.16,-.36);
 function updateHandMenu(){
- if(!renderer.xr.isPresenting){panel.visible=true;rightPanel.visible=false;return}
- panel.visible=leftMenuOpen&&!!leftController;
- rightPanel.visible=rightMenuOpen&&!!rightController;
- if(panel.visible)moveHandPanel(panel,leftController,leftOffset);
- if(rightPanel.visible)moveHandPanel(rightPanel,rightController,rightOffset);
+ if(!renderer.xr.isPresenting){panel.visible=true;return}
+ panel.visible=handMenuOpen&&!!rightController;
+ if(!panel.visible)return;
+ rightController.updateWorldMatrix(true,false);
+ panel.position.copy(menuAnchorOffset).applyMatrix4(rightController.matrixWorld);
+ panel.quaternion.copy(renderer.xr.getCamera().getWorldQuaternion(new THREE.Quaternion()));
+ panel.updateMatrixWorld(true);
 }
-function pressMenu(controller,pad){
- const buttons=pad?.buttons||[];
- const left=controller===leftController,right=controller===rightController;
- // Quest Browser may hide the physical hamburger/menu button from WebXR.
- // Index 4 is the X button on the left and A on the right; never map Y or B.
- // A separately exposed menu button at index 6+ takes priority.
- const exposedMenu=left&&buttons.length>6&&buttons.slice(6).some(b=>b?.pressed);
- const pressed=left?(exposedMenu||!!buttons[4]?.pressed):right?!!buttons[4]?.pressed:false;
- if(pressed&&!lastMenuPress.get(controller)){
-  if(left)leftMenuOpen=!leftMenuOpen;
-  if(right)rightMenuOpen=!rightMenuOpen;
-  updateHandMenu();
-  $('status').textContent=(left?'Sol':'Sağ')+' menü '+((left?leftMenuOpen:rightMenuOpen)?'açıldı':'kapandı');
- }
- lastMenuPress.set(controller,pressed);
-}
+
 const labels=['play','reset','mode','trails','near'];
 function refreshPanel(){
  ctx.clearRect(0,0,720,505);ctx.fillStyle='#15253aeF';ctx.fillRect(0,0,720,505);
@@ -191,7 +165,7 @@ function refreshPanel(){
   ctx.fillStyle='#ffffff';ctx.font='28px system-ui';ctx.fillText(names[i],x+20,y+54);
  }
  ctx.fillStyle='#99d6ff';ctx.font='bold 24px system-ui';ctx.fillText('Seçili: '+selectedBodies.size,395,65);
- ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v10 | Sol X (MENU desteklenirse MENU) · Sag A',12,460);
+ ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v9 | Sol MENU: panel · Tetik: sec · Grip: tasi',15,460);
  panelTexture.needsUpdate=true;
 }
 const raycaster=new THREE.Raycaster(),tempMatrix=new THREE.Matrix4();
@@ -206,7 +180,7 @@ function choosePlanets(items){
  for(const b of items)if(b&&bodies.includes(b))selectedBodies.add(b);
  selectedPlanet=items.length?items[0]:null;
  $('status').textContent=selectedBodies.size?selectedBodies.size+' gezegen seçildi (tetik)':'Seçim kaldırıldı';
- refreshPanel();refreshRightMenu();
+ refreshPanel();
 }
 function choosePlanet(b){choosePlanets(b?[b]:[])}
 
@@ -331,8 +305,7 @@ function updateGrabsAndHover(dt){
  updateHandMenu();
  for(const controller of controllers){
   rayFromController(controller);
-  const menuHits=raycaster.intersectObjects([panel,rightPanel].filter(p=>p.visible),false);
-  const menuHit=menuHits[0]||null;
+  const menuHit=panel.visible?raycaster.intersectObject(panel,false)[0]:null;
   const beam=controller.userData.beam;
   if(beam){
    const endDistance=menuHit?Math.min(MAX_RAY_LENGTH,menuHit.distance):MAX_RAY_LENGTH;
@@ -350,7 +323,9 @@ function updateGrabsAndHover(dt){
   }
   // On Quest Touch left controllers the application menu is commonly button 4.
   // WebXR may reserve this button; in that case it will not be reported here.
-  pressMenu(controller,pad);
+  const menuPressed=controller===leftController&&!!(pad?.buttons?.[4]?.pressed||pad?.buttons?.[5]?.pressed);
+  if(menuPressed&&!lastMenuPress.get(controller))toggleHandMenu();
+  lastMenuPress.set(controller,menuPressed);
   const cone=coneVisuals[controllers.indexOf(controller)];
   if(cone){
    const thisAngle=coneAngles.get(controller)||0;
@@ -400,12 +375,7 @@ for(let i=0;i<2;i++){
  controller.addEventListener('disconnected',()=>{controllerInputs.delete(controller);releaseGrab(controller)});
  controller.addEventListener('selectstart',()=>{
   rayFromController(controller);
-  const panelHit=raycaster.intersectObjects([panel,rightPanel].filter(p=>p.visible),false)[0];
-  if(panelHit?.object===rightPanel){
-   const px=panelHit.uv.x*560,py=(1-panelHit.uv.y)*380;
-   if(px>=24&&px<=536&&py>=132&&py<=232)action('near');
-   return;
-  }
+  const panelHit=panel.visible?raycaster.intersectObject(panel,false)[0]:null;
   if(panelHit?.uv){
    const px=panelHit.uv.x*720,py=(1-panelHit.uv.y)*505;
    if(py>=100&&py<=415){
@@ -432,11 +402,11 @@ for(let i=0;i<2;i++){
  const grip=renderer.xr.getControllerGrip(i);grip.add(controllerFactory.createControllerModel(grip));scene.add(grip);
 }
 renderer.xr.addEventListener('sessionstart',()=>{
- leftMenuOpen=false;rightMenuOpen=false;
- $('status').textContent='v10 · Sol X / sağ A ile iki ayrı menü';
+ handMenuOpen=false;
+ $('status').textContent='v9 · Sol Menü düğmesi: paneli aç/kapat';
 });
 renderer.xr.addEventListener('sessionend',()=>{
- grabs.clear();hoverBodies.clear();magneticTargets.clear();leftMenuOpen=false;rightMenuOpen=false;
+ grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;
  $('status').textContent='VR kapalı · Masaüstü önizlemesi';
 });
 const clock=new THREE.Clock();
@@ -452,7 +422,7 @@ renderer.setAnimationLoop(()=>{
  renderer.render(scene,camera);
 });
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-setup();syncButtons();refreshRightMenu();$('status').textContent='Hazır · Quest 3 tarayıcısında ENTER VR düğmesini kullan';
+setup();syncButtons();$('status').textContent='Hazır · Quest 3 tarayıcısında ENTER VR düğmesini kullan';
 if(!navigator.xr)$('warning').textContent='Bu tarayıcıda WebXR görünmüyor. Quest 3 Browser ile aç.';
 </script>
 </body>
