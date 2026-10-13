@@ -153,6 +153,7 @@ button{font:inherit;border:none;cursor:pointer}
   let compactProduct = false;
   let rootUnitStage = 0;
   let outsideFractionStarted = false;
+  let insideFractionCollapsed = false;
   const palette = ['#d7264d','#2a9d55','#7a3dd8','#e07a14','#147ca8','#b5419d'];
   let plannedSlots = {num:0, den:0};
   let nextSlotByPart = {num:0, den:0};
@@ -267,6 +268,7 @@ button{font:inherit;border:none;cursor:pointer}
     compactProduct = false;
     rootUnitStage = 0;
     outsideFractionStarted = false;
+    insideFractionCollapsed = false;
     document.querySelector('.expression').classList.remove('compact');
     document.querySelector('.radical').style.left = '';
     outsideEl.style.right = '';
@@ -516,7 +518,7 @@ button{font:inherit;border:none;cursor:pointer}
       }
       return;
     }
-    if(current.den && (phase === 'seed' || arr.some(t=>t.part==='den'))){
+    if(current.den && !insideFractionCollapsed && rootUnitStage===0){
       const frac = document.createElement('span');
       frac.className = 'frac';
       const num = document.createElement('span');
