@@ -45,7 +45,7 @@ button{font:inherit;border:none;cursor:pointer}
 .expression.compact .factor{padding-left:0;padding-right:0;min-width:0}
 .expression.compact .inside,.expression.compact .outside-row{gap:0}
 .factor-group-space{display:inline-flex;align-items:baseline;gap:4px;visibility:hidden;min-width:96px;justify-content:center;flex-shrink:0}
-.dot{color:#8a97ab;transition:opacity .13s ease}.dot.fade-out{opacity:0}
+.root-unit-product-dot{position:absolute;color:#8a97ab;pointer-events:none;line-height:1;transform:translate(-50%,-50%);z-index:3}.dot{color:#8a97ab;transition:opacity .13s ease}.dot.fade-out{opacity:0}
 .fraction-action{cursor:pointer}.fraction-action:hover .num{border-bottom-color:#2f64d6}.empty-fraction-one{display:inline-flex;align-items:center;justify-content:center;min-width:1em}.frac{display:inline-flex;flex-direction:column;align-items:center;min-width:44px;font-size:.76em;line-height:1.15}
 .frac .num{display:flex;align-items:center;justify-content:center;border-bottom:2.5px solid currentColor;padding:0 6px 4px;min-height:26px}
 .frac .den{display:flex;align-items:center;justify-content:center;padding:4px 6px 0;min-height:26px}
@@ -641,6 +641,26 @@ button{font:inherit;border:none;cursor:pointer}
       outsideEl.style.top=(oldTop+correction)+'px';
     }
   }
+  function alignRootUnitProductDot(){
+    const expression=document.querySelector('.expression');
+    let dot=expression.querySelector('.root-unit-product-dot');
+    const show=rootUnitStage===1 && outer.some(t=>!t.incoming) && !compactProduct;
+    if(!show){if(dot)dot.remove();return;}
+    if(!dot){
+      dot=document.createElement('span');
+      dot.className='root-unit-product-dot';
+      dot.textContent='·';
+      dot.setAttribute('aria-hidden','true');
+      expression.appendChild(dot);
+    }
+    const outsideRect=outsideEl.getBoundingClientRect();
+    const one=insideEl.querySelector('.factor') || insideEl;
+    const oneRect=one.getBoundingClientRect();
+    const frame=expression.getBoundingClientRect();
+    dot.style.left=((outsideRect.right+oneRect.left)/2-frame.left)+'px';
+    dot.style.top=((oneRect.top+oneRect.bottom)/2-frame.top)+'px';
+  }
+
   function render(){
     renderZone('out', outsideEl);
     const radicalElement=document.querySelector('.radical');
@@ -656,6 +676,7 @@ button{font:inherit;border:none;cursor:pointer}
     }
     requestAnimationFrame(() => {
       alignFormula();
+      alignRootUnitProductDot();
       // Her balon, kendi grubunun yer tutucusunun tam merkezinde kalır.
       stage.querySelectorAll('.bubble.waiting[data-group-id]').forEach(bubble => {
         const anchor=insideEl.querySelector(`.factor-group-space[data-group-id="${bubble.dataset.groupId}"]`);
