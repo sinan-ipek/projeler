@@ -50,6 +50,14 @@ button{font:inherit;border:none;cursor:pointer}
 .frac .num{display:flex;align-items:center;justify-content:center;border-bottom:2.5px solid currentColor;padding:0 6px 4px;min-height:26px}
 .frac .den{display:flex;align-items:center;justify-content:center;padding:4px 6px 0;min-height:26px}
 .outside .frac{position:relative}.outside .frac .num{position:relative;border-bottom-color:transparent}.outside .frac .num{transition:transform .3s cubic-bezier(.25,.1,.25,1)}.outside .frac .num{transform:none}.outside .frac .num::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2.5px;background:currentColor;transform-origin:center;animation:outsideFractionBar .42s ease-out both}@keyframes outsideFractionBar{from{transform:scaleX(0);opacity:0}to{transform:scaleX(1);opacity:1}}
+.outside .frac{width:max-content}
+.outside .frac .num,.outside .frac .den{width:100%;min-width:0;text-align:center;position:relative}
+.outside .frac .num{border-bottom:2.5px solid currentColor}
+.outside .frac .num::after{display:none}
+.outside .frac .num,.outside .frac .den{transition:padding .24s ease}
+.outside .frac .empty-fraction-one{position:relative}
+.outside .frac .dynamic-fraction-row{display:contents}
+.outside .frac .incoming-factor{visibility:hidden}
 .outside-row{display:inline-flex;align-items:baseline;gap:0}.outside-slot{display:inline-flex;align-items:center;justify-content:center;min-width:1.15em;position:relative}.outside-slot.empty{visibility:hidden}.outside-dot{display:inline-flex;align-items:center;justify-content:center;min-width:.45em;color:#8a97ab}.outside-dot.hidden{visibility:hidden}.factor.colorized{font-weight:800}
 .overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .float-token,.bubble,.burst{position:absolute;pointer-events:none;z-index:20}
@@ -462,6 +470,40 @@ button{font:inherit;border:none;cursor:pointer}
     }
   }
 
+  // Kesirli dış alanda rezervasyon yoktur. Görünür terimler yerleşimi belirler.
+  // incoming=true öğe sadece animasyon hedefini ölçmek için gizlice oluşturulur.
+  function renderDynamicFractionPart(parent, part){
+    const tokens=outer.filter(t=>t.part===part)
+      .sort((a,b)=>(b.arrivalOrder||0)-(a.arrivalOrder||0));
+    const real=tokens.filter(t=>!t.incoming);
+    if(!real.length){
+      const one=document.createElement('span');
+      one.className='empty-fraction-one';
+      one.textContent='1';
+      parent.appendChild(one);
+    }
+    const arriving=tokens.filter(t=>t.incoming);
+    // Hedefleri satırın doğal genişliğine dahil et, sabit slotlara yerleştirme.
+    // Gelen terim daha görünür değilken yer tutan 1 ortada kalır.
+    const row=document.createElement('span');
+    row.className='outside-row dynamic-fraction-row';
+    tokens.forEach((tok,i)=>{
+      if(i>0 && !compactProduct && !tok.incoming && !tokens[i-1].incoming){
+        const dot=document.createElement('span');
+        dot.className='outside-dot';
+        dot.textContent='·';
+        row.appendChild(dot);
+      }
+      const node=renderToken(tok);
+      if(tok.incoming){
+        node.classList.add('incoming-factor');
+        node.style.visibility='hidden';
+      }
+      row.appendChild(node);
+    });
+    if(tokens.length) parent.appendChild(row);
+  }
+
   function renderOutsidePart(parent, part){
     const row = document.createElement('span');
     row.className = 'outside-row';
@@ -527,24 +569,8 @@ button{font:inherit;border:none;cursor:pointer}
         num.className = 'num';
         const den = document.createElement('span');
         den.className = 'den';
-        renderOutsidePart(num, 'num');
-        renderOutsidePart(den, 'den');
-        // Bir kesrin payı ve paydası hiçbir zaman boş olamaz.
-        // Gizli slotlarda "8" yazsa bile bunlar gerçek çarpan değildir.
-        // Slotları silme: hareket eden balonun hedefi bu görünmez yuvalardır.
-        // Boş kesir bölümündeki 1 yalnızca görsel bir katmandır.
-        if(!outer.some(t=>t.part==='num')){
-          const one=document.createElement('span');
-          one.className='empty-fraction-one';
-          one.textContent='1';
-          num.appendChild(one);
-        }
-        if(!outer.some(t=>t.part==='den')){
-          const one=document.createElement('span');
-          one.className='empty-fraction-one';
-          one.textContent='1';
-          den.appendChild(one);
-        }
+        renderDynamicFractionPart(num, 'num');
+        renderDynamicFractionPart(den, 'den');
         frac.append(num, den);
         el.appendChild(frac);
       } else {
@@ -853,22 +879,38 @@ button{font:inherit;border:none;cursor:pointer}
           }, 130);
           const start = centerOf(bubble);
           const assignedSlot = nextSlotByPart[tok.part]++;
-          if(tok.part === 'den' && !outsideFractionStarted){
-            outsideFractionStarted = true;
-            render(); // Kesir çizgisi tam bu anda doğar, pay yukarıya yerleşir.
-          }
+          const fractionalTarget=current.den && (outsideFractionStarted || tok.part==='den');
+          const incoming=token(tok.type,tok.base,'out',tok.part,1);
+          incoming.slot=assignedSlot;
+          incoming.arrivalOrder=assignedSlot+1;
+          incoming.incoming=true;
+          if(tok.part==='den') outsideFractionStarted=true;
+          if(fractionalTarget) outer.push(incoming);
+          render();
           requestAnimationFrame(() => {
             if(session !== questionNo) return;
-            const target = getOutsideTarget(tok.part, assignedSlot);
+            let target;
+            if(fractionalTarget){
+              const node=outsideEl.querySelector('[data-id="'+incoming.id+'"]');
+              target=node ? centerOf(node) : centerOf(outsideEl);
+            }else{
+              target=getOutsideTarget(tok.part,assignedSlot);
+            }
             animateBubble(tokenText(tok), start, target, tint, () => {
           if(session !== questionNo) return;
           pendingGroups.delete(tok.extractGroupId);
           exitingGroups.delete(tok.extractGroupId);
         inner = inner.filter(t => !group.some(g => g.id === t.id));
-        const outTok = token(tok.type, tok.base, 'out', tok.part, 1);
-        outTok.slot = assignedSlot;
-        outTok.color = '';
-        outer.push(outTok);
+        if(fractionalTarget){
+          incoming.incoming=false;
+          incoming.color='';
+        }else{
+          const outTok=token(tok.type,tok.base,'out',tok.part,1);
+          outTok.slot=assignedSlot;
+          outTok.color='';
+          outTok.arrivalOrder=assignedSlot+1;
+          outer.push(outTok);
+        }
         animating = false;
         if(anyExtractable() || pendingGroups.size || inner.some(canExpand)){
           phase = 'extract';
