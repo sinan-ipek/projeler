@@ -16,7 +16,7 @@ button:hover{background:#3678bd}#status{font-size:12px;color:#a8cde8;margin-top:
 </head>
 <body>
 <div id="top">
-<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v6.1 · Menü ışını ve Yakına Getir</small></h1>
+<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v7 · Bağımsız koniler ve çoklu seçim</small></h1>
 <p>Quest 3 tarayıcısında <b>ENTER VR</b> düğmesini kullan. VR içinde kumandayla yüzen düğmeleri işaretleyip tetikle. Tetik: seçim. Grip: tut/fırlat. Grip ile joystick ileri/geri: mesafe. Joystick sağ/sol: manyetik seçim konisini genişlet/daralt. Yakına Getir için Grip gerekmez: tetikle gezegeni seçip paneldeki düğmeye bas. Grip ile tutarken de sol kumandadan düğmeye basabilirsin.</p>
 <div><button id="play">⏸ Duraklat</button><button id="reset">↻ Sıfırla</button><button id="mode">🌌 Uzay</button><button id="trails">Yörüngeler: Açık</button></div>
 <div id="status">Hazırlanıyor…</div><p id="warning"></p>
@@ -122,7 +122,7 @@ function syncButtons(){
 }
 function action(name){
  if(name==='play')running=!running
- if(name==='reset'){grabs.clear();hoverBodies.clear();magneticTargets.clear();selectedPlanet=null;setup();selectionRing.visible=false}
+ if(name==='reset'){grabs.clear();hoverBodies.clear();magneticTargets.clear();choosePlanets([]);setup();for(const ring of selectionRings.values())ring.visible=false}
  if(name==='mode'){planetMode=!planetMode;if(planetMode)for(const b of bodies){b.pos.y=Math.max(b.pos.y,-10+b.radius);b.history=[];updateTrail(b)}}
  if(name==='trails')showTrails=!showTrails;
  if(name==='near')bringNear();
@@ -144,71 +144,102 @@ function refreshPanel(){
   ctx.fillStyle='#285a8d';ctx.beginPath();ctx.roundRect(x,y,310,85,12);ctx.fill();
   ctx.fillStyle='#ffffff';ctx.font='28px system-ui';ctx.fillText(names[i],x+20,y+54);
  }
- ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v6.1 | Tetik: seç · Grip: taşı · Joystick: koni',20,460);
+ ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v7 | Işın: manyetik tekli · Koni: çoklu seçim',20,460);
  panelTexture.needsUpdate=true;
 }
 const raycaster=new THREE.Raycaster(),tempMatrix=new THREE.Matrix4();
 const controllers=[];
 const grabs=new Map();
 let selectedPlanet=null;
+const selectedBodies=new Set();
 const grabbedBody=b=>[...grabs.values()].some(g=>g.body===b);
 const JOYSTICK_SPEED=3.5;
-function choosePlanet(b){selectedPlanet=b;$('status').textContent=b?'Gezegen seçildi':'Seçim kaldırıldı'}
+function choosePlanets(items){
+ selectedBodies.clear();
+ for(const b of items)if(b&&bodies.includes(b))selectedBodies.add(b);
+ selectedPlanet=items.length?items[0]:null;
+ $('status').textContent=selectedBodies.size?selectedBodies.size+' gezegen seçildi':'Seçim kaldırıldı';
+}
+function choosePlanet(b){choosePlanets(b?[b]:[])}
+
 const hoverBodies=new Map();
-const selectionRing=new THREE.Mesh(new THREE.RingGeometry(1.22,1.34,64),new THREE.MeshBasicMaterial({color:0xe5f5ff,side:THREE.DoubleSide,transparent:true,opacity:.95,depthTest:false}));
-selectionRing.visible=false;selectionRing.renderOrder=30;world.add(selectionRing);
+const selectionRings=new Map();
+function ringFor(body){
+ if(!selectionRings.has(body)){
+  const ring=new THREE.Mesh(new THREE.RingGeometry(1.22,1.34,64),new THREE.MeshBasicMaterial({color:0xe5f5ff,side:THREE.DoubleSide,transparent:true,opacity:.95,depthTest:false}));
+  ring.renderOrder=30;world.add(ring);selectionRings.set(body,ring);
+ }
+ return selectionRings.get(body);
+}
 const controllerInputs=new Map();
 const coneVisuals=[];
 const CONE_VISUAL_LENGTH=4;
 
 const MAX_RAY_LENGTH=1000;
-let coneAngle=.045; // radians; joystick right/left changes this from 0 to 15 degrees
+const coneAngles=new Map(); // each controller has its own adjustable selection cone
 const MAX_CONE=.261799;
 const magneticTargets=new Map();
 const joystickButtons=new Map();
 function updateSelectionRing(){
- selectionRing.visible=!!selectedPlanet&&bodies.includes(selectedPlanet);
- if(!selectionRing.visible)return;
- selectionRing.position.copy(selectedPlanet.pos);
- selectionRing.scale.setScalar(selectedPlanet.radius);
- selectionRing.material.color.setHex(planetMode?0x152d48:0xe5f5ff);
- selectionRing.quaternion.copy(camera.getWorldQuaternion(new THREE.Quaternion()));
+ for(const [body,ring] of selectionRings){
+  ring.visible=selectedBodies.has(body)&&bodies.includes(body);
+  if(!ring.visible)continue;
+  ring.position.copy(body.pos);
+  ring.scale.setScalar(body.radius);
+  ring.material.color.setHex(planetMode?0x152d48:0xe5f5ff);
+  ring.quaternion.copy(camera.getWorldQuaternion(new THREE.Quaternion()));
+ }
 }
-
-function magneticPick(controller){
+// In ray mode, magnetic selection is enabled; a nonzero cone selects
+// every sphere intersecting the cone (not only those with centers inside).
+function pickTargets(controller){
  rayFromController(controller);
+ const angle=coneAngles.get(controller)||0;
+ const origin=raycaster.ray.origin,direction=raycaster.ray.direction;
  const exact=raycaster.intersectObjects(bodies.map(b=>b.mesh),false)[0];
+ if(angle>0.00001){
+  const selected=[];
+  for(const body of bodies){
+   const v=body.mesh.getWorldPosition(new THREE.Vector3()).sub(origin);
+   const dist=v.length();
+   if(dist<.00001)continue;
+   const longitudinal=direction.dot(v);
+   if(longitudinal<-body.radius*SCALE)continue;
+   const error=Math.acos(THREE.MathUtils.clamp(longitudinal/dist,-1,1));
+   const apparentRadius=Math.asin(Math.min(1,body.radius*SCALE/dist));
+   if(error<=angle+apparentRadius)selected.push({body,distance:dist,angle:error});
+  }
+  selected.sort((x,y)=>x.angle-y.angle);
+  magneticTargets.delete(controller);
+  return selected;
+ }
  if(exact){
   const body=bodies.find(b=>b.mesh===exact.object);
-  magneticTargets.set(controller,body);return {body,distance:exact.distance};
+  magneticTargets.set(controller,body);
+  return [{body,distance:exact.distance,angle:0}];
  }
- const direction=raycaster.ray.direction,origin=raycaster.ray.origin;
- let best=null,bestAngle=Infinity,bestDistance=0;
- for(const b of bodies){
-  const center=b.mesh.getWorldPosition(new THREE.Vector3());
-  const v=center.sub(origin),distance=v.length();
-  if(distance<.0001)continue;
-  const cosine=direction.dot(v)/distance;
-  if(cosine<=0)continue;
-  const error=Math.acos(Math.min(1,Math.max(-1,cosine)));
-  const visibleRadius=Math.asin(Math.min(1,b.radius*SCALE/distance));
-  const allowance=Math.max(coneAngle,visibleRadius);
-  if(error<=allowance&&error<bestAngle){best=b;bestAngle=error;bestDistance=distance}
+ const magneticAngle=THREE.MathUtils.degToRad(2.2);
+ let best=null,bestAngle=Infinity;
+ for(const body of bodies){
+  const offset=body.mesh.getWorldPosition(new THREE.Vector3()).sub(origin);
+  const dist=offset.length();
+  if(dist<.00001)continue;
+  const alignment=direction.dot(offset)/dist;
+  if(alignment<=0)continue;
+  const error=Math.acos(THREE.MathUtils.clamp(alignment,-1,1));
+  const radius=Math.asin(Math.min(1,body.radius*SCALE/dist));
+  if(error<=magneticAngle+radius&&error<bestAngle){best={body,distance:dist,angle:error};bestAngle=error}
  }
  const previous=magneticTargets.get(controller);
- if(previous&&bodies.includes(previous)&&best!==previous){
-  const v=previous.mesh.getWorldPosition(new THREE.Vector3()).sub(origin);
-  const d=v.length();
-  if(d>0){
-   const error=Math.acos(THREE.MathUtils.clamp(direction.dot(v)/d,-1,1));
-   const threshold=Math.max(coneAngle,Math.asin(Math.min(1,previous.radius*SCALE/d)));
-   if(error<threshold+THREE.MathUtils.degToRad(1.2)){
-    best=previous;bestDistance=d;
-   }
+ if(previous&&bodies.includes(previous)&&(!best||best.body!==previous)){
+  const offset=previous.mesh.getWorldPosition(new THREE.Vector3()).sub(origin),dist=offset.length();
+  if(dist>.00001){
+   const error=Math.acos(THREE.MathUtils.clamp(direction.dot(offset)/dist,-1,1));
+   if(error<magneticAngle+THREE.MathUtils.degToRad(1.2)+Math.asin(Math.min(1,previous.radius*SCALE/dist)))best={body:previous,distance:dist,angle:error};
   }
  }
- magneticTargets.set(controller,best);
- return best?{body:best,distance:bestDistance}:null;
+ magneticTargets.set(controller,best?.body||null);
+ return best?[best]:[];
 }
 function bringNear(){
  if(!selectedPlanet)return;
@@ -250,19 +281,30 @@ function releaseGrab(controller){
 function updateGrabsAndHover(dt){
  for(const controller of controllers){
   rayFromController(controller);
+  const menuHit=raycaster.intersectObject(panel,false)[0];
+  const beam=controller.userData.beam;
+  if(beam){
+   const endDistance=menuHit?Math.min(MAX_RAY_LENGTH,menuHit.distance):MAX_RAY_LENGTH;
+   beam.scale.z=endDistance;
+  }
   const pad=controllerInputs.get(controller)?.gamepad;
   const axes=pad?.axes||[];
   const sideAxis=axes.length>=4?axes[2]:axes.length>=2?axes[0]:0;
   if(!grabs.has(controller)&&Math.abs(sideAxis)>.18){
-   coneAngle=THREE.MathUtils.clamp(coneAngle+sideAxis*dt*.24,0,MAX_CONE);
+   const before=coneAngles.get(controller)||0;
+   let next=THREE.MathUtils.clamp(before+sideAxis*dt*.24,0,MAX_CONE);
+   if(next<THREE.MathUtils.degToRad(.55))next=0;
+   else if(before===0)next=THREE.MathUtils.degToRad(.7);
+   coneAngles.set(controller,next);
   }
   const pressed=!!pad?.buttons?.[3]?.pressed;
   if(pressed&&!joystickButtons.get(controller)&&!grabs.has(controller))bringNear();
   joystickButtons.set(controller,pressed);
   const cone=coneVisuals[controllers.indexOf(controller)];
   if(cone){
-   cone.visible=!grabs.has(controller)&&coneAngle>.008;
-   const radius=Math.tan(coneAngle)*CONE_VISUAL_LENGTH;
+   const thisAngle=coneAngles.get(controller)||0;
+   cone.visible=!grabs.has(controller)&&thisAngle>0;
+   const radius=Math.tan(thisAngle)*CONE_VISUAL_LENGTH;
    cone.scale.set(radius,1,radius);
   }
   const g=grabs.get(controller);
@@ -277,12 +319,12 @@ function updateGrabsAndHover(dt){
    g.samples.push({p:pos.clone(),t:now});
    while(g.samples.length>2&&now-g.samples[0].t>.14)g.samples.shift();
   }else{
-   const picked=magneticPick(controller);
-   hoverBodies.set(controller,picked?.body.mesh||null);
+   const picked=pickTargets(controller);
+   hoverBodies.set(controller,new Set(picked.map(p=>p.body.mesh)));
   }
  }
  for(const b of bodies){
-  const highlighted=[...hoverBodies.values()].includes(b.mesh)||grabbedBody(b);
+  const highlighted=[...hoverBodies.values()].some(set=>set?.has(b.mesh))||grabbedBody(b);
   b.mesh.material.emissive.setHex(highlighted?0x284866:0);
   b.mesh.material.emissiveIntensity=highlighted?.6:0;
  }
@@ -294,9 +336,11 @@ for(let i=0;i<2;i++){
  const coneMesh=new THREE.Mesh(new THREE.ConeGeometry(1,CONE_VISUAL_LENGTH,32,1,true),new THREE.MeshBasicMaterial({color:0x64b6ff,transparent:true,opacity:.09,depthWrite:false,side:THREE.DoubleSide}));
  coneMesh.rotation.x=Math.PI/2;coneMesh.position.z=-CONE_VISUAL_LENGTH/2;
  controller.add(coneMesh);coneVisuals.push(coneMesh);
- const pointerBeam=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,-MAX_RAY_LENGTH)]),new THREE.LineBasicMaterial({color:0xc3f0ff,transparent:true,opacity:.9,depthTest:false,depthWrite:false}));
+ const pointerBeam=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,-1)]),new THREE.LineBasicMaterial({color:0xc3f0ff,transparent:true,opacity:.9,depthTest:false,depthWrite:false}));
  pointerBeam.renderOrder=40;
  controller.add(pointerBeam);
+ controller.userData.beam=pointerBeam;
+ coneAngles.set(controller,0);
  controller.addEventListener('connected',e=>controllerInputs.set(controller,e.data));
  controller.addEventListener('disconnected',()=>{controllerInputs.delete(controller);releaseGrab(controller)});
  controller.addEventListener('selectstart',()=>{
@@ -309,16 +353,16 @@ for(let i=0;i<2;i++){
     if(px>=x&&px<=x+310&&py>=y&&py<=y+85&&labels[row*2+col]){action(labels[row*2+col]);return}
    }
   }
-  const hit=magneticPick(controller);
-  choosePlanet(hit?.body||null);
+  const hits=pickTargets(controller);
+  choosePlanets(hits.map(h=>h.body));
  });
  controller.addEventListener('squeezestart',()=>{
   rayFromController(controller);
-  const hit=magneticPick(controller);
+  const hit=pickTargets(controller)[0];
   if(!hit)return;
   const body=hit.body;
   if(!body||grabbedBody(body))return;
-  choosePlanet(body);
+  if(!selectedBodies.has(body))choosePlanet(body);
   const center=body.mesh.getWorldPosition(new THREE.Vector3());
   const point=raycaster.ray.at(hit.distance,new THREE.Vector3());
   grabs.set(controller,{body,distance:hit.distance,offset:center.sub(point),samples:[{p:body.pos.clone(),t:performance.now()/1000}]});
