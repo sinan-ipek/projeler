@@ -343,6 +343,16 @@ button{font:inherit;border:none;cursor:pointer}
     phase=(anyExtractable()||inner.some(canExpand))?'extract':'merge';
     render();
     reserveHorizontalSpace();
+    if(tok.type==='var'){
+      const pending=parts.filter(t=>t.exp===current.d && t.extractGroupId);
+      const queue=()=> {
+        const next=pending.shift();
+        if(next && inner.some(t=>t.id===next.id)){
+          extractGroup(next,()=>setTimeout(queue,30));
+        }
+      };
+      if(pending.length) requestAnimationFrame(queue);
+    }
     if(phase==='merge' && !anyMergeable()) readyToCompact();
   }
 
@@ -897,7 +907,7 @@ button{font:inherit;border:none;cursor:pointer}
     const t=group[0];
     return String(t.base)+'<sup style="font-size:.56em">'+current.d+'</sup>';
   }
-  function extractGroup(tok){
+  function extractGroup(tok, onPacked){
 
     const group = groupFor(tok);
     if(group.length !== current.d && !(group.length===1 && tok.type==='var' && tok.exp===current.d)) return;
@@ -1013,6 +1023,7 @@ button{font:inherit;border:none;cursor:pointer}
             }, bubble, tok.part);
           });
         };
+        if(typeof onPacked==='function') onPacked();
       }, 340);
     }, 510);
   }
