@@ -874,9 +874,16 @@ button{font:inherit;border:none;cursor:pointer}
 
   function compactAndFinish(){
     if(rootUnitStage===1){
-      rootUnitStage=2; // 1 çarpmada etkisiz; kök sembolü de kalkar.
+      // Kökten gelen 1 kaybolurken dışarıdaki bütün çarpımlar
+      // aynı son yazım aşamasında bitişik cebirsel gösterime döner.
+      rootUnitStage=2;
       if(outer.length===0) outer.push(token('num',1,'out','num'));
-      render(); phase='done';setStatus('İşlem tamamlandı.');return;
+      compactProduct=true;
+      document.querySelector('.expression').classList.add('compact');
+      phase='done';
+      render();
+      setStatus('İşlem tamamlandı.');
+      return;
     }
     if(normalizeFraction()){
       render();
