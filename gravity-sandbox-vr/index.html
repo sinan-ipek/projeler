@@ -145,6 +145,7 @@ function updateHandMenu(){
  rightController.updateWorldMatrix(true,false);
  panel.position.copy(menuAnchorOffset).applyMatrix4(rightController.matrixWorld);
  panel.quaternion.copy(renderer.xr.getCamera().getWorldQuaternion(new THREE.Quaternion()));
+ panel.updateMatrixWorld(true);
 }
 
 const labels=['play','reset','mode','trails','near'];
