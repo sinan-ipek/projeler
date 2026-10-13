@@ -384,7 +384,7 @@ button{font:inherit;border:none;cursor:pointer}
     if(animating) return false;
     if(phase === 'seed') return canExpand(tok);
     if(phase === 'extract') return isExtractable(tok) || canExpand(tok);
-    if(phase === 'merge') return bucketHasMergeable(tok.side, tok.part) || (tok.side==='in' && fractionCanReduce()) || (tok.side==='out' && hasOutsideLiteralProduct());
+    if(phase === 'merge') return bucketHasMergeable(tok.side, tok.part) || (tok.side==='in' && fractionCanReduce()) || (tok.side==='out' && hasOutsideLiteralProduct(tok.part));
     if(phase === 'format') return true;
     return false;
   }
@@ -477,7 +477,13 @@ button{font:inherit;border:none;cursor:pointer}
   // incoming=true öğe sadece animasyon hedefini ölçmek için gizlice oluşturulur.
   function renderDynamicFractionPart(parent, part){
     const tokens=outer.filter(t=>t.part===part)
-      .sort((a,b)=>compactProduct ? ((a.type==='num'?0:1)-(b.type==='num'?0:1) || String(a.base).localeCompare(String(b.base))) : ((b.arrivalOrder||0)-(a.arrivalOrder||0)));
+      .sort((a,b)=>{
+        if(a.joinedProduct&&a.joinedProduct===b.joinedProduct){
+          return (a.type==='num'?0:1)-(b.type==='num'?0:1) ||
+                 String(a.base).localeCompare(String(b.base));
+        }
+        return (b.arrivalOrder||0)-(a.arrivalOrder||0);
+      });
     const real=tokens.filter(t=>!t.incoming);
     if(!real.length){
       const one=document.createElement('span');
@@ -492,7 +498,8 @@ button{font:inherit;border:none;cursor:pointer}
     const row=document.createElement('span');
     row.className='outside-row dynamic-fraction-row';
     tokens.forEach((tok,i)=>{
-      if(i>0 && !compactProduct && !tok.incoming && !tokens[i-1].incoming){
+      if(i>0 && !compactProduct && !tok.incoming && !tokens[i-1].incoming &&
+         !(tok.joinedProduct && tok.joinedProduct===tokens[i-1].joinedProduct)){
         const dot=document.createElement('span');
         dot.className='outside-dot';
         dot.textContent='·';
@@ -699,7 +706,7 @@ button{font:inherit;border:none;cursor:pointer}
     else if(phase === 'extract' && isExtractable(tok)) extractGroup(tok);
     else if(phase === 'extract' && canExpand(tok)) expandOnly(tok);
     else if(phase === 'merge'){
-      if(tok.side==='out' && compactOutsideProduct()) return;
+      if(tok.side==='out' && compactOutsideProduct(tok.part)) return;
       if(tok.side==='in' && reduceInnerFraction()) return;
       simplifyBucket(tok.side,tok.part);
     }
@@ -1039,20 +1046,46 @@ button{font:inherit;border:none;cursor:pointer}
     setStatus('Son yazım için ifadeye tıkla.');
   }
 
-  function hasOutsideLiteralProduct(){
-    return ['num','den'].some(part=>{
-      const a=outer.filter(t=>t.part===part&&!t.incoming);
-      return a.length>1 && a.some(t=>t.type==='num') && a.some(t=>t.type==='var');
+  function hasOutsideLiteralProduct(part=null){
+    return (part?[part]:['num','den']).some(p=>{
+      const a=outer.filter(t=>t.part===p&&!t.incoming);
+      return a.length>1;
     });
   }
 
-  function compactOutsideProduct(){
-    if(compactProduct || !hasOutsideLiteralProduct()) return false;
-    // Cebirsel yazım: katsayı harften önce, arada çarpım noktası yok.
-    compactProduct=true;
-    document.querySelector('.expression').classList.add('compact');
+  // Gerçek çarpma yapılır: 3·2·a -> 6a, x·x·3 -> 3x².
+  // Yalnızca seçilen kesir parçası toparlanır.
+  function compactOutsideProduct(part=null){
+    const parts=part?[part]:['num','den'];
+    let changed=false;
+    const next=outer.filter(t=>t.incoming||!parts.includes(t.part));
+    for(const p of parts){
+      const a=outer.filter(t=>t.part===p&&!t.incoming);
+      if(a.length<2){next.push(...a);continue;}
+      changed=true;
+      let number=1;
+      const vars=new Map();
+      for(const t of a){
+        if(t.type==='num') number*=t.base;
+        else vars.set(String(t.base),(vars.get(String(t.base))||0)+(t.exp||1));
+      }
+      const order=Math.max(0,...a.map(t=>t.arrivalOrder||0));
+      const pieces=[];
+      if(number!==1 || vars.size===0) pieces.push(token('num',number,'out',p));
+      for(const [v,exponent] of [...vars].sort(([x],[y])=>x.localeCompare(y))){
+        pieces.push(token('var',v,'out',p,exponent));
+      }
+      const gid='joined-'+nextId;
+      pieces.forEach((t,i)=>{
+        t.arrivalOrder=order-i*0.001;
+        t.joinedProduct=gid;
+        next.push(t);
+      });
+    }
+    if(!changed)return false;
+    outer=next;
     render();
-    setStatus('Dışarıdaki çarpım toparlandı.');
+    setStatus('Çarpanlar toparlandı.');
     return true;
   }
 
