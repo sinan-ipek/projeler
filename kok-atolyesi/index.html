@@ -384,7 +384,7 @@ button{font:inherit;border:none;cursor:pointer}
     if(animating) return false;
     if(phase === 'seed') return canExpand(tok);
     if(phase === 'extract') return isExtractable(tok) || canExpand(tok);
-    if(phase === 'merge') return bucketHasMergeable(tok.side, tok.part) || (tok.side==='in' && fractionCanReduce());
+    if(phase === 'merge') return bucketHasMergeable(tok.side, tok.part) || (tok.side==='in' && fractionCanReduce()) || (tok.side==='out' && hasOutsideLiteralProduct());
     if(phase === 'format') return true;
     return false;
   }
@@ -477,7 +477,7 @@ button{font:inherit;border:none;cursor:pointer}
   // incoming=true öğe sadece animasyon hedefini ölçmek için gizlice oluşturulur.
   function renderDynamicFractionPart(parent, part){
     const tokens=outer.filter(t=>t.part===part)
-      .sort((a,b)=>(b.arrivalOrder||0)-(a.arrivalOrder||0));
+      .sort((a,b)=>compactProduct ? ((a.type==='num'?0:1)-(b.type==='num'?0:1) || String(a.base).localeCompare(String(b.base))) : ((b.arrivalOrder||0)-(a.arrivalOrder||0)));
     const real=tokens.filter(t=>!t.incoming);
     if(!real.length){
       const one=document.createElement('span');
@@ -674,6 +674,7 @@ button{font:inherit;border:none;cursor:pointer}
     else if(phase === 'extract' && isExtractable(tok)) extractGroup(tok);
     else if(phase === 'extract' && canExpand(tok)) expandOnly(tok);
     else if(phase === 'merge'){
+      if(tok.side==='out' && compactOutsideProduct()) return;
       if(tok.side==='in' && reduceInnerFraction()) return;
       simplifyBucket(tok.side,tok.part);
     }
@@ -1013,7 +1014,25 @@ button{font:inherit;border:none;cursor:pointer}
     setStatus('Son yazım için ifadeye tıkla.');
   }
 
+  function hasOutsideLiteralProduct(){
+    return ['num','den'].some(part=>{
+      const a=outer.filter(t=>t.part===part&&!t.incoming);
+      return a.length>1 && a.some(t=>t.type==='num') && a.some(t=>t.type==='var');
+    });
+  }
+
+  function compactOutsideProduct(){
+    if(compactProduct || !hasOutsideLiteralProduct()) return false;
+    // Cebirsel yazım: katsayı harften önce, arada çarpım noktası yok.
+    compactProduct=true;
+    document.querySelector('.expression').classList.add('compact');
+    render();
+    setStatus('Dışarıdaki çarpım toparlandı.');
+    return true;
+  }
+
   function compactAndFinish(){
+    if(compactOutsideProduct()) return;
     if(rootUnitStage===1){
       // Kökten gelen 1 kaybolurken dışarıdaki bütün çarpımlar
       // aynı son yazım aşamasında bitişik cebirsel gösterime döner.
