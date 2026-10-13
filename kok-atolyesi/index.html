@@ -287,7 +287,7 @@ button{font:inherit;border:none;cursor:pointer}
     inner=originalInsideTokens();
     if(!inner.some(canExpand)){
       buildExtractionPlan();
-      phase=anyExtractable()?'extract':'merge';
+      phase=(anyExtractable() || inner.some(canExpand))?'extract':'merge';
       if(phase==='merge' && !anyMergeable() && !fractionCanReduce()) phase='format';
     }
     setStatus('Açmak istediğin çarpana tıkla.');
@@ -313,11 +313,6 @@ button{font:inherit;border:none;cursor:pointer}
       ?primeFactors(tok.base).map(n=>token('num',n,'in',tok.part))
       :Array.from({length:tok.exp},()=>token('var',tok.base,'in',tok.part));
     inner.splice(pos,1,...parts);
-    if(inner.some(canExpand)){
-      render();
-      setStatus('Diğer çarpanları da tek tek açabilirsin.');
-      return;
-    }
     buildExtractionPlan();
     phase=anyExtractable()?'extract':'merge';
     render();
@@ -369,7 +364,7 @@ button{font:inherit;border:none;cursor:pointer}
   function tokenClickable(tok){
     if(animating) return false;
     if(phase === 'seed') return canExpand(tok);
-    if(phase === 'extract') return isExtractable(tok);
+    if(phase === 'extract') return isExtractable(tok) || canExpand(tok);
     if(phase === 'merge') return bucketHasMergeable(tok.side, tok.part) || (tok.side==='in' && fractionCanReduce());
     if(phase === 'format') return true;
     return false;
@@ -626,6 +621,7 @@ button{font:inherit;border:none;cursor:pointer}
     if(animating) return;
     if(phase === 'seed') expandOnly(tok);
     else if(phase === 'extract' && isExtractable(tok)) extractGroup(tok);
+    else if(phase === 'extract' && canExpand(tok)) expandOnly(tok);
     else if(phase === 'merge'){
       if(tok.side==='in' && reduceInnerFraction()) return;
       simplifyBucket(tok.side,tok.part);
@@ -851,7 +847,7 @@ button{font:inherit;border:none;cursor:pointer}
         outTok.color = '';
         outer.push(outTok);
         animating = false;
-        if(anyExtractable() || pendingGroups.size){
+        if(anyExtractable() || pendingGroups.size || inner.some(canExpand)){
           phase = 'extract';
           setStatus('Renkli grupları paketle veya bekleyen balonlara tıkla.');
           render();
