@@ -36,8 +36,8 @@ button{font:inherit;border:none;cursor:pointer}
 .degree{position:absolute;left:3px;top:26%;transform:translateY(-50%);min-width:28px;height:30px;padding:0 3px;border-radius:6px;border:2px solid transparent;background:transparent;color:#2f4260;font-weight:800;font-size:23px;display:grid;place-items:center;transition:background .15s,border-color .15s;z-index:2}
 .degree.implicit{color:transparent}
 .degree:hover,.degree:focus-visible{background:#fff2be;border-color:#f0c645;color:#2f4260;outline:none}
-.rootmark{position:absolute;left:0;top:0;height:96px;width:56px;color:#213142}.rootmark svg{display:block;width:100%;height:100%}
-.inside{display:inline-flex;align-items:baseline;min-height:70px;margin-top:0;padding:8px 8px 6px 1px;border-top:4px solid #213142;flex-wrap:wrap;gap:4px;line-height:1.1}
+.rootmark{position:absolute;left:0;top:0;height:96px;width:120px;pointer-events:none;color:#213142;z-index:1}.rootmark svg{display:block;width:100%;height:100%}
+.inside{display:inline-flex;align-items:baseline;min-height:70px;margin-top:0;padding:8px 8px 6px 1px;border-top:4px solid transparent;flex-wrap:wrap;gap:4px;line-height:1.1}
 .factor{display:inline-flex;align-items:center;justify-content:center;min-width:22px;padding:5px 4px;border-radius:10px;border:2px solid transparent;background:transparent;color:#23384d;font-size:1em;transition:.15s}
 .factor.clickable:hover,.factor.clickable:focus-visible{background:var(--accent-soft);border-color:#a9bef4;outline:none}
 .factor.extractable{color:var(--extract);font-weight:800;background:#fff2f5;transition:color .4s ease,background-color .4s ease}
@@ -98,7 +98,7 @@ button{font:inherit;border:none;cursor:pointer}
         <span class="outside" id="outside"></span>
         <span class="radical">
           <button id="degree" class="degree implicit" aria-label="Kök derecesi">2</button>
-          <span class="rootmark" aria-hidden="true"><svg viewBox="0 0 56 96" preserveAspectRatio="none"><path d="M 3 37 L 16 37 L 30 67 L 53 3" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" stroke-linecap="square"/></svg></span>
+          <span class="rootmark" aria-hidden="true"><svg viewBox="0 0 120 96" preserveAspectRatio="none"><path class="root-path" d="M 3 40 L 16 40 L 30 88 L 53 3 L 117 3" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></span>
           <span class="inside" id="inside"></span>
         </span>
       </div>
@@ -614,18 +614,48 @@ button{font:inherit;border:none;cursor:pointer}
     }
   }
 
+  // Beyaz tahtadaki üç kontrol noktasıyla aynı geometri ilkesi:
+  // başlangıç, dip ve çatı. Tek çizgi bütün bağlantıları pürüzsüz tutar.
+  let rootGeometry=null;
+  let rootMorphFrame=0;
+  function drawRootGeometry(geometry){
+    const mark=document.querySelector('.rootmark');
+    const svg=mark.querySelector('svg');
+    const path=mark.querySelector('.root-path');
+    const {w,h}=geometry;
+    mark.style.width=w+'px';
+    mark.style.height=h+'px';
+    svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const top=3, low=h-8;
+    const startY=top+(low-top)*0.39;
+    const x0=3, x1=16, x2=30, x3=53, xEnd=w-3;
+    path.setAttribute('d',`M ${x0} ${startY} L ${x1} ${startY} L ${x2} ${low} L ${x3} ${top} L ${xEnd} ${top}`);
+  }
+  function updateRootGeometry(w,h){
+    const target={w:Math.max(76,Math.ceil(w)),h:Math.max(92,Math.ceil(h))};
+    if(rootGeometry && Math.abs(rootGeometry.w-target.w)<1 && Math.abs(rootGeometry.h-target.h)<1)return;
+    cancelAnimationFrame(rootMorphFrame);
+    const from=rootGeometry||target;
+    const begin=performance.now(),duration=260;
+    const move=now=>{
+      const u=Math.min(1,(now-begin)/duration);
+      const e=u*u*(3-2*u);
+      drawRootGeometry({w:from.w+(target.w-from.w)*e,h:from.h+(target.h-from.h)*e});
+      if(u<1)rootMorphFrame=requestAnimationFrame(move);
+      else rootGeometry=target;
+    };
+    // İlk çizim zıplamasızdır; sonraki boyut değişimleri yumuşak ilerler.
+    if(!rootGeometry){rootGeometry=target;drawRootGeometry(target);}
+    else rootMorphFrame=requestAnimationFrame(move);
+  }
   function alignFormula(){
-    const mark = document.querySelector('.rootmark');
-    const radical = document.querySelector('.radical');
-    const inside = insideEl.getBoundingClientRect();
-    // Kökün üst çizgisi içeriğin genişliğini takip eder; dikey kol kesrin altına uzar.
-    const desiredHeight = Math.max(96, Math.ceil(inside.height + 12));
-    const desiredWidth = Math.max(56, Math.round(desiredHeight * 56 / 96));
-    if(Math.abs(mark.offsetHeight-desiredHeight)>1){
-      mark.style.height = desiredHeight+'px';
-      mark.style.width = desiredWidth+'px';
-      radical.style.paddingLeft=(desiredWidth-2)+'px';
-    }
+    const radical=document.querySelector('.radical');
+    const inside=insideEl.getBoundingClientRect();
+    const desiredHeight=Math.max(96,Math.ceil(inside.height+12));
+    // Çatı kök içinin o anki gerçek genişliğine göre uzar.
+    const desiredWidth=54+inside.width;
+    radical.style.paddingLeft='54px';
+    updateRootGeometry(desiredWidth,desiredHeight);
     // Kesir varsa merkezlerini değil, kesir çizgilerini hizala.
     const inFraction = insideEl.querySelector('.frac');
     const outFraction = outsideEl.querySelector('.frac');
