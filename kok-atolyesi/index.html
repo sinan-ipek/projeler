@@ -208,14 +208,11 @@ button{font:inherit;border:none;cursor:pointer}
   }
 
   function buildExtractionPlan(){
-    clearExtractionMarks();
-    plannedSlots = {num:0, den:0};
-    nextSlotByPart = {num:0, den:0};
-    nextGroupId = 1;
+    // Önceden paketlenmiş grupların kimliklerini ve slotlarını koru.
 
     const buckets = {};
     inner.forEach(t => {
-      if(t.exp !== 1) return;
+      if(t.exp !== 1 || t.extractGroupId) return;
       const k = kindKey(t);
       (buckets[k] ||= []).push(t);
     });
@@ -226,7 +223,7 @@ button{font:inherit;border:none;cursor:pointer}
       const groupCount = Math.floor(groupTokens.length / current.d);
       if(groupCount <= 0) return;
       const part = k.split('|')[0];
-      plannedSlots[part] += groupCount;
+      plannedSlots[part] = Math.max(plannedSlots[part], nextSlotByPart[part] + groupCount + pendingGroups.size);
       for(let g = 0; g < groupCount; g++){
         const color = palette[colorIndex % palette.length];
         colorIndex += 1;
@@ -238,6 +235,17 @@ button{font:inherit;border:none;cursor:pointer}
         }
       }
     });
+    // Henüz açılmamış bir çarpan da gelecekte slot gerektirebilir.
+    for(const part of ['num','den']){
+      const all=[];
+      inner.filter(t=>t.part===part).forEach(t=>{
+        if(t.type==='num') all.push(...primeFactors(t.base).map(String));
+        else for(let i=0;i<t.exp;i++) all.push(String(t.base));
+      });
+      const counts={};all.forEach(x=>counts[x]=(counts[x]||0)+1);
+      const potential=Object.values(counts).reduce((sum,n)=>sum+Math.floor(n/current.d),0);
+      plannedSlots[part]=Math.max(plannedSlots[part],nextSlotByPart[part]+potential);
+    }
   }
 
   function colorOf(t){
