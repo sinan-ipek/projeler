@@ -134,33 +134,60 @@ const panelCanvas=document.createElement('canvas');panelCanvas.width=720;panelCa
 const ctx=panelCanvas.getContext('2d'),panelTexture=new THREE.CanvasTexture(panelCanvas);panelTexture.colorSpace=THREE.SRGBColorSpace;
 const panel=new THREE.Mesh(new THREE.PlaneGeometry(.325,.23),new THREE.MeshBasicMaterial({map:panelTexture,transparent:true,side:THREE.DoubleSide,depthTest:false}));
 panel.position.set(-.5,1.7,-1.3);panel.renderOrder=20;scene.add(panel);
-let handMenuOpen=false;
+let handMenuOpen=false,rightMenuOpen=false;
 let rightController=null;
 const lastMenuPress=new Map();
 let leftController=null;
 function toggleHandMenu(){
  handMenuOpen=!handMenuOpen;
+ if(handMenuOpen)rightMenuOpen=false;
  updateHandMenu();
  $('status').textContent=handMenuOpen?'Menü açık':'Menü kapalı';
 }
 const menuAnchorOffset=new THREE.Vector3(0,.115,-.015);
+const rightMenuCanvas=document.createElement('canvas');
+rightMenuCanvas.width=720;rightMenuCanvas.height=505;
+const rightMenuCtx=rightMenuCanvas.getContext('2d');
+const rightMenuTexture=new THREE.CanvasTexture(rightMenuCanvas);
+rightMenuTexture.colorSpace=THREE.SRGBColorSpace;
+const rightPanel=new THREE.Mesh(new THREE.PlaneGeometry(.325,.23),new THREE.MeshBasicMaterial({map:rightMenuTexture,transparent:true,side:THREE.DoubleSide,depthTest:false}));
+rightPanel.renderOrder=20;rightPanel.visible=false;scene.add(rightPanel);
+function refreshRightPanel(){
+ rightMenuCtx.clearRect(0,0,720,505);
+ rightMenuCtx.fillStyle='#15253aef';rightMenuCtx.fillRect(0,0,720,505);
+ rightMenuCtx.fillStyle='#fff';rightMenuCtx.font='bold 37px system-ui';rightMenuCtx.fillText('SECILI NESNELER',28,72);
+ rightMenuCtx.fillStyle='#b8e2ff';rightMenuCtx.font='27px system-ui';rightMenuCtx.fillText('Secili: '+selectedBodies.size,28,125);
+ rightMenuCtx.fillStyle='#285a8d';rightMenuCtx.beginPath();rightMenuCtx.roundRect(28,160,664,145,18);rightMenuCtx.fill();
+ rightMenuCtx.fillStyle='#fff';rightMenuCtx.font='bold 38px system-ui';rightMenuCtx.fillText('YAKINA GETIR',195,250);
+ rightMenuCtx.fillStyle='#b1cbe1';rightMenuCtx.font='23px system-ui';rightMenuCtx.fillText('Sag A: ac / kapat',28,451);
+ rightMenuTexture.needsUpdate=true;
+}
+const rightMenuOffset=new THREE.Vector3(0,.115,-.015);
 const menuWristRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/3);
 function updateHandMenu(){
- if(!renderer.xr.isPresenting){panel.visible=true;return}
+ if(!renderer.xr.isPresenting){panel.visible=true;rightPanel.visible=false;return}
  panel.visible=handMenuOpen&&!!leftController;
- if(!panel.visible)return;
- leftController.updateWorldMatrix(true,false);
- panel.position.copy(menuAnchorOffset).applyMatrix4(leftController.matrixWorld);
- panel.quaternion.setFromRotationMatrix(new THREE.Matrix4().extractRotation(leftController.matrixWorld)).multiply(menuWristRotation);
- panel.updateMatrixWorld(true);
+ rightPanel.visible=rightMenuOpen&&!!rightController;
+ if(panel.visible){
+  leftController.updateWorldMatrix(true,false);
+  panel.position.copy(menuAnchorOffset).applyMatrix4(leftController.matrixWorld);
+  panel.quaternion.setFromRotationMatrix(new THREE.Matrix4().extractRotation(leftController.matrixWorld)).multiply(menuWristRotation);
+  panel.updateMatrixWorld(true);
+ }
+ if(rightPanel.visible){
+  rightController.updateWorldMatrix(true,false);
+  rightPanel.position.copy(rightMenuOffset).applyMatrix4(rightController.matrixWorld);
+  rightPanel.quaternion.setFromRotationMatrix(new THREE.Matrix4().extractRotation(rightController.matrixWorld)).multiply(menuWristRotation);
+  rightPanel.updateMatrixWorld(true);
+ }
 }
 
-const labels=['play','reset','mode','trails','near'];
+const labels=['play','reset','mode','trails'];
 function refreshPanel(){
  ctx.clearRect(0,0,720,505);ctx.fillStyle='#15253aeF';ctx.fillRect(0,0,720,505);
  ctx.fillStyle='#e7f4ff';ctx.font='bold 34px system-ui';ctx.fillText('GRAVITY SANDBOX VR',34,60);
- const names=[$('play').textContent,$('reset').textContent,$('mode').textContent,$('trails').textContent,'Yakına Getir'];
- for(let i=0;i<5;i++){
+ const names=[$('play').textContent,$('reset').textContent,$('mode').textContent,$('trails').textContent];
+ for(let i=0;i<4;i++){
   const x=35+(i%2)*345,y=100+Math.floor(i/2)*115;
   ctx.fillStyle='#285a8d';ctx.beginPath();ctx.roundRect(x,y,310,85,12);ctx.fill();
   ctx.fillStyle='#ffffff';ctx.font='28px system-ui';ctx.fillText(names[i],x+20,y+54);
@@ -181,7 +208,7 @@ function choosePlanets(items){
  for(const b of items)if(b&&bodies.includes(b))selectedBodies.add(b);
  selectedPlanet=items.length?items[0]:null;
  $('status').textContent=selectedBodies.size?selectedBodies.size+' gezegen seçildi (tetik)':'Seçim kaldırıldı';
- refreshPanel();
+ refreshPanel();refreshRightPanel();
 }
 function choosePlanet(b){choosePlanets(b?[b]:[])}
 
@@ -306,10 +333,10 @@ function updateGrabsAndHover(dt){
  updateHandMenu();
  for(const controller of controllers){
   rayFromController(controller);
-  const menuHit=panel.visible?raycaster.intersectObject(panel,false)[0]:null;
+  const menuHit=raycaster.intersectObjects([panel,rightPanel].filter(p=>p.visible),false)[0];
   const beam=controller.userData.beam;
   if(beam){
-   beam.visible=!(controller===leftController&&handMenuOpen);
+   beam.visible=!((controller===leftController&&handMenuOpen)||(controller===rightController&&rightMenuOpen));
    const endDistance=menuHit?Math.min(MAX_RAY_LENGTH,menuHit.distance):MAX_RAY_LENGTH;
    beam.scale.z=endDistance;
   }
@@ -325,13 +352,16 @@ function updateGrabsAndHover(dt){
   }
   // On Quest Touch left controllers the application menu is commonly button 4.
   // WebXR may reserve this button; in that case it will not be reported here.
-  const menuPressed=controller===leftController&&!!pad?.buttons?.[4]?.pressed; // X only; hamburger may be hidden by WebXR
-  if(menuPressed&&!lastMenuPress.get(controller))toggleHandMenu();
+  const menuPressed=(controller===leftController||controller===rightController)&&!!pad?.buttons?.[4]?.pressed;
+  if(menuPressed&&!lastMenuPress.get(controller)){
+   if(controller===leftController)toggleHandMenu();
+   else{rightMenuOpen=!rightMenuOpen;if(rightMenuOpen)handMenuOpen=false;updateHandMenu();$('status').textContent=rightMenuOpen?'Sağ menü açık':'Sağ menü kapalı'}
+  }
   lastMenuPress.set(controller,menuPressed);
   const cone=coneVisuals[controllers.indexOf(controller)];
   if(cone){
    const thisAngle=coneAngles.get(controller)||0;
-   cone.visible=!(controller===leftController&&handMenuOpen)&&!grabs.has(controller)&&thisAngle>0;
+   cone.visible=!((controller===leftController&&handMenuOpen)||(controller===rightController&&rightMenuOpen))&&!grabs.has(controller)&&thisAngle>0;
    const radius=Math.tan(thisAngle)*CONE_VISUAL_LENGTH;
    cone.scale.set(radius,1,radius);
   }
@@ -377,7 +407,12 @@ for(let i=0;i<2;i++){
  controller.addEventListener('disconnected',()=>{controllerInputs.delete(controller);releaseGrab(controller)});
  controller.addEventListener('selectstart',()=>{
   rayFromController(controller);
-  const panelHit=panel.visible?raycaster.intersectObject(panel,false)[0]:null;
+  const panelHit=raycaster.intersectObjects([panel,rightPanel].filter(p=>p.visible),false)[0];
+  if(panelHit?.object===rightPanel){
+   const px=panelHit.uv.x*720,py=(1-panelHit.uv.y)*505;
+   if(px>=28&&px<=692&&py>=160&&py<=305)action('near');
+   return;
+  }
   if(panelHit?.uv){
    const px=panelHit.uv.x*720,py=(1-panelHit.uv.y)*505;
    if(py>=100&&py<=415){
@@ -404,11 +439,11 @@ for(let i=0;i<2;i++){
  const grip=renderer.xr.getControllerGrip(i);grip.add(controllerFactory.createControllerModel(grip));scene.add(grip);
 }
 renderer.xr.addEventListener('sessionstart',()=>{
- handMenuOpen=false;
+ handMenuOpen=false;rightMenuOpen=false;
  $('status').textContent='v9.1 · Sol X: menüyü aç/kapat';
 });
 renderer.xr.addEventListener('sessionend',()=>{
- grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;
+ grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;rightMenuOpen=false;
  $('status').textContent='VR kapalı · Masaüstü önizlemesi';
 });
 const clock=new THREE.Clock();
@@ -424,7 +459,7 @@ renderer.setAnimationLoop(()=>{
  renderer.render(scene,camera);
 });
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-setup();syncButtons();$('status').textContent='Hazır · Quest 3 tarayıcısında ENTER VR düğmesini kullan';
+setup();syncButtons();refreshRightPanel();$('status').textContent='Hazır · Quest 3 tarayıcısında ENTER VR düğmesini kullan';
 if(!navigator.xr)$('warning').textContent='Bu tarayıcıda WebXR görünmüyor. Quest 3 Browser ile aç.';
 </script>
 </body>
