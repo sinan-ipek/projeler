@@ -1068,6 +1068,9 @@
   let contextTargetIndices = [];
   let pendingBoardLoad = null;
   const imageCache = new Map();
+  const imageAssetCache = new Map();      // assetId -> data URL
+  const imageAssetLoading = new Map();    // assetId -> Promise
+  const IMAGE_ASSET_PREFIX = 'asset:';
 
   let drawing = false;
   let points = [];
@@ -1465,9 +1468,19 @@
     return changed;
   }
 
+  function collabSerializableObject(o){
+    const copy=JSON.parse(JSON.stringify(o));
+    if(copy && copy.kind==='image' && copy.assetId){
+      // The image bytes live in their own asset row. Never repeat them in
+      // board snapshots or realtime object messages.
+      delete copy.src;
+    }
+    return copy;
+  }
+
   function collabSerializableObjects(){
     ensureUniqueObjectIds();
-    return JSON.parse(JSON.stringify(objects));
+    return objects.map(collabSerializableObject);
   }
 
   function collabSignature(state=objects){
@@ -1489,10 +1502,33 @@
     for(const o of objects){
       if(!o || !o.id) continue;
       try{
-        next.set(o.id,JSON.stringify(o));
+        next.set(o.id,collabSerializableObject(o));
       }catch(_){}
     }
     collabLiveSnapshot=next;
+  }
+
+  function collabTopLevelPatch(previous,current){
+    if(!previous || !current) return null;
+    const changes={};
+    const unset=[];
+
+    for(const [key,value] of Object.entries(current)){
+      if(key==='id') continue;
+      let same=false;
+      try{
+        same=JSON.stringify(previous[key])===JSON.stringify(value);
+      }catch(_){}
+      if(!same) changes[key]=JSON.parse(JSON.stringify(value));
+    }
+
+    for(const key of Object.keys(previous)){
+      if(key==='id') continue;
+      if(!(key in current)) unset.push(key);
+    }
+
+    if(!Object.keys(changes).length && !unset.length) return null;
+    return {id:current.id,changes,unset};
   }
 
   function collabBroadcast(event,payload){
@@ -1514,7 +1550,10 @@
   function collabApplyLiveDelta(payload){
     if(!payload || payload.clientId===COLLAB_CLIENT_ID) return;
 
+    // Legacy clients may still send upserts for a short while after deploy.
     const upserts=Array.isArray(payload.upserts) ? payload.upserts : [];
+    const creates=Array.isArray(payload.creates) ? payload.creates : [];
+    const patches=Array.isArray(payload.patches) ? payload.patches : [];
     const deletes=Array.isArray(payload.deletes) ? payload.deletes : [];
 
     collabApplyingRemote=true;
@@ -1527,16 +1566,51 @@
         objects=objects.filter(o=>o && !del.has(o.id));
       }
 
-      for(const incoming of upserts){
+      for(const incoming of [...upserts,...creates]){
         if(!incoming || !incoming.id) continue;
         const copy=JSON.parse(JSON.stringify(incoming));
         const idx=objects.findIndex(o=>o && o.id===copy.id);
-        if(idx>=0) objects[idx]=copy;
-        else objects.push(copy);
+        if(idx>=0){
+          // Preserve an already-resolved local image source when the compact
+          // network object intentionally omits it.
+          if(
+            objects[idx] &&
+            objects[idx].kind==='image' &&
+            objects[idx].src &&
+            copy.kind==='image' &&
+            copy.assetId &&
+            !copy.src
+          ){
+            copy.src=objects[idx].src;
+          }
+          objects[idx]=copy;
+        }else{
+          objects.push(copy);
+        }
+      }
+
+      for(const patch of patches){
+        if(!patch || !patch.id) continue;
+        const idx=objects.findIndex(o=>o && o.id===patch.id);
+        if(idx<0) continue;
+
+        const target=objects[idx];
+        const changes=patch.changes && typeof patch.changes==='object'
+          ? patch.changes
+          : {};
+
+        for(const [key,value] of Object.entries(changes)){
+          target[key]=JSON.parse(JSON.stringify(value));
+        }
+
+        if(Array.isArray(patch.unset)){
+          for(const key of patch.unset){
+            if(key!=='id') delete target[key];
+          }
+        }
       }
 
       if(removedSomething){
-        // Index tabanlı seçimlerin kaymasını önle.
         setSelection([]);
       }else{
         normalizeSelection();
@@ -1689,7 +1763,7 @@
     if(!o.id) o.id=liveInkId || makeObjectId();
 
     collabBroadcast('live_object_commit',{
-      object:JSON.parse(JSON.stringify(o))
+      object:collabSerializableObject(o)
     });
 
     if(liveInkId){
@@ -1710,21 +1784,27 @@
     ensureUniqueObjectIds();
 
     const current=new Map();
-    const upserts=[];
+    const creates=[];
+    const patches=[];
 
     for(const o of objects){
       if(!o || !o.id) continue;
 
-      let serialized='';
+      let normalized=null;
       try{
-        serialized=JSON.stringify(o);
+        normalized=collabSerializableObject(o);
       }catch(_){
         continue;
       }
 
-      current.set(o.id,serialized);
-      if(collabLiveSnapshot.get(o.id)!==serialized){
-        upserts.push(JSON.parse(serialized));
+      current.set(o.id,normalized);
+
+      const previous=collabLiveSnapshot.get(o.id);
+      if(!previous){
+        creates.push(normalized);
+      }else{
+        const patch=collabTopLevelPatch(previous,normalized);
+        if(patch) patches.push(patch);
       }
     }
 
@@ -1733,15 +1813,16 @@
       if(!current.has(id)) deletes.push(id);
     }
 
-    if(!upserts.length && !deletes.length) return;
+    if(!creates.length && !patches.length && !deletes.length) return;
 
     collabLiveSnapshot=current;
     collabLocalDirty=true;
 
-    collabBroadcast('live_delta',{upserts,deletes});
+    collabBroadcast('live_delta',{creates,patches,deletes});
 
-    // Broadcast gives fluid motion; database remains the durable checkpoint.
-    collabScheduleSend(120);
+    // Live motion travels as tiny deltas. The database is only a durable
+    // checkpoint after the board has been quiet for a few seconds.
+    collabScheduleSend(3000);
   }
 
   async function collabSendBoardNow(){
@@ -1759,6 +1840,10 @@
       const state=collabSerializableObjects();
       const signature=collabSignature(state);
 
+      if(signature===collabLastSignature && !collabLocalDirty){
+        return;
+      }
+
       const {error}=await collabClient
         .from(COLLAB_TABLE)
         .upsert({
@@ -1770,6 +1855,7 @@
 
       if(error) throw error;
       collabLastSignature=signature;
+      collabLocalDirty=false;
     }catch(err){
       console.error('Realtime gönderim hatası:',err);
       collabSetStatus('Ortak tahta bağlantısında gönderim hatası');
@@ -1777,12 +1863,12 @@
       collabSendInFlight=false;
       if(collabSendAgain){
         collabSendAgain=false;
-        setTimeout(collabSendBoardNow,40);
+        setTimeout(collabSendBoardNow,500);
       }
     }
   }
 
-  function collabScheduleSend(delay=80){
+  function collabScheduleSend(delay=3000){
     if(!collabEnabled || collabApplyingRemote) return;
     clearTimeout(collabSendTimer);
     collabSendTimer=setTimeout(collabSendBoardNow,delay);
@@ -1988,6 +2074,14 @@
         collabLastSignature=collabSignature(initialState);
       }
 
+      // One-time migration for old boards that still contain Base64 image data.
+      // After this succeeds, the main board row only carries a tiny assetId.
+      try{
+        await migrateInlineSharedImagesToAssets();
+      }catch(err){
+        console.warn('Eski görsellerin ayrıştırılması tamamlanamadı:',err);
+      }
+
       collabChannel=collabClient
         .channel(
           'whiteboard:'+COLLAB_BOARD_ID,
@@ -2013,27 +2107,7 @@
           {event:'board_replace'},
           ({payload})=>collabApplyBoardReplace(payload)
         )
-        .on(
-          'postgres_changes',
-          {
-            event:'*',
-            schema:'public',
-            table:COLLAB_TABLE,
-            filter:'id=eq.'+COLLAB_BOARD_ID
-          },
-          payload=>{
-            const row=payload.new;
-            if(!row || !Array.isArray(row.state)) return;
-            if((row.updated_by||'')===COLLAB_CLIENT_ID) return;
 
-            // Broadcast normalde bu değişikliği daha önce getirmiş olur.
-            // PostgreSQL olayı yalnızca kaçırılmış mesajlar için fallback'tir.
-            if(Date.now()-collabLastLiveReceivedAt<900) return;
-            if(drawing || erasing || selectAction) return;
-
-            collabApplyRemoteState(row.state,row.updated_by||'');
-          }
-        )
         .subscribe(status=>{
           if(status==='SUBSCRIBED'){
             collabEnabled=true;
@@ -2697,6 +2771,207 @@
     }
   }
 
+  function readBlobAsDataURL(blob){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(String(reader.result||''));
+      reader.onerror=()=>reject(reader.error || new Error('Görüntü okunamadı'));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function loadImageElement(src){
+    return new Promise((resolve,reject)=>{
+      const img=new Image();
+      img.onload=()=>resolve(img);
+      img.onerror=()=>reject(new Error('Görüntü açılamadı'));
+      img.src=src;
+    });
+  }
+
+  async function optimizeImageFile(file){
+    const originalSrc=await readBlobAsDataURL(file);
+    const img=await loadImageElement(originalSrc);
+
+    const naturalW=Math.max(1,img.naturalWidth||img.width||1);
+    const naturalH=Math.max(1,img.naturalHeight||img.height||1);
+    const maxSide=1600;
+    const scale=Math.min(1,maxSide/Math.max(naturalW,naturalH));
+    const outW=Math.max(1,Math.round(naturalW*scale));
+    const outH=Math.max(1,Math.round(naturalH*scale));
+
+    const work=document.createElement('canvas');
+    work.width=outW;
+    work.height=outH;
+    const workCtx=work.getContext('2d');
+    workCtx.drawImage(img,0,0,outW,outH);
+
+    const isPng=file.type==='image/png';
+    const outputType=isPng ? 'image/png' : 'image/jpeg';
+    const quality=isPng ? undefined : 0.82;
+
+    const blob=await new Promise((resolve,reject)=>{
+      work.toBlob(
+        b=>b ? resolve(b) : reject(new Error('Görüntü sıkıştırılamadı')),
+        outputType,
+        quality
+      );
+    });
+
+    return {
+      dataUrl:await readBlobAsDataURL(blob),
+      naturalW:outW,
+      naturalH:outH,
+      mimeType:blob.type || outputType,
+      byteSize:blob.size || 0
+    };
+  }
+
+  async function storeSharedImageAsset(dataUrl,meta={}){
+    if(!collabClient) throw new Error('Ortak tahta bağlantısı hazır değil');
+
+    const assetId=IMAGE_ASSET_PREFIX+makeObjectId();
+    const assetState={
+      type:'image_asset',
+      dataUrl,
+      mimeType:String(meta.mimeType||''),
+      width:Number(meta.naturalW)||0,
+      height:Number(meta.naturalH)||0
+    };
+
+    const {error}=await collabClient
+      .from(COLLAB_TABLE)
+      .upsert({
+        id:assetId,
+        state:assetState,
+        updated_at:new Date().toISOString(),
+        updated_by:COLLAB_CLIENT_ID
+      },{onConflict:'id'});
+
+    if(error) throw error;
+
+    imageAssetCache.set(assetId,dataUrl);
+    return assetId;
+  }
+
+  async function resolveSharedImageAsset(assetId){
+    if(!assetId) return '';
+    if(imageAssetCache.has(assetId)) return imageAssetCache.get(assetId)||'';
+    if(imageAssetLoading.has(assetId)) return imageAssetLoading.get(assetId);
+
+    if(!collabClient) return '';
+
+    const promise=(async()=>{
+      try{
+        const {data,error}=await collabClient
+          .from(COLLAB_TABLE)
+          .select('state')
+          .eq('id',assetId)
+          .maybeSingle();
+
+        if(error) throw error;
+
+        const src=(
+          data &&
+          data.state &&
+          data.state.type==='image_asset' &&
+          typeof data.state.dataUrl==='string'
+        ) ? data.state.dataUrl : '';
+
+        if(src) imageAssetCache.set(assetId,src);
+        return src;
+      }catch(err){
+        console.warn('Paylaşılan görsel alınamadı:',err);
+        return '';
+      }finally{
+        imageAssetLoading.delete(assetId);
+      }
+    })();
+
+    imageAssetLoading.set(assetId,promise);
+    return promise;
+  }
+
+  function imageSourceForObject(o){
+    if(!o) return '';
+    if(typeof o.src==='string' && o.src) return o.src;
+
+    if(o.assetId){
+      const cached=imageAssetCache.get(o.assetId);
+      if(cached) return cached;
+
+      if(!imageAssetLoading.has(o.assetId)){
+        resolveSharedImageAsset(o.assetId).then(src=>{
+          if(src) redraw();
+        });
+      }
+    }
+
+    return '';
+  }
+
+  async function prepareSharedImageObject(o){
+    if(!o || o.kind!=='image' || o.assetId) return false;
+    if(typeof o.src!=='string' || !o.src.startsWith('data:image/')) return false;
+
+    const img=await loadImageElement(o.src);
+    const assetId=await storeSharedImageAsset(o.src,{
+      naturalW:img.naturalWidth,
+      naturalH:img.naturalHeight,
+      mimeType:(o.src.match(/^data:([^;]+)/)||[])[1] || ''
+    });
+
+    o.assetId=assetId;
+    return true;
+  }
+
+  async function prepareSharedImages(list){
+    let changed=false;
+    for(const o of list||[]){
+      if(!o || o.kind!=='image' || o.assetId) continue;
+      if(typeof o.src!=='string' || !o.src.startsWith('data:image/')) continue;
+      await prepareSharedImageObject(o);
+      changed=true;
+    }
+    return changed;
+  }
+
+  async function migrateInlineSharedImagesToAssets(){
+    if(!collabClient) return false;
+
+    let changed=false;
+    for(const o of objects){
+      if(!o || o.kind!=='image' || o.assetId) continue;
+      if(typeof o.src!=='string' || !o.src.startsWith('data:image/')) continue;
+
+      try{
+        await prepareSharedImageObject(o);
+        changed=true;
+      }catch(err){
+        console.warn('Eski gömülü görsel ayrı varlığa taşınamadı:',err);
+      }
+    }
+
+    if(!changed) return false;
+
+    const state=collabSerializableObjects();
+    const {error}=await collabClient
+      .from(COLLAB_TABLE)
+      .upsert({
+        id:COLLAB_BOARD_ID,
+        state,
+        updated_at:new Date().toISOString(),
+        updated_by:COLLAB_CLIENT_ID
+      },{onConflict:'id'});
+
+    if(error) throw error;
+
+    collabLastSignature=collabSignature(state);
+    collabLocalDirty=false;
+    collabRebuildLiveSnapshot();
+    return true;
+  }
+
   function getCachedImage(src){
     if(!src) return null;
     let img=imageCache.get(src);
@@ -2711,8 +2986,9 @@
   }
 
   function drawImageObject(o){
-    if(!o || !o.src || !o.center) return;
-    const img=getCachedImage(o.src);
+    if(!o || !o.center) return;
+    const src=imageSourceForObject(o);
+    const img=getCachedImage(src);
 
     ctx.save();
     ctx.translate(o.center.x,o.center.y);
@@ -2731,7 +3007,7 @@
     ctx.restore();
   }
 
-  function addImageDataURL(src,naturalW,naturalH){
+  function addImageDataURL(src,naturalW,naturalH,assetId=''){
     if(!src) return;
 
     const r=canvas.getBoundingClientRect();
@@ -2745,7 +3021,7 @@
 
     saveState();
     const index=objects.length;
-    objects.push({
+    const imageObject={
       kind:'image',
       center:{x:c.x,y:c.y},
       w:screenW/viewZoom,
@@ -2755,7 +3031,9 @@
       locked:false,
       source:'image',
       boxAngle:0
-    });
+    };
+    if(assetId) imageObject.assetId=assetId;
+    objects.push(imageObject);
 
     mode='select';
     fillBtn.classList.remove('active');
@@ -2769,16 +3047,42 @@
     statusEl.textContent='Fotoğraf eklendi';
   }
 
-  function loadImageFile(file){
+  async function loadImageFile(file){
     if(!file || !file.type || !file.type.startsWith('image/')) return;
-    const reader=new FileReader();
-    reader.onload=()=>{
-      const src=String(reader.result||'');
-      const img=new Image();
-      img.onload=()=>addImageDataURL(src,img.naturalWidth,img.naturalHeight);
-      img.src=src;
-    };
-    reader.readAsDataURL(file);
+
+    try{
+      statusEl.textContent='Fotoğraf hazırlanıyor…';
+      const optimized=await optimizeImageFile(file);
+
+      if(boardMode==='everyone'){
+        if(!collabClient || !collabEnabled){
+          throw new Error('Ortak tahta bağlantısı hazır değil');
+        }
+
+        statusEl.textContent='Fotoğraf ortak tahta için bir kez kaydediliyor…';
+        const assetId=await storeSharedImageAsset(optimized.dataUrl,optimized);
+        addImageDataURL(
+          optimized.dataUrl,
+          optimized.naturalW,
+          optimized.naturalH,
+          assetId
+        );
+        collabLocalDirty=true;
+        collabScheduleSend(3000);
+        statusEl.textContent='Fotoğraf eklendi — ortak tahta için ayrı saklanıyor';
+        return;
+      }
+
+      addImageDataURL(
+        optimized.dataUrl,
+        optimized.naturalW,
+        optimized.naturalH
+      );
+      statusEl.textContent='Fotoğraf eklendi — yerel';
+    }catch(err){
+      console.error('Fotoğraf eklenemedi:',err);
+      statusEl.textContent='Fotoğraf eklenemedi';
+    }
   }
 
   function objectBounds(o){
@@ -7560,13 +7864,21 @@
     fileMenu.classList.remove('open');
   }
 
-  function boardFilePayload(){
+  async function boardFilePayload(){
+    const exportObjects=JSON.parse(JSON.stringify(objects));
+
+    for(const o of exportObjects){
+      if(!o || o.kind!=='image' || o.src || !o.assetId) continue;
+      const src=await resolveSharedImageAsset(o.assetId);
+      if(src) o.src=src;
+    }
+
     return {
       format:'sinan-ipek-whiteboard',
-      version:1,
+      version:2,
       savedAt:new Date().toISOString(),
       boardId:COLLAB_BOARD_ID,
-      objects:collabSerializableObjects()
+      objects:exportObjects
     };
   }
 
@@ -7683,7 +7995,7 @@
 
   async function downloadCurrentBoard(){
     try{
-      const payload=boardFilePayload();
+      const payload=await boardFilePayload();
       const text=JSON.stringify(payload,null,2);
       const suggestedName=safeBoardFilename();
 
@@ -7783,6 +8095,17 @@
     const incoming=JSON.parse(JSON.stringify(pendingBoardLoad.objects));
     pendingBoardLoad=null;
     hideBoardLoadConfirmation();
+
+    if(boardMode==='everyone' && collabClient){
+      try{
+        statusEl.textContent='Kaydedilmiş tahtadaki görseller hazırlanıyor…';
+        await prepareSharedImages(incoming);
+      }catch(err){
+        console.error('Tahta görselleri ortak moda hazırlanamadı:',err);
+        statusEl.textContent='Tahta açılamadı — ortak görseller hazırlanamadı';
+        return;
+      }
+    }
 
     // Undo, yalnızca yüklemeyi yapan bu tarayıcıda eski tahtayı geri alma
     // imkânı sağlar. Ortak odadaki diğer cihazlar yeni state'i görür.
@@ -8909,8 +9232,12 @@
   });
 
   document.addEventListener('visibilitychange',()=>{
-    if(document.visibilityState==='hidden' && boardMode==='me'){
+    if(document.visibilityState!=='hidden') return;
+
+    if(boardMode==='me'){
       saveLocalBoard();
+    }else if(boardMode==='everyone' && collabEnabled && collabLocalDirty){
+      collabSendBoardNow();
     }
   });
 
