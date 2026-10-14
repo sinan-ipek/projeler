@@ -929,28 +929,9 @@ button{font:inherit;border:none;cursor:pointer}
     const middle = average(points);
     const tint = colorOf(tok);
     const packageHtml=packageLabel(group);
-    const clones = nodes.map((node,i) => makeFloatClone(node, points[i], tint));
-    nodes.forEach(node => node.style.opacity = '0');
-    fadeInternalDots(nodes);
-
-    requestAnimationFrame(() => {
-      clones.forEach(clone => {
-        clone.style.opacity = '1';
-        clone.style.left = middle.x + 'px';
-        clone.style.top = middle.y + 'px';
-      });
-    });
-
-    setTimeout(() => {
-      if(session !== questionNo) return;
-      clones.forEach(c => c.remove());
-      const combined = makeFloatClone(nodes[0], middle, tint);
-      combined.innerHTML = packageHtml;
-      combined.style.transition = 'none';
-      combined.style.transform = 'translate(-50%,-50%)';
-      setTimeout(() => {
-        if(session !== questionNo) return;
-        // Son balonun geometrisini önce kur; ara yazıyı ancak sonra kaldır.
+    const direct=group.length===1 && tok.type==='var' && tok.exp===current.d;
+    const showBubble=()=>{
+      if(session!==questionNo)return;
         const bubble = document.createElement('button');
         bubble.type = 'button';
         bubble.className = 'bubble waiting';
@@ -962,7 +943,6 @@ button{font:inherit;border:none;cursor:pointer}
         bubble.style.left = middle.x + 'px';
         bubble.style.top = middle.y + 'px';
         stage.appendChild(bubble);
-        combined.remove();
         animating = false;
         render();
         setStatus('Balona tıkla veya başka bir renkli grubu paketle.');
@@ -1031,8 +1011,36 @@ button{font:inherit;border:none;cursor:pointer}
           });
         };
         if(typeof onPacked==='function') onPacked();
-      }, 340);
-    }, 510);
+    };
+    if(direct){
+      // Zaten kök derecesine eşit kuvvet: tek tıklamada doğrudan balon.
+      nodes.forEach(node=>node.style.opacity='0');
+      showBubble();
+      return;
+    }
+    const clones=nodes.map((node,i)=>makeFloatClone(node,points[i],tint));
+    nodes.forEach(node=>node.style.opacity='0');
+    fadeInternalDots(nodes);
+    requestAnimationFrame(()=>{
+      clones.forEach(clone=>{
+        clone.style.opacity='1';
+        clone.style.left=middle.x+'px';
+        clone.style.top=middle.y+'px';
+      });
+    });
+    setTimeout(()=>{
+      if(session!==questionNo)return;
+      clones.forEach(c=>c.remove());
+      const combined=makeFloatClone(nodes[0],middle,tint);
+      combined.innerHTML=packageHtml;
+      combined.style.transition='none';
+      combined.style.transform='translate(-50%,-50%)';
+      setTimeout(()=>{
+        if(session!==questionNo)return;
+        showBubble();
+        combined.remove();
+      },340);
+    },510);
   }
 
   function simplifyBucket(side, part){
