@@ -79,6 +79,7 @@ button{font:inherit;border:none;cursor:pointer}
   .stage{min-height:250px}
   .radical{left:38%}.outside{right:62%;min-width:0}
 }
+.difficulty{display:inline-flex;gap:4px;background:#edf1f7;padding:4px;border-radius:12px}.difficulty-btn{font-size:15px;font-weight:750;color:#52647d;background:transparent;border-radius:9px;padding:8px 13px}.difficulty-btn.active{background:#2f64d6;color:white;box-shadow:0 1px 5px #213b6d24}.difficulty-btn:focus-visible{outline:2px solid #15274b;outline-offset:2px}
 .nav-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}#homeBtn{display:inline-flex;align-items:center;justify-content:center;min-height:36px}
 </style>
 </head>
@@ -93,7 +94,7 @@ button{font:inherit;border:none;cursor:pointer}
           <span class="level" id="level"></span>
         </div>
       </div>
-      <div class="nav-actions"><a id="homeBtn" href="../index.html" aria-label="Öğren ana sayfasına dön" title="Ana sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a><button id="newBtn">Yeni soru</button></div>
+      <div class="nav-actions"><div class="difficulty" role="group" aria-label="Zorluk seviyesi"><button type="button" class="difficulty-btn active" data-difficulty="easy" aria-pressed="true">Kolay</button><button type="button" class="difficulty-btn" data-difficulty="medium" aria-pressed="false">Orta</button><button type="button" class="difficulty-btn" data-difficulty="advanced" aria-pressed="false">İleri</button></div><a id="homeBtn" href="../index.html" aria-label="Öğren ana sayfasına dön" title="Ana sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a><button id="newBtn">Yeni soru</button></div>
     </div>
 
     <div class="status" id="status"></div>
@@ -157,6 +158,8 @@ button{font:inherit;border:none;cursor:pointer}
   };
 
   let questionNo = 0;
+  let difficulty = 'easy';
+  let levelQuestionNo = 0;
   let current = null;
   let phase = 'seed';
   let inner = [];
@@ -175,20 +178,19 @@ button{font:inherit;border:none;cursor:pointer}
   let pendingGroups = new Set();
   let exitingGroups = new Set();
 
-  function stageNoFromQuestion(n){
-    if(n <= 5) return 1;
-    if(n <= 8) return 2;
-    if(n <= 11) return 3;
-    return 4;
-  }
-
-  function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
-
-  function randomFrom(arr){ return deepClone(arr[Math.floor(Math.random()*arr.length)]); }
-
-  function makeQuestion(n){
-    const stageNo = stageNoFromQuestion(n);
-    return {...randomFrom(pools[stageNo]), stageNo};
+  function deepClone(obj){return JSON.parse(JSON.stringify(obj));}
+  function randomFrom(arr){return deepClone(arr[Math.floor(Math.random()*arr.length)]);}
+  function makeQuestion(){
+    const r=Math.random();
+    let stageNo;
+    if(difficulty==='easy'){
+      stageNo=levelQuestionNo<=5?1:(r<.82?1:2);
+    }else if(difficulty==='medium'){
+      stageNo=r<.55?2:r<.85?3:1;
+    }else{
+      stageNo=r<.72?4:r<.90?3:r<.97?2:1;
+    }
+    return {...randomFrom(pools[stageNo]),stageNo};
   }
 
   function primeFactors(n){
@@ -282,14 +284,16 @@ button{font:inherit;border:none;cursor:pointer}
       3:'3. aşama · değişkenler',
       4:'4. aşama · kesirler'
     };
-    return stages[current.stageNo];
+    const titles={easy:'Kolay',medium:'Orta',advanced:'İleri'};
+    return titles[difficulty]+' · '+stages[current.stageNo].split(' · ')[1];
   }
 
   function setStatus(text){ $('status').textContent = text; }
 
   function startQuestion(){
     questionNo += 1;
-    current = makeQuestion(questionNo);
+    levelQuestionNo += 1;
+    current = makeQuestion();
     phase = 'seed';
     inner = [];
     outer = [];
@@ -1240,6 +1244,20 @@ button{font:inherit;border:none;cursor:pointer}
 
   document.querySelector('.expression').addEventListener('click', () => {
     if(phase === 'format' && !animating) compactAndFinish();
+  });
+  function selectDifficulty(value){
+    if(!['easy','medium','advanced'].includes(value) || value===difficulty)return;
+    difficulty=value;
+    levelQuestionNo=0;
+    document.querySelectorAll('.difficulty-btn').forEach(btn=>{
+      const active=btn.dataset.difficulty===difficulty;
+      btn.classList.toggle('active',active);
+      btn.setAttribute('aria-pressed',String(active));
+    });
+    startQuestion();
+  }
+  document.querySelectorAll('.difficulty-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>selectDifficulty(btn.dataset.difficulty));
   });
   $('newBtn').onclick = startQuestion;
   $('degree').onclick = () => {
