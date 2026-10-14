@@ -35,6 +35,35 @@
   }
   canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:default}
   #status{margin-left:auto;font-size:12px;color:#687080}
+  .boardScope{
+    height:34px;
+    display:inline-flex;
+    align-items:center;
+    padding:2px;
+    gap:2px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:#f3f5f8;
+    flex:0 0 auto;
+  }
+  .boardScope button{
+    height:28px;
+    min-width:42px;
+    padding:0 8px;
+    border:0;
+    border-radius:7px;
+    background:transparent;
+    font-size:12px;
+    font-weight:650;
+    color:#667085;
+  }
+  .boardScope button:hover{background:#e9edf2}
+  .boardScope button.active{
+    background:#fff;
+    color:#1747b0;
+    box-shadow:0 1px 4px rgba(0,0,0,.12);
+  }
+  .boardScope button:disabled{opacity:.55;cursor:wait}
   .label{font-size:12px;color:#667085}
   .iconBtn{
     width:38px;
@@ -728,6 +757,11 @@
             style="font-weight:700;font-size:18px;line-height:1">?</button>
 
     <div id="status">Hazır</div>
+
+    <div id="boardScope" class="boardScope" role="group" aria-label="Tahta görünürlüğü">
+      <button id="scopeMeBtn" type="button" title="Yalnızca bu cihazdaki yerel tahta">Ben</button>
+      <button id="scopeEveryoneBtn" type="button" title="Ortak canlı tahta">Herkes</button>
+    </div>
   </div>
   <div id="stageWrap">
     <canvas id="c"></canvas>
@@ -1009,6 +1043,9 @@
   const widthEl = document.getElementById('width');
   const formatPainterBtn = document.getElementById('formatPainterBtn');
   const statusEl = document.getElementById('status');
+  const boardScope = document.getElementById('boardScope');
+  const scopeMeBtn = document.getElementById('scopeMeBtn');
+  const scopeEveryoneBtn = document.getElementById('scopeEveryoneBtn');
   const undoBtn = document.getElementById('undoBtn');
   const redoBtn = document.getElementById('redoBtn');
   const clearBtn = document.getElementById('clearBtn');
@@ -1075,6 +1112,15 @@
   let collabSendTimer = null;
   let collabSendInFlight = false;
   let collabSendAgain = false;
+  let collabDeltaInterval = null;
+
+  // Ben / Herkes board mode.
+  // Existing users start in the historical shared mode; after the first choice
+  // the selected mode is remembered on this device.
+  const BOARD_MODE_KEY = 'beyaz-tahta:board-mode:v1';
+  const LOCAL_BOARD_KEY = 'beyaz-tahta:local-board:v1';
+  let boardMode = localStorage.getItem(BOARD_MODE_KEY)==='me' ? 'me' : 'everyone';
+  let boardModeSwitching = false;
 
   // v16.1 — low-latency Broadcast layer
   let collabLiveSnapshot = new Map();
@@ -1767,6 +1813,128 @@
     }
   }
 
+
+  function updateBoardModeUI(){
+    const isMe=boardMode==='me';
+    scopeMeBtn.classList.toggle('active',isMe);
+    scopeEveryoneBtn.classList.toggle('active',!isMe);
+    scopeMeBtn.setAttribute('aria-pressed',String(isMe));
+    scopeEveryoneBtn.setAttribute('aria-pressed',String(!isMe));
+    scopeMeBtn.disabled=boardModeSwitching;
+    scopeEveryoneBtn.disabled=boardModeSwitching;
+  }
+
+  function saveLocalBoard(){
+    if(boardMode!=='me') return;
+    try{
+      localStorage.setItem(LOCAL_BOARD_KEY,JSON.stringify(objects));
+    }catch(err){
+      console.warn('Yerel tahta kaydedilemedi:',err);
+    }
+  }
+
+  function loadLocalBoard(){
+    let next=[];
+    try{
+      const raw=localStorage.getItem(LOCAL_BOARD_KEY);
+      if(raw){
+        const parsed=JSON.parse(raw);
+        if(Array.isArray(parsed)) next=parsed;
+      }
+    }catch(err){
+      console.warn('Yerel tahta okunamadı:',err);
+    }
+
+    objects=JSON.parse(JSON.stringify(next));
+    ensureUniqueObjectIds();
+    undoStack=[];
+    redoStack=[];
+    setSelection([]);
+    closeContextMenu();
+    if(textEditing) closeTextEditor(false);
+    remoteLiveInk.clear();
+    collabRebuildLiveSnapshot();
+    redraw();
+  }
+
+  async function disconnectCollaboration(){
+    clearTimeout(collabSendTimer);
+    collabSendTimer=null;
+    collabSendAgain=false;
+    collabEnabled=false;
+
+    if(collabDeltaInterval){
+      clearInterval(collabDeltaInterval);
+      collabDeltaInterval=null;
+    }
+
+    if(collabChannel){
+      try{
+        await collabChannel.unsubscribe();
+      }catch(_){}
+      try{
+        if(collabClient && collabClient.removeChannel){
+          await collabClient.removeChannel(collabChannel);
+        }
+      }catch(_){}
+    }
+
+    collabChannel=null;
+    collabClient=null;
+    remoteLiveInk.clear();
+    liveInkId=null;
+    liveInkSentIndex=0;
+    liveInkLastSentAt=0;
+    collabLocalDirty=false;
+  }
+
+  async function switchBoardMode(nextMode,{initial=false}={}){
+    if(nextMode!=='me' && nextMode!=='everyone') return;
+    if(boardModeSwitching) return;
+    if(!initial && nextMode===boardMode) return;
+
+    boardModeSwitching=true;
+    updateBoardModeUI();
+
+    try{
+      if(nextMode==='me'){
+        if(boardMode==='everyone' && collabEnabled){
+          // Flush the shared board before leaving it.
+          await collabSendBoardNow();
+        }
+
+        await disconnectCollaboration();
+        boardMode='me';
+        localStorage.setItem(BOARD_MODE_KEY,'me');
+        loadLocalBoard();
+        collabSetStatus('Ben — yerel tahta');
+      }else{
+        if(boardMode==='me'){
+          saveLocalBoard();
+        }
+
+        await disconnectCollaboration();
+        boardMode='everyone';
+        localStorage.setItem(BOARD_MODE_KEY,'everyone');
+
+        // Never mix the local board into the shared board.
+        objects=[];
+        undoStack=[];
+        redoStack=[];
+        setSelection([]);
+        closeContextMenu();
+        if(textEditing) closeTextEditor(false);
+        redraw();
+
+        collabSetStatus('Herkes — ortak tahtaya bağlanıyor…');
+        await initCollaboration();
+      }
+    }finally{
+      boardModeSwitching=false;
+      updateBoardModeUI();
+    }
+  }
+
   async function initCollaboration(){
     ensureUniqueObjectIds();
     collabLastSignature=collabSignature(objects);
@@ -1802,7 +1970,9 @@
       if(error) throw error;
 
       if(data && Array.isArray(data.state)){
-        collabApplyRemoteState(data.state,data.updated_by||'');
+        // Initial mode entry must always adopt the server board, even if the
+        // last writer happens to be this same browser session.
+        collabApplyRemoteState(data.state,'');
       }else{
         const initialState=collabSerializableObjects();
         const {error:insertError}=await collabClient
@@ -1876,7 +2046,9 @@
         });
 
       // Nesne hareketlerini ~30 FPS Broadcast ile aktar.
-      setInterval(collabBroadcastDeltaTick,33);
+      if(!collabDeltaInterval){
+        collabDeltaInterval=setInterval(collabBroadcastDeltaTick,33);
+      }
 
     }catch(err){
       console.error('Ortak tahta başlatılamadı:',err);
@@ -8729,8 +8901,27 @@
     }
   });
 
+  scopeMeBtn.addEventListener('click',()=>switchBoardMode('me'));
+  scopeEveryoneBtn.addEventListener('click',()=>switchBoardMode('everyone'));
+
+  window.addEventListener('beforeunload',()=>{
+    if(boardMode==='me') saveLocalBoard();
+  });
+
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden' && boardMode==='me'){
+      saveLocalBoard();
+    }
+  });
+
+  // Lightweight local persistence; no server activity in "Ben" mode.
+  setInterval(()=>{
+    if(boardMode==='me') saveLocalBoard();
+  },5000);
+
   resize();
-  initCollaboration();
+  updateBoardModeUI();
+  switchBoardMode(boardMode,{initial:true});
 })();
 </script>
 
