@@ -143,14 +143,15 @@ function toggleHandMenu(){
  updateHandMenu();
  $('status').textContent=handMenuOpen?'Menü açık':'Menü kapalı';
 }
-const menuAnchorOffset=new THREE.Vector3(0,0,-.32);
+const menuAnchorOffset=new THREE.Vector3(0,.115,-.015);
+const menuWristRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/3);
 function updateHandMenu(){
  if(!renderer.xr.isPresenting){panel.visible=true;return}
  panel.visible=handMenuOpen&&!!leftController;
  if(!panel.visible)return;
  leftController.updateWorldMatrix(true,false);
  panel.position.copy(menuAnchorOffset).applyMatrix4(leftController.matrixWorld);
- panel.quaternion.setFromRotationMatrix(new THREE.Matrix4().extractRotation(leftController.matrixWorld));
+ panel.quaternion.setFromRotationMatrix(new THREE.Matrix4().extractRotation(leftController.matrixWorld)).multiply(menuWristRotation);
  panel.updateMatrixWorld(true);
 }
 
@@ -165,7 +166,7 @@ function refreshPanel(){
   ctx.fillStyle='#ffffff';ctx.font='28px system-ui';ctx.fillText(names[i],x+20,y+54);
  }
  ctx.fillStyle='#99d6ff';ctx.font='bold 24px system-ui';ctx.fillText('Seçili: '+selectedBodies.size,395,65);
- ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v9.1 | Sol X: menu · Sol kumanda ile doner',15,460);
+ ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v9.3 | Sol X: bilek menusu · Sag tetik: sec',15,460);
  panelTexture.needsUpdate=true;
 }
 const raycaster=new THREE.Raycaster(),tempMatrix=new THREE.Matrix4();
@@ -308,6 +309,7 @@ function updateGrabsAndHover(dt){
   const menuHit=panel.visible?raycaster.intersectObject(panel,false)[0]:null;
   const beam=controller.userData.beam;
   if(beam){
+   beam.visible=!(controller===leftController&&handMenuOpen);
    const endDistance=menuHit?Math.min(MAX_RAY_LENGTH,menuHit.distance):MAX_RAY_LENGTH;
    beam.scale.z=endDistance;
   }
@@ -329,7 +331,7 @@ function updateGrabsAndHover(dt){
   const cone=coneVisuals[controllers.indexOf(controller)];
   if(cone){
    const thisAngle=coneAngles.get(controller)||0;
-   cone.visible=!grabs.has(controller)&&thisAngle>0;
+   cone.visible=!(controller===leftController&&handMenuOpen)&&!grabs.has(controller)&&thisAngle>0;
    const radius=Math.tan(thisAngle)*CONE_VISUAL_LENGTH;
    cone.scale.set(radius,1,radius);
   }
