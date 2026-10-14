@@ -132,7 +132,7 @@ for(const id of ['play','reset','mode','trails'])$(id).onclick=()=>action(id);
 // VR panel uses a shared canvas texture; buttons remain selectable via controller rays.
 const panelCanvas=document.createElement('canvas');panelCanvas.width=720;panelCanvas.height=505;
 const ctx=panelCanvas.getContext('2d'),panelTexture=new THREE.CanvasTexture(panelCanvas);panelTexture.colorSpace=THREE.SRGBColorSpace;
-const panel=new THREE.Mesh(new THREE.PlaneGeometry(.85,.60),new THREE.MeshBasicMaterial({map:panelTexture,transparent:true,side:THREE.DoubleSide,depthTest:false}));
+const panel=new THREE.Mesh(new THREE.PlaneGeometry(.65,.46),new THREE.MeshBasicMaterial({map:panelTexture,transparent:true,side:THREE.DoubleSide,depthTest:false}));
 panel.position.set(-.5,1.7,-1.3);panel.renderOrder=20;scene.add(panel);
 let handMenuOpen=false;
 let rightController=null;
@@ -143,7 +143,7 @@ function toggleHandMenu(){
  updateHandMenu();
  $('status').textContent=handMenuOpen?'Menü açık':'Menü kapalı';
 }
-const menuAnchorOffset=new THREE.Vector3(-.14,.15,-.38);
+const menuAnchorOffset=new THREE.Vector3(0,0,-.32);
 function updateHandMenu(){
  if(!renderer.xr.isPresenting){panel.visible=true;return}
  panel.visible=handMenuOpen&&!!leftController;
