@@ -166,7 +166,7 @@ function toggleHandMenu(){
  updateHandMenu();
  $('status').textContent=handMenuOpen?'Menü açık':'Menü kapalı';
 }
-const menuAnchorOffset=new THREE.Vector3(.18,.09,-.11);
+const menuAnchorOffset=new THREE.Vector3(0,.025,-.11);
 const rightMenuCanvas=document.createElement('canvas');
 rightMenuCanvas.width=720;rightMenuCanvas.height=505;
 const rightMenuCtx=rightMenuCanvas.getContext('2d');
@@ -194,7 +194,7 @@ function refreshRightPanel(){
  rightMenuCtx.fillStyle='#b1cbe1';rightMenuCtx.font='23px system-ui';rightMenuCtx.fillText('Sag A: ac / kapat',28,451);
  rightMenuTexture.needsUpdate=true;
 }
-const rightMenuOffset=new THREE.Vector3(-.18,.09,-.11);
+const rightMenuOffset=new THREE.Vector3(0,.025,-.11);
 const menuWristRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/3);
 function updateHandMenu(){
  if(!renderer.xr.isPresenting){panel.visible=true;rightPanel.visible=false;return}
