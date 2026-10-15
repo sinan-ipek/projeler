@@ -145,6 +145,9 @@ function action(name){
  if(name==='mode'){planetMode=!planetMode;if(planetMode)for(const b of bodies){b.pos.y=Math.max(b.pos.y,-10+b.radius);b.history=[];updateTrail(b)}}
  if(name==='trails')showTrails=!showTrails;
  if(name==='near')bringNear();
+ if(name==='new')createPlanet();
+ if(name==='grow')resizeSelected(1.2);
+ if(name==='shrink')resizeSelected(1/1.2);
  syncButtons();
 }
 for(const id of ['play','reset','mode','trails'])$(id).onclick=()=>action(id);
@@ -176,8 +179,18 @@ function refreshRightPanel(){
  rightMenuCtx.fillStyle='#15253aef';rightMenuCtx.fillRect(0,0,720,505);
  rightMenuCtx.fillStyle='#fff';rightMenuCtx.font='bold 37px system-ui';rightMenuCtx.fillText('SECILI NESNELER',28,72);
  rightMenuCtx.fillStyle='#b8e2ff';rightMenuCtx.font='27px system-ui';rightMenuCtx.fillText('Secili: '+selectedBodies.size,28,125);
- rightMenuCtx.fillStyle='#285a8d';rightMenuCtx.beginPath();rightMenuCtx.roundRect(28,160,664,145,18);rightMenuCtx.fill();
- rightMenuCtx.fillStyle='#fff';rightMenuCtx.font='bold 38px system-ui';rightMenuCtx.fillText('YAKINA GETIR',195,250);
+ const rightButtons=[
+  {text:'YAKINA GETIR',x:28,y:150,w:664,h:90},
+  {text:'KUCULT -',x:28,y:260,w:316,h:95},
+  {text:'BUYUT +',x:376,y:260,w:316,h:95}
+ ];
+ for(const b of rightButtons){
+  rightMenuCtx.fillStyle='#285a8d';rightMenuCtx.beginPath();rightMenuCtx.roundRect(b.x,b.y,b.w,b.h,15);rightMenuCtx.fill();
+  rightMenuCtx.fillStyle='#fff';rightMenuCtx.font='bold 32px system-ui';
+  rightMenuCtx.fillText(b.text,b.x+22,b.y+58);
+ }
+ rightMenuCtx.fillStyle='#b8e2ff';rightMenuCtx.font='23px system-ui';
+ rightMenuCtx.fillText('Boyut: '+(selectedPlanet?selectedPlanet.radius.toFixed(2):'—'),28,401);
  rightMenuCtx.fillStyle='#b1cbe1';rightMenuCtx.font='23px system-ui';rightMenuCtx.fillText('Sag A: ac / kapat',28,451);
  rightMenuTexture.needsUpdate=true;
 }
@@ -201,18 +214,18 @@ function updateHandMenu(){
  }
 }
 
-const labels=['play','reset','mode','trails'];
+const labels=['play','reset','mode','trails','new'];
 function refreshPanel(){
  ctx.clearRect(0,0,720,505);ctx.fillStyle='#15253aeF';ctx.fillRect(0,0,720,505);
  ctx.fillStyle='#e7f4ff';ctx.font='bold 34px system-ui';ctx.fillText('GRAVITY SANDBOX VR',34,60);
- const names=[$('play').textContent,$('reset').textContent,$('mode').textContent,$('trails').textContent];
- for(let i=0;i<4;i++){
+ const names=[$('play').textContent,$('reset').textContent,$('mode').textContent,$('trails').textContent,'Yeni Gezegen'];
+ for(let i=0;i<5;i++){
   const x=35+(i%2)*345,y=100+Math.floor(i/2)*115;
   ctx.fillStyle='#285a8d';ctx.beginPath();ctx.roundRect(x,y,310,85,12);ctx.fill();
   ctx.fillStyle='#ffffff';ctx.font='28px system-ui';ctx.fillText(names[i],x+20,y+54);
  }
  ctx.fillStyle='#99d6ff';ctx.font='bold 24px system-ui';ctx.fillText('Seçili: '+selectedBodies.size,395,65);
- ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v9.3 | Sol X: bilek menusu · Sag tetik: sec',15,460);
+ ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('v9.7 | Yeni gezegen · Boyut = kutle',15,460);
  panelTexture.needsUpdate=true;
 }
 const raycaster=new THREE.Raycaster(),tempMatrix=new THREE.Matrix4();
@@ -310,6 +323,27 @@ function pickTargets(controller){
  }
  magneticTargets.set(controller,best?.body||null);
  return best?[best]:[];
+}
+function createPlanet(){
+ const view=renderer.xr.isPresenting?renderer.xr.getCamera():camera;
+ const position=view.getWorldPosition(new THREE.Vector3());
+ const direction=new THREE.Vector3(0,0,-1).applyQuaternion(view.getWorldQuaternion(new THREE.Quaternion()));
+ position.addScaledVector(direction,1.25);
+ world.worldToLocal(position);
+ const b=makeBody(.9,0x80cbff,position.x,position.y,position.z,0,0,0);
+ updateTrail(b);choosePlanet(b);
+ $('status').textContent='Yeni gezegen oluşturuldu · Grip ile taşıyabilirsin';
+}
+function resizeSelected(factor){
+ if(!selectedBodies.size)return;
+ for(const b of selectedBodies){
+  b.radius=THREE.MathUtils.clamp(b.radius*factor,.2,12);
+  b.mass=DENSITY_FACTOR*b.radius**3;
+  b.mesh.scale.setScalar(b.radius);
+  if(planetMode)b.pos.y=Math.max(b.pos.y,-10+b.radius);
+ }
+ refreshRightPanel();
+ $('status').textContent='Büyüklük ve kütle birlikte değiştirildi';
 }
 function bringNear(){
  if(!selectedPlanet)return;
@@ -429,7 +463,9 @@ for(let i=0;i<2;i++){
   const panelHit=raycaster.intersectObjects([panel,rightPanel].filter(p=>p.visible),false)[0];
   if(panelHit?.object===rightPanel){
    const px=panelHit.uv.x*720,py=(1-panelHit.uv.y)*505;
-   if(px>=28&&px<=692&&py>=160&&py<=305)action('near');
+   if(px>=28&&px<=692&&py>=150&&py<=240)action('near');
+   else if(px>=28&&px<=344&&py>=260&&py<=355)action('shrink');
+   else if(px>=376&&px<=692&&py>=260&&py<=355)action('grow');
    return;
   }
   if(panelHit?.uv){
