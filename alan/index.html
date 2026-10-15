@@ -237,7 +237,9 @@ function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
 function fmt(n,d=2){if(Math.abs(n-Math.round(n))<.005)return String(Math.round(n));return n.toFixed(d).replace(/0+$/,"").replace(/\.$/,"").replace(".",",")}
 function clearSVG(){while(svg.firstChild)svg.removeChild(svg.firstChild)}
+let activeCountVersion=0;
 function reset(){
+ activeCountVersion++;
  keepEmptyAfterCount=false;if(imageObjectURL){URL.revokeObjectURL(imageObjectURL);imageObjectURL=null}imageMask=null;shape=null;freePoints=[];freeClosed=false;penDrawing=false;penPoints=[];polygonPoints=[];polygonClosed=false;dragging=null;tiles=[];animating=false;resetCounters();clearSVG();hint.style.opacity="1";hint.textContent="Çalışma alanına tıklayın.";document.querySelectorAll(".flyTile,.mergeBox").forEach(x=>x.remove())}
 clearBtn.onclick=reset;select.onchange=()=>{reset();if(select.value==="image")imageInput.click()};
 
@@ -831,7 +833,7 @@ async function convertCounter(level){
 midUnit.onclick=()=>convertCounter("mid");smallUnit.onclick=()=>convertCounter("small");
 async function animateSum(){
  if(!shape||!tiles.length||animating)return;
- animating=true;resetCounters();
+ animating=true;const currentVersion=++activeCountVersion;resetCounters();
  setCounterHTML(counterBig,0);setCounterHTML(counterMid,0);setCounterHTML(counterSmall,0);
  // Kaplama başlarken içi boş şekil gösterilir. Kareler sırasıyla
  // şeklin içine yerleşirken sayaç eşzamanlı ilerler.
@@ -843,13 +845,14 @@ async function animateSum(){
    const group=ordered.filter(t=>t.level===level);
    const interval=level==="big"?85:level==="mid"?49:24;
    for(let i=0;i<group.length;i++){
+     if(currentVersion!==activeCountVersion)return;
      const t=group[i],el=tileNodes.get(t.id);
      if(el){
        el.classList.add("counted");
        el.style.visibility="visible";
        el.style.opacity="0";
        el.style.transition="opacity "+Math.min(160,interval*2)+"ms ease-out";
-       requestAnimationFrame(()=>{el.style.opacity=String(tileAlpha)});
+       requestAnimationFrame(()=>{if(currentVersion===activeCountVersion&&el.isConnected)el.style.opacity=String(tileAlpha)});
      }
      counterState[level]++;
      setCounter(level,counterState[level]);
@@ -857,6 +860,7 @@ async function animateSum(){
    }
    await sleep(level==="small"?80:160);
  }
+ if(currentVersion!==activeCountVersion)return;
  counterState.counted=true;
  if(counterState.mid)midUnit.classList.add("ready");
  if(counterState.small)smallUnit.classList.add("ready");
