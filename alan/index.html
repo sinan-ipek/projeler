@@ -26,8 +26,9 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
 .handle:active{cursor:grabbing}
 .free-point{fill:#fff;stroke:#245f9d;stroke-width:2;vector-effect:non-scaling-stroke}
 .free-point.start{fill:#ffe07a}
-.tile{fill:#f6d66d;stroke:#8d7a38;stroke-width:.65;vector-effect:non-scaling-stroke;pointer-events:none}
-.tile.partial{fill:#f6d66d}
+.tile{fill:#fff2c5;stroke:#8d7a38;stroke-width:.65;vector-effect:non-scaling-stroke;pointer-events:none}
+.tile.partial{fill:#fff2c5}
+.tile.counted,.tile.partial.counted{fill:#f6d66d}
 .tile.tile-big{stroke-width:1.05}
 .tile.tile-mid{stroke-width:.72}
 .tile.tile-small{stroke-width:.42}
@@ -844,6 +845,7 @@ async function animateSum(){
    for(let i=0;i<group.length;i++){
      const t=group[i],el=tileNodes.get(t.id);
      if(el){
+       el.classList.add("counted");
        el.style.visibility="visible";
        el.style.opacity="0";
        el.style.transition="opacity "+Math.min(160,interval*2)+"ms ease-out";
