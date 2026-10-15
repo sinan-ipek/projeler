@@ -567,7 +567,7 @@ function render(){
    const path=S("path",{d:smoothPath(freePoints,freeClosed),class:freeClosed?"shape":"free-preview"});
    svg.appendChild(path);
    if(freeClosed){path.dataset.role="shape";path.onpointerdown=shapeDown}
-   if(freeClosed)drawTiles();
+   if(freeClosed){drawTiles();drawHandles();}
    freePoints.forEach((p,i)=>{const c=S("circle",{cx:p.x,cy:p.y,r:i===0&&!freeClosed?8:6,class:"free-point"+(i===0?" start":"")});c.dataset.index=i;c.onpointerdown=handleDown;svg.appendChild(c)});
    return
  }
