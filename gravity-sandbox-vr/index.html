@@ -50,7 +50,7 @@ const geometry=new THREE.SphereGeometry(1,20,14);
 const G=5,SOFT=1.44,DT=1/120,G_PLANET=12,BOUNCE=.72;
 const HISTORY=280;
 const DENSITY_FACTOR=8; // All bodies share the same density: mass = factor * radius^3.
-let bodies=[],running=true,planetMode=false,showTrails=true,accumulator=0;
+let bodies=[],running=true,planetMode=false,showTrails=true,showVelocities=false,accumulator=0;
 function makeBody(radius,color,x,y,z,vx,vy,vz){
  const mass=DENSITY_FACTOR*radius**3;
  const mat=new THREE.MeshStandardMaterial({color,roughness:.72});
@@ -60,12 +60,25 @@ function makeBody(radius,color,x,y,z,vx,vy,vz){
  lineGeo.setAttribute('position',new THREE.BufferAttribute(coords,3).setUsage(THREE.DynamicDrawUsage));lineGeo.setDrawRange(0,0);
  const trail=new THREE.Line(lineGeo,new THREE.LineBasicMaterial({color,transparent:true,opacity:.78}));
  trail.frustumCulled=false;world.add(trail);
- const b={radius,mass,mesh,trail,coords,pos:new THREE.Vector3(x,y,z),v:new THREE.Vector3(vx,vy,vz),history:[],tick:0};
+ const arrow=new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(),1,color, .25,.15);
+ arrow.visible=false;world.add(arrow);
+ const b={radius,mass,mesh,trail,arrow,coords,pos:new THREE.Vector3(x,y,z),v:new THREE.Vector3(vx,vy,vz),history:[],tick:0};
  bodies.push(b);drawBody(b);return b;
 }
 function drawBody(b){
  b.mesh.position.copy(b.pos);
  b.trail.visible=showTrails;
+ const speed=b.v.length();
+ b.arrow.visible=showVelocities&&speed>.00001;
+ if(b.arrow.visible){
+  // The arrow uses the true instantaneous world-space velocity direction.
+  // Its length uses a single common scale for all celestial bodies.
+  const dir=b.v.clone().divideScalar(speed);
+  const length=Math.max(.6,Math.min(32,speed*.48));
+  b.arrow.position.copy(b.pos);
+  b.arrow.setDirection(dir);
+  b.arrow.setLength(length,Math.min(2.2,length*.24),Math.min(1.1,length*.13));
+ }
 }
 function updateTrail(b){
  b.history.push(b.pos.clone());
@@ -74,8 +87,14 @@ function updateTrail(b){
  for(let i=0;i<b.history.length;i++)attr.setXYZ(i,b.history[i].x,b.history[i].y,b.history[i].z);
  attr.needsUpdate=true;b.trail.geometry.setDrawRange(0,b.history.length);
 }
+function disposeBodyArrow(b){
+ if(!b.arrow)return;
+ world.remove(b.arrow);
+ b.arrow.line.geometry.dispose();b.arrow.line.material.dispose();
+ b.arrow.cone.geometry.dispose();b.arrow.cone.material.dispose();
+}
 function clearBodies(){
- for(const b of bodies){world.remove(b.mesh,b.trail);b.mesh.material.dispose();b.trail.geometry.dispose();b.trail.material.dispose()}
+ for(const b of bodies){world.remove(b.mesh,b.trail);b.mesh.material.dispose();b.trail.geometry.dispose();b.trail.material.dispose();disposeBodyArrow(b)}
  bodies=[];
 }
 function setup(){
@@ -144,6 +163,7 @@ function action(name){
  if(name==='reset'){endTwoHand();grabs.clear();hoverBodies.clear();magneticTargets.clear();choosePlanets([]);setup();for(const ring of selectionRings.values())ring.visible=false}
  if(name==='mode'){planetMode=!planetMode;if(planetMode)for(const b of bodies){b.pos.y=Math.max(b.pos.y,-10+b.radius);b.history=[];updateTrail(b)}}
  if(name==='trails')showTrails=!showTrails;
+ if(name==='velocities')showVelocities=!showVelocities;
  if(name==='near')bringNear();
  if(name==='new')createPlanet();
  if(name==='grow')resizeSelected(1.2);
@@ -218,12 +238,12 @@ function updateHandMenu(){
  }
 }
 
-const labels=['play','reset','mode','trails','new'];
+const labels=['play','reset','mode','trails','new','velocities'];
 function refreshPanel(){
  ctx.clearRect(0,0,720,505);ctx.fillStyle='#15253aeF';ctx.fillRect(0,0,720,505);
  ctx.fillStyle='#e7f4ff';ctx.font='bold 34px system-ui';ctx.fillText('GRAVITY SANDBOX VR',34,60);
- const names=[$('play').textContent,$('reset').textContent,$('mode').textContent,$('trails').textContent,'Yeni Gezegen'];
- for(let i=0;i<5;i++){
+ const names=[$('play').textContent,$('reset').textContent,$('mode').textContent,$('trails').textContent,'Yeni Gezegen',showVelocities?'Hızları Gizle':'Hızları Göster'];
+ for(let i=0;i<6;i++){
   const x=35+(i%2)*345,y=100+Math.floor(i/2)*115;
   ctx.fillStyle='#285a8d';ctx.beginPath();ctx.roundRect(x,y,310,85,12);ctx.fill();
   ctx.fillStyle='#ffffff';ctx.font='28px system-ui';ctx.fillText(names[i],x+20,y+54);
@@ -350,7 +370,7 @@ function deleteSelected(){
  if(twoHand&&targets.includes(twoHand.body))endTwoHand();
  for(const [controller,grab] of grabs)if(targets.includes(grab.body))grabs.delete(controller);
  for(const b of targets){
-  world.remove(b.mesh,b.trail);b.mesh.material.dispose();b.trail.geometry.dispose();b.trail.material.dispose();
+  world.remove(b.mesh,b.trail);b.mesh.material.dispose();b.trail.geometry.dispose();b.trail.material.dispose();disposeBodyArrow(b);
   const ring=selectionRings.get(b);
   if(ring){world.remove(ring);ring.geometry.dispose();ring.material.dispose();selectionRings.delete(b)}
   bodies.splice(bodies.indexOf(b),1);
