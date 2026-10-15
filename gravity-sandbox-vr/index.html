@@ -148,6 +148,8 @@ function action(name){
  if(name==='new')createPlanet();
  if(name==='grow')resizeSelected(1.2);
  if(name==='shrink')resizeSelected(1/1.2);
+ if(name==='copy')copySelected();
+ if(name==='delete')deleteSelected();
  syncButtons();
 }
 for(const id of ['play','reset','mode','trails'])$(id).onclick=()=>action(id);
@@ -182,16 +184,18 @@ function refreshRightPanel(){
  const rightButtons=[
   {text:'YAKINA GETIR',x:28,y:150,w:664,h:90},
   {text:'KUCULT -',x:28,y:260,w:316,h:95},
-  {text:'BUYUT +',x:376,y:260,w:316,h:95}
+  {text:'BUYUT +',x:376,y:260,w:316,h:95},
+  {text:'KOPYALA',x:28,y:375,w:316,h:82},
+  {text:'SIL',x:376,y:375,w:316,h:82}
  ];
  for(const b of rightButtons){
   rightMenuCtx.fillStyle='#285a8d';rightMenuCtx.beginPath();rightMenuCtx.roundRect(b.x,b.y,b.w,b.h,15);rightMenuCtx.fill();
   rightMenuCtx.fillStyle='#fff';rightMenuCtx.font='bold 32px system-ui';
-  rightMenuCtx.fillText(b.text,b.x+22,b.y+58);
+  rightMenuCtx.fillText(b.text,b.x+22,b.y+Math.min(58,b.h*.67));
  }
  rightMenuCtx.fillStyle='#b8e2ff';rightMenuCtx.font='23px system-ui';
- rightMenuCtx.fillText('Boyut: '+(selectedPlanet?selectedPlanet.radius.toFixed(2):'—'),28,401);
- rightMenuCtx.fillStyle='#b1cbe1';rightMenuCtx.font='23px system-ui';rightMenuCtx.fillText('Sag A: ac / kapat',28,451);
+ rightMenuCtx.fillText('Boyut: '+(selectedPlanet?selectedPlanet.radius.toFixed(2):'—'),28,486);
+ rightMenuCtx.fillStyle='#b1cbe1';rightMenuCtx.font='23px system-ui';
  rightMenuTexture.needsUpdate=true;
 }
 const rightMenuOffset=new THREE.Vector3(0,.025,-.11);
@@ -326,6 +330,34 @@ function pickTargets(controller){
  }
  magneticTargets.set(controller,best?.body||null);
  return best?[best]:[];
+}
+function copySelected(){
+ const originals=[...selectedBodies].filter(b=>bodies.includes(b));
+ if(!originals.length)return;
+ const shift=new THREE.Vector3(Math.max(2.5,...originals.map(b=>b.radius*2.5)),0,0);
+ const copies=[];
+ for(const b of originals){
+  const p=b.pos.clone().add(shift);
+  const clone=makeBody(b.radius,b.mesh.material.color.getHex(),p.x,p.y,p.z,b.v.x,b.v.y,b.v.z);
+  updateTrail(clone);copies.push(clone);
+ }
+ choosePlanets(copies);
+ $('status').textContent=copies.length+' gezegen kopyalandı';
+}
+function deleteSelected(){
+ const targets=[...selectedBodies].filter(b=>bodies.includes(b));
+ if(!targets.length)return;
+ if(twoHand&&targets.includes(twoHand.body))endTwoHand();
+ for(const [controller,grab] of grabs)if(targets.includes(grab.body))grabs.delete(controller);
+ for(const b of targets){
+  world.remove(b.mesh,b.trail);b.mesh.material.dispose();b.trail.geometry.dispose();b.trail.material.dispose();
+  const ring=selectionRings.get(b);
+  if(ring){world.remove(ring);ring.geometry.dispose();ring.material.dispose();selectionRings.delete(b)}
+  bodies.splice(bodies.indexOf(b),1);
+ }
+ for(const [controller,target] of magneticTargets)if(targets.includes(target))magneticTargets.delete(controller);
+ hoverBodies.clear();choosePlanets([]);
+ $('status').textContent=targets.length+' gezegen silindi';
 }
 function createPlanet(){
  const view=renderer.xr.isPresenting?renderer.xr.getCamera():camera;
@@ -508,6 +540,8 @@ for(let i=0;i<2;i++){
    if(px>=28&&px<=692&&py>=150&&py<=240)action('near');
    else if(px>=28&&px<=344&&py>=260&&py<=355)action('shrink');
    else if(px>=376&&px<=692&&py>=260&&py<=355)action('grow');
+   else if(px>=28&&px<=344&&py>=375&&py<=457)action('copy');
+   else if(px>=376&&px<=692&&py>=375&&py<=457)action('delete');
    return;
   }
   if(panelHit?.uv){
