@@ -354,7 +354,7 @@ function smoothPath(P,closed){
  for(let i=0;i<P.length-1;i++){const p0=P[Math.max(0,i-1)],p1=P[i],p2=P[i+1],p3=P[Math.min(P.length-1,i+2)],c1={x:p1.x+(p2.x-p0.x)/6,y:p1.y+(p2.y-p0.y)/6},c2={x:p2.x-(p3.x-p1.x)/6,y:p2.y-(p3.y-p1.y)/6};d+=` C ${c1.x} ${c1.y},${c2.x} ${c2.y},${p2.x} ${p2.y}`}
  return d
 }
-function shapePolygon(){
+function localShapePolygon(){
  if(!shape)return[];const t=shape.type;
  if(t==="square"||t==="rect"||t==="image"){const x=shape.cx-shape.w/2,y=shape.cy-shape.h/2;return[{x,y},{x:x+shape.w,y},{x:x+shape.w,y:y+shape.h},{x,y:y+shape.h}]}
  if(t==="tri"||t==="rightTri"||t==="parallelogram"||t==="rhombus"||t==="trapezoid"||t==="pentagon"||t==="hexagon"||t==="pen"||(t==="polygon"&&polygonClosed)||["bunny","cat","heart","star","fish","cloud"].includes(t))return shape.pts.map(p=>({...p}));
@@ -362,6 +362,9 @@ function shapePolygon(){
  if(t==="free"&&freeClosed)return smoothClosedPolygon(freePoints);
  return[]
 }
+function rotationCenter(){const P=localShapePolygon();return P.length?{x:P.reduce((a,p)=>a+p.x,0)/P.length,y:P.reduce((a,p)=>a+p.y,0)/P.length}:{x:0,y:0}}
+function rotatePoint(p,c,a){const x=p.x-c.x,y=p.y-c.y;return{x:c.x+x*Math.cos(a)-y*Math.sin(a),y:c.y+x*Math.sin(a)+y*Math.cos(a)}}
+function shapePolygon(){const P=localShapePolygon(),a=shape?.rotation||0;if(!a||!P.length)return P;const c=rotationCenter();return P.map(p=>rotatePoint(p,c,a))}
 function pointInPolygon(p,P){let ins=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const a=P[i],b=P[j];if(((a.y>p.y)!=(b.y>p.y))&&(p.x<(b.x-a.x)*(p.y-a.y)/((b.y-a.y)||1e-12)+a.x))ins=!ins}return ins}
 function clipEdge(P,inside,inter){const o=[];if(!P.length)return o;let A=P[P.length-1],ai=inside(A);for(const B of P){const bi=inside(B);if(bi){if(!ai)o.push(inter(A,B));o.push(B)}else if(ai)o.push(inter(A,B));A=B;ai=bi}return o}
 function clipRect(P,x0,y0,x1,y1){let p=P;
@@ -595,6 +598,7 @@ function render(){
  if(t==="square"||t==="rect")el=S("rect",{x:shape.cx-shape.w/2,y:shape.cy-shape.h/2,width:shape.w,height:shape.h,class:"shape"});else if(t==="image"){const im=S("image",{x:shape.cx-shape.w/2,y:shape.cy-shape.h/2,width:shape.w,height:shape.h,href:imageObjectURL||"",opacity:.20,preserveAspectRatio:"none"});im.style.pointerEvents="none";svg.appendChild(im);el=S("rect",{x:shape.cx-shape.w/2,y:shape.cy-shape.h/2,width:shape.w,height:shape.h,class:"shape"})}
  else if(t==="circle"||t==="ellipse")el=S("ellipse",{cx:shape.cx,cy:shape.cy,rx:shape.rx,ry:shape.ry,class:"shape"});
  else el=S("polygon",{points:shape.pts.map(p=>`${p.x},${p.y}`).join(" "),class:"shape"});
+ if(shape.rotation){const c=rotationCenter();el.setAttribute("transform",`rotate(${shape.rotation*180/Math.PI} ${c.x} ${c.y})`)}
  el.dataset.role="shape";el.onpointerdown=shapeDown;svg.appendChild(el);
  drawTiles();drawHandles()
 }
@@ -605,12 +609,14 @@ function drawHandles(){
  else if(shape.type==="circle")hs=[{x:shape.cx+shape.rx,y:shape.cy,id:"r"}];
  else if(shape.type==="ellipse")hs=[{x:shape.cx+shape.rx,y:shape.cy,id:"rx"},{x:shape.cx,y:shape.cy-shape.ry,id:"ry"}];
  else if(shape.type==="tri"||shape.type==="rightTri"||shape.type==="parallelogram"||shape.type==="rhombus"||shape.type==="trapezoid"||shape.type==="pentagon"||shape.type==="hexagon"||(shape.type==="polygon"&&polygonClosed))hs=shape.pts.map((p,i)=>({...p,id:String(i)}));
- if(shapePolygon().length>=3 && !(shape.type==="polygon"&&!polygonClosed)){
- const P=shapePolygon(),cx=P.reduce((v,p)=>v+p.x,0)/P.length,cy=P.reduce((v,p)=>v+p.y,0)/P.length;
- const top=Math.min(...P.map(p=>p.y)),hy=top-35;
- const stem=S("line",{x1:cx,y1:top,x2:cx,y2:hy,stroke:"#d18b18","stroke-width":2,"vector-effect":"non-scaling-stroke"});
- svg.appendChild(stem);
- const rot=S("circle",{cx,cy:hy,r:10,fill:"#ffcd55",stroke:"#a96b08","stroke-width":2,class:"handle"});
+ const angle=shape.rotation||0,center=rotationCenter();
+ if(angle)hs=hs.map(h=>({...rotatePoint(h,center,angle),id:h.id}));
+ if(localShapePolygon().length>=3 && !(shape.type==="polygon"&&!polygonClosed)){
+ const P=localShapePolygon(),top=Math.min(...P.map(p=>p.y));
+ const pivot=rotatePoint({x:center.x,y:top},center,angle);
+ const tip=rotatePoint({x:center.x,y:top-35},center,angle);
+ svg.appendChild(S("line",{x1:pivot.x,y1:pivot.y,x2:tip.x,y2:tip.y,stroke:"#d18b18","stroke-width":2,"vector-effect":"non-scaling-stroke"}));
+ const rot=S("circle",{cx:tip.x,cy:tip.y,r:10,fill:"#ffcd55",stroke:"#a96b08","stroke-width":2,class:"handle"});
  rot.dataset.handle="rotate";rot.onpointerdown=handleDown;svg.appendChild(rot);
  }
  hs.forEach(h=>{const c=S("circle",{cx:h.x,cy:h.y,r:7,class:"handle"});c.dataset.handle=h.id;c.onpointerdown=handleDown;svg.appendChild(c)})
@@ -621,8 +627,8 @@ function handleDown(e){
  if(shape?.type==="free"&&!freeClosed){const i=+e.currentTarget.dataset.index;if(i===0&&freePoints.length>=3){freeClosed=true;refreshTiles();hint.style.opacity="0";render();return}}
  dragging={kind:e.currentTarget.dataset.handle==="rotate"?"rotate":"handle",id:e.currentTarget.dataset.handle,index:e.currentTarget.dataset.index,start:pt(e),original:JSON.parse(JSON.stringify(shape)),freeOriginal:freePoints.map(q=>({...q}))};
  if(dragging.kind==="rotate"){
-   const P=shapePolygon();const center={x:P.reduce((v,p)=>v+p.x,0)/P.length,y:P.reduce((v,p)=>v+p.y,0)/P.length};
-   const start=pt(e);dragging.rotationPoints=P;dragging.rotationCenter=center;dragging.rotationStart=Math.atan2(start.y-center.y,start.x-center.x);
+   const center=rotationCenter();
+   const start=pt(e);dragging.rotationCenter=center;dragging.rotationStart=Math.atan2(start.y-center.y,start.x-center.x);
  }
  e.currentTarget.setPointerCapture?.(e.pointerId)
 }
@@ -640,17 +646,12 @@ function shapeDown(e){
  animateSum()
 }
 stage.onpointermove=e=>{
- if(!dragging)return;const p=pt(e),dx=p.x-dragging.start.x,dy=p.y-dragging.start.y;
+ if(!dragging)return;const raw=pt(e),a=dragging.original.rotation||0,c=dragging.rotationCenter||rotationCenter();
+ const p=dragging.kind==="rotate"?raw:rotatePoint(raw,c,-a),start=dragging.kind==="rotate"?dragging.start:rotatePoint(dragging.start,c,-a);
+ const dx=p.x-start.x,dy=p.y-start.y;
  if(dragging.kind==="rotate"){
-   const original=dragging.original;
-   const P=dragging.rotationPoints;
-   const center=dragging.rotationCenter;
-   const angle=Math.atan2(p.y-center.y,p.x-center.x)-dragging.rotationStart;
-   const co=Math.cos(angle),si=Math.sin(angle);
-   const rotated=P.map(q=>({x:center.x+(q.x-center.x)*co-(q.y-center.y)*si,y:center.y+(q.x-center.x)*si+(q.y-center.y)*co}));
-   if(original.type==="free"){freePoints=rotated;shape.pts=rotated;}
-   else if(original.type==="circle"){return;}
-   else {shape.type="polygon";shape.pts=rotated;polygonClosed=true;polygonPoints=rotated.map(q=>({...q}));}
+   const c=dragging.rotationCenter;
+   shape.rotation=(dragging.original.rotation||0)+Math.atan2(p.y-c.y,p.x-c.x)-dragging.rotationStart;
  }else if(dragging.kind==="move"){
    if(shape.type==="free")freePoints=dragging.freeOriginal.map(q=>({x:q.x+dx,y:q.y+dy}));
    else if(shape.type==="square"||shape.type==="rect"||shape.type==="circle"||shape.type==="ellipse"||shape.type==="image"){shape.cx=dragging.original.cx+dx;shape.cy=dragging.original.cy+dy}
