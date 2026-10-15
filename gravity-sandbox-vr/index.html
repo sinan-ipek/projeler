@@ -49,8 +49,10 @@ const grid=new THREE.GridHelper(2000,200,0x263c56,0x1a2a3f);grid.position.y=-9.9
 const geometry=new THREE.SphereGeometry(1,20,14);
 const G=5,SOFT=1.44,DT=1/120,G_PLANET=12,BOUNCE=.72;
 const HISTORY=280;
+const DENSITY_FACTOR=8; // All bodies share the same density: mass = factor * radius^3.
 let bodies=[],running=true,planetMode=false,showTrails=true,accumulator=0;
-function makeBody(radius,mass,color,x,y,z,vx,vy,vz){
+function makeBody(radius,color,x,y,z,vx,vy,vz){
+ const mass=DENSITY_FACTOR*radius**3;
  const mat=new THREE.MeshStandardMaterial({color,roughness:.72});
  const mesh=new THREE.Mesh(geometry,mat);mesh.scale.setScalar(radius);world.add(mesh);
  const lineGeo=new THREE.BufferGeometry();
@@ -78,14 +80,31 @@ function clearBodies(){
 }
 function setup(){
  clearBodies();accumulator=0;
- // Merkezde büyük yıldız ve çevresinde üç farklı hareketli gök cismi.
- makeBody(4.3,700,0xffc253,0,0,0,0,0,0);
- const samples=[[18,1.2,0x57a7ff,.1],[29,1.7,0xf17b6d,2.5],[42,1.05,0x71dab8,4.3]];
- for(const [r,size,color,angle] of samples){
-  const x=r*Math.cos(angle),z=r*Math.sin(angle),speed=Math.sqrt(G*700*r*r/Math.pow(r*r+SOFT,1.5));
-  makeBody(size,size**3*8,color,x,0,z,-Math.sin(angle)*speed,0,Math.cos(angle)*speed);
+ // Stable default system: all bodies have identical density.
+ // Circular softened-gravity orbital speeds and generously separated orbits
+ // keep the system stable over an extended unattended observation.
+ const starRadius=7;
+ const starMass=DENSITY_FACTOR*starRadius**3;
+ const star=makeBody(starRadius,0xffc253,0,0,0,0,0,0);
+ const orbits=[
+  {distance:24,radius:.8,color:0x57a7ff,phase:.1},
+  {distance:48,radius:1,color:0xf17b6d,phase:2.3},
+  {distance:90,radius:1.2,color:0x71dab8,phase:4.4}
+ ];
+ for(const orbit of orbits){
+  const {distance:r,radius,color,phase}=orbit;
+  const mass=DENSITY_FACTOR*radius**3;
+  const speed=Math.sqrt(G*(starMass+mass)*r*r/Math.pow(r*r+SOFT,1.5));
+  makeBody(radius,color,r*Math.cos(phase),0,r*Math.sin(phase),
+   -Math.sin(phase)*speed,0,Math.cos(phase)*speed);
  }
- for(const b of bodies){b.history=[];updateTrail(b)}
+ // Put the central body into the system's reflex motion; preserve relative
+ // circular velocities and avoid a large systemic center-of-mass drift.
+ const recoil=new THREE.Vector3();
+ for(let i=1;i<bodies.length;i++)recoil.addScaledVector(bodies[i].v,-bodies[i].mass/star.mass);
+ star.v.copy(recoil);
+ for(let i=1;i<bodies.length;i++)bodies[i].v.add(recoil);
+ for(const body of bodies){body.history=[];updateTrail(body)}
 }
 function accelerations(){
  if(planetMode)return bodies.map(()=>new THREE.Vector3(0,-G_PLANET,0));
