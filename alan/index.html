@@ -608,6 +608,7 @@ function drawHandles(){
  hs.forEach(h=>{const c=S("circle",{cx:h.x,cy:h.y,r:7,class:"handle"});c.dataset.handle=h.id;c.onpointerdown=handleDown;svg.appendChild(c)})
 }
 function handleDown(e){
+ if(animating){activeCountVersion++;animating=false;resetCounters();}
  e.stopPropagation();
  if(shape?.type==="free"&&!freeClosed){const i=+e.currentTarget.dataset.index;if(i===0&&freePoints.length>=3){freeClosed=true;refreshTiles();hint.style.opacity="0";render();return}}
  dragging={kind:"handle",id:e.currentTarget.dataset.handle,index:e.currentTarget.dataset.index,start:pt(e),original:JSON.parse(JSON.stringify(shape)),freeOriginal:freePoints.map(q=>({...q}))};
