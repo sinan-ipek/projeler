@@ -605,13 +605,25 @@ function drawHandles(){
  else if(shape.type==="circle")hs=[{x:shape.cx+shape.rx,y:shape.cy,id:"r"}];
  else if(shape.type==="ellipse")hs=[{x:shape.cx+shape.rx,y:shape.cy,id:"rx"},{x:shape.cx,y:shape.cy-shape.ry,id:"ry"}];
  else if(shape.type==="tri"||shape.type==="rightTri"||shape.type==="parallelogram"||shape.type==="rhombus"||shape.type==="trapezoid"||shape.type==="pentagon"||shape.type==="hexagon"||(shape.type==="polygon"&&polygonClosed))hs=shape.pts.map((p,i)=>({...p,id:String(i)}));
+ if(shapePolygon().length>=3 && !(shape.type==="polygon"&&!polygonClosed)){
+ const P=shapePolygon(),cx=P.reduce((v,p)=>v+p.x,0)/P.length,cy=P.reduce((v,p)=>v+p.y,0)/P.length;
+ const top=Math.min(...P.map(p=>p.y)),hy=top-35;
+ const stem=S("line",{x1:cx,y1:top,x2:cx,y2:hy,stroke:"#d18b18","stroke-width":2,"vector-effect":"non-scaling-stroke"});
+ svg.appendChild(stem);
+ const rot=S("circle",{cx,cy:hy,r:10,fill:"#ffcd55",stroke:"#a96b08","stroke-width":2,class:"handle"});
+ rot.dataset.handle="rotate";rot.onpointerdown=handleDown;svg.appendChild(rot);
+ }
  hs.forEach(h=>{const c=S("circle",{cx:h.x,cy:h.y,r:7,class:"handle"});c.dataset.handle=h.id;c.onpointerdown=handleDown;svg.appendChild(c)})
 }
 function handleDown(e){
  if(animating){activeCountVersion++;animating=false;resetCounters();}
  e.stopPropagation();
  if(shape?.type==="free"&&!freeClosed){const i=+e.currentTarget.dataset.index;if(i===0&&freePoints.length>=3){freeClosed=true;refreshTiles();hint.style.opacity="0";render();return}}
- dragging={kind:"handle",id:e.currentTarget.dataset.handle,index:e.currentTarget.dataset.index,start:pt(e),original:JSON.parse(JSON.stringify(shape)),freeOriginal:freePoints.map(q=>({...q}))};
+ dragging={kind:e.currentTarget.dataset.handle==="rotate"?"rotate":"handle",id:e.currentTarget.dataset.handle,index:e.currentTarget.dataset.index,start:pt(e),original:JSON.parse(JSON.stringify(shape)),freeOriginal:freePoints.map(q=>({...q}))};
+ if(dragging.kind==="rotate"){
+   const P=shapePolygon();const center={x:P.reduce((v,p)=>v+p.x,0)/P.length,y:P.reduce((v,p)=>v+p.y,0)/P.length};
+   const start=pt(e);dragging.rotationPoints=P;dragging.rotationCenter=center;dragging.rotationStart=Math.atan2(start.y-center.y,start.x-center.x);
+ }
  e.currentTarget.setPointerCapture?.(e.pointerId)
 }
 function shapeDown(e){
@@ -629,7 +641,17 @@ function shapeDown(e){
 }
 stage.onpointermove=e=>{
  if(!dragging)return;const p=pt(e),dx=p.x-dragging.start.x,dy=p.y-dragging.start.y;
- if(dragging.kind==="move"){
+ if(dragging.kind==="rotate"){
+   const original=dragging.original;
+   const P=dragging.rotationPoints;
+   const center=dragging.rotationCenter;
+   const angle=Math.atan2(p.y-center.y,p.x-center.x)-dragging.rotationStart;
+   const co=Math.cos(angle),si=Math.sin(angle);
+   const rotated=P.map(q=>({x:center.x+(q.x-center.x)*co-(q.y-center.y)*si,y:center.y+(q.x-center.x)*si+(q.y-center.y)*co}));
+   if(original.type==="free"){freePoints=rotated;shape.pts=rotated;}
+   else if(original.type==="circle"){return;}
+   else {shape.type="polygon";shape.pts=rotated;polygonClosed=true;polygonPoints=rotated.map(q=>({...q}));}
+ }else if(dragging.kind==="move"){
    if(shape.type==="free")freePoints=dragging.freeOriginal.map(q=>({x:q.x+dx,y:q.y+dy}));
    else if(shape.type==="square"||shape.type==="rect"||shape.type==="circle"||shape.type==="ellipse"||shape.type==="image"){shape.cx=dragging.original.cx+dx;shape.cy=dragging.original.cy+dy}
    else {
