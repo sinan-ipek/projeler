@@ -565,10 +565,11 @@ function render(){
  clearSVG();if(!shape&&freePoints.length===0)return;
  if(shape?.type==="free"||freePoints.length){
    const path=S("path",{d:smoothPath(freePoints,freeClosed),class:freeClosed?"shape":"free-preview"});
+   if(freeClosed&&shape?.rotation){const c=rotationCenter();path.setAttribute("transform",`rotate(${shape.rotation*180/Math.PI} ${c.x} ${c.y})`)}
    svg.appendChild(path);
    if(freeClosed){path.dataset.role="shape";path.onpointerdown=shapeDown}
    if(freeClosed){drawTiles();drawHandles();}
-   freePoints.forEach((p,i)=>{const c=S("circle",{cx:p.x,cy:p.y,r:i===0&&!freeClosed?8:6,class:"free-point"+(i===0?" start":"")});c.dataset.index=i;c.onpointerdown=handleDown;svg.appendChild(c)});
+   freePoints.forEach((p,i)=>{const rp=freeClosed&&shape?.rotation?rotatePoint(p,rotationCenter(),shape.rotation):p;const c=S("circle",{cx:rp.x,cy:rp.y,r:i===0&&!freeClosed?8:6,class:"free-point"+(i===0?" start":"")});c.dataset.index=i;c.onpointerdown=handleDown;svg.appendChild(c)});
    return
  }
  let el,t=shape.type;
