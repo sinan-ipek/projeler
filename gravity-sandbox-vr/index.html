@@ -410,6 +410,32 @@ function rayFromController(controller){
  raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
  raycaster.ray.direction.set(0,0,-1).applyMatrix4(tempMatrix).normalize();
 }
+// Estimate release velocity from the last 200 ms with linear regression.
+// Only the release impulse is smoothed; held planets still track hands directly.
+const THROW_WINDOW=.20,THROW_DEADZONE=.6,THROW_MAX=40;
+function estimateThrowVelocity(samples){
+ if(samples.length<3)return new THREE.Vector3();
+ const end=samples[samples.length-1].t;
+ const recent=samples.filter(s=>end-s.t<=THROW_WINDOW);
+ if(recent.length<3)return new THREE.Vector3();
+ const n=recent.length;
+ let tMean=0;
+ const pMean=new THREE.Vector3();
+ for(const s of recent){tMean+=s.t;pMean.add(s.p)}
+ tMean/=n;pMean.divideScalar(n);
+ let denominator=0;
+ const numerator=new THREE.Vector3();
+ for(const s of recent){
+  const d=s.t-tMean;
+  denominator+=d*d;
+  numerator.addScaledVector(s.p.clone().sub(pMean),d);
+ }
+ if(denominator<.000001)return new THREE.Vector3();
+ const velocity=numerator.divideScalar(denominator);
+ // Ignore extremely small involuntary release motions.
+ if(velocity.length()<THROW_DEADZONE)return velocity.set(0,0,0);
+ return velocity.clampLength(0,THROW_MAX);
+}
 function releaseGrab(controller){
  if(twoHand&&twoHand.secondary===controller){
   endTwoHand();$('status').textContent='İki elle ölçeklendirme bitti';return;
@@ -426,9 +452,7 @@ function releaseGrab(controller){
   return;
  }
  const g=grabs.get(controller);if(!g)return;
- const last=g.samples.at(-1),first=g.samples[0],dt=last.t-first.t;
- g.body.v.set(0,0,0);
- if(dt>.016)g.body.v.copy(last.p).sub(first.p).divideScalar(dt).clampLength(0,40);
+ g.body.v.copy(estimateThrowVelocity(g.samples));
  g.body.history=[];updateTrail(g.body);grabs.delete(controller);
 }
 function updateGrabsAndHover(dt){
@@ -479,7 +503,7 @@ function updateGrabsAndHover(dt){
    g.body.pos.copy(pos);g.body.v.set(0,0,0);
    const now=performance.now()/1000;
    g.samples.push({p:pos.clone(),t:now});
-   while(g.samples.length>2&&now-g.samples[0].t>.14)g.samples.shift();
+   while(g.samples.length>3&&now-g.samples[0].t>THROW_WINDOW)g.samples.shift();
   }else if(twoHand&&twoHand.secondary===controller){
    // The second hand contributes only to scaling, not to the orbit velocity.
   }else{
