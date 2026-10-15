@@ -832,49 +832,35 @@ async function animateSum(){
  if(!shape||!tiles.length||animating)return;
  animating=true;resetCounters();
  setCounterHTML(counterBig,0);setCounterHTML(counterMid,0);setCounterHTML(counterSmall,0);
- const originals=tiles.map(t=>({...t})),sleep=ms=>new Promise(r=>setTimeout(r,ms)),flying=[];
- for(const t of originals){
-   const d=document.createElement("div");
-   d.className="flyTile flyTile-"+t.level;
-   d.style.transition="none";
-   const sp=worldToScreen(t.x,t.y);
-   const fw=t.w*view.scale,fh=t.h*view.scale;
-   d.style.left=sp.x+"px";d.style.top=sp.y+"px";
-   d.style.width=fw+"px";d.style.height=fh+"px";
-   d.style.boxSizing="border-box";
-   d.style.borderWidth=(t.level==="big"?"1.4px":t.level==="mid"?".9px":".55px");
-   document.body.appendChild(d);
-   flying.push({tile:t,el:d,fw,fh});
+ // Kaplama başlarken içi boş şekil gösterilir. Kareler sırasıyla
+ // şeklin içine yerleşirken sayaç eşzamanlı ilerler.
+ const ordered=["big","mid","small"].flatMap(level=>tiles.filter(t=>t.level===level));
+ const tileNodes=new Map([...svg.querySelectorAll(".tile")].map(el=>[el.getAttribute("data-tile-id"),el]));
+ tileNodes.forEach(el=>el.style.visibility="hidden");
+ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+ for(const level of ["big","mid","small"]){
+   const group=ordered.filter(t=>t.level===level);
+   const interval=level==="big"?85:level==="mid"?49:24;
+   for(let i=0;i<group.length;i++){
+     const t=group[i],el=tileNodes.get(t.id);
+     if(el){
+       el.style.visibility="visible";
+       el.style.opacity="0";
+       el.style.transition="opacity "+Math.min(160,interval*2)+"ms ease-out";
+       requestAnimationFrame(()=>{el.style.opacity=String(tileAlpha)});
+     }
+     counterState[level]++;
+     setCounter(level,counterState[level]);
+     if(i<group.length-1)await sleep(interval);
+   }
+   await sleep(level==="small"?80:160);
  }
- void document.body.offsetWidth;
- svg.querySelectorAll(".tile").forEach(e=>e.style.visibility="hidden");
- await sleep(35);
- for(const o of flying)o.el.style.transition="";
- async function send(o,delay,level){
-   await sleep(delay);
-   const t=o.tile,d=o.el,target=level==="big"?counterBig:level==="mid"?counterMid:counterSmall;
-   const r=target.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2;
-   d.classList.add("lifted");
-   // Boyut değişmez: şeklin içindeki ekranda görünen boyutuyla sayaca gider.
-   d.style.width=o.fw+"px";d.style.height=o.fh+"px";
-   d.style.left=(tx-o.fw/2)+"px";d.style.top=(ty-o.fh/2+7)+"px";
-   const travel=level==="big"?480:level==="mid"?390:300;
-   await sleep(travel);
-   counterState[level]++;setCounter(level,counterState[level]);d.remove();
- }
- async function group(level){
-   const g=flying.filter(o=>o.tile.level===level);
-   const gap=level==="big"?82:level==="mid"?58:34;
-   await Promise.all(g.map((o,i)=>send(o,i*gap,level)));
- }
- await group("big");
- await group("mid");
- await group("small");
  counterState.counted=true;
  if(counterState.mid)midUnit.classList.add("ready");
  if(counterState.small)smallUnit.classList.add("ready");
- for(const o of flying)if(o.el.isConnected)o.el.remove();
- animating=false;keepEmptyAfterCount=true;tiles=[];render();
+ animating=false;
+ // Kaplama görünür kalır; yeni şekil değişikliğinde kareler yeniden hesaplanır.
+ keepEmptyAfterCount=false;
 }
 /* Zoom: fare konumunu sabit tutarak yakınlaştır / uzaklaştır. */
 stage.addEventListener("wheel",e=>{
