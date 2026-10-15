@@ -866,7 +866,6 @@ async function animateSum(){
 }
 /* Zoom: fare konumunu sabit tutarak yakınlaştır / uzaklaştır. */
 stage.addEventListener("wheel",e=>{
-  if(animating)return;
   e.preventDefault();
   const r=stage.getBoundingClientRect();
   const sx=e.clientX-r.left,sy=e.clientY-r.top;
@@ -879,7 +878,7 @@ stage.addEventListener("wheel",e=>{
 
 /* Boş alana basıp sürükleyerek görünümü taşı. */
 stage.addEventListener("pointerdown",e=>{
-  if(animating||e.button!==0||!isPanTarget(e))return;
+  if(e.button!==0||!isPanTarget(e))return;
   panDrag={id:e.pointerId,x:e.clientX,y:e.clientY,tx:view.tx,ty:view.ty,moved:false};
   stage.setPointerCapture(e.pointerId);stage.classList.add("panning");
 },true);
