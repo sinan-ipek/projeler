@@ -141,7 +141,7 @@ function syncButtons(){
 }
 function action(name){
  if(name==='play')running=!running
- if(name==='reset'){grabs.clear();hoverBodies.clear();magneticTargets.clear();choosePlanets([]);setup();for(const ring of selectionRings.values())ring.visible=false}
+ if(name==='reset'){endTwoHand();grabs.clear();hoverBodies.clear();magneticTargets.clear();choosePlanets([]);setup();for(const ring of selectionRings.values())ring.visible=false}
  if(name==='mode'){planetMode=!planetMode;if(planetMode)for(const b of bodies){b.pos.y=Math.max(b.pos.y,-10+b.radius);b.history=[];updateTrail(b)}}
  if(name==='trails')showTrails=!showTrails;
  if(name==='near')bringNear();
@@ -231,6 +231,9 @@ function refreshPanel(){
 const raycaster=new THREE.Raycaster(),tempMatrix=new THREE.Matrix4();
 const controllers=[];
 const grabs=new Map();
+let twoHand=null;
+function handPosition(c){return c.getWorldPosition(new THREE.Vector3());}
+function endTwoHand(){twoHand=null;}
 let selectedPlanet=null;
 const selectedBodies=new Set();
 const grabbedBody=b=>[...grabs.values()].some(g=>g.body===b);
@@ -376,6 +379,20 @@ function rayFromController(controller){
  raycaster.ray.direction.set(0,0,-1).applyMatrix4(tempMatrix).normalize();
 }
 function releaseGrab(controller){
+ if(twoHand&&twoHand.secondary===controller){
+  endTwoHand();$('status').textContent='İki elle ölçeklendirme bitti';return;
+ }
+ if(twoHand&&twoHand.primary===controller){
+  // Continue holding the planet with the remaining hand without a sudden jump.
+  const other=twoHand.secondary,body=twoHand.body;
+  endTwoHand();grabs.delete(controller);
+  rayFromController(other);
+  const center=body.mesh.getWorldPosition(new THREE.Vector3());
+  const distance=Math.max(.12,center.distanceTo(raycaster.ray.origin));
+  const point=raycaster.ray.at(distance,new THREE.Vector3());
+  grabs.set(other,{body,distance,offset:center.sub(point),samples:[{p:body.pos.clone(),t:performance.now()/1000}]});
+  return;
+ }
  const g=grabs.get(controller);if(!g)return;
  const last=g.samples.at(-1),first=g.samples[0],dt=last.t-first.t;
  g.body.v.set(0,0,0);
@@ -429,6 +446,8 @@ function updateGrabsAndHover(dt){
    const now=performance.now()/1000;
    g.samples.push({p:pos.clone(),t:now});
    while(g.samples.length>2&&now-g.samples[0].t>.14)g.samples.shift();
+  }else if(twoHand&&twoHand.secondary===controller){
+   // The second hand contributes only to scaling, not to the orbit velocity.
   }else{
    const picked=pickTargets(controller);
    hoverBodies.set(controller,new Set(picked.map(p=>p.body.mesh)));
@@ -438,6 +457,15 @@ function updateGrabsAndHover(dt){
   const highlighted=[...hoverBodies.values()].some(set=>set?.has(b.mesh))||grabbedBody(b);
   b.mesh.material.emissive.setHex(highlighted?0x284866:0);
   b.mesh.material.emissiveIntensity=highlighted?.6:0;
+ }
+ if(twoHand){
+  const distance=handPosition(twoHand.primary).distanceTo(handPosition(twoHand.secondary));
+  const desired=THREE.MathUtils.clamp(twoHand.startRadius*distance/twoHand.startDistance,.2,12);
+  const b=twoHand.body;
+  if(Math.abs(b.radius-desired)>.001){
+   b.radius=desired;b.mass=DENSITY_FACTOR*desired**3;b.mesh.scale.setScalar(desired);
+   if(planetMode)b.pos.y=Math.max(b.pos.y,-10+desired);
+  }
  }
  updateSelectionRing();
 }
@@ -483,7 +511,16 @@ for(let i=0;i<2;i++){
   const hit=pickTargets(controller)[0];
   if(!hit)return;
   const body=hit.body;
-  if(!body||grabbedBody(body))return;
+  if(!body)return;
+  const existing=[...grabs.entries()].find(([,g])=>g.body===body);
+  if(existing){
+   if(twoHand||existing[0]===controller)return;
+   const separation=handPosition(controller).distanceTo(handPosition(existing[0]));
+   if(separation<.035)return;
+   twoHand={body,primary:existing[0],secondary:controller,startDistance:separation,startRadius:body.radius};
+   $('status').textContent='İki el: uzaklaştır büyüt · yaklaştır küçült';
+   return;
+  }
   if(!selectedBodies.has(body))choosePlanet(body);
   const center=body.mesh.getWorldPosition(new THREE.Vector3());
   const point=raycaster.ray.at(hit.distance,new THREE.Vector3());
@@ -498,7 +535,7 @@ renderer.xr.addEventListener('sessionstart',()=>{
  $('status').textContent='v9.1 · Sol X: menüyü aç/kapat';
 });
 renderer.xr.addEventListener('sessionend',()=>{
- grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;rightMenuOpen=false;
+ endTwoHand();grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;rightMenuOpen=false;
  $('status').textContent='VR kapalı · Masaüstü önizlemesi';
 });
 const clock=new THREE.Clock();
