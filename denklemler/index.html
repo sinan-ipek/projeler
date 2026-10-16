@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Denklem Atölyesi — Beta 22</title>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Denklem Atölyesi — Beta 23</title>
 <style>
 :root{font-family:Arial,Helvetica,sans-serif;color:#1d2a3b;background:#f4f6fa}*{box-sizing:border-box}body{margin:0;min-height:100vh}header{padding:18px 25px;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:22px;margin:0;font-weight:600}.subtitle{font-size:12px;color:#77869a;margin-top:6px}.home{width:45px;height:45px;border-radius:12px;background:#ffcf31;border:2px solid #e4ac14;box-shadow:0 3px 8px #5a461525;display:grid;place-items:center;color:#383019;text-decoration:none}.home svg{height:23px;width:23px;fill:currentColor}main{width:min(1120px,calc(100% - 28px));margin:auto}.toolbar,.examples,.entry{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:8px 0 14px}button,select,input{font:inherit;border:1px solid #d5dfea;border-radius:10px;background:white;color:#273954;padding:10px 13px}button{cursor:pointer;box-shadow:0 2px 5px #182b3a0c}button:hover:not(:disabled){border-color:#8fa6c4}button:disabled{opacity:.42;cursor:default}.toolbar label{font-size:13px;color:#69768c;margin-left:auto}.board{border:1px solid #e1e7ee;background:white;border-radius:22px;min-height:430px;box-shadow:0 14px 45px #192e4b0b;overflow:hidden}.board-top{display:flex;justify-content:space-between;color:#78869b;padding:18px 20px;font-size:12px}.scene{height:316px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}.equation{position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1.3;font-size:clamp(26px,4.5vw,50px);font-weight:400;max-width:97%;transform-origin:center center;font-variant-numeric:lining-nums}.side{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative}.equals{padding:0 .36em}.part{display:inline-flex;align-items:center;white-space:nowrap;position:relative}.atom{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border-radius:7px;position:relative;padding:0 .035em}.sign{padding:0 .06em}.hit{cursor:pointer;position:relative;border-radius:8px;outline:none;background:transparent;box-shadow:none;transition:background .18s,box-shadow .18s}.hit:hover,.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.busy .hit{pointer-events:none}.combine{display:inline-flex;align-items:center;border-radius:8px}.combine.hit{padding:0 .04em}.fraction{display:inline-grid;grid-template-rows:auto 3px auto;align-items:center;justify-items:center;position:relative;margin:0 .08em;min-width:1em;border-radius:9px}.numerator,.denominator{display:flex;justify-content:center;align-items:center;min-height:.92em;padding:0 .14em;white-space:nowrap}.numerator{transform:translateY(-.09em)}.denominator{transform:translateY(.09em)}.fracbar{height:2px;width:100%;background:#293852;border-radius:2px;align-self:center;transform:scaleX(1);transform-origin:center}.fraction.constructing .fracbar{transform:scaleX(0)}.fraction.constructed .fracbar{transform:scaleX(1);transition:transform .34s cubic-bezier(.45,0,.18,1)}.fraction.hit:hover,.fraction.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.tip{min-height:32px;text-align:center;font-size:13px;color:#7d8ca0}.examples button.active,.modules button.active{background:#273e5e;color:white}.modules{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 14px}.modules button{font-weight:600}.module-label{font-size:13px;color:#62738c;margin:8px 0}.examples button{font-size:14px}.entry input{width:min(340px,65vw)}.feedback{min-height:18px;color:#ad3e3e;font-size:12px}.notice{font-size:12px;color:#8390a3;line-height:1.6}.measure-layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;pointer-events:none}.measurement{max-width:97%}.ghost{position:fixed;z-index:2000;pointer-events:none;white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-weight:400;line-height:1.3;color:#bf7c1d;will-change:transform,opacity}.done{color:#188a5c}.cross{position:relative}@media(max-width:620px){header{padding:12px 16px}.board{min-height:375px}.board-top{padding:14px}.scene{height:270px}.equals{padding:0 .18em}.toolbar label{margin-left:0}}
 </style></head><body>
@@ -153,7 +153,7 @@ function rect(id){return byId(id)?.getBoundingClientRect()}
 function positionScale(){const max=scene.clientWidth*.95,w=eq.scrollWidth;const scale=w>max?Math.max(.38,max/w):1;eq.style.transform=`translateX(${layoutShiftX}px) scale(${scale})`;}
 function update(animateBars=false){render(animateBars);positionScale()}
 async function fade(change){const animation=eq.animate([{opacity:1},{opacity:.15}],{duration:190*speed(),easing:'ease-in-out'});await animation.finished.catch(()=>{});change();update();await eq.animate([{opacity:.15},{opacity:1}],{duration:300*speed(),easing:'ease-in-out'}).finished.catch(()=>{});}
-// Beta 22: Sembollerin kimlikleri, görevleri ve hedef koordinatları işlemden önce hesaplanır.
+// Beta 23: Sembollerin kimlikleri, görevleri ve hedef koordinatları işlemden önce hesaplanır.
 // İşaret (sign), katsayı, terim ve eşitlik ayrı anlamlı öğelerdir.
 const MotionEngine={
  center(r){return {x:r.left+r.width/2,y:r.top+r.height/2}},
@@ -171,20 +171,52 @@ const MotionEngine={
   clone.querySelectorAll('[data-id]').forEach(node=>map.set(node.dataset.id,node.getBoundingClientRect()));
   // Hareket eden matematiksel nesne sayi degil, isaretiyle birlikte TAM TERIMDIR.
   clone.querySelectorAll('[data-part]').forEach(node=>map.set('part:'+node.dataset.part,node.getBoundingClientRect()));
+  clone.querySelectorAll('[data-id=\"sideL\"],[data-id=\"sideR\"]').forEach(n=>map.set(n.dataset.id,n.getBoundingClientRect()));
   const e=clone.querySelector('.equals');
   if(e)map.set('equals',e.getBoundingClientRect());
   layer.remove();return map;
  },
 
- // Bir terim karşıya taşınırken, korunan matematiksel nesne sabit ankraj olur.
- // Gelecek düzenin bütün sembollerini, bu sabit ankraja göre öteleyerek hesapla.
- anchorLayout(map, anchorId, anchorRect){
-  if(!anchorRect || !map.has(anchorId))return {map,delta:0};
-  const target=map.get(anchorId);
-  const delta=(anchorRect.left+anchorRect.width/2)-(target.left+target.width/2);
-  const shifted=new Map();
-  map.forEach((r,id)=>shifted.set(id,{left:r.left+delta,top:r.top,width:r.width,height:r.height,right:r.right+delta,bottom:r.bottom,x:r.x+delta,y:r.y}));
-  return {map:shifted,delta};
+ // Semantic Layout Planner: generate several candidate placements.
+ // Unchanged terms and = are tracked by identity, not by character offsets.
+ planLayout(future, before, kind, sourceId, targetId){
+  const currentIds=['la','rd','rc','lb','equals'];
+  const survivors=currentIds.filter(id=>id!==sourceId&&id!==targetId&&before.has(id)&&future.has(id));
+  const center=r=>r.left+r.width/2;
+  const candidateShifts=new Set([0]);
+  for(const id of survivors){
+   candidateShifts.add(center(before.get(id))-center(future.get(id)));
+  }
+  const bounds=scene.getBoundingClientRect();
+  const margin=18;
+  const preferred=kind==='B'?'rd':'la';
+  let best=null;
+  for(const dx of candidateShifts){
+   const shifted=new Map();
+   future.forEach((r,id)=>shifted.set(id,{
+    left:r.left+dx,right:r.right+dx,top:r.top,bottom:r.bottom,
+    width:r.width,height:r.height,x:r.x+dx,y:r.y
+   }));
+   const l=shifted.get('sideL'),r=shifted.get('sideR');
+   // Locate the full equation using the surviving equal sign and term boxes.
+   let min=Infinity,max=-Infinity;
+   for(const [id,box] of shifted){
+    if(id==='equals'||id==='sideL'||id==='sideR'||id.startsWith('part:')){
+     min=Math.min(min,box.left);max=Math.max(max,box.right);
+    }
+   }
+   let cost=0;
+   for(const id of survivors){
+    const movement=Math.abs(center(before.get(id))-center(shifted.get(id)));
+    // A term is more important as a visual anchor than the equals glyph.
+    const weight=id==='equals'?0.35:id===preferred?5:2;
+    cost+=movement*weight;
+   }
+   const overflow=Math.max(0,bounds.left+margin-min)+Math.max(0,max-(bounds.right-margin));
+   cost+=overflow*100;
+   if(!best||cost<best.cost)best={map:shifted,delta:dx,cost};
+  }
+  return best||{map:future,delta:0,cost:0};
  },
  // A ve B gerçek ölçülmüş koordinatlar. Matematiksel işaret hedefte önceden belirmez.
  async fly(from,to,sourceText,targetText,source,equalsRect){
@@ -230,6 +262,7 @@ async function moveTerm(type){
  const from=source?.getBoundingClientRect();
  const before=new Map();
  eq.querySelectorAll('[data-id]').forEach(node=>before.set(node.dataset.id,node.getBoundingClientRect()));
+ const eqSign=eq.querySelector('.equals');if(eqSign)before.set('equals',eqSign.getBoundingClientRect());
  const old=structuredClone(s),next=structuredClone(s);
  if(fromB){next.movedB=true;next.combinedR=(m.b===0||m.d===0)}
  else{next.movedC=true;next.combinedL=m.c===0}
@@ -237,11 +270,8 @@ async function moveTerm(type){
  const nextMarkup=markup();
  let future=MotionEngine.targetLayout(nextMarkup);
  Object.assign(s,old);
- // Hangi tarafın korunan terimi var? Başlangıçtaki konumu sabit tutulur.
- // +6 sağa geçerse sağdaki 12 (rd), x sola geçerse soldaki ax (la) ankrajdır.
- const anchorId=fromB?(byId('rd')?'rd':'rc'):'la';
- const anchorRect=byId(anchorId)?.getBoundingClientRect();
- const placement=MotionEngine.anchorLayout(future,anchorId,anchorRect);
+ // Evaluate candidate layouts before animating. Keep semantic anchors stable.
+ const placement=MotionEngine.planLayout(future,before,type,sourceId,targetId);
  future=placement.map;
  const textBefore=source?.textContent?.trim() || (fromB?String(m.b):`${coefficient(m.c)}x`);
  const textAfter=fromB?`${-m.b<0?'−':'+'}${abs(m.b)}`:
