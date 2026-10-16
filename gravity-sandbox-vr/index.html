@@ -58,7 +58,8 @@ function mountSelected(){
  if(!selectedPlanet||!bodies.includes(selectedPlanet))return;
  ridingBody=selectedPlanet;
  grabs.clear();endTwoHand();vectorDrag=null;
- surface.visible=true;
+ surface.material.color.copy(ridingBody.mesh.material.color);
+ surface.visible=!planetMode;
 }
 function updateRidingView(){
  if(!ridingBody||!bodies.includes(ridingBody)){if(ridingBody)dismount();return}
@@ -70,6 +71,8 @@ function updateRidingView(){
  world.position.copy(target).sub(ridingBody.pos.clone().multiplyScalar(SCALE));
  const location=xrEye.getWorldPosition(new THREE.Vector3());
  surface.position.set(location.x,location.y-1.55,location.z);
+ surface.visible=!planetMode;
+ surface.material.color.copy(ridingBody.mesh.material.color);
  ridingBody.mesh.visible=false;
 }
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),new THREE.MeshBasicMaterial({color:0x16243a,side:THREE.DoubleSide}));
@@ -189,6 +192,7 @@ function syncButtons(){
  $('mode').textContent=planetMode?'🌍 Gezegen':'🌌 Uzay';
  $('trails').textContent='Yörüngeler: '+(showTrails?'Açık':'Kapalı');
  floor.visible=planetMode;grid.visible=planetMode;
+ surface.visible=!!ridingBody&&!planetMode;
  scene.background.set(planetMode?0x283c56:0x090e19);
  if(labels.length)refreshPanel();
 }
