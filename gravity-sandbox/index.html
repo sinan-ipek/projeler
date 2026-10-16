@@ -782,7 +782,47 @@ function resolveBodyCollisions(){
   if(dist>=minDist)continue;
   const n=dist>1e-8?delta.divideScalar(dist):new THREE.Vector3(1,0,0);
   const approach=b.v.clone().sub(a.v).dot(n);
-  if((collisionMode==='fragment'||collisionMode==='dynamic')&&approach< -5&&bodies.length+2<=MAX_FRAGMENT_BODIES){
+  // Dynamic high-speed impacts: when masses differ by more than 3:1,
+  // preserve the larger body and fragment only the smaller one.
+  if(collisionMode==='dynamic'&&approach< -5&&
+     Math.max(a.m,b.m)/Math.max(Math.min(a.m,b.m),1e-9)>3&&
+     bodies.length+3<=MAX_FRAGMENT_BODIES){
+   const big=a.m>=b.m?a:b,small=a.m>=b.m?b:a;
+   const smallIndex=bodies.indexOf(small);
+   const outward=small.p.clone().sub(big.p).normalize();
+   const axis=Math.abs(outward.y)>.9?new THREE.Vector3(1,0,0):new THREE.Vector3(0,1,0);
+   const tangent=new THREE.Vector3().crossVectors(outward,axis).normalize();
+   const second=new THREE.Vector3().crossVectors(outward,tangent).normalize();
+   const directions=[tangent.clone().add(second),tangent.clone().sub(second),
+    tangent.clone().negate().add(second),tangent.clone().negate().sub(second)]
+    .map(d=>d.normalize());
+   const normalSpeed=Math.max(0,-small.v.clone().sub(big.v).dot(outward));
+   // Modest transfer of impact impulse to the surviving body.
+   const impulse=normalSpeed*.35*small.m;
+   const bigNewVelocity=big.v.clone().addScaledVector(outward,-impulse/big.m);
+   // Momentum conservation fixes the fragments' shared translational velocity.
+   const totalBefore=big.v.clone().multiplyScalar(big.m).addScaledVector(small.v,small.m);
+   const sharedVelocity=totalBefore.addScaledVector(bigNewVelocity,-big.m).divideScalar(small.m);
+   const pieceMass=small.m/4,pieceRadius=Math.cbrt(pieceMass/DENSITY);
+   const spread=Math.min(7,normalSpeed*.25);
+   const wasSelected=selectedBodies.has(small);
+   const origin=big.p.clone().addScaledVector(outward,big.r+pieceRadius*1.8);
+   bodies.splice(smallIndex,1);selectedBodies.delete(small);
+   if(hoveredBody===small)hoveredBody=null;
+   removeBody(small);big.v.copy(bigNewVelocity);
+   for(const d of directions){
+    const direction=outward.clone().multiplyScalar(.6).addScaledVector(d,.8).normalize();
+    const p=origin.clone().addScaledVector(direction,pieceRadius*1.8);
+    const fragment=makeBody(pieceRadius,small.color,p,
+      sharedVelocity.clone().addScaledVector(d,spread));
+    fragment.m=pieceMass;bodies.push(fragment);updateTrail(fragment);
+    if(wasSelected)selectedBodies.add(fragment);
+   }
+   selectedBody=selectedBodies.size?[...selectedBodies].at(-1):null;
+   syncSelections();
+   return;
+  }
+  if((collisionMode==='fragment'||collisionMode==='dynamic'&&Math.max(a.m,b.m)/Math.max(Math.min(a.m,b.m),1e-9)<=3)&&approach< -5&&bodies.length+2<=MAX_FRAGMENT_BODIES){
    const mass=a.m+b.m;
    const center=a.p.clone().multiplyScalar(a.m).addScaledVector(b.p,b.m).divideScalar(mass);
    const velocity=a.v.clone().multiplyScalar(a.m).addScaledVector(b.v,b.m).divideScalar(mass);
