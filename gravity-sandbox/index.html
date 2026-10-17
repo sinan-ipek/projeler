@@ -845,7 +845,10 @@ function resolveBodyCollisions(){
    selectedBody=selectedBodies.size?[...selectedBodies].at(-1):null;syncSelections();
    return;
   }
-  if(collisionMode==='dynamic'&&approach>= -5){
+  // Dynamic mode never falls through to elastic bounce.
+  // Slow contacts merge; high-speed contacts merge only when the
+  // fragment capacity prevents the fragmentation branches above.
+  if(collisionMode==='dynamic'){
    mergeCollisionPair(i,j,a,b);return;
   }
   const invA=1/Math.max(a.m,1e-9),invB=1/Math.max(b.m,1e-9);
