@@ -111,6 +111,7 @@ function updateRidingView(){
  world.position.copy(target).sub(ridingBody.pos.clone().multiplyScalar(scale));
  const location=xrEye.getWorldPosition(new THREE.Vector3());
  surface.position.set(location.x,location.y-1.55,location.z);
+ surface.scale.setScalar(micro?100:1);
  surface.visible=true;
  surface.material.color.copy(ridingBody.mesh.material.color);
  for(const b of bodies){
