@@ -89,6 +89,7 @@ const surface=new THREE.Mesh(new THREE.PlaneGeometry(120,120,1,1),
 surface.rotation.x=-Math.PI/2;surface.visible=false;scene.add(surface);
 function dismount(){
  ridingBody=null;surface.visible=false;microSky.visible=false;world.scale.setScalar(SCALE);world.position.copy(originalWorldPosition);
+ floor.visible=planetMode;grid.visible=planetMode;
  for(const b of bodies)b.mesh.visible=true;
 }
 function mountSelected(){
@@ -97,7 +98,7 @@ function mountSelected(){
  for(const b of bodies)b.mesh.visible=true;
  grabs.clear();endTwoHand();vectorDrag=null;
  surface.material.color.copy(ridingBody.mesh.material.color);
- surface.visible=rideViewMode==='micro';
+ surface.visible=!planetMode&&rideViewMode==='micro';
 }
 function updateRidingView(){
  if(!ridingBody||!bodies.includes(ridingBody)){if(ridingBody)dismount();return}
@@ -112,7 +113,8 @@ function updateRidingView(){
  const location=xrEye.getWorldPosition(new THREE.Vector3());
  surface.position.set(location.x,location.y-1.55,location.z);
  surface.scale.setScalar(micro?100:1);
- surface.visible=true;
+ surface.visible=!planetMode&&micro;
+ floor.visible=planetMode;grid.visible=planetMode;
  surface.material.color.copy(ridingBody.mesh.material.color);
  for(const b of bodies){
   b.mesh.visible=!micro&&b!==ridingBody;
@@ -236,8 +238,8 @@ function syncButtons(){
  $('play').textContent=running?'⏸ Duraklat':'▶ Başlat';
  $('mode').textContent=planetMode?'🌍 Gezegen':'🌌 Uzay';
  $('trails').textContent='Yörüngeler: '+(showTrails?'Açık':'Kapalı');
- floor.visible=planetMode&&!ridingBody;grid.visible=planetMode&&!ridingBody;
- surface.visible=!!ridingBody;
+ floor.visible=planetMode;grid.visible=planetMode;
+ surface.visible=!!ridingBody&&!planetMode&&rideViewMode==='micro';
  scene.background.set(planetMode?0x283c56:0x090e19);
  if(labels.length)refreshPanel();
 }
@@ -289,12 +291,14 @@ const topButtons=[['ride','BIN'],['dismount','IN'],['micro','MIKRO'],['macro','M
 const topCanvas=document.createElement('canvas');topCanvas.width=720;topCanvas.height=505;
 const topCtx=topCanvas.getContext('2d'),topTexture=new THREE.CanvasTexture(topCanvas);
 topTexture.colorSpace=THREE.SRGBColorSpace;
-const topPanel=new THREE.Mesh(new THREE.PlaneGeometry(.275,.195),new THREE.MeshBasicMaterial({map:topTexture,side:THREE.DoubleSide,depthTest:false}));
+const topPanel=new THREE.Mesh(new THREE.PlaneGeometry(.275,.17),new THREE.MeshBasicMaterial({map:topTexture,side:THREE.DoubleSide,depthTest:false}));
 topPanel.renderOrder=20;
 const prism=new THREE.Group(),FACE_W=.275,FACE_H=.195,PRISM_DEPTH=.17;
 panel.position.z=PRISM_DEPTH/2;
+rightPanel.geometry.dispose();
+rightPanel.geometry=new THREE.PlaneGeometry(PRISM_DEPTH,FACE_H);
 rightPanel.rotation.y=Math.PI/2;rightPanel.position.x=FACE_W/2;
-topPanel.rotation.x=-Math.PI/2;topPanel.position.y=FACE_H/2;
+topPanel.rotation.x=Math.PI/2;topPanel.position.y=-FACE_H/2;
 prism.add(panel,rightPanel,topPanel);
 const edges=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(FACE_W,FACE_H,PRISM_DEPTH)),new THREE.LineBasicMaterial({color:0xa8c4da,depthTest:false}));
 edges.renderOrder=21;prism.add(edges);scene.add(prism);
