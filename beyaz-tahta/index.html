@@ -695,6 +695,7 @@
     <select id="shapeType" title="Şekil" aria-label="Şekil">
       <option value="line">Çizgi</option>
       <option value="arc">Yay</option>
+      <option value="sector">Daire dilimi</option>
       <option value="rect">Dikdörtgen</option>
       <option value="ellipse">Elips</option>
       <option value="parabola">Parabol</option>
@@ -2623,7 +2624,13 @@
   }
 
   function arcGeometry(o){
-    if(!o || o.kind!=='arc' || !finitePoint(o.center) || !finitePoint(o.a) || !finitePoint(o.b)) return null;
+    if(
+      !o ||
+      (o.kind!=='arc' && o.kind!=='sector') ||
+      !finitePoint(o.center) ||
+      !finitePoint(o.a) ||
+      !finitePoint(o.b)
+    ) return null;
 
     const r=Math.max(1,Math.hypot(o.a.x-o.center.x,o.a.y-o.center.y));
     let start=Math.atan2(o.a.y-o.center.y,o.a.x-o.center.x);
@@ -2659,7 +2666,12 @@
   }
 
   function setArcRadiusFromHandle(o,which,target,snapshot=o){
-    if(!o || !snapshot || snapshot.kind!=='arc' || !target) return false;
+    if(
+      !o ||
+      !snapshot ||
+      (snapshot.kind!=='arc' && snapshot.kind!=='sector') ||
+      !target
+    ) return false;
     const m={...snapshot.center};
 
     if(which==='arc-center'){
@@ -2744,6 +2756,22 @@
           g.end,
           g.sweep<0
         );
+
+      }else if(o.kind==='sector'){
+        const g=arcGeometry(o);
+        if(!g) return;
+        ctx.moveTo(o.center.x,o.center.y);
+        ctx.lineTo(o.a.x,o.a.y);
+        ctx.arc(
+          o.center.x,
+          o.center.y,
+          g.r,
+          g.start,
+          g.end,
+          g.sweep<0
+        );
+        ctx.lineTo(o.center.x,o.center.y);
+        ctx.closePath();
 
       }else if(o.kind==='ellipse'){
         if(!finitePoint(o.center)) return;
@@ -2837,7 +2865,11 @@
         return;
       }
 
-      if(!ghost && o.fillColor && (o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon')){
+      if(
+        !ghost &&
+        o.fillColor &&
+        (o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='sector')
+      ){
         ctx.save();
         ctx.fillStyle=o.fillColor;
         ctx.fill();
@@ -3220,6 +3252,11 @@
       return pts.length ? bbox(pts) : null;
     }
 
+    if(o.kind==='sector'){
+      const pts=[o.center,...arcSamplePoints(o,96)];
+      return pts.length ? bbox(pts) : null;
+    }
+
     if(o.kind==='ellipse'){
       const a=o.angle||0, rx=o.rx, ry=o.ry;
       const ex=Math.sqrt((rx*Math.cos(a))**2+(ry*Math.sin(a))**2);
@@ -3301,7 +3338,7 @@
   function menuEditHandles(o){
     if(!o) return [];
 
-    if(o.kind==='arc'){
+    if(o.kind==='arc' || o.kind==='sector'){
       return [
         {name:'arc-center',x:o.center.x,y:o.center.y,label:'M'},
         {name:'arc-a',x:o.a.x,y:o.a.y,label:'A'},
@@ -3448,7 +3485,7 @@
       return true;
     }
 
-    if(snap.kind==='arc'){
+    if(snap.kind==='arc' || snap.kind==='sector'){
       Object.assign(o,cloneObject(snap));
 
       if(names.includes('arc-center')){
@@ -3571,7 +3608,7 @@
     if(o.kind==='line'){
       return Math.atan2(o.b.y-o.a.y,o.b.x-o.a.x);
     }
-    if(o.kind==='arc'){
+    if(o.kind==='arc' || o.kind==='sector'){
       return Math.atan2(o.a.y-o.center.y,o.a.x-o.center.x);
     }
     return 0;
@@ -3582,6 +3619,7 @@
 
     if(o.kind==='line') return [{...o.a},{...o.b}];
     if(o.kind==='arc') return arcSamplePoints(o,48);
+    if(o.kind==='sector') return [o.center,...arcSamplePoints(o,48)];
     if(o.kind==='stroke') return (o.points||[]).map(p=>({x:p.x,y:p.y}));
     if(o.kind==='symbol') return symbolWorldPoints(o);
 
@@ -3902,7 +3940,7 @@
       return;
     }
 
-    if(o.kind==='arc'){
+    if(o.kind==='arc' || o.kind==='sector'){
       o.center=rotatePoint(o.center,c,delta);
       o.a=rotatePoint(o.a,c,delta);
       o.b=rotatePoint(o.b,c,delta);
@@ -3945,7 +3983,7 @@
       return;
     }
 
-    if(o.kind==='arc'){
+    if(o.kind==='arc' || o.kind==='sector'){
       o.center=scalePt(o.center);
       o.a=scalePt(o.a);
       o.b=scalePt(o.b);
@@ -4150,7 +4188,7 @@
       return;
     }
 
-    if(o.kind==='arc'){
+    if(o.kind==='arc' || o.kind==='sector'){
       const oldCenter={...o.center};
       const newCenter=scalePt(oldCenter);
       const radius=Math.max(8,Math.hypot(o.a.x-oldCenter.x,o.a.y-oldCenter.y));
@@ -4406,7 +4444,7 @@
     ctx.setLineDash([]);
 
     // Shape's own editable points
-    if(selected.kind==='arc' && special.length){
+    if((selected.kind==='arc' || selected.kind==='sector') && special.length){
       const m=special.find(h=>h.name==='arc-center');
       const a=special.find(h=>h.name==='arc-a');
       const b=special.find(h=>h.name==='arc-b');
@@ -4432,7 +4470,7 @@
         ctx.fill();
         ctx.stroke();
 
-        if(selected.kind==='arc' && hnd.label){
+        if((selected.kind==='arc' || selected.kind==='sector') && hnd.label){
           ctx.save();
           ctx.fillStyle='#2563eb';
           ctx.font=`${12/viewZoom}px system-ui,-apple-system,"Segoe UI",Arial,sans-serif`;
@@ -4465,7 +4503,7 @@
     }
 
     // Bounding-box resize handles
-    const showBBoxHandles = selected.kind==='arc'
+    const showBBoxHandles = (selected.kind==='arc' || selected.kind==='sector')
       ? false
       : (selected.source==='menu' || !special.length);
     if(showBBoxHandles){
@@ -4481,6 +4519,7 @@
 
     const canRotate=
       selected.kind!=='arc' &&
+      selected.kind!=='sector' &&
       !(selected.kind==='ellipse' && selected.shapeName==='circle');
     if(canRotate){
       ctx.beginPath();
@@ -4555,7 +4594,11 @@
       }
     }
 
-    if(selected.kind!=='arc' && (selected.source==='menu' || (!special.length && !isTriangle))){
+    if(
+      selected.kind!=='arc' &&
+      selected.kind!=='sector' &&
+      (selected.source==='menu' || (!special.length && !isTriangle))
+    ){
       const entries=[
         ['nw',oc.nw],['ne',oc.ne],['se',oc.se],['sw',oc.sw]
       ];
@@ -4567,6 +4610,7 @@
 
     if(
       selected.kind!=='arc' &&
+      selected.kind!=='sector' &&
       !(selected.kind==='ellipse' && selected.shapeName==='circle')
     ){
       const hitR=(pointerType==='touch' ? 22 : 11)/viewZoom;
@@ -4590,7 +4634,7 @@
 
   function isFillableObject(o){
     return !!o && !o.locked &&
-      (o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon');
+      (o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon' || o.kind==='sector');
   }
 
   function pointInsideFillableObject(o,p){
@@ -4615,6 +4659,11 @@
 
     if(o.kind==='polygon'){
       const verts=polygonWorldVertices(o);
+      return verts.length>=3 && pointInPolygon(p,verts);
+    }
+
+    if(o.kind==='sector'){
+      const verts=[o.center,...arcSamplePoints(o,96)];
       return verts.length>=3 && pointInPolygon(p,verts);
     }
 
@@ -4684,6 +4733,17 @@
 
     if(o.kind==='arc'){
       const pts=arcSamplePoints(o,96);
+      for(let i=1;i<pts.length;i++){
+        if(eraserPointSegDistance(p,pts[i-1],pts[i])<=tol) return true;
+      }
+      return false;
+    }
+
+    if(o.kind==='sector'){
+      const pts=arcSamplePoints(o,96);
+      if(pointInPolygon(p,[o.center,...pts])) return true;
+      if(eraserPointSegDistance(p,o.center,o.a)<=tol) return true;
+      if(eraserPointSegDistance(p,o.center,o.b)<=tol) return true;
       for(let i=1;i<pts.length;i++){
         if(eraserPointSegDistance(p,pts[i-1],pts[i])<=tol) return true;
       }
@@ -4783,7 +4843,7 @@
       return;
     }
 
-    if(o.kind==='arc'){
+    if(o.kind==='arc' || o.kind==='sector'){
       o.center=reflectPointAcross(o.center,pivot,axis);
       o.a=reflectPointAcross(o.a,pivot,axis);
       o.b=reflectPointAcross(o.b,pivot,axis);
@@ -4855,7 +4915,7 @@
   function translateObject(o,dx,dy){
     if(o.kind==='line'){
       o.a.x+=dx;o.a.y+=dy;o.b.x+=dx;o.b.y+=dy;
-    }else if(o.kind==='arc'){
+    }else if(o.kind==='arc' || o.kind==='sector'){
       o.center.x+=dx;o.center.y+=dy;
       o.a.x+=dx;o.a.y+=dy;
       o.b.x+=dx;o.b.y+=dy;
@@ -4876,7 +4936,7 @@
       o.b=rotatePoint(o.b,c,delta);
       o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
 
-    }else if(o.kind==='arc'){
+    }else if(o.kind==='arc' || o.kind==='sector'){
       o.a=rotatePoint(o.a,o.center,delta);
       o.b=rotatePoint(o.b,o.center,delta);
       o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
@@ -4927,7 +4987,7 @@
     if(!o || !snap) return false;
 
     // ARC M/A/B handles work for both menu and auto-recognized arcs.
-    if(snap.kind==='arc' && handle.startsWith('arc-')){
+    if((snap.kind==='arc' || snap.kind==='sector') && handle.startsWith('arc-')){
       return setArcRadiusFromHandle(o,handle,p,snap);
     }
 
@@ -6574,7 +6634,7 @@
     // but locked objects are always protected from the eraser.
     return !!o &&
       !o.locked &&
-      ['stroke','line','arc','ellipse','rect','polygon','parabola','axes','symbol'].includes(o.kind);
+      ['stroke','line','arc','sector','ellipse','rect','polygon','parabola','axes','symbol'].includes(o.kind);
   }
 
   function inkObjectHit(o,p,r){
@@ -6595,6 +6655,16 @@
 
     if(o.kind==='arc'){
       const pts=arcSamplePoints(o,96);
+      for(let i=1;i<pts.length;i++){
+        if(eraserPointSegDistance(p,pts[i-1],pts[i])<=r) return true;
+      }
+      return false;
+    }
+
+    if(o.kind==='sector'){
+      const pts=arcSamplePoints(o,96);
+      if(eraserPointSegDistance(p,o.center,o.a)<=r) return true;
+      if(eraserPointSegDistance(p,o.center,o.b)<=r) return true;
       for(let i=1;i<pts.length;i++){
         if(eraserPointSegDistance(p,pts[i-1],pts[i])<=r) return true;
       }
@@ -7664,7 +7734,7 @@
             o.a=scalePointLocal(o.a);
             o.b=scalePointLocal(o.b);
 
-          }else if(o.kind==='arc'){
+          }else if(o.kind==='arc' || o.kind==='sector'){
             const newCenter=scalePointLocal(o.center);
             const oldR=Math.max(8,Math.hypot(o.a.x-o.center.x,o.a.y-o.center.y));
             const aa=Math.atan2(o.a.y-o.center.y,o.a.x-o.center.x);
@@ -9289,6 +9359,29 @@
         sweepSign:1,
         style,
         shapeName:'arc',
+        source:'menu',
+        boxAngle:0
+      });
+    }
+    if(t==='sector'){
+      const radius=100*insertionScale;
+      const a0=-5*Math.PI/6;
+      const a1=-Math.PI/6;
+      const center={x:cx,y:cy+30*insertionScale};
+      objects.push({
+        kind:'sector',
+        center,
+        a:{
+          x:center.x+Math.cos(a0)*radius,
+          y:center.y+Math.sin(a0)*radius
+        },
+        b:{
+          x:center.x+Math.cos(a1)*radius,
+          y:center.y+Math.sin(a1)*radius
+        },
+        sweepSign:1,
+        style,
+        shapeName:'sector',
         source:'menu',
         boxAngle:0
       });
