@@ -997,7 +997,8 @@ async function moveTerm(type){
  Object.assign(s,old);
  const placement=MotionEngine.planLayout(futureLayout,before,type,sourceId,targetId);
  const future=placement.map;
- const beforeText=source?.textContent?.trim() || (fromB?String(m.b):`${coefficient(m.c)}x`); const afterText=fromB?`${-m.b<0?'−':'+'}${abs(m.b)}`:
+ const beforeText=source?.textContent?.trim() || (fromB?String(m.b):`${coefficient(m.c)}x`);
+ const afterText=fromB?`${-m.b<0?'−':'+'}${abs(m.b)}`:
                   `${-m.c<0?'−':'+'}${coefficient(Math.abs(m.c))}x`;
  const targetKey=(fromB&&next.combinedR)?'part:rd':'part:'+targetId;
  const target=future.get(targetKey)||future.get('part:'+targetId)||future.get(targetId)||future.get('d')||future.get('rd');
