@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Denklem Atölyesi — Beta 45</title>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Denklem Atölyesi — Beta 46</title>
 <style>
 :root{font-family:Arial,Helvetica,sans-serif;color:#1d2a3b;background:#f4f6fa}*{box-sizing:border-box}body{margin:0;min-height:100vh}header{padding:18px 25px;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:22px;margin:0;font-weight:600}.subtitle{font-size:12px;color:#77869a;margin-top:6px}.home{width:45px;height:45px;border-radius:12px;background:#ffcf31;border:2px solid #e4ac14;box-shadow:0 3px 8px #5a461525;display:grid;place-items:center;color:#383019;text-decoration:none}.home svg{height:23px;width:23px;fill:currentColor}main{width:min(1120px,calc(100% - 28px));margin:auto}.toolbar,.examples,.entry{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:8px 0 14px}button,select,input{font:inherit;border:1px solid #d5dfea;border-radius:10px;background:white;color:#273954;padding:10px 13px}button{cursor:pointer;box-shadow:0 2px 5px #182b3a0c}button:hover:not(:disabled){border-color:#8fa6c4}button:disabled{opacity:.42;cursor:default}.toolbar label{font-size:13px;color:#69768c;margin-left:auto}.mode-switch{display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid #d5dfea;border-radius:12px;background:#eaf0f7}.mode-switch button{padding:7px 13px;border:1px solid transparent;background:transparent;box-shadow:none;border-radius:9px;font-size:14px;min-width:67px}.mode-switch button.selected{color:white;background:#273e5e;border-color:#273e5e;box-shadow:0 2px 5px #182b3a20}.mode-switch button:focus-visible{outline:2px solid #e1a518;outline-offset:2px}.board{border:1px solid #e1e7ee;background:white;border-radius:22px;min-height:430px;box-shadow:0 14px 45px #192e4b0b;overflow:hidden}.board-top{display:flex;justify-content:space-between;color:#78869b;padding:18px 20px;font-size:12px}.scene{height:316px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}.equation{position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1.3;font-size:clamp(26px,4.5vw,50px);font-weight:400;max-width:97%;transform-origin:center center;font-variant-numeric:lining-nums}.side{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative}.equals{padding:0 .36em}.part{display:inline-flex;align-items:center;white-space:nowrap;position:relative}.atom{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border-radius:7px;position:relative;padding:0 .035em}.sign{padding:0 .06em}.hit{cursor:pointer;position:relative;border-radius:8px;outline:none;background:transparent;box-shadow:none;transition:background .18s,box-shadow .18s}.hit:hover,.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.busy .hit{pointer-events:none}.combine{display:inline-flex;align-items:center;border-radius:8px}.combine.hit{padding:0 .04em}.multi-combine{display:inline-flex;align-items:center;white-space:nowrap;border-radius:8px}.multi-combine .part{white-space:nowrap}.multi-combine.hit{padding:0 .05em}.multiply-factor{display:inline-flex;align-items:center;white-space:nowrap}.mul-dot{display:inline-block;padding:0 .08em}.multiply-factor .hit{padding:0 .055em}.fraction{display:inline-grid;grid-template-rows:auto 3px auto;align-items:center;justify-items:center;position:relative;margin:0 .08em;min-width:1em;border-radius:9px}.numerator,.denominator{display:flex;justify-content:center;align-items:center;min-height:.92em;padding:0 .14em;white-space:nowrap}.numerator{transform:translateY(-.09em)}.denominator{transform:translateY(.09em)}.fracbar{height:2px;width:100%;background:#293852;border-radius:2px;align-self:center;transform:scaleX(1);transform-origin:center}.fraction.constructing .fracbar{transform:scaleX(0)}.fraction.constructed .fracbar{transform:scaleX(1);transition:transform .34s cubic-bezier(.45,0,.18,1)}.fraction.hit:hover,.fraction.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.tip{min-height:32px;text-align:center;font-size:13px;color:#7d8ca0}.examples button.active,.modules button.active{background:#273e5e;color:white}.modules{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 14px}.modules button{font-weight:600}.module-label{font-size:13px;color:#62738c;margin:8px 0}.examples button{font-size:14px}.entry input{width:min(340px,65vw)}.feedback{min-height:18px;color:#ad3e3e;font-size:12px}.notice{font-size:12px;color:#8390a3;line-height:1.6}.measure-layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;pointer-events:none}.measurement{max-width:97%}.ghost{position:fixed;z-index:2000;pointer-events:none;white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-weight:400;line-height:1.3;color:#bf7c1d;will-change:transform,opacity}.done{color:#188a5c}.cross{position:relative}@media(max-width:620px){header{padding:12px 16px}.board{min-height:375px}.board-top{padding:14px}.scene{height:270px}.equals{padding:0 .18em}.toolbar label{margin-left:0}}
 
@@ -12,8 +12,14 @@
 /* Yalnızca motor yüklenemediğinde görünür; çalışırken yer kaplamaz. */
 .startup-notice{visibility:hidden;animation:showStartupProblem 0s 3s forwards;margin:8px 18px;padding:12px;border:1px solid #e3bd9e;border-radius:10px;background:#fff3e8;color:#933a32;font-size:13px;text-align:center}
 @keyframes showStartupProblem{to{visibility:visible}}
+
+/* Dağılım özelliği hatırlatıcısı: yalnızca Yavaş modda, üzerine gelince.
+   Grafik normal yerleşimden bağımsızdır; vurgulu ifadeyi asla itmez. */
+.distribute-hint{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:8}
+.distribute-hint path.distribute-arc{fill:none;stroke:#b9a38b;stroke-width:2.4;stroke-linecap:round;stroke-dasharray:5 7;opacity:.77}
+.distribute-hint .distribute-arrow{fill:none;stroke:#b9a38b;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
 </style></head><body>
-<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 45</span></h1><div class="subtitle">Kademeli modüller · önceki bilgiler korunur</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
+<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 46</span></h1><div class="subtitle">Kademeli modüller · önceki bilgiler korunur</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
 <main><div class="toolbar"><button id="reset">↺ Baştan</button><button id="back">← Geri</button><div class="mode-switch" role="group" aria-label="Çözüm yöntemi"><button type="button" id="modeSlow" class="selected" aria-pressed="true" title="Bütün öğretici işlem adımlarını göster">Yavaş</button><button type="button" id="modeFast" aria-pressed="false" title="Bariz işlemleri tek adımda tamamla">Hızlı</button></div><label for="level">Seviye</label><select id="level"><option>A1</option><option selected>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></div>
 <div class="modules" id="modules"><button data-module="1" class="active">1 · ax + b = c</button><button data-module="2">2 · ax + b = cx + d</button><button data-module="3">3 · a(x + b) = c</button><button data-module="4">4 · (ax + b)/n = c</button><button data-module="5">5 · (ax + b)/m = (cx + d)/n</button><button data-module="6">6 · Çoklu Kesirli Denklemler</button></div><div class="module-label" id="moduleLabel"></div><div class="board"><div class="board-top"><span>Terim taşıma · yerinde hesaplama · bölme · sadeleştirme</span><span id="stepLabel">Adım 1</span></div><div id="scene" class="scene"><div id="equation" class="equation"></div></div><div id="tip" class="tip" aria-live="polite"></div></div>
 <div id="startupNotice" class="startup-notice" role="alert">Denklem motoru başlatılamadı. Hata bilgisi için tarayıcı konsolunu açabilirsiniz.</div><div id="examples" class="examples"></div><div class="entry"><input id="custom" aria-label="Denklem" placeholder="Örn. 3x+5=x+13" spellcheck="false"><button id="load">Denklemi aç</button><span id="feedback" class="feedback"></span></div><p class="notice">Modül 1: ax+b=c. Modül 2: ax+b=cx+d. Modül 3: parantezli denklemler. Modül 4: sayısal paydalar için iki tarafı aynı sayı ile çarpma. Modül 5: iki tarafı paydaların OKEK’iyle çarpma ve sadeleştirme. Modül 6: değişken sayıdaki doğrusal veya sabit paylı kesirler; önce paydasız terimlere /1, sonra OKEK genişletmeleri ve ortak paydaların kaldırılması. Hızlı modda genişletilen paydaki çarpma özgün terim sırası korunarak hesaplanır; eksi işaretli kesirlerde çizginin parantez görevi korunur. Önceki modüller korunur; Yavaş bütün adımları gösterir, Hızlı bariz kısa yolları uygular. Tam sayılı katsayılar desteklenir. Başlangıçta yalnızca uygun terimlere fareyle gelince vurgu oluşur. Kesirlerde payda sıfır olamaz.</p></main>
@@ -42,6 +48,7 @@ const fastMode=()=>teachingMode==='fast';
 function setTeachingMode(mode){
  if(busy||!['slow','fast'].includes(mode))return;
  teachingMode=mode;
+ hideDistributionHint();
  for(const [id,isActive] of [['modeSlow',mode==='slow'],['modeFast',mode==='fast']]){
   const button=document.getElementById(id);
   button.classList.toggle('selected',isActive);
@@ -796,13 +803,13 @@ const botLeft=s.leftDone?'':hit('bota',fmt(A()),'cancel');
 let l=s.leftDone?atom('onlyx','x'):fhtml(topLeft,botLeft,'fractionL',null,!s.barsReady);
 let r=s.rightDone?rightResult():fhtml(atom('righttop',fmt(D())),atom('rightbottom',fmt(A())),'fractionR','simplify',!s.barsReady);
 return `<span class="side" data-id="sideL">${l}</span><span class="equals">=</span><span class="side" data-id="sideR">${r}</span>`;}
-function render(animateBars=false){eq.innerHTML=markup();$('#stepLabel').textContent=(multiEq&&multiEq.mode!=='linear')?`Adım ${step+1}`:(pairEq&&pairEq.mode!=='linear')?`Adım ${step+1}`:(fractionEq&&fractionEq.mode!=='linear')?`Adım ${step+1}`:(bracket&&bracket.mode!=='linear')?`Adım ${step+1}`:ready()&&A()===0?'Özel durum':(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'Çözüldü':`Adım ${step+1}`;$('#tip').innerHTML=(multiEq&&multiEq.mode!=='linear')?'':(pairEq&&pairEq.mode!=='linear')?'':(fractionEq&&fractionEq.mode!=='linear')?'':(bracket&&bracket.mode!=='linear')?'':ready()&&A()===0?(D()===0?'<span class="done">Sonsuz çözüm</span>':'Çözüm yok'):(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'<span class="done">✓</span>':'';$('#back').disabled=busy||history.length===0;$('#reset').disabled=busy;if(animateBars){requestAnimationFrame(()=>requestAnimationFrame(()=>eq.querySelectorAll('.fraction.constructing').forEach(el=>{el.classList.remove('constructing');el.classList.add('constructed')})));}}
+function render(animateBars=false){hideDistributionHint();eq.innerHTML=markup();$('#stepLabel').textContent=(multiEq&&multiEq.mode!=='linear')?`Adım ${step+1}`:(pairEq&&pairEq.mode!=='linear')?`Adım ${step+1}`:(fractionEq&&fractionEq.mode!=='linear')?`Adım ${step+1}`:(bracket&&bracket.mode!=='linear')?`Adım ${step+1}`:ready()&&A()===0?'Özel durum':(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'Çözüldü':`Adım ${step+1}`;$('#tip').innerHTML=(multiEq&&multiEq.mode!=='linear')?'':(pairEq&&pairEq.mode!=='linear')?'':(fractionEq&&fractionEq.mode!=='linear')?'':(bracket&&bracket.mode!=='linear')?'':ready()&&A()===0?(D()===0?'<span class="done">Sonsuz çözüm</span>':'Çözüm yok'):(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'<span class="done">✓</span>':'';$('#back').disabled=busy||history.length===0;$('#reset').disabled=busy;if(animateBars){requestAnimationFrame(()=>requestAnimationFrame(()=>eq.querySelectorAll('.fraction.constructing').forEach(el=>{el.classList.remove('constructing');el.classList.add('constructed')})));}}
 function byId(id){return eq.querySelector(`[data-id="${id}"]`)}
 function rect(id){return byId(id)?.getBoundingClientRect()}
 function positionScale(){const max=scene.clientWidth*.95,w=eq.scrollWidth;const scale=w>max?Math.max(.38,max/w):1;eq.style.transform=`translateX(${layoutShiftX}px) scale(${scale})`;}
 function update(animateBars=false){render(animateBars);positionScale()}
 async function fade(change){const animation=eq.animate([{opacity:1},{opacity:.15}],{duration:190*speed(),easing:'ease-in-out'});await animation.finished.catch(()=>{});change();update();await eq.animate([{opacity:.15},{opacity:1}],{duration:300*speed(),easing:'ease-in-out'}).finished.catch(()=>{});}
-// Beta 45: Sembollerin kimlikleri, görevleri ve hedef koordinatları işlemden önce hesaplanır.
+// Beta 46: Sembollerin kimlikleri, görevleri ve hedef koordinatları işlemden önce hesaplanır.
 // İşaret (sign), katsayı, terim ve eşitlik ayrı anlamlı öğelerdir.
 const MotionEngine={
  center(r){return {x:r.left+r.width/2,y:r.top+r.height/2}},
@@ -959,7 +966,7 @@ const MotionEngine={
  }
 
 };
-// Beta 45: İptal çizgisi bir noktanın sol alttan sağ üste süratlenerek
+// Beta 46: İptal çizgisi bir noktanın sol alttan sağ üste süratlenerek
 // ilerlemesiyle oluşur; ardından sayı ve kırmızı iz kısa bir sürede çözünür.
 // SVG yalnızca bir geçiş katmanıdır, matematiksel DOM nesnesi değişmez.
 function drawStroke(el){
@@ -1072,8 +1079,106 @@ async function act(action){if(action.startsWith('multi'))return multiAction(acti
   await wait(380);s.barsReady=true;update();
  }
 }else if(action==='cancel'){await Promise.all([drawStroke(byId('topa')),drawStroke(byId('bota'))]);await finishCancellation(()=>{s.leftDone=true})}else if(action==='simplify'){await fade(()=>{s.rightDone=true})}}finally{busy=false;scene.classList.remove('busy');update()}}
-eq.addEventListener('click',e=>{const t=e.target.closest('[data-action]');if(t&&eq.contains(t))act(t.dataset.action)});
-eq.addEventListener('keydown',e=>{const t=e.target.closest('[data-action]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();act(t.dataset.action)}});
+
+// ---------------- Dağıtma özelliği yayları (Yavaş mod) ----------------
+// Simgeler üzerine gelindiğinde SVG ayrı bir katmanda çizilir. Böylece
+// vurgulama hareketleri denklem ölçülerini, satırı veya = işaretini değiştirmez.
+let distributionOverlay=null;
+function hideDistributionHint(){
+ if(distributionOverlay){distributionOverlay.remove();distributionOverlay=null;}
+}
+function distributionRangeRect(node,a,b){
+ if(!node||node.nodeType!==Node.TEXT_NODE||a<0||b>a&&b>node.textContent.length||b<=a)return null;
+ const range=document.createRange();range.setStart(node,a);range.setEnd(node,b);
+ return range.getBoundingClientRect();
+}
+// Parantezin önündeki sayı/eksi, sonra parantez içindeki iki additif terim.
+// Metin modelinin kendi sırası kullanılır: 2-x -> 2 ve -x olarak kalır.
+function distributionParts(label){
+ const open=label.indexOf('('),close=label.lastIndexOf(')');
+ if(open<1||close<=open+1)return null;
+ const inner=label.slice(open+1,close);
+ let divider=-1,depth=0;
+ for(let i=1;i<inner.length;i++){
+  if(inner[i]==='(')depth++;
+  else if(inner[i]===')')depth--;
+  else if(depth===0&&'+−-'.includes(inner[i])){divider=i;break;}
+ }
+ if(divider<0)return null;
+ // İçteki ikinci toplama teriminin işareti hedef aralığına dahildir.
+ const left=[open+1,open+1+divider],right=[open+1+divider,close];
+ let start=open-1;
+ while(start>0&&/[0-9]/.test(label[start-1]))start--;
+ if(!/^(?:[+−-]?\d+|[−-])$/.test(label.slice(start,open)))return null;
+ return {outer:[start,open],left,right};
+}
+function showDistributionHint(hitEl){
+ hideDistributionHint();
+ if(fastMode()||busy||!hitEl||!eq.contains(hitEl))return;
+ const action=hitEl.dataset.action||'';
+ const distributionAction=/^multiOpen_[LR]\d+$/.test(action)||/^pairExpand[LR]$/.test(action)||action==='bracketExpand';
+ if(!distributionAction)return;
+ const label=hitEl.textContent||'';
+ let parts=distributionParts(label);
+ let sourceNode=hitEl.firstChild,sourceRect;
+ if(action==='bracketExpand'){
+  // Modül 3'te katsayı bağımsız düğümdür; paranteze odaklanınca da iki yay.
+  const outside=eq.querySelector('[data-id="brkcoef"]');
+  const outsideText=outside?.firstChild;
+  parts=distributionParts('3'+label); // yalnızca parantez içindeki hedef aralıkları hesapla
+  if(!parts||!outsideText||outsideText.nodeType!==Node.TEXT_NODE)return;
+  parts={outer:[0,outsideText.textContent.length],left:[parts.left[0]-1,parts.left[1]-1],right:[parts.right[0]-1,parts.right[1]-1]};
+  sourceNode=hitEl.firstChild;
+  sourceRect=distributionRangeRect(outsideText,parts.outer[0],parts.outer[1]);
+ }else if(parts&&sourceNode?.nodeType===Node.TEXT_NODE){
+  sourceRect=distributionRangeRect(sourceNode,parts.outer[0],parts.outer[1]);
+ }
+ if(!parts||!sourceRect||sourceNode?.nodeType!==Node.TEXT_NODE)return;
+ const first=distributionRangeRect(sourceNode,...parts.left);
+ const second=distributionRangeRect(sourceNode,...parts.right);
+ if(!first||!second||!first.width||!second.width)return;
+ const box=scene.getBoundingClientRect();
+ const sx=sourceRect.left+sourceRect.width*.53-box.left,sy=sourceRect.top-box.top-7;
+ const goals=[first,second].map(r=>({x:r.left+r.width*.5-box.left,y:r.top-box.top-7}));
+ const ns='http://www.w3.org/2000/svg';
+ const svg=document.createElementNS(ns,'svg');
+ svg.classList.add('distribute-hint');svg.setAttribute('aria-hidden','true');
+ svg.setAttribute('viewBox',`0 0 ${box.width} ${box.height}`);
+ const defs=document.createElementNS(ns,'defs');
+ const marker=document.createElementNS(ns,'marker');
+ marker.setAttribute('id','distribute-arrow-marker');marker.setAttribute('viewBox','0 0 8 8');
+ marker.setAttribute('refX','6');marker.setAttribute('refY','4');
+ marker.setAttribute('markerWidth','6');marker.setAttribute('markerHeight','6');marker.setAttribute('orient','auto');
+ const head=document.createElementNS(ns,'path');head.classList.add('distribute-arrow');
+ head.setAttribute('d','M1 1 L6 4 L1 7');marker.appendChild(head);defs.appendChild(marker);svg.appendChild(defs);
+ for(const [i,end] of goals.entries()){
+  const dx=end.x-sx;
+  const want=Math.max(24,Math.min(86,Math.abs(dx)*.55+(i===1?8:0)));
+  const rise=Math.min(want,Math.max(14,Math.min(sy,end.y)-9));
+  const controlY=Math.min(sy,end.y)-rise*1.3;
+  const path=document.createElementNS(ns,'path');path.classList.add('distribute-arc');
+  path.setAttribute('d',`M ${sx.toFixed(1)} ${sy.toFixed(1)} C ${(sx+dx*.17).toFixed(1)} ${controlY.toFixed(1)} ${(sx+dx*.85).toFixed(1)} ${controlY.toFixed(1)} ${end.x.toFixed(1)} ${end.y.toFixed(1)}`);
+  path.setAttribute('marker-end','url(#distribute-arrow-marker)');svg.appendChild(path);
+ }
+ scene.appendChild(svg);distributionOverlay=svg;
+}
+function distributionTarget(node){
+ const el=node?.nodeType===Node.ELEMENT_NODE?node:node?.parentElement;
+ return el?.closest?.('[data-action]')||null;
+}
+eq.addEventListener('pointerover',e=>{
+ const target=distributionTarget(e.target);
+ if(target&&!target.contains(e.relatedTarget))showDistributionHint(target);
+});
+eq.addEventListener('pointerout',e=>{
+ const target=distributionTarget(e.target);
+ if(target&&!target.contains(e.relatedTarget))hideDistributionHint();
+});
+eq.addEventListener('focusin',e=>showDistributionHint(distributionTarget(e.target)));
+eq.addEventListener('focusout',()=>hideDistributionHint());
+
+eq.addEventListener('click',e=>{const t=e.target.closest('[data-action]');if(t&&eq.contains(t)){hideDistributionHint();act(t.dataset.action)}});
+eq.addEventListener('keydown',e=>{const t=e.target.closest('[data-action]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();hideDistributionHint();act(t.dataset.action)}});
 function formatModel(o){let str=coefficient(o.a)+'x';if(o.b!==0)str+=(o.b<0?'-':'+')+abs(o.b);str+='=';if(o.c!==0)str+=coefficient(o.c)+'x';if(o.d!==0)str+=(o.d<0?'-':o.c!==0?'+':'')+abs(o.d);return str}
 function drawExamples(){
  const list=$('#examples');list.innerHTML='';
@@ -1126,7 +1231,7 @@ $('#modeFast').onclick=()=>setTeachingMode('fast');
 $('#load').onclick=()=>{if(busy)return;const mu=parseMulti($('#custom').value);const pr=mu?null:parsePair($('#custom').value);const fr=(mu||pr)?null:parseFraction($('#custom').value);const br=(mu||pr||fr)?null:parseBracket($('#custom').value);const n=mu||pr||fr||br||parse($('#custom').value);$('#feedback').textContent=n?'':'Örnek: 4x+6=12, 2(x+3)=8, (2x+4)/3=6 veya (2x+3)/4+(3x-1)/7=(x+2)/9.';if(n){const targetModule=mu?6:pr?5:fr?4:br?3:n.c===0?1:2;if(targetModule!==currentModule){currentModule=targetModule;drawExamples()}restart(n,!!br,!!fr,!!pr,!!mu)}};
 $('#custom').onkeydown=e=>{if(e.key==='Enter')$('#load').click()};
 document.querySelectorAll('#modules button').forEach(b=>b.addEventListener('click',()=>changeModule(Number(b.dataset.module))));
-window.addEventListener('resize',()=>{if(!busy)positionScale()});
+window.addEventListener('resize',()=>{hideDistributionHint();if(!busy)positionScale()});
 changeModule(1);
 const startup=document.getElementById("startupNotice");if(startup)startup.remove();
 })();
