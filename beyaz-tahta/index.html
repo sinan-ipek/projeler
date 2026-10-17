@@ -694,6 +694,7 @@
 
     <select id="shapeType" title="Şekil" aria-label="Şekil">
       <option value="line">Çizgi</option>
+      <option value="arc">Yay</option>
       <option value="rect">Dikdörtgen</option>
       <option value="ellipse">Elips</option>
       <option value="parabola">Parabol</option>
@@ -850,7 +851,7 @@
           <section class="helpSection">
             <h3>Hazır nesneler</h3>
             <ul>
-              <li>Çizgi, dikdörtgen, elips, üçgen, beşgen, altıgen.</li>
+              <li>Çizgi, yay, dikdörtgen, elips, üçgen, beşgen, altıgen.</li>
               <li>Parabol, sin x, tan x, eˣ ve x-y eksenleri.</li>
               <li>Metin kutusu, karekök ve integral sembolü.</li>
               <li>Fotoğraf / resim ekleme.</li>
@@ -2615,6 +2616,85 @@
     ctx.restore();
   }
 
+  function normalizeSignedAngle(a){
+    while(a>Math.PI) a-=Math.PI*2;
+    while(a<=-Math.PI) a+=Math.PI*2;
+    return a;
+  }
+
+  function arcGeometry(o){
+    if(!o || o.kind!=='arc' || !finitePoint(o.center) || !finitePoint(o.a) || !finitePoint(o.b)) return null;
+
+    const r=Math.max(1,Math.hypot(o.a.x-o.center.x,o.a.y-o.center.y));
+    let start=Math.atan2(o.a.y-o.center.y,o.a.x-o.center.x);
+    let end=Math.atan2(o.b.y-o.center.y,o.b.x-o.center.x);
+    let sweep=normalizeSignedAngle(end-start);
+
+    const sign=Number(o.sweepSign)||Math.sign(sweep)||1;
+    if(sign>0 && sweep<0) sweep+=Math.PI*2;
+    if(sign<0 && sweep>0) sweep-=Math.PI*2;
+
+    // Arc objects intentionally use the minor/semicircle family.
+    if(Math.abs(sweep)>Math.PI){
+      sweep += sweep>0 ? -Math.PI*2 : Math.PI*2;
+    }
+
+    return {r,start,sweep,end:start+sweep};
+  }
+
+  function arcSamplePoints(o,count=72){
+    const g=arcGeometry(o);
+    if(!g) return [];
+    const n=Math.max(8,count);
+    const pts=[];
+    for(let i=0;i<=n;i++){
+      const t=i/n;
+      const a=g.start+g.sweep*t;
+      pts.push({
+        x:o.center.x+Math.cos(a)*g.r,
+        y:o.center.y+Math.sin(a)*g.r
+      });
+    }
+    return pts;
+  }
+
+  function setArcRadiusFromHandle(o,which,target,snapshot=o){
+    if(!o || !snapshot || snapshot.kind!=='arc' || !target) return false;
+    const m={...snapshot.center};
+
+    if(which==='arc-center'){
+      const dx=target.x-snapshot.center.x;
+      const dy=target.y-snapshot.center.y;
+      o.center={x:snapshot.center.x+dx,y:snapshot.center.y+dy};
+      o.a={x:snapshot.a.x+dx,y:snapshot.a.y+dy};
+      o.b={x:snapshot.b.x+dx,y:snapshot.b.y+dy};
+      return true;
+    }
+
+    const oldA=Math.atan2(snapshot.a.y-m.y,snapshot.a.x-m.x);
+    const oldB=Math.atan2(snapshot.b.y-m.y,snapshot.b.x-m.x);
+
+    if(which==='arc-a'){
+      const r=Math.max(8,Math.hypot(target.x-m.x,target.y-m.y));
+      const a=Math.atan2(target.y-m.y,target.x-m.x);
+      o.center=m;
+      o.a={x:m.x+Math.cos(a)*r,y:m.y+Math.sin(a)*r};
+      o.b={x:m.x+Math.cos(oldB)*r,y:m.y+Math.sin(oldB)*r};
+      return true;
+    }
+
+    if(which==='arc-b'){
+      const r=Math.max(8,Math.hypot(target.x-m.x,target.y-m.y));
+      const b=Math.atan2(target.y-m.y,target.x-m.x);
+      o.center=m;
+      o.a={x:m.x+Math.cos(oldA)*r,y:m.y+Math.sin(oldA)*r};
+      o.b={x:m.x+Math.cos(b)*r,y:m.y+Math.sin(b)*r};
+      return true;
+    }
+
+    return false;
+  }
+
   function drawShape(o, ghost=false){
     if(!o || !o.kind || !o.style) return;
 
@@ -2652,6 +2732,18 @@
         if(!finitePoint(o.a) || !finitePoint(o.b)) return;
         ctx.moveTo(o.a.x,o.a.y);
         ctx.lineTo(o.b.x,o.b.y);
+
+      }else if(o.kind==='arc'){
+        const g=arcGeometry(o);
+        if(!g) return;
+        ctx.arc(
+          o.center.x,
+          o.center.y,
+          g.r,
+          g.start,
+          g.end,
+          g.sweep<0
+        );
 
       }else if(o.kind==='ellipse'){
         if(!finitePoint(o.center)) return;
@@ -3123,6 +3215,11 @@
       return {x:minX,y:minY,w:maxX-minX,h:maxY-minY,cx:(minX+maxX)/2,cy:(minY+maxY)/2};
     }
 
+    if(o.kind==='arc'){
+      const pts=arcSamplePoints(o,96);
+      return pts.length ? bbox(pts) : null;
+    }
+
     if(o.kind==='ellipse'){
       const a=o.angle||0, rx=o.rx, ry=o.ry;
       const ex=Math.sqrt((rx*Math.cos(a))**2+(ry*Math.sin(a))**2);
@@ -3202,7 +3299,17 @@
   }
 
   function menuEditHandles(o){
-    if(!o || o.source!=='menu') return [];
+    if(!o) return [];
+
+    if(o.kind==='arc'){
+      return [
+        {name:'arc-center',x:o.center.x,y:o.center.y,label:'M'},
+        {name:'arc-a',x:o.a.x,y:o.a.y,label:'A'},
+        {name:'arc-b',x:o.b.x,y:o.b.y,label:'B'}
+      ];
+    }
+
+    if(o.source!=='menu') return [];
 
     if(o.kind==='line'){
       return [
@@ -3242,6 +3349,7 @@
       s.startsWith('endpoint-') ||
       s.startsWith('rectvertex-') ||
       s.startsWith('ellipse-') ||
+      s.startsWith('arc-') ||
       s.startsWith('sqrt-')
     );
   }
@@ -3340,6 +3448,41 @@
       return true;
     }
 
+    if(snap.kind==='arc'){
+      Object.assign(o,cloneObject(snap));
+
+      if(names.includes('arc-center')){
+        return setArcRadiusFromHandle(
+          o,
+          'arc-center',
+          {x:snap.center.x+dx,y:snap.center.y+dy},
+          snap
+        );
+      }
+
+      const movedA=names.includes('arc-a')
+        ? {x:snap.a.x+dx,y:snap.a.y+dy}
+        : null;
+      const movedB=names.includes('arc-b')
+        ? {x:snap.b.x+dx,y:snap.b.y+dy}
+        : null;
+
+      if(movedA && movedB){
+        const m=snap.center;
+        const r=Math.max(8,Math.hypot(movedA.x-m.x,movedA.y-m.y));
+        const aa=Math.atan2(movedA.y-m.y,movedA.x-m.x);
+        const bb=Math.atan2(movedB.y-m.y,movedB.x-m.x);
+        o.center={...m};
+        o.a={x:m.x+Math.cos(aa)*r,y:m.y+Math.sin(aa)*r};
+        o.b={x:m.x+Math.cos(bb)*r,y:m.y+Math.sin(bb)*r};
+        return true;
+      }
+
+      if(movedA) return setArcRadiusFromHandle(o,'arc-a',movedA,snap);
+      if(movedB) return setArcRadiusFromHandle(o,'arc-b',movedB,snap);
+      return false;
+    }
+
     if(snap.kind==='polygon'){
       const verts=polygonWorldVertices(snap);
       let changed=false;
@@ -3428,6 +3571,9 @@
     if(o.kind==='line'){
       return Math.atan2(o.b.y-o.a.y,o.b.x-o.a.x);
     }
+    if(o.kind==='arc'){
+      return Math.atan2(o.a.y-o.center.y,o.a.x-o.center.x);
+    }
     return 0;
   }
 
@@ -3435,6 +3581,7 @@
     if(!o) return [];
 
     if(o.kind==='line') return [{...o.a},{...o.b}];
+    if(o.kind==='arc') return arcSamplePoints(o,48);
     if(o.kind==='stroke') return (o.points||[]).map(p=>({x:p.x,y:p.y}));
     if(o.kind==='symbol') return symbolWorldPoints(o);
 
@@ -3755,6 +3902,14 @@
       return;
     }
 
+    if(o.kind==='arc'){
+      o.center=rotatePoint(o.center,c,delta);
+      o.a=rotatePoint(o.a,c,delta);
+      o.b=rotatePoint(o.b,c,delta);
+      o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
+      return;
+    }
+
     if(o.kind==='stroke'){
       o.points=o.points.map(p=>rotatePoint(p,c,delta));
       o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
@@ -3787,6 +3942,13 @@
 
     if(o.kind==='line'){
       o.a=scalePt(o.a); o.b=scalePt(o.b);
+      return;
+    }
+
+    if(o.kind==='arc'){
+      o.center=scalePt(o.center);
+      o.a=scalePt(o.a);
+      o.b=scalePt(o.b);
       return;
     }
 
@@ -3985,6 +4147,20 @@
     if(o.kind==='line'){
       o.a=scalePt(o.a);
       o.b=scalePt(o.b);
+      return;
+    }
+
+    if(o.kind==='arc'){
+      const oldCenter={...o.center};
+      const newCenter=scalePt(oldCenter);
+      const radius=Math.max(8,Math.hypot(o.a.x-oldCenter.x,o.a.y-oldCenter.y));
+      const aa=Math.atan2(o.a.y-oldCenter.y,o.a.x-oldCenter.x);
+      const bb=Math.atan2(o.b.y-oldCenter.y,o.b.x-oldCenter.x);
+      const s=Math.sqrt(Math.abs(sx*sy));
+      const nr=Math.max(8,radius*s);
+      o.center=newCenter;
+      o.a={x:newCenter.x+Math.cos(aa+angle)*nr,y:newCenter.y+Math.sin(aa+angle)*nr};
+      o.b={x:newCenter.x+Math.cos(bb+angle)*nr,y:newCenter.y+Math.sin(bb+angle)*nr};
       return;
     }
 
@@ -4230,6 +4406,22 @@
     ctx.setLineDash([]);
 
     // Shape's own editable points
+    if(selected.kind==='arc' && special.length){
+      const m=special.find(h=>h.name==='arc-center');
+      const a=special.find(h=>h.name==='arc-a');
+      const b=special.find(h=>h.name==='arc-b');
+      if(m && a && b){
+        ctx.save();
+        ctx.setLineDash([4/viewZoom,4/viewZoom]);
+        ctx.strokeStyle='rgba(37,99,235,.55)';
+        ctx.beginPath();
+        ctx.moveTo(m.x,m.y); ctx.lineTo(a.x,a.y);
+        ctx.moveTo(m.x,m.y); ctx.lineTo(b.x,b.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
     if(special.length){
       for(const hnd of special){
         ctx.beginPath();
@@ -4239,6 +4431,18 @@
         ctx.arc(hnd.x,hnd.y,rr,0,Math.PI*2);
         ctx.fill();
         ctx.stroke();
+
+        if(selected.kind==='arc' && hnd.label){
+          ctx.save();
+          ctx.fillStyle='#2563eb';
+          ctx.font=`${12/viewZoom}px system-ui,-apple-system,"Segoe UI",Arial,sans-serif`;
+          ctx.fillText(
+            hnd.label,
+            hnd.x+8/viewZoom,
+            hnd.y-8/viewZoom
+          );
+          ctx.restore();
+        }
       }
     }else{
       const isTriangle=
@@ -4261,7 +4465,9 @@
     }
 
     // Bounding-box resize handles
-    const showBBoxHandles = selected.source==='menu' || !special.length;
+    const showBBoxHandles = selected.kind==='arc'
+      ? false
+      : (selected.source==='menu' || !special.length);
     if(showBBoxHandles){
       for(const p of [oc.nw,oc.ne,oc.se,oc.sw]){
         ctx.beginPath();
@@ -4273,7 +4479,9 @@
       }
     }
 
-    const canRotate=!(selected.kind==='ellipse' && selected.shapeName==='circle');
+    const canRotate=
+      selected.kind!=='arc' &&
+      !(selected.kind==='ellipse' && selected.shapeName==='circle');
     if(canRotate){
       ctx.beginPath();
       ctx.moveTo(oc.topCenter.x,oc.topCenter.y);
@@ -4347,7 +4555,7 @@
       }
     }
 
-    if(selected.source==='menu' || (!special.length && !isTriangle)){
+    if(selected.kind!=='arc' && (selected.source==='menu' || (!special.length && !isTriangle))){
       const entries=[
         ['nw',oc.nw],['ne',oc.ne],['se',oc.se],['sw',oc.sw]
       ];
@@ -4357,7 +4565,10 @@
       }
     }
 
-    if(!(selected.kind==='ellipse' && selected.shapeName==='circle')){
+    if(
+      selected.kind!=='arc' &&
+      !(selected.kind==='ellipse' && selected.shapeName==='circle')
+    ){
       const hitR=(pointerType==='touch' ? 22 : 11)/viewZoom;
       if(Math.hypot(p.x-oc.rotate.x,p.y-oc.rotate.y)<=hitR) return 'rotate';
     }
@@ -4471,6 +4682,14 @@
       return eraserPointSegDistance(p,o.a,o.b)<=tol;
     }
 
+    if(o.kind==='arc'){
+      const pts=arcSamplePoints(o,96);
+      for(let i=1;i<pts.length;i++){
+        if(eraserPointSegDistance(p,pts[i-1],pts[i])<=tol) return true;
+      }
+      return false;
+    }
+
     if(o.kind==='stroke'){
       const pts=o.points||[];
       if(!pts.length) return false;
@@ -4564,6 +4783,18 @@
       return;
     }
 
+    if(o.kind==='arc'){
+      o.center=reflectPointAcross(o.center,pivot,axis);
+      o.a=reflectPointAcross(o.a,pivot,axis);
+      o.b=reflectPointAcross(o.b,pivot,axis);
+      o.sweepSign=-(Number(o.sweepSign)||1);
+      o.boxAngle=reflectedAngle(
+        Number.isFinite(o.boxAngle) ? o.boxAngle : 0,
+        axis
+      );
+      return;
+    }
+
     if(o.kind==='stroke'){
       o.points=(o.points||[]).map(p=>reflectPointAcross(p,pivot,axis));
       o.boxAngle=reflectedAngle(
@@ -4624,6 +4855,10 @@
   function translateObject(o,dx,dy){
     if(o.kind==='line'){
       o.a.x+=dx;o.a.y+=dy;o.b.x+=dx;o.b.y+=dy;
+    }else if(o.kind==='arc'){
+      o.center.x+=dx;o.center.y+=dy;
+      o.a.x+=dx;o.a.y+=dy;
+      o.b.x+=dx;o.b.y+=dy;
     }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image' || o.kind==='text' || o.kind==='symbol'){
       o.center.x+=dx;o.center.y+=dy;
       if(o.kind==='polygon' && o.baseVertices){
@@ -4639,6 +4874,11 @@
       const c={x:(o.a.x+o.b.x)/2,y:(o.a.y+o.b.y)/2};
       o.a=rotatePoint(o.a,c,delta);
       o.b=rotatePoint(o.b,c,delta);
+      o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
+
+    }else if(o.kind==='arc'){
+      o.a=rotatePoint(o.a,o.center,delta);
+      o.b=rotatePoint(o.b,o.center,delta);
       o.boxAngle=(Number.isFinite(o.boxAngle) ? o.boxAngle : 0)+delta;
 
     }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image' || o.kind==='text' || o.kind==='symbol'){
@@ -4685,6 +4925,11 @@
 
   function moveMenuHandleFromSnapshot(o,snap,handle,p){
     if(!o || !snap) return false;
+
+    // ARC M/A/B handles work for both menu and auto-recognized arcs.
+    if(snap.kind==='arc' && handle.startsWith('arc-')){
+      return setArcRadiusFromHandle(o,handle,p,snap);
+    }
 
     // LINE endpoints work for every line, including ink-recognized AB segments.
     if(snap.kind==='line' && handle.startsWith('endpoint-')){
@@ -6002,6 +6247,128 @@
   }
 
 
+  function fitCircleForArc(pts){
+    if(!pts || pts.length<6) return null;
+
+    let mx=0,my=0;
+    for(const p of pts){mx+=p.x;my+=p.y}
+    mx/=pts.length; my/=pts.length;
+
+    let sxx=0,syy=0,sxy=0,bx=0,by=0;
+    for(const p of pts){
+      const x=p.x-mx,y=p.y-my;
+      const q=x*x+y*y;
+      sxx+=x*x; syy+=y*y; sxy+=x*y;
+      bx+=x*q; by+=y*q;
+    }
+
+    const det=sxx*syy-sxy*sxy;
+    if(Math.abs(det)<1e-8) return null;
+
+    const ux=.5*(bx*syy-by*sxy)/det;
+    const uy=.5*(by*sxx-bx*sxy)/det;
+    const center={x:mx+ux,y:my+uy};
+
+    let rsum=0;
+    const radii=pts.map(p=>{
+      const r=Math.hypot(p.x-center.x,p.y-center.y);
+      rsum+=r;
+      return r;
+    });
+    const radius=rsum/Math.max(1,radii.length);
+    if(!Number.isFinite(radius) || radius<18) return null;
+
+    let sumAbs=0,sumSq=0;
+    for(const r of radii){
+      const d=r-radius;
+      sumAbs+=Math.abs(d);
+      sumSq+=d*d;
+    }
+
+    return {
+      center,
+      radius,
+      meanAbs:(sumAbs/radii.length)/radius,
+      rms:Math.sqrt(sumSq/radii.length)/radius
+    };
+  }
+
+  function arcCandidate(pts,style){
+    if(!pts || pts.length<8) return null;
+
+    const rs=resamplePolyline(pts,64);
+    if(rs.length<8) return null;
+
+    const fit=fitCircleForArc(rs);
+    if(!fit || fit.meanAbs>0.045 || fit.rms>0.060) return null;
+
+    const chord=dist(rs[0],rs[rs.length-1]);
+    if(chord<35) return null;
+
+    let pathLen=0;
+    for(let i=1;i<rs.length;i++) pathLen+=dist(rs[i-1],rs[i]);
+    if(pathLen/chord>1.75) return null;
+
+    // The stroke must be visibly curved relative to its A-B chord.
+    let maxChordDeviation=0;
+    let meanChordDeviation=0;
+    for(const p of rs){
+      const d=pointToSegmentDistance(p,rs[0],rs[rs.length-1]);
+      maxChordDeviation=Math.max(maxChordDeviation,d);
+      meanChordDeviation+=d;
+    }
+    meanChordDeviation/=rs.length;
+
+    if(maxChordDeviation/chord<0.045) return null;
+    if(meanChordDeviation/chord<0.020) return null;
+
+    // Unwrap angular progress around the fitted center. A genuine hand-drawn
+    // arc should turn mostly in one direction without backtracking.
+    const angles=[];
+    let prev=Math.atan2(rs[0].y-fit.center.y,rs[0].x-fit.center.x);
+    angles.push(prev);
+    let total=0,totalAbs=0;
+    for(let i=1;i<rs.length;i++){
+      const a=Math.atan2(rs[i].y-fit.center.y,rs[i].x-fit.center.x);
+      const d=normalizeSignedAngle(a-prev);
+      total+=d;
+      totalAbs+=Math.abs(d);
+      angles.push(a);
+      prev=a;
+    }
+
+    const span=Math.abs(total);
+    if(span<0.38 || span>3.05) return null; // ~22° .. 175°
+    if(totalAbs/Math.max(0.001,span)>1.32) return null;
+
+    // Circle fit must be clearly more convincing than a straight segment.
+    const circleErr=fit.meanAbs;
+    const lineErr=meanChordDeviation/Math.max(1,chord);
+    if(lineErr < circleErr*1.7 + 0.010) return null;
+
+    const a0=Math.atan2(rs[0].y-fit.center.y,rs[0].x-fit.center.x);
+    const a1=Math.atan2(rs[rs.length-1].y-fit.center.y,rs[rs.length-1].x-fit.center.x);
+    const r=fit.radius;
+
+    return {
+      kind:'arc',
+      center:{...fit.center},
+      a:{
+        x:fit.center.x+Math.cos(a0)*r,
+        y:fit.center.y+Math.sin(a0)*r
+      },
+      b:{
+        x:fit.center.x+Math.cos(a1)*r,
+        y:fit.center.y+Math.sin(a1)*r
+      },
+      sweepSign:total>=0 ? 1 : -1,
+      style,
+      shapeName:'arc',
+      source:'auto',
+      boxAngle:0
+    };
+  }
+
   function openStrokeLineIntent(pts){
     /*
       A single open A→B stroke should become AB even if it is curved.
@@ -6056,6 +6423,11 @@
     try{
       if(pts.length<6) return null;
       const style=strokeStyle();
+
+      // A clearly circular open curve wins before the broad A→B line intent.
+      // Very shallow curves are rejected by arcCandidate and remain lines.
+      const arc=arcCandidate(pts,style);
+      if(arc) return arc;
 
       // NEW: an open A→B stroke remains a line even if the hand path is curved.
       if(openStrokeLineIntent(pts)){
@@ -6144,6 +6516,10 @@
           lockedShape.a={...lockAnchor};
           lockedShape.b={...lockPointer};
           statusEl.textContent='Doğru aktif — A sabit, B’yi sürükleyebilirsin';
+        }else if(lockedShape.kind==='arc'){
+          lockedShapeSnapshot=JSON.parse(JSON.stringify(lockedShape));
+          rotationCenter={...lockedShape.center};
+          statusEl.textContent='Yay aktif — B yönü ve uzaklığı yayı ayarlar';
         }else{
           rotationCenter={...lockedShape.center};
           rotationStartPointerAngle=Math.atan2(
@@ -6198,7 +6574,7 @@
     // but locked objects are always protected from the eraser.
     return !!o &&
       !o.locked &&
-      ['stroke','line','ellipse','rect','polygon','parabola','axes','symbol'].includes(o.kind);
+      ['stroke','line','arc','ellipse','rect','polygon','parabola','axes','symbol'].includes(o.kind);
   }
 
   function inkObjectHit(o,p,r){
@@ -6215,6 +6591,14 @@
 
     if(o.kind==='line'){
       return eraserPointSegDistance(p,o.a,o.b)<=r;
+    }
+
+    if(o.kind==='arc'){
+      const pts=arcSamplePoints(o,96);
+      for(let i=1;i<pts.length;i++){
+        if(eraserPointSegDistance(p,pts[i-1],pts[i])<=r) return true;
+      }
+      return false;
     }
 
     if(o.kind==='ellipse'){
@@ -7280,6 +7664,17 @@
             o.a=scalePointLocal(o.a);
             o.b=scalePointLocal(o.b);
 
+          }else if(o.kind==='arc'){
+            const newCenter=scalePointLocal(o.center);
+            const oldR=Math.max(8,Math.hypot(o.a.x-o.center.x,o.a.y-o.center.y));
+            const aa=Math.atan2(o.a.y-o.center.y,o.a.x-o.center.x);
+            const bb=Math.atan2(o.b.y-o.center.y,o.b.x-o.center.x);
+            const s=Math.sqrt(Math.abs(sx*sy));
+            const nr=Math.max(8,oldR*s);
+            o.center=newCenter;
+            o.a={x:newCenter.x+Math.cos(aa)*nr,y:newCenter.y+Math.sin(aa)*nr};
+            o.b={x:newCenter.x+Math.cos(bb)*nr,y:newCenter.y+Math.sin(bb)*nr};
+
           }else if(o.kind==='stroke'){
             o.points=o.points.map(scalePointLocal);
 
@@ -7486,6 +7881,12 @@
         lockedShape.a={...lockAnchor};
         lockedShape.b={x:p.x,y:p.y};
         statusEl.textContent='Doğru aktif — B noktası hareket ediyor';
+
+      }else if(lockedShape.kind==='arc'){
+        const snap=lockedShapeSnapshot || lockedShape;
+        lockedShape=JSON.parse(JSON.stringify(snap));
+        setArcRadiusFromHandle(lockedShape,'arc-b',p,snap);
+        statusEl.textContent='Yay aktif — M sabit, r=|MA|=|MB|';
 
       }else{
         /*
@@ -8876,6 +9277,22 @@
     const insertionScale=1/viewZoom;
     const style=strokeStyle(), t=shapeType.value;
     if(t==='line') objects.push({kind:'line',a:{x:cx-100*insertionScale,y:cy},b:{x:cx+100*insertionScale,y:cy},style,source:'menu',boxAngle:0});
+    if(t==='arc'){
+      const radius=100*insertionScale;
+      const a0=-5*Math.PI/6;
+      const a1=-Math.PI/6;
+      objects.push({
+        kind:'arc',
+        center:{x:cx,y:cy+30*insertionScale},
+        a:{x:cx+Math.cos(a0)*radius,y:cy+30*insertionScale+Math.sin(a0)*radius},
+        b:{x:cx+Math.cos(a1)*radius,y:cy+30*insertionScale+Math.sin(a1)*radius},
+        sweepSign:1,
+        style,
+        shapeName:'arc',
+        source:'menu',
+        boxAngle:0
+      });
+    }
     if(t==='rect') objects.push({kind:'rect',center:{x:cx,y:cy},w:180*insertionScale,h:110*insertionScale,angle:0,style,shapeName:'rectangle',source:'menu'});
     if(t==='ellipse') objects.push({kind:'ellipse',center:{x:cx,y:cy},rx:95*insertionScale,ry:60*insertionScale,angle:0,style,shapeName:'ellipse',source:'menu'});
     if(t==='parabola') {
