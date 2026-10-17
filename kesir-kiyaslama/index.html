@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kesir Kıyaslama Laboratuvarı</title>
+<style>
+:root{--bg:#f5f3ed;--ink:#242835;--blue:#285de0;--orange:#d87e14;--green:#19865d;--yellow:#ffd849}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
+header{min-height:80px;display:flex;align-items:center;justify-content:center;position:relative;padding:15px 80px;text-align:center}h1{font-size:clamp(19px,2.4vw,29px);margin:0;font-weight:800}header p{font-size:13px;color:#777;margin:2px 0 0}.home{position:absolute;left:19px;top:17px;width:47px;height:47px;border:0;border-radius:14px;background:var(--yellow);box-shadow:0 4px 0 #cda82f;cursor:pointer;display:grid;place-items:center}.home svg{width:27px;height:27px}
+main{width:min(1020px,calc(100% - 24px));min-height:590px;margin:9px auto 35px;background:#fffefa;border:1px solid #e6e3dc;border-radius:25px;box-shadow:0 15px 40px #3c352217;overflow:hidden}.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 23px;border-bottom:1px solid #eeebe4}.toolbar strong{font-size:clamp(13px,1.8vw,16px)}button{font:inherit}.restart{border:0;background:#eae8e1;border-radius:11px;padding:10px 16px;cursor:pointer;font-weight:700}.restart:hover{background:#dedbd2}.workspace{display:flex;flex-direction:column;align-items:center;padding:45px 14px 30px;min-height:450px}.hint{text-align:center;min-height:52px;font-size:clamp(15px,2vw,20px);font-weight:600;color:#555a64}
+.equation{display:flex;align-items:flex-start;justify-content:center;gap:clamp(20px,6vw,75px);width:100%;margin-top:24px}.side{width:clamp(110px,22vw,220px);display:flex;flex-direction:column;align-items:center;min-height:235px;position:relative}.frac{display:inline-flex;flex-direction:column;align-items:center;font-size:clamp(38px,5.4vw,58px);font-weight:650;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap}.num,.den{min-height:66px;min-width:75px;display:flex;align-items:center;justify-content:center;padding:0 9px;position:relative}.bar{width:100%;height:4px;border-radius:4px;background:currentColor}.token{display:inline-flex;align-items:center;justify-content:center;border-radius:12px;padding:2px 5px;border:3px solid transparent;line-height:1.08}.clickable{cursor:pointer;background:transparent;border-color:transparent;color:var(--ink)}.clickable:hover,.clickable:focus-visible{outline:none;background:#f8e9b9;border-color:#efb314}.mult{margin-top:6px;font-family:inherit;font-size:clamp(31px,4.4vw,47px);font-weight:650;color:#c57a00;line-height:1.1}.mult.clickable{background:transparent;border:3px solid transparent;color:#c57a00;padding:1px 8px}.mult.clickable:hover,.mult.clickable:focus-visible{background:#f8e9b9;border-color:#efb314}
+.operator{padding-top:43px;font-size:clamp(45px,5vw,65px);font-weight:700;min-width:45px;text-align:center}.symbol-preview{color:#858a94}.choice-row{display:flex;gap:15px;justify-content:center;min-height:70px;margin-top:1px}.choice{width:69px;height:60px;background:#fff;border:2px solid #d4d7df;border-radius:15px;font-size:36px;font-weight:700;cursor:pointer;transition:background .15s,transform .15s,box-shadow .15s}.choice:hover,.choice:focus-visible{background:#f8e9b9;color:var(--ink);border-color:#efb314;outline:none}.choice.wrong{animation:nope .34s ease-in-out}.choice.correct{background:#dcf6e9;color:var(--green);border-color:var(--green)}@keyframes nope{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}@keyframes appear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.product{gap:0;padding:0 2px}.times{font-size:.7em;margin:0 .08em;font-weight:500;color:inherit}.result{color:var(--green);}.foot{height:60px;display:flex;justify-content:center;align-items:center;color:#8b8b8b;font-size:13px;border-top:1px solid #eeebe4}.hidden{display:none!important}@media(max-width:540px){header{padding:17px 65px}.toolbar{padding:14px}.workspace{padding:50px 8px 20px}.equation{gap:10px}.side{width:37vw}.num,.den{min-height:62px;min-width:60px;padding:0 3px}.operator{min-width:29px;font-size:44px;padding-top:39px}.frac{font-size:39px}.mult{font-size:32px}}
+</style>
+</head>
+<body>
+<header><button class="home" id="home" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6 2 11.2l1.4 1.7L5 11.6V21h5.1v-6.2h3.8V21H19v-9.4l1.6 1.3 1.4-1.7L12 2.6Z"/></svg></button><div><h1>Kesir Kıyaslama Laboratuvarı</h1><p>Aynı türden kesirler</p></div></header>
+<main><div class="toolbar"><strong>1 · Payda eşitleyerek kıyaslama</strong><button class="restart" id="restart">Yeni örnek ↻</button></div><section class="workspace"><div class="hint" id="hint" aria-live="polite"></div><div class="equation"><div class="side" id="left"></div><div class="operator" id="operator">?</div><div class="side" id="right"></div></div><div class="choice-row hidden" id="choices"><button class="choice" data-answer="<" aria-label="Küçüktür">&lt;</button><button class="choice" data-answer="=" aria-label="Eşittir">=</button><button class="choice" data-answer=">" aria-label="Büyüktür">&gt;</button></div></section><div class="foot">Kesirlere ve vurgulanan ifadelere tıklayarak ilerle.</div></main>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const H=$('hint'),left=$('left'),right=$('right'),op=$('operator'),choices=$('choices');
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+let q,phase='start',calculated=new Set(),busy=false;
+function nextQuestion(){
+  let a,b,c,d,k=0;
+  do{b=rnd(3,10);d=rnd(3,10);a=rnd(1,b-1);c=rnd(1,d-1);k++;}
+  while((b===d||a===c||b*d/gcd(b,d)>72||(a*d===b*c))&&k<300);
+  const common=b*d/gcd(b,d);
+  q={a,b,c,d,x:common/b,y:common/d,common,answer:a*d<b*c?'<':a*d>b*c?'>':'='};
+  phase='start';calculated.clear();busy=false;render();
+}
+function frac(top,bottom,mode,side){
+  return `<div class="frac"><div class="num">${mode==='products'?product(top,side+'N'):text(top)}</div><div class="bar"></div><div class="den">${mode==='products'?product(bottom,side+'D'):text(bottom,phase==='start'?'den':'')}</div></div>`;
+}
+function text(value,role=''){return `<span class="token ${role==='den'?'clickable':''}" ${role==='den'?'data-action="den" tabindex="0" role="button" aria-label="Paydayı eşitle"':''}>${value}</span>`;}
+function product(pair,key){
+  const n=pair[0]*pair[1];
+  if(calculated.has(key))return `<span class="token result">${n}</span>`;
+  return `<span class="token clickable product" role="button" tabindex="0" data-product="${key}" aria-label="Çarpımı hesapla">${pair[0]}<span class="times">·</span>${pair[1]}</span>`;
+}
+function oneSide(side){
+  let a=side==='L'?q.a:q.c,b=side==='L'?q.b:q.d,k=side==='L'?q.x:q.y;
+  if(phase==='start')return frac(a,b,'original',side);
+  if(phase==='factors')return frac(a,b,'original',side)+`<span class="token clickable mult" data-action="factor" role="button" tabindex="0" aria-label="Genişletme katsayısı">(${k})</span>`;
+  if(phase==='products'||phase==='choose')return frac([a,k],[b,k],'products',side);
+  return frac(a,b,'final',side);
+}
+function render(){
+  left.innerHTML=oneSide('L');right.innerHTML=oneSide('R');
+  op.textContent=phase==='done'?q.answer:'?';
+  op.classList.toggle('symbol-preview',phase!=='done');
+  choices.classList.toggle('hidden',phase!=='choose');
+  const prompts={start:'Paydalardan birine tıkla.',factors:'Genişletme katsayılarından birine tıkla.',products:'Vurgulanan çarpımlara tek tek tıkla.',choose:'Kesirleri karşılaştır. Doğru işareti seç.',done:'Doğru!'};
+  H.textContent=prompts[phase];
+}
+function act(element){
+  if(busy)return;
+  if(phase==='start'&&element.closest('[data-action="den"]')){phase='factors';render();return;}
+  if(phase==='factors'&&element.closest('[data-action="factor"]')){phase='products';render();return;}
+  if(phase==='products'){
+    const token=element.closest('[data-product]');if(!token)return;
+    calculated.add(token.dataset.product);
+    if(calculated.size===4)phase='choose';
+    render();
+  }
+}
+document.querySelector('.equation').addEventListener('click',e=>act(e.target));
+document.querySelector('.equation').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const el=e.target.closest('[role="button"]');if(el){e.preventDefault();act(el);}}});
+choices.addEventListener('click',e=>{
+  const btn=e.target.closest('[data-answer]');if(!btn||busy||phase!=='choose')return;
+  if(btn.dataset.answer!==q.answer){btn.classList.remove('wrong');void btn.offsetWidth;btn.classList.add('wrong');H.textContent='Tekrar dene.';return;}
+  busy=true;btn.classList.add('correct');op.textContent=q.answer;op.classList.remove('symbol-preview');
+  H.textContent='Doğru!';
+  setTimeout(()=>{phase='done';busy=false;render();},650);
+});
+$('restart').addEventListener('click',nextQuestion);
+$('home').addEventListener('click',()=>location.href='https://sinan-ipek.github.io/projeler/');
+nextQuestion();
+})();
+</script>
+</body>
+</html>
