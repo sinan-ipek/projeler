@@ -214,14 +214,16 @@ function action(name){
  if(name==='ride')mountSelected();
  if(name==='dismount')dismount();
  if(name==='rideView'){rideViewMode=rideViewMode==='micro'?'macro':'micro';}
- syncButtons();
+ if(name==='micro')rideViewMode='micro';
+ if(name==='macro')rideViewMode='macro';
+ syncButtons();refreshRightPanel();
 }
 for(const id of ['play','reset','mode','trails'])$(id).onclick=()=>action(id);
 // VR panel uses a shared canvas texture; buttons remain selectable via controller rays.
 const panelCanvas=document.createElement('canvas');panelCanvas.width=720;panelCanvas.height=505;
 const ctx=panelCanvas.getContext('2d'),panelTexture=new THREE.CanvasTexture(panelCanvas);panelTexture.colorSpace=THREE.SRGBColorSpace;
 const panel=new THREE.Mesh(new THREE.PlaneGeometry(.275,.195),new THREE.MeshBasicMaterial({map:panelTexture,transparent:true,side:THREE.DoubleSide,depthTest:false}));
-panel.position.set(-.5,1.7,-1.3);panel.renderOrder=20;scene.add(panel);
+panel.renderOrder=20;
 let handMenuOpen=false,rightMenuOpen=false;
 let rightController=null;
 const lastMenuPress=new Map();
@@ -232,57 +234,65 @@ function toggleHandMenu(){
  updateHandMenu();
  $('status').textContent=handMenuOpen?'Menü açık':'Menü kapalı';
 }
-const menuAnchorOffset=new THREE.Vector3(0,.025,-.11);
+const menuAnchorOffset=new THREE.Vector3(.10,.025,-.13);
 const rightMenuCanvas=document.createElement('canvas');
 rightMenuCanvas.width=720;rightMenuCanvas.height=505;
 const rightMenuCtx=rightMenuCanvas.getContext('2d');
 const rightMenuTexture=new THREE.CanvasTexture(rightMenuCanvas);
 rightMenuTexture.colorSpace=THREE.SRGBColorSpace;
 const rightPanel=new THREE.Mesh(new THREE.PlaneGeometry(.275,.195),new THREE.MeshBasicMaterial({map:rightMenuTexture,transparent:true,side:THREE.DoubleSide,depthTest:false}));
-rightPanel.renderOrder=20;rightPanel.visible=false;scene.add(rightPanel);
-const rightButtons=[
- ['near','YAKINA GETIR'],['ride','BIN'],
- ['shrink','KUCULT'],['grow','BUYUT'],
- ['copy','KOPYALA'],['delete','SIL'],
- ['dismount','IN'],['rideView','MIKRO / MAKRO']
-];
-function refreshRightPanel(){
- const c=rightMenuCtx;
- c.clearRect(0,0,720,505);c.fillStyle='#15253aef';c.fillRect(0,0,720,505);
- c.fillStyle='#fff';c.font='bold 30px system-ui';c.fillText('GEZEGEN',24,44);
- c.fillStyle='#b8e2ff';c.font='22px system-ui';
- const b=selectedPlanet;
- c.fillText(b?'R '+b.radius.toFixed(2)+'  M '+b.mass.toFixed(1)+'  H '+b.v.length().toFixed(1):'Secim yok',24,83);
- c.fillText(ridingBody?'Binildi · '+(rideViewMode==='micro'?'MIKRO':'MAKRO'):'Serbest gozlem',24,114);
- for(let i=0;i<rightButtons.length;i++){
-  const [id,text]=rightButtons[i],x=24+(i%2)*344,y=136+Math.floor(i/2)*88;
-  c.fillStyle=(id==='rideView'&&rideViewMode==='micro')?'#2d856d':'#285a8d';
-  c.beginPath();c.roundRect(x,y,326,76,12);c.fill();
-  c.fillStyle='#fff';c.font='bold 27px system-ui';
-  c.fillText(text,x+16,y+47);
+rightPanel.renderOrder=20;rightPanel.visible=false;
+const rightButtons=[['near','YAKINA GETIR'],['shrink','KUCULT'],['grow','BUYUT'],['copy','KOPYALA'],['delete','SIL']];
+const topButtons=[['ride','BIN'],['dismount','IN'],['micro','MIKRO'],['macro','MAKRO']];
+const topCanvas=document.createElement('canvas');topCanvas.width=720;topCanvas.height=505;
+const topCtx=topCanvas.getContext('2d'),topTexture=new THREE.CanvasTexture(topCanvas);
+topTexture.colorSpace=THREE.SRGBColorSpace;
+const topPanel=new THREE.Mesh(new THREE.PlaneGeometry(.275,.195),new THREE.MeshBasicMaterial({map:topTexture,side:THREE.DoubleSide,depthTest:false}));
+topPanel.renderOrder=20;
+const prism=new THREE.Group(),FACE_W=.275,FACE_H=.195,PRISM_DEPTH=.17;
+panel.position.z=PRISM_DEPTH/2;
+rightPanel.rotation.y=Math.PI/2;rightPanel.position.x=FACE_W/2;
+topPanel.rotation.x=-Math.PI/2;topPanel.position.y=FACE_H/2;
+prism.add(panel,rightPanel,topPanel);
+const edges=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(FACE_W,FACE_H,PRISM_DEPTH)),new THREE.LineBasicMaterial({color:0xa8c4da,depthTest:false}));
+edges.renderOrder=21;prism.add(edges);scene.add(prism);
+function faceButtons(c,items,active){
+ for(let i=0;i<items.length;i++){
+  const [id,label]=items[i],x=20+(i%2)*350,y=135+Math.floor(i/2)*100;
+  c.fillStyle=active===id?'#2d856d':'#285a8d';
+  c.beginPath();c.roundRect(x,y,330,83,12);c.fill();
+  c.fillStyle='#fff';c.font='bold 28px system-ui';c.fillText(label,x+16,y+52);
  }
- rightMenuTexture.needsUpdate=true;
+}
+function refreshRightPanel(){
+ const c=rightMenuCtx;c.clearRect(0,0,720,505);
+ c.fillStyle='#15253a';c.fillRect(0,0,720,505);
+ c.fillStyle='#fff';c.font='bold 38px system-ui';c.fillText('NESNE',24,58);
+ const b=selectedPlanet;c.fillStyle='#b8e2ff';c.font='21px system-ui';
+ c.fillText(b?'R '+b.radius.toFixed(2)+'  M '+b.mass.toFixed(1)+'  V '+b.v.length().toFixed(1):'Secim yok',24,103);
+ faceButtons(c,rightButtons,null);rightMenuTexture.needsUpdate=true;
+ refreshTopPanel();
+}
+function refreshTopPanel(){
+ const c=topCtx;c.clearRect(0,0,720,505);
+ c.fillStyle='#15253a';c.fillRect(0,0,720,505);
+ c.fillStyle='#fff';c.font='bold 38px system-ui';c.fillText('GOZLEM',24,58);
+ c.fillStyle='#b8e2ff';c.font='23px system-ui';
+ c.fillText(ridingBody?'Gezegende · '+(rideViewMode==='micro'?'Mikro':'Makro'):'Serbest gozlem',24,105);
+ faceButtons(c,topButtons,rideViewMode);topTexture.needsUpdate=true;
 }
 const rightMenuOffset=new THREE.Vector3(0,.025,-.11);
 const menuWristRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/3);
 function updateHandMenu(){
- if(!renderer.xr.isPresenting){panel.visible=true;rightPanel.visible=false;return}
- panel.visible=handMenuOpen&&!!leftController;
- rightPanel.visible=rightMenuOpen&&!!rightController;
- if(panel.visible){
+ if(!renderer.xr.isPresenting){prism.visible=true;prism.position.set(-.5,1.7,-1.3);prism.quaternion.identity();return}
+ prism.visible=handMenuOpen&&!!leftController;
+ if(prism.visible){
   leftController.updateWorldMatrix(true,false);
-  panel.position.copy(menuAnchorOffset).applyMatrix4(leftController.matrixWorld);
-  panel.quaternion.setFromRotationMatrix(new THREE.Matrix4().extractRotation(leftController.matrixWorld)).multiply(menuWristRotation);
-  panel.updateMatrixWorld(true);
- }
- if(rightPanel.visible){
-  rightController.updateWorldMatrix(true,false);
-  rightPanel.position.copy(rightMenuOffset).applyMatrix4(rightController.matrixWorld);
-  rightPanel.quaternion.setFromRotationMatrix(new THREE.Matrix4().extractRotation(rightController.matrixWorld)).multiply(menuWristRotation);
-  rightPanel.updateMatrixWorld(true);
+  prism.position.copy(menuAnchorOffset).applyMatrix4(leftController.matrixWorld);
+  prism.quaternion.setFromRotationMatrix(new THREE.Matrix4().extractRotation(leftController.matrixWorld)).multiply(menuWristRotation);
+  prism.updateMatrixWorld(true);
  }
 }
-
 const labels=['play','reset','mode','trails','new','velocities'];
 function refreshPanel(){
  ctx.clearRect(0,0,720,505);ctx.fillStyle='#15253aeF';ctx.fillRect(0,0,720,505);
@@ -526,10 +536,10 @@ function updateGrabsAndHover(dt){
  updateHandMenu();
  for(const controller of controllers){
   rayFromController(controller);
-  const menuHit=raycaster.intersectObjects([panel,rightPanel].filter(p=>p.visible),false)[0];
+  const menuHit=raycaster.intersectObjects([panel,rightPanel,topPanel].filter(p=>prism.visible&&p.visible),false)[0];
   const beam=controller.userData.beam;
   if(beam){
-   beam.visible=!((controller===leftController&&handMenuOpen)||(controller===rightController&&rightMenuOpen));
+   beam.visible=!(controller===leftController&&handMenuOpen);
    const endDistance=menuHit?Math.min(MAX_RAY_LENGTH,menuHit.distance):MAX_RAY_LENGTH;
    beam.scale.z=endDistance;
   }
@@ -548,13 +558,13 @@ function updateGrabsAndHover(dt){
   const menuPressed=(controller===leftController||controller===rightController)&&!!pad?.buttons?.[4]?.pressed;
   if(menuPressed&&!lastMenuPress.get(controller)){
    if(controller===leftController)toggleHandMenu();
-   else{rightMenuOpen=!rightMenuOpen;if(rightMenuOpen)handMenuOpen=false;updateHandMenu();$('status').textContent=rightMenuOpen?'Sağ menü açık':'Sağ menü kapalı'}
+   else{ /* One left-hand prism menu only. */ }
   }
   lastMenuPress.set(controller,menuPressed);
   const cone=coneVisuals[controllers.indexOf(controller)];
   if(cone){
    const thisAngle=coneAngles.get(controller)||0;
-   cone.visible=!((controller===leftController&&handMenuOpen)||(controller===rightController&&rightMenuOpen))&&!grabs.has(controller)&&thisAngle>0;
+   cone.visible=!(controller===leftController&&handMenuOpen)&&!grabs.has(controller)&&thisAngle>0;
    const radius=Math.tan(thisAngle)*CONE_VISUAL_LENGTH;
    cone.scale.set(radius,1,radius);
    cone.userData.outline.visible=cone.visible;
@@ -631,21 +641,22 @@ for(let i=0;i<2;i++){
  controller.addEventListener('disconnected',()=>{controllerInputs.delete(controller);releaseGrab(controller)});
  controller.addEventListener('selectstart',()=>{
   rayFromController(controller);
-  const panelHit=raycaster.intersectObjects([panel,rightPanel].filter(p=>p.visible),false)[0];
-  if(panelHit?.object===rightPanel){
+  const panelHit=raycaster.intersectObjects([panel,rightPanel,topPanel].filter(p=>prism.visible&&p.visible),false)[0];
+  if(panelHit){
    const px=panelHit.uv.x*720,py=(1-panelHit.uv.y)*505;
-   for(let i=0;i<rightButtons.length;i++){
-    const x=24+(i%2)*344,y=136+Math.floor(i/2)*88;
-    if(px>=x&&px<=x+326&&py>=y&&py<=y+76){action(rightButtons[i][0]);break}
+   if(panelHit.object===panel){
+    for(let i=0;i<labels.length;i++){
+     const x=35+(i%2)*345,y=100+Math.floor(i/2)*105;
+     if(px>=x&&px<=x+310&&py>=y&&py<=y+76){action(labels[i]);break}
+    }
+   }else{
+    const items=panelHit.object===rightPanel?rightButtons:topButtons;
+    for(let i=0;i<items.length;i++){
+     const x=20+(i%2)*350,y=135+Math.floor(i/2)*100;
+     if(px>=x&&px<=x+330&&py>=y&&py<=y+83){action(items[i][0]);break}
+    }
    }
    return;
-  }
-  if(panelHit?.uv){
-   const px=panelHit.uv.x*720,py=(1-panelHit.uv.y)*505;
-   if(py>=100&&py<=415){
-    const col=px<360?0:1,row=Math.min(2,Math.floor((py-100)/115)),x=35+col*345,y=100+row*115;
-    if(px>=x&&px<=x+310&&py>=y&&py<=y+85&&labels[row*2+col]){action(labels[row*2+col]);return}
-   }
   }
   const hits=pickTargets(controller);
   choosePlanets(hits.map(h=>h.body));
@@ -715,7 +726,7 @@ renderer.setAnimationLoop(()=>{
  updateGrabsAndHover(dt);
  for(const b of bodies)drawBody(b);
  updateRidingView();
- if(rightMenuOpen)refreshRightPanel();
+ if(handMenuOpen)refreshRightPanel();
  renderer.render(scene,camera);
 });
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
