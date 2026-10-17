@@ -45,33 +45,36 @@ const SCALE=.04;
 const world=new THREE.Group();world.position.set(0,1.4,-2.25);world.scale.setScalar(SCALE);scene.add(world);
 const originalWorldPosition=world.position.clone();
 let ridingBody=null;
+let rideViewMode='macro';
+const MICRO_SCALE_MULTIPLIER=8;
 let vectorDrag=null;
 const surface=new THREE.Mesh(new THREE.PlaneGeometry(120,120,1,1),
  new THREE.MeshStandardMaterial({color:0x54758e,roughness:1,side:THREE.DoubleSide}));
 surface.rotation.x=-Math.PI/2;surface.visible=false;scene.add(surface);
 function dismount(){
- ridingBody=null;surface.visible=false;world.position.copy(originalWorldPosition);
+ ridingBody=null;surface.visible=false;world.scale.setScalar(SCALE);world.position.copy(originalWorldPosition);
  for(const b of bodies)b.mesh.visible=true;
 }
 function mountSelected(){
- if(ridingBody){dismount();return}
  if(!selectedPlanet||!bodies.includes(selectedPlanet))return;
  ridingBody=selectedPlanet;
+ for(const b of bodies)b.mesh.visible=true;
  grabs.clear();endTwoHand();vectorDrag=null;
  surface.material.color.copy(ridingBody.mesh.material.color);
- surface.visible=!planetMode;
+ surface.visible=rideViewMode==='micro';
 }
 function updateRidingView(){
  if(!ridingBody||!bodies.includes(ridingBody)){if(ridingBody)dismount();return}
  // The entire simulated universe translates with the ridden planet;
  // headset orientation stays under native WebXR head tracking.
  const xrEye=(renderer.xr.isPresenting?renderer.xr.getCamera():camera);
- const eye=xrEye.position.clone();
+ const scale=SCALE*(rideViewMode==='micro'?MICRO_SCALE_MULTIPLIER:1);
+ world.scale.setScalar(scale);
  const target=new THREE.Vector3(0,1.5,0);
- world.position.copy(target).sub(ridingBody.pos.clone().multiplyScalar(SCALE));
+ world.position.copy(target).sub(ridingBody.pos.clone().multiplyScalar(scale));
  const location=xrEye.getWorldPosition(new THREE.Vector3());
  surface.position.set(location.x,location.y-1.55,location.z);
- surface.visible=!planetMode;
+ surface.visible=rideViewMode==='micro';
  surface.material.color.copy(ridingBody.mesh.material.color);
  ridingBody.mesh.visible=false;
 }
@@ -191,8 +194,8 @@ function syncButtons(){
  $('play').textContent=running?'⏸ Duraklat':'▶ Başlat';
  $('mode').textContent=planetMode?'🌍 Gezegen':'🌌 Uzay';
  $('trails').textContent='Yörüngeler: '+(showTrails?'Açık':'Kapalı');
- floor.visible=planetMode;grid.visible=planetMode;
- surface.visible=!!ridingBody&&!planetMode;
+ floor.visible=planetMode&&!ridingBody;grid.visible=planetMode&&!ridingBody;
+ surface.visible=!!ridingBody&&rideViewMode==='micro';
  scene.background.set(planetMode?0x283c56:0x090e19);
  if(labels.length)refreshPanel();
 }
@@ -209,6 +212,8 @@ function action(name){
  if(name==='copy')copySelected();
  if(name==='delete')deleteSelected();
  if(name==='ride')mountSelected();
+ if(name==='dismount')dismount();
+ if(name==='rideView'){rideViewMode=rideViewMode==='micro'?'macro':'micro';}
  syncButtons();
 }
 for(const id of ['play','reset','mode','trails'])$(id).onclick=()=>action(id);
@@ -235,29 +240,27 @@ const rightMenuTexture=new THREE.CanvasTexture(rightMenuCanvas);
 rightMenuTexture.colorSpace=THREE.SRGBColorSpace;
 const rightPanel=new THREE.Mesh(new THREE.PlaneGeometry(.275,.195),new THREE.MeshBasicMaterial({map:rightMenuTexture,transparent:true,side:THREE.DoubleSide,depthTest:false}));
 rightPanel.renderOrder=20;rightPanel.visible=false;scene.add(rightPanel);
+const rightButtons=[
+ ['near','YAKINA GETIR'],['ride','BIN'],
+ ['shrink','KUCULT'],['grow','BUYUT'],
+ ['copy','KOPYALA'],['delete','SIL'],
+ ['dismount','IN'],['rideView','MIKRO / MAKRO']
+];
 function refreshRightPanel(){
- rightMenuCtx.clearRect(0,0,720,505);
- rightMenuCtx.fillStyle='#15253aef';rightMenuCtx.fillRect(0,0,720,505);
- rightMenuCtx.fillStyle='#fff';rightMenuCtx.font='bold 37px system-ui';rightMenuCtx.fillText('SECILI NESNELER',28,72);
- rightMenuCtx.fillStyle='#b8e2ff';rightMenuCtx.font='27px system-ui';rightMenuCtx.fillText('Secili: '+selectedBodies.size,28,102);
- const rightButtons=[
-  {text:'YAKINA GETIR',x:28,y:150,w:664,h:90},
-  {text:'KUCULT -',x:28,y:260,w:316,h:95},
-  {text:'BUYUT +',x:376,y:260,w:316,h:95},
-  {text:'KOPYALA',x:28,y:375,w:316,h:70},
-  {text:'SIL',x:376,y:375,w:316,h:70},
-  {text:ridingBody?'GEZEGENDEN IN':'GEZEGENE BIN',x:28,y:448,w:664,h:48}
- ];
- for(const b of rightButtons){
-  rightMenuCtx.fillStyle='#285a8d';rightMenuCtx.beginPath();rightMenuCtx.roundRect(b.x,b.y,b.w,b.h,15);rightMenuCtx.fill();
-  rightMenuCtx.fillStyle='#fff';rightMenuCtx.font='bold 32px system-ui';
-  rightMenuCtx.fillText(b.text,b.x+22,b.y+Math.min(58,b.h*.67));
- }
- rightMenuCtx.fillStyle='#b8e2ff';rightMenuCtx.font='23px system-ui';
+ const c=rightMenuCtx;
+ c.clearRect(0,0,720,505);c.fillStyle='#15253aef';c.fillRect(0,0,720,505);
+ c.fillStyle='#fff';c.font='bold 30px system-ui';c.fillText('GEZEGEN',24,44);
+ c.fillStyle='#b8e2ff';c.font='22px system-ui';
  const b=selectedPlanet;
- rightMenuCtx.font='21px system-ui';
- rightMenuCtx.fillText(b?'R: '+b.radius.toFixed(2)+'   M: '+b.mass.toFixed(1)+'   |v|: '+b.v.length().toFixed(2):'Gezegen seçilmedi',28,136);
- rightMenuCtx.fillStyle='#b1cbe1';rightMenuCtx.font='23px system-ui';
+ c.fillText(b?'R '+b.radius.toFixed(2)+'  M '+b.mass.toFixed(1)+'  H '+b.v.length().toFixed(1):'Secim yok',24,83);
+ c.fillText(ridingBody?'Binildi · '+(rideViewMode==='micro'?'MIKRO':'MAKRO'):'Serbest gozlem',24,114);
+ for(let i=0;i<rightButtons.length;i++){
+  const [id,text]=rightButtons[i],x=24+(i%2)*344,y=136+Math.floor(i/2)*88;
+  c.fillStyle=(id==='rideView'&&rideViewMode==='micro')?'#2d856d':'#285a8d';
+  c.beginPath();c.roundRect(x,y,326,76,12);c.fill();
+  c.fillStyle='#fff';c.font='bold 27px system-ui';
+  c.fillText(text,x+16,y+47);
+ }
  rightMenuTexture.needsUpdate=true;
 }
 const rightMenuOffset=new THREE.Vector3(0,.025,-.11);
@@ -283,15 +286,14 @@ function updateHandMenu(){
 const labels=['play','reset','mode','trails','new','velocities'];
 function refreshPanel(){
  ctx.clearRect(0,0,720,505);ctx.fillStyle='#15253aeF';ctx.fillRect(0,0,720,505);
- ctx.fillStyle='#e7f4ff';ctx.font='bold 34px system-ui';ctx.fillText('GRAVITY SANDBOX VR',34,60);
+ ctx.fillStyle='#e7f4ff';ctx.font='bold 33px system-ui';ctx.fillText('SIMULASYON',34,60);
  const names=[$('play').textContent,$('reset').textContent,$('mode').textContent,$('trails').textContent,'Yeni Gezegen',showVelocities?'Hızları Gizle':'Hızları Göster'];
  for(let i=0;i<6;i++){
-  const x=35+(i%2)*345,y=100+Math.floor(i/2)*115;
-  ctx.fillStyle='#285a8d';ctx.beginPath();ctx.roundRect(x,y,310,85,12);ctx.fill();
-  ctx.fillStyle='#ffffff';ctx.font='28px system-ui';ctx.fillText(names[i],x+20,y+54);
+  const x=35+(i%2)*345,y=100+Math.floor(i/2)*105;
+  ctx.fillStyle='#285a8d';ctx.beginPath();ctx.roundRect(x,y,310,76,12);ctx.fill();
+  ctx.fillStyle='#ffffff';ctx.font='25px system-ui';ctx.fillText(names[i],x+18,y+47);
  }
- ctx.fillStyle='#99d6ff';ctx.font='bold 24px system-ui';ctx.fillText('Seçili: '+selectedBodies.size,395,65);
- ctx.font='19px system-ui';ctx.fillStyle='#b1cbe1';ctx.fillText('Simulasyon',15,460);
+
  panelTexture.needsUpdate=true;
 }
 const raycaster=new THREE.Raycaster(),tempMatrix=new THREE.Matrix4();
@@ -632,12 +634,10 @@ for(let i=0;i<2;i++){
   const panelHit=raycaster.intersectObjects([panel,rightPanel].filter(p=>p.visible),false)[0];
   if(panelHit?.object===rightPanel){
    const px=panelHit.uv.x*720,py=(1-panelHit.uv.y)*505;
-   if(px>=28&&px<=692&&py>=150&&py<=240)action('near');
-   else if(px>=28&&px<=344&&py>=260&&py<=355)action('shrink');
-   else if(px>=376&&px<=692&&py>=260&&py<=355)action('grow');
-   else if(px>=28&&px<=344&&py>=375&&py<=457)action('copy');
-   else if(px>=376&&px<=692&&py>=375&&py<=445)action('delete');
-   else if(px>=28&&px<=692&&py>=448&&py<=496)action('ride');
+   for(let i=0;i<rightButtons.length;i++){
+    const x=24+(i%2)*344,y=136+Math.floor(i/2)*88;
+    if(px>=x&&px<=x+326&&py>=y&&py<=y+76){action(rightButtons[i][0]);break}
+   }
    return;
   }
   if(panelHit?.uv){
@@ -653,7 +653,19 @@ for(let i=0;i<2;i++){
  controller.addEventListener('squeezestart',()=>{
   rayFromController(controller);
   if(showVelocities&&!vectorDrag){
-   const hitHandle=raycaster.intersectObjects(bodies.map(b=>b.velocityHandle).filter(h=>h.visible),false)[0];
+   const handles=bodies.filter(b=>b.velocityHandle.visible&&!grabbedBody(b));
+   const direct=raycaster.intersectObjects(handles.map(b=>b.velocityHandle),false)[0];
+   let hitHandle=direct;
+   if(!hitHandle){
+    let minAngle=THREE.MathUtils.degToRad(4);
+    for(const body of handles){
+     const d=body.velocityHandle.getWorldPosition(new THREE.Vector3()).sub(raycaster.ray.origin);
+     const distance=d.length();
+     if(distance<.01||raycaster.ray.direction.dot(d)<=0)continue;
+     const angle=raycaster.ray.direction.angleTo(d);
+     if(angle<minAngle){minAngle=angle;hitHandle={object:body.velocityHandle,distance}}
+    }
+   }
    if(hitHandle){
     const body=bodies.find(b=>b.velocityHandle===hitHandle.object);
     if(body&&!grabbedBody(body)){
