@@ -28,7 +28,7 @@ import {VRButton} from 'three/addons/webxr/VRButton.js';
 import {XRControllerModelFactory} from 'three/addons/webxr/XRControllerModelFactory.js';
 const $=id=>document.getElementById(id);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x090e19);
-const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.01,300);
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.01,20000);
 camera.position.set(0,1.65,3.1);
 camera.lookAt(0,1.45,-1.9);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
@@ -46,13 +46,49 @@ const world=new THREE.Group();world.position.set(0,1.4,-2.25);world.scale.setSca
 const originalWorldPosition=world.position.clone();
 let ridingBody=null;
 let rideViewMode='macro';
-const MICRO_SCALE_MULTIPLIER=8;
+const MICRO_SCALE_MULTIPLIER=1000;
 let vectorDrag=null;
+// In the micro observation mode, distant bodies render as colored sky points.
+// Their original physical simulation coordinates, masses and colors stay intact.
+const microSkyGeometry=new THREE.BufferGeometry();
+const microSkyPositions=new Float32Array(600*3);
+const microSkyColors=new Float32Array(600*3);
+microSkyGeometry.setAttribute('position',new THREE.BufferAttribute(microSkyPositions,3).setUsage(THREE.DynamicDrawUsage));
+microSkyGeometry.setAttribute('color',new THREE.BufferAttribute(microSkyColors,3).setUsage(THREE.DynamicDrawUsage));
+microSkyGeometry.setDrawRange(0,0);
+const microSky=new THREE.Points(microSkyGeometry,new THREE.PointsMaterial({
+ size:2.4,sizeAttenuation:false,vertexColors:true,depthWrite:false
+}));
+microSky.frustumCulled=false;world.add(microSky);
+function updateMicroSky(){
+ if(!(ridingBody&&rideViewMode==='micro')){microSky.visible=false;return}
+ microSky.visible=true;
+ let count=0;
+ for(const b of bodies){
+  if(b===ridingBody||count>=600)continue;
+  const relative=b.pos.clone().sub(ridingBody.pos);
+  const dist=relative.length();
+  if(dist<1e-6)continue;
+  // Local visual horizon: show other planets above the representative surface.
+  // This is an observational rendering, not a change in the simulated orbits.
+  const groundDistance=Math.hypot(relative.x,relative.z);
+  const k=count*3;
+  microSkyPositions[k]=b.pos.x;
+  microSkyPositions[k+1]=ridingBody.pos.y+Math.max(groundDistance*.28,3);
+  microSkyPositions[k+2]=b.pos.z;
+  const color=b.mesh.material.color;
+  microSkyColors[k]=color.r;microSkyColors[k+1]=color.g;microSkyColors[k+2]=color.b;
+  count++;
+ }
+ microSkyGeometry.setDrawRange(0,count);
+ microSkyGeometry.attributes.position.needsUpdate=true;
+ microSkyGeometry.attributes.color.needsUpdate=true;
+}
 const surface=new THREE.Mesh(new THREE.PlaneGeometry(120,120,1,1),
  new THREE.MeshStandardMaterial({color:0x54758e,roughness:1,side:THREE.DoubleSide}));
 surface.rotation.x=-Math.PI/2;surface.visible=false;scene.add(surface);
 function dismount(){
- ridingBody=null;surface.visible=false;world.scale.setScalar(SCALE);world.position.copy(originalWorldPosition);
+ ridingBody=null;surface.visible=false;microSky.visible=false;world.scale.setScalar(SCALE);world.position.copy(originalWorldPosition);
  for(const b of bodies)b.mesh.visible=true;
 }
 function mountSelected(){
@@ -68,15 +104,20 @@ function updateRidingView(){
  // The entire simulated universe translates with the ridden planet;
  // headset orientation stays under native WebXR head tracking.
  const xrEye=(renderer.xr.isPresenting?renderer.xr.getCamera():camera);
- const scale=SCALE*(rideViewMode==='micro'?MICRO_SCALE_MULTIPLIER:1);
+ const micro=rideViewMode==='micro';
+ const scale=SCALE*(micro?MICRO_SCALE_MULTIPLIER:1);
  world.scale.setScalar(scale);
  const target=new THREE.Vector3(0,1.5,0);
  world.position.copy(target).sub(ridingBody.pos.clone().multiplyScalar(scale));
  const location=xrEye.getWorldPosition(new THREE.Vector3());
  surface.position.set(location.x,location.y-1.55,location.z);
- surface.visible=rideViewMode==='micro';
+ surface.visible=true;
  surface.material.color.copy(ridingBody.mesh.material.color);
- ridingBody.mesh.visible=false;
+ for(const b of bodies){
+  b.mesh.visible=!micro&&b!==ridingBody;
+  if(micro){b.trail.visible=false;b.arrow.visible=false;b.velocityHandle.visible=false}
+ }
+ updateMicroSky();
 }
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),new THREE.MeshBasicMaterial({color:0x16243a,side:THREE.DoubleSide}));
 floor.rotation.x=-Math.PI/2;floor.position.y=-10;floor.visible=false;world.add(floor);
@@ -195,7 +236,7 @@ function syncButtons(){
  $('mode').textContent=planetMode?'🌍 Gezegen':'🌌 Uzay';
  $('trails').textContent='Yörüngeler: '+(showTrails?'Açık':'Kapalı');
  floor.visible=planetMode&&!ridingBody;grid.visible=planetMode&&!ridingBody;
- surface.visible=!!ridingBody&&rideViewMode==='micro';
+ surface.visible=!!ridingBody;
  scene.background.set(planetMode?0x283c56:0x090e19);
  if(labels.length)refreshPanel();
 }
