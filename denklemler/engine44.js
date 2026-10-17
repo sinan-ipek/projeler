@@ -1,0 +1,1056 @@
+
+(()=>{'use strict';
+const $=s=>document.querySelector(s), eq=$('#equation'),scene=$('#scene');
+const examplesByModule={6:["x/2+x/3=5","x/3+x/5=8/5","(2x+1)/4+(x-2)/6=5/4","(x+2)/6-(2-x)/9=2/3","(3x-1)/5+(2-x)/4=(x+8)/10","2x+(x-3)/6=6+(x-3)/4","-(x+1)/4+(3x-2)/6-x/3=-3/4","x/4+x/6+x/8=13/6","(x-1)/7+(x+3)/4=25/14","(2-x)/5+(x+1)/6=(3x-1)/10","x/6+x/9=5x/18","x/6+x/9=5x/18+1"],5:['(2x-2)/4=(x+3)/10','(x-1)/3=(2x-4)/8','(2x+1)/5=(x+4)/6','(x+1)/2=(3x+9)/9','(x+3)/12=(2x+3)/15','(3x-8)/11=x/1','(x+2)/7=(2x+5)/14','(x+3)/13=(2x+6)/26'],4:['(2x+4)/3=6','(3x-2)/4=7','(5x+5)/5=8','(4x-8)/6=2','(-2x+3)/7=-1','(2x+6)/8=4','x/9=5','3x/10=6','(3x+4)/2=5','(2x+3)/1=7'],3:['3(x+2)=18','2(x-4)=10','-3(x+2)=12','2(3x+4)=20','3(x+2)+4=19','2(x+3)=x+11','2(x+3)=2x+6','2(x+3)=2x+8'],1:['4x+6=12','2x+3=11','3x-5=10','-3x+6=-9','5x+10=0','7x-3=4'],2:['3x+5=x+13','5x+7=2x+19','7x-3=2x+12','2x+8=5x-7','-3x+6=x-10','2x+3=2x+8','2x+3=2x+3']};
+let layoutShiftX=0;
+let currentModule=1;let bracket=null;let fractionEq=null;let pairEq=null;let multiEq=null;
+let m={a:4,b:6,c:0,d:12},s,history=[],busy=false,step=0;
+// ÖĞRETİM MODU: Animasyon hızından bağımsızdır. Yavaş, Beta 37 adımlarını korur.
+let teachingMode='slow';
+const fastMode=()=>teachingMode==='fast';
+function setTeachingMode(mode){
+ if(busy||!['slow','fast'].includes(mode))return;
+ teachingMode=mode;
+ for(const [id,isActive] of [['modeSlow',mode==='slow'],['modeFast',mode==='fast']]){
+  const button=document.getElementById(id);
+  button.classList.toggle('selected',isActive);
+  button.setAttribute('aria-pressed',String(isActive));
+ }
+ // Mod değişimi çözümü ya da geri alma geçmişini değiştirmez.
+}
+
+const fmt=n=>String(Object.is(n,-0)?0:n).replace(/-/g,'−');
+const gcd=(aa,bb)=>{let a=Math.abs(aa),b=Math.abs(bb);while(b)[a,b]=[b,a%b];return a||1};
+const lcm=(a,b)=>Math.abs(a/gcd(a,b)*b);
+const speed=()=>({A1:1.35,A2:1.12,B1:1,B2:.90,C1:.82,C2:.75}[$('#level').value]||1);
+const wait=n=>new Promise(r=>setTimeout(r,n*speed()));
+const coefficient=(n)=>n===1?'':n===-1?'−':fmt(n);
+const showCoeff=(n)=>Math.abs(n)===1?'1':fmt(Math.abs(n));
+const signed=(n,leading=false)=>n<0?'−':leading?'':'+', abs=n=>String(Math.abs(n));
+function parse(raw){
+ const str=raw.replace(/\s+/g,'').replace(/−/g,'-');
+ const parts=str.split('=');if(parts.length!==2)return null;
+ const left=parts[0].match(/^([+-]?\d*)x([+-]\d+)?$/i);
+ const right=parts[1].match(/^([+-]?\d*)x([+-]\d+)?$/i);
+ const rightConstant=parts[1].match(/^([+-]?\d+)$/);
+ if(!left||(!right&&!rightConstant))return null;
+ const asCoefficient=t=>t===''||t==='+'?1:t==='-'?-1:Number(t);
+ const a=asCoefficient(left[1]),b=Number(left[2]||0);
+ const c=right?asCoefficient(right[1]):0;
+ const d=right?Number(right[2]||0):Number(rightConstant[1]);
+ if(![a,b,c,d].every(Number.isSafeInteger)||a===0||Math.max(...[a,b,c,d].map(Math.abs))>99999)return null;
+ return {a,b,c,d};
+}
+// Modül 3: Tek parantez ve tam sayılı katsayılar.
+function parseBracket(raw){
+ const str=raw.replace(/\s+/g,'').replace(/−/g,'-');
+ const sides=str.split('=');if(sides.length!==2)return null;
+ const lm=sides[0].match(/^([+-]?\d+)\(([+-]?\d*)x([+-]\d+)?\)([+-]\d+)?$/i);
+ if(!lm)return null;
+ const r=sides[1].match(/^([+-]?\d*)x([+-]\d+)?$/i);
+ const rc=sides[1].match(/^([+-]?\d+)$/);
+ if(!r&&!rc)return null;
+ const coeff=t=>t===''||t==='+'?1:t==='-'?-1:Number(t);
+ const obj={k:Number(lm[1]),p:coeff(lm[2]),q:Number(lm[3]||0),out:Number(lm[4]||0),c:r?coeff(r[1]):0,d:r?Number(r[2]||0):Number(rc[1])};
+ if(obj.k===0||obj.p===0||![obj.k,obj.p,obj.q,obj.out,obj.c,obj.d].every(Number.isSafeInteger)||Math.max(...Object.values(obj).map(Math.abs))>9999)return null;
+ return obj;
+}
+// Modül 4: payda sayısal, pay birinci dereceden, sağ taraf tam sayı.
+// Parantezler, paydaki toplamanın bütünüyle bölündüğünü belirtir.
+function parseFraction(raw){
+ const str=raw.replace(/\s+/g,'').replace(/−/g,'-');
+ const parts=str.split('='); if(parts.length!==2)return null;
+ const right=parts[1].match(/^[+-]?\d+$/); if(!right)return null;
+ const left=parts[0].match(/^\(([+-]?\d*)x([+-]\d+)?\)\/([+]?[1-9]\d*)$/i)
+              || parts[0].match(/^([+-]?\d*)x\/([+]?[1-9]\d*)$/i);
+ if(!left)return null;
+ const simple=left.length===3;
+ const coef=t=>t===''||t==='+'?1:t==='-'?-1:Number(t);
+ const a=coef(left[1]),b=simple?0:Number(left[2]||0),n=Number(left[simple?2:3]),c=Number(parts[1]);
+ if(![a,b,n,c].every(Number.isSafeInteger)||a===0||n<1||n>999||Math.max(Math.abs(a),Math.abs(b),Math.abs(c))>9999||Math.abs(n*c)>99999)return null;
+ return {a,b,n,c};
+}
+
+// Modül 6 — Yapısal çoklu kesirli denklemler: her terim kendi kimliğini,
+// işaretini, payını, paydasını, genişletmesini ve öğretim durumunu taşır.
+// Temel model: Eşitliğin iki yanındaki bağımsız doğrusal paylar ve sabit paydalar.
+function parseAffineNumerator(input){
+ const txt=input.replace(/−/g,'-');
+ if(!txt||/[^0-9xX+\-]/.test(txt))return null;
+ const pieces=txt.match(/[+-]?[^+-]+/g);
+ if(!pieces||pieces.join('')!==txt)return null;
+ let a=0,b=0;
+ for(const piece of pieces){
+  const xm=piece.match(/^([+-]?\d*)x$/i);
+  const nm=piece.match(/^[+-]?\d+$/);
+  if(xm){const c=xm[1];a+=c===''||c==='+'?1:c==='-'?-1:Number(c)}
+  else if(nm)b+=Number(piece);
+  else return null;
+ }
+ if(!Number.isSafeInteger(a)||!Number.isSafeInteger(b)||Math.max(Math.abs(a),Math.abs(b))>99999)return null;
+ return {a,b};
+}
+function splitMultiSide(txt,side){
+ if(!txt)return null;
+ const result=[];let i=0;
+ while(i<txt.length){
+  let sign=1;
+  if(txt[i]==='+'||txt[i]==='-'){sign=txt[i]==='-'?-1:1;i++}
+  else if(result.length) return null;
+  const start=i;let depth=0;
+  while(i<txt.length){
+   const ch=txt[i];
+   if(ch==='(')depth++;
+   else if(ch===')'){depth--;if(depth<0)return null}
+   if(depth===0&&(ch==='+'||ch==='-')&&i>start)break;
+   i++;
+  }
+  if(depth!==0||i===start)return null;
+  const token=txt.slice(start,i);
+  const mat=token.match(/^(.+)\/([1-9]\d*)$/);
+  let numerator=mat?mat[1]:token;
+  const denominator=mat?Number(mat[2]):1;
+  if(numerator.startsWith('(')&&numerator.endsWith(')'))numerator=numerator.slice(1,-1);
+  const poly=parseAffineNumerator(numerator);
+  if(!poly||!Number.isSafeInteger(denominator)||denominator>500||result.length>=12)return null;
+  result.push({id:`${side}${result.length}`,sign,a:poly.a,b:poly.b,
+   numerator:numerator.replace(/-/g,'−'),den:denominator,
+   originallyFraction:!!mat,hasDen:!!mat,ready:false,pending:false,opened:false});
+ }
+ return result;
+}
+function parseMulti(raw){
+ const text=raw.replace(/\s+/g,'').replace(/[−–]/g,'-').replace(/\u00d7/g,'*');
+ const sides=text.split('=');if(sides.length!==2)return null;
+ const L=splitMultiSide(sides[0],'L'),R=splitMultiSide(sides[1],'R');
+ if(!L||!R)return null;
+ const terms=[...L,...R];
+ const fractions=terms.filter(t=>t.originallyFraction).length;
+ if(fractions<2||(L.length===1&&R.length===1))return null;
+ let common=1;
+ for(const t of terms){common=lcm(common,t.den);if(common>1000000)return null}
+ let ok=true;
+ for(const t of terms){
+  const k=common/t.den;
+  if(!Number.isSafeInteger(t.a*k)||!Number.isSafeInteger(t.b*k)||
+    Math.max(Math.abs(t.a*k),Math.abs(t.b*k))>1e9)ok=false;
+  t.ready=(t.den===common);t.opened=!(k>1&&t.a!==0&&t.b!==0);
+ }
+ if(!ok)return null;
+ const original={sides:{L,R}};
+ return {mode:'multi',sides:{L,R},common,original};
+}
+function multiTerms(){return [...multiEq.sides.L,...multiEq.sides.R]}
+function multiPhase(){
+ const q=multiEq;if(!q)return 'none';
+ if(q.mode==='open')return 'open';
+ if(q.mode==='linear')return 'linear';
+ if(multiTerms().some(t=>!t.hasDen))return 'units';
+ if(multiTerms().some(t=>!t.ready))return 'expand';
+ return 'cancel';
+}
+function multiFactor(t){return multiEq.common/t.den}
+function multiInnerText(t){return t.numerator}
+function multiAffineText(a,b){
+ const x=a===0?'':`${a<0?'−':''}${Math.abs(a)===1?'':Math.abs(a)}x`;
+ const c=b===0?'':`${b<0?'−':x?'+':''}${Math.abs(b)}`;
+ return x+c||'0';
+}
+function multiNumerator(t){
+ const k=multiFactor(t);
+ if(!t.ready)return multiInnerText(t);
+ if(k===1)return multiInnerText(t);
+ // Hızlı modda genişletilen birinci dereceden pay doğrudan hesaplanır.
+ // Örn. (x−4)/3 · (2/2) → (2x−8)/6, parantez açma için ek tıklama gerekmez.
+ if(t.expandedFast)return multiAffineText(t.a*k,t.b*k);
+ if(t.a===0)return fmt(t.b*k);
+ if(t.b===0)return multiAffineText(t.a*k,0);
+ return `${k}(${multiInnerText(t)})`;
+}
+function multiOpenTermText(t){
+ const k=multiFactor(t),a=t.a*k,b=t.b*k;
+ if(!t.opened&&k>1&&t.a!==0&&t.b!==0){
+  return `${t.sign<0?'−':''}${k}(${multiInnerText(t)})`;
+ }
+ return multiAffineText(t.sign*a,t.sign*b);
+}
+function multiSideTotal(side){
+ const terms=multiEq.sides[side];
+ return terms.reduce((acc,t)=>{
+  const factor=multiFactor(t);
+  acc.a+=t.sign*t.a*factor;acc.b+=t.sign*t.b*factor;
+  return acc;
+ },{a:0,b:0});
+}
+function multiSideMarkup(side,phase){
+ const q=multiEq,terms=q.sides[side];
+ if(phase==='open'&&q.combined?.[side]){
+  const sum=multiSideTotal(side);
+  return atom(`sixCombined${side}`,multiAffineText(sum.a,sum.b));
+ }
+ const isOpen=phase==='open';
+ const fragments=terms.map((t,i)=>{
+  if(isOpen){
+   let txt=multiOpenTermText(t);
+   if(i>0&&!txt.startsWith('−'))txt='+'+txt;
+   const needsOpen=!t.opened;
+   return `<span class="part multi-term" data-six-term="${t.id}" data-id="sixTerm${t.id}">`+
+    (needsOpen?hit(`sixOpen${t.id}`,txt,`multiOpen_${t.id}`):atom(`sixText${t.id}`,txt))+`</span>`;
+  }
+  const prefix=t.sign<0?'−':i>0?'+':'';
+  const numerator=(phase==='units'&&!t.hasDen)
+   ?hit(`sixBare${t.id}`,multiInnerText(t),`multiWrap_${t.id}`)
+   :atom(`sixNum${t.id}`,multiNumerator(t));
+  let content;
+  if(phase==='units'&&!t.hasDen)content=numerator;
+  else{
+   let denominator;
+   const denominatorValue=t.ready?q.common:t.den;
+   const factor=multiFactor(t);
+   if(phase==='expand'&&!t.ready&&t.pending){
+    denominator=`<span class="six-den-stack">${atom(`sixDenText${t.id}`,fmt(denominatorValue))}`+
+     `<span class="six-factor hit" data-id="sixHint${t.id}" data-action="multiApply_${t.id}" `+
+     `role="button" tabindex="0" aria-label="${factor} ile genişlet">(${factor})</span></span>`;
+   }else if(phase==='expand'&&!t.ready){
+    denominator=hit(`sixDen${t.id}`,fmt(denominatorValue),`multiSelect_${t.id}`);
+   }else if(phase==='cancel'){
+    denominator=hit(`sixDen${t.id}`,fmt(denominatorValue),'multiCancel');
+   }else denominator=atom(`sixDen${t.id}`,fmt(denominatorValue));
+   content=fhtml(numerator,denominator,`sixFraction${t.id}`,null);
+  }
+  return `<span class="part multi-term" data-six-term="${t.id}" data-id="sixTerm${t.id}">`+
+    (prefix?`<span class="sign">${prefix}</span>`:'')+content+'</span>';
+ });
+ const inner=fragments.join('')||atom(`sixZero${side}`,'0');
+ if(isOpen&&terms.length>1&&terms.every(t=>t.opened)){
+  return `<span class="multi-combine hit" role="button" tabindex="0" `+
+   `data-action="multiCombine_${side}" data-id="sixGroup${side}">${inner}</span>`;
+ }
+ return `<span class="multi-combine" data-id="sixGroup${side}">${inner}</span>`;
+}
+function multiMarkup(){
+ const phase=multiPhase();
+ return `<span class="side" data-id="sideL">${multiSideMarkup('L',phase)}</span>`+
+  `<span class="equals">=</span>`+
+  `<span class="side" data-id="sideR">${multiSideMarkup('R',phase)}</span>`;
+}
+// Her işlemde önce eski ve yeni term kimlikleri ölçülür, sonra aynı hız eğrisi
+// kullanılarak bütün görünür kalacak terimler ve eşittir eşzamanlı kaydırılır.
+async function multiStage(change){
+ const old=new Map();
+ eq.querySelectorAll('[data-six-term]').forEach(node=>old.set(node.dataset.sixTerm,node.getBoundingClientRect()));
+ const oldEqual=eq.querySelector('.equals')?.getBoundingClientRect();
+ change();update();
+ // Anlamsal yerleşim ilkesi: eşittir işaretini gereksiz yere oynatma.
+ // Denklem sığdığı sürece yeni DOM yerleşimini eski eşittirin merkezine
+ // hizala. Ölçümleri ancak bu karar verildikten sonra animasyona aktar.
+ if(oldEqual){
+  const nextEqual=eq.querySelector('.equals')?.getBoundingClientRect();
+  if(nextEqual){
+   const wanted=(oldEqual.left+oldEqual.width/2)-(nextEqual.left+nextEqual.width/2);
+   const board=scene.getBoundingClientRect(),extent=eq.getBoundingClientRect();
+   const safeMargin=12;
+   let allowed=0;
+   if(extent.width<=board.width-2*safeMargin){
+    const min=board.left+safeMargin-extent.left;
+    const max=board.right-safeMargin-extent.right;
+    allowed=Math.max(min,Math.min(max,wanted));
+   }
+   if(Math.abs(allowed)>0.35){
+    layoutShiftX+=allowed;
+    positionScale();
+   }
+  }
+ }
+ const transitions=[],time=fastMode()?250*speed():365*speed();
+ const easing='cubic-bezier(.45,0,.18,1)';
+ eq.querySelectorAll('[data-six-term]').forEach(node=>{
+  const orig=old.get(node.dataset.sixTerm),end=node.getBoundingClientRect();
+  if(orig){const dx=orig.left-end.left,dy=orig.top-end.top;
+   if(Math.abs(dx)+Math.abs(dy)>.8)transitions.push(node.animate([
+    {transform:`translate(${dx}px,${dy}px)`},{transform:'translate(0,0)'}],
+    {duration:time,easing}).finished.catch(()=>{}));
+  }else transitions.push(node.animate([{opacity:0},{opacity:1}],{duration:220*speed()}).finished.catch(()=>{}));
+ });
+ const el=eq.querySelector('.equals');
+ if(el&&oldEqual){const end=el.getBoundingClientRect();
+  const dx=oldEqual.left-end.left,dy=oldEqual.top-end.top;
+  if(Math.abs(dx)+Math.abs(dy)>1.8)transitions.push(el.animate([
+   {transform:`translate(${dx}px,${dy}px)`},{transform:'translate(0,0)'}],
+   {duration:time,easing}).finished.catch(()=>{}));
+ }
+ await Promise.all(transitions);
+}
+function multiToLinear(){
+ const left=multiSideTotal('L'),right=multiSideTotal('R');
+ m={a:left.a,b:left.b,c:right.a,d:right.b};
+ multiEq.mode='linear';s=initial();s.barsReady=true;
+}
+async function multiAction(action){
+ const q=multiEq;if(!q||q.mode==='linear'||busy)return;
+ const phase=multiPhase();
+ const match=action.match(/^multi(Wrap|Select|Apply|Open)_([LR]\d+)$/);
+ const combining=action.match(/^multiCombine_([LR])$/);
+ const term=match?multiTerms().find(t=>t.id===match[2]):null;
+ let allowed=false;
+ if(match&&term){
+  if(match[1]==='Wrap')allowed=phase==='units'&&!term.hasDen;
+  if(match[1]==='Select')allowed=phase==='expand'&&!term.ready&&!term.pending;
+  if(match[1]==='Apply')allowed=phase==='expand'&&!term.ready&&term.pending;
+  if(match[1]==='Open')allowed=phase==='open'&&!term.opened;
+ }else if(action==='multiCancel')allowed=phase==='cancel';
+ else if(combining)allowed=phase==='open'&&!q.combined[combining[1]]&&
+    q.sides[combining[1]].length>1&&q.sides[combining[1]].every(t=>t.opened);
+ if(!allowed)return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  if(match){
+   if(match[1]==='Wrap')await multiStage(()=>{term.hasDen=true});
+   if(match[1]==='Select')await multiStage(()=>{term.pending=true});
+   if(match[1]==='Apply')await multiStage(()=>{term.ready=true;term.pending=false;term.expandedFast=fastMode();});
+   if(match[1]==='Open')await multiStage(()=>{term.opened=true;
+    const side=term.id[0];if(q.sides[side].length===1)q.combined[side]=true;});
+  }else if(action==='multiCancel'){
+   const dens=multiTerms().map(t=>byId(`sixDen${t.id}`)).filter(Boolean);
+   if(q.common!==1)await Promise.all(dens.map(drawStroke));
+   await finishCancellation(()=>{
+    q.mode='open';
+    for(const t of multiTerms())t.opened=!!t.expandedFast||!(multiFactor(t)>1&&t.a!==0&&t.b!==0);
+    q.combined={L:q.sides.L.length===1&&q.sides.L[0].opened,
+                R:q.sides.R.length===1&&q.sides.R[0].opened};
+   });
+  }else if(combining){
+   await multiStage(()=>{q.combined[combining[1]]=true});
+  }
+  if(q.mode==='open'&&q.combined.L&&q.combined.R&&multiTerms().every(t=>t.opened)){
+   await wait(fastMode()?90:220);
+   await multiStage(()=>multiToLinear());
+  }
+ }finally{busy=false;scene.classList.remove('busy');update()}
+}
+
+// Modül 5: İki taraftaki SAYISAL paydaların OKEK'i alınır.
+// Payda n sayısal olduğundan (n !== 0) eşitlik iki yanda OKEK ile çarpılabilir.
+// Başlangıç -> her iki tarafta "·OKEK" -> her taraf bağımsız sadeleşir
+// -> ortak katsayı paranteze dağıtılır -> önceki lineer denklem motoru.
+function parsePair(raw){
+ const str=raw.replace(/\s+/g,'').replace(/−/g,'-');
+ const parts=str.split('=');if(parts.length!==2)return null;
+ function one(t){
+  const match=t.match(/^(?:\(([+-]?\d*)x([+-]\d+)?\)|([+-]?\d*)x)\/([1-9]\d*)$/i);
+  if(!match)return null;
+  const rawA=match[1]??match[3];
+  const a=rawA===''||rawA==='+'?1:rawA==='-'?-1:Number(rawA);
+  const b=Number(match[2]||0),d=Number(match[4]);
+  if(![a,b,d].every(Number.isSafeInteger)||a===0||d>99||Math.max(Math.abs(a),Math.abs(b))>999)return null;
+  return {a,b,d,quotient:1,canceled:false,expanded:false};
+ }
+ const left=one(parts[0]),right=one(parts[1]);
+ if(!left||!right)return null;
+ const common=lcm(left.d,right.d);
+ if(!Number.isSafeInteger(common)||common<1)return null;
+ const a=left.a*(common/left.d),b=left.b*(common/left.d);
+ const c=right.a*(common/right.d),d=right.b*(common/right.d);
+ if(![a,b,c,d].every(Number.isSafeInteger)||Math.max(...[a,b,c,d].map(Math.abs))>99999)return null;
+ return {left,right,lcm:common,started:false,mode:'pair'};
+}
+function pairPoly(side){return `${signedX(side.a,true)}${side.b?signedConst(side.b):''}`;}
+function pairMarkupSide(letter){
+ const pair=pairEq,side=letter==='L'?pair.left:pair.right,poly=pairPoly(side);
+ const did=`pairDen${letter}`,mid=`pairMul${letter}`;
+ if(!pair.started){
+  const denom=pair.lcm>1&&side.d>1?hit(did,fmt(side.d),'pairStartLCM'):
+    pair.lcm===1?hit(did,'1','pairRemoveBothUnits'):atom(did,fmt(side.d));
+  return fhtml(atom(`pairPoly${letter}`,poly),denom,`pairFrac${letter}`,null);
+ }
+ if(!side.canceled){
+  const frac=fhtml(atom(`pairPoly${letter}`,poly),
+    hit(did,fmt(side.d),'pairCancel'+letter),`pairFrac${letter}`,null);
+  const multiplier=`<span class="multiply-factor" data-id="pairFactor${letter}">`+
+    `<span class="mul-dot">·</span>${hit(mid,fmt(pair.lcm),'pairCancel'+letter)}</span>`;
+  return `${frac}${multiplier}`;
+ }
+ if(side.expanded){
+  return atom(`pairPoly${letter}`,poly);
+ }
+ // Paydanın sadeleşmesinden sonra arta kalan çarpan gösterilir.
+ // Örnek: (x+1)/2 · 6  -->  3(x+1)
+ const factor=side.quotient;
+ const product=`${fmt(factor)}(${poly})`;
+ return hit(`pairExpand${letter}`,product,'pairExpand'+letter);
+}
+function pairHTML(){
+ return `<span class="side" data-id="sideL">${pairMarkupSide('L')}</span>`+
+ `<span class="equals">=</span>`+
+ `<span class="side" data-id="sideR">${pairMarkupSide('R')}</span>`;
+}
+function pairLinear(){
+ const l=pairEq.left,r=pairEq.right;
+ m={a:l.a,b:l.b,c:r.a,d:r.b};
+ pairEq.mode='linear';s=initial();s.barsReady=true;
+}
+function pairIsReady(p){return p.started&&p.left.canceled&&p.right.canceled&&p.left.expanded&&p.right.expanded;}
+function pairMaybeLinear(){if(pairIsReady(pairEq))pairLinear();}
+// FLIP: simgeleri eşitliğe göre kimlikleriyle takip et.
+async function pairStage(change,appear=[]){
+ const old=new Map();
+ eq.querySelectorAll('[data-id]').forEach(n=>old.set(n.dataset.id,n.getBoundingClientRect()));
+ const eqOld=eq.querySelector('.equals')?.getBoundingClientRect();
+ change();update();
+ const animations=[];const ms=420*speed();
+ for(const node of eq.querySelectorAll('[data-id]')){
+  const r0=old.get(node.dataset.id),r1=node.getBoundingClientRect();
+  if(!r0)continue;
+  const dx=r0.left-r1.left,dy=r0.top-r1.top;
+  if(Math.abs(dx)+Math.abs(dy)>1){
+   animations.push(node.animate([{transform:`translate3d(${dx}px,${dy}px,0)`},{transform:'translate3d(0,0,0)'}],
+    {duration:ms,easing:'cubic-bezier(.45,0,.18,1)'}).finished.catch(()=>{}));
+  }
+ }
+ const e=eq.querySelector('.equals');
+ if(e&&eqOld){const r=e.getBoundingClientRect();
+  animations.push(e.animate([{transform:`translate3d(${eqOld.left-r.left}px,${eqOld.top-r.top}px,0)`},
+    {transform:'translate3d(0,0,0)'}],{duration:ms,easing:'cubic-bezier(.45,0,.18,1)'}).finished.catch(()=>{}));}
+ for(const id of appear){const n=byId(id);if(n)animations.push(n.animate([{opacity:0},{opacity:1}],
+  {duration:310*speed(),easing:'ease-in-out'}).finished.catch(()=>{}));}
+ await Promise.all(animations);
+}
+async function pairAction(action){
+ if(!pairEq||pairEq.mode!=='pair'||busy)return;
+ const pair=pairEq;
+ const side=action.endsWith('L')?'L':'R';
+ const term=side==='L'?pair.left:pair.right;
+ const start=action==='pairStartLCM';
+ const unit=action==='pairRemoveBothUnits';
+ const cancel=action==='pairCancel'+side;
+ const expand=action==='pairExpand'+side;
+ if(!((start&&!pair.started&&pair.lcm>1)||(unit&&!pair.started&&pair.lcm===1)||
+      (cancel&&pair.started&&!term.canceled)||(expand&&pair.started&&term.canceled&&!term.expanded)))return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  if(start){
+   // Paydalardan hangisine tıklanırsa tıklansın iki tarafta AYNI OKEK belirir.
+   await pairStage(()=>{pair.started=true},['pairMulL','pairMulR']);
+  }else if(unit){
+   await pairStage(()=>{
+    for(const t of [pair.left,pair.right]){t.canceled=true;t.expanded=true;}
+    pair.started=true;pairMaybeLinear();
+   });
+  }else if(cancel){
+   // Payda d, çarpan OKEK: yeni katsayı OKEK/d.
+   // Rakamlar kırmızı çizilerek aynı anda sadeleşir.
+   if(term.d===1){
+    // 1 ile çarpan birbirini götürmez! Yalnızca etkisiz payda kaldırılır.
+    const den=byId('pairDen'+side),bar=byId('pairFrac'+side)?.querySelector('.fracbar');
+    const fadeUnit=[den,bar].filter(Boolean).map(el=>el.animate(
+      [{opacity:1},{opacity:0}],{duration:230*speed(),easing:'ease-in-out',fill:'forwards'}).finished.catch(()=>{}));
+    await Promise.all(fadeUnit);
+   }else{
+    await Promise.all([drawStroke(byId('pairDen'+side)),drawStroke(byId('pairMul'+side))]);
+   }
+   await finishCancellation(()=>{
+    term.canceled=true;term.quotient=pair.lcm/term.d;
+    if(term.quotient===1)term.expanded=true;
+    pairMaybeLinear();
+   });
+  }else if(expand){
+   await pairStage(()=>{
+    term.a*=term.quotient;term.b*=term.quotient;
+    term.quotient=1;term.expanded=true;
+    pairMaybeLinear();
+   });
+  }
+ }finally{busy=false;scene.classList.remove('busy');update();}
+}
+function fractionExpressionText(f){return `${signedX(f.a,true)}${f.b?signedConst(f.b):''}`;}
+// Modül 4 — Genişletme: bütün sayısal paydalı kesirlerde aynı yol.
+// Pay tek terim veya toplam olabilir: karar yalnızca sabit payda n'den gelir.
+// n>1: paydadaki n seçilir, iki yanda ·n doğrudan oluşur.
+// n=1: etkisiz payda kaybolur; gereksiz yere ·1 oluşturulmaz.
+function fractionHTML(){
+ const f=fractionEq;
+ if(f.mode==='start'){
+  const den=f.n===1
+   ?hit('fDen','1','fractionRemoveUnitDenominator')
+   :hit('fDen',fmt(f.n),'fractionDirectMultiply');
+  const left=fhtml(atom('fNumerator',fractionExpressionText(f)),den,'fractionBase',null);
+  return `<span class="side" data-id="sideL">${left}</span>`+
+   `<span class="equals">=</span>`+
+   `<span class="side" data-id="sideR">${atom('fRightBase',fmt(f.c))}</span>`;
+ }
+ if(f.mode==='directMultiply'){
+  const left=f.leftDone
+   ?atom('fNumerator',fractionExpressionText(f))
+   :`${fhtml(atom('fNumerator',fractionExpressionText(f)),
+     hit('fDen',fmt(f.n),'fractionDirectCancel'),'fractionBase',null)}`+
+     `<span class="multiply-factor"><span class="mul-dot">·</span>`+
+     `${hit('fMulLeft',fmt(f.n),'fractionDirectCancel')}</span>`;
+  const right=f.rightDone
+   ?atom('fRightProduct',fmt(f.c*f.n))
+   :`<span class="combine hit" role="button" tabindex="0" `+
+    `data-id="fRightCalc" data-action="fractionDirectCompute">`+
+    `${atom('fRightBase',fmt(f.c))}<span class="mul-dot">·</span>`+
+    `${atom('fMulRight',fmt(f.n))}</span>`;
+  return `<span class="side" data-id="sideL">${left}</span>`+
+   `<span class="equals">=</span>`+
+   `<span class="side" data-id="sideR">${right}</span>`;
+ }
+ return '';
+}
+// Tek geçişte hem korunacak matematiksel düğümleri, hem de yeni oluşan
+// kesir öğelerini takip et. Tüm hareketler aynı sürede ease-in-out ilerler.
+async function fractionStage(change,{appear=[],bar=false}={}){
+ const ids=['fNumerator','fDen','fRightBase','fMulLeft','fMulRight','fRightCalc','fRightNum','fRightDen',
+  'sideL','sideR'];
+ const old=new Map();
+ for(const id of ids){const el=byId(id);if(el)old.set(id,el.getBoundingClientRect());}
+ const eqOld=eq.querySelector('.equals')?.getBoundingClientRect();
+ change();update(bar);
+ const animations=[];
+ for(const id of ['fNumerator','fDen','fRightBase','fRightNum','fRightDen','fRightFrac']){
+  const el=byId(id),r0=old.get(id);if(!el||!r0)continue;
+  const r1=el.getBoundingClientRect();
+  if(Math.abs(r1.left-r0.left)+Math.abs(r1.top-r0.top)>0.3){
+   animations.push(el.animate([
+    {transform:`translate(${r0.left-r1.left}px,${r0.top-r1.top}px)`},
+    {transform:'translate(0,0)'}],
+    {duration:420*speed(),easing:'cubic-bezier(.45,0,.18,1)'}).finished.catch(()=>{}));
+  }
+ }
+ const e=eq.querySelector('.equals');
+ if(e&&eqOld){const r=e.getBoundingClientRect();animations.push(e.animate([
+    {transform:`translate(${eqOld.left-r.left}px,${eqOld.top-r.top}px)`},
+    {transform:'translate(0,0)'}],
+    {duration:420*speed(),easing:'cubic-bezier(.45,0,.18,1)'}).finished.catch(()=>{}));}
+ for(const id of appear){
+  const el=byId(id);if(el)animations.push(el.animate([{opacity:0},{opacity:1}],
+   {duration:320*speed(),easing:'ease-in-out'}).finished.catch(()=>{}));
+ }
+ await Promise.all(animations);
+}
+function linearFromFraction(){
+ m={a:fractionEq.a,b:fractionEq.b,c:0,d:fractionEq.c*fractionEq.n};
+ fractionEq.mode='linear';s=initial();s.barsReady=true;
+}
+
+// Paydada 1 etkisizdir: öğrenci soldaki 1'i seçerse
+// ne sağa 1 yazılır ne de gereksiz ortak payda animasyonu çalıştırılır.
+// Yeni yerleşimi işlemden ÖNCE ölçeriz: sağdaki sayı sabit kalır;
+// pay ve eşittir gerçek hedeflerine yumuşakça yerleşir.
+async function removeUnitDenominator(){
+ const f=fractionEq;
+ if(!f||f.n!==1||f.mode!=='start')return;
+ const numerator=byId('fNumerator'),den=byId('fDen');
+ const bar=eq.querySelector('[data-id="fractionBase"] .fracbar');
+ const equals=eq.querySelector('.equals');
+ const right=byId('fRightBase');
+ if(!numerator||!den||!bar||!equals||!right){
+  await fade(()=>linearFromFraction());return;
+ }
+ const oldR=right.getBoundingClientRect();
+ const oldN=numerator.getBoundingClientRect();
+ const oldE=equals.getBoundingClientRect();
+ // Gelecek ifade, canlı denkleme müdahale etmeden ölçülür.
+ const oldMode=f.mode;
+ f.mode='linear';
+ const targetHTML=markup();
+ const future=MotionEngine.targetLayout(targetHTML);
+ f.mode=oldMode;
+ const newR=future.get('rd'),newN=future.get('sideL'),newE=future.get('equals');
+ if(!newR||!newN||!newE){
+  await fade(()=>linearFromFraction());return;
+ }
+ const dxAnchor=oldR.left-newR.left;
+ // Denklemi sahne dışına taşırmadan korunacak 7'yi ankraj seç.
+ const bounds=scene.getBoundingClientRect(),margin=12;
+ const leftEdge=Math.min(newN.left,newE.left,newR.left)+dxAnchor;
+ const rightEdge=Math.max(newN.right,newE.right,newR.right)+dxAnchor;
+ let correction=0;
+ if(leftEdge<bounds.left+margin)correction=bounds.left+margin-leftEdge;
+ if(rightEdge+correction>bounds.right-margin)correction+=(bounds.right-margin)-(rightEdge+correction);
+ const shift=dxAnchor+correction;
+ const duration=480*speed();
+ const ease='cubic-bezier(.45,0,.18,1)';
+ const actions=[];
+ actions.push(numerator.animate([
+  {transform:'translate3d(0,0,0)'},
+  {transform:`translate3d(${newN.left+shift-oldN.left}px,${newN.top-oldN.top}px,0)`}
+ ],{duration,easing:ease,fill:'forwards'}).finished.catch(()=>{}));
+ actions.push(equals.animate([
+  {transform:'translate3d(0,0,0)'},
+  {transform:`translate3d(${newE.left+shift-oldE.left}px,${newE.top-oldE.top}px,0)`}
+ ],{duration,easing:ease,fill:'forwards'}).finished.catch(()=>{}));
+ actions.push(den.animate([{opacity:1},{opacity:0}],
+  {duration:duration*.56,easing:'ease-in',fill:'forwards'}).finished.catch(()=>{}));
+ actions.push(bar.animate([{opacity:1},{opacity:0}],
+  {duration:duration*.56,easing:'ease-in',fill:'forwards'}).finished.catch(()=>{}));
+ await Promise.all(actions);
+ layoutShiftX=shift;
+ linearFromFraction();
+ update();
+}
+async function fractionAction(action){
+ if(!fractionEq||busy||fractionEq.mode==='linear')return;
+ const f=fractionEq;
+ const allowed={
+  fractionDirectMultiply:f.mode==='start'&&f.n>1,
+  fractionDirectCancel:f.mode==='directMultiply'&&!f.leftDone,
+  fractionDirectCompute:f.mode==='directMultiply'&&!f.rightDone,
+  fractionRemoveUnitDenominator:f.mode==='start'&&f.n===1
+ };
+ if(!allowed[action])return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  if(action==='fractionDirectMultiply'){
+   // Hızlı: sayısal, sıfır olmayan paydayı iki tarafta çarpıp
+   // sadeleştirmek tek ve bariz işlemdir. Karmaşık paydalara dokunulmaz.
+   if(fastMode())await fade(()=>linearFromFraction());
+   else await fractionStage(()=>{f.mode='directMultiply'}, {appear:['fMulLeft','fMulRight']});
+  }else if(action==='fractionDirectCancel'){
+   // Öğrenci iki eş çarpandan istediğine basabilir.
+   await Promise.all([drawStroke(byId('fDen')),drawStroke(byId('fMulLeft'))]);
+   await finishCancellation(()=>{f.leftDone=true});
+   if(f.rightDone)linearFromFraction();
+  }else if(action==='fractionDirectCompute'){
+   await fractionStage(()=>{f.rightDone=true},{appear:['fRightProduct']});
+   if(f.leftDone)linearFromFraction();
+  }else if(action==='fractionRemoveUnitDenominator'){
+   await removeUnitDenominator();
+
+  }
+ }finally{busy=false;scene.classList.remove('busy');update();}
+}
+function signedX(n,first=false){return `${n<0?'−':first?'':'+'}${Math.abs(n)===1?'':Math.abs(n)}x`}
+function signedConst(n,first=false){return `${n<0?'−':first?'':'+'}${Math.abs(n)}`}
+function innerText(b){return `${signedX(b.p,true)}${b.q?signedConst(b.q):''}`}
+function rightText(b){return `${b.c?signedX(b.c,true):''}${b.d||!b.c?signedConst(b.d,!b.c):''}`}
+function bracketHTML(){
+ if(bracket.mode==='start'){
+  const outer=canBracketDivide(bracket)?hit('brkcoef',fmt(bracket.k),'bracketDivide'):atom('brkcoef',fmt(bracket.k));
+  const parentheses=hit('brkgroup',`(${innerText(bracket)})`,'bracketExpand');
+  return `<span class="side">${outer}${parentheses}${bracket.out?atom('brkout',signedConst(bracket.out)):''}</span><span class="equals">=</span><span class="side">${atom('brkr',rightText(bracket))}</span>`;
+ }
+ if(bracket.mode==='expanded'){
+  const b=bracket, first=signedX(b.k*b.p,true),product=b.k*b.q;
+  const variable=atom('expandedx',first);
+  if(!b.q){return `<span class="side">${variable}${b.out?atom('brkout',signedConst(b.out)):''}</span><span class="equals">=</span><span class="side">${atom('brkr',rightText(b))}</span>`;}
+  // Tıklanabilir bölge yalnızca hesaplanacak çarpımdır.
+  const sign=product<0?'−':'+';
+  const multiplication=`${fmt(Math.abs(b.k))}·${Math.abs(b.q)}`;
+  return `<span class="side">${variable}<span class="part"><span class="sign">${sign}</span>${hit('expandproduct',multiplication,'finishExpand')}</span>${b.out?atom('brkout',signedConst(b.out)):''}</span><span class="equals">=</span><span class="side">${atom('brkr',rightText(b))}</span>`;
+ }
+ if(bracket.mode==='expandedCalculated'){
+  const b=bracket,variable=atom('expandedx',signedX(b.k*b.p,true));
+  const constant=b.k*b.q;
+  // Çarpım hesaplandı: yalnızca kalan toplama/çıkarma işlemi tıklanabilir.
+  const terms= b.out?hit('sumconstants',`${signedConst(constant)}${signedConst(b.out)}`,'combineExpandedConstants'):
+    atom('calculatedconstant',signedConst(constant));
+  return `<span class="side">${variable}${terms}</span><span class="equals">=</span><span class="side">${atom('brkr',rightText(b))}</span>`;
+ }
+ if(bracket.mode==='dividing'){
+  const b=bracket;
+  const top=b.leftDone?atom('binner',innerText(b)):`${hit('btopk',fmt(b.k),'bracketCancel')}${atom('bparen',`(${innerText(b)})`)}`;
+  const bot=b.leftDone?'':hit('bbotk',fmt(b.k),'bracketCancel');
+  const left=b.leftDone?atom('binner',innerText(b)):fhtml(top,bot,'bfleft',null,!b.barsReady);
+  const right=b.rightDone?atom('brresult',rightText({c:b.c/b.k,d:b.d/b.k})):fhtml(atom('brnum',rightText(b)),atom('brden',fmt(b.k)),'bfright','bracketSimplify',!b.barsReady);
+  return `<span class="side">${left}</span><span class="equals">=</span><span class="side">${right}</span>`;
+ }
+ return '';
+}
+function linearFromBracket(byDivision=false){
+ const b=bracket;
+ if(byDivision){m={a:b.p,b:b.q,c:b.c/b.k,d:b.d/b.k}}
+ else m={a:b.k*b.p,b:b.k*b.q+b.out,c:b.c,d:b.d};
+ bracket.mode='linear';s=initial();s.barsReady=true;
+}
+function canBracketDivide(b){return !!b&&b.mode==='start'&&b.k!==0&&b.out===0&&b.c%b.k===0&&b.d%b.k===0;}
+async function bracketAction(action){
+ if(!bracket||busy)return;
+ if(action==='bracketDivide'&&!canBracketDivide(bracket))return;
+ if(action==='bracketExpand'&&bracket.mode!=='start')return;
+ if(action==='finishExpand'&&bracket.mode!=='expanded')return;
+ if(action==='combineExpandedConstants'&&bracket.mode!=='expandedCalculated')return;
+ if(action==='bracketCancel'&&(bracket.mode!=='dividing'||bracket.leftDone))return;
+ if(action==='bracketSimplify'&&(bracket.mode!=='dividing'||bracket.rightDone))return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  if(action==='bracketExpand')await fade(()=>{if(bracket.q===0)linearFromBracket(false);else bracket.mode='expanded'});
+  if(action==='finishExpand')await fade(()=>{if(bracket.out!==0)bracket.mode='expandedCalculated';else linearFromBracket(false)});
+  if(action==='combineExpandedConstants')await fade(()=>linearFromBracket(false));
+  if(action==='bracketDivide'){
+    // Hızlı: a(ax+b)=c türünde dış katsayı iki tarafa bölünür,
+    // ara kesir çizgileri ve cancellation atlanır. Yavaş: eski akış.
+    if(fastMode()||Math.abs(bracket.k)===1){await fade(()=>linearFromBracket(true));}
+    else {bracket.mode='dividing';bracket.barsReady=false;update(true);await wait(380);bracket.barsReady=true;update();}
+  }
+  if(action==='bracketCancel'){
+    await Promise.all([drawStroke(byId('btopk')),drawStroke(byId('bbotk'))]);
+    await finishCancellation(()=>{bracket.leftDone=true;});
+  }
+  if(action==='bracketSimplify'){bracket.rightDone=true;update();}
+  if(bracket.mode==='dividing'&&bracket.leftDone&&bracket.rightDone){await wait(350);linearFromBracket(true);update()}
+ }finally{busy=false;scene.classList.remove('busy');update()}
+}
+// Temsil: her adım cebirsel eşitliği korur, işaretin yanında hangi terimin olduğu veri modelinde saklanır.
+function initial(){return {movedB:m.b===0,movedC:m.c===0,combinedL:m.c===0,combinedR:m.b===0,divided:false,leftDone:false,rightDone:false};}
+function stateCopy(){return structuredClone({s,bracket,fractionEq,pairEq,multiEq,m,layoutShiftX})}
+function save(){history.push(stateCopy());}
+function hit(id,txt,action){return `<span class="atom hit" role="button" tabindex="0" data-action="${action}" data-id="${id}" aria-label="${txt.replace(/<[^>]*>/g,'')}" >${txt}</span>`}
+function atom(id,txt){return `<span class="atom" data-id="${id}">${txt}</span>`}
+function op(v){return `<span class="sign">${v<0?'−':'+'}</span>`}
+function xterm(n,id,action){if(n===0)return '';let text=coefficient(Math.abs(n))+'x'; // negatiflik ayrı işarette; katsayı tam sayı olarak izlenir
+ return action?hit(id,text,action):atom(id,text)}
+function constTerm(n,id,action){return action?hit(id,abs(n),action):atom(id,abs(n))}
+function expression(terms,allowFirstSign=true){return terms.map((t,i)=>{const prefix=t.n<0?'−':i===0?(allowFirstSign?'':'+'):'+', content=t.kind==='x'?xterm(Math.abs(t.n),t.id,t.action):constTerm(t.n,t.id,t.action);return `<span class="part" data-part="${t.id}">${prefix?`<span class="sign" data-sign="${t.id}">${prefix}</span>`:''}${content}</span>`}).join('')||atom('zero','0')}
+function fhtml(numerator,denominator,id,action,animated=false){return `<span class="fraction ${action?'hit':''} ${animated?'constructing':''}" data-id="${id}" ${action?`data-action="${action}" tabindex="0" role="button"`:''}><span class="numerator">${numerator}</span><span class="fracbar"></span><span class="denominator">${denominator}</span></span>`}
+function resultFrac(n,d){if(d===0)return atom('undef','tanımsız');if(d<0){n=-n;d=-d}let g=gcd(n,d);n/=g;d/=g;return d===1?atom('result',fmt(n)):fhtml(atom('rn',fmt(n)),atom('rd',fmt(d)),'resultfrac',null)}
+function leftTerms(){let res=[];if(s.movedC){if(s.combinedL){let a=m.a-m.c;if(a!==0)res.push({kind:'x',n:a,id:'la'});}else{res.push({kind:'x',n:m.a,id:'la'});if(m.c!==0)res.push({kind:'x',n:-m.c,id:'lc'});}}else res.push({kind:'x',n:m.a,id:'la'});if(!s.movedB&&m.b!==0)res.push({kind:'k',n:m.b,id:'lb',action:'moveB'});return res;}
+function rightTerms(){let res=[];if(!s.movedC&&m.c!==0)res.push({kind:'x',n:m.c,id:'rc',action:'moveC'});if(s.movedB){if(s.combinedR){let d=m.d-m.b;if(d!==0||res.length===0)res.push({kind:'k',n:d,id:'rd'});}else{if(m.d!==0)res.push({kind:'k',n:m.d,id:'rd'});if(m.b!==0)res.push({kind:'k',n:-m.b,id:'rb'});}}else if(m.d!==0 ||res.length===0)res.push({kind:'k',n:m.d,id:'rd'});return res;}
+function ready(){return s.movedB&&s.movedC&&s.combinedL&&s.combinedR;}
+function A(){return m.a-m.c}function D(){return m.d-m.b}
+function rightResult(){return resultFrac(D(),A())}
+function markup(){if(multiEq&&multiEq.mode!=='linear')return multiMarkup();if(pairEq&&pairEq.mode!=='linear')return pairHTML();if(fractionEq&&fractionEq.mode!=='linear')return fractionHTML();if(bracket&&bracket.mode!=='linear')return bracketHTML();if(ready()&&A()===0){return `<span class="side">${atom('zz','0')}</span><span class="equals">=</span><span class="side">${atom('verdict',D()===0?'0':' '+fmt(D()))}</span>`;}
+if(!s.divided){let l=expression(leftTerms()),r=expression(rightTerms());if(s.movedC&&!s.combinedL&&m.c!==0){let pieces=leftTerms().filter(t=>t.kind==='x');if(pieces.length>1){let prefix=expression(pieces);// Sabit terimin kimliği ve işareti korunmalı ki hedef planda hareket edebilsin.
+ let suffix=!s.movedB&&m.b!==0?expression([{kind:'k',n:m.b,id:'lb',action:'moveB'}],false):'';
+ l=`<span class="combine hit" role="button" tabindex="0" data-action="combineL" data-id="groupL">${prefix}</span>${suffix}`;}}
+if(s.movedB&&!s.combinedR&&m.b!==0){let ts=rightTerms();let constants=ts.filter(t=>t.kind==='k'),xr=ts.filter(t=>t.kind==='x');if(constants.length>1){r=`${xr.length?expression(xr):''}<span class="combine hit" role="button" tabindex="0" data-action="combineR" data-id="groupR">${expression(constants,!xr.length)}</span>`;}}
+if(ready()&&A()!==0){l=A()===1?atom('lx','x'):`${hit('a',coefficient(A())||'1','divide')}${atom('lx','x')}`;r=atom('d',fmt(D()));}
+return `<span class="side" data-id="sideL">${l}</span><span class="equals">=</span><span class="side" data-id="sideR">${r}</span>`;}
+const topLeft=s.leftDone?atom('onlyx','x'):`${hit('topa',fmt(A()),'cancel')}${atom('topx','x')}`;
+const botLeft=s.leftDone?'':hit('bota',fmt(A()),'cancel');
+let l=s.leftDone?atom('onlyx','x'):fhtml(topLeft,botLeft,'fractionL',null,!s.barsReady);
+let r=s.rightDone?rightResult():fhtml(atom('righttop',fmt(D())),atom('rightbottom',fmt(A())),'fractionR','simplify',!s.barsReady);
+return `<span class="side" data-id="sideL">${l}</span><span class="equals">=</span><span class="side" data-id="sideR">${r}</span>`;}
+function render(animateBars=false){eq.innerHTML=markup();$('#stepLabel').textContent=(multiEq&&multiEq.mode!=='linear')?`Adım ${step+1}`:(pairEq&&pairEq.mode!=='linear')?`Adım ${step+1}`:(fractionEq&&fractionEq.mode!=='linear')?`Adım ${step+1}`:(bracket&&bracket.mode!=='linear')?`Adım ${step+1}`:ready()&&A()===0?'Özel durum':(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'Çözüldü':`Adım ${step+1}`;$('#tip').innerHTML=(multiEq&&multiEq.mode!=='linear')?'':(pairEq&&pairEq.mode!=='linear')?'':(fractionEq&&fractionEq.mode!=='linear')?'':(bracket&&bracket.mode!=='linear')?'':ready()&&A()===0?(D()===0?'<span class="done">Sonsuz çözüm</span>':'Çözüm yok'):(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'<span class="done">✓</span>':'';$('#back').disabled=busy||history.length===0;$('#reset').disabled=busy;if(animateBars){requestAnimationFrame(()=>requestAnimationFrame(()=>eq.querySelectorAll('.fraction.constructing').forEach(el=>{el.classList.remove('constructing');el.classList.add('constructed')})));}}
+function byId(id){return eq.querySelector(`[data-id="${id}"]`)}
+function rect(id){return byId(id)?.getBoundingClientRect()}
+function positionScale(){const max=scene.clientWidth*.95,w=eq.scrollWidth;const scale=w>max?Math.max(.38,max/w):1;eq.style.transform=`translateX(${layoutShiftX}px) scale(${scale})`;}
+function update(animateBars=false){render(animateBars);positionScale()}
+async function fade(change){const animation=eq.animate([{opacity:1},{opacity:.15}],{duration:190*speed(),easing:'ease-in-out'});await animation.finished.catch(()=>{});change();update();await eq.animate([{opacity:.15},{opacity:1}],{duration:300*speed(),easing:'ease-in-out'}).finished.catch(()=>{});}
+// Beta 44: Sembollerin kimlikleri, görevleri ve hedef koordinatları işlemden önce hesaplanır.
+// İşaret (sign), katsayı, terim ve eşitlik ayrı anlamlı öğelerdir.
+const MotionEngine={
+ center(r){return {x:r.left+r.width/2,y:r.top+r.height/2}},
+ measure(el){return el?el.getBoundingClientRect():null},
+ // Yeni denklem, canlı DOM'u değiştirmeden görünmeyen bir eş kopyada ölçülür.
+ targetLayout(nextMarkup){
+  const layer=document.createElement('div');
+  layer.className='measure-layer';
+  layer.innerHTML=`<div class="equation measurement">${nextMarkup}</div>`;
+  scene.append(layer);
+  const clone=layer.firstElementChild;
+  const w=clone.scrollWidth, max=scene.clientWidth*.95;
+  if(w>max)clone.style.transform=`scale(${Math.max(.38,max/w)})`;
+  const map=new Map();
+  clone.querySelectorAll('[data-id]').forEach(node=>map.set(node.dataset.id,node.getBoundingClientRect()));
+  // Hareket eden matematiksel nesne sayi degil, isaretiyle birlikte TAM TERIMDIR.
+  clone.querySelectorAll('[data-part]').forEach(node=>map.set('part:'+node.dataset.part,node.getBoundingClientRect()));
+  clone.querySelectorAll('[data-sign]').forEach(node=>map.set('sign:'+node.dataset.sign,node.getBoundingClientRect()));
+  clone.querySelectorAll('[data-id=\"sideL\"],[data-id=\"sideR\"]').forEach(n=>map.set(n.dataset.id,n.getBoundingClientRect()));
+  const e=clone.querySelector('.equals');
+  if(e)map.set('equals',e.getBoundingClientRect());
+  layer.remove();return map;
+ },
+
+ // Semantic Layout Planner: generate several candidate placements.
+ // Unchanged terms and = are tracked by identity, not by character offsets.
+ planLayout(future, before, kind, sourceId, targetId){
+  const currentIds=['la','rd','rc','lb','equals'];
+  const survivors=currentIds.filter(id=>id!==sourceId&&id!==targetId&&before.has(id)&&future.has(id));
+  const center=r=>r.left+r.width/2;
+  const candidateShifts=new Set([0]);
+  for(const id of survivors){
+   candidateShifts.add(center(before.get(id))-center(future.get(id)));
+  }
+  const bounds=scene.getBoundingClientRect();
+  const margin=18;
+  const preferred=kind==='B'?'rd':'la';
+  let best=null;
+  for(const dx of candidateShifts){
+   const shifted=new Map();
+   future.forEach((r,id)=>shifted.set(id,{
+    left:r.left+dx,right:r.right+dx,top:r.top,bottom:r.bottom,
+    width:r.width,height:r.height,x:r.x+dx,y:r.y
+   }));
+   const l=shifted.get('sideL'),r=shifted.get('sideR');
+   // Locate the full equation using the surviving equal sign and term boxes.
+   let min=Infinity,max=-Infinity;
+   for(const [id,box] of shifted){
+    if(id==='equals'||id==='sideL'||id==='sideR'||id.startsWith('part:')){
+     min=Math.min(min,box.left);max=Math.max(max,box.right);
+    }
+   }
+   let cost=0;
+   for(const id of survivors){
+    const movement=Math.abs(center(before.get(id))-center(shifted.get(id)));
+    // A term is more important as a visual anchor than the equals glyph.
+    const weight=id==='equals'?0.35:id===preferred?5:2;
+    cost+=movement*weight;
+   }
+   const overflow=Math.max(0,bounds.left+margin-min)+Math.max(0,max-(bounds.right-margin));
+   cost+=overflow*100;
+   if(!best||cost<best.cost)best={map:shifted,delta:dx,cost};
+  }
+  return best||{map:future,delta:0,cost:0};
+ },
+ // Tek zaman cizelgesi: ucan terim + korunan terimler + esitlik
+ // ayni karede ilerler, hicbiri digerini beklemez.
+ async transferTogether({source,from,to,sourceText,targetText,before,after,sourceId}){
+  if(!source||!from||!to)throw new Error('Terim icin kaynak veya hedef koordinati bulunamadi');
+  const origin=this.center(from),destination=this.center(to);
+  const eqBefore=before.get('equals'),eqAfter=after.get('equals');
+  if(!eqBefore||!eqAfter)throw new Error('Esittir isareti olculemedi');
+  const eqStart=this.center(eqBefore).x,eqFinish=this.center(eqAfter).x;
+  const shifts=[];
+  const sourcePart=source.closest('[data-part]');
+  // Yeni denklemde bir terim ilk siraya gecerse + isareti kalkabilir.
+  // Bu durumda dis terim kutusu degil sayi/degisken dugumu takip edilir.
+  eq.querySelectorAll('[data-part]').forEach(node=>{
+   const id=node.dataset.part;
+   if(node===sourcePart||id===sourceId)return;
+   const nextPart=after.get('part:'+id);
+   if(!nextPart)return;
+   const currentSign=node.querySelector(`[data-sign="${id}"]`);
+   // Yeni hedefte isaretin devam edip etmedigini hedef modelden oku.
+   const signInTarget=after.get('sign:'+id); // Isaret hedefte de ayni terimin alt dugumu olarak korunur.
+   if(!!currentSign===!!signInTarget){
+    const current=node.getBoundingClientRect();
+    shifts.push({node,dx:nextPart.left-current.left,dy:nextPart.top-current.top});
+   }else{
+    const atom=node.querySelector(`[data-id="${id}"]`);
+    const atomTarget=after.get(id);
+    if(atom&&atomTarget){
+     const current=atom.getBoundingClientRect();
+     shifts.push({node:atom,dx:atomTarget.left-current.left,dy:atomTarget.top-current.top});
+    }
+    if(currentSign)shifts.push({node:currentSign,fade:true,dx:0,dy:0});
+   }
+  });
+  const equalsNode=eq.querySelector('.equals');
+  shifts.push({node:equalsNode,dx:eqFinish-eqStart,dy:eqAfter.top-eqBefore.top});
+
+  const ghost=document.createElement('span');
+  ghost.className='ghost semantic-flight';ghost.textContent=sourceText;
+  Object.assign(ghost.style,{
+    position:'fixed',left:'0',top:'0',
+    fontSize:getComputedStyle(eq).fontSize,
+    color:getComputedStyle(eq).color,
+    margin:'0',padding:'0',pointerEvents:'none',zIndex:'2000'
+  });
+  document.body.append(ghost);
+  let signed=false;
+  const setGhost=(x,y)=>{
+   ghost.style.left=`${x-ghost.offsetWidth/2}px`;
+   ghost.style.top=`${y-ghost.offsetHeight/2}px`;
+  };
+  setGhost(origin.x,origin.y);
+  source.style.visibility='hidden';
+  const duration=850*speed();
+  const arch=Math.min(260,140+Math.abs(destination.x-origin.x)*.32);
+  const cx=(origin.x+destination.x)/2;
+  const cy=Math.min(origin.y,destination.y)-arch;
+  const leftToRight=destination.x>=origin.x;
+
+  try{
+   await new Promise(resolve=>{
+    let start=null;
+    const frame=now=>{
+     if(start===null)start=now;
+     const t=Math.min(1,(now-start)/duration);
+     const u=t*t*(3-2*t),v=1-u;
+     // Bire bir ayni easing: kisa yol az, uzun yol daha fazla piksel/kare.
+     // Her nesne ayni anda hareket eder ve ayni anda tamamlar.
+     for(const item of shifts){
+      if(!item.node)continue;
+      if(item.fade){item.node.style.opacity=String(1-u);}else{item.node.style.transform=`translate3d(${item.dx*u}px,${item.dy*u}px,0)`;}
+     }
+     const x=v*v*origin.x+2*v*u*cx+u*u*destination.x;
+     const y=v*v*origin.y+2*v*u*cy+u*u*destination.y;
+     const movingEquals=eqStart+(eqFinish-eqStart)*u;
+     // Isaret, o karedeki hareketli esittirin merkezine varinca degisir.
+     if(!signed&&((leftToRight&&x>=movingEquals)||(!leftToRight&&x<=movingEquals))){
+      signed=true;ghost.textContent=targetText;
+     }
+     setGhost(x,y);
+     if(t<1)requestAnimationFrame(frame); else resolve();
+    };
+    requestAnimationFrame(frame);
+   });
+  }finally{
+   ghost.remove();
+   // Canli denklem sonraki karede hedef modelle degistirilecektir.
+   // Kaynak eski agacda gizlidir; bu fonksiyon durum degistirmez.
+  }
+ }
+
+};
+// Beta 44: İptal çizgisi bir noktanın sol alttan sağ üste süratlenerek
+// ilerlemesiyle oluşur; ardından sayı ve kırmızı iz kısa bir sürede çözünür.
+// SVG yalnızca bir geçiş katmanıdır, matematiksel DOM nesnesi değişmez.
+function drawStroke(el){
+ if(!el)return Promise.resolve();
+ const w=el.offsetWidth+16,h=el.offsetHeight+16;
+ const ns='http://www.w3.org/2000/svg';
+ const svg=document.createElementNS(ns,'svg');
+ svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+ svg.setAttribute('width',String(w));svg.setAttribute('height',String(h));
+ Object.assign(svg.style,{
+  position:'absolute',left:'-8px',top:'-8px',overflow:'visible',
+  pointerEvents:'none',zIndex:'20',opacity:'1'
+ });
+ const make=(tag,attrs)=>{const n=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,String(v));svg.append(n);return n;};
+ const x1=3,y1=h-4,x2=w-3,y2=4;
+ const length=Math.hypot(x2-x1,y2-y1);
+ const stroke=make('line',{x1,y1,x2,y2,stroke:'#e23642','stroke-width':4.4,'stroke-linecap':'round'});
+ stroke.style.strokeDasharray=String(length);
+ stroke.style.strokeDashoffset=String(length);
+ const point=make('circle',{cx:x1,cy:y1,r:3.2,fill:'#e23642'});
+ // İki kısa, solan silinme izi: ikinci bir "işlem" gibi görünmeyecek kadar hafif.
+ const trails=[-1,1].map(sign=>make('line',{
+  x1:x2-10,y1:y2+9+sign*5,x2:x2-2,y2:y2+1+sign*5,
+  stroke:'#e85b61','stroke-width':1.7,'stroke-linecap':'round',opacity:0
+ }));
+ el.append(svg);
+ // Hover yalnızca etkileşimden önce görünsün.
+ el.style.background='transparent';el.style.boxShadow='none';
+ return new Promise(resolve=>{
+  let start=null;
+  const duration=400*speed();  // Eski 390ms çizgi + 90ms bekleme + fade yerine tek hızlı hareket.
+  function frame(now){
+   if(start===null)start=now;
+   const t=Math.min(1,(now-start)/duration);
+   const d=Math.min(1,t/.61);
+   // Başlangıçta yavaş, ortada hızlanır, çizgi bitiminde çok kısa yavaşlar.
+   const draw=d<.5?4*d*d*d:1-Math.pow(-2*d+2,3)/2;
+   stroke.style.strokeDashoffset=String(length*(1-draw));
+   point.setAttribute('cx',String(x1+(x2-x1)*draw));
+   point.setAttribute('cy',String(y1+(y2-y1)*draw));
+   // Kırmızı çizgi tamamlanınca işaretlenen sayı yerinde yok olur.
+   const vanish=Math.max(0,Math.min(1,(t-.62)/.38));
+   const easy=vanish*vanish*(3-2*vanish);
+   el.style.color=`rgba(29,42,59,${1-easy})`;
+   // Solan izleri hafifçe göster, ardından hepsi kaybolsun.
+   trails.forEach((trail,i)=>{const peak=Math.max(0,1-Math.abs((t-.77)/.17));trail.setAttribute('opacity',String(.42*peak));});
+   point.setAttribute('opacity',String(1-Math.max(0,Math.min(1,(t-.62)/.18))));
+   svg.style.opacity=String(1-Math.max(0,Math.min(1,(t-.78)/.22)));
+   if(t<1)requestAnimationFrame(frame);
+   else {svg.remove();resolve();}
+  }
+  requestAnimationFrame(frame);
+ });
+}
+// Cancellation'da tek tek sayılar zaten silindiğinden bütün denklemi
+// tekrar uzun bir fade'e sokmuyoruz: sadece kısa ve yumuşak yerleşme.
+async function finishCancellation(change){
+ change();update();
+ const animation=eq.animate([{opacity:.58},{opacity:1}],{
+  duration:185*speed(),easing:'cubic-bezier(.22,1,.36,1)'
+ });
+ await animation.finished.catch(()=>{});
+}
+
+async function moveTerm(type){
+ const fromB=type==='B',sourceId=fromB?'lb':'rc',targetId=fromB?'rb':'lc';
+ const source=byId(sourceId)?.closest('[data-part]')||byId(sourceId);
+ const from=source?.getBoundingClientRect();
+ const before=new Map();
+ eq.querySelectorAll('[data-id]').forEach(node=>before.set(node.dataset.id,node.getBoundingClientRect()));
+ eq.querySelectorAll('[data-part]').forEach(node=>before.set('part:'+node.dataset.part,node.getBoundingClientRect()));
+ const eqSign=eq.querySelector('.equals');if(eqSign)before.set('equals',eqSign.getBoundingClientRect());
+ const old=structuredClone(s),next=structuredClone(s);
+ if(fromB){next.movedB=true;next.combinedR=(m.b===0||m.d===0)}
+ else{next.movedC=true;next.combinedL=m.c===0}
+ Object.assign(s,next);
+ const nextMarkup=markup();
+ const futureLayout=MotionEngine.targetLayout(nextMarkup);
+ Object.assign(s,old);
+ const placement=MotionEngine.planLayout(futureLayout,before,type,sourceId,targetId);
+ const future=placement.map;
+ const beforeText=source?.textContent?.trim() || (fromB?String(m.b):`${coefficient(m.c)}x`);
+ const afterText=fromB?`${-m.b<0?'−':'+'}${abs(m.b)}`:
+                  `${-m.c<0?'−':'+'}${coefficient(Math.abs(m.c))}x`;
+ const targetKey=(fromB&&next.combinedR)?'part:rd':'part:'+targetId;
+ const target=future.get(targetKey)||future.get('part:'+targetId)||future.get(targetId)||future.get('d')||future.get('rd');
+ // Yeni denklemi HENUZ yazma. Mevcut terimleri ve ucan nesneyi
+ // birlikte hedeflerine gotur; ancak sonra ekrani tek seferde kesinlestir.
+ await MotionEngine.transferTogether({
+  source,from,to:target,sourceText:beforeText,targetText:afterText,
+  before,after:future,sourceId
+ });
+ layoutShiftX=placement.delta;
+ Object.assign(s,next);
+ update();
+}
+// Terimler birbirlerine yaklaşmaz. Aritmetik işlem bulunduğu yerde
+// gerçekleşir: eski ifade yumuşakça yeni katsayıya dönüşür.async function mergeTerms(kind){
+ await fade(()=>{if(kind==='L')s.combinedL=true;else s.combinedR=true});
+}
+async function act(action){if(action.startsWith('multi'))return multiAction(action);if(action.startsWith('pair'))return pairAction(action);if(action.startsWith('fraction'))return fractionAction(action);if(action.startsWith('bracket'))return bracketAction(action);if(action==='finishExpand'||action==='combineExpandedConstants')return bracketAction(action);if(busy||(multiEq&&multiEq.mode!=='linear')||(pairEq&&pairEq.mode!=='linear')||(fractionEq&&fractionEq.mode!=='linear')||(bracket&&bracket.mode!=='linear'))return;const allowed={moveB:!s.movedB,moveC:!s.movedC,combineL:s.movedC&&!s.combinedL,combineR:s.movedB&&!s.combinedR,divide:ready()&&A()!==0&&!s.divided,cancel:s.divided&&!s.leftDone,simplify:s.divided&&!s.rightDone};if(!allowed[action])return;busy=true;scene.classList.add('busy');save();step++;try{if(action==='moveB')await moveTerm('B');else if(action==='moveC')await moveTerm('C');else if(action==='combineL'){await mergeTerms('L')}else if(action==='combineR'){await mergeTerms('R')}else if(action==='divide'){
+ // Yavaş: kesir oluşumu, kırmızı sadeleştirme ve sonuç ayrı adımlardır.
+ // Hızlı: ax=d => x=d/a, tam veya sadeleştirilmiş kesir olarak doğrudan.
+ // Her iki durumda da D/A aynı matematiksel modelden alınır.
+ if(fastMode()||Math.abs(A())===1){
+  await fade(()=>{s.divided=true;s.leftDone=true;s.rightDone=true});
+ }else{
+  s.divided=true;s.barsReady=false;update(true);
+  await wait(380);s.barsReady=true;update();
+ }
+}else if(action==='cancel'){await Promise.all([drawStroke(byId('topa')),drawStroke(byId('bota'))]);await finishCancellation(()=>{s.leftDone=true})}else if(action==='simplify'){await fade(()=>{s.rightDone=true})}}finally{busy=false;scene.classList.remove('busy');update()}}
+eq.addEventListener('click',e=>{const t=e.target.closest('[data-action]');if(t&&eq.contains(t))act(t.dataset.action)});
+eq.addEventListener('keydown',e=>{const t=e.target.closest('[data-action]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();act(t.dataset.action)}});
+function formatModel(o){let str=coefficient(o.a)+'x';if(o.b!==0)str+=(o.b<0?'-':'+')+abs(o.b);str+='=';if(o.c!==0)str+=coefficient(o.c)+'x';if(o.d!==0)str+=(o.d<0?'-':o.c!==0?'+':'')+abs(o.d);return str}
+function drawExamples(){
+ const list=$('#examples');list.innerHTML='';
+ for(const ex of examplesByModule[currentModule]){
+  const btn=document.createElement('button');btn.textContent=ex;btn.dataset.eq=ex;
+  btn.onclick=()=>{if(!busy){$('#custom').value=ex;const next=currentModule===6?parseMulti(ex):currentModule===5?parsePair(ex):currentModule===4?parseFraction(ex):currentModule===3?parseBracket(ex):parse(ex);if(next)restart(next,currentModule===3,currentModule===4,currentModule===5,currentModule===6)}};
+  list.append(btn);
+ }
+ document.querySelectorAll('#modules button').forEach(b=>b.classList.toggle('active',Number(b.dataset.module)===currentModule));
+ $('#moduleLabel').textContent=currentModule===1?'Modül 1 · Sabit terimi taşı, hesapla, katsayıya böl.':currentModule===2?'Modül 2 · İki taraftaki terimleri istediğin sırayla taşı.':currentModule===3?'Modül 3 · Paranteze tıklayarak aç; uygun denklemlerde katsayıya tıklayarak önce böl.':currentModule===4?'Modül 4 · Paydadaki sayıya tıkla; iki tarafı bu sayı ile çarp ve sadeleştir.':currentModule===5?'Modül 5 · Paydaların OKEK’iyle iki tarafı aynı anda çarp; karşılıklı sadeleştir, ardından parantezleri aç.':'Modül 6 · Önce paydasız terimlere /1 ekle; sonra paydaları OKEK’e genişlet ve birlikte kaldır.';
+}
+function restart(newM=(multiEq||pairEq||fractionEq||bracket||m),isBracket=!!bracket,isFraction=!!fractionEq,isPair=!!pairEq,isMulti=!!multiEq){
+ if(busy)return;layoutShiftX=0;
+ if(isMulti){
+  const base=newM.original||newM;
+  const L=structuredClone(base.sides.L),R=structuredClone(base.sides.R);
+  let common=1;for(const t of [...L,...R])common=lcm(common,t.den);
+  multiEq={mode:'multi',sides:{L,R},common,original:structuredClone(base)};
+  for(const t of [...L,...R]){
+   t.ready=t.den===common;t.pending=false;
+   t.opened=!(common/t.den>1&&t.a!==0&&t.b!==0);
+   // 1 / n, x / n vs. plain 1, x: fraction information stays stable.
+   t.hasDen=t.originallyFraction;
+  }
+  pairEq=null;fractionEq=null;bracket=null;
+  const totalSide=side=>multiEq.sides[side].reduce((acc,t)=>{
+   const k=common/t.den;acc.a+=t.sign*t.a*k;acc.b+=t.sign*t.b*k;return acc;
+  },{a:0,b:0});
+  const l=totalSide('L'),r=totalSide('R');
+  m={a:l.a,b:l.b,c:r.a,d:r.b};
+ }else if(isPair){multiEq=null;const base=newM.original||newM;const L={a:base.left.a,b:base.left.b,d:base.left.d},R={a:base.right.a,b:base.right.b,d:base.right.d};const common=lcm(L.d,R.d);pairEq={left:{...L,quotient:1,canceled:false,expanded:false},right:{...R,quotient:1,canceled:false,expanded:false},lcm:common,started:false,original:{left:L,right:R},mode:'pair'};fractionEq=null;bracket=null;m={a:L.a*(common/L.d),b:L.b*(common/L.d),c:R.a*(common/R.d),d:R.b*(common/R.d)};}
+ else if(isFraction){multiEq=null;pairEq=null;fractionEq={...newM,mode:'start',leftDone:false,rightDone:false};bracket=null;m={a:fractionEq.a,b:fractionEq.b,c:0,d:fractionEq.c*fractionEq.n};}
+ else if(isBracket){multiEq=null;pairEq=null;bracket={...newM,mode:'start',leftDone:false,rightDone:false,barsReady:true};fractionEq=null;m={a:bracket.k*bracket.p,b:bracket.k*bracket.q+bracket.out,c:bracket.c,d:bracket.d};}
+ else{multiEq=null;pairEq=null;bracket=null;fractionEq=null;m={...newM}}
+ s=initial();s.barsReady=true;step=0;history=[];update();
+ const input=$('#custom').value.replace(/\s/g,'');
+ document.querySelectorAll('#examples button').forEach(b=>b.classList.toggle('active',b.dataset.eq===(multiEq||pairEq||fractionEq||bracket?input:formatModel(m))));
+}
+function changeModule(number){
+ if(busy)return;currentModule=number;drawExamples();
+ const ex=examplesByModule[number][0];
+ const first=number===6?parseMulti(ex):number===5?parsePair(ex):number===4?parseFraction(ex):number===3?parseBracket(ex):parse(ex);
+ $('#custom').value=ex;restart(first,number===3,number===4,number===5,number===6);$('#feedback').textContent='';
+}
+$('#reset').onclick=()=>restart();
+$('#back').onclick=()=>{if(busy||!history.length)return;({s,bracket,fractionEq,pairEq,multiEq,m,layoutShiftX}=history.pop());step=Math.max(0,step-1);update()};
+$('#level').onchange=()=>{if(!busy)update()};
+$('#modeSlow').onclick=()=>setTeachingMode('slow');
+$('#modeFast').onclick=()=>setTeachingMode('fast');
+$('#load').onclick=()=>{if(busy)return;const mu=parseMulti($('#custom').value);const pr=mu?null:parsePair($('#custom').value);const fr=(mu||pr)?null:parseFraction($('#custom').value);const br=(mu||pr||fr)?null:parseBracket($('#custom').value);const n=mu||pr||fr||br||parse($('#custom').value);$('#feedback').textContent=n?'':'Örnek: 4x+6=12, 2(x+3)=8, (2x+4)/3=6 veya (2x+3)/4+(3x-1)/7=(x+2)/9.';if(n){const targetModule=mu?6:pr?5:fr?4:br?3:n.c===0?1:2;if(targetModule!==currentModule){currentModule=targetModule;drawExamples()}restart(n,!!br,!!fr,!!pr,!!mu)}};
+$('#custom').onkeydown=e=>{if(e.key==='Enter')$('#load').click()};
+document.querySelectorAll('#modules button').forEach(b=>b.addEventListener('click',()=>changeModule(Number(b.dataset.module))));
+window.addEventListener('resize',()=>{if(!busy)positionScale()});
+changeModule(1);
+const bootMessage=document.getElementById("startupNotice");if(bootMessage)bootMessage.remove();
+})();
