@@ -419,14 +419,17 @@
 
   const css = `
   .si-home-btn{
-    width:38px!important;height:36px!important;min-width:38px!important;max-width:38px!important;
-    flex:0 0 38px!important;padding:0!important;border:1px solid #d9dde5!important;border-radius:10px!important;
-    background:#fff!important;color:#1f2430!important;display:inline-flex!important;align-items:center!important;
+    width:48px!important;height:48px!important;min-width:48px!important;max-width:48px!important;
+    flex:0 0 48px!important;padding:0!important;border:0!important;border-radius:12px!important;
+    background:#ffdf49!important;color:#000!important;display:inline-flex!important;align-items:center!important;
     justify-content:center!important;box-sizing:border-box!important;cursor:pointer!important;text-decoration:none!important;
-    box-shadow:none!important;line-height:1!important
+    box-shadow:0 5px 12px rgba(0,0,0,.23),0 2px 4px rgba(0,0,0,.12)!important;
+    line-height:1!important;transition:transform .16s ease,box-shadow .16s ease!important
   }
-  .si-home-btn:hover{background:#f3f5f8!important}
-  .si-home-btn svg{width:21px!important;height:21px!important;display:block!important}
+  .si-home-btn:hover{background:#ffe451!important;transform:translateY(-2px)!important;box-shadow:0 8px 18px rgba(0,0,0,.25),0 3px 6px rgba(0,0,0,.13)!important}
+  .si-home-btn:active{transform:translateY(1px)!important;box-shadow:0 2px 5px rgba(0,0,0,.2)!important}
+  .si-home-btn svg{width:27px!important;height:27px!important;display:block!important;fill:#000!important}
+  .si-home-btn svg path{fill:#000!important;stroke:none!important}
   .si-home-fixed{position:fixed!important;left:12px;top:12px;z-index:9990!important}
   .si-translation-tooltip{
     position:fixed;left:0;top:0;z-index:11000;display:none;pointer-events:none;
@@ -528,7 +531,7 @@
     if(REPLACE[title]) document.title=REPLACE[title];
   }
 
-  const homeSvg='<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg>';
+  const homeSvg='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 2 11.2l1.4 1.7L5 11.6V21h5.1v-6.2h3.8V21H19v-9.4l1.6 1.3 1.4-1.7L12 2.6Z"/></svg>';
 
   function isHomeLike(el){
     const t=norm(el.textContent).toLowerCase();
