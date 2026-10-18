@@ -586,6 +586,10 @@
           <span style="font-size:16px;width:22px;text-align:center">↑</span>
           <span>Aç</span>
         </button>
+        <button id="exportSvgBtn" role="menuitem">
+          <span style="font-size:15px;width:22px;text-align:center">◇</span>
+          <span>SVG dışa aktar</span>
+        </button>
         <button id="shareBoardBtn" role="menuitem">
           <span style="font-size:16px;width:22px;text-align:center">↗</span>
           <span>Paylaş</span>
@@ -987,6 +991,7 @@
   const fileMenu = document.getElementById('fileMenu');
   const saveBoardBtn = document.getElementById('saveBoardBtn');
   const openBoardBtn = document.getElementById('openBoardBtn');
+  const exportSvgBtn = document.getElementById('exportSvgBtn');
   const shareBoardBtn = document.getElementById('shareBoardBtn');
   const boardFileInput = document.getElementById('boardFileInput');
   const boardLoadConfirm = document.getElementById('boardLoadConfirm');
@@ -8521,6 +8526,326 @@
     return `Beyaz_Tahta_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.png`;
   }
 
+  function safeBoardSvgFilename(){
+    const d=new Date();
+    const pad=n=>String(n).padStart(2,'0');
+    return `Beyaz_Tahta_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.svg`;
+  }
+
+  function svgEscapeText(value){
+    return String(value??'')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;');
+  }
+
+  function svgEscapeAttr(value){
+    return svgEscapeText(value)
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&apos;');
+  }
+
+  function svgNum(n){
+    const v=Number(n);
+    if(!Number.isFinite(v)) return '0';
+    return String(Math.round(v*1000)/1000);
+  }
+
+  function svgPoints(points){
+    return (points||[])
+      .filter(finitePoint)
+      .map(p=>`${svgNum(p.x)},${svgNum(p.y)}`)
+      .join(' ');
+  }
+
+  function svgStyleAttrs(o,{fillOverride=null}={}){
+    const stroke=(o.style && o.style.color) || '#111111';
+    const width=Math.max(.1,Number(o.style && o.style.width)||2);
+    const fill=fillOverride!==null
+      ? fillOverride
+      : (o.fillColor || 'none');
+
+    return `stroke="${svgEscapeAttr(stroke)}" stroke-width="${svgNum(width)}" stroke-linecap="round" stroke-linejoin="round" fill="${svgEscapeAttr(fill)}"`;
+  }
+
+  function svgPolylinePath(points,close=false){
+    const pts=(points||[]).filter(finitePoint);
+    if(!pts.length) return '';
+    let d=`M ${svgNum(pts[0].x)} ${svgNum(pts[0].y)}`;
+    for(let i=1;i<pts.length;i++){
+      d+=` L ${svgNum(pts[i].x)} ${svgNum(pts[i].y)}`;
+    }
+    if(close) d+=' Z';
+    return d;
+  }
+
+  function svgParabolaPoints(o,count=100){
+    const pts=[];
+    const a=o.angle||0;
+    for(let i=0;i<=count;i++){
+      const u=-1+2*i/count;
+      const q={
+        x:o.center.x+u*(o.w/2),
+        y:o.center.y+(o.mirrorY?-1:1)*(o.h/2-(u*u)*o.h)
+      };
+      pts.push(rotatePoint(q,o.center,a));
+    }
+    return pts;
+  }
+
+  function svgAxesPath(o){
+    const a=o.angle||0,hw=o.w/2,hh=o.h/2;
+    const sy=o.mirrorY ? -1 : 1;
+    const left=rotatePoint({x:o.center.x-hw,y:o.center.y},o.center,a);
+    const right=rotatePoint({x:o.center.x+hw,y:o.center.y},o.center,a);
+    const top=rotatePoint({x:o.center.x,y:o.center.y-sy*hh},o.center,a);
+    const bottom=rotatePoint({x:o.center.x,y:o.center.y+sy*hh},o.center,a);
+    const ah=10;
+
+    function arrow(tip,from){
+      const ang=Math.atan2(tip.y-from.y,tip.x-from.x);
+      const p1={
+        x:tip.x+Math.cos(ang+2.6)*ah,
+        y:tip.y+Math.sin(ang+2.6)*ah
+      };
+      const p2={
+        x:tip.x+Math.cos(ang-2.6)*ah,
+        y:tip.y+Math.sin(ang-2.6)*ah
+      };
+      return `M ${svgNum(tip.x)} ${svgNum(tip.y)} L ${svgNum(p1.x)} ${svgNum(p1.y)} M ${svgNum(tip.x)} ${svgNum(tip.y)} L ${svgNum(p2.x)} ${svgNum(p2.y)}`;
+    }
+
+    return [
+      `M ${svgNum(left.x)} ${svgNum(left.y)} L ${svgNum(right.x)} ${svgNum(right.y)}`,
+      `M ${svgNum(bottom.x)} ${svgNum(bottom.y)} L ${svgNum(top.x)} ${svgNum(top.y)}`,
+      arrow(right,left),
+      arrow(top,bottom)
+    ].join(' ');
+  }
+
+  async function svgElementForObject(o,index){
+    if(!o) return '';
+
+    const style=svgStyleAttrs(o);
+
+    if(o.kind==='stroke'){
+      const d=svgPolylinePath(o.points||[],false);
+      return d ? `<path d="${d}" ${style}/>` : '';
+    }
+
+    if(o.kind==='line'){
+      return `<line x1="${svgNum(o.a.x)}" y1="${svgNum(o.a.y)}" x2="${svgNum(o.b.x)}" y2="${svgNum(o.b.y)}" ${style}/>`;
+    }
+
+    if(o.kind==='arc' || o.kind==='sector'){
+      const g=arcGeometry(o);
+      if(!g) return '';
+      const largeArc=Math.abs(g.sweep)>Math.PI ? 1 : 0;
+      const sweep=g.sweep>=0 ? 1 : 0;
+      const arcCmd=`A ${svgNum(g.r)} ${svgNum(g.r)} 0 ${largeArc} ${sweep} ${svgNum(o.b.x)} ${svgNum(o.b.y)}`;
+
+      if(o.kind==='arc'){
+        const d=`M ${svgNum(o.a.x)} ${svgNum(o.a.y)} ${arcCmd}`;
+        return `<path d="${d}" ${style}/>`;
+      }
+
+      const d=[
+        `M ${svgNum(o.center.x)} ${svgNum(o.center.y)}`,
+        `L ${svgNum(o.a.x)} ${svgNum(o.a.y)}`,
+        arcCmd,
+        `L ${svgNum(o.center.x)} ${svgNum(o.center.y)} Z`
+      ].join(' ');
+      return `<path d="${d}" ${style}/>`;
+    }
+
+    if(o.kind==='ellipse'){
+      const deg=(Number(o.angle)||0)*180/Math.PI;
+      return `<ellipse cx="${svgNum(o.center.x)}" cy="${svgNum(o.center.y)}" rx="${svgNum(Math.abs(o.rx))}" ry="${svgNum(Math.abs(o.ry))}" transform="rotate(${svgNum(deg)} ${svgNum(o.center.x)} ${svgNum(o.center.y)})" ${style}/>`;
+    }
+
+    if(o.kind==='rect'){
+      const pts=rectWorldVertices(o);
+      return pts.length
+        ? `<polygon points="${svgPoints(pts)}" ${style}/>`
+        : '';
+    }
+
+    if(o.kind==='polygon'){
+      const pts=polygonWorldVertices(o);
+      return pts.length
+        ? `<polygon points="${svgPoints(pts)}" ${style}/>`
+        : '';
+    }
+
+    if(o.kind==='parabola'){
+      const d=svgPolylinePath(svgParabolaPoints(o,120),false);
+      return d ? `<path d="${d}" ${style}/>` : '';
+    }
+
+    if(o.kind==='axes'){
+      const d=svgAxesPath(o);
+      return `<path d="${d}" ${svgStyleAttrs(o,{fillOverride:'none'})}/>`;
+    }
+
+    if(o.kind==='symbol'){
+      if(o.symbolType==='integral'){
+        const curves=integralBezierLocal(o);
+        if(!curves.length) return '';
+        const a=o.angle||0;
+        const wp=p=>rotatePoint(
+          {x:o.center.x+p.x,y:o.center.y+p.y},
+          o.center,
+          a
+        );
+
+        const first=wp(curves[0].p0);
+        let d=`M ${svgNum(first.x)} ${svgNum(first.y)}`;
+        for(const seg of curves){
+          const c1=wp(seg.c1),c2=wp(seg.c2),p3=wp(seg.p3);
+          d+=` C ${svgNum(c1.x)} ${svgNum(c1.y)} ${svgNum(c2.x)} ${svgNum(c2.y)} ${svgNum(p3.x)} ${svgNum(p3.y)}`;
+        }
+        return `<path d="${d}" ${svgStyleAttrs(o,{fillOverride:'none'})}/>`;
+      }
+
+      const d=svgPolylinePath(symbolWorldPoints(o),false);
+      return d ? `<path d="${d}" ${svgStyleAttrs(o,{fillOverride:'none'})}/>` : '';
+    }
+
+    if(o.kind==='text'){
+      const fontSize=Math.max(4,Number(o.fontSize)||24);
+      const w=Math.max(12,Number(o.w)||120);
+      const h=Math.max(12,Number(o.h)||40);
+      const pad=Math.max(2,fontSize*.18);
+      const lineHeight=fontSize*1.25;
+      const lines=layoutTextLines(
+        o.text||'',
+        Math.max(4,w-2*pad),
+        fontSize
+      );
+      const deg=(Number(o.angle)||0)*180/Math.PI;
+      const x=o.center.x-w/2+pad;
+      const y0=o.center.y-h/2+pad+fontSize;
+      const tspans=[];
+
+      for(let i=0;i<lines.length;i++){
+        const y=y0+i*lineHeight;
+        if(y>o.center.y+h/2+lineHeight*.15) break;
+        tspans.push(
+          `<tspan x="${svgNum(x)}" y="${svgNum(y)}">${svgEscapeText(lines[i])}</tspan>`
+        );
+      }
+
+      const color=(o.style && o.style.color)||'#111111';
+      return `<text font-family="Comic Neue, Trebuchet MS, Segoe UI, Arial, sans-serif" font-size="${svgNum(fontSize)}" fill="${svgEscapeAttr(color)}" transform="rotate(${svgNum(deg)} ${svgNum(o.center.x)} ${svgNum(o.center.y)})">${tspans.join('')}</text>`;
+    }
+
+    if(o.kind==='image'){
+      let src=(typeof o.src==='string' && o.src) ? o.src : '';
+      if(!src && o.assetId){
+        src=await resolveSharedImageAsset(o.assetId);
+      }
+      if(!src) return '';
+
+      const w=Math.max(1,Number(o.w)||1);
+      const h=Math.max(1,Number(o.h)||1);
+      const x=o.center.x-w/2;
+      const y=o.center.y-h/2;
+      const deg=(Number(o.angle)||0)*180/Math.PI;
+
+      return `<image href="${svgEscapeAttr(src)}" x="${svgNum(x)}" y="${svgNum(y)}" width="${svgNum(w)}" height="${svgNum(h)}" preserveAspectRatio="none" transform="rotate(${svgNum(deg)} ${svgNum(o.center.x)} ${svgNum(o.center.y)})"/>`;
+    }
+
+    return '';
+  }
+
+  async function buildBoardSvg(){
+    if(!objects.length) throw new Error('Tahta boş');
+
+    const bounds=[];
+    for(const o of objects){
+      const b=objectBounds(o);
+      if(b && Number.isFinite(b.x) && Number.isFinite(b.y) && Number.isFinite(b.w) && Number.isFinite(b.h)){
+        bounds.push(b);
+      }
+    }
+    if(!bounds.length) throw new Error('Dışa aktarılabilir nesne yok');
+
+    const minX=Math.min(...bounds.map(b=>b.x));
+    const minY=Math.min(...bounds.map(b=>b.y));
+    const maxX=Math.max(...bounds.map(b=>b.x+b.w));
+    const maxY=Math.max(...bounds.map(b=>b.y+b.h));
+
+    const maxStroke=Math.max(
+      1,
+      ...objects.map(o=>Math.max(1,Number(o && o.style && o.style.width)||1))
+    );
+    const pad=Math.max(12,maxStroke*3);
+    const x=minX-pad;
+    const y=minY-pad;
+    const w=Math.max(1,maxX-minX+pad*2);
+    const h=Math.max(1,maxY-minY+pad*2);
+
+    const parts=[];
+    for(let i=0;i<objects.length;i++){
+      const svg=await svgElementForObject(objects[i],i);
+      if(svg) parts.push(svg);
+    }
+
+    return [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${svgNum(x)} ${svgNum(y)} ${svgNum(w)} ${svgNum(h)}" width="${svgNum(w)}" height="${svgNum(h)}">`,
+      '<title>Beyaz Tahta</title>',
+      '<g>',
+      ...parts,
+      '</g>',
+      '</svg>'
+    ].join('\n');
+  }
+
+  async function exportBoardSvg(){
+    try{
+      statusEl.textContent='SVG hazırlanıyor…';
+      const svg=await buildBoardSvg();
+      const filename=safeBoardSvgFilename();
+
+      if('showSaveFilePicker' in window){
+        try{
+          const handle=await window.showSaveFilePicker({
+            suggestedName:filename,
+            types:[
+              {
+                description:'SVG vektör grafiği',
+                accept:{'image/svg+xml':['.svg']}
+              }
+            ],
+            excludeAcceptAllOption:false
+          });
+
+          const writable=await handle.createWritable();
+          await writable.write(svg);
+          await writable.close();
+          statusEl.textContent=`${objects.length} nesne SVG olarak dışa aktarıldı`;
+          return;
+        }catch(err){
+          if(err && err.name==='AbortError'){
+            statusEl.textContent='SVG dışa aktarma iptal edildi';
+            return;
+          }
+          console.warn('SVG kayıt penceresi kullanılamadı, indirme yöntemine geçiliyor:',err);
+        }
+      }
+
+      const blob=new Blob([svg],{type:'image/svg+xml;charset=utf-8'});
+      downloadBlob(blob,filename);
+      statusEl.textContent=`${objects.length} nesne SVG olarak dışa aktarıldı`;
+    }catch(err){
+      console.error('SVG dışa aktarılamadı:',err);
+      statusEl.textContent=objects.length
+        ? 'SVG dışa aktarılamadı'
+        : 'Tahta boş — SVG oluşturulmadı';
+    }
+  }
+
   function captureVisibleBoardCanvas(){
     // Ekranda görünen tahta alanını yakala.
     // Araç çubuğu zaten canvas dışında. Seçim çerçevesi ve silgi imleci
@@ -8801,6 +9126,12 @@
     closeFileMenu();
     boardFileInput.value='';
     boardFileInput.click();
+  });
+
+  exportSvgBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    closeFileMenu();
+    exportBoardSvg();
   });
 
   shareBoardBtn.addEventListener('click',e=>{
