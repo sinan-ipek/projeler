@@ -1,84 +1,129 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kesir Kıyaslama Laboratuvarı</title>
 <style>
-:root{--bg:#f5f3ed;--ink:#242835;--blue:#285de0;--orange:#d87e14;--green:#19865d;--yellow:#ffd849}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
-header{min-height:80px;display:flex;align-items:center;justify-content:center;position:relative;padding:15px 80px;text-align:center}h1{font-size:clamp(19px,2.4vw,29px);margin:0;font-weight:800}header p{font-size:13px;color:#777;margin:2px 0 0}.home{position:absolute;left:19px;top:17px;width:47px;height:47px;border:0;border-radius:14px;background:var(--yellow);box-shadow:0 4px 0 #cda82f;cursor:pointer;display:grid;place-items:center}.home svg{width:27px;height:27px}
-main{width:min(1020px,calc(100% - 24px));min-height:590px;margin:9px auto 35px;background:#fffefa;border:1px solid #e6e3dc;border-radius:25px;box-shadow:0 15px 40px #3c352217;overflow:hidden}.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 23px;border-bottom:1px solid #eeebe4}.toolbar strong{font-size:clamp(13px,1.8vw,16px)}button{font:inherit}.restart{border:0;background:#eae8e1;border-radius:11px;padding:10px 16px;cursor:pointer;font-weight:700}.restart:hover{background:#dedbd2}.workspace{display:flex;flex-direction:column;align-items:center;padding:45px 14px 30px;min-height:450px}.hint{text-align:center;min-height:52px;font-size:clamp(15px,2vw,20px);font-weight:600;color:#555a64}
-.equation{display:flex;align-items:flex-start;justify-content:center;gap:clamp(20px,6vw,75px);width:100%;margin-top:24px}.side{width:clamp(110px,22vw,220px);display:flex;flex-direction:column;align-items:center;min-height:235px;position:relative}.frac{display:inline-flex;flex-direction:column;align-items:center;font-size:clamp(38px,5.4vw,58px);font-weight:650;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap}.num,.den{min-height:66px;min-width:75px;display:flex;align-items:center;justify-content:center;padding:0 9px;position:relative}.bar{width:100%;height:4px;border-radius:4px;background:currentColor}.token{display:inline-flex;align-items:center;justify-content:center;border-radius:12px;padding:2px 5px;border:3px solid transparent;line-height:1.08}.clickable{cursor:pointer;background:transparent;border-color:transparent;color:var(--ink)}.clickable:hover,.clickable:focus-visible{outline:none;background:#f8e9b9;border-color:#efb314}.mult{margin-top:6px;font-family:inherit;font-size:clamp(31px,4.4vw,47px);font-weight:650;color:#c57a00;line-height:1.1}.mult.clickable{background:transparent;border:3px solid transparent;color:#c57a00;padding:1px 8px}.mult.clickable:hover,.mult.clickable:focus-visible{background:#f8e9b9;border-color:#efb314}
-.operator{padding-top:43px;font-size:clamp(45px,5vw,65px);font-weight:700;min-width:45px;text-align:center}.symbol-preview{color:#858a94}.choice-row{display:flex;gap:15px;justify-content:center;min-height:70px;margin-top:1px}.choice{width:69px;height:60px;background:#fff;border:2px solid #d4d7df;border-radius:15px;font-size:36px;font-weight:700;cursor:pointer;transition:background .15s,transform .15s,box-shadow .15s}.choice:hover,.choice:focus-visible{background:#f8e9b9;color:var(--ink);border-color:#efb314;outline:none}.choice.wrong{animation:nope .34s ease-in-out}.choice.correct{background:#dcf6e9;color:var(--green);border-color:var(--green)}@keyframes nope{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}@keyframes appear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.product{gap:0;padding:0 2px}.times{font-size:.7em;margin:0 .08em;font-weight:500;color:inherit}.result{color:var(--green);}.foot{height:60px;display:flex;justify-content:center;align-items:center;color:#8b8b8b;font-size:13px;border-top:1px solid #eeebe4}.hidden{display:none!important}@media(max-width:540px){header{padding:17px 65px}.toolbar{padding:14px}.workspace{padding:50px 8px 20px}.equation{gap:10px}.side{width:37vw}.num,.den{min-height:62px;min-width:60px;padding:0 3px}.operator{min-width:29px;font-size:44px;padding-top:39px}.frac{font-size:39px}.mult{font-size:32px}}
+:root{--bg:#dedede;--ink:#293241;--orange:#d58700;--yellow:#f3b71b;--green:#159b71}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+header{padding:19px 76px;text-align:center;position:relative}h1{margin:0;font-size:clamp(19px,2.3vw,27px)}
+.home{position:absolute;left:18px;top:15px;border:0;background:#ffd94c;width:48px;height:48px;border-radius:12px;box-shadow:0 4px 0 #c6a32c;cursor:pointer}.home svg{width:27px}
+main{max-width:1060px;margin:10px auto 28px;background:#f8f8f7;border-radius:21px;min-height:590px;box-shadow:0 12px 36px #00000012;overflow:hidden}
+.toolbar{padding:17px;display:flex;gap:10px;align-items:center;border-bottom:1px solid #ddd;flex-wrap:wrap}.tab,.new{background:#e6e6e4;border:1px solid #c8c8c8;border-radius:11px;padding:11px 15px;cursor:pointer;font-size:14px}.tab.active{background:#293241;color:white;border-color:#293241}.new{margin-left:auto}
+.hint{text-align:center;font-size:18px;min-height:52px;padding:15px 8px 0;color:#4b5260}.stage{min-height:410px;position:relative;padding:24px 12px 40px}
+.equation{display:flex;align-items:center;justify-content:center;gap:clamp(14px,5vw,62px);width:100%;min-height:220px}.slot{min-width:clamp(105px,24vw,295px);display:flex;justify-content:center;align-items:center;flex-direction:column;gap:18px}.operator{font-size:clamp(38px,5vw,62px);min-width:45px;text-align:center;color:#9499a2;font-weight:650}.operator.done{color:var(--green)}
+.expr{font-size:clamp(29px,4.1vw,54px);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:.09em;white-space:nowrap;line-height:1.12;font-variant-numeric:tabular-nums}
+.frac{display:inline-flex;vertical-align:middle;align-items:center;flex-direction:column;justify-content:center;line-height:1.12;flex-shrink:0;min-width:1.1em}
+.frac .top,.frac .bottom{display:flex;align-items:center;justify-content:center;padding:.07em .13em;min-height:1.15em}.frac .bar{height:3px;width:100%;background:currentColor;border-radius:4px}
+.math-button{display:inline-flex;align-items:center;justify-content:center;border:3px solid transparent;border-radius:12px;padding:3px 7px;background:transparent;color:inherit;font:inherit;line-height:1.14;cursor:pointer}.math-button:hover,.math-button:focus-visible{background:#f9e5ae;border-color:var(--yellow);outline:0}.math-button:disabled{cursor:default}
+.den-focus{display:inline-flex;align-items:center;justify-content:center;border:6px solid #ffd31f;border-radius:.42em;padding:.02em .18em;line-height:1;background:transparent}
+.frac-button{padding:5px}.frac-button .frac{font-size:inherit}.product{color:var(--ink)}.dot{font-size:.8em;margin:0 .05em}
+.explain{text-align:center;font-size:clamp(14px,1.8vw,20px);color:#5b626d;min-height:35px;margin-top:5px}
+.answers{display:flex;justify-content:center;gap:15px;margin-top:10px}.answer{font-size:36px;min-width:75px;height:64px;border:2px solid #b9bcc4;border-radius:13px;background:white;cursor:pointer}.answer:hover,.answer:focus-visible{background:#f9e5ae;border-color:var(--yellow);outline:none}.answer.wrong{animation:no .4s ease-in-out}.answer.correct{color:var(--green);border-color:var(--green)}@keyframes no{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.hidden{display:none!important}.success{color:var(--green)}.note{font-size:14px;color:#777;text-align:center;padding:12px}
+@media(max-width:600px){main{margin:0 7px}.toolbar{gap:6px;padding:12px}.tab,.new{font-size:12px;padding:9px 7px}.equation{gap:7px}.slot{min-width:36vw}.expr{font-size:clamp(25px,6vw,38px)}.operator{min-width:20px;font-size:35px}.stage{padding:20px 3px}.math-button{border-width:2px;border-radius:8px;padding:2px 3px}}
 </style>
 </head>
 <body>
-<header><button class="home" id="home" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6 2 11.2l1.4 1.7L5 11.6V21h5.1v-6.2h3.8V21H19v-9.4l1.6 1.3 1.4-1.7L12 2.6Z"/></svg></button><div><h1>Kesir Kıyaslama Laboratuvarı</h1><p>Aynı türden kesirler</p></div></header>
-<main><div class="toolbar"><strong>1 · Payda eşitleyerek kıyaslama</strong><button class="restart" id="restart">Yeni örnek ↻</button></div><section class="workspace"><div class="hint" id="hint" aria-live="polite"></div><div class="equation"><div class="side" id="left"></div><div class="operator" id="operator">?</div><div class="side" id="right"></div></div><div class="choice-row hidden" id="choices"><button class="choice" data-answer="<" aria-label="Küçüktür">&lt;</button><button class="choice" data-answer="=" aria-label="Eşittir">=</button><button class="choice" data-answer=">" aria-label="Büyüktür">&gt;</button></div></section><div class="foot">Kesirlere ve vurgulanan ifadelere tıklayarak ilerle.</div></main>
+<header><button class="home" id="home" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6 2 11.2l1.4 1.7L5 11.6V21h5.1v-6.2h3.8V21H19v-9.4l1.6 1.3 1.4-1.7L12 2.6Z"/></svg></button><h1>Kesir Kıyaslama Laboratuvarı</h1></header>
+<main>
+<nav class="toolbar"><button class="tab" data-mode="denom">Payda eşitleyerek kıyaslama</button><button class="tab" data-mode="one">1'e yakınlığına göre kıyaslama</button><button class="new" id="new">Yeni örnek ↻</button></nav>
+<div class="hint" id="hint" aria-live="polite"></div>
+<section class="stage"><div class="equation" id="equation"><div class="slot" id="left"></div><div class="operator" id="operator">?</div><div class="slot" id="right"></div></div><div class="explain" id="explain"></div><div class="answers hidden" id="answers"><button class="answer" data-answer="<">&lt;</button><button class="answer" data-answer="=">=</button><button class="answer" data-answer=">">&gt;</button></div></section>
+<div class="note">Vurgulanan matematiksel ifadelerin üzerine tıklayarak ilerle.</div>
+</main>
 <script>
 (()=>{'use strict';
-const $=id=>document.getElementById(id);
-const H=$('hint'),left=$('left'),right=$('right'),op=$('operator'),choices=$('choices');
-const gcd=(a,b)=>b?gcd(b,a%b):a;
+const $=id=>document.getElementById(id),L=$('left'),R=$('right'),O=$('operator'),H=$('hint'),E=$('explain'),A=$('answers');
+let mode='denom',q,steps=[0,0],solved=new Set(),phase='initial',locked=false,stamp=0;
 const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-let q,phase='start',calculated=new Set(),busy=false;
-function nextQuestion(){
-  let a,b,c,d,k=0;
-  do{b=rnd(3,10);d=rnd(3,10);a=rnd(1,b-1);c=rnd(1,d-1);k++;}
-  while((b===d||a===c||b*d/gcd(b,d)>72||(a*d===b*c))&&k<300);
-  const common=b*d/gcd(b,d);
-  q={a,b,c,d,x:common/b,y:common/d,common,answer:a*d<b*c?'<':a*d>b*c?'>':'='};
-  phase='start';calculated.clear();busy=false;render();
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+const frac=(n,d)=>`<span class="frac"><span class="top">${n}</span><span class="bar"></span><span class="bottom">${d}</span></span>`;
+const btn=(html,kind,side,cls='')=>`<button class="math-button ${cls}" data-action="${kind}" data-side="${side}" aria-label="İfadeyi dönüştür">${html}</button>`;
+const sign=(a,b,c,d)=>a*d<b*c?'<':a*d>b*c?'>':'=';
+function generate(){
+ let a,b,c,d,t=0;
+ if(mode==='one'){
+   // Her iki basit kesrin payda - pay farkı eşit ve pozitiftir.
+   let delta=rnd(1,3); b=rnd(delta+2,12); do{d=rnd(delta+2,12)}while(d===b); a=b-delta;c=d-delta;
+ }else{
+   do{b=rnd(3,10);d=rnd(3,10);a=rnd(1,b-1);c=rnd(1,d-1);t++}while((b===d||b*d/gcd(b,d)>72||a*d===b*c)&&t<200);
+ }
+ const common=b*d/gcd(b,d);
+ q={a,b,c,d,common,x:common/b,y:common/d,delta:b-a,answer:sign(a,b,c,d)};
+ steps=[0,0];solved.clear();phase='initial';locked=false;stamp++;render();
 }
-function frac(top,bottom,mode,side){
-  return `<div class="frac"><div class="num">${mode==='products'?product(top,side+'N'):text(top)}</div><div class="bar"></div><div class="den">${mode==='products'?product(bottom,side+'D'):text(bottom,phase==='start'?'den':'')}</div></div>`;
+function denSide(i){
+ const n=i===0?q.a:q.c,d=i===0?q.b:q.d,m=i===0?q.x:q.y,s=i===0?'L':'R';
+ if(phase==='initial')return `<span class="expr">${frac(n,btn(d,'den',s))}</span>`;
+ if(phase==='factors')return `<span class="expr">${frac(n,d)}</span>${btn('('+m+')','factor',s,'success')}`;
+ if(phase==='multiplications'||phase==='answer'||phase==='complete'){
+  if(phase==='complete')return `<span class="expr">${frac(n,d)}</span>`;
+  const prod=(value,key)=>solved.has(key)?String(value*m):btn(value+'<span class="dot">·</span>'+m,'product',key,'product');
+  return `<span class="expr">${frac(prod(n,s+'n'),prod(d,s+'d'))}</span>`;
+ }
+ return '';
 }
-function text(value,role=''){return `<span class="token ${role==='den'?'clickable':''}" ${role==='den'?'data-action="den" tabindex="0" role="button" aria-label="Paydayı eşitle"':''}>${value}</span>`;}
-function product(pair,key){
-  const n=pair[0]*pair[1];
-  if(calculated.has(key))return `<span class="token result">${n}</span>`;
-  return `<span class="token clickable product" role="button" tabindex="0" data-product="${key}" aria-label="Çarpımı hesapla">${pair[0]}<span class="times">·</span>${pair[1]}</span>`;
+function finalDifference(d,highlight){
+ const bottom = highlight ? `<span class="den-focus">${d}</span>` : d;
+ return `<span class="expr"><span>1</span><span>−</span>${frac(q.delta,bottom)}</span>`;
 }
-function oneSide(side){
-  let a=side==='L'?q.a:q.c,b=side==='L'?q.b:q.d,k=side==='L'?q.x:q.y;
-  if(phase==='start')return frac(a,b,'original',side);
-  if(phase==='factors')return frac(a,b,'original',side)+`<span class="token clickable mult" data-action="factor" role="button" tabindex="0" aria-label="Genişletme katsayısı">(${k})</span>`;
-  if(phase==='products'||phase==='choose')return frac([a,k],[b,k],'products',side);
-  return frac(a,b,'final',side);
+function oneSide(i){
+ const n=i===0?q.a:q.c,d=i===0?q.b:q.d,s=i===0?'L':'R';
+ const st=steps[i];
+ const focusDen = steps.every(x=>x===3) && d===Math.max(q.b,q.d);
+ if(st===0)return `<span class="expr">${btn(frac(n,d),'fraction',s,'frac-button')}</span>`;
+ if(st===1)return `<span class="expr">${btn(frac(`${d}−${q.delta}`,d),'split',s,'frac-button')}</span>`;
+ if(st===2)return `<span class="expr">${btn(frac(d,d),'unity',s,'frac-button')}<span>−</span>${frac(q.delta,d)}</span>`;
+ return finalDifference(d, focusDen);
 }
 function render(){
-  left.innerHTML=oneSide('L');right.innerHTML=oneSide('R');
-  op.textContent=phase==='done'?q.answer:'?';
-  op.classList.toggle('symbol-preview',phase!=='done');
-  choices.classList.toggle('hidden',phase!=='choose');
-  const prompts={start:'Paydalardan birine tıkla.',factors:'Genişletme katsayılarından birine tıkla.',products:'Vurgulanan çarpımlara tek tek tıkla.',choose:'Kesirleri karşılaştır. Doğru işareti seç.',done:'Doğru!'};
-  H.textContent=prompts[phase];
-}
-function act(element){
-  if(busy)return;
-  if(phase==='start'&&element.closest('[data-action="den"]')){phase='factors';render();return;}
-  if(phase==='factors'&&element.closest('[data-action="factor"]')){phase='products';render();return;}
-  if(phase==='products'){
-    const token=element.closest('[data-product]');if(!token)return;
-    calculated.add(token.dataset.product);
-    if(calculated.size===4)phase='choose';
-    render();
+ document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active',el.dataset.mode===mode));
+ L.innerHTML=mode==='one'?oneSide(0):denSide(0);
+ R.innerHTML=mode==='one'?oneSide(1):denSide(1);
+ O.textContent=phase==='complete'?q.answer:'?';O.classList.toggle('done',phase==='complete');
+ if(mode==='one'){
+  if(steps.every(x=>x===3)){
+    const biggerDen = Math.max(q.b,q.d);
+    E.textContent='Çıkarılan kesirlerde paylar aynı. Sadece paydalara bakılır: büyük payda → daha küçük kesir → sonuç daha büyük. Bu yüzden '+biggerDen+' belirleyicidir.';
+  }else{
+    E.textContent=steps.some(x=>x>0)?'Pay ile payda arasındaki fark aynı':'';
   }
+  H.textContent=phase==='complete'?'Doğru!':steps.every(x=>x===3)?'Büyük payda, çıkarılan kesri küçültür. İşareti seç.':
+   steps.some(x=>x===2)?'Paydaya eşit olan kesre tıkla; 1’e dönüştür.':
+   steps.some(x=>x===1)?'Dönüşen kesre tıkla ve farkı iki kesre ayır.':'İstediğin kesre tıkla.';
+ }else{
+  E.textContent='';
+  H.textContent={initial:'Paydalardan birine tıkla.',factors:'Genişletme katsayılarından birine tıkla.',multiplications:'Çarpımları tek tek hesapla.',answer:'Karşılaştırma işaretini seç.',complete:'Doğru!'}[phase];
+ }
+ A.classList.toggle('hidden',mode==='one'?!(steps.every(x=>x===3)&&phase!=='complete'):phase!=='answer');
 }
-document.querySelector('.equation').addEventListener('click',e=>act(e.target));
-document.querySelector('.equation').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const el=e.target.closest('[role="button"]');if(el){e.preventDefault();act(el);}}});
-choices.addEventListener('click',e=>{
-  const btn=e.target.closest('[data-answer]');if(!btn||busy||phase!=='choose')return;
-  if(btn.dataset.answer!==q.answer){btn.classList.remove('wrong');void btn.offsetWidth;btn.classList.add('wrong');H.textContent='Tekrar dene.';return;}
-  busy=true;btn.classList.add('correct');op.textContent=q.answer;op.classList.remove('symbol-preview');
-  H.textContent='Doğru!';
-  setTimeout(()=>{phase='done';busy=false;render();},650);
+function action(el){
+ if(locked)return;
+ const kind=el.dataset.action,side=el.dataset.side,i=side==='L'?0:1;
+ if(mode==='one'){
+  const expected=['fraction','split','unity'];
+  if(steps[i]<3 && expected[steps[i]]===kind){steps[i]++;render()}
+ }else{
+  if(phase==='initial'&&kind==='den'){phase='factors';render()}
+  else if(phase==='factors'&&kind==='factor'){phase='multiplications';render()}
+  else if(phase==='multiplications'&&kind==='product'){
+   solved.add(side);if(solved.size===4)phase='answer';render();
+  }
+ }
+}
+$('equation').addEventListener('click',e=>{const el=e.target.closest('[data-action]');if(el)action(el)});
+A.addEventListener('click',e=>{
+ const el=e.target.closest('[data-answer]');if(!el||locked)return;
+ if(el.dataset.answer!==q.answer){el.classList.remove('wrong');void el.offsetWidth;el.classList.add('wrong');H.textContent='Tekrar dene.';return}
+ locked=true;el.classList.add('correct');O.textContent=q.answer;O.classList.add('done');H.textContent='Doğru!';
+ const snapshot=stamp;
+ setTimeout(()=>{if(snapshot!==stamp)return;phase='complete';locked=false;render();document.querySelectorAll('.answer').forEach(b=>b.classList.remove('correct','wrong'))},600);
 });
-$('restart').addEventListener('click',nextQuestion);
+$('new').addEventListener('click',generate);
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{mode=t.dataset.mode;generate()}));
 $('home').addEventListener('click',()=>location.href='https://sinan-ipek.github.io/projeler/');
-nextQuestion();
+generate();
 })();
 </script>
-</body>
-</html>
+</body></html>
