@@ -6905,6 +6905,35 @@
       return eraserSampleSegment(o.a,o.b,3);
     }
 
+    if(o.kind==='arc'){
+      return arcSamplePoints(o,160);
+    }
+
+    if(o.kind==='sector'){
+      const pts=[];
+
+      const firstRadius=eraserSampleSegment(o.center,o.a,3);
+      pts.push(...firstRadius);
+
+      const arcPts=arcSamplePoints(o,160);
+      if(arcPts.length){
+        if(pts.length && dist(pts[pts.length-1],arcPts[0])<1e-6){
+          arcPts.shift();
+        }
+        pts.push(...arcPts);
+      }
+
+      const secondRadius=eraserSampleSegment(o.b,o.center,3);
+      if(secondRadius.length){
+        if(pts.length && dist(pts[pts.length-1],secondRadius[0])<1e-6){
+          secondRadius.shift();
+        }
+        pts.push(...secondRadius);
+      }
+
+      return pts;
+    }
+
     if(o.kind==='ellipse'){
       const pts=[], n=140, a=o.angle||0;
       for(let i=0;i<=n;i++){
