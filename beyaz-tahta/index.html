@@ -3423,6 +3423,27 @@
     };
   }
 
+  function arcRotateHandle(o){
+    if(!o || (o.kind!=='arc' && o.kind!=='sector')) return null;
+    const g=arcGeometry(o);
+    if(!g) return null;
+
+    const midAngle=g.start+g.sweep/2;
+    const mid={
+      x:o.center.x+Math.cos(midAngle)*g.r,
+      y:o.center.y+Math.sin(midAngle)*g.r
+    };
+
+    // The handle grows outward from the midpoint of the visible arc.
+    const offset=30/viewZoom;
+    return {
+      name:'rotate',
+      mid,
+      x:mid.x+Math.cos(midAngle)*offset,
+      y:mid.y+Math.sin(midAngle)*offset
+    };
+  }
+
   function realEditHandles(o){
     if(!o || o.locked) return [];
 
@@ -4368,9 +4389,13 @@
     if(selectedIndex<0 || !objects[selectedIndex]) return;
     const selected=objects[selectedIndex];
 
-    // Kilitli nesne seçilebilir; yalnızca bounding box gösterilir.
-    // Taşıma / resize / rotate tutamaçları bilinçli olarak gizlidir.
+    // Kilitli nesne seçilebilir; düzenleme tutamaçları gizlidir.
     if(selected.locked){
+      if(selected.kind==='arc' || selected.kind==='sector'){
+        drawShape(selected,true);
+        return;
+      }
+
       const lockedBox=orientedSelectionBox(selected);
       if(!lockedBox) return;
       const lockedOc=orientedBoxCorners(lockedBox,8/viewZoom);
@@ -4422,6 +4447,62 @@
 
         ctx.beginPath();
         ctx.fillStyle='white';
+        ctx.arc(rh.x,rh.y,6/viewZoom,0,Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // ARC / SECTOR: no rectangular bounding box.
+    // M/A/B remain editable, and a dedicated rotation handle grows
+    // radially outward from the midpoint of the visible arc.
+    if(selected.kind==='arc' || selected.kind==='sector'){
+      const arcHandles=menuEditHandles(selected);
+      const rh=arcRotateHandle(selected);
+
+      ctx.save();
+      ctx.strokeStyle='#2563eb';
+      ctx.lineWidth=1.5/viewZoom;
+
+      const m=arcHandles.find(h=>h.name==='arc-center');
+      const a=arcHandles.find(h=>h.name==='arc-a');
+      const b=arcHandles.find(h=>h.name==='arc-b');
+
+      if(m && a && b){
+        ctx.save();
+        ctx.setLineDash([4/viewZoom,4/viewZoom]);
+        ctx.strokeStyle='rgba(37,99,235,.55)';
+        ctx.beginPath();
+        ctx.moveTo(m.x,m.y);
+        ctx.lineTo(a.x,a.y);
+        ctx.moveTo(m.x,m.y);
+        ctx.lineTo(b.x,b.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      for(const hnd of arcHandles){
+        ctx.beginPath();
+        ctx.fillStyle=selectedHandleIs(hnd.name) ? '#2563eb' : 'white';
+        ctx.strokeStyle='#2563eb';
+        ctx.arc(hnd.x,hnd.y,6/viewZoom,0,Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      if(rh){
+        ctx.beginPath();
+        ctx.moveTo(rh.mid.x,rh.mid.y);
+        ctx.lineTo(rh.x,rh.y);
+        ctx.strokeStyle='#2563eb';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.fillStyle='white';
+        ctx.strokeStyle='#2563eb';
         ctx.arc(rh.x,rh.y,6/viewZoom,0,Math.PI*2);
         ctx.fill();
         ctx.stroke();
@@ -4561,6 +4642,20 @@
       }
 
       const rh=lineRotateHandle(selected);
+      if(rh && Math.hypot(p.x-rh.x,p.y-rh.y)<=hitR) return 'rotate';
+
+      return null;
+    }
+
+    if(selected.kind==='arc' || selected.kind==='sector'){
+      const arcHandles=menuEditHandles(selected);
+      const hitR=(pointerType==='touch' ? 22 : 11)/viewZoom;
+
+      for(const h of arcHandles){
+        if(Math.hypot(p.x-h.x,p.y-h.y)<=hitR) return h.name;
+      }
+
+      const rh=arcRotateHandle(selected);
       if(rh && Math.hypot(p.x-rh.x,p.y-rh.y)<=hitR) return 'rotate';
 
       return null;
@@ -7852,9 +7947,16 @@
         if(Math.hypot(rawDx,rawDy)>2/viewZoom) multiHandleMoved=true;
 
       }else if(selectAction==='rotate'){
-        const box=orientedSelectionBox(selectSnapshot);
-        if(box){
-          const c=box.center;
+        const isArcLike=
+          selectSnapshot.kind==='arc' ||
+          selectSnapshot.kind==='sector';
+
+        const box=isArcLike ? null : orientedSelectionBox(selectSnapshot);
+        const c=isArcLike
+          ? selectSnapshot.center
+          : (box ? box.center : null);
+
+        if(c){
           const a0=Math.atan2(selectStart.y-c.y,selectStart.x-c.x);
           const a1=Math.atan2(p.y-c.y,p.x-c.x);
           const delta=a1-a0;
@@ -7863,6 +7965,10 @@
           }
           objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
           rotateObject(objects[selectedIndex],delta);
+
+          if(isArcLike){
+            statusEl.textContent='Merkez etrafında döndürülüyor';
+          }
         }
 
       }else if(selectAction==='point'){
