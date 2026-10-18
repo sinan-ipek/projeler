@@ -2665,7 +2665,7 @@
     return pts;
   }
 
-  function setArcRadiusFromHandle(o,which,target,snapshot=o){
+  function setArcRadiusFromHandle(o,which,target,snapshot=o,lockRadius=false){
     if(
       !o ||
       !snapshot ||
@@ -2673,6 +2673,10 @@
       !target
     ) return false;
     const m={...snapshot.center};
+    const fixedRadius=Math.max(
+      8,
+      Math.hypot(snapshot.a.x-m.x,snapshot.a.y-m.y)
+    );
 
     if(which==='arc-center'){
       const dx=target.x-snapshot.center.x;
@@ -2687,7 +2691,9 @@
     const oldB=Math.atan2(snapshot.b.y-m.y,snapshot.b.x-m.x);
 
     if(which==='arc-a'){
-      const r=Math.max(8,Math.hypot(target.x-m.x,target.y-m.y));
+      const r=lockRadius
+        ? fixedRadius
+        : Math.max(8,Math.hypot(target.x-m.x,target.y-m.y));
       const a=Math.atan2(target.y-m.y,target.x-m.x);
       o.center=m;
       o.a={x:m.x+Math.cos(a)*r,y:m.y+Math.sin(a)*r};
@@ -2696,7 +2702,9 @@
     }
 
     if(which==='arc-b'){
-      const r=Math.max(8,Math.hypot(target.x-m.x,target.y-m.y));
+      const r=lockRadius
+        ? fixedRadius
+        : Math.max(8,Math.hypot(target.x-m.x,target.y-m.y));
       const b=Math.atan2(target.y-m.y,target.x-m.x);
       o.center=m;
       o.a={x:m.x+Math.cos(oldA)*r,y:m.y+Math.sin(oldA)*r};
@@ -4983,12 +4991,18 @@
     if(shapeName!==undefined) o.shapeName=shapeName;
   }
 
-  function moveMenuHandleFromSnapshot(o,snap,handle,p){
+  function moveMenuHandleFromSnapshot(o,snap,handle,p,lockArcRadius=false){
     if(!o || !snap) return false;
 
     // ARC M/A/B handles work for both menu and auto-recognized arcs.
     if((snap.kind==='arc' || snap.kind==='sector') && handle.startsWith('arc-')){
-      return setArcRadiusFromHandle(o,handle,p,snap);
+      return setArcRadiusFromHandle(
+        o,
+        handle,
+        p,
+        snap,
+        lockArcRadius && (handle==='arc-a' || handle==='arc-b')
+      );
     }
 
     // LINE endpoints work for every line, including ink-recognized AB segments.
@@ -7866,11 +7880,21 @@
 
         const rawDx=p.x-selectStart.x;
         const rawDy=p.y-selectStart.y;
-        const d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
-        const pointTarget={
-          x:selectStart.x+d.dx,
-          y:selectStart.y+d.dy
-        };
+
+        const isArcEndpoint=
+          (selectSnapshot.kind==='arc' || selectSnapshot.kind==='sector') &&
+          (activeHandle==='arc-a' || activeHandle==='arc-b');
+
+        const d=isArcEndpoint
+          ? {dx:rawDx,dy:rawDy}
+          : constrainMoveDelta(rawDx,rawDy,e.shiftKey);
+
+        const pointTarget=isArcEndpoint
+          ? {x:p.x,y:p.y}
+          : {
+              x:selectStart.x+d.dx,
+              y:selectStart.y+d.dy
+            };
 
         if(
           selectSnapshot.kind==='line' &&
@@ -7889,10 +7913,17 @@
           objects[selectedIndex],
           selectSnapshot,
           String(activeHandle),
-          pointTarget
+          pointTarget,
+          isArcEndpoint && e.shiftKey
         );
 
         // Backward compatibility: auto-recognized triangle still uses vertex editing.
+        if(isArcEndpoint){
+          statusEl.textContent=e.shiftKey
+            ? 'Yarıçap kilitli — yalnız açı değişiyor'
+            : 'Yay ucu hareket ediyor — yarıçap değişebilir';
+        }
+
         if(!handled && String(activeHandle).startsWith('vertex-')){
           const vertexIndex=Number(String(activeHandle).split('-')[1]);
           moveTriangleVertexFromSnapshot(
