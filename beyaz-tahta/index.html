@@ -3348,9 +3348,9 @@
 
     if(o.kind==='arc' || o.kind==='sector'){
       return [
-        {name:'arc-center',x:o.center.x,y:o.center.y,label:'M'},
-        {name:'arc-a',x:o.a.x,y:o.a.y,label:'A'},
-        {name:'arc-b',x:o.b.x,y:o.b.y,label:'B'}
+        {name:'arc-center',x:o.center.x,y:o.center.y},
+        {name:'arc-a',x:o.a.x,y:o.a.y},
+        {name:'arc-b',x:o.b.x,y:o.b.y}
       ];
     }
 
@@ -4478,17 +4478,7 @@
         ctx.fill();
         ctx.stroke();
 
-        if((selected.kind==='arc' || selected.kind==='sector') && hnd.label){
-          ctx.save();
-          ctx.fillStyle='#2563eb';
-          ctx.font=`${12/viewZoom}px system-ui,-apple-system,"Segoe UI",Arial,sans-serif`;
-          ctx.fillText(
-            hnd.label,
-            hnd.x+8/viewZoom,
-            hnd.y-8/viewZoom
-          );
-          ctx.restore();
-        }
+
       }
     }else{
       const isTriangle=
