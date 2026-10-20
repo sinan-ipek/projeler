@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Denklem Atölyesi — Beta 46</title>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 54</title>
 <style>
 :root{font-family:Arial,Helvetica,sans-serif;color:#1d2a3b;background:#f4f6fa}*{box-sizing:border-box}body{margin:0;min-height:100vh}header{padding:18px 25px;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:22px;margin:0;font-weight:600}.subtitle{font-size:12px;color:#77869a;margin-top:6px}.home{width:45px;height:45px;border-radius:12px;background:#ffcf31;border:2px solid #e4ac14;box-shadow:0 3px 8px #5a461525;display:grid;place-items:center;color:#383019;text-decoration:none}.home svg{height:23px;width:23px;fill:currentColor}main{width:min(1120px,calc(100% - 28px));margin:auto}.toolbar,.examples,.entry{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:8px 0 14px}button,select,input{font:inherit;border:1px solid #d5dfea;border-radius:10px;background:white;color:#273954;padding:10px 13px}button{cursor:pointer;box-shadow:0 2px 5px #182b3a0c}button:hover:not(:disabled){border-color:#8fa6c4}button:disabled{opacity:.42;cursor:default}.toolbar label{font-size:13px;color:#69768c;margin-left:auto}.mode-switch{display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid #d5dfea;border-radius:12px;background:#eaf0f7}.mode-switch button{padding:7px 13px;border:1px solid transparent;background:transparent;box-shadow:none;border-radius:9px;font-size:14px;min-width:67px}.mode-switch button.selected{color:white;background:#273e5e;border-color:#273e5e;box-shadow:0 2px 5px #182b3a20}.mode-switch button:focus-visible{outline:2px solid #e1a518;outline-offset:2px}.board{border:1px solid #e1e7ee;background:white;border-radius:22px;min-height:430px;box-shadow:0 14px 45px #192e4b0b;overflow:hidden}.board-top{display:flex;justify-content:space-between;color:#78869b;padding:18px 20px;font-size:12px}.scene{height:316px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}.equation{position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1.3;font-size:clamp(26px,4.5vw,50px);font-weight:400;max-width:97%;transform-origin:center center;font-variant-numeric:lining-nums}.side{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative}.equals{padding:0 .36em}.part{display:inline-flex;align-items:center;white-space:nowrap;position:relative}.atom{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border-radius:7px;position:relative;padding:0 .035em}.sign{padding:0 .06em}.hit{cursor:pointer;position:relative;border-radius:8px;outline:none;background:transparent;box-shadow:none;transition:background .18s,box-shadow .18s}.hit:hover,.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.busy .hit{pointer-events:none}.combine{display:inline-flex;align-items:center;border-radius:8px}.combine.hit{padding:0 .04em}.multi-combine{display:inline-flex;align-items:center;white-space:nowrap;border-radius:8px}.multi-combine .part{white-space:nowrap}.multi-combine.hit{padding:0 .05em}.multiply-factor{display:inline-flex;align-items:center;white-space:nowrap}.mul-dot{display:inline-block;padding:0 .08em}.multiply-factor .hit{padding:0 .055em}.fraction{display:inline-grid;grid-template-rows:auto 3px auto;align-items:center;justify-items:center;position:relative;margin:0 .08em;min-width:1em;border-radius:9px}.numerator,.denominator{display:flex;justify-content:center;align-items:center;min-height:.92em;padding:0 .14em;white-space:nowrap}.numerator{transform:translateY(-.09em)}.denominator{transform:translateY(.09em)}.fracbar{height:2px;width:100%;background:#293852;border-radius:2px;align-self:center;transform:scaleX(1);transform-origin:center}.fraction.constructing .fracbar{transform:scaleX(0)}.fraction.constructed .fracbar{transform:scaleX(1);transition:transform .34s cubic-bezier(.45,0,.18,1)}.fraction.hit:hover,.fraction.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.tip{min-height:32px;text-align:center;font-size:13px;color:#7d8ca0}.examples button.active,.modules button.active{background:#273e5e;color:white}.modules{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 14px}.modules button{font-weight:600}.module-label{font-size:13px;color:#62738c;margin:8px 0}.examples button{font-size:14px}.entry input{width:min(340px,65vw)}.feedback{min-height:18px;color:#ad3e3e;font-size:12px}.notice{font-size:12px;color:#8390a3;line-height:1.6}.measure-layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;pointer-events:none}.measurement{max-width:97%}.ghost{position:fixed;z-index:2000;pointer-events:none;white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-weight:400;line-height:1.3;color:#bf7c1d;will-change:transform,opacity}.done{color:#188a5c}.cross{position:relative}@media(max-width:620px){header{padding:12px 16px}.board{min-height:375px}.board-top{padding:14px}.scene{height:270px}.equals{padding:0 .18em}.toolbar label{margin-left:0}}
 
-/* Modül 6: Çarpan paydanın hemen altında, küçük ve net görünür. */
+/* Çoklu kesir modülü: Çarpan paydanın hemen altında, küçük ve net görünür. */
 .six-den-stack{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative}
 .six-factor{position:absolute;left:50%;top:100%;transform:translate(-50%,.18em);font-size:.42em;line-height:1.08;padding:.03em .12em;color:#a2680f;letter-spacing:-.01em;z-index:2}
 .six-den-stack .atom{line-height:1.12}
@@ -18,11 +18,30 @@
 .distribute-hint{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:8}
 .distribute-hint path.distribute-arc{fill:none;stroke:#b9a38b;stroke-width:2.4;stroke-linecap:round;stroke-dasharray:5 7;opacity:.77}
 .distribute-hint .distribute-arrow{fill:none;stroke:#b9a38b;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+/* Modül 4: etiketlerin yalnızca örnekler arasında görünmesi. */
+.example-section{width:100%;font-size:12px;color:#73849b;font-weight:600;margin:9px 0 0}
+.whole-simplify{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border-radius:10px;padding:0 .035em}
+.whole-simplify[data-action="preSimplify"] [data-action]{pointer-events:none}
+.whole-simplify[data-action="preSimplify"] .hit:hover{background:transparent;box-shadow:none}
+.whole-simplify[data-action^="simpleShared_"] .hit{pointer-events:none}
+.whole-simplify[data-action^="simpleShared_"] .hit:hover{background:transparent;box-shadow:none}
+.simple-side{display:inline-flex;align-items:center;white-space:nowrap}
+.simple-factor .hit{padding:0 .04em}
+/* Ortak çarpan bağı: farklı yerlerdeki aynı matematiksel yapı birlikte hl olur.
+   Vurgu yalnızca ilgili parçaların üzerinde; eşitlik veya komşu terimlerde değil. */
+.simple-linked{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+.simple-linked.hit{padding:0 .025em}
+.simple-linked.hl-linked,.simple-linked.hit:hover,.simple-linked.hit:focus-visible{
+  background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940;
+}
+.simple-linked .hit{pointer-events:none}
+.simple-coeff-sum{display:inline-flex;align-items:center;white-space:nowrap}
+
 </style></head><body>
-<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 46</span></h1><div class="subtitle">Kademeli modüller · önceki bilgiler korunur</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
+<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 54</span></h1><div class="subtitle">Kademeli modüller · önceki bilgiler korunur</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
 <main><div class="toolbar"><button id="reset">↺ Baştan</button><button id="back">← Geri</button><div class="mode-switch" role="group" aria-label="Çözüm yöntemi"><button type="button" id="modeSlow" class="selected" aria-pressed="true" title="Bütün öğretici işlem adımlarını göster">Yavaş</button><button type="button" id="modeFast" aria-pressed="false" title="Bariz işlemleri tek adımda tamamla">Hızlı</button></div><label for="level">Seviye</label><select id="level"><option>A1</option><option selected>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></div>
-<div class="modules" id="modules"><button data-module="1" class="active">1 · ax + b = c</button><button data-module="2">2 · ax + b = cx + d</button><button data-module="3">3 · a(x + b) = c</button><button data-module="4">4 · (ax + b)/n = c</button><button data-module="5">5 · (ax + b)/m = (cx + d)/n</button><button data-module="6">6 · Çoklu Kesirli Denklemler</button></div><div class="module-label" id="moduleLabel"></div><div class="board"><div class="board-top"><span>Terim taşıma · yerinde hesaplama · bölme · sadeleştirme</span><span id="stepLabel">Adım 1</span></div><div id="scene" class="scene"><div id="equation" class="equation"></div></div><div id="tip" class="tip" aria-live="polite"></div></div>
-<div id="startupNotice" class="startup-notice" role="alert">Denklem motoru başlatılamadı. Hata bilgisi için tarayıcı konsolunu açabilirsiniz.</div><div id="examples" class="examples"></div><div class="entry"><input id="custom" aria-label="Denklem" placeholder="Örn. 3x+5=x+13" spellcheck="false"><button id="load">Denklemi aç</button><span id="feedback" class="feedback"></span></div><p class="notice">Modül 1: ax+b=c. Modül 2: ax+b=cx+d. Modül 3: parantezli denklemler. Modül 4: sayısal paydalar için iki tarafı aynı sayı ile çarpma. Modül 5: iki tarafı paydaların OKEK’iyle çarpma ve sadeleştirme. Modül 6: değişken sayıdaki doğrusal veya sabit paylı kesirler; önce paydasız terimlere /1, sonra OKEK genişletmeleri ve ortak paydaların kaldırılması. Hızlı modda genişletilen paydaki çarpma özgün terim sırası korunarak hesaplanır; eksi işaretli kesirlerde çizginin parantez görevi korunur. Önceki modüller korunur; Yavaş bütün adımları gösterir, Hızlı bariz kısa yolları uygular. Tam sayılı katsayılar desteklenir. Başlangıçta yalnızca uygun terimlere fareyle gelince vurgu oluşur. Kesirlerde payda sıfır olamaz.</p></main>
+<div class="modules" id="modules"><button data-module="1" class="active">1 · ax + b = c</button><button data-module="2">2 · ax + b = cx + d</button><button data-module="3">3 · a(x + b) = c</button><button data-module="4">4 · Basit Aritmetik ile Çözülebilen Denklemler</button><button data-module="5">5 · (ax + b)/n = c</button><button data-module="6">6 · (ax + b)/m = (cx + d)/n</button><button data-module="7">7 · Çoklu Kesirli Denklemler</button></div><div class="module-label" id="moduleLabel"></div><div class="board"><div class="board-top"><span>Terim taşıma · yerinde hesaplama · bölme · sadeleştirme</span><span id="stepLabel">Adım 1</span></div><div id="scene" class="scene"><div id="equation" class="equation"></div></div><div id="tip" class="tip" aria-live="polite"></div></div>
+<div id="startupNotice" class="startup-notice" role="alert">Denklem motoru başlatılamadı. Hata bilgisi için tarayıcı konsolunu açabilirsiniz.</div><div id="examples" class="examples"></div><div class="entry"><input id="custom" aria-label="Denklem" placeholder="Örn. 3x+5=x+13" spellcheck="false"><button id="load">Denklemi aç</button><span id="feedback" class="feedback"></span></div><p class="notice">Modül 1: ax+b=c. Modül 2: bilinmeyen iki tarafta. Modül 3: tek parantezli denklemler. Modül 4: temel aritmetik ailesi — bütün denklemi ortak sayıya bölme, birden fazla parantez, ortak çarpanları ve benzer terimleri ilişkilendiren hl, iç içe parantez. Modül 5: tek kesir. Modül 6: iki kesir. Modül 7: değişken sayıda kesirli ve kesirsiz terim. Bütün modüllerde çözüm adımlarından önce ortak tam sayı çarpanı denetlenir; bu aşamada yalnızca sadeleşen katsayılar birlikte vurgulanır. Hızlı modda terim sırası korunur; kesir çizgisinin parantez görevi kaybolmaz. Her zaman yalnızca geçerli işlem üzerine gelindiğinde highlight oluşur.</p></main>
 <script>
 (()=>{
  const box=document.getElementById('startupNotice');
@@ -38,9 +57,9 @@
 <script>
 (()=>{'use strict';
 const $=s=>document.querySelector(s), eq=$('#equation'),scene=$('#scene');
-const examplesByModule={6:["x/2+x/3=5","x/3+x/5=8/5","(2x+1)/4+(x-2)/6=5/4","(x+2)/6-(2-x)/9=2/3","(3x-1)/5+(2-x)/4=(x+8)/10","2x+(x-3)/6=6+(x-3)/4","-(x+1)/4+(3x-2)/6-x/3=-3/4","x/4+x/6+x/8=13/6","(x-1)/7+(x+3)/4=25/14","(2-x)/5+(x+1)/6=(3x-1)/10","x/6+x/9=5x/18","x/6+x/9=5x/18+1"],5:['(2x-2)/4=(x+3)/10','(x-1)/3=(2x-4)/8','(2x+1)/5=(x+4)/6','(x+1)/2=(3x+9)/9','(x+3)/12=(2x+3)/15','(3x-8)/11=x/1','(x+2)/7=(2x+5)/14','(x+3)/13=(2x+6)/26'],4:['(2x+4)/3=6','(3x-2)/4=7','(5x+5)/5=8','(4x-8)/6=2','(-2x+3)/7=-1','(2x+6)/8=4','x/9=5','3x/10=6','(3x+4)/2=5','(2x+3)/1=7'],3:['3(x+2)=18','2(x-4)=10','-3(x+2)=12','2(3x+4)=20','3(x+2)+4=19','2(x+3)=x+11','2(x+3)=2x+6','2(x+3)=2x+8'],1:['4x+6=12','2x+3=11','3x-5=10','-3x+6=-9','5x+10=0','7x-3=4'],2:['3x+5=x+13','5x+7=2x+19','7x-3=2x+12','2x+8=5x-7','-3x+6=x-10','2x+3=2x+8','2x+3=2x+3']};
+const examplesByModule={7:["x/2+x/3=5","x/3+x/5=8/5","(2x+1)/4+(x-2)/6=5/4","(x+2)/6-(2-x)/9=2/3","(3x-1)/5+(2-x)/4=(x+8)/10","2x+(x-3)/6=6+(x-3)/4","-(x+1)/4+(3x-2)/6-x/3=-3/4","x/4+x/6+x/8=13/6","(x-1)/7+(x+3)/4=25/14","(2-x)/5+(x+1)/6=(3x-1)/10","x/6+x/9=5x/18","x/6+x/9=5x/18+1"],6:['(2x-2)/4=(x+3)/10','(x-1)/3=(2x-4)/8','(2x+1)/5=(x+4)/6','(x+1)/2=(3x+9)/9','(x+3)/12=(2x+3)/15','(3x-8)/11=x/1','(x+2)/7=(2x+5)/14','(x+3)/13=(2x+6)/26'],5:['(2x+4)/3=6','(3x-2)/4=7','(5x+5)/5=8','(4x-8)/6=2','(-2x+3)/7=-1','(2x+6)/8=4','x/9=5','3x/10=6','(3x+4)/2=5','(2x+3)/1=7'],4:['4x+6=12','6x+9=15','2(x+2)=10','2(x+3)-3(x-1)=7','2(x+5)+4(x-1)=18','4(x-1)-2(x+5)=6','3(x+2)+2x+4=24','3(x+2)+5(x+2)=24','3(x+2)+5x+10=24','2(3(x-1)+4)=20','3(2(x+1)-x)=15','2(3(x-1)+4)-4=12'],3:['3(x+2)=18','2(x-4)=10','-3(x+2)=12','2(3x+4)=20','3(x+2)+4=19','2(x+3)=x+11','2(x+3)=2x+6','2(x+3)=2x+8'],1:['4x+6=12','2x+3=11','3x-5=10','-3x+6=-9','5x+10=0','7x-3=4'],2:['3x+5=x+13','5x+7=2x+19','7x-3=2x+12','2x+8=5x-7','-3x+6=x-10','2x+3=2x+8','2x+3=2x+3']};
 let layoutShiftX=0;
-let currentModule=1;let bracket=null;let fractionEq=null;let pairEq=null;let multiEq=null;
+let currentModule=1;let bracket=null;let fractionEq=null;let pairEq=null;let multiEq=null;let simpleEq=null;let preCommon=1;
 let m={a:4,b:6,c:0,d:12},s,history=[],busy=false,step=0;
 // ÖĞRETİM MODU: Animasyon hızından bağımsızdır. Yavaş, Beta 37 adımlarını korur.
 let teachingMode='slow';
@@ -256,10 +275,8 @@ function multiSideTotal(side){
 }
 function multiSideMarkup(side,phase){
  const q=multiEq,terms=q.sides[side];
- if(phase==='open'&&q.combined?.[side]){
-  const sum=multiSideTotal(side);
-  return atom(`sixCombined${side}`,multiAffineText(sum.a,sum.b));
- }
+ // Modül 7'nin eski «bütün tarafı birden topla» işlemi kaldırıldı.
+ // Kesirler açıldıktan sonra seçilebilir BENZER TERİM gruplarına geçilir.
  const isOpen=phase==='open';
  const fragments=terms.map((t,i)=>{
   if(isOpen){
@@ -289,7 +306,7 @@ function multiSideMarkup(side,phase){
    }else if(phase==='expand'&&!t.ready){
     denominator=hit(`sixDen${t.id}`,fmt(denominatorValue),`multiSelect_${t.id}`);
    }else if(phase==='cancel'){
-    denominator=hit(`sixDen${t.id}`,fmt(denominatorValue),'multiCancel');
+    denominator=sLinkedHit(`sixDen${t.id}`,fmt(denominatorValue),'multiCancel','all-common-denominators');
    }else denominator=atom(`sixDen${t.id}`,fmt(denominatorValue));
    content=fhtml(numerator,denominator,`sixFraction${t.id}`,null);
   }
@@ -297,10 +314,6 @@ function multiSideMarkup(side,phase){
     (prefix?`<span class="sign">${prefix}</span>`:'')+content+'</span>';
  });
  const inner=fragments.join('')||atom(`sixZero${side}`,'0');
- if(isOpen&&terms.length>1&&terms.every(t=>!multiOpenPending(t))){
-  return `<span class="multi-combine hit" role="button" tabindex="0" `+
-   `data-action="multiCombine_${side}" data-id="sixGroup${side}">${inner}</span>`;
- }
  return `<span class="multi-combine" data-id="sixGroup${side}">${inner}</span>`;
 }
 function multiMarkup(){
@@ -356,16 +369,34 @@ async function multiStage(change){
  }
  await Promise.all(transitions);
 }
-function multiToLinear(){
- const left=multiSideTotal('L'),right=multiSideTotal('R');
- m={a:left.a,b:left.b,c:right.a,d:right.b};
+// Beta 54: Kesir çizgileri kaybolduktan sonra terimleri toplamadan
+// GENEL ifade ağacına aktar. 3x+6−4+2x yapısı dört ayrı terim olarak
+// yaşar. Bu aşamada Modül 4'ün tek ortak "benzer terim" motoru kullanılır.
+function multiToExpression(){
+ const build=side=>{
+  const pieces=[];
+  for(const t of multiEq.sides[side]){
+   // Tüm gerekli parantez/eksi işlemleri tamamlanmış durumda.
+   // Paydaki özgün terim sırasını koru: 2−x → 4−2x.
+   const text=multiScaledNumerator(t,multiFactor(t),t.sign<0);
+   const parsed=parseSimpleExpr(text);
+   if(!parsed)throw Error('Kesir sonrasında terimler ayrıştırılamadı: '+text);
+   if(parsed.kind==='sum')pieces.push(...parsed.items);
+   else pieces.push({sign:1,node:parsed});
+  }
+  return sSum(pieces.length?pieces:[{sign:1,node:sNumber(0)}]);
+ };
+ const left=build('L'),right=build('R');
+ simpleEq={mode:'expression',left,right};
+ const L=sPoly(left),R=sPoly(right);
+ m={a:L.a,b:L.b,c:R.a,d:R.b};
  multiEq.mode='linear';s=initial();s.barsReady=true;
 }
 async function multiAction(action){
  const q=multiEq;if(!q||q.mode==='linear'||busy)return;
  const phase=multiPhase();
  const match=action.match(/^multi(Wrap|Select|Apply|Open)_([LR]\d+)$/);
- const combining=action.match(/^multiCombine_([LR])$/);
+
  const term=match?multiTerms().find(t=>t.id===match[2]):null;
  let allowed=false;
  if(match&&term){
@@ -374,8 +405,7 @@ async function multiAction(action){
   if(match[1]==='Apply')allowed=phase==='expand'&&!term.ready&&term.pending;
   if(match[1]==='Open')allowed=phase==='open'&&multiOpenPending(term);
  }else if(action==='multiCancel')allowed=phase==='cancel';
- else if(combining)allowed=phase==='open'&&!q.combined[combining[1]]&&
-    q.sides[combining[1]].length>1&&q.sides[combining[1]].every(t=>!multiOpenPending(t));
+
  if(!allowed)return;
  busy=true;scene.classList.add('busy');save();step++;
  try{
@@ -401,12 +431,13 @@ async function multiAction(action){
     q.combined={L:q.sides.L.length===1&&!multiOpenPending(q.sides.L[0]),
                 R:q.sides.R.length===1&&!multiOpenPending(q.sides.R[0])};
    });
-  }else if(combining){
-   await multiStage(()=>{q.combined[combining[1]]=true});
   }
-  if(q.mode==='open'&&q.combined.L&&q.combined.R&&multiTerms().every(t=>!multiOpenPending(t))){
-   await wait(fastMode()?90:220);
-   await multiStage(()=>multiToLinear());
+  // Payda kaldırılmış, dağıtma ve işaret işlemleri bitmişse otomatik olarak
+  // aynı sembolleri KORUYAN ve ikili grup HL kullanan ifade motoruna geç.
+  // Artık sol/sağ bütününü tıklatıp tek adımda toplama yok.
+  if(q.mode==='open'&&multiTerms().every(t=>!multiOpenPending(t))){
+   await wait(fastMode()?70:150);
+   await multiStage(()=>multiToExpression());
   }
  }finally{busy=false;scene.classList.remove('busy');update()}
 }
@@ -415,6 +446,599 @@ async function multiAction(action){
 // Payda n sayısal olduğundan (n !== 0) eşitlik iki yanda OKEK ile çarpılabilir.
 // Başlangıç -> her iki tarafta "·OKEK" -> her taraf bağımsız sadeleşir
 // -> ortak katsayı paranteze dağıtılır -> önceki lineer denklem motoru.
+
+// MODÜL 4: Sayı, x, toplama ve çarpma nesnelerinden kurulan genel ifade ağacı.
+// Girişte dört aile kullanılır: tam denklem sadeleştirme, çoklu parantez,
+// ortak çarpan ve iç içe parantez. Ağaç, her adımda özgün işlem sırasını korur.
+let simpleNextId=1;
+const sn=(kind,props={})=>({kind,id:`sm${simpleNextId++}`,...props});
+const sNumber=v=>sn('num',{value:v});
+const sVariable=()=>sn('var');
+const sGroup=expr=>sn('group',{expr});
+function sMul(a,b){
+ if(a.kind==='num'&&a.value===1)return b;
+ if(b.kind==='num'&&b.value===1)return a;
+ return sn('mul',{factors:[a,b]});
+}
+function sSum(items){
+ const out=[];
+ for(const t of items){
+  if(t.node.kind==='sum')for(const p of t.node.items)out.push({sign:t.sign*p.sign,node:p.node});
+  else out.push(t);
+ }
+ return sn('sum',{items:out});
+}
+function parseSimpleExpr(source){
+ const t=source.replace(/[−–]/g,'-').replace(/\s+/g,'').replace(/\*/g,'·');
+ if(!t||/[^0-9xX()+\-·]/.test(t))return null;
+ let pos=0;
+ function factor(){
+  if(t[pos]==='('){pos++;const inside=expr();if(t[pos]!==')')throw Error('Parantez');pos++;return sGroup(inside)}
+  if(/[xX]/.test(t[pos]||'')){pos++;return sVariable()}
+  const digits=t.slice(pos).match(/^\d+/);
+  if(digits){pos+=digits[0].length;return sNumber(Number(digits[0]))}
+  throw Error('Terim');
+ }
+ function product(){
+  let value=factor();
+  while(pos<t.length && (/[0-9xX(]/.test(t[pos])||t[pos]==='·')){
+   if(t[pos]==='·')pos++;
+   value=sMul(value,factor());
+  }
+  return value;
+ }
+ function expr(){
+  const terms=[];
+  while(pos<t.length&&t[pos]!==')'){
+   let sign=1;
+   if(t[pos]==='+'||t[pos]==='-'){sign=t[pos]==='-'?-1:1;pos++}
+   else if(terms.length)throw Error('Toplama');
+   const value=product();terms.push({sign,node:value});
+   if(pos<t.length&&t[pos]!==')'&&t[pos]!=='+'&&t[pos]!=='-')throw Error('Beklenmeyen');
+  }
+  if(!terms.length)throw Error('Boş');
+  return sSum(terms);
+ }
+ try{const res=expr();if(pos!==t.length)return null;return res}catch{return null}
+}
+function sPoly(node){
+ if(node.kind==='coeffsum')return {a:0,b:node.terms.reduce((sum,t)=>sum+t.sign*t.value,0)};
+ if(node.kind==='num')return {a:0,b:node.value};
+ if(node.kind==='var')return {a:1,b:0};
+ if(node.kind==='group')return sPoly(node.expr);
+ if(node.kind==='sum')return node.items.reduce((p,t)=>{const v=sPoly(t.node);return {a:p.a+t.sign*v.a,b:p.b+t.sign*v.b}},{a:0,b:0});
+ if(node.kind==='mul'){
+  const f=sPoly(node.factors[0]),g=sPoly(node.factors[1]);
+  if(f.a*g.a!==0)throw Error('İkinci derece');
+  return {a:f.a*g.b+f.b*g.a,b:f.b*g.b};
+ }
+ throw Error('Yapı');
+}
+function parseSimple(raw){
+ const str=raw.replace(/\s+/g,'').replace(/−/g,'-');const parts=str.split('=');
+ if(parts.length!==2||!parts.every(Boolean))return null;
+ const left=parseSimpleExpr(parts[0]),right=parseSimpleExpr(parts[1]);
+ if(!left||!right)return null;
+ try{
+  const a=sPoly(left),b=sPoly(right);
+  if(![a.a,a.b,b.a,b.b].every(Number.isSafeInteger) || Math.max(...[a.a,a.b,b.a,b.b].map(Math.abs))>300000)return null;
+ }catch{return null}
+ return {mode:'expression',left,right,raw};
+}
+function sPlain(node){
+ if(node.kind==='coeffsum')return `(${sCoefficientText(node)})`;
+ if(node.kind==='num')return String(node.value);
+ if(node.kind==='var')return 'x';
+ if(node.kind==='group')return `(${sPlain(node.expr)})`;
+ if(node.kind==='sum')return node.items.map((t,i)=>`${t.sign<0?'−':i?'+':''}${sPlain(t.node)}`).join('');
+ if(node.kind==='mul'){
+  const [a,b]=node.factors;
+  return `${sPlain(a)}${a.kind==='num'&&(b.kind==='group'||b.kind==='var')?'':'·'}${sPlain(b)}`;
+ }
+ return '';
+}
+// Katsayılar ara aşamada toplanmaz: (3+2)(x+2) öğrenci tarafından çözülür.
+function sCoefficientText(node){
+ return node.terms.map((t,i)=>`${t.sign<0?'−':i?'+':''}${fmt(t.value)}`).join('');
+}
+function sLinkedHit(id,content,action,group){
+ return `<span class="simple-linked hit" data-id="${id}" data-action="${action}" `+
+  `data-hl-group="${group}" tabindex="0" role="button">${content}</span>`;
+}
+function sTraverse(node,fn){fn(node);if(node.kind==='group')sTraverse(node.expr,fn);if(node.kind==='sum')for(const t of node.items)sTraverse(t.node,fn);if(node.kind==='mul')for(const t of node.factors)sTraverse(t,fn)}
+function sFind(id){let found=null;for(const side of ['left','right'])sTraverse(simpleEq[side],n=>{if(n.id===id)found=n});return found}
+function sRewrite(node,id,replacer){
+ if(node.id===id)return replacer(node);
+ if(node.kind==='sum')return sSum(node.items.map(t=>({sign:t.sign,node:sRewrite(t.node,id,replacer)})));
+ if(node.kind==='group')return {...node,expr:sRewrite(node.expr,id,replacer)};
+ if(node.kind==='mul')return {...node,factors:node.factors.map(n=>sRewrite(n,id,replacer))};
+ return node;
+}
+function sScalarGroup(node){
+ if(node.kind!=='mul')return null;
+ const [a,b]=node.factors;
+ return a.kind==='num'&&b.kind==='group'?{k:a.value,group:b}:null;
+}
+// Aynı parantezi taşıyan iki veya daha fazla terim, tek tek değil grup halinde seçilir.
+// Başka terimler bulunursa onların kimliği ve sırası aynen korunur.
+function sShared(side){
+ const root=simpleEq[side];if(root.kind!=='sum'||root.items.length<2)return null;
+ const groups=new Map();
+ root.items.forEach((t,i)=>{
+  const f=sScalarGroup(t.node);
+  if(!f)return;
+  const key=sPlain(f.group.expr);
+  if(!groups.has(key))groups.set(key,[]);
+  groups.get(key).push({i,sign:t.sign,k:f.k,group:f.group,node:t.node});
+ });
+ const matching=[...groups.values()].find(items=>items.length>=2);
+ if(!matching)return null;
+ return {items:matching,group:matching[0].group};
+}
+function sHidden(side){
+ const root=simpleEq[side];if(root.kind!=='sum'||root.items.length!==3)return null;
+ const first=sScalarGroup(root.items[0].node);if(!first)return null;
+ try{
+  const p=sPoly(first.group.expr),other=sPoly(sSum(root.items.slice(1)));
+  let k=null;
+  if(p.a)k=other.a/p.a;else if(p.b)k=other.b/p.b;
+  if(k===null||!Number.isSafeInteger(k)||k===0||k*p.a!==other.a||k*p.b!==other.b)return null;
+  // Öğrencinin görmesi gereken şey iki katsayıdır; tüm kuyruğu hl yapma.
+  const isSimple=t=>t.node.kind==='num'||t.node.kind==='var'||
+   (t.node.kind==='mul'&&t.node.factors[0].kind==='num'&&t.node.factors[1].kind==='var');
+  if(!root.items.slice(1).every(isSimple))return null;
+  return {first,k,marks:new Set(root.items.slice(1).map(t=>t.node.id))};
+ }catch{return null}
+}
+function sCalcAllowed(node){return node.kind==='mul'&&node.factors.every(n=>n.kind==='num')}
+function sSpreadAllowed(node){const grp=sScalarGroup(node);return !!grp&&grp.group.expr.kind==='sum'&&grp.group.expr.items.length>1}
+// Beta 54: Benzer terimler yalnızca başka bir cebirsel işlem beklemiyorsa seçilebilir.
+// Ayrı taraflar asla eşleştirilmez; değişkenler yalnızca değişkenlerle,
+// sayısal sabitler yalnızca sayısal sabitlerle birlikte hl olur.
+function sLikeValue(node){
+ if(node.kind==='var')return {kind:'x',value:1};
+ if(node.kind==='num'&&node.value!==0)return {kind:'constant',value:node.value};
+ if(node.kind==='mul'&&node.factors.length===2&&
+    node.factors[0].kind==='num'&&node.factors[1].kind==='var')
+   return {kind:'x',value:node.factors[0].value};
+ return null;
+}
+function sLikeGroups(side){
+ const root=simpleEq?.[side];
+ if(!root||root.kind!=='sum')return {};
+ const groups={x:[],constant:[]};
+ root.items.forEach((term,index)=>{
+  const item=sLikeValue(term.node);
+  if(item&&item.value!==0)groups[item.kind].push({
+   index,id:term.node.id,value:term.sign*item.value
+  });
+ });
+ return Object.fromEntries(Object.entries(groups).filter(([,items])=>items.length>=2));
+}
+function sCombineLikeGroup(side,kind){
+ const group=sLikeGroups(side)[kind];
+ if(!group)return false;
+ const root=simpleEq[side];
+ const selected=new Set(group.map(t=>t.index));
+ const first=group[0].index;
+ const total=group.reduce((sum,t)=>sum+t.value,0);
+ const next=[];
+ root.items.forEach((term,index)=>{
+  if(!selected.has(index)){next.push(term);return;}
+  if(index!==first||total===0)return;
+  const value=Math.abs(total);
+  const node=kind==='x'
+   ?(value===1?sVariable():sMul(sNumber(value),sVariable()))
+   :sNumber(value);
+  next.push({sign:Math.sign(total),node});
+ });
+ simpleEq[side]=sSum(next.length?next:[{sign:1,node:sNumber(0)}]);
+ return true;
+}
+function sHasPending(){
+ if(!simpleEq||simpleEq.mode!=='expression')return false;
+ for(const side of ['left','right']){
+  if(sShared(side)||sHidden(side))return true;
+  let has=false;sTraverse(simpleEq[side],n=>{
+   if(sSpreadAllowed(n)||sCalcAllowed(n)||n.kind==='coeffsum')has=true;
+  });
+  if(has)return true;
+ }
+ return false;
+}
+function sMarkup(node,side,context=null){
+ const target=context&&context.nodeId===node.id?context:null;
+ if(node.kind==='num'){
+  if(target?.type==='hidden'||target?.type==='crossCancel')
+   return sLinkedHit('s'+node.id,fmt(node.value),target.action,target.group);
+  return atom('s'+node.id,fmt(node.value));
+ }
+ if(node.kind==='var'){
+  if(target?.type==='hidden')return sLinkedHit('s'+node.id,'x',target.action,target.group);
+  return atom('s'+node.id,'x');
+ }
+ if(node.kind==='coeffsum')return `<span class="simple-coeff-sum">(${hit('s'+node.id,sCoefficientText(node),`simpleSum_${node.id}`)})</span>`;
+ if(node.kind==='group'){
+  const printed=`(${sMarkup(node.expr,side)})`;
+  if(target?.type==='shared')return sLinkedHit('s'+node.id,printed,target.action,target.group);
+  return `<span class="simple-factor" data-id="s${node.id}">${printed}</span>`;
+ }
+ if(node.kind==='sum')return `<span class="simple-side">${node.items.map(t=>{
+  const i=node.items.indexOf(t),sign=t.sign<0?'−':i?'+':'';
+  return `<span class="part" data-id="sPiece${t.node.id}">${sign?`<span class="sign">${sign}</span>`:''}${sMarkup(t.node,side,context)}</span>`;
+ }).join('')}</span>`;
+ if(node.kind==='mul'){
+  const [a,b]=node.factors;
+  // Eşitliğin iki tarafındaki ortak sayılar tıklanırken çarpımın
+  // yalnız katsayısı vurgulanır; parantez normal ve hareketsiz kalır.
+  if(target?.type==='crossCancel'&&a.kind==='num'&&b.kind==='group')
+   return `<span class="simple-factor">${sLinkedHit('s'+a.id,fmt(a.value),target.action,target.group)}`+
+    `${atom('sCrossGroup'+b.id,sPlain(b))}</span>`;
+  if(target?.type==='hidden' && b.kind==='var' && a.kind==='num')return `<span class="simple-factor">${sLinkedHit('s'+a.id,fmt(a.value),target.action,target.group)}${sMarkup(b,side)}</span>`;
+  if(sCalcAllowed(node))return hit('s'+node.id,`${fmt(a.value)}·${fmt(b.value)}`,`simpleCalc_${node.id}`);
+  if(sSpreadAllowed(node)&&target?.type!=='shared')return `<span class="simple-factor">${hit('s'+node.id,sPlain(node),`simpleSpread_${node.id}`)}</span>`;
+  if(a.kind==='num'&&b.kind==='var')return atom('s'+node.id,`${fmt(a.value)}x`);
+  const bcontext=target?.type==='shared'?{...target,nodeId:b.id}:null;
+  return `<span class="simple-factor" data-id="s${node.id}">${sMarkup(a,side)}${b.kind==='group'||b.kind==='var'?'':`<span class="mul-dot">·</span>`}${sMarkup(b,side,bcontext)}</span>`;
+ }
+ return '';
+}
+// İki tarafı tam sayı ile sadeleştirmenin en kolay görülen durumu:
+// bir yanda k(parantezli ifade), diğer yanda tek bir tam sayı bulunuyor.
+// Yalnızca k ve sayıyı ilişkili HL yap; tamamını veya parantezi vurgulama.
+// İlk adımda iç parantezin açılmasına izin verilmez.
+function directCancelCandidate(){
+ if(preCommon<=1)return null;
+ if(simpleEq&&simpleEq.mode==='expression'){
+  const solo=root=>root.kind==='sum'&&root.items.length===1?root.items[0]:null;
+  const left=solo(simpleEq.left),right=solo(simpleEq.right);
+  if(!left||!right)return null;
+  for(const [productSide,product,numberSide,number] of [
+   ['left',left,'right',right],['right',right,'left',left]]){
+   if(product.node.kind!=='mul'||number.node.kind!=='num')continue;
+   const [coef,grp]=product.node.factors;
+   if(coef.kind!=='num'||grp.kind!=='group')continue;
+   const divisor=gcd(Math.abs(coef.value),Math.abs(number.node.value));
+   if(divisor<=1)continue;
+   return {kind:'simple',g:divisor,productSide,numberSide,
+    productId:product.node.id,numberId:number.node.id};
+  }
+ }
+ if(bracket&&bracket.mode==='start'&&bracket.out===0&&bracket.c===0&&
+    bracket.k!==0&&bracket.d!==0){
+  const divisor=gcd(Math.abs(bracket.k),Math.abs(bracket.d));
+  if(divisor>1)return {kind:'bracket',g:divisor};
+ }
+ return null;
+}
+// Direkt sadeleştirme aşamasında denklem ağacının geri kalanı tıklanabilir değil.
+function directCancelMarkup(candidate){
+ if(candidate.kind==='bracket'){
+  const b=bracket,group='cross-cancel';
+  const left=sLinkedHit('brkCancelK',fmt(b.k),'preCancelPair',group)+
+   atom('brkCancelInner',`(${innerText(b)})`);
+  const right=sLinkedHit('brkCancelD',fmt(b.d),'preCancelPair',group);
+  return `<span class="side">${left}</span><span class="equals">=</span><span class="side">${right}</span>`;
+ }
+ const choice=side=>{
+  const root=simpleEq[side];
+  const context={type:'crossCancel',nodeId:side===candidate.productSide?
+   candidate.productId:candidate.numberId,action:'preCancelPair',group:'cross-cancel'};
+  return `<span class="side">${sMarkup(root,side,context)}</span>`;
+ };
+ return `${choice('left')}<span class="equals">=</span>${choice('right')}`;
+}
+function simpleMarkup(){
+ // Önce ortak çarpan alma, dağıtma veya aritmetik hesap gibi işlemler yapılır.
+ // Ancak hiçbiri beklemiyorsa benzer terimler ayrı ayrı değil, ilişkili çiftler
+ // hâlinde vurgulanır ve sadece o terimler toplanır.
+ const structuralPending=sHasPending();
+ const likes=structuralPending?{left:{},right:{}}:{
+  left:sLikeGroups('left'),right:sLikeGroups('right')
+ };
+ const sides=['left','right'].map(side=>{
+  const root=simpleEq[side],shared=sShared(side),hidden=shared?null:sHidden(side);
+  if(root.kind!=='sum')return `<span class="side">${sMarkup(root,side)}</span>`;
+  let body='';
+  for(const [i,t] of root.items.entries()){
+   const sign=t.sign<0?'−':i?'+':'';
+   let context=null;
+   if(shared&&shared.items.some(q=>q.i===i))
+    context={type:'shared',nodeId:t.node.id,group:'factor-'+side,action:'simpleShared_'+side};
+   else if(hidden&&hidden.marks.has(t.node.id))
+    context={type:'hidden',nodeId:t.node.id,group:'number-'+side,action:'simpleHidden_'+side};
+   const activeKind=Object.keys(likes[side]).find(kind=>
+    likes[side][kind].some(q=>q.index===i));
+   const interactive=activeKind?
+    ` class="part simple-linked hit" data-id="sPiece${t.node.id}" `+
+    `data-hl-group="like-${side}-${activeKind}" `+
+    `data-action="simpleLike_${side}_${activeKind}" role="button" tabindex="0"`:
+    ` class="part" data-id="sPiece${t.node.id}"`;
+   body+=`<span${interactive}>${sign?`<span class="sign">${sign}</span>`:''}${sMarkup(t.node,side,context)}</span>`;
+  }
+  return `<span class="side">${body}</span>`;
+ });
+ const inner=`${sides[0]}<span class="equals">=</span>${sides[1]}`;
+ const hasLike=Object.keys(likes.left).length||Object.keys(likes.right).length;
+ if(!structuralPending&&!hasLike)
+   return `<span class="whole-simplify hit" role="button" tabindex="0" data-id="sFinish" data-action="simpleFinish">${inner}</span>`;
+ return inner;
+}
+function sScaled(k,node){
+ if(k===1)return structuredClone(node);
+ if(node.kind==='num')return fastMode()?sNumber(k*node.value):sMul(sNumber(k),structuredClone(node));
+ if(node.kind==='mul'&&node.factors[0].kind==='num')return sMul(sNumber(k*node.factors[0].value),structuredClone(node.factors[1]));
+ return sMul(sNumber(k),structuredClone(node));
+}
+function sDistribute(node){
+ const p=sScalarGroup(node);if(!p)return node;
+ return sSum(p.group.expr.items.map(t=>({sign:t.sign,node:sScaled(p.k,t.node)})));
+}
+function simpleToLinear(){
+ const left=sPoly(simpleEq.left),right=sPoly(simpleEq.right);
+ if(![left.a,left.b,right.a,right.b].every(Number.isSafeInteger))throw Error('Çok büyük sayı');
+ m={a:left.a,b:left.b,c:right.a,d:right.b};simpleEq.mode='linear';s=initial();s.barsReady=true;
+}
+async function simpleAction(action){
+ if(!simpleEq||simpleEq.mode!=='expression'||busy)return;
+ const spread=action.match(/^simpleSpread_(sm\d+)$/),calc=action.match(/^simpleCalc_(sm\d+)$/),
+  sum=action.match(/^simpleSum_(sm\d+)$/),shared=action.match(/^simpleShared_(left|right)$/),
+  hidden=action.match(/^simpleHidden_(left|right)$/),
+  like=action.match(/^simpleLike_(left|right)_(x|constant)$/);
+ const target=spread||calc||sum;let allowed=false;
+ if(spread)allowed=!!sFind(spread[1])&&sSpreadAllowed(sFind(spread[1]));
+ else if(calc)allowed=!!sFind(calc[1])&&sCalcAllowed(sFind(calc[1]));
+ else if(sum)allowed=!!sFind(sum[1])&&sFind(sum[1]).kind==='coeffsum';
+ else if(shared)allowed=!!sShared(shared[1]);
+ else if(hidden)allowed=!!sHidden(hidden[1]);
+ else if(like)allowed=!sHasPending()&&!!sLikeGroups(like[1])[like[2]];
+ else if(action==='simpleFinish')allowed=!sHasPending()&&
+  !Object.keys(sLikeGroups('left')).length&&!Object.keys(sLikeGroups('right')).length;
+ if(!allowed)return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  await fade(()=>{
+   if(target)for(const side of ['left','right'])simpleEq[side]=sRewrite(simpleEq[side],target[1],node=>{
+    if(spread)return sDistribute(node);
+    if(sum)return sNumber(node.terms.reduce((v,t)=>v+t.sign*t.value,0));
+    return sNumber(node.factors[0].value*node.factors[1].value);
+   });
+   else if(shared){
+    const side=shared[1],q=sShared(side),root=simpleEq[side];
+    const coefficients=sn('coeffsum',{terms:q.items.map(t=>({sign:t.sign,value:t.k}))});
+    const replacement={sign:1,node:sMul(coefficients,structuredClone(q.group))};
+    const firstIndex=q.items[0].i,indices=new Set(q.items.map(t=>t.i));
+    simpleEq[side]=sSum(root.items.flatMap((t,i)=>i===firstIndex?[replacement]:indices.has(i)?[]:[t]));
+   }else if(hidden){
+    const side=hidden[1],q=sHidden(side),items=simpleEq[side].items;
+    simpleEq[side]=sSum([items[0],{sign:q.k<0?-1:1,node:sMul(sNumber(Math.abs(q.k)),structuredClone(q.first.group))}]);
+   }else if(like){
+    sCombineLikeGroup(like[1],like[2]);
+   }else if(action==='simpleFinish')simpleToLinear();
+  });
+ }finally{busy=false;scene.classList.remove('busy');update()}
+}
+
+
+// BÜTÜN MODÜLLERDE ORTAK İLK ADIM: bütün görünen terimleri bölen
+// 1'den büyük bir tam sayı varsa yalnızca TAM DENKLEM aktif olur.
+function sTermHead(node){
+ if(node.kind==='num')return node.value;
+ if(node.kind==='var')return 1;
+ if(node.kind==='mul'&&node.factors[0].kind==='num')return node.factors[0].value;
+ return 1;
+}
+function sRootHeads(node){return node.kind==='sum'?node.items.map(t=>sTermHead(t.node)): [sTermHead(node)]}
+function sDivideNode(n,g){
+ if(n.kind==='num')return {...n,value:n.value/g};
+ if(n.kind==='mul'&&n.factors[0].kind==='num')return sMul(sNumber(n.factors[0].value/g),n.factors[1]);
+ return n;
+}
+function sDivideSide(node,g){
+ // Payda yerine ortak sayıyla bölümde negatif bölen seçilirse bütün
+ // terimlerin işaretleri birlikte çevrilir: −3x+6=−9 -> x−2=3.
+ const sign=g<0?-1:1,divisor=Math.abs(g);
+ if(node.kind==='sum')return sSum(node.items.map(t=>({sign:t.sign*sign,node:sDivideNode(t.node,divisor)})));
+ const result=sDivideNode(node,divisor);
+ return sign<0?sSum([{sign:-1,node:result}]):result;
+}
+function commonPreFactor(){
+ let values=[];
+ if(simpleEq&&simpleEq.mode==='expression')values=[...sRootHeads(simpleEq.left),...sRootHeads(simpleEq.right)];
+ else if(multiEq&&multiEq.mode==='multi')values=multiTerms().flatMap(t=>[t.a,t.b]);
+ else if(pairEq&&pairEq.mode==='pair')values=[pairEq.left.a,pairEq.left.b,pairEq.right.a,pairEq.right.b];
+ else if(fractionEq&&fractionEq.mode==='start')values=[fractionEq.a,fractionEq.b,fractionEq.c];
+ else if(bracket&&bracket.mode==='start')values=[bracket.k,bracket.out,bracket.c,bracket.d];
+ else if(!simpleEq&&!multiEq&&!pairEq&&!fractionEq&&!bracket)values=[m.a,m.b,m.c,m.d];
+ else return 1;
+ const positive=values.filter(n=>n!==0).map(Math.abs);
+ if(positive.length<1||!positive.every(Number.isSafeInteger))return 1;
+ return positive.reduce((a,b)=>gcd(a,b),0)||1;
+}
+function originalOrderDivided(t,g){
+ const pieces=t.numerator.replace(/−/g,'-').match(/[+-]?[^+-]+/g)||[];
+ return pieces.map((p,i)=>{
+  const negative=p.startsWith('-'),pure=p.replace(/^[+-]/,'');
+  const isVar=/x$/i.test(pure);
+  const c=isVar?(pure.length===1?1:Number(pure.slice(0,-1))):Number(pure);
+  const n=c/g;
+  const core=isVar?`${n===1?'':n}x`:String(n);
+  return `${negative?'−':i?'+':''}${core}`;
+ }).join('');
+}
+// Sadeleştirme işaretinin pedagojik yönü: ilk x katsayısı negatifse
+// tüm denklemi −EBOB'a bölüp başlangıçtaki x'i pozitif yapabiliriz.
+// Kesirli terimlerde işaret/terim dizilimini etkileyen ayrı prosedürler
+// bulunduğundan bu tercih yalnızca doğrusal ve basit ifade ağaçlarında.
+function preSignedDivisor(){
+ if(preCommon<=1)return 1;
+ if(simpleEq&&simpleEq.mode==='expression'){
+  try{if(sPoly(simpleEq.left).a<0)return -preCommon}catch{}
+ }else if(!multiEq&&!pairEq&&!fractionEq&&!bracket&&!simpleEq&&m.a<0){
+  return -preCommon;
+ }
+ return preCommon;
+}
+
+// Aynı gruba ait katsayıların biri üzerine gelindiğinde hepsi HL olur.
+// Bağlı alanlar ayrı: x, parantez ve kesir paydası vurgulanmaz.
+function preHit(number,id){
+ return `<span class="simple-linked hit pre-coefficient" data-id="${id}" `+
+  `data-hl-group="pre-coefficients" data-action="preSimplify" `+
+  `role="button" tabindex="0">${number}</span>`;
+}
+// Temel ifade ağacındaki yalnızca EN DIŞ düzey terim başlarını yaz.
+// İç parantezlerin sayılarına asla dokunma: 6(2x+3)+12=18 ise
+// 6,12,18 hl; parantez içindeki 2 ve 3 hl değil.
+function preSimpleSide(side){
+ const root=simpleEq[side];
+ if(root.kind!=='sum')return `<span class="side">${sPlain(root)}</span>`;
+ let content='';
+ for(const [i,t] of root.items.entries()){
+  const head=sTermHead(t.node);
+  const isCoefficient=Number.isSafeInteger(head)&&head!==0&&Math.abs(head)%preCommon===0;
+  const sign=t.sign*(head<0?-1:1);
+  const prefix=sign<0?'−':i?'+':'';
+  let suffix='';
+  if(t.node.kind==='mul'){
+   const [,right]=t.node.factors;
+   suffix=(right.kind==='group'||right.kind==='var'?'':'·')+sPlain(right);
+  }else if(t.node.kind!=='num')suffix=sPlain(t.node);
+  if(isCoefficient){
+   if(prefix==='+')content+='<span class="sign">+</span>';
+   content+=preHit(`${prefix==='−'?'−':''}${fmt(Math.abs(head))}`,
+      `pre${side}${t.node.id}`)+suffix;
+  }else{
+   content+=`${prefix?`<span class="sign">${prefix}</span>`:''}${sPlain(t.node)}`;
+  }
+ }
+ return `<span class="side">${content}</span>`;
+}
+// Kesirli/tek parantezli ve klasik doğrusal ailelerde hazır matematiksel
+// yerleşimi koruyarak yalnızca katsayı atomlarının sayısal parçalarını aç.
+// Bir dizi sayıyı tek bütün terim olarak değil, ayrı etkileşim yüzeyleri
+// olarak işaretlediğimiz için '+', 'x' ve '=' yerinde kalır.
+function preNumericalParts(value,id){
+ let counter=0;
+ return value.replace(/([−-]?)(\d+)(?=x|[+−-]|$)/g,(full,minus,num)=>{
+  const n=Number(num);
+  if(!n||!Number.isSafeInteger(n)||n%preCommon!==0)return full;
+  return preHit((minus==='-'?'−':minus)+num,`${id}_${counter++}`);
+ });
+}
+function preOtherMarkup(){
+ const tmp=document.createElement('div');
+ tmp.innerHTML=markupCore();
+ // Sadeleştirme öncelikli: diğer işlemleri aktif bırakma.
+ tmp.querySelectorAll('[data-action]').forEach(el=>{
+  el.removeAttribute('data-action');el.removeAttribute('tabindex');
+  el.removeAttribute('role');el.classList.remove('hit');
+ });
+ let ids=[];
+ if(multiEq&&multiEq.mode==='multi'){
+  ids=[...tmp.querySelectorAll('[data-id^="sixNum"],[data-id^="sixBare"]')];
+ }else if(pairEq&&pairEq.mode==='pair'){
+  ids=[...tmp.querySelectorAll('[data-id^="pairPoly"]')];
+ }else if(fractionEq&&fractionEq.mode==='start'){
+  ids=[...tmp.querySelectorAll('[data-id="fNumerator"],[data-id="fRightBase"]')];
+ }else if(bracket&&bracket.mode==='start'){
+  ids=[...tmp.querySelectorAll('[data-id="brkcoef"],[data-id="brkout"],[data-id="brkr"]')];
+ }else{
+  ids=[...tmp.querySelectorAll('[data-id="la"],[data-id="lb"],[data-id="rc"],[data-id="rd"]')];
+ }
+ for(const el of ids){
+  if(el.closest('.denominator'))continue;
+  const before=el.textContent;
+  // Klasik doğrusal ailede negatif işareti katsayının parçası say;
+  // x yalnızca yazılır ama hl olmaz.
+  const sibling=el.previousElementSibling;
+  const neg=sibling?.classList.contains('sign')&&sibling.textContent==='−';
+  const text=(neg?'−':'')+before;
+  const output=preNumericalParts(text,el.dataset.id||'pre');
+  if(output===text)continue;
+  if(neg)sibling.remove();
+  el.innerHTML=output;
+ }
+ return tmp.innerHTML;
+}
+function preCoefficientMarkup(){
+ if(simpleEq&&simpleEq.mode==='expression')
+  return `${preSimpleSide('left')}<span class="equals">=</span>${preSimpleSide('right')}`;
+ return preOtherMarkup();
+}
+function performPreSimplify(factor){
+ if(simpleEq&&simpleEq.mode==='expression'){
+  simpleEq.left=sDivideSide(simpleEq.left,factor);simpleEq.right=sDivideSide(simpleEq.right,factor);
+ }else if(multiEq&&multiEq.mode==='multi'){
+  for(const t of multiTerms()){
+   t.numerator=originalOrderDivided(t,factor);
+   t.a/=factor;t.b/=factor;
+  }
+  multiEq.original=structuredClone({sides:multiEq.sides});
+  const common=multiEq.common,l=multiEq.sides.L.reduce((a,t)=>({a:a.a+t.sign*t.a*common/t.den,b:a.b+t.sign*t.b*common/t.den}),{a:0,b:0});
+  const r=multiEq.sides.R.reduce((a,t)=>({a:a.a+t.sign*t.a*common/t.den,b:a.b+t.sign*t.b*common/t.den}),{a:0,b:0});
+  m={a:l.a,b:l.b,c:r.a,d:r.b};
+ }else if(pairEq&&pairEq.mode==='pair'){
+  for(const t of [pairEq.left,pairEq.right]){t.a/=factor;t.b/=factor}
+  pairEq.original={left:{a:pairEq.left.a,b:pairEq.left.b,d:pairEq.left.d},right:{a:pairEq.right.a,b:pairEq.right.b,d:pairEq.right.d}};
+  m={a:pairEq.left.a*pairEq.lcm/pairEq.left.d,b:pairEq.left.b*pairEq.lcm/pairEq.left.d,c:pairEq.right.a*pairEq.lcm/pairEq.right.d,d:pairEq.right.b*pairEq.lcm/pairEq.right.d};
+ }else if(fractionEq&&fractionEq.mode==='start'){
+  fractionEq.a/=factor;fractionEq.b/=factor;fractionEq.c/=factor;
+  m={a:fractionEq.a,b:fractionEq.b,c:0,d:fractionEq.c*fractionEq.n};
+ }else if(bracket&&bracket.mode==='start'){
+  bracket.k/=factor; bracket.out/=factor; bracket.c/=factor; bracket.d/=factor;
+  m={a:bracket.k*bracket.p,b:bracket.k*bracket.q+bracket.out,c:bracket.c,d:bracket.d};
+ }else{m={a:m.a/factor,b:m.b/factor,c:m.c/factor,d:m.d/factor};s=initial();s.barsReady=true}
+ preCommon=1;
+}
+// Sayıya özel çözüm ezberi yok: katsayı ve karşı sayının EBOB'u
+// bulunur. İki sayıya tek anda kırmızı sadeleşme işareti çizilir.
+async function crossCancelAction(){
+ const pair=directCancelCandidate();
+ if(!pair||busy)return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  const ids=pair.kind==='simple'
+   ?['s'+(sFind(pair.productId)?.factors[0].id),'s'+pair.numberId]
+   :['brkCancelK','brkCancelD'];
+  await Promise.all(ids.map(id=>drawStroke(byId(id))));
+  await finishCancellation(()=>{
+   if(pair.kind==='bracket'){
+    bracket.k/=pair.g;bracket.d/=pair.g;
+    m={a:bracket.k*bracket.p,b:bracket.k*bracket.q,c:0,d:bracket.d};
+    if(Math.abs(bracket.k)===1){
+     // 2(x+2)=10 -> x+2=5: dış katsayı kalkınca gereksiz
+     // parantezi tutma veya yeniden açtırma.
+     linearFromBracket(true);
+    }
+   }else{
+    const coefficient=sFind(pair.productId)?.factors[0]?.value;
+    for(const side of ['left','right']){
+     if(side===pair.productSide){
+      simpleEq[side]=sRewrite(simpleEq[side],pair.productId,node=>{
+       const next=coefficient/pair.g;
+       if(next===1)return node.factors[1].expr;
+       return sMul(sNumber(next),structuredClone(node.factors[1]));
+      });
+     }else{
+      simpleEq[side]=sRewrite(simpleEq[side],pair.numberId,node=>sNumber(node.value/pair.g));
+     }
+    }
+    // Algebra state remains consistent for later conversion to linear.
+    const a=sPoly(simpleEq.left),b=sPoly(simpleEq.right);
+    m={a:a.a,b:a.b,c:b.a,d:b.b};
+   }
+   preCommon=commonPreFactor();
+  });
+ }finally{busy=false;scene.classList.remove('busy');update()}
+}
+async function preAction(){
+ if(busy||preCommon<=1)return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{const factor=preSignedDivisor();await fade(()=>performPreSimplify(factor))}
+ finally{busy=false;scene.classList.remove('busy');update()}
+}
+
 function parsePair(raw){
  const str=raw.replace(/\s+/g,'').replace(/−/g,'-');
  const parts=str.split('=');if(parts.length!==2)return null;
@@ -708,7 +1332,7 @@ function innerText(b){return `${signedX(b.p,true)}${b.q?signedConst(b.q):''}`}
 function rightText(b){return `${b.c?signedX(b.c,true):''}${b.d||!b.c?signedConst(b.d,!b.c):''}`}
 function bracketHTML(){
  if(bracket.mode==='start'){
-  const outer=canBracketDivide(bracket)?hit('brkcoef',fmt(bracket.k),'bracketDivide'):atom('brkcoef',fmt(bracket.k));
+  const outer=bracket.k===1?'':canBracketDivide(bracket)?hit('brkcoef',fmt(bracket.k),'bracketDivide'):atom('brkcoef',fmt(bracket.k));
   const parentheses=hit('brkgroup',`(${innerText(bracket)})`,'bracketExpand');
   return `<span class="side">${outer}${parentheses}${bracket.out?atom('brkout',signedConst(bracket.out)):''}</span><span class="equals">=</span><span class="side">${atom('brkr',rightText(bracket))}</span>`;
  }
@@ -745,7 +1369,7 @@ function linearFromBracket(byDivision=false){
  else m={a:b.k*b.p,b:b.k*b.q+b.out,c:b.c,d:b.d};
  bracket.mode='linear';s=initial();s.barsReady=true;
 }
-function canBracketDivide(b){return !!b&&b.mode==='start'&&b.k!==0&&b.out===0&&b.c%b.k===0&&b.d%b.k===0;}
+function canBracketDivide(b){return !!b&&b.mode==='start'&&b.k!==0&&b.k!==1&&b.out===0&&b.c%b.k===0&&b.d%b.k===0;}
 async function bracketAction(action){
  if(!bracket||busy)return;
  if(action==='bracketDivide'&&!canBracketDivide(bracket))return;
@@ -775,7 +1399,7 @@ async function bracketAction(action){
 }
 // Temsil: her adım cebirsel eşitliği korur, işaretin yanında hangi terimin olduğu veri modelinde saklanır.
 function initial(){return {movedB:m.b===0,movedC:m.c===0,combinedL:m.c===0,combinedR:m.b===0,divided:false,leftDone:false,rightDone:false};}
-function stateCopy(){return structuredClone({s,bracket,fractionEq,pairEq,multiEq,m,layoutShiftX})}
+function stateCopy(){return structuredClone({s,bracket,fractionEq,pairEq,multiEq,simpleEq,preCommon,m,layoutShiftX})}
 function save(){history.push(stateCopy());}
 function hit(id,txt,action){return `<span class="atom hit" role="button" tabindex="0" data-action="${action}" data-id="${id}" aria-label="${txt.replace(/<[^>]*>/g,'')}" >${txt}</span>`}
 function atom(id,txt){return `<span class="atom" data-id="${id}">${txt}</span>`}
@@ -791,7 +1415,7 @@ function rightTerms(){let res=[];if(!s.movedC&&m.c!==0)res.push({kind:'x',n:m.c,
 function ready(){return s.movedB&&s.movedC&&s.combinedL&&s.combinedR;}
 function A(){return m.a-m.c}function D(){return m.d-m.b}
 function rightResult(){return resultFrac(D(),A())}
-function markup(){if(multiEq&&multiEq.mode!=='linear')return multiMarkup();if(pairEq&&pairEq.mode!=='linear')return pairHTML();if(fractionEq&&fractionEq.mode!=='linear')return fractionHTML();if(bracket&&bracket.mode!=='linear')return bracketHTML();if(ready()&&A()===0){return `<span class="side">${atom('zz','0')}</span><span class="equals">=</span><span class="side">${atom('verdict',D()===0?'0':' '+fmt(D()))}</span>`;}
+function markupCore(){if(simpleEq&&simpleEq.mode!=='linear')return simpleMarkup();if(multiEq&&multiEq.mode!=='linear')return multiMarkup();if(pairEq&&pairEq.mode!=='linear')return pairHTML();if(fractionEq&&fractionEq.mode!=='linear')return fractionHTML();if(bracket&&bracket.mode!=='linear')return bracketHTML();if(ready()&&A()===0){return `<span class="side">${atom('zz','0')}</span><span class="equals">=</span><span class="side">${atom('verdict',D()===0?'0':' '+fmt(D()))}</span>`;}
 if(!s.divided){let l=expression(leftTerms()),r=expression(rightTerms());if(s.movedC&&!s.combinedL&&m.c!==0){let pieces=leftTerms().filter(t=>t.kind==='x');if(pieces.length>1){let prefix=expression(pieces);// Sabit terimin kimliği ve işareti korunmalı ki hedef planda hareket edebilsin.
  let suffix=!s.movedB&&m.b!==0?expression([{kind:'k',n:m.b,id:'lb',action:'moveB'}],false):'';
  l=`<span class="combine hit" role="button" tabindex="0" data-action="combineL" data-id="groupL">${prefix}</span>${suffix}`;}}
@@ -803,13 +1427,108 @@ const botLeft=s.leftDone?'':hit('bota',fmt(A()),'cancel');
 let l=s.leftDone?atom('onlyx','x'):fhtml(topLeft,botLeft,'fractionL',null,!s.barsReady);
 let r=s.rightDone?rightResult():fhtml(atom('righttop',fmt(D())),atom('rightbottom',fmt(A())),'fractionR','simplify',!s.barsReady);
 return `<span class="side" data-id="sideL">${l}</span><span class="equals">=</span><span class="side" data-id="sideR">${r}</span>`;}
-function render(animateBars=false){hideDistributionHint();eq.innerHTML=markup();$('#stepLabel').textContent=(multiEq&&multiEq.mode!=='linear')?`Adım ${step+1}`:(pairEq&&pairEq.mode!=='linear')?`Adım ${step+1}`:(fractionEq&&fractionEq.mode!=='linear')?`Adım ${step+1}`:(bracket&&bracket.mode!=='linear')?`Adım ${step+1}`:ready()&&A()===0?'Özel durum':(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'Çözüldü':`Adım ${step+1}`;$('#tip').innerHTML=(multiEq&&multiEq.mode!=='linear')?'':(pairEq&&pairEq.mode!=='linear')?'':(fractionEq&&fractionEq.mode!=='linear')?'':(bracket&&bracket.mode!=='linear')?'':ready()&&A()===0?(D()===0?'<span class="done">Sonsuz çözüm</span>':'Çözüm yok'):(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'<span class="done">✓</span>':'';$('#back').disabled=busy||history.length===0;$('#reset').disabled=busy;if(animateBars){requestAnimationFrame(()=>requestAnimationFrame(()=>eq.querySelectorAll('.fraction.constructing').forEach(el=>{el.classList.remove('constructing');el.classList.add('constructed')})));}}
+// Beta 54: Öncelik tek merkezde belirlenir. Yeni kurallar eklendiğinde
+// birbirinin üzerine çizilen tıklama alanları yerine TEK etkin kural seçilir.
+// Tam sadeleşme: ax=d'de EBOB(|a|,|d|)>1 ise a ve d birlikte HL.
+// Aksi halde standart 'a'ya tıkla ve her iki tarafı a'ya böl yolu korunur.
+function simpleTerminalCandidate(){
+ if(simpleEq?.mode!=='expression')return null;
+ const l=simpleEq.left,r=simpleEq.right;
+ // Henüz benzer terimler veya başka yapısal işlemler bekliyorsa
+ // kısayol açılmaz. Öğrenci bu parçaları önce kendisi birleştirir.
+ if(l.kind!=='sum'||r.kind!=='sum'||l.items.length!==1||r.items.length!==1||
+    sHasPending()||Object.keys(sLikeGroups('left')).length||
+    Object.keys(sLikeGroups('right')).length)return null;
+ const L=sPoly(l),R=sPoly(r);
+ if(L.b!==0||R.a!==0||!Number.isSafeInteger(L.a)||
+    !Number.isSafeInteger(R.b)||L.a===0)return null;
+ return {a:L.a,d:R.b,source:'simple'};
+}
+function readyReductionCandidate(){
+ let model=simpleTerminalCandidate();
+ if(!model){
+  if(simpleEq?.mode==='expression'||!ready()||s.divided||
+     multiEq?.mode==='multi'||pairEq?.mode==='pair'||
+     (fractionEq&&fractionEq.mode!=='linear')||
+     (bracket&&bracket.mode!=='linear'))return null;
+  model={a:A(),d:D(),source:'linear'};
+ }
+ if(!Number.isSafeInteger(model.a)||!Number.isSafeInteger(model.d)||model.a===0)return null;
+ const g=gcd(Math.abs(model.a),Math.abs(model.d));
+ return g>1?{...model,g,divisor:model.a<0?-g:g}:null;
+}
+function simpleFinalDivideCandidate(){
+ const model=simpleTerminalCandidate();
+ return model&&Math.abs(model.a)>1&&gcd(Math.abs(model.a),Math.abs(model.d))===1?model:null;
+}
+function currentPriorityRule(){
+ const reduced=readyReductionCandidate();
+ if(reduced)return {type:'readyReduction',details:reduced};
+ const divide=simpleFinalDivideCandidate();
+ if(divide)return {type:'finalDivide',details:divide};
+ const pair=directCancelCandidate();
+ if(pair)return {type:'pairReduction',details:pair};
+ if(preCommon>1)return {type:'wholeReduction',details:preCommon};
+ // Ortak paydaları tek hamlede kaldıran genel kesir kuralı modülde kalır;
+ // oradaki bütün paydalar aynı hl kimliğini taşır.
+ return {type:'moduleOperation'};
+}
+function readyReductionMarkup(candidate){
+ const a=sLinkedHit('readyCoeff',fmt(candidate.a),'readyReduce','ready-reduce');
+ const d=sLinkedHit('readyResult',fmt(candidate.d),'readyReduce','ready-reduce');
+ return `<span class="side">${a}${atom('readyVariable','x')}</span>`+
+  `<span class="equals">=</span><span class="side">${d}</span>`;
+}
+async function readyReductionAction(){
+ const stage=currentPriorityRule();
+ if(stage.type!=='readyReduction'||busy)return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  const divisor=stage.details.divisor,a=stage.details.a,d=stage.details.d;
+  if(!fastMode())await Promise.all([drawStroke(byId('readyCoeff')),drawStroke(byId('readyResult'))]);
+  await finishCancellation(()=>{
+   if(stage.details.source==='simple')simpleEq.mode='linear';
+   m={a:a/divisor,b:0,c:0,d:d/divisor};
+   s=initial();s.barsReady=true;
+   preCommon=1;
+  });
+ }finally{busy=false;scene.classList.remove('busy');update()}
+}
+function finalDivideMarkup(candidate){
+ return `<span class="side">${hit('finalDivideCoeff',fmt(candidate.a),'finalDivide')}`+
+  `${atom('finalDivideVariable','x')}</span><span class="equals">=</span>`+
+  `<span class="side">${atom('finalDivideConstant',fmt(candidate.d))}</span>`;
+}
+async function finalDivideAction(){
+ const rule=currentPriorityRule();
+ if(rule.type!=='finalDivide'||busy)return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  if(fastMode()){
+   await fade(()=>{
+    simpleToLinear();s.divided=true;s.leftDone=true;s.rightDone=true;
+   });
+  }else{
+   simpleToLinear();s.divided=true;s.barsReady=false;update(true);
+   await wait(380);s.barsReady=true;update();
+  }
+ }finally{busy=false;scene.classList.remove('busy');update()}
+}
+function markup(){
+ const stage=currentPriorityRule();
+ if(stage.type==='readyReduction')return readyReductionMarkup(stage.details);
+ if(stage.type==='finalDivide')return finalDivideMarkup(stage.details);
+ if(stage.type==='pairReduction')return directCancelMarkup(stage.details);
+ if(stage.type==='wholeReduction')return preCoefficientMarkup();
+ return markupCore();
+}
+function render(animateBars=false){hideDistributionHint();clearLinkedHighlight();const chosen=currentPriorityRule();eq.innerHTML=markup();$('#stepLabel').textContent=chosen.type==='readyReduction'?`Ortak bölen: ${fmt(chosen.details.g)}`:chosen.type==='wholeReduction'?`Ortak bölen: ${fmt(preSignedDivisor())}`:(simpleEq&&simpleEq.mode!=='linear')?`Adım ${step+1}`:(multiEq&&multiEq.mode!=='linear')?`Adım ${step+1}`:(pairEq&&pairEq.mode!=='linear')?`Adım ${step+1}`:(fractionEq&&fractionEq.mode!=='linear')?`Adım ${step+1}`:(bracket&&bracket.mode!=='linear')?`Adım ${step+1}`:ready()&&A()===0?'Özel durum':(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'Çözüldü':`Adım ${step+1}`;$('#tip').innerHTML=preCommon>1?'':(simpleEq&&simpleEq.mode!=='linear')?'':(multiEq&&multiEq.mode!=='linear')?'':(pairEq&&pairEq.mode!=='linear')?'':(fractionEq&&fractionEq.mode!=='linear')?'':(bracket&&bracket.mode!=='linear')?'':ready()&&A()===0?(D()===0?'<span class="done">Sonsuz çözüm</span>':'Çözüm yok'):(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'<span class="done">✓</span>':'';$('#back').disabled=busy||history.length===0;$('#reset').disabled=busy;if(animateBars){requestAnimationFrame(()=>requestAnimationFrame(()=>eq.querySelectorAll('.fraction.constructing').forEach(el=>{el.classList.remove('constructing');el.classList.add('constructed')})));}}
 function byId(id){return eq.querySelector(`[data-id="${id}"]`)}
 function rect(id){return byId(id)?.getBoundingClientRect()}
 function positionScale(){const max=scene.clientWidth*.95,w=eq.scrollWidth;const scale=w>max?Math.max(.38,max/w):1;eq.style.transform=`translateX(${layoutShiftX}px) scale(${scale})`;}
 function update(animateBars=false){render(animateBars);positionScale()}
 async function fade(change){const animation=eq.animate([{opacity:1},{opacity:.15}],{duration:190*speed(),easing:'ease-in-out'});await animation.finished.catch(()=>{});change();update();await eq.animate([{opacity:.15},{opacity:1}],{duration:300*speed(),easing:'ease-in-out'}).finished.catch(()=>{});}
-// Beta 46: Sembollerin kimlikleri, görevleri ve hedef koordinatları işlemden önce hesaplanır.
+// Beta 54: Sembollerin kimlikleri, görevleri ve hedef koordinatları işlemden önce hesaplanır.
 // İşaret (sign), katsayı, terim ve eşitlik ayrı anlamlı öğelerdir.
 const MotionEngine={
  center(r){return {x:r.left+r.width/2,y:r.top+r.height/2}},
@@ -966,7 +1685,7 @@ const MotionEngine={
  }
 
 };
-// Beta 46: İptal çizgisi bir noktanın sol alttan sağ üste süratlenerek
+// Beta 54: İptal çizgisi bir noktanın sol alttan sağ üste süratlenerek
 // ilerlemesiyle oluşur; ardından sayı ve kırmızı iz kısa bir sürede çözünür.
 // SVG yalnızca bir geçiş katmanıdır, matematiksel DOM nesnesi değişmez.
 function drawStroke(el){
@@ -1068,7 +1787,7 @@ async function moveTerm(type){
 async function mergeTerms(kind){
  await fade(()=>{if(kind==='L')s.combinedL=true;else s.combinedR=true});
 }
-async function act(action){if(action.startsWith('multi'))return multiAction(action);if(action.startsWith('pair'))return pairAction(action);if(action.startsWith('fraction'))return fractionAction(action);if(action.startsWith('bracket'))return bracketAction(action);if(action==='finishExpand'||action==='combineExpandedConstants')return bracketAction(action);if(busy||(multiEq&&multiEq.mode!=='linear')||(pairEq&&pairEq.mode!=='linear')||(fractionEq&&fractionEq.mode!=='linear')||(bracket&&bracket.mode!=='linear'))return;const allowed={moveB:!s.movedB,moveC:!s.movedC,combineL:s.movedC&&!s.combinedL,combineR:s.movedB&&!s.combinedR,divide:ready()&&A()!==0&&!s.divided,cancel:s.divided&&!s.leftDone,simplify:s.divided&&!s.rightDone};if(!allowed[action])return;busy=true;scene.classList.add('busy');save();step++;try{if(action==='moveB')await moveTerm('B');else if(action==='moveC')await moveTerm('C');else if(action==='combineL'){await mergeTerms('L')}else if(action==='combineR'){await mergeTerms('R')}else if(action==='divide'){
+async function act(action){const priority=currentPriorityRule();if(priority.type==='readyReduction')return action==='readyReduce'?readyReductionAction():undefined;if(priority.type==='finalDivide')return action==='finalDivide'?finalDivideAction():undefined;if(priority.type==='pairReduction')return action==='preCancelPair'?crossCancelAction():undefined;if(priority.type==='wholeReduction')return action==='preSimplify'?preAction():undefined;if(action.startsWith('simple'))return simpleAction(action);if(action.startsWith('multi'))return multiAction(action);if(action.startsWith('pair'))return pairAction(action);if(action.startsWith('fraction'))return fractionAction(action);if(action.startsWith('bracket'))return bracketAction(action);if(action==='finishExpand'||action==='combineExpandedConstants')return bracketAction(action);if(busy||(multiEq&&multiEq.mode!=='linear')||(pairEq&&pairEq.mode!=='linear')||(fractionEq&&fractionEq.mode!=='linear')||(bracket&&bracket.mode!=='linear'))return;const allowed={moveB:!s.movedB,moveC:!s.movedC,combineL:s.movedC&&!s.combinedL,combineR:s.movedB&&!s.combinedR,divide:ready()&&A()!==0&&!s.divided,cancel:s.divided&&!s.leftDone,simplify:s.divided&&!s.rightDone};if(!allowed[action])return;busy=true;scene.classList.add('busy');save();step++;try{if(action==='moveB')await moveTerm('B');else if(action==='moveC')await moveTerm('C');else if(action==='combineL'){await mergeTerms('L')}else if(action==='combineR'){await mergeTerms('R')}else if(action==='divide'){
  // Yavaş: kesir oluşumu, kırmızı sadeleştirme ve sonuç ayrı adımlardır.
  // Hızlı: ax=d => x=d/a, tam veya sadeleştirilmiş kesir olarak doğrudan.
  // Her iki durumda da D/A aynı matematiksel modelden alınır.
@@ -1116,7 +1835,7 @@ function showDistributionHint(hitEl){
  hideDistributionHint();
  if(fastMode()||busy||!hitEl||!eq.contains(hitEl))return;
  const action=hitEl.dataset.action||'';
- const distributionAction=/^multiOpen_[LR]\d+$/.test(action)||/^pairExpand[LR]$/.test(action)||action==='bracketExpand';
+ const distributionAction=/^multiOpen_[LR]\d+$/.test(action)||/^pairExpand[LR]$/.test(action)||/^simpleSpread_sm\d+$/.test(action)||action==='bracketExpand';
  if(!distributionAction)return;
  const label=hitEl.textContent||'';
  let parts=distributionParts(label);
@@ -1166,74 +1885,142 @@ function distributionTarget(node){
  const el=node?.nodeType===Node.ELEMENT_NODE?node:node?.parentElement;
  return el?.closest?.('[data-action]')||null;
 }
+// Bir bağımsız parça üzerine gelmek, aynı çarpan grubunun tamamını vurgular.
+let linkedHoverGroup=null;
+function clearLinkedHighlight(){
+ linkedHoverGroup=null;
+ eq.querySelectorAll('.simple-linked.hl-linked').forEach(el=>el.classList.remove('hl-linked'));
+}
+function showLinkedHighlight(target){
+ const el=target?.nodeType===Node.ELEMENT_NODE?target:target?.parentElement;
+ const marked=el?.closest?.('[data-hl-group]');
+ const group=marked?.dataset.hlGroup||null;
+ if(group===linkedHoverGroup)return;
+ clearLinkedHighlight();
+ if(!group)return;
+ linkedHoverGroup=group;
+ eq.querySelectorAll('[data-hl-group]').forEach(node=>{
+  if(node.dataset.hlGroup===group)node.classList.add('hl-linked');
+ });
+}
 eq.addEventListener('pointerover',e=>{
+ showLinkedHighlight(e.target);
  const target=distributionTarget(e.target);
  if(target&&!target.contains(e.relatedTarget))showDistributionHint(target);
 });
 eq.addEventListener('pointerout',e=>{
+ showLinkedHighlight(e.relatedTarget);
  const target=distributionTarget(e.target);
  if(target&&!target.contains(e.relatedTarget))hideDistributionHint();
 });
-eq.addEventListener('focusin',e=>showDistributionHint(distributionTarget(e.target)));
-eq.addEventListener('focusout',()=>hideDistributionHint());
+eq.addEventListener('focusin',e=>{showDistributionHint(distributionTarget(e.target));showLinkedHighlight(e.target)});
+eq.addEventListener('focusout',e=>{hideDistributionHint();showLinkedHighlight(e.relatedTarget)});
 
-eq.addEventListener('click',e=>{const t=e.target.closest('[data-action]');if(t&&eq.contains(t)){hideDistributionHint();act(t.dataset.action)}});
-eq.addEventListener('keydown',e=>{const t=e.target.closest('[data-action]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();hideDistributionHint();act(t.dataset.action)}});
+eq.addEventListener('click',e=>{const t=e.target.closest('[data-action]');if(t&&eq.contains(t)){hideDistributionHint();clearLinkedHighlight();act(t.dataset.action)}});
+eq.addEventListener('keydown',e=>{const t=e.target.closest('[data-action]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();hideDistributionHint();clearLinkedHighlight();act(t.dataset.action)}});
 function formatModel(o){let str=coefficient(o.a)+'x';if(o.b!==0)str+=(o.b<0?'-':'+')+abs(o.b);str+='=';if(o.c!==0)str+=coefficient(o.c)+'x';if(o.d!==0)str+=(o.d<0?'-':o.c!==0?'+':'')+abs(o.d);return str}
+function parseModule(raw,module){
+ if(module===7)return parseMulti(raw);
+ if(module===6)return parsePair(raw);
+ if(module===5)return parseFraction(raw);
+ if(module===4)return parseSimple(raw);
+ if(module===3)return parseBracket(raw);
+ return parse(raw);
+}
 function drawExamples(){
  const list=$('#examples');list.innerHTML='';
- for(const ex of examplesByModule[currentModule]){
+ const module4Labels={0:'1 · Denklemin tamamını sadeleştirme',3:'2 · Birden fazla parantez',6:'3 · Ortak cebirsel çarpan',9:'4 · İç içe parantez'};
+ for(const [index,ex] of examplesByModule[currentModule].entries()){
+  if(currentModule===4&&module4Labels[index]){
+   const heading=document.createElement('div');heading.className='example-section';heading.textContent=module4Labels[index];list.append(heading);
+  }
   const btn=document.createElement('button');btn.textContent=ex;btn.dataset.eq=ex;
-  btn.onclick=()=>{if(!busy){$('#custom').value=ex;const next=currentModule===6?parseMulti(ex):currentModule===5?parsePair(ex):currentModule===4?parseFraction(ex):currentModule===3?parseBracket(ex):parse(ex);if(next)restart(next,currentModule===3,currentModule===4,currentModule===5,currentModule===6)}};
+  btn.onclick=()=>{if(busy)return;$('#custom').value=ex;const next=parseModule(ex,currentModule);if(next)restart(next,currentModule)};
   list.append(btn);
  }
  document.querySelectorAll('#modules button').forEach(b=>b.classList.toggle('active',Number(b.dataset.module)===currentModule));
- $('#moduleLabel').textContent=currentModule===1?'Modül 1 · Sabit terimi taşı, hesapla, katsayıya böl.':currentModule===2?'Modül 2 · İki taraftaki terimleri istediğin sırayla taşı.':currentModule===3?'Modül 3 · Paranteze tıklayarak aç; uygun denklemlerde katsayıya tıklayarak önce böl.':currentModule===4?'Modül 4 · Paydadaki sayıya tıkla; iki tarafı bu sayı ile çarp ve sadeleştir.':currentModule===5?'Modül 5 · Paydaların OKEK’iyle iki tarafı aynı anda çarp; karşılıklı sadeleştir, ardından parantezleri aç.':'Modül 6 · Önce paydasız terimlere /1 ekle; sonra paydaları OKEK’e genişlet ve birlikte kaldır.';
+ const labels={
+  1:'Modül 1 · Sabit terimi taşı, hesapla, katsayıya böl.',
+  2:'Modül 2 · İki taraftaki terimleri istediğin sırayla taşı.',
+  3:'Modül 3 · Paranteze tıklayarak aç; uygun durumlarda katsayıya böl.',
+  4:'Modül 4 · Basit Aritmetik: ortak sayıyla sadeleştirme · çoklu parantez · ortak çarpan · iç içe parantez.',
+  5:'Modül 5 · Tek kesrin paydasını kaldır ve çöz.',
+  6:'Modül 6 · İki kesir: OKEK’le çarp, sadeleştir, çöz.',
+  7:'Modül 7 · Kesirsiz terimlere /1, paydalara OKEK genişletmesi, ardından sadeleştirme.'
+ };
+ $('#moduleLabel').textContent=labels[currentModule];
 }
-function restart(newM=(multiEq||pairEq||fractionEq||bracket||m),isBracket=!!bracket,isFraction=!!fractionEq,isPair=!!pairEq,isMulti=!!multiEq){
- if(busy)return;layoutShiftX=0;
- if(isMulti){
-  const base=newM.original||newM;
-  const L=structuredClone(base.sides.L),R=structuredClone(base.sides.R);
+function restart(newM=null,module=currentModule){
+ if(busy)return;
+ layoutShiftX=0;
+ const fresh=newM||parseModule($('#custom').value,module);
+ if(!fresh)return;
+ simpleEq=null;multiEq=null;pairEq=null;fractionEq=null;bracket=null;
+ if(module===4){
+  simpleEq=structuredClone(fresh);const left=sPoly(simpleEq.left),right=sPoly(simpleEq.right);
+  m={a:left.a,b:left.b,c:right.a,d:right.b};
+ }else if(module===7){
+  const base=fresh.original||fresh,L=structuredClone(base.sides.L),R=structuredClone(base.sides.R);
   let common=1;for(const t of [...L,...R])common=lcm(common,t.den);
   multiEq={mode:'multi',sides:{L,R},common,original:structuredClone(base)};
   for(const t of [...L,...R]){
-   t.ready=t.den===common;t.pending=false;
-   t.opened=!(common/t.den>1&&t.a!==0&&t.b!==0);
-   // 1 / n, x / n vs. plain 1, x: fraction information stays stable.
-   t.hasDen=t.originallyFraction;
+   t.ready=t.den===common;t.pending=false;t.expandedFast=false;t.negationApplied=false;
+   t.opened=!(common/t.den>1&&t.a!==0&&t.b!==0);t.hasDen=t.originallyFraction;
   }
-  pairEq=null;fractionEq=null;bracket=null;
-  const totalSide=side=>multiEq.sides[side].reduce((acc,t)=>{
-   const k=common/t.den;acc.a+=t.sign*t.a*k;acc.b+=t.sign*t.b*k;return acc;
-  },{a:0,b:0});
-  const l=totalSide('L'),r=totalSide('R');
-  m={a:l.a,b:l.b,c:r.a,d:r.b};
- }else if(isPair){multiEq=null;const base=newM.original||newM;const L={a:base.left.a,b:base.left.b,d:base.left.d},R={a:base.right.a,b:base.right.b,d:base.right.d};const common=lcm(L.d,R.d);pairEq={left:{...L,quotient:1,canceled:false,expanded:false},right:{...R,quotient:1,canceled:false,expanded:false},lcm:common,started:false,original:{left:L,right:R},mode:'pair'};fractionEq=null;bracket=null;m={a:L.a*(common/L.d),b:L.b*(common/L.d),c:R.a*(common/R.d),d:R.b*(common/R.d)};}
- else if(isFraction){multiEq=null;pairEq=null;fractionEq={...newM,mode:'start',leftDone:false,rightDone:false};bracket=null;m={a:fractionEq.a,b:fractionEq.b,c:0,d:fractionEq.c*fractionEq.n};}
- else if(isBracket){multiEq=null;pairEq=null;bracket={...newM,mode:'start',leftDone:false,rightDone:false,barsReady:true};fractionEq=null;m={a:bracket.k*bracket.p,b:bracket.k*bracket.q+bracket.out,c:bracket.c,d:bracket.d};}
- else{multiEq=null;pairEq=null;bracket=null;fractionEq=null;m={...newM}}
- s=initial();s.barsReady=true;step=0;history=[];update();
+  const total=side=>multiEq.sides[side].reduce((acc,t)=>{const k=common/t.den;acc.a+=t.sign*t.a*k;acc.b+=t.sign*t.b*k;return acc},{a:0,b:0});
+  const l=total('L'),r=total('R');m={a:l.a,b:l.b,c:r.a,d:r.b};
+ }else if(module===6){
+  const base=fresh.original||fresh,L={a:base.left.a,b:base.left.b,d:base.left.d},R={a:base.right.a,b:base.right.b,d:base.right.d};
+  const common=lcm(L.d,R.d);
+  pairEq={left:{...L,quotient:1,canceled:false,expanded:false},right:{...R,quotient:1,canceled:false,expanded:false},lcm:common,started:false,original:{left:L,right:R},mode:'pair'};
+  m={a:L.a*(common/L.d),b:L.b*(common/L.d),c:R.a*(common/R.d),d:R.b*(common/R.d)};
+ }else if(module===5){
+  fractionEq={...fresh,mode:'start',leftDone:false,rightDone:false};
+  m={a:fractionEq.a,b:fractionEq.b,c:0,d:fractionEq.c*fractionEq.n};
+ }else if(module===3){
+  bracket={...fresh,mode:'start',leftDone:false,rightDone:false,barsReady:true};
+  m={a:bracket.k*bracket.p,b:bracket.k*bracket.q+bracket.out,c:bracket.c,d:bracket.d};
+ }else m={...fresh};
+ s=initial();s.barsReady=true;step=0;history=[];
+ preCommon=commonPreFactor();update();
  const input=$('#custom').value.replace(/\s/g,'');
- document.querySelectorAll('#examples button').forEach(b=>b.classList.toggle('active',b.dataset.eq===(multiEq||pairEq||fractionEq||bracket?input:formatModel(m))));
+ document.querySelectorAll('#examples button').forEach(b=>b.classList.toggle('active',b.dataset.eq===input));
 }
 function changeModule(number){
- if(busy)return;currentModule=number;drawExamples();
- const ex=examplesByModule[number][0];
- const first=number===6?parseMulti(ex):number===5?parsePair(ex):number===4?parseFraction(ex):number===3?parseBracket(ex):parse(ex);
- $('#custom').value=ex;restart(first,number===3,number===4,number===5,number===6);$('#feedback').textContent='';
+ if(busy)return;
+ currentModule=number;drawExamples();
+ const ex=examplesByModule[number][0];$('#custom').value=ex;
+ restart(parseModule(ex,number),number);$('#feedback').textContent='';
 }
 $('#reset').onclick=()=>restart();
-$('#back').onclick=()=>{if(busy||!history.length)return;({s,bracket,fractionEq,pairEq,multiEq,m,layoutShiftX}=history.pop());step=Math.max(0,step-1);update()};
+$('#back').onclick=()=>{
+ if(busy||!history.length)return;
+ ({s,bracket,fractionEq,pairEq,multiEq,simpleEq,preCommon,m,layoutShiftX}=history.pop());
+ step=Math.max(0,step-1);update();
+};
 $('#level').onchange=()=>{if(!busy)update()};
 $('#modeSlow').onclick=()=>setTeachingMode('slow');
 $('#modeFast').onclick=()=>setTeachingMode('fast');
-$('#load').onclick=()=>{if(busy)return;const mu=parseMulti($('#custom').value);const pr=mu?null:parsePair($('#custom').value);const fr=(mu||pr)?null:parseFraction($('#custom').value);const br=(mu||pr||fr)?null:parseBracket($('#custom').value);const n=mu||pr||fr||br||parse($('#custom').value);$('#feedback').textContent=n?'':'Örnek: 4x+6=12, 2(x+3)=8, (2x+4)/3=6 veya (2x+3)/4+(3x-1)/7=(x+2)/9.';if(n){const targetModule=mu?6:pr?5:fr?4:br?3:n.c===0?1:2;if(targetModule!==currentModule){currentModule=targetModule;drawExamples()}restart(n,!!br,!!fr,!!pr,!!mu)}};
+$('#load').onclick=()=>{
+ if(busy)return;
+ const raw=$('#custom').value;
+ // Hazır örnekler dışında da doğru aileyi bul: çoklu kesir önce,
+ // ardından iki kesir, tek kesir, çoklu/iç içe parantez, tek parantez.
+ const multi=parseMulti(raw),pair=multi?null:parsePair(raw),fraction=(multi||pair)?null:parseFraction(raw);
+ const bracket=(multi||pair||fraction)?null:parseBracket(raw);
+ const simple=(multi||pair||fraction||bracket)?null:parseSimple(raw);
+ const linear=(!multi&&!pair&&!fraction&&!bracket&&!simple)?parse(raw):null;
+ const found=multi||pair||fraction||bracket||simple||linear;
+ $('#feedback').textContent=found?'':'Bu örneği ayrıştıramadım. Modül 4 için 2(x+3)-3(x-1)=7 gibi bir denklem deneyin.';
+ if(!found)return;
+ const mod=multi?7:pair?6:fraction?5:bracket?3:simple?((raw.includes('(')||currentModule===4)?4:(linear?linear.c?2:1:4)):linear?.c?2:1;
+ if(mod!==currentModule){currentModule=mod;drawExamples()}
+ restart(mod===4?simple||parseSimple(raw):found,mod);
+};
 $('#custom').onkeydown=e=>{if(e.key==='Enter')$('#load').click()};
 document.querySelectorAll('#modules button').forEach(b=>b.addEventListener('click',()=>changeModule(Number(b.dataset.module))));
 window.addEventListener('resize',()=>{hideDistributionHint();if(!busy)positionScale()});
 changeModule(1);
 const startup=document.getElementById("startupNotice");if(startup)startup.remove();
 })();
-</script><script src="/projeler/shared-ui.js?v=20261018-home"></script>
-</body></html>
+</script></body></html>
