@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 60</title>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 62</title>
 <style>
-:root{font-family:Arial,Helvetica,sans-serif;color:#1d2a3b;background:#f4f6fa}*{box-sizing:border-box}body{margin:0;min-height:100vh}header{padding:18px 25px;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:22px;margin:0;font-weight:600}.subtitle{font-size:12px;color:#77869a;margin-top:6px}.home{width:45px;height:45px;border-radius:12px;background:#ffcf31;border:2px solid #e4ac14;box-shadow:0 3px 8px #5a461525;display:grid;place-items:center;color:#383019;text-decoration:none}.home svg{height:23px;width:23px;fill:currentColor}main{width:min(1120px,calc(100% - 28px));margin:auto}.toolbar,.examples,.entry{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:8px 0 14px}button,select,input{font:inherit;border:1px solid #d5dfea;border-radius:10px;background:white;color:#273954;padding:10px 13px}button{cursor:pointer;box-shadow:0 2px 5px #182b3a0c}button:hover:not(:disabled){border-color:#8fa6c4}button:disabled{opacity:.42;cursor:default}.toolbar label{font-size:13px;color:#69768c;margin-left:auto}.mode-switch{display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid #d5dfea;border-radius:12px;background:#eaf0f7}.mode-switch button{padding:7px 13px;border:1px solid transparent;background:transparent;box-shadow:none;border-radius:9px;font-size:14px;min-width:67px}.mode-switch button.selected{color:white;background:#273e5e;border-color:#273e5e;box-shadow:0 2px 5px #182b3a20}.mode-switch button:focus-visible{outline:2px solid #e1a518;outline-offset:2px}.board{border:1px solid #e1e7ee;background:white;border-radius:22px;min-height:430px;box-shadow:0 14px 45px #192e4b0b;overflow:hidden}.board-top{display:flex;justify-content:space-between;color:#78869b;padding:18px 20px;font-size:12px}.scene{height:316px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}.equation{position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1.3;font-size:clamp(26px,4.5vw,50px);font-weight:400;max-width:97%;transform-origin:center center;font-variant-numeric:lining-nums}.side{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative}.equals{padding:0 .36em}.part{display:inline-flex;align-items:center;white-space:nowrap;position:relative}.atom{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border-radius:7px;position:relative;padding:0 .035em}.sign{padding:0 .06em}.hit{cursor:pointer;position:relative;border-radius:8px;outline:none;background:transparent;box-shadow:none;transition:background .18s,box-shadow .18s}.hit:hover,.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.busy .hit{pointer-events:none}.combine{display:inline-flex;align-items:center;border-radius:8px}.combine.hit{padding:0 .04em}.multi-combine{display:inline-flex;align-items:center;white-space:nowrap;border-radius:8px}.multi-combine .part{white-space:nowrap}.multi-combine.hit{padding:0 .05em}.multiply-factor{display:inline-flex;align-items:center;white-space:nowrap}.mul-dot{display:inline-block;padding:0 .08em}.multiply-factor .hit{padding:0 .055em}.fraction{display:inline-grid;grid-template-rows:auto 3px auto;align-items:center;justify-items:center;position:relative;margin:0 .08em;min-width:1em;border-radius:9px}.numerator,.denominator{display:flex;justify-content:center;align-items:center;min-height:.92em;padding:0 .14em;white-space:nowrap}.numerator{transform:translateY(-.09em)}.denominator{transform:translateY(.09em)}.fracbar{height:2px;width:100%;background:#293852;border-radius:2px;align-self:center;transform:scaleX(1);transform-origin:center}.fraction.constructing .fracbar{transform:scaleX(0)}.fraction.constructed .fracbar{transform:scaleX(1);transition:transform .34s cubic-bezier(.45,0,.18,1)}.fraction.hit:hover,.fraction.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.tip{min-height:32px;text-align:center;font-size:13px;color:#7d8ca0}.examples button.active,.modules button.active{background:#273e5e;color:white}.modules{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 14px}.modules button{font-weight:600}.module-label{font-size:13px;color:#62738c;margin:8px 0}.examples button{font-size:14px}.entry input{width:min(340px,65vw)}.feedback{min-height:18px;color:#ad3e3e;font-size:12px}.notice{font-size:12px;color:#8390a3;line-height:1.6}.measure-layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;pointer-events:none}.measurement{max-width:97%}.ghost{position:fixed;z-index:2000;pointer-events:none;white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-weight:400;line-height:1.3;color:#bf7c1d;will-change:transform,opacity}.done{color:#188a5c}.cross{position:relative}@media(max-width:620px){header{padding:12px 16px}.board{min-height:375px}.board-top{padding:14px}.scene{height:270px}.equals{padding:0 .18em}.toolbar label{margin-left:0}}
+:root{font-family:Arial,Helvetica,sans-serif;color:#1d2a3b;background:#f4f6fa}*{box-sizing:border-box}body{margin:0;min-height:100vh}header{padding:18px 25px;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:22px;margin:0;font-weight:600}.subtitle{font-size:12px;color:#77869a;margin-top:6px}.home{width:45px;height:45px;border-radius:12px;background:#ffcf31;border:2px solid #e4ac14;box-shadow:0 3px 8px #5a461525;display:grid;place-items:center;color:#383019;text-decoration:none}.home svg{height:23px;width:23px;fill:currentColor}main{width:min(1120px,calc(100% - 28px));margin:auto}.toolbar,.examples,.entry{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:8px 0 14px}button,select,input{font:inherit;border:1px solid #d5dfea;border-radius:10px;background:white;color:#273954;padding:10px 13px}button{cursor:pointer;box-shadow:0 2px 5px #182b3a0c}button:hover:not(:disabled){border-color:#8fa6c4}button:disabled{opacity:.42;cursor:default}.toolbar label{font-size:13px;color:#69768c;margin-left:auto}.mode-switch{display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid #d5dfea;border-radius:12px;background:#eaf0f7}.mode-switch button{padding:7px 13px;border:1px solid transparent;background:transparent;box-shadow:none;border-radius:9px;font-size:14px;min-width:67px}.mode-switch button.selected{color:white;background:#273e5e;border-color:#273e5e;box-shadow:0 2px 5px #182b3a20}.mode-switch button:focus-visible{outline:2px solid #e1a518;outline-offset:2px}.board{border:1px solid #e1e7ee;background:white;border-radius:22px;min-height:430px;box-shadow:0 14px 45px #192e4b0b;overflow:hidden}.board-top{display:flex;justify-content:space-between;color:#78869b;padding:18px 20px;font-size:12px}.scene{height:316px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}.equation{position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1.3;font-size:clamp(26px,4.5vw,50px);font-weight:400;max-width:97%;transform-origin:center center;font-variant-numeric:lining-nums}.side{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative}.equals{padding:0 .36em}.part{display:inline-flex;align-items:center;white-space:nowrap;position:relative}.atom{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border-radius:7px;position:relative;padding:0 .035em}.sign{padding:0 .06em}.hit{cursor:pointer;position:relative;border-radius:8px;outline:none;background:transparent;box-shadow:none;transition:background .18s,box-shadow .18s}.hit:hover,.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.busy .hit{pointer-events:none}.combine{display:inline-flex;align-items:center;border-radius:8px}.combine.hit{padding:0 .04em}.multi-combine{display:inline-flex;align-items:center;white-space:nowrap;border-radius:8px}.multi-combine .part{white-space:nowrap}.multi-combine.hit{padding:0 .05em}.multiply-factor{display:inline-flex;align-items:center;white-space:nowrap}.mul-dot{display:inline-block;padding:0 .08em}.multiply-factor .hit{padding:0 .055em}.fraction{display:inline-grid;grid-template-rows:auto 3px auto;align-items:center;justify-items:center;position:relative;margin:0 .08em;min-width:1em;border-radius:9px}.numerator,.denominator{display:flex;justify-content:center;align-items:center;min-height:.92em;padding:0 .14em;white-space:nowrap}.numerator{transform:translateY(-.09em)}.denominator{transform:translateY(.09em)}.fracbar{height:2px;width:100%;background:#293852;border-radius:2px;align-self:center;transform:scaleX(1);transform-origin:center}.fraction.constructing .fracbar{transform:scaleX(0)}.fraction.constructed .fracbar{transform:scaleX(1);transition:transform .34s cubic-bezier(.45,0,.18,1)}.fraction.hit:hover,.fraction.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.tip{min-height:32px;text-align:center;font-size:13px;color:#7d8ca0}.examples button.active,.modules button.active{background:#273e5e;color:white}.modules{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 14px}.modules button{font-weight:600;min-width:115px}.module-label{display:none}.examples button{font-size:14px}.entry input{width:min(340px,65vw)}.feedback{min-height:18px;color:#ad3e3e;font-size:12px}.notice{font-size:12px;color:#8390a3;line-height:1.6}.measure-layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;pointer-events:none}.measurement{max-width:97%}.ghost{position:fixed;z-index:2000;pointer-events:none;white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-weight:400;line-height:1.3;color:#bf7c1d;will-change:transform,opacity}.done{color:#188a5c}.cross{position:relative}@media(max-width:620px){header{padding:12px 16px}.board{min-height:375px}.board-top{padding:14px}.scene{height:270px}.equals{padding:0 .18em}.toolbar label{margin-left:0}}
 
 /* Çoklu kesir modülü: Çarpan paydanın hemen altında, küçük ve net görünür. */
 .six-den-stack{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative}
@@ -37,11 +37,17 @@
 .simple-linked .hit{pointer-events:none}
 .simple-coeff-sum{display:inline-flex;align-items:center;white-space:nowrap}
 
+
+/* Öğrenci arayüzü: on alıştırma eşit ve düzenli iki satırda gösterilir. */
+.modules{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.modules button{min-width:0;white-space:nowrap;padding:10px 8px}
+@media(max-width:700px){.modules{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:430px){.modules{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style></head><body>
-<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 60</span></h1><div class="subtitle">Kademeli modüller · önceki bilgiler korunur</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
+<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 62</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
 <main><div class="toolbar"><button id="reset">↺ Baştan</button><button id="back">← Geri</button><div class="mode-switch" role="group" aria-label="Çözüm yöntemi"><button type="button" id="modeSlow" class="selected" aria-pressed="true" title="Bütün öğretici işlem adımlarını göster">Yavaş</button><button type="button" id="modeFast" aria-pressed="false" title="Bariz işlemleri tek adımda tamamla">Hızlı</button></div><label for="level">Seviye</label><select id="level"><option>A1</option><option selected>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></div>
-<div class="modules" id="modules"><button data-module="1" class="active">1 · ax + b = c</button><button data-module="2">2 · ax + b = cx + d</button><button data-module="3">3 · a(x + b) = c</button><button data-module="4">4 · Basit Aritmetik ile Çözülebilen Denklemler</button><button data-module="5">5 · (ax + b)/n = c</button><button data-module="6">6 · İçler–Dışlar Çarpımı</button><button data-module="7">7 · Çoklu Kesirli Denklemler</button></div><div class="module-label" id="moduleLabel"></div><div class="board"><div class="board-top"><span>Terim taşıma · yerinde hesaplama · bölme · sadeleştirme</span><span id="stepLabel">Adım 1</span></div><div id="scene" class="scene"><div id="equation" class="equation"></div></div><div id="tip" class="tip" aria-live="polite"></div></div>
-<div id="startupNotice" class="startup-notice" role="alert">Denklem motoru başlatılamadı. Hata bilgisi için tarayıcı konsolunu açabilirsiniz.</div><div id="examples" class="examples"></div><div class="entry"><input id="custom" aria-label="Denklem" placeholder="Örn. 3x+5=x+13" spellcheck="false"><button id="load">Denklemi aç</button><span id="feedback" class="feedback"></span></div><p class="notice">Modül 1: ax+b=c. Modül 2: bilinmeyen iki tarafta. Modül 3: tek parantezli denklemler. Modül 4: temel aritmetik ailesi — bütün denklemi ortak sayıya bölme, birden fazla parantez, ortak çarpanları ve benzer terimleri ilişkilendiren hl, iç içe parantez. Modül 5: tek kesir. Modül 6: içler–dışlar çarpımı. Modül 7: değişken sayıda kesirli ve kesirsiz terim. Bütün modüllerde çözüm adımlarından önce ortak tam sayı çarpanı denetlenir; bu aşamada yalnızca sadeleşen katsayılar birlikte vurgulanır. Hızlı modda terim sırası korunur; kesir çizgisinin parantez görevi kaybolmaz. Her zaman yalnızca geçerli işlem üzerine gelindiğinde highlight oluşur.</p></main>
+<div class="modules" id="modules" aria-label="Alıştırma seçimi"></div><div class="module-label" id="moduleLabel"></div><div class="board"><div class="board-top"><span>Denklemi adım adım çöz</span><span id="stepLabel">Adım 1</span></div><div id="scene" class="scene"><div id="equation" class="equation"></div></div><div id="tip" class="tip" aria-live="polite"></div></div>
+<div id="startupNotice" class="startup-notice" role="alert">Denklem motoru başlatılamadı. Hata bilgisi için tarayıcı konsolunu açabilirsiniz.</div><div id="examples" class="examples"></div><div class="entry"><input id="custom" aria-label="Denklem" placeholder="Örn. 3x+5=x+13" spellcheck="false"><button id="load">Denklemi aç</button><span id="feedback" class="feedback"></span></div><p class="notice">Bir bilinmeyenli birinci dereceden denklemler. Alıştırma seçebilir veya kendi denklemini yazabilirsin. Fareyle üzerine gelince yalnızca yapılabilecek işlemler vurgulanır.</p></main>
 <script>
 (()=>{
  const box=document.getElementById('startupNotice');
@@ -57,7 +63,166 @@
 <script>
 (()=>{'use strict';
 const $=s=>document.querySelector(s), eq=$('#equation'),scene=$('#scene');
-const examplesByModule={7:["x/2+x/3=5","x/3+x/5=8/5","(2x+1)/4+(x-2)/6=5/4","(x+2)/6-(2-x)/9=2/3","(3x-1)/5+(2-x)/4=(x+8)/10","2x+(x-3)/6=6+(x-3)/4","-(x+1)/4+(3x-2)/6-x/3=-3/4","x/4+x/6+x/8=13/6","(x-1)/7+(x+3)/4=25/14","(2-x)/5+(x+1)/6=(3x-1)/10","x/6+x/9=5x/18","x/6+x/9=5x/18+1"],6:['(2x-2)/4=(x+3)/10','(x-1)/3=(2x-4)/8','(2x+1)/5=(x+4)/6','(x+1)/2=(3x+9)/9','(x+3)/12=(2x+3)/15','(3x-8)/11=x/1','(x+2)/7=(2x+5)/14','(x+3)/13=(2x+6)/26'],5:['(2x+4)/3=6','(3x-2)/4=7','(5x+5)/5=8','(4x-8)/6=2','(-2x+3)/7=-1','(2x+6)/8=4','x/9=5','3x/10=6','(3x+4)/2=5','(2x+3)/1=7'],4:['4x+6=12','6x+9=15','2(x+2)=10','2(x+3)-3(x-1)=7','2(x+5)+4(x-1)=18','4(x-1)-2(x+5)=6','3(x+2)+2x+4=24','4(x-3)+3(x-3)=14','3(2x+1)+4x+2=35','2(3(x-1)+4)=20','3(2(x+1)-x)=15','2(3(x-1)+4)-4=12'],3:['3(x+2)=18','2(x-4)=10','-3(x+2)=12','2(3x+4)=20','3(x+2)+4=19','2(x+3)=x+11','2(x+3)=2x+6','2(x+3)=2x+8'],1:['4x+6=12','2x+3=11','3x-5=10','-3x+6=-9','5x+10=0','7x-3=4'],2:['3x+5=x+13','5x+7=2x+19','7x-3=2x+12','2x+8=5x-7','-3x+6=x-10','2x+3=2x+8','2x+3=2x+3']};
+// Öğretim örnekleri kuraldan bağımsızdır: her grupta iki ek örnek,
+// başlangıçta ortak sayıyla sadeleşmeyen denklemlerden seçildi.
+// Grup sınırları örnek indeksinden değil, doğrudan bu katalogdan belirlenir.
+const exampleGroupsByModule={
+  1: [
+    {
+      "title": "Sabit Terimler",
+      "examples": [
+        "4x+6=12",
+        "2x+3=11",
+        "3x-5=10",
+        "-3x+6=-9",
+        "5x+10=0",
+        "7x-3=4",
+        "5x+7=19",
+        "3x-4=13"
+      ]
+    }
+  ],
+  2: [
+    {
+      "title": "İki Tarafta x",
+      "examples": [
+        "3x+5=x+13",
+        "5x+7=2x+19",
+        "7x-3=2x+12",
+        "2x+8=5x-7",
+        "-3x+6=x-10",
+        "2x+3=2x+8",
+        "2x+3=2x+3",
+        "4x+5=2x+12",
+        "7x-2=3x+9"
+      ]
+    }
+  ],
+  3: [
+    {
+      "title": "Tek Parantez",
+      "examples": [
+        "3(x+2)=18",
+        "2(x-4)=10",
+        "-3(x+2)=12",
+        "2(3x+4)=20",
+        "3(x+2)+4=19",
+        "2(x+3)=x+11",
+        "2(x+3)=2x+6",
+        "2(x+3)=2x+8",
+        "3(x+4)=17",
+        "4(x-3)+5=18"
+      ]
+    }
+  ],
+  4: [
+    {
+      "title": "Sadeleştir veya Çöz",
+      "examples": [
+        "4x+6=12",
+        "6x+9=15",
+        "2(x+2)=10",
+        "3x+5=16",
+        "5(x+1)=17"
+      ]
+    },
+    {
+      "title": "Çoklu Parantez",
+      "examples": [
+        "2(x+3)-3(x-1)=7",
+        "2(x+5)+4(x-1)=18",
+        "4(x-1)-2(x+5)=6",
+        "3(x+2)-2(x-1)=11",
+        "2(x-4)+5(x+1)=19"
+      ]
+    },
+    {
+      "title": "Ortak Çarpan",
+      "examples": [
+        "3(x+2)+2x+4=24",
+        "4(x-3)+3(x-3)=14",
+        "3(2x+1)+4x+2=35",
+        "2(x-4)+3x-12=17",
+        "4(2x+3)+6x+9=31"
+      ]
+    },
+    {
+      "title": "İç İçe Parantez",
+      "examples": [
+        "2(3(x-1)+4)=20",
+        "3(2(x+1)-x)=15",
+        "2(3(x-1)+4)-4=12",
+        "3(2(x+2)-1)=20",
+        "2(3(x-2)+5)=17"
+      ]
+    }
+  ],
+  5: [
+    {
+      "title": "Tek Kesir",
+      "examples": [
+        "(2x+4)/3=6",
+        "(3x-2)/4=7",
+        "(5x+5)/5=8",
+        "(4x-8)/6=2",
+        "(-2x+3)/7=-1",
+        "(2x+6)/8=4",
+        "x/9=5",
+        "3x/10=6",
+        "(3x+4)/2=5",
+        "(2x+3)/1=7",
+        "(3x+1)/4=8",
+        "(4x-3)/7=4"
+      ]
+    }
+  ],
+  6: [
+    {
+      "title": "İçler–Dışlar",
+      "examples": [
+        "(2x-2)/4=(x+3)/10",
+        "(x-1)/3=(2x-4)/8",
+        "(2x+1)/5=(x+4)/6",
+        "(x+1)/2=(3x+9)/9",
+        "(x+3)/12=(2x+3)/15",
+        "(3x-8)/11=x/1",
+        "(x+2)/7=(2x+5)/14",
+        "(x+3)/13=(2x+6)/26",
+        "(2x+5)/3=(x-1)/7",
+        "(3x-4)/5=(2x+1)/8"
+      ]
+    }
+  ],
+  7: [
+    {
+      "title": "Çoklu Kesir",
+      "examples": [
+        "x/2+x/3=5",
+        "x/3+x/5=8/5",
+        "(2x+1)/4+(x-2)/6=5/4",
+        "(x+2)/6-(2-x)/9=2/3",
+        "(3x-1)/5+(2-x)/4=(x+8)/10",
+        "2x+(x-3)/6=6+(x-3)/4",
+        "-(x+1)/4+(3x-2)/6-x/3=-3/4",
+        "x/4+x/6+x/8=13/6",
+        "(x-1)/7+(x+3)/4=25/14",
+        "(2-x)/5+(x+1)/6=(3x-1)/10",
+        "x/6+x/9=5x/18",
+        "x/6+x/9=5x/18+1",
+        "(x+1)/4+(2x-3)/5=7",
+        "(3x-2)/5-(x+4)/6=(2x+3)/3"
+      ]
+    }
+  ]
+};
+const examplesByModule=Object.fromEntries(
+ Object.entries(exampleGroupsByModule).map(([id,groups])=>
+  [id,groups.flatMap(group=>group.examples)]));
+// Öğrenci arayüzünde yalnızca sıralı alıştırmalar var. İç sınıflandırma
+// örnekleri ayrıştırıp doğru cebir motoruna yönlendirmek için korunuyor.
+const exerciseCatalog=Object.entries(exampleGroupsByModule).flatMap(([module,groups])=>
+ groups.map((group,groupIndex)=>({module:Number(module),groupIndex,examples:group.examples})));
+let currentExercise=0;
 let layoutShiftX=0;
 let currentModule=1;let bracket=null;let fractionEq=null;let pairEq=null;let multiEq=null;let simpleEq=null;let preCommon=1;
 let m={a:4,b:6,c:0,d:12},s,history=[],busy=false,step=0;
@@ -198,7 +363,7 @@ function parseMulti(raw){
  return {mode:'multi',sides:{L,R},common,original};
 }
 function multiTerms(){return [...multiEq.sides.L,...multiEq.sides.R]}
-// Beta 60 — Birim payda, diğer paydalarla ortak paydaya getirilebiliyorsa
+// Beta 61 — Birim payda, diğer paydalarla ortak paydaya getirilebiliyorsa
 // henüz silinmez. 2/1 de 6 ortak paydasına 12/6 olarak genişletilebilir.
 // Bu denetim her işlemden sonra yeniden çalışır; belirli örneğe bağlı değildir.
 function multiCanUnifyDenominators(){
@@ -398,7 +563,7 @@ async function multiStage(change){
  }
  await Promise.all(transitions);
 }
-// Beta 60: Kesir çizgileri kaybolduktan sonra terimleri toplamadan
+// Beta 61: Kesir çizgileri kaybolduktan sonra terimleri toplamadan
 // GENEL ifade ağacına aktar. 3x+6−4+2x yapısı dört ayrı terim olarak
 // yaşar. Bu aşamada Modül 4'ün tek ortak "benzer terim" motoru kullanılır.
 function multiToExpression(){
@@ -633,7 +798,7 @@ function sUnitFactorAllowed(node){
   node.factors[0].value===1&&node.factors[1]?.kind==='group';
 }
 function sSpreadAllowed(node){const grp=sScalarGroup(node);return !!grp&&grp.k!==1&&grp.group.expr.kind==='sum'&&grp.group.expr.items.length>1}
-// Beta 60: Benzer terimler yalnızca başka bir cebirsel işlem beklemiyorsa seçilebilir.
+// Beta 61: Benzer terimler yalnızca başka bir cebirsel işlem beklemiyorsa seçilebilir.
 // Ayrı taraflar asla eşleştirilmez; değişkenler yalnızca değişkenlerle,
 // sayısal sabitler yalnızca sayısal sabitlerle birlikte hl olur.
 function sLikeValue(node){
@@ -676,9 +841,9 @@ function sCombineLikeGroup(side,kind){
  simpleEq[side]=sSum(next.length?next:[{sign:1,node:sNumber(0)}]);
  return true;
 }
-// Beta 60: Yalnızca üst düzeyde duran parantezler gereksiz olabilir.
+// Beta 61: Yalnızca üst düzeyde duran parantezler gereksiz olabilir.
 // Çarpılan veya kesir payını tutan parantezlerin görevi devam eder.
-// Beta 60: İç parantezde henüz yapılabilecek dağıtma/hesaplama varsa
+// Beta 61: İç parantezde henüz yapılabilecek dağıtma/hesaplama varsa
 // dış parantez o sırada HL olamaz. İki iç içe hit alanını yasaklıyoruz.
 function sNestedPriority(node){
  let waiting=false;
@@ -1263,7 +1428,7 @@ function parsePair(raw){
 }
 // Genel payda öncelikleri: önce /1 kaldır, ardından bütün paydaların
 // ortak böleni varsa eşitliğin iki tarafını bu bölenle çarp.
-// Beta 60: Payın BÜTÜN terimleri ve payda aynı g>1 ile
+// Beta 61: Payın BÜTÜN terimleri ve payda aynı g>1 ile
 // bölünebiliyorsa, bu işlem önce seçilir. Kesir değerini değiştirmez.
 function numeratorDenominatorCandidate(){
  if(fractionEq?.mode==='start'&&fractionEq.n>1){
@@ -1930,7 +2095,7 @@ const botLeft=s.leftDone?'':hit('bota',fmt(A()),'cancel');
 let l=s.leftDone?atom('onlyx','x'):fhtml(topLeft,botLeft,'fractionL',null,!s.barsReady);
 let r=s.rightDone?rightResult():fhtml(atom('righttop',fmt(D())),atom('rightbottom',fmt(A())),'fractionR','simplify',!s.barsReady);
 return `<span class="side" data-id="sideL">${l}</span><span class="equals">=</span><span class="side" data-id="sideR">${r}</span>`;}
-// Beta 60: Öncelik tek merkezde belirlenir. Yeni kurallar eklendiğinde
+// Beta 61: Öncelik tek merkezde belirlenir. Yeni kurallar eklendiğinde
 // birbirinin üzerine çizilen tıklama alanları yerine TEK etkin kural seçilir.
 // Tam sadeleşme: ax=d'de EBOB(|a|,|d|)>1 ise a ve d birlikte HL.
 // Aksi halde standart 'a'ya tıkla ve her iki tarafı a'ya böl yolu korunur.
@@ -2054,7 +2219,7 @@ function rect(id){return byId(id)?.getBoundingClientRect()}
 function positionScale(){const max=scene.clientWidth*.95,w=eq.scrollWidth;const scale=w>max?Math.max(.38,max/w):1;eq.style.transform=`translateX(${layoutShiftX}px) scale(${scale})`;}
 function update(animateBars=false){render(animateBars);positionScale()}
 async function fade(change){const animation=eq.animate([{opacity:1},{opacity:.15}],{duration:190*speed(),easing:'ease-in-out'});await animation.finished.catch(()=>{});change();update();await eq.animate([{opacity:.15},{opacity:1}],{duration:300*speed(),easing:'ease-in-out'}).finished.catch(()=>{});}
-// Beta 60: Sembollerin kimlikleri, görevleri ve hedef koordinatları işlemden önce hesaplanır.
+// Beta 61: Sembollerin kimlikleri, görevleri ve hedef koordinatları işlemden önce hesaplanır.
 // İşaret (sign), katsayı, terim ve eşitlik ayrı anlamlı öğelerdir.
 const MotionEngine={
  center(r){return {x:r.left+r.width/2,y:r.top+r.height/2}},
@@ -2211,7 +2376,7 @@ const MotionEngine={
  }
 
 };
-// Beta 60: İptal çizgisi bir noktanın sol alttan sağ üste süratlenerek
+// Beta 61: İptal çizgisi bir noktanın sol alttan sağ üste süratlenerek
 // ilerlemesiyle oluşur; ardından sayı ve kırmızı iz kısa bir sürede çözünür.
 // SVG yalnızca bir geçiş katmanıdır, matematiksel DOM nesnesi değişmez.
 function drawStroke(el){
@@ -2458,26 +2623,32 @@ function parseModule(raw,module){
 }
 function drawExamples(){
  const list=$('#examples');list.innerHTML='';
- const module4Labels={0:'1 · Denklemin tamamını sadeleştirme',3:'2 · Birden fazla parantez',6:'3 · Ortak cebirsel çarpan',9:'4 · İç içe parantez'};
- for(const [index,ex] of examplesByModule[currentModule].entries()){
-  if(currentModule===4&&module4Labels[index]){
-   const heading=document.createElement('div');heading.className='example-section';heading.textContent=module4Labels[index];list.append(heading);
-  }
+ const page=exerciseCatalog[currentExercise];
+ if(!page)return;
+ // Eski pedagojik gruplar hâlâ veri kataloğunda mevcut, fakat başlıkları
+ // öğrenciye gösterilmiyor. Her bölümde yalnızca denklemler listeleniyor.
+ for(const ex of page.examples){
   const btn=document.createElement('button');btn.textContent=ex;btn.dataset.eq=ex;
-  btn.onclick=()=>{if(busy)return;$('#custom').value=ex;const next=parseModule(ex,currentModule);if(next)restart(next,currentModule)};
+  btn.onclick=()=>{if(busy)return;$('#custom').value=ex;
+   const next=parseModule(ex,currentModule);if(next)restart(next,currentModule)};
   list.append(btn);
  }
- document.querySelectorAll('#modules button').forEach(b=>b.classList.toggle('active',Number(b.dataset.module)===currentModule));
- const labels={
-  1:'Modül 1 · Sabit terimi taşı, hesapla, katsayıya böl.',
-  2:'Modül 2 · İki taraftaki terimleri istediğin sırayla taşı.',
-  3:'Modül 3 · Paranteze tıklayarak aç; uygun durumlarda katsayıya böl.',
-  4:'Modül 4 · Basit Aritmetik: ortak sayıyla sadeleştirme · çoklu parantez · ortak çarpan · iç içe parantez.',
-  5:'Modül 5 · Tek kesrin paydasını kaldır ve çöz.',
-  6:'Modül 6 · İçler–Dışlar: çapraz iki gruptan birini seç; çarpımlara geç.',
-  7:'Modül 7 · Kesirsiz terimlere /1, paydalara OKEK genişletmesi, ardından sadeleştirme.'
- };
- $('#moduleLabel').textContent=labels[currentModule];
+ const nav=$('#modules');
+ if(nav.children.length!==exerciseCatalog.length){
+  nav.innerHTML='';
+  exerciseCatalog.forEach((entry,index)=>{
+   const btn=document.createElement('button');
+   btn.type='button';btn.dataset.exercise=String(index);
+   btn.textContent='Alıştırma '+(index+1);
+   nav.append(btn);
+  });
+ }
+ nav.querySelectorAll('button[data-exercise]').forEach(b=>{
+  const active=Number(b.dataset.exercise)===currentExercise;
+  b.classList.toggle('active',active);
+  b.setAttribute('aria-pressed',String(active));
+ });
+ $('#moduleLabel').textContent='';
 }
 function restart(newM=null,module=currentModule){
  if(busy)return;
@@ -2517,11 +2688,19 @@ function restart(newM=null,module=currentModule){
  const input=$('#custom').value.replace(/\s/g,'');
  document.querySelectorAll('#examples button').forEach(b=>b.classList.toggle('active',b.dataset.eq===input));
 }
-function changeModule(number){
+function changeExercise(index){
  if(busy)return;
- currentModule=number;drawExamples();
- const ex=examplesByModule[number][0];$('#custom').value=ex;
- restart(parseModule(ex,number),number);$('#feedback').textContent='';
+ const page=exerciseCatalog[index];if(!page)return;
+ currentExercise=index;
+ currentModule=page.module;
+ drawExamples();
+ const ex=page.examples[0];$('#custom').value=ex;
+ restart(parseModule(ex,currentModule),currentModule);
+ $('#feedback').textContent='';
+}
+function changeModule(number){
+ const index=exerciseCatalog.findIndex(page=>page.module===number);
+ if(index>=0)changeExercise(index);
 }
 $('#reset').onclick=()=>restart();
 $('#back').onclick=()=>{
@@ -2545,13 +2724,27 @@ $('#load').onclick=()=>{
  $('#feedback').textContent=found?'':'Bu örneği ayrıştıramadım. Modül 4 için 2(x+3)-3(x-1)=7 gibi bir denklem deneyin.';
  if(!found)return;
  const mod=multi?7:pair?6:fraction?5:bracket?3:simple?((raw.includes('(')||currentModule===4)?4:(linear?linear.c?2:1:4)):linear?.c?2:1;
- if(mod!==currentModule){currentModule=mod;drawExamples()}
+ // Hazır örneklerden biri elle girilirse ilgili alıştırmayı da seç.
+ const simplified=raw.replace(/\s/g,'').replace(/−/g,'-');
+ const matching=exerciseCatalog.findIndex(page=>
+  page.module===mod&&page.examples.some(eq=>eq.replace(/−/g,'-')===simplified));
+ const firstForModule=exerciseCatalog.findIndex(page=>page.module===mod);
+ const desired=matching>=0?matching:
+  (exerciseCatalog[currentExercise]?.module===mod?currentExercise:firstForModule);
+ if(desired!==currentExercise||mod!==currentModule){
+  currentExercise=desired>=0?desired:0;
+  currentModule=mod;
+  drawExamples();
+ }
  restart(mod===4?simple||parseSimple(raw):found,mod);
 };
 $('#custom').onkeydown=e=>{if(e.key==='Enter')$('#load').click()};
-document.querySelectorAll('#modules button').forEach(b=>b.addEventListener('click',()=>changeModule(Number(b.dataset.module))));
+$('#modules').addEventListener('click',e=>{
+ const btn=e.target.closest('button[data-exercise]');
+ if(btn)changeExercise(Number(btn.dataset.exercise));
+});
 window.addEventListener('resize',()=>{hideDistributionHint();if(!busy)positionScale()});
-changeModule(1);
+changeExercise(0);
 const startup=document.getElementById("startupNotice");if(startup)startup.remove();
 })();
 </script></body></html>
