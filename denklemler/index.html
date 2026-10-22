@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 68</title>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 69</title>
 <style>
 :root{font-family:Arial,Helvetica,sans-serif;color:#1d2a3b;background:#f4f6fa}*{box-sizing:border-box}body{margin:0;min-height:100vh}header{padding:18px 25px;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:22px;margin:0;font-weight:600}.subtitle{font-size:12px;color:#77869a;margin-top:6px}.home{width:45px;height:45px;border-radius:12px;background:#ffcf31;border:2px solid #e4ac14;box-shadow:0 3px 8px #5a461525;display:grid;place-items:center;color:#383019;text-decoration:none}.home svg{height:23px;width:23px;fill:currentColor}main{width:min(1120px,calc(100% - 28px));margin:auto}.toolbar,.examples,.entry{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:8px 0 14px}button,select,input{font:inherit;border:1px solid #d5dfea;border-radius:10px;background:white;color:#273954;padding:10px 13px}button{cursor:pointer;box-shadow:0 2px 5px #182b3a0c}button:hover:not(:disabled){border-color:#8fa6c4}button:disabled{opacity:.42;cursor:default}.toolbar label{font-size:13px;color:#69768c;margin-left:auto}.mode-switch{display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid #d5dfea;border-radius:12px;background:#eaf0f7}.mode-switch button{padding:7px 13px;border:1px solid transparent;background:transparent;box-shadow:none;border-radius:9px;font-size:14px;min-width:67px}.mode-switch button.selected{color:white;background:#273e5e;border-color:#273e5e;box-shadow:0 2px 5px #182b3a20}.mode-switch button:focus-visible{outline:2px solid #e1a518;outline-offset:2px}.board{border:1px solid #e1e7ee;background:white;border-radius:22px;min-height:430px;box-shadow:0 14px 45px #192e4b0b;overflow:hidden}.board-top{display:flex;justify-content:space-between;color:#78869b;padding:18px 20px;font-size:12px}.scene{height:316px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}.equation{position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1.3;font-size:clamp(26px,4.5vw,50px);font-weight:400;max-width:97%;transform-origin:center center;font-variant-numeric:lining-nums}.side{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative}.equals{padding:0 .36em}.part{display:inline-flex;align-items:center;white-space:nowrap;position:relative}.atom{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border-radius:7px;position:relative;padding:0 .035em}.sign{padding:0 .06em}.hit{cursor:pointer;position:relative;border-radius:8px;outline:none;background:transparent;box-shadow:none;transition:background .18s,box-shadow .18s}.hit:hover,.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.busy .hit{pointer-events:none}.combine{display:inline-flex;align-items:center;border-radius:8px}.combine.hit{padding:0 .04em}.multi-combine{display:inline-flex;align-items:center;white-space:nowrap;border-radius:8px}.multi-combine .part{white-space:nowrap}.multi-combine.hit{padding:0 .05em}.multiply-factor{display:inline-flex;align-items:center;white-space:nowrap}.mul-dot{display:inline-block;padding:0 .08em}.multiply-factor .hit{padding:0 .055em}.fraction{display:inline-grid;grid-template-rows:auto 3px auto;align-items:center;justify-items:center;position:relative;margin:0 .08em;min-width:1em;border-radius:9px}.numerator,.denominator{display:flex;justify-content:center;align-items:center;min-height:.92em;padding:0 .14em;white-space:nowrap}.numerator{transform:translateY(-.09em)}.denominator{transform:translateY(.09em)}.fracbar{height:2px;width:100%;background:#293852;border-radius:2px;align-self:center;transform:scaleX(1);transform-origin:center}.fraction.constructing .fracbar{transform:scaleX(0)}.fraction.constructed .fracbar{transform:scaleX(1);transition:transform .34s cubic-bezier(.45,0,.18,1)}.fraction.hit:hover,.fraction.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.tip{min-height:32px;text-align:center;font-size:13px;color:#7d8ca0}.examples button.active,.modules button.active{background:#273e5e;color:white}.modules{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 14px}.modules button{font-weight:600;min-width:115px}.module-label{display:none}.examples button{font-size:14px}.entry input{width:min(340px,65vw)}.feedback{min-height:18px;color:#ad3e3e;font-size:12px}.notice{font-size:12px;color:#8390a3;line-height:1.6}.measure-layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;pointer-events:none}.measurement{max-width:97%}.ghost{position:fixed;z-index:2000;pointer-events:none;white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-weight:400;line-height:1.3;color:#bf7c1d;will-change:transform,opacity}.done{color:#188a5c}.cross{position:relative}@media(max-width:620px){header{padding:12px 16px}.board{min-height:375px}.board-top{padding:14px}.scene{height:270px}.equals{padding:0 .18em}.toolbar label{margin-left:0}}
 
@@ -44,7 +44,7 @@
 @media(max-width:700px){.modules{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:430px){.modules{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style></head><body>
-<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 68</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
+<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 69</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
 <main><div class="toolbar"><button id="reset">↺ Baştan</button><button id="back">← Geri</button><div class="mode-switch" role="group" aria-label="Çözüm yöntemi"><button type="button" id="modeSlow" class="selected" aria-pressed="true" title="Bütün öğretici işlem adımlarını göster">Yavaş</button><button type="button" id="modeFast" aria-pressed="false" title="Bariz işlemleri tek adımda tamamla">Hızlı</button></div><label for="level">Seviye</label><select id="level"><option>A1</option><option selected>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></div>
 <div class="modules" id="modules" aria-label="Alıştırma seçimi"></div><div class="module-label" id="moduleLabel"></div><div class="board"><div class="board-top"><span>Denklemi adım adım çöz</span><span id="stepLabel">Adım 1</span></div><div id="scene" class="scene"><div id="equation" class="equation"></div></div><div id="tip" class="tip" aria-live="polite"></div></div>
 <div id="startupNotice" class="startup-notice" role="alert">Denklem motoru başlatılamadı. Hata bilgisi için tarayıcı konsolunu açabilirsiniz.</div><div id="examples" class="examples"></div><div class="entry"><input id="custom" aria-label="Denklem" placeholder="Örn. 3x+5=x+13" spellcheck="false"><button id="load">Denklemi aç</button><span id="feedback" class="feedback"></span></div><p class="notice">Bir bilinmeyenli birinci dereceden denklemler. Alıştırma seçebilir veya kendi denklemini yazabilirsin. Fareyle üzerine gelince yalnızca yapılabilecek işlemler vurgulanır.</p></main>
@@ -1431,6 +1431,17 @@ function preOtherMarkup(){
   if(neg)sibling.remove();
   el.innerHTML=output;
  }
+ if(bracket?.mode==='start'&&bracket.out!==0){
+  // Tam denklem sadeleşebilir olsa bile, dıştaki bağımsız sabit
+  // öğrencinin seçebileceği ayrı bir karşıya geçirme işlemidir.
+  const out=tmp.querySelector('[data-id="brkout"]');
+  if(out){
+   out.textContent=signedConst(bracket.out);
+   out.classList.add('hit');out.dataset.action='bracketMoveOut';
+   out.dataset.hlParticipant='pre-coefficients';
+   out.setAttribute('role','button');out.setAttribute('tabindex','0');
+  }
+ }
  return tmp.innerHTML;
 }
 function preCoefficientMarkup(){
@@ -2112,28 +2123,54 @@ function signedX(n,first=false){return `${n<0?'−':first?'':'+'}${Math.abs(n)==
 function signedConst(n,first=false){return `${n<0?'−':first?'':'+'}${Math.abs(n)}`}
 function innerText(b){return `${signedX(b.p,true)}${b.q?signedConst(b.q):''}`}
 function rightText(b){return `${b.c?signedX(b.c,true):''}${b.d||!b.c?signedConst(b.d,!b.c):''}`}
+// İki eşdeğer işlem birbirinden bağımsızdır: parantezi açmak ve
+// parantez dışındaki toplama terimini eşitliğin karşısına taşımak.
+// Sağa taşınmış terim, öğrenci yeni aritmetiği seçene kadar ayrı kalır.
+function bracketOuterConstantMarkup(){
+ return bracket.out?hit('brkout',signedConst(bracket.out),'bracketMoveOut'):'';
+}
+function bracketRightMarkup(){
+ const original=atom('brkr',rightText(bracket));
+ if(!bracket.pendingOut)return original;
+ const inverse= -bracket.pendingOut;
+ return `<span class="combine hit" role="button" tabindex="0" `+
+  `data-action="bracketCombineRight" data-id="brkRightCombine">`+
+  original+atom('brkMovedOut',signedConst(inverse))+'</span>';
+}
+function bracketCalculatedConstantsMarkup(){
+ const b=bracket,value=b.k*b.q;
+ if(!b.out)return value?atom('calculatedconstant',signedConst(value)):'';
+ if(!value)return bracketOuterConstantMarkup();
+ // İlk terime gelince benzer sabitler birlikte HL olur; dışarıdaki sabite
+ // gelince yalnız o terim HL olur ve bağımsız olarak karşıya geçer.
+ const first=sLinkedHit('brkCalcConst',signedConst(value),
+  'combineExpandedConstants','brk-like-constants');
+ const second=`<span class="simple-linked hit" data-id="brkout" `+
+  `data-hl-participant="brk-like-constants" data-action="bracketMoveOut" `+
+  `role="button" tabindex="0">${signedConst(b.out)}</span>`;
+ return first+second;
+}
 function bracketHTML(){
  if(bracket.mode==='start'){
   const outer=bracket.k===1?'':canBracketDivide(bracket)?hit('brkcoef',fmt(bracket.k),'bracketDivide'):atom('brkcoef',fmt(bracket.k));
   const parentheses=hit('brkgroup',`(${innerText(bracket)})`,'bracketExpand');
-  return `<span class="side">${outer}${parentheses}${bracket.out?atom('brkout',signedConst(bracket.out)):''}</span><span class="equals">=</span><span class="side">${atom('brkr',rightText(bracket))}</span>`;
+  return `<span class="side">${outer}${parentheses}${bracketOuterConstantMarkup()}</span><span class="equals">=</span><span class="side">${bracketRightMarkup()}</span>`;
  }
  if(bracket.mode==='expanded'){
   const b=bracket, first=signedX(b.k*b.p,true),product=b.k*b.q;
   const variable=atom('expandedx',first);
-  if(!b.q){return `<span class="side">${variable}${b.out?atom('brkout',signedConst(b.out)):''}</span><span class="equals">=</span><span class="side">${atom('brkr',rightText(b))}</span>`;}
+  if(!b.q){return `<span class="side">${variable}${bracketOuterConstantMarkup()}</span><span class="equals">=</span><span class="side">${bracketRightMarkup()}</span>`;}
   // Tıklanabilir bölge yalnızca hesaplanacak çarpımdır.
   const sign=product<0?'−':'+';
   const multiplication=`${fmt(Math.abs(b.k))}·${Math.abs(b.q)}`;
-  return `<span class="side">${variable}<span class="part"><span class="sign">${sign}</span>${hit('expandproduct',multiplication,'finishExpand')}</span>${b.out?atom('brkout',signedConst(b.out)):''}</span><span class="equals">=</span><span class="side">${atom('brkr',rightText(b))}</span>`;
+  return `<span class="side">${variable}<span class="part"><span class="sign">${sign}</span>${hit('expandproduct',multiplication,'finishExpand')}</span>${bracketOuterConstantMarkup()}</span><span class="equals">=</span><span class="side">${bracketRightMarkup()}</span>`;
  }
  if(bracket.mode==='expandedCalculated'){
   const b=bracket,variable=atom('expandedx',signedX(b.k*b.p,true));
   const constant=b.k*b.q;
   // Çarpım hesaplandı: yalnızca kalan toplama/çıkarma işlemi tıklanabilir.
-  const terms= b.out?hit('sumconstants',`${signedConst(constant)}${signedConst(b.out)}`,'combineExpandedConstants'):
-    atom('calculatedconstant',signedConst(constant));
-  return `<span class="side">${variable}${terms}</span><span class="equals">=</span><span class="side">${atom('brkr',rightText(b))}</span>`;
+  const terms=bracketCalculatedConstantsMarkup();
+  return `<span class="side">${variable}${terms}</span><span class="equals">=</span><span class="side">${bracketRightMarkup()}</span>`;
  }
  if(bracket.mode==='dividing'){
   const b=bracket;
@@ -2151,19 +2188,106 @@ function linearFromBracket(byDivision=false){
  else m={a:b.k*b.p,b:b.k*b.q+b.out,c:b.c,d:b.d};
  bracket.mode='linear';s=initial();s.barsReady=true;
 }
-function canBracketDivide(b){return !!b&&b.mode==='start'&&b.k!==0&&b.k!==1&&b.out===0&&b.c%b.k===0&&b.d%b.k===0;}
+function canBracketDivide(b){return !!b&&b.mode==='start'&&!b.pendingOut&&b.k!==0&&b.k!==1&&b.out===0&&b.c%b.k===0&&b.d%b.k===0;}
+// Hareket sırasında eşitliğin ve yerinde kalan nesnelerin konumları da
+// yumuşakça değişir. Uçan terimin işareti = çizgisini geçerken çevrilir.
+async function bracketMoveOutAnimated(){
+ const b=bracket,oldOut=b.out;
+ const source=byId('brkout');
+ if(!source||!oldOut)throw Error('Dış sabit terim bulunamadı');
+ const original=source.getBoundingClientRect(),beforeText=source.textContent.trim();
+ const before=new Map();
+ eq.querySelectorAll('[data-id]').forEach(n=>before.set(n.dataset.id,n.getBoundingClientRect()));
+ const oldEq=eq.querySelector('.equals')?.getBoundingClientRect();
+ // Hedef denklem ilk kez burada kurulur, fakat sonraki matematiksel
+ // sadeleştirme otomatik yapılmaz: öğrenci 19−4 üzerine tıklar.
+ b.out=0;b.pendingOut=oldOut;
+ update();
+ const goal=byId('brkMovedOut'),newEq=eq.querySelector('.equals');
+ if(!goal||!oldEq||!newEq)throw Error('Karşı tarafta uçuş hedefi oluşturulamadı');
+ const destination=goal.getBoundingClientRect(),endEq=newEq.getBoundingClientRect();
+ const center=r=>({x:(r.left+r.right)/2,y:(r.top+r.bottom)/2});
+ const from=center(original),to=center(destination),eqFrom=center(oldEq),eqTo=center(endEq);
+ const ghost=document.createElement('span');
+ ghost.className='ghost semantic-flight';ghost.textContent=beforeText;
+ Object.assign(ghost.style,{
+  position:'fixed',left:'0',top:'0',fontSize:getComputedStyle(eq).fontSize,
+  color:getComputedStyle(eq).color,margin:'0',padding:'0',zIndex:'2000',
+  pointerEvents:'none',lineHeight:'1.3'
+ });
+ document.body.append(ghost);goal.style.visibility='hidden';
+ const shifts=[];
+ for(const node of eq.querySelectorAll('[data-id]')){
+  if(node===goal||goal.contains(node))continue;
+  const previous=before.get(node.dataset.id);if(!previous)continue;
+  const now=node.getBoundingClientRect();
+  if(Math.abs(previous.left-now.left)+Math.abs(previous.top-now.top)>0.5)
+   shifts.push({node,dx:previous.left-now.left,dy:previous.top-now.top});
+ }
+ shifts.push({node:newEq,dx:oldEq.left-endEq.left,dy:oldEq.top-endEq.top});
+ const duration=850*speed(),height=Math.min(250,125+Math.abs(to.x-from.x)*.32);
+ const control={x:(from.x+to.x)/2,y:Math.min(from.y,to.y)-height};
+ let switched=false;
+ const position=(x,y)=>{
+  ghost.style.left=`${x-ghost.offsetWidth/2}px`;
+  ghost.style.top=`${y-ghost.offsetHeight/2}px`;
+ };
+ position(from.x,from.y);
+ try{
+  await new Promise(resolve=>{
+   let start=null;
+   function frame(now){
+    if(start===null)start=now;
+    const t=Math.min(1,(now-start)/duration),u=t*t*(3-2*t),v=1-u;
+    shifts.forEach(p=>{p.node.style.transform=
+     `translate3d(${p.dx*(1-u)}px,${p.dy*(1-u)}px,0)`});
+    const x=v*v*from.x+2*v*u*control.x+u*u*to.x;
+    const y=v*v*from.y+2*v*u*control.y+u*u*to.y;
+    const eqX=eqFrom.x+(eqTo.x-eqFrom.x)*u;
+    if(!switched&&((to.x>=from.x&&x>=eqX)||(to.x<from.x&&x<=eqX))){
+     switched=true;ghost.textContent=signedConst(-oldOut);
+    }
+    position(x,y);
+    if(t<1)requestAnimationFrame(frame);else resolve();
+   }
+   requestAnimationFrame(frame);
+  });
+ }finally{
+  ghost.remove();goal.style.visibility='';
+  shifts.forEach(p=>{p.node.style.transform=''});
+ }
+}
 async function bracketAction(action){
  if(!bracket||busy)return;
  if(action==='bracketDivide'&&!canBracketDivide(bracket))return;
  if(action==='bracketExpand'&&bracket.mode!=='start')return;
+ if(action==='bracketMoveOut'&&!(bracket.out!==0&&
+     ['start','expanded','expandedCalculated'].includes(bracket.mode)))return;
+ if(action==='bracketCombineRight'&&!bracket.pendingOut)return;
  if(action==='finishExpand'&&bracket.mode!=='expanded')return;
  if(action==='combineExpandedConstants'&&bracket.mode!=='expandedCalculated')return;
  if(action==='bracketCancel'&&(bracket.mode!=='dividing'||bracket.leftDone))return;
  if(action==='bracketSimplify'&&(bracket.mode!=='dividing'||bracket.rightDone))return;
  busy=true;scene.classList.add('busy');save();step++;
  try{
-  if(action==='bracketExpand')await fade(()=>{if(bracket.q===0)linearFromBracket(false);else bracket.mode='expanded'});
-  if(action==='finishExpand')await fade(()=>{if(bracket.out!==0)bracket.mode='expandedCalculated';else linearFromBracket(false)});
+  if(action==='bracketMoveOut')await bracketMoveOutAnimated();
+  if(action==='bracketCombineRight')await fade(()=>{
+   bracket.d-=bracket.pendingOut;
+   bracket.pendingOut=0;
+   // İki tarafın hesaplanması bittiyse doğrusal motor devralabilir.
+   if(bracket.mode==='expandedCalculated'&&bracket.out===0)
+    linearFromBracket(false);
+  });
+  if(action==='bracketExpand')await fade(()=>{
+   if(bracket.q===0){
+    if(bracket.pendingOut)bracket.mode='expandedCalculated';
+    else linearFromBracket(false);
+   }else bracket.mode='expanded';
+  });
+  if(action==='finishExpand')await fade(()=>{
+   if(bracket.out!==0||bracket.pendingOut)bracket.mode='expandedCalculated';
+   else linearFromBracket(false);
+  });
   if(action==='combineExpandedConstants')await fade(()=>linearFromBracket(false));
   if(action==='bracketDivide'){
     // Hızlı: a(ax+b)=c türünde dış katsayı iki tarafa bölünür,
@@ -2371,6 +2495,7 @@ async function pairChoiceAction(action){
 function currentPriorityRule(){
  // Kesirlerin açılma aşaması bitmeden eski doğrusal motoru asla çizme.
  if(multiEq&&multiEq.mode!=='linear')return multiPriorityRule();
+ if(bracket?.pendingOut)return {type:'moduleOperation'};
  const reduced=readyReductionCandidate();
  if(reduced)return {type:'readyReduction',details:reduced};
  const divide=simpleFinalDivideCandidate();
@@ -2751,7 +2876,9 @@ async function act(action){const priority=currentPriorityRule();if(priority.type
  if(action==='moveC'&&!simpleEq&&!multiEq&&!pairEq&&!fractionEq&&!bracket)
   return preLinearMoveAlternative('C');
  if(structuralAlternativeToReduction(action))return simpleAction(action);
- if(bracket?.mode==='start'&&action==='bracketExpand')return bracketAction(action);
+ if(bracket?.mode==='start'&&
+    (action==='bracketExpand'||action==='bracketMoveOut'))
+  return bracketAction(action);
  return;
 }if(action.startsWith('simple'))return simpleAction(action);if(action.startsWith('multi'))return multiAction(action);if(action.startsWith('pair'))return pairAction(action);if(action.startsWith('fraction'))return fractionAction(action);if(action.startsWith('bracket'))return bracketAction(action);if(action==='finishExpand'||action==='combineExpandedConstants')return bracketAction(action);if(busy||(multiEq&&multiEq.mode!=='linear')||(pairEq&&pairEq.mode!=='linear')||(fractionEq&&fractionEq.mode!=='linear')||(bracket&&bracket.mode!=='linear'))return;const allowed={moveB:!s.movedB,moveC:!s.movedC,combineL:s.movedC&&!s.combinedL,combineR:s.movedB&&!s.combinedR,divide:ready()&&A()!==0&&!s.divided,cancel:s.divided&&!s.leftDone,simplify:s.divided&&!s.rightDone};if(!allowed[action])return;busy=true;scene.classList.add('busy');save();step++;try{if(action==='moveB')await moveTerm('B');else if(action==='moveC')await moveTerm('C');else if(action==='combineL'){await mergeTerms('L')}else if(action==='combineR'){await mergeTerms('R')}else if(action==='divide'){
  // Yavaş: kesir oluşumu, kırmızı sadeleştirme ve sonuç ayrı adımlardır.
