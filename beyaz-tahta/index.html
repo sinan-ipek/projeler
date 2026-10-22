@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.10</title>
+<title>Beyaz Tahta v16.11</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -788,6 +788,14 @@
     <textarea id="textEditor" spellcheck="false" aria-label="Metin düzenleyici"></textarea>
 
     <div id="contextMenu" role="menu" aria-label="Nesne menüsü">
+      <button id="copyContextBtn" role="menuitem">
+        <span style="font-size:16px;width:22px;text-align:center">⧉</span>
+        <span>Kopyala</span>
+      </button>
+      <button id="pasteContextBtn" role="menuitem">
+        <span style="font-size:16px;width:22px;text-align:center">▣</span>
+        <span>Yapıştır</span>
+      </button>
       <button id="bringFrontBtn" role="menuitem">
         <span style="font-size:17px;width:22px;text-align:center">⬆</span>
         <span>En öne getir</span>
@@ -837,7 +845,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.10 (sürüm notu etiketi)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.11 (sağ menüde kopyala / yapıştır)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -975,6 +983,7 @@
           <div class="helpShortcutRow"><kbd>Shift + Space</kbd><span>Kopyala ve son transformasyonu uygula</span></div>
           <div class="helpShortcutRow"><kbd>Delete / Backspace</kbd><span>Seçili nesneyi / nesneleri sil</span></div>
           <div class="helpShortcutRow"><kbd>Ctrl + C</kbd><span>Seçili nesneyi / nesneleri kopyala</span></div>
+          <div class="helpShortcutRow"><kbd>Ctrl + V</kbd><span>Kopyalanan nesneyi / nesneleri yapıştır</span></div>
           <div class="helpShortcutRow"><kbd>Esc</kbd><span>Seçimi kaldır</span></div>
         </div>
       </div>
@@ -1041,6 +1050,8 @@
   const imageBtn = document.getElementById('imageBtn');
   const imageInput = document.getElementById('imageInput');
   const contextMenu = document.getElementById('contextMenu');
+  const copyContextBtn = document.getElementById('copyContextBtn');
+  const pasteContextBtn = document.getElementById('pasteContextBtn');
   const bringFrontBtn = document.getElementById('bringFrontBtn');
   const sendBackBtn = document.getElementById('sendBackBtn');
   const lockToggleBtn = document.getElementById('lockToggleBtn');
@@ -4426,6 +4437,48 @@
     return Array.from({length:copies.length},(_,k)=>start+k);
   }
 
+  function copyObjectsToInternalClipboard(indices){
+    const valid=[...new Set(indices||[])]
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length)
+      .map(i=>objects[i])
+      .filter(Boolean);
+
+    internalClipboard=valid.map(cloneObject);
+    pasteOffsetStep=24;
+
+    return internalClipboard.length;
+  }
+
+  function pasteInternalClipboard(){
+    if(!internalClipboard.length) return 0;
+
+    saveState();
+
+    const start=objects.length;
+    const pastedCopies=remapGroupIdsForCopies(
+      internalClipboard.map(original=>{
+        const copy=cloneObject(original);
+        copy.id=makeObjectId();
+        copy.locked=false;
+        translateObject(copy,pasteOffsetStep,pasteOffsetStep);
+        return copy;
+      })
+    );
+
+    for(const copy of pastedCopies) objects.push(copy);
+
+    const pastedIndices=Array.from(
+      {length:pastedCopies.length},
+      (_,k)=>start+k
+    );
+
+    setSelection(pastedIndices);
+    pasteOffsetStep+=24;
+    redraw();
+
+    return pastedCopies.length;
+  }
+
   function scaleObjectXYAround(o,anchor,sx,sy,angle=0){
     if(!o || !anchor) return;
     sx=Math.max(.06,Number(sx)||1);
@@ -7339,6 +7392,8 @@
       groupToggleBtn.disabled=targets.length<2;
     }
 
+    copyContextBtn.disabled=targets.length===0;
+    pasteContextBtn.disabled=internalClipboard.length===0;
     flipHorizontalBtn.disabled=false;
     flipVerticalBtn.disabled=false;
     deleteContextBtn.disabled=targets.every(o=>!!o.locked);
@@ -7353,7 +7408,7 @@
 
     updateContextMenuState();
 
-    const menuW=190, menuH=272;
+    const menuW=190, menuH=344;
     const r=wrap.getBoundingClientRect();
     const x=Math.max(6,Math.min(screenP.x,r.width-menuW-6));
     const y=Math.max(6,Math.min(screenP.y,r.height-menuH-6));
@@ -7399,6 +7454,31 @@
 
     closeContextMenu();
   }
+
+  copyContextBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+
+    const valid=expandGroupedIndices(contextTargetIndices)
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length);
+
+    const count=copyObjectsToInternalClipboard(valid);
+    closeContextMenu();
+
+    statusEl.textContent=count>1
+      ? `${count} nesne kopyalandı`
+      : (count===1 ? 'Nesne kopyalandı' : 'Kopyalanacak nesne yok');
+  });
+
+  pasteContextBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+
+    const count=pasteInternalClipboard();
+    closeContextMenu();
+
+    statusEl.textContent=count>1
+      ? `${count} nesne yapıştırıldı`
+      : (count===1 ? 'Nesne yapıştırıldı' : 'Yapıştırılacak nesne yok');
+  });
 
   bringFrontBtn.addEventListener('click',e=>{
     e.stopPropagation();
@@ -9778,25 +9858,10 @@
 
     if(mode==='select' && internalClipboard.length){
       e.preventDefault();
-      saveState();
-
-      const start=objects.length;
-      const pastedCopies=remapGroupIdsForCopies(
-        internalClipboard.map(original=>{
-          const copy=cloneObject(original);
-          copy.locked=false;
-          translateObject(copy,pasteOffsetStep,pasteOffsetStep);
-          return copy;
-        })
-      );
-      for(const copy of pastedCopies) objects.push(copy);
-
-      setSelection(
-        Array.from({length:pastedCopies.length},(_,k)=>start+k)
-      );
-
-      redraw();
-      statusEl.textContent=`${internalClipboard.length} nesne yapıştırıldı`;
+      const count=pasteInternalClipboard();
+      statusEl.textContent=count>1
+        ? `${count} nesne yapıştırıldı`
+        : 'Nesne yapıştırıldı';
     }
   });
 
@@ -10341,11 +10406,10 @@
 
     if(mode==='select' && cmd && e.key.toLowerCase()==='c' && selectedIndices.length){
       e.preventDefault();
-      internalClipboard=selectedIndices
-        .map(i=>objects[i])
-        .filter(Boolean)
-        .map(cloneObject);
-      statusEl.textContent=`${internalClipboard.length} nesne kopyalandı`;
+      const count=copyObjectsToInternalClipboard(selectedIndices);
+      statusEl.textContent=count>1
+        ? `${count} nesne kopyalandı`
+        : 'Nesne kopyalandı';
       return;
     }
 
