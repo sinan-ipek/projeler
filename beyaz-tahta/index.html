@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.17</title>
+<title>Beyaz Tahta v16.18</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -970,7 +970,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.17 (nesne noktalarına snap)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.18 (matematik sembollerinde dikey yansıtma düzeltildi)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -2981,6 +2981,9 @@
     ctx.save();
     ctx.translate(o.center.x,o.center.y);
     ctx.rotate(o.angle||0);
+    if(o.source==='math-keyboard' && o.mirrorY){
+      ctx.scale(1,-1);
+    }
     ctx.beginPath();
     ctx.rect(-w/2,-h/2,w,h);
     ctx.clip();
@@ -5476,6 +5479,13 @@
 
     if(o.kind==='text'){
       o.angle=reflectedAngle(o.angle||0,axis);
+
+      // Ordinary text stays readable, but math-keyboard characters are
+      // geometric symbols and must actually mirror like the other math shapes.
+      if(o.source==='math-keyboard'){
+        o.mirrorY=!o.mirrorY;
+      }
+
       o.boxAngle=reflectedAngle(
         Number.isFinite(o.boxAngle) ? o.boxAngle : 0,
         axis
@@ -9345,7 +9355,12 @@
       }
 
       const color=(o.style && o.style.color)||'#111111';
-      return `<text font-family="Comic Neue, Trebuchet MS, Segoe UI, Arial, sans-serif" font-size="${svgNum(fontSize)}" fill="${svgEscapeAttr(color)}" transform="rotate(${svgNum(deg)} ${svgNum(o.center.x)} ${svgNum(o.center.y)})">${tspans.join('')}</text>`;
+      const transform=(
+        o.source==='math-keyboard' && o.mirrorY
+      )
+        ? `translate(${svgNum(o.center.x)} ${svgNum(o.center.y)}) rotate(${svgNum(deg)}) scale(1 -1) translate(${svgNum(-o.center.x)} ${svgNum(-o.center.y)})`
+        : `rotate(${svgNum(deg)} ${svgNum(o.center.x)} ${svgNum(o.center.y)})`;
+      return `<text font-family="Comic Neue, Trebuchet MS, Segoe UI, Arial, sans-serif" font-size="${svgNum(fontSize)}" fill="${svgEscapeAttr(color)}" transform="${transform}">${tspans.join('')}</text>`;
     }
 
     if(o.kind==='image'){
@@ -10111,6 +10126,7 @@
       style:{color:currentColor,width:currentWidth},
       source:'math-keyboard',
       shapeName:'math-symbol',
+      mirrorY:false,
       boxAngle:0
     };
 
