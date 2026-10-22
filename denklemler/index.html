@@ -988,7 +988,10 @@ function sMoveTerm(side,id){
  const kind=chosen&&sLikeValue(chosen.node)?.kind;
  if(!chosen||!sMovableTerms(side).some(t=>t.id===id)||
     (kind!=='x'&&kind!=='constant'))return false;
- simpleEq[side]=sSum(src.items.filter(t=>t.node.id!==id));
+ const remaining=src.items.filter(t=>t.node.id!==id);
+ // Son x terimi sağdan sola geçince eşitliğin sağı boş kalmaz:
+ // 3x=5x  →  3x−5x=0. Eski sSum([]) ekranda boşluk üretiyordu.
+ simpleEq[side]=sSum(remaining.length?remaining:[{sign:1,node:sNumber(0)}]);
  const inverse={sign:-chosen.sign,node:structuredClone(chosen.node)};
  const root=simpleEq[dest];
  simpleEq[dest]=sSum([...(root.kind==='sum'?root.items:[{sign:1,node:root}]),inverse]);
