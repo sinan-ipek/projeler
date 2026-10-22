@@ -1233,11 +1233,20 @@
   function pFromEvent(e){
     const s=screenPointFromEvent(e);
     const w=screenToWorld(s);
+    const pointerType=String(e.pointerType||'mouse');
+    const eventTime=Number(e.timeStamp);
+    const rawPressure=Number(e.pressure);
+
     return {
       x:w.x,
       y:w.y,
-      t:performance.now(),
-      pressure:e.pressure||0.5
+      t:Number.isFinite(eventTime) ? eventTime : performance.now(),
+      pressure:(
+        pointerType==='pen' &&
+        Number.isFinite(rawPressure) &&
+        rawPressure>0
+      ) ? Math.max(0.02,Math.min(1,rawPressure)) : null,
+      input:pointerType
     };
   }
 
@@ -1642,9 +1651,16 @@
       remoteLiveInk.set(id,{
         id,
         points:Array.isArray(payload.points)
-          ? payload.points.map(p=>({x:p.x,y:p.y}))
+          ? payload.points.map(p=>({
+              x:p.x,
+              y:p.y,
+              t:p.t,
+              pressure:p.pressure,
+              input:p.input
+            }))
           : [],
-        style:payload.style || {color:'#111827',width:3}
+        style:payload.style || {color:'#111827',width:3},
+        inkProfile:payload.inkProfile || 'dynamic'
       });
       redraw();
       return;
@@ -1656,13 +1672,20 @@
         item={
           id,
           points:[],
-          style:payload.style || {color:'#111827',width:3}
+          style:payload.style || {color:'#111827',width:3},
+          inkProfile:payload.inkProfile || 'dynamic'
         };
         remoteLiveInk.set(id,item);
       }
       if(Array.isArray(payload.points)){
         for(const p of payload.points){
-          item.points.push({x:p.x,y:p.y});
+          item.points.push({
+            x:p.x,
+            y:p.y,
+            t:p.t,
+            pressure:p.pressure,
+            input:p.input
+          });
         }
       }
       redraw();
@@ -1730,8 +1753,15 @@
       collabBroadcast('live_ink',{
         action:'start',
         id:liveInkId,
-        points:[{x:points[0].x,y:points[0].y}],
-        style:strokeStyle()
+        points:[{
+          x:points[0].x,
+          y:points[0].y,
+          t:points[0].t,
+          pressure:points[0].pressure,
+          input:points[0].input
+        }],
+        style:strokeStyle(),
+        inkProfile:'dynamic'
       });
       liveInkSentIndex=1;
     }
@@ -1739,13 +1769,20 @@
     if(points.length>liveInkSentIndex){
       const chunk=points
         .slice(liveInkSentIndex)
-        .map(p=>({x:p.x,y:p.y}));
+        .map(p=>({
+          x:p.x,
+          y:p.y,
+          t:p.t,
+          pressure:p.pressure,
+          input:p.input
+        }));
 
       collabBroadcast('live_ink',{
         action:'append',
         id:liveInkId,
         points:chunk,
-        style:strokeStyle()
+        style:strokeStyle(),
+        inkProfile:'dynamic'
       });
       liveInkSentIndex=points.length;
     }
@@ -2315,24 +2352,193 @@
     return {color:currentColor,width:currentWidth};
   }
 
-  function drawSmoothStroke(pts, style){
+  function clamp01(v){
+    return Math.max(0,Math.min(1,v));
+  }
+
+  function inkPointWidthFactor(pts,i){
+    const p=pts[i];
+    const prev=pts[Math.max(0,i-1)];
+    const next=pts[Math.min(pts.length-1,i+1)];
+
+    const dt=Math.max(
+      4,
+      Number(next.t)-Number(prev.t) || 16
+    );
+    const travel=Math.hypot(next.x-prev.x,next.y-prev.y);
+    const speed=travel/dt;
+
+    if(p && p.input==='pen' && Number.isFinite(Number(p.pressure))){
+      const pressure=clamp01(Number(p.pressure));
+      const pressureFactor=.62 + pressure*.58;
+      const speedTrim=1.04 - clamp01(speed/1.5)*.09;
+      return pressureFactor*speedTrim;
+    }
+
+    // Mouse/touch have no useful pressure information. Derive a restrained
+    // ballpoint-like width change from drawing speed instead.
+    return 1.12 - clamp01(speed/1.35)*.28;
+  }
+
+  function inkCenterSamples(pts,style,{live=false}={}){
+    if(!pts || !pts.length) return [];
+
+    const baseWidth=Math.max(.75,Number(style && style.width)||1);
+    const raw=pts.map((p,i)=>({
+      x:Number(p.x)||0,
+      y:Number(p.y)||0,
+      t:Number(p.t),
+      pressure:p.pressure,
+      input:p.input,
+      width:baseWidth*inkPointWidthFactor(pts,i)
+    }));
+
+    // Very light spatial smoothing: enough to remove micro-jitter without
+    // rounding away handwriting corners.
+    const smoothed=raw.map((p,i)=>{
+      if(i===0 || i===raw.length-1) return {...p};
+      const a=raw[i-1],b=p,d=raw[i+1];
+      return {
+        ...p,
+        x:a.x*.16+b.x*.68+d.x*.16,
+        y:a.y*.16+b.y*.68+d.y*.16,
+        width:a.width*.18+b.width*.64+d.width*.18
+      };
+    });
+
+    let total=0;
+    const cumulative=[0];
+    for(let i=1;i<smoothed.length;i++){
+      total+=Math.hypot(
+        smoothed[i].x-smoothed[i-1].x,
+        smoothed[i].y-smoothed[i-1].y
+      );
+      cumulative.push(total);
+    }
+
+    const startTaper=Math.max(5,baseWidth*2.6);
+    const endTaper=Math.max(8,baseWidth*3.4);
+
+    for(let i=0;i<smoothed.length;i++){
+      const fromStart=cumulative[i];
+      const toEnd=total-cumulative[i];
+
+      const startFactor=.58 + .42*clamp01(fromStart/startTaper);
+      const endFactor=live
+        ? 1
+        : (.42 + .58*clamp01(toEnd/endTaper));
+
+      smoothed[i].width=Math.max(
+        baseWidth*.28,
+        smoothed[i].width*startFactor*endFactor
+      );
+    }
+
+    return smoothed;
+  }
+
+  function inkOutlinePoints(pts,style,{live=false}={}){
+    const samples=inkCenterSamples(pts,style,{live});
+    if(samples.length<2) return [];
+
+    // One Chaikin pass makes the contour flow more like wet ink while keeping
+    // the stroke close to the raw handwriting trajectory.
+    const smooth=[];
+    smooth.push({...samples[0]});
+    for(let i=0;i<samples.length-1;i++){
+      const a=samples[i],b=samples[i+1];
+      smooth.push({
+        x:a.x*.75+b.x*.25,
+        y:a.y*.75+b.y*.25,
+        width:a.width*.75+b.width*.25
+      });
+      smooth.push({
+        x:a.x*.25+b.x*.75,
+        y:a.y*.25+b.y*.75,
+        width:a.width*.25+b.width*.75
+      });
+    }
+    smooth.push({...samples[samples.length-1]});
+
+    const left=[];
+    const right=[];
+
+    for(let i=0;i<smooth.length;i++){
+      const prev=smooth[Math.max(0,i-1)];
+      const next=smooth[Math.min(smooth.length-1,i+1)];
+      let dx=next.x-prev.x;
+      let dy=next.y-prev.y;
+      const length=Math.hypot(dx,dy);
+
+      if(length<1e-6){
+        dx=1;
+        dy=0;
+      }else{
+        dx/=length;
+        dy/=length;
+      }
+
+      const nx=-dy;
+      const ny=dx;
+      const half=Math.max(.2,smooth[i].width/2);
+
+      left.push({
+        x:smooth[i].x+nx*half,
+        y:smooth[i].y+ny*half
+      });
+      right.push({
+        x:smooth[i].x-nx*half,
+        y:smooth[i].y-ny*half
+      });
+    }
+
+    return left.concat(right.reverse());
+  }
+
+  function drawSmoothStroke(pts, style, dynamic=false, live=false){
     if(!pts || !pts.length) return;
 
     ctx.save();
-    ctx.strokeStyle = style.color;
-    ctx.fillStyle = style.color;
-    ctx.lineWidth = style.width;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    ctx.strokeStyle=(style && style.color)||'#111111';
+    ctx.fillStyle=(style && style.color)||'#111111';
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
 
-    // Tek tıklama da gerçek bir ink izi olsun.
-    // Tek noktalı stroke, kalem kalınlığı kadar dolu bir daire olarak çizilir.
+    const baseWidth=Math.max(.75,Number(style && style.width)||1);
+
+    // Legacy strokes keep their historical appearance exactly.
+    if(!dynamic){
+      ctx.lineWidth=baseWidth;
+
+      if(pts.length===1){
+        ctx.beginPath();
+        ctx.arc(pts[0].x,pts[0].y,baseWidth/2,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+        return;
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x,pts[0].y);
+      for(let i=1;i<pts.length-1;i++){
+        const mx=(pts[i].x+pts[i+1].x)/2;
+        const my=(pts[i].y+pts[i+1].y)/2;
+        ctx.quadraticCurveTo(pts[i].x,pts[i].y,mx,my);
+      }
+      const last=pts[pts.length-1];
+      ctx.lineTo(last.x,last.y);
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
+
     if(pts.length===1){
+      const factor=inkPointWidthFactor(pts,0);
       ctx.beginPath();
       ctx.arc(
         pts[0].x,
         pts[0].y,
-        Math.max(0.75,Number(style.width)||1)/2,
+        Math.max(.35,baseWidth*factor*.55)/2,
         0,
         Math.PI*2
       );
@@ -2341,16 +2547,17 @@
       return;
     }
 
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x, pts[0].y);
-    for(let i=1;i<pts.length-1;i++){
-      const mx=(pts[i].x+pts[i+1].x)/2;
-      const my=(pts[i].y+pts[i+1].y)/2;
-      ctx.quadraticCurveTo(pts[i].x,pts[i].y,mx,my);
+    const outline=inkOutlinePoints(pts,style,{live});
+    if(outline.length>=3){
+      ctx.beginPath();
+      ctx.moveTo(outline[0].x,outline[0].y);
+      for(let i=1;i<outline.length;i++){
+        ctx.lineTo(outline[i].x,outline[i].y);
+      }
+      ctx.closePath();
+      ctx.fill();
     }
-    const last=pts[pts.length-1];
-    ctx.lineTo(last.x,last.y);
-    ctx.stroke();
+
     ctx.restore();
   }
 
@@ -3310,7 +3517,13 @@
       return bbox(pts);
     }
 
-    if(o.kind==='stroke') return bbox(o.points||[]);
+    if(o.kind==='stroke'){
+      if(o.inkProfile==='dynamic'){
+        const outline=inkOutlinePoints(o.points||[],o.style||{}, {live:false});
+        return outline.length ? bbox(outline) : bbox(o.points||[]);
+      }
+      return bbox(o.points||[]);
+    }
     return null;
   }
 
@@ -5581,14 +5794,25 @@
     drawAdaptiveGrid();
 
     for(const o of objects){
-      if(o.kind==='stroke') drawSmoothStroke(o.points,o.style);
-      else if(o.kind==='image') drawImageObject(o);
+      if(o.kind==='stroke'){
+        drawSmoothStroke(
+          o.points,
+          o.style,
+          o.inkProfile==='dynamic',
+          false
+        );
+      }else if(o.kind==='image') drawImageObject(o);
       else if(o.kind==='text') drawTextObject(o);
       else drawShape(o);
     }
     for(const item of remoteLiveInk.values()){
       if(item && item.points && item.points.length){
-        drawSmoothStroke(item.points,item.style);
+        drawSmoothStroke(
+          item.points,
+          item.style,
+          item.inkProfile==='dynamic',
+          true
+        );
       }
     }
 
@@ -5597,7 +5821,7 @@
         // Otomatik şekil aktifleştiğinde ham ink yerine canlı geometrik öneriyi göster.
         drawShape(lockedShape,true);
       }else{
-        drawSmoothStroke(points,strokeStyle());
+        drawSmoothStroke(points,strokeStyle(),true,true);
         if(previewRecognized) drawShape(previewRecognized,true);
       }
     }
@@ -6859,7 +7083,7 @@
     return changed;
   }
 
-  function splitSampledStroke(points,style,p,r){
+  function splitSampledStroke(points,style,p,r,inkProfile=''){
     if(!points || !points.length) return null;
 
     if(points.length===1){
@@ -6886,7 +7110,8 @@
     return chunks.map(pts=>({
       kind:'stroke',
       points:pts,
-      style:JSON.parse(JSON.stringify(style||{}))
+      style:JSON.parse(JSON.stringify(style||{})),
+      ...(inkProfile ? {inkProfile} : {})
     }));
   }
 
@@ -7044,7 +7269,13 @@
           changed=true;
         }
       }else{
-        const parts=splitSampledStroke(sampled,o.style,p,eraserRadius/viewZoom);
+        const parts=splitSampledStroke(
+          sampled,
+          o.style,
+          p,
+          eraserRadius/viewZoom,
+          o.inkProfile==='dynamic' ? 'dynamic' : ''
+        );
 
         if(parts===null){
           next.push(o);
@@ -8431,8 +8662,15 @@
       const accepted={
         id:liveInkId || makeObjectId(),
         kind:'stroke',
-        points:points.map(p=>({x:p.x,y:p.y})),
+        points:points.map(p=>({
+          x:p.x,
+          y:p.y,
+          t:p.t,
+          pressure:p.pressure,
+          input:p.input
+        })),
         style:strokeStyle(),
+        inkProfile:'dynamic',
         boxAngle:0
       };
       objects.push(accepted);
@@ -8629,6 +8867,15 @@
     const style=svgStyleAttrs(o);
 
     if(o.kind==='stroke'){
+      if(o.inkProfile==='dynamic'){
+        const outline=inkOutlinePoints(o.points||[],o.style||{}, {live:false});
+        const d=svgPolylinePath(outline,true);
+        const color=(o.style && o.style.color)||'#111111';
+        return d
+          ? `<path d="${d}" fill="${svgEscapeAttr(color)}" stroke="none"/>`
+          : '';
+      }
+
       const d=svgPolylinePath(o.points||[],false);
       return d ? `<path d="${d}" ${style}/>` : '';
     }
