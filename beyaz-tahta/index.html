@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.12</title>
+<title>Beyaz Tahta v16.13</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -845,7 +845,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.12 (boş alanda sağ menü + büyük sürüm yazısı)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.13 (boş alanda sağ menü mevcut seçimi hedefler)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -8652,8 +8652,13 @@
         }
         openContextMenu(rp.startScreen,targets);
       }else{
-        contextTargetIndices=[];
-        openContextMenu(rp.startScreen,[]);
+        // Boş alana sağ tıklansa bile mevcut seçim korunur ve menü o seçime
+        // uygulanır. Hiç seçim yoksa menü genel bağlam menüsü olarak açılır.
+        const targets=selectedIndices
+          .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length);
+
+        contextTargetIndices=targets.slice();
+        openContextMenu(rp.startScreen,targets);
       }
       restoreToolCursor();
       return;
