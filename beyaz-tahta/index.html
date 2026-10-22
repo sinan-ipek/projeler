@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.15</title>
+<title>Beyaz Tahta v16.16</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -664,6 +664,13 @@
 
     <button id="selectBtn" class="iconBtn" title="Seç" aria-label="Seç">↖</button>
 
+    <button id="pointSnapBtn" class="iconBtn" title="Nokta snap: kapalı" aria-label="Nokta snap" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 3v7a5 5 0 0 0 10 0V3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M7 3h4v4H7zM13 3h4v4h-4z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+    </button>
+
     <button id="inkBtn" class="active iconBtn" title="Ink" aria-label="Ink">✎</button>
 
     <div class="colorWrap">
@@ -963,7 +970,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.15 (matematik klavyesi)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.16 (hazır nesne noktalarında aç/kapat snap)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1014,6 +1021,7 @@
               <li>Nesneleri taşı, boyutlandır ve döndür.</li>
               <li>Doğru parçasında A ve B uçlarına ek olarak orta noktadan çıkan döndürme tutamacını kullan.</li>
               <li>Hazır şekillerin gerçek düzenleme handle'larını tek tek taşı.</li>
+              <li>Nokta Snap düğmesi açıkken gerçek düzenleme noktaları görünür ızgaraya oturur.</li>
               <li>Ctrl ile birden fazla gerçek handle seçip birlikte taşı.</li>
               <li>Bounding-box resize ve rotate tutamaçları handle çoklu seçimine dahil değildir.</li>
             </ul>
@@ -1154,6 +1162,7 @@
   const sendFeedbackBtn = document.getElementById('sendFeedbackBtn');
   const inkBtn = document.getElementById('inkBtn');
   const selectBtn = document.getElementById('selectBtn');
+  const pointSnapBtn = document.getElementById('pointSnapBtn');
   const eraserBtn = document.getElementById('eraserBtn');
   const eraserMenu = document.getElementById('eraserMenu');
   const eraserOptions = Array.from(document.querySelectorAll('.eraserOption'));
@@ -1208,6 +1217,17 @@
   const clearBtn = document.getElementById('clearBtn');
 
   let mode = 'ink';
+
+  const POINT_SNAP_KEY='beyaz-tahta:point-snap:v1';
+  let pointSnapEnabled=localStorage.getItem(POINT_SNAP_KEY)==='1';
+
+  function updatePointSnapUI(){
+    pointSnapBtn.classList.toggle('active',pointSnapEnabled);
+    pointSnapBtn.setAttribute('aria-pressed',String(pointSnapEnabled));
+    pointSnapBtn.title=pointSnapEnabled
+      ? 'Nokta snap: açık'
+      : 'Nokta snap: kapalı';
+  }
 
   // Infinite-surface camera. Objects always remain in world coordinates.
   let viewX = 0;
@@ -3871,6 +3891,39 @@
     if(!enabled) return delta;
     const step=Math.PI/12; // 15°
     return Math.round(delta/step)*step;
+  }
+
+  function visibleGridSnapStep(){
+    let majorStep=24;
+    while(majorStep*viewZoom<22){
+      majorStep*=4;
+    }
+
+    let snapStep=majorStep;
+    let childStep=majorStep/4;
+    let depth=0;
+
+    while(childStep*viewZoom>=8 && depth<3){
+      snapStep=childStep;
+      childStep/=4;
+      depth++;
+    }
+
+    return Math.max(.001,snapStep);
+  }
+
+  function snapPointToVisibleGrid(p,{snapX=true,snapY=true}={}){
+    if(!pointSnapEnabled || !p) return {x:p.x,y:p.y};
+    const step=visibleGridSnapStep();
+    return {
+      x:snapX ? Math.round(p.x/step)*step : p.x,
+      y:snapY ? Math.round(p.y/step)*step : p.y
+    };
+  }
+
+  function realHandlePosition(o,name){
+    const h=realEditHandles(o).find(item=>String(item.name)===String(name));
+    return h ? {x:h.x,y:h.y} : null;
   }
 
   function applyMultipleHandleDelta(o,snap,handles,dx,dy){
@@ -8431,7 +8484,30 @@
 
       }else if(selectAction==='multiPoint'){
         const rawDx=p.x-selectStart.x,rawDy=p.y-selectStart.y;
-        const d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
+        let d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
+
+        if(pointSnapEnabled && activeHandle){
+          const startHandle=realHandlePosition(selectSnapshot,activeHandle);
+          if(startHandle){
+            const target={
+              x:startHandle.x+d.dx,
+              y:startHandle.y+d.dy
+            };
+
+            let snapX=true,snapY=true;
+            if(e.shiftKey){
+              if(Math.abs(rawDx)>=Math.abs(rawDy)) snapY=false;
+              else snapX=false;
+            }
+
+            const snapped=snapPointToVisibleGrid(target,{snapX,snapY});
+            d={
+              dx:snapped.x-startHandle.x,
+              dy:snapped.y-startHandle.y
+            };
+          }
+        }
+
         objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
 
         applyMultipleHandleDelta(
@@ -8487,24 +8563,42 @@
           ? {dx:rawDx,dy:rawDy}
           : constrainMoveDelta(rawDx,rawDy,e.shiftKey);
 
-        const pointTarget=isArcEndpoint
+        let pointTarget=isArcEndpoint
           ? {x:p.x,y:p.y}
           : {
               x:selectStart.x+d.dx,
               y:selectStart.y+d.dy
             };
 
+        if(pointSnapEnabled){
+          let snapX=true,snapY=true;
+
+          if(!isArcEndpoint && e.shiftKey){
+            if(Math.abs(rawDx)>=Math.abs(rawDy)) snapY=false;
+            else snapX=false;
+          }
+
+          pointTarget=snapPointToVisibleGrid(pointTarget,{snapX,snapY});
+        }
+
         if(
           selectSnapshot.kind==='line' &&
-          (activeHandle==='endpoint-0' || activeHandle==='endpoint-1') &&
-          Math.hypot(d.dx,d.dy)>1e-5
+          (activeHandle==='endpoint-0' || activeHandle==='endpoint-1')
         ){
-          pendingRepeatTransform={
-            type:'lineEndpoint',
-            endpoint:activeHandle,
-            dx:d.dx,
-            dy:d.dy
-          };
+          const startEndpoint=activeHandle==='endpoint-0'
+            ? selectSnapshot.a
+            : selectSnapshot.b;
+          const actualDx=pointTarget.x-startEndpoint.x;
+          const actualDy=pointTarget.y-startEndpoint.y;
+
+          if(Math.hypot(actualDx,actualDy)>1e-5){
+            pendingRepeatTransform={
+              type:'lineEndpoint',
+              endpoint:activeHandle,
+              dx:actualDx,
+              dy:actualDy
+            };
+          }
         }
 
         const handled=moveMenuHandleFromSnapshot(
@@ -10159,6 +10253,18 @@
     armFormatPainter();
   });
 
+  pointSnapBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    pointSnapEnabled=!pointSnapEnabled;
+    try{
+      localStorage.setItem(POINT_SNAP_KEY,pointSnapEnabled?'1':'0');
+    }catch(_){}
+    updatePointSnapUI();
+    statusEl.textContent=pointSnapEnabled
+      ? 'Nokta snap açık — düzenleme noktaları ızgaraya oturur'
+      : 'Nokta snap kapalı — düzenleme noktaları serbest';
+  });
+
   inkBtn.onclick=()=>{
     cancelFormatPainter();
     if(textEditing) closeTextEditor(true);
@@ -10813,6 +10919,7 @@
   },5000);
 
   resize();
+  updatePointSnapUI();
   updateBoardModeUI();
   switchBoardMode(boardMode,{initial:true});
 })();
