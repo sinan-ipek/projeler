@@ -412,7 +412,7 @@ function cfProductRightCandidate(){
  const q=complexEq;
  if(!q||q.mode!=='product'||q.rhs===null)return null;
  const d=q.lower.d,r=q.rhs;
- if(!/^[+]?[1-9]\\d*$/.test(d)||!/^[-+]?\\d+$/.test(r))return null;
+ if(!/^[+]?[1-9]\d*$/.test(d)||!/^[-+]?\d+$/.test(r))return null;
  const numerator=Number(d),rhs=Number(r);
  if(!Number.isSafeInteger(numerator)||!Number.isSafeInteger(rhs)||rhs===0)return null;
  const g=gcd(numerator,rhs);
