@@ -3794,7 +3794,7 @@ $('#load').onclick=()=>{
  const simple=(multi||pair||fraction||bracket)?null:parseSimple(raw);
  const linear=(!multi&&!pair&&!fraction&&!bracket&&!simple)?parse(raw):null;
  const found=complex||multi||pair||fraction||bracket||simple||linear;
- $('#feedback').textContent=found?'':'Bu örneği ayrıştıramadım. Modül 4 için 2(x+3)-3(x-1)=7 gibi bir denklem deneyin.';
+ $('#feedback').textContent=found?'':'Bu denklemi henüz ayrıştıramadım. Lütfen birinci dereceden bir denklem ve açık parantez yapısı kullanın.';
  if(!found)return;
  const mod=complex?8:multi?7:pair?6:fraction?5:bracket?3:simple?((raw.includes('(')||currentModule===4)?4:(linear?linear.c?2:1:4)):linear?.c?2:1;
  // Hazır örneklerden biri elle girilirse ilgili alıştırmayı da seç.
