@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.16</title>
+<title>Beyaz Tahta v16.17</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -970,7 +970,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.16 (hazır nesne noktalarında aç/kapat snap)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.17 (nesne noktalarına snap)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1021,7 +1021,7 @@
               <li>Nesneleri taşı, boyutlandır ve döndür.</li>
               <li>Doğru parçasında A ve B uçlarına ek olarak orta noktadan çıkan döndürme tutamacını kullan.</li>
               <li>Hazır şekillerin gerçek düzenleme handle'larını tek tek taşı.</li>
-              <li>Nokta Snap düğmesi açıkken gerçek düzenleme noktaları görünür ızgaraya oturur.</li>
+              <li>Nokta Snap düğmesi açıkken gerçek düzenleme noktaları diğer nesnelerin köşe/uç/düzenleme noktalarına yapışır.</li>
               <li>Ctrl ile birden fazla gerçek handle seçip birlikte taşı.</li>
               <li>Bounding-box resize ve rotate tutamaçları handle çoklu seçimine dahil değildir.</li>
             </ul>
@@ -3893,31 +3893,60 @@
     return Math.round(delta/step)*step;
   }
 
-  function visibleGridSnapStep(){
-    let majorStep=24;
-    while(majorStep*viewZoom<22){
-      majorStep*=4;
+  function snapCandidatePoints(excludeIndex=-1){
+    const pts=[];
+
+    for(let i=0;i<objects.length;i++){
+      if(i===excludeIndex) continue;
+      const o=objects[i];
+      if(!o) continue;
+
+      // Prefer the same meaningful editable points the user already sees:
+      // endpoints, corners, arc center/endpoints, ellipse cardinal points,
+      // and symbol control points.
+      const handles=realEditHandles(o);
+      for(const h of handles){
+        if(finitePoint(h)){
+          pts.push({
+            x:h.x,
+            y:h.y,
+            objectIndex:i,
+            handleName:h.name
+          });
+        }
+      }
     }
 
-    let snapStep=majorStep;
-    let childStep=majorStep/4;
-    let depth=0;
-
-    while(childStep*viewZoom>=8 && depth<3){
-      snapStep=childStep;
-      childStep/=4;
-      depth++;
-    }
-
-    return Math.max(.001,snapStep);
+    return pts;
   }
 
-  function snapPointToVisibleGrid(p,{snapX=true,snapY=true}={}){
-    if(!pointSnapEnabled || !p) return {x:p.x,y:p.y};
-    const step=visibleGridSnapStep();
+  function snapPointToOtherObjectHandle(p,excludeIndex=-1){
+    if(!pointSnapEnabled || !p) return {x:p.x,y:p.y,snapped:false};
+
+    const threshold=12/viewZoom;
+    const candidates=snapCandidatePoints(excludeIndex);
+
+    let best=null;
+    let bestD=Infinity;
+
+    for(const q of candidates){
+      const d=Math.hypot(q.x-p.x,q.y-p.y);
+      if(d<=threshold && d<bestD){
+        best=q;
+        bestD=d;
+      }
+    }
+
+    if(!best){
+      return {x:p.x,y:p.y,snapped:false};
+    }
+
     return {
-      x:snapX ? Math.round(p.x/step)*step : p.x,
-      y:snapY ? Math.round(p.y/step)*step : p.y
+      x:best.x,
+      y:best.y,
+      snapped:true,
+      objectIndex:best.objectIndex,
+      handleName:best.handleName
     };
   }
 
@@ -8494,17 +8523,13 @@
               y:startHandle.y+d.dy
             };
 
-            let snapX=true,snapY=true;
-            if(e.shiftKey){
-              if(Math.abs(rawDx)>=Math.abs(rawDy)) snapY=false;
-              else snapX=false;
+            const snapped=snapPointToOtherObjectHandle(target,selectedIndex);
+            if(snapped.snapped){
+              d={
+                dx:snapped.x-startHandle.x,
+                dy:snapped.y-startHandle.y
+              };
             }
-
-            const snapped=snapPointToVisibleGrid(target,{snapX,snapY});
-            d={
-              dx:snapped.x-startHandle.x,
-              dy:snapped.y-startHandle.y
-            };
           }
         }
 
@@ -8571,14 +8596,11 @@
             };
 
         if(pointSnapEnabled){
-          let snapX=true,snapY=true;
-
-          if(!isArcEndpoint && e.shiftKey){
-            if(Math.abs(rawDx)>=Math.abs(rawDy)) snapY=false;
-            else snapX=false;
+          const snapped=snapPointToOtherObjectHandle(pointTarget,selectedIndex);
+          if(snapped.snapped){
+            pointTarget={x:snapped.x,y:snapped.y};
+            statusEl.textContent='Nokta snap — diğer nesnenin noktasına yapıştı';
           }
-
-          pointTarget=snapPointToVisibleGrid(pointTarget,{snapX,snapY});
         }
 
         if(
@@ -10261,7 +10283,7 @@
     }catch(_){}
     updatePointSnapUI();
     statusEl.textContent=pointSnapEnabled
-      ? 'Nokta snap açık — düzenleme noktaları ızgaraya oturur'
+      ? 'Nokta snap açık — diğer nesnelerin köşe/uç noktalarına yapışır'
       : 'Nokta snap kapalı — düzenleme noktaları serbest';
   });
 
