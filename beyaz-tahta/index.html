@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.13</title>
+<title>Beyaz Tahta v16.14</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -845,7 +845,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.13 (boş alanda sağ menü mevcut seçimi hedefler)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.14 (Shift ile 15° adımlı döndürme)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -906,6 +906,7 @@
               <li>Shift + sürükleme hareketi yatay veya dikey eksene kilitler.</li>
               <li>Bu kural tek nesne, çoklu seçim, tek handle ve çoklu handle için çalışır.</li>
               <li>Resize sırasında Shift oranı korur.</li>
+              <li>Döndürme sırasında Shift dönüşü 15° adımlara kilitler.</li>
               <li>Alt + sürükleme seçimin kopyasını oluşturup taşır.</li>
               <li>Doğru parçasında A veya B noktası Alt ile sürüklenirse önce kopya oluşur; uç nokta kopyada taşınır.</li>
               <li>Alt + boyutlandırma seçimin kopyasını oluşturup kopyayı boyutlandırır.</li>
@@ -3742,6 +3743,12 @@
     return Math.abs(dx)>=Math.abs(dy)
       ? {dx,dy:0}
       : {dx:0,dy};
+  }
+
+  function snapRotationDelta(delta,enabled){
+    if(!enabled) return delta;
+    const step=Math.PI/12; // 15°
+    return Math.round(delta/step)*step;
   }
 
   function applyMultipleHandleDelta(o,snap,handles,dx,dy){
@@ -8142,7 +8149,7 @@
         const c=groupBoxSnapshot.center;
         const a0=Math.atan2(selectStart.y-c.y,selectStart.x-c.x);
         const a1=Math.atan2(p.y-c.y,p.x-c.x);
-        const delta=a1-a0;
+        const delta=snapRotationDelta(a1-a0,e.shiftKey);
         groupSelectionAngle=(groupBoxSnapshot.angle||0)+delta;
         if(Math.abs(delta)>1e-5){
           pendingRepeatTransform={type:'rotate',delta};
@@ -8328,7 +8335,7 @@
         if(c){
           const a0=Math.atan2(selectStart.y-c.y,selectStart.x-c.x);
           const a1=Math.atan2(p.y-c.y,p.x-c.x);
-          const delta=a1-a0;
+          const delta=snapRotationDelta(a1-a0,e.shiftKey);
           if(Math.abs(delta)>1e-5){
             pendingRepeatTransform={type:'rotate',delta};
           }
@@ -8336,7 +8343,11 @@
           rotateObject(objects[selectedIndex],delta);
 
           if(isArcLike){
-            statusEl.textContent='Merkez etrafında döndürülüyor';
+            statusEl.textContent=e.shiftKey
+              ? 'Merkez etrafında 15° adımlarla döndürülüyor'
+              : 'Merkez etrafında döndürülüyor';
+          }else if(e.shiftKey){
+            statusEl.textContent='15° adımlarla döndürülüyor';
           }
         }
 
@@ -8488,6 +8499,7 @@
           let delta=a-rotationStartPointerAngle;
           while(delta>Math.PI) delta-=Math.PI*2;
           while(delta<-Math.PI) delta+=Math.PI*2;
+          delta=snapRotationDelta(delta,e.shiftKey);
 
           if(Number.isFinite(lockedShape.angle)){
             lockedShape.angle=rotationStartShapeAngle+delta;
@@ -8497,7 +8509,9 @@
 
           statusEl.textContent=
             (lockedShape.shapeName||'Şekil')+
-            ' — aynı anda boyutlandırılıyor ve döndürülüyor';
+            (e.shiftKey
+              ? ' — boyutlandırılıyor ve 15° adımlarla döndürülüyor'
+              : ' — aynı anda boyutlandırılıyor ve döndürülüyor');
         }
       }
       redraw();
