@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.11</title>
+<title>Beyaz Tahta v16.12</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -303,7 +303,7 @@
     bottom:9px;
     z-index:20;
     color:#a0a4aa;
-    font:400 13px/1.2 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+    font:400 15px/1.2 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
     letter-spacing:.12px;
     user-select:none;
     -webkit-user-select:none;
@@ -845,7 +845,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.11 (sağ menüde kopyala / yapıştır)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.12 (boş alanda sağ menü + büyük sürüm yazısı)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -7367,8 +7367,24 @@
     const targets=contextTargetIndices
       .map(i=>objects[i])
       .filter(Boolean);
-    if(!targets.length){
-      closeContextMenu();
+
+    const hasTargets=targets.length>0;
+
+    copyContextBtn.disabled=!hasTargets;
+    pasteContextBtn.disabled=internalClipboard.length===0;
+    bringFrontBtn.disabled=!hasTargets;
+    sendBackBtn.disabled=!hasTargets;
+    lockToggleBtn.disabled=!hasTargets;
+    flipHorizontalBtn.disabled=!hasTargets;
+    flipVerticalBtn.disabled=!hasTargets;
+    deleteContextBtn.disabled=!hasTargets || targets.every(o=>!!o.locked);
+
+    if(!hasTargets){
+      lockMenuIcon.textContent='🔓';
+      lockMenuText.textContent='Kilitle';
+      groupMenuIcon.textContent='▦';
+      groupMenuText.textContent='Grupla';
+      groupToggleBtn.disabled=true;
       return;
     }
 
@@ -7391,20 +7407,12 @@
       groupMenuText.textContent='Grupla';
       groupToggleBtn.disabled=targets.length<2;
     }
-
-    copyContextBtn.disabled=targets.length===0;
-    pasteContextBtn.disabled=internalClipboard.length===0;
-    flipHorizontalBtn.disabled=false;
-    flipVerticalBtn.disabled=false;
-    deleteContextBtn.disabled=targets.every(o=>!!o.locked);
   }
 
   function openContextMenu(screenP,indices){
     contextTargetIndices=expandGroupedIndices(
       (indices||[]).filter(i=>Number.isInteger(i) && i>=0 && i<objects.length)
     );
-
-    if(!contextTargetIndices.length) return;
 
     updateContextMenuState();
 
@@ -8644,7 +8652,8 @@
         }
         openContextMenu(rp.startScreen,targets);
       }else{
-        closeContextMenu();
+        contextTargetIndices=[];
+        openContextMenu(rp.startScreen,[]);
       }
       restoreToolCursor();
       return;
