@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 65</title>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 66</title>
 <style>
 :root{font-family:Arial,Helvetica,sans-serif;color:#1d2a3b;background:#f4f6fa}*{box-sizing:border-box}body{margin:0;min-height:100vh}header{padding:18px 25px;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:22px;margin:0;font-weight:600}.subtitle{font-size:12px;color:#77869a;margin-top:6px}.home{width:45px;height:45px;border-radius:12px;background:#ffcf31;border:2px solid #e4ac14;box-shadow:0 3px 8px #5a461525;display:grid;place-items:center;color:#383019;text-decoration:none}.home svg{height:23px;width:23px;fill:currentColor}main{width:min(1120px,calc(100% - 28px));margin:auto}.toolbar,.examples,.entry{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:8px 0 14px}button,select,input{font:inherit;border:1px solid #d5dfea;border-radius:10px;background:white;color:#273954;padding:10px 13px}button{cursor:pointer;box-shadow:0 2px 5px #182b3a0c}button:hover:not(:disabled){border-color:#8fa6c4}button:disabled{opacity:.42;cursor:default}.toolbar label{font-size:13px;color:#69768c;margin-left:auto}.mode-switch{display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid #d5dfea;border-radius:12px;background:#eaf0f7}.mode-switch button{padding:7px 13px;border:1px solid transparent;background:transparent;box-shadow:none;border-radius:9px;font-size:14px;min-width:67px}.mode-switch button.selected{color:white;background:#273e5e;border-color:#273e5e;box-shadow:0 2px 5px #182b3a20}.mode-switch button:focus-visible{outline:2px solid #e1a518;outline-offset:2px}.board{border:1px solid #e1e7ee;background:white;border-radius:22px;min-height:430px;box-shadow:0 14px 45px #192e4b0b;overflow:hidden}.board-top{display:flex;justify-content:space-between;color:#78869b;padding:18px 20px;font-size:12px}.scene{height:316px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}.equation{position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1.3;font-size:clamp(26px,4.5vw,50px);font-weight:400;max-width:97%;transform-origin:center center;font-variant-numeric:lining-nums}.side{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative}.equals{padding:0 .36em}.part{display:inline-flex;align-items:center;white-space:nowrap;position:relative}.atom{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border-radius:7px;position:relative;padding:0 .035em}.sign{padding:0 .06em}.hit{cursor:pointer;position:relative;border-radius:8px;outline:none;background:transparent;box-shadow:none;transition:background .18s,box-shadow .18s}.hit:hover,.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.busy .hit{pointer-events:none}.combine{display:inline-flex;align-items:center;border-radius:8px}.combine.hit{padding:0 .04em}.multi-combine{display:inline-flex;align-items:center;white-space:nowrap;border-radius:8px}.multi-combine .part{white-space:nowrap}.multi-combine.hit{padding:0 .05em}.multiply-factor{display:inline-flex;align-items:center;white-space:nowrap}.mul-dot{display:inline-block;padding:0 .08em}.multiply-factor .hit{padding:0 .055em}.fraction{display:inline-grid;grid-template-rows:auto 3px auto;align-items:center;justify-items:center;position:relative;margin:0 .08em;min-width:1em;border-radius:9px}.numerator,.denominator{display:flex;justify-content:center;align-items:center;min-height:.92em;padding:0 .14em;white-space:nowrap}.numerator{transform:translateY(-.09em)}.denominator{transform:translateY(.09em)}.fracbar{height:2px;width:100%;background:#293852;border-radius:2px;align-self:center;transform:scaleX(1);transform-origin:center}.fraction.constructing .fracbar{transform:scaleX(0)}.fraction.constructed .fracbar{transform:scaleX(1);transition:transform .34s cubic-bezier(.45,0,.18,1)}.fraction.hit:hover,.fraction.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.tip{min-height:32px;text-align:center;font-size:13px;color:#7d8ca0}.examples button.active,.modules button.active{background:#273e5e;color:white}.modules{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 14px}.modules button{font-weight:600;min-width:115px}.module-label{display:none}.examples button{font-size:14px}.entry input{width:min(340px,65vw)}.feedback{min-height:18px;color:#ad3e3e;font-size:12px}.notice{font-size:12px;color:#8390a3;line-height:1.6}.measure-layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;pointer-events:none}.measurement{max-width:97%}.ghost{position:fixed;z-index:2000;pointer-events:none;white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-weight:400;line-height:1.3;color:#bf7c1d;will-change:transform,opacity}.done{color:#188a5c}.cross{position:relative}@media(max-width:620px){header{padding:12px 16px}.board{min-height:375px}.board-top{padding:14px}.scene{height:270px}.equals{padding:0 .18em}.toolbar label{margin-left:0}}
 
@@ -44,7 +44,7 @@
 @media(max-width:700px){.modules{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:430px){.modules{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style></head><body>
-<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 65</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
+<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 66</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
 <main><div class="toolbar"><button id="reset">↺ Baştan</button><button id="back">← Geri</button><div class="mode-switch" role="group" aria-label="Çözüm yöntemi"><button type="button" id="modeSlow" class="selected" aria-pressed="true" title="Bütün öğretici işlem adımlarını göster">Yavaş</button><button type="button" id="modeFast" aria-pressed="false" title="Bariz işlemleri tek adımda tamamla">Hızlı</button></div><label for="level">Seviye</label><select id="level"><option>A1</option><option selected>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></div>
 <div class="modules" id="modules" aria-label="Alıştırma seçimi"></div><div class="module-label" id="moduleLabel"></div><div class="board"><div class="board-top"><span>Denklemi adım adım çöz</span><span id="stepLabel">Adım 1</span></div><div id="scene" class="scene"><div id="equation" class="equation"></div></div><div id="tip" class="tip" aria-live="polite"></div></div>
 <div id="startupNotice" class="startup-notice" role="alert">Denklem motoru başlatılamadı. Hata bilgisi için tarayıcı konsolunu açabilirsiniz.</div><div id="examples" class="examples"></div><div class="entry"><input id="custom" aria-label="Denklem" placeholder="Örn. 3x+5=x+13" spellcheck="false"><button id="load">Denklemi aç</button><span id="feedback" class="feedback"></span></div><p class="notice">Bir bilinmeyenli birinci dereceden denklemler. Alıştırma seçebilir veya kendi denklemini yazabilirsin. Fareyle üzerine gelince yalnızca yapılabilecek işlemler vurgulanır.</p></main>
@@ -1514,15 +1514,18 @@ function parsePair(raw){
  const parts=str.split('=');if(parts.length!==2)return null;
  function one(t){
   const match=t.match(/^(?:\(([+-]?\d*)x([+-]\d+)?\)|([+-]?\d*)x)\/([1-9]\d*)$/i);
-  if(!match)return null;
-  const rawA=match[1]??match[3];
+  // Karşı taraftaki pay yalnızca bir sabit de olabilir: 2x/2 = 3/2.
+  const constant=t.match(/^([+-]?\d+)\/([1-9]\d*)$/);
+  if(!match&&!constant)return null;
+  const rawA=match?(match[1]??match[3]):'0';
   const a=rawA===''||rawA==='+'?1:rawA==='-'?-1:Number(rawA);
-  const b=Number(match[2]||0),d=Number(match[4]);
-  if(![a,b,d].every(Number.isSafeInteger)||a===0||d>99||Math.max(Math.abs(a),Math.abs(b))>999)return null;
+  const b=constant?Number(constant[1]):Number(match[2]||0);
+  const d=constant?Number(constant[2]):Number(match[4]);
+  if(![a,b,d].every(Number.isSafeInteger)||d>99||Math.max(Math.abs(a),Math.abs(b))>999)return null;
   return {a,b,d,quotient:1,canceled:false,expanded:false};
  }
  const left=one(parts[0]),right=one(parts[1]);
- if(!left||!right)return null;
+ if(!left||!right||(left.a===0&&right.a===0))return null;
  const common=lcm(left.d,right.d);
  if(!Number.isSafeInteger(common)||common<1)return null;
  const a=left.a*(common/left.d),b=left.b*(common/left.d);
@@ -1739,7 +1742,10 @@ function multiPriorityRule(){
  if(preCommon>1)return {type:'wholeReduction',details:preCommon};
  return {type:'moduleOperation'};
 }
-function pairPoly(side){return `${signedX(side.a,true)}${side.b?signedConst(side.b):''}`;}
+function pairPoly(side){
+ if(side.a===0)return fmt(side.b);
+ return `${signedX(side.a,true)}${side.b?signedConst(side.b):''}`;
+}
 function pairMarkupSide(letter){
  const pair=pairEq,side=letter==='L'?pair.left:pair.right,poly=pairPoly(side);
  const did=`pairDen${letter}`,mid=`pairMul${letter}`;
@@ -2277,9 +2283,100 @@ function currentPriorityRule(){
  if(divide)return {type:'finalDivide',details:divide};
  const pair=directCancelCandidate();
  if(pair)return {type:'pairReduction',details:pair};
- // İki kesrin eşitliğinde öncelik: ortak paydaları sadeleştir,
+ // Kesişen işlemleri sembolün rolüne göre belirle. Lokal pay/payda
+// sadeleşmesi, eşitliğin iki paydasını birlikte azaltmadan önceliklidir.
+// Aynı payda iki işleme katılıyorsa lokal kural o paydanın tıklama
+// davranışını alır. Diğer payda üzerinden global kural korunur.
+function pairSelectionCandidates(){
+ if(!pairEq||pairEq.mode!=='pair'||pairEq.started)return null;
+ const local={};
+ for(const letter of ['L','R']){
+  const t=letter==='L'?pairEq.left:pairEq.right;
+  const g=t.d>1?gcd(gcd(t.a,t.b),t.d):1;
+  if(g>1)local[letter]={letter,g};
+ }
+ const s=sharedDenominatorCandidate();
+ const shared=s?.kind==='pair'?s:null;
+ return local.L||local.R||shared?{local,shared}:null;
+}
+function pairChoiceHit(id,label,action,group,otherGroup=null){
+ const participant=otherGroup?` data-hl-participant="${otherGroup}"`:'';
+ return `<span class="simple-linked hit" data-id="${id}" `+
+  `data-action="${action}" data-hl-group="${group}"${participant} `+
+  `role="button" tabindex="0">${label}</span>`;
+}
+function pairChoiceNumerator(t,letter,local){
+ if(!local)return atom('pairPoly'+letter,pairPoly(t));
+ const group='pair-local-'+letter,action='pairLocalReduce'+letter;
+ const label=(id,val)=>pairChoiceHit(id,fmt(val),action,group);
+ const variable=t.a===0?'':(Math.abs(t.a)===1?
+  (t.a<0?'−':'')+'x':label('pairCoeff'+letter,t.a)+'x');
+ const constant=t.b===0?'':(t.a===0?
+  label('pairConst'+letter,t.b):
+  (t.b<0?'−':'+')+label('pairConst'+letter,Math.abs(t.b)));
+ return variable+constant;
+}
+function pairChoicesMarkup(choices){
+ const side=letter=>{
+  const t=letter==='L'?pairEq.left:pairEq.right;
+  const local=choices.local[letter],group='pair-local-'+letter;
+  const numerator=pairChoiceNumerator(t,letter,local);
+  const den=local
+   ?pairChoiceHit('pairDen'+letter,fmt(t.d),'pairLocalReduce'+letter,
+      group,choices.shared?'pair-shared-denominators':null)
+   :choices.shared
+    ?pairChoiceHit('pairDen'+letter,fmt(t.d),'pairSharedReduce','pair-shared-denominators')
+    :atom('pairDen'+letter,fmt(t.d));
+  return `<span class="side" data-id="side${letter}">${fhtml(numerator,den,'pairFrac'+letter,null)}</span>`;
+ };
+ return `${side('L')}<span class="equals">=</span>${side('R')}`;
+}
+async function pairChoiceAction(action){
+ const candidates=pairSelectionCandidates();
+ if(!candidates||busy)return;
+ const matched=action.match(/^pairLocalReduce([LR])$/);
+ const letter=matched?.[1];
+ const local=letter?candidates.local[letter]:null;
+ const shared=action==='pairSharedReduce'?candidates.shared:null;
+ if(!local&&!shared)return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  const ids=local
+   ?[...eq.querySelectorAll(`[data-hl-group="pair-local-${letter}"]`)]
+   :['L','R'].map(side=>byId('pairDen'+side)).filter(Boolean);
+  if(!fastMode())await Promise.all(ids.map(node=>drawStroke(node)));
+  await finishCancellation(()=>{
+   if(local){
+    const t=letter==='L'?pairEq.left:pairEq.right;
+    t.a/=local.g;t.b/=local.g;t.d/=local.g;
+    if(t.d===1)t.unitRemoved=true;
+   }else{
+    pairEq.left.d/=shared.g;pairEq.right.d/=shared.g;
+    if(pairEq.left.d===1)pairEq.left.unitRemoved=true;
+    if(pairEq.right.d===1)pairEq.right.unitRemoved=true;
+   }
+   pairEq.lcm=lcm(pairEq.left.d,pairEq.right.d);
+   pairEq.original={
+    left:{a:pairEq.left.a,b:pairEq.left.b,d:pairEq.left.d},
+    right:{a:pairEq.right.a,b:pairEq.right.b,d:pairEq.right.d}
+   };
+   const common=pairEq.lcm;
+   m={
+    a:pairEq.left.a*(common/pairEq.left.d),
+    b:pairEq.left.b*(common/pairEq.left.d),
+    c:pairEq.right.a*(common/pairEq.right.d),
+    d:pairEq.right.b*(common/pairEq.right.d)
+   };
+   if(pairEq.left.d===1&&pairEq.right.d===1)pairLinear();
+   preCommon=commonPreFactor();
+  });
+ }finally{busy=false;scene.classList.remove('busy');update();}
+}
+// İki kesrin eşitliğinde öncelik: ortak paydaları sadeleştir,
  // ardından (paydalardan biri 1 olsa da) içler–dışlar çarpımı.
  if(pairEq?.mode==='pair'&&!pairEq.started){
+  const alternatives=pairSelectionCandidates();
+  if(alternatives)return {type:'pairChoices',details:alternatives};
   const commonDen=sharedDenominatorCandidate();
   if(commonDen)return {type:'denReduction',details:commonDen};
   const cross=pairCrossCandidate();if(cross)return {type:'pairCross'};
@@ -2348,6 +2445,7 @@ function markup(){
  if(stage.type==='readyReduction')return readyReductionMarkup(stage.details);
  if(stage.type==='finalDivide')return finalDivideMarkup(stage.details);
  if(stage.type==='pairReduction')return directCancelMarkup(stage.details);
+ if(stage.type==='pairChoices')return pairChoicesMarkup(stage.details);
  if(stage.type==='fractionFactorReduction')return numeratorDenominatorMarkup(stage.details);
  if(stage.type==='pairCross')return pairCrossHTML();
  if(stage.type==='unitDenominator')return unitDenominatorMarkup(stage.details);
@@ -2631,7 +2729,7 @@ async function act(action){const priority=currentPriorityRule();if(priority.type
  if(priority.details.kind==='simple'&&structuralAlternativeToReduction(action))return simpleAction(action);
  if(priority.details.kind==='bracket'&&action==='bracketExpand')return bracketAction(action);
  return;
-}if(priority.type==='fractionFactorReduction')return action==='reduceNumeratorDenominator'?numeratorDenominatorAction():undefined;if(priority.type==='pairCross')return action==='pairCross'?pairCrossAction():undefined;if(priority.type==='unitDenominator')return action==='removeUnitDenominator'?removeUnitDenominatorAction():undefined;if(priority.type==='denReduction')return action==='reduceDenominators'?reduceDenominatorsAction():undefined;if(priority.type==='wholeReduction'){
+}if(priority.type==='pairChoices')return pairChoiceAction(action);if(priority.type==='fractionFactorReduction')return action==='reduceNumeratorDenominator'?numeratorDenominatorAction():undefined;if(priority.type==='pairCross')return action==='pairCross'?pairCrossAction():undefined;if(priority.type==='unitDenominator')return action==='removeUnitDenominator'?removeUnitDenominatorAction():undefined;if(priority.type==='denReduction')return action==='reduceDenominators'?reduceDenominatorsAction():undefined;if(priority.type==='wholeReduction'){
  if(action==='preSimplify')return preAction();
  // Sadeleştir veya karşıya gönder: başlangıçta ikisi de gerçek seçenek.
  if(/^simpleMove_(left|right)_sm\d+$/.test(action)&&simpleEq?.mode==='expression')
