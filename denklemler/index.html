@@ -247,7 +247,7 @@ const exerciseCatalog=Object.entries(exampleGroupsByModule).flatMap(([module,gro
  groups.map((group,groupIndex)=>({module:Number(module),groupIndex,examples:group.examples})));
 let currentExercise=0;
 let layoutShiftX=0;
-let currentModule=1;let bracket=null;let fractionEq=null;let pairEq=null;let multiEq=null;let simpleEq=null;let complexEq=null;let preCommon=1;
+let currentModule=1;let bracket=null;let fractionEq=null;let pairEq=null;let multiEq=null;let simpleEq=null;let complexEq=null;let complexDomain=[];let preCommon=1;
 let m={a:4,b:6,c:0,d:12},s,history=[],busy=false,step=0;
 // ÖĞRETİM MODU: Animasyon hızından bağımsızdır. Yavaş, Beta 37 adımlarını korur.
 let teachingMode='slow';
@@ -380,7 +380,18 @@ function parseComplex(raw){
   [a.a*D,a.b*D,R*B*c.a,R*B*c.b,B*c.b].every(v=>Number.isSafeInteger(v)&&Math.abs(v)<=999999);
  const model=integers?{a:a.a*D,b:a.b*D,c:R*B*c.a,d:R*B*c.b}:null;
  const straightFraction=!!model&&c.a===0&&c.b>0&&a.a!==0;
- return {mode:'division',upper,lower,rhs,model,straightFraction,scaleLock:null};
+ const domain=integers&&c.a!==0?[{a:c.a,b:c.b}]:[];
+ return {mode:'division',upper,lower,rhs,model,straightFraction,domain,scaleLock:null};
+}
+function complexRestrictionLabel(r){
+ const n=-r.b,d=r.a;
+ const g=gcd(Math.abs(n),Math.abs(d));
+ const nn=(d<0?-n:n)/g,dd=Math.abs(d)/g;
+ return dd===1?fmt(nn):fmt(nn)+'/'+fmt(dd);
+}
+function complexNoSolution(){
+ if(!complexDomain.length||!ready()||A()===0)return false;
+ return complexDomain.some(r=>r.a*D()+r.b*A()===0);
 }
 function cfText(text){
  return text.replace(/-/g,'−').replace(/&/g,'&amp;').replace(/</g,'&lt;')
@@ -479,7 +490,7 @@ async function complexAction(action){
     fractionEq={a:sol.a,b:sol.b,n:B*C,c:Number(q.rhs),mode:'start',leftDone:false,rightDone:false};
     m={a:sol.a,b:sol.b,c:0,d:Number(q.rhs)*B*C};
    }else m={...sol};
-   complexEq=null;s=initial();s.barsReady=true;
+   complexDomain=structuredClone(q.domain);complexEq=null;s=initial();s.barsReady=true;
    preCommon=commonPreFactor();
   });
  }finally{busy=false;scene.classList.remove('busy');update()}
@@ -2579,7 +2590,7 @@ async function bracketAction(action){
 }
 // Temsil: her adım cebirsel eşitliği korur, işaretin yanında hangi terimin olduğu veri modelinde saklanır.
 function initial(){return {movedB:m.b===0,movedC:m.c===0,combinedL:m.c===0,combinedR:m.b===0,divided:false,leftDone:false,rightDone:false};}
-function stateCopy(){return structuredClone({s,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,preCommon,m,layoutShiftX})}
+function stateCopy(){return structuredClone({s,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX})}
 function save(){history.push(stateCopy());}
 function hit(id,txt,action){return `<span class="atom hit" role="button" tabindex="0" data-action="${action}" data-id="${id}" aria-label="${txt.replace(/<[^>]*>/g,'')}" >${txt}</span>`}
 function atom(id,txt){return `<span class="atom" data-id="${id}">${txt}</span>`}
@@ -2595,7 +2606,7 @@ function rightTerms(){let res=[];if(!s.movedC&&m.c!==0)res.push({kind:'x',n:m.c,
 function ready(){return s.movedB&&s.movedC&&s.combinedL&&s.combinedR;}
 function A(){return m.a-m.c}function D(){return m.d-m.b}
 function rightResult(){return resultFrac(D(),A())}
-function markupCore(){if(complexEq)return complexHTML();if(simpleEq&&simpleEq.mode!=='linear')return simpleMarkup();if(multiEq&&multiEq.mode!=='linear')return multiMarkup();if(pairEq&&pairEq.mode!=='linear')return pairHTML();if(fractionEq&&fractionEq.mode!=='linear')return fractionHTML();if(bracket&&bracket.mode!=='linear')return bracketHTML();if(ready()&&A()===0){return `<span class="side">${atom('zz','0')}</span><span class="equals">=</span><span class="side">${atom('verdict',D()===0?'0':' '+fmt(D()))}</span>`;}
+function markupCore(){if(complexEq)return complexHTML();if(complexNoSolution())return `<span class="side">Çözüm yok</span>`;if(simpleEq&&simpleEq.mode!=='linear')return simpleMarkup();if(multiEq&&multiEq.mode!=='linear')return multiMarkup();if(pairEq&&pairEq.mode!=='linear')return pairHTML();if(fractionEq&&fractionEq.mode!=='linear')return fractionHTML();if(bracket&&bracket.mode!=='linear')return bracketHTML();if(ready()&&A()===0){return `<span class="side">${atom('zz','0')}</span><span class="equals">=</span><span class="side">${atom('verdict',D()===0?'0':' '+fmt(D()))}</span>`;}
 if(!s.divided){let l=expression(leftTerms()),r=expression(rightTerms());if(s.movedC&&!s.combinedL&&m.c!==0){let pieces=leftTerms().filter(t=>t.kind==='x');if(pieces.length>1){let prefix=expression(pieces);// Sabit terimin kimliği ve işareti korunmalı ki hedef planda hareket edebilsin.
  let suffix=!s.movedB&&m.b!==0?expression([{kind:'k',n:m.b,id:'lb',action:'moveB'}],false):'';
  l=`<span class="combine hit" role="button" tabindex="0" data-action="combineL" data-id="groupL">${prefix}</span>${suffix}`;}}
@@ -2763,6 +2774,7 @@ async function pairChoiceAction(action){
 
 function currentPriorityRule(){
  if(complexEq)return {type:'moduleOperation'};
+ if(complexNoSolution())return {type:'invalidSolution'};
  // Kesirlerin açılma aşaması bitmeden eski doğrusal motoru asla çizme.
  if(multiEq&&multiEq.mode!=='linear')return multiPriorityRule();
  if(bracket?.pendingOut)return {type:'moduleOperation'};
@@ -2853,7 +2865,12 @@ function markup(){
  if(stage.type==='wholeReduction')return preCoefficientMarkup();
  return markupCore();
 }
-function render(animateBars=false){hideDistributionHint();clearLinkedHighlight();const chosen=currentPriorityRule();eq.innerHTML=markup();$('#stepLabel').textContent=chosen.type==='readyReduction'?`Ortak bölen: ${fmt(chosen.details.g)}`:chosen.type==='wholeReduction'?`Ortak bölen: ${fmt(preSignedDivisor())}`:complexEq?`Adım ${step+1}`:(simpleEq&&simpleEq.mode!=='linear')?`Adım ${step+1}`:(multiEq&&multiEq.mode!=='linear')?`Adım ${step+1}`:(pairEq&&pairEq.mode!=='linear')?`Adım ${step+1}`:(fractionEq&&fractionEq.mode!=='linear')?`Adım ${step+1}`:(bracket&&bracket.mode!=='linear')?`Adım ${step+1}`:ready()&&A()===0?'Özel durum':(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'Çözüldü':`Adım ${step+1}`;$('#tip').innerHTML=preCommon>1?'':complexEq?'':(simpleEq&&simpleEq.mode!=='linear')?'':(multiEq&&multiEq.mode!=='linear')?'':(pairEq&&pairEq.mode!=='linear')?'':(fractionEq&&fractionEq.mode!=='linear')?'':(bracket&&bracket.mode!=='linear')?'':ready()&&A()===0?(D()===0?'<span class="done">Sonsuz çözüm</span>':'Çözüm yok'):(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'<span class="done">✓</span>':'';$('#back').disabled=busy||history.length===0;$('#reset').disabled=busy;if(animateBars){requestAnimationFrame(()=>requestAnimationFrame(()=>eq.querySelectorAll('.fraction.constructing').forEach(el=>{el.classList.remove('constructing');el.classList.add('constructed')})));}}
+function render(animateBars=false){hideDistributionHint();clearLinkedHighlight();const chosen=currentPriorityRule();eq.innerHTML=markup();$('#stepLabel').textContent=chosen.type==='readyReduction'?`Ortak bölen: ${fmt(chosen.details.g)}`:chosen.type==='wholeReduction'?`Ortak bölen: ${fmt(preSignedDivisor())}`:complexEq?`Adım ${step+1}`:(simpleEq&&simpleEq.mode!=='linear')?`Adım ${step+1}`:(multiEq&&multiEq.mode!=='linear')?`Adım ${step+1}`:(pairEq&&pairEq.mode!=='linear')?`Adım ${step+1}`:(fractionEq&&fractionEq.mode!=='linear')?`Adım ${step+1}`:(bracket&&bracket.mode!=='linear')?`Adım ${step+1}`:ready()&&A()===0?'Özel durum':(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'Çözüldü':`Adım ${step+1}`;$('#tip').innerHTML=preCommon>1?'':complexEq?'':(simpleEq&&simpleEq.mode!=='linear')?'':(multiEq&&multiEq.mode!=='linear')?'':(pairEq&&pairEq.mode!=='linear')?'':(fractionEq&&fractionEq.mode!=='linear')?'':(bracket&&bracket.mode!=='linear')?'':ready()&&A()===0?(D()===0?'<span class="done">Sonsuz çözüm</span>':'Çözüm yok'):(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'<span class="done">✓</span>':'';$('#back').disabled=busy||history.length===0;$('#reset').disabled=busy;if(complexEq?.domain.length||complexDomain.length){
+ const constraints=complexEq?.domain||complexDomain;
+ const label=constraints.map(r=>'x ≠ '+complexRestrictionLabel(r)).join(', ');
+ $('#tip').textContent=complexNoSolution()?'Çözüm yok: '+label:label;
+}
+if(animateBars){requestAnimationFrame(()=>requestAnimationFrame(()=>eq.querySelectorAll('.fraction.constructing').forEach(el=>{el.classList.remove('constructing');el.classList.add('constructed')})));}}
 function byId(id){return eq.querySelector(`[data-id="${id}"]`)}
 function rect(id){return byId(id)?.getBoundingClientRect()}
 function positionScale(){const max=scene.clientWidth*.95,w=eq.scrollWidth,h=eq.scrollHeight;const auto=Math.min(1,max/Math.max(1,w),(complexEq?scene.clientHeight*.9/Math.max(1,h):1));const scale=complexEq?.scaleLock??Math.max(.32,auto);eq.style.transform=`translateX(${layoutShiftX}px) scale(${scale})`;}
@@ -3132,7 +3149,7 @@ async function preLinearMoveAlternative(type){
  try{await moveTerm(type)}
  finally{busy=false;scene.classList.remove('busy');update()}
 }
-async function act(action){if(action.startsWith('complex'))return complexAction(action);const priority=currentPriorityRule();if(priority.type==='readyReduction')return action==='readyReduce'?readyReductionAction():undefined;if(priority.type==='finalDivide')return action==='finalDivide'?finalDivideAction():undefined;if(priority.type==='pairReduction'){
+async function act(action){if(action.startsWith('complex'))return complexAction(action);const priority=currentPriorityRule();if(priority.type==='invalidSolution')return;if(priority.type==='readyReduction')return action==='readyReduce'?readyReductionAction():undefined;if(priority.type==='finalDivide')return action==='finalDivide'?finalDivideAction():undefined;if(priority.type==='pairReduction'){
  if(action==='preCancelPair')return crossCancelAction();
  if(priority.details.kind==='simple'&&structuralAlternativeToReduction(action))return simpleAction(action);
  if(priority.details.kind==='bracket'&&action==='bracketExpand')return bracketAction(action);
@@ -3363,7 +3380,7 @@ function restart(newM=null,module=currentModule){
  layoutShiftX=0;
  const fresh=newM||parseModule($('#custom').value,module);
  if(!fresh)return;
- simpleEq=null;multiEq=null;pairEq=null;fractionEq=null;bracket=null;complexEq=null;
+ simpleEq=null;multiEq=null;pairEq=null;fractionEq=null;bracket=null;complexEq=null;complexDomain=[];
  if(module===8){
   complexEq=structuredClone(fresh);m=complexEq.model?{...complexEq.model}:{a:1,b:0,c:0,d:0};
  }else if(module===4){
@@ -3415,7 +3432,7 @@ function changeModule(number){
 $('#reset').onclick=()=>restart();
 $('#back').onclick=()=>{
  if(busy||!history.length)return;
- ({s,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,preCommon,m,layoutShiftX}=history.pop());
+ ({s,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX}=history.pop());
  step=Math.max(0,step-1);update();
 };
 $('#level').onchange=()=>{if(!busy)update()};
