@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.14</title>
+<title>Beyaz Tahta v16.15</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -116,6 +116,56 @@
   #deleteContextBtn:not(:disabled):hover{background:#fff1f0}
   #lockMenuIcon{font-size:17px;width:22px;text-align:center}
   #imageInput{display:none}
+
+  .mathKeyboardWrap{
+    position:relative;
+    display:inline-flex;
+  }
+  #mathKeyboardBtn{
+    font:600 18px/1 "Cambria Math","STIX Two Math","Times New Roman",serif;
+  }
+  #mathKeyboardMenu{
+    position:absolute;
+    top:42px;
+    right:0;
+    display:none;
+    width:304px;
+    padding:10px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.15);
+    z-index:55;
+  }
+  #mathKeyboardMenu.open{display:block}
+  .mathKeyboardSection{
+    margin-bottom:9px;
+  }
+  .mathKeyboardSection:last-child{margin-bottom:0}
+  .mathKeyboardLabel{
+    margin:0 0 5px 2px;
+    color:#7a818c;
+    font-size:10px;
+    font-weight:650;
+    letter-spacing:.35px;
+    text-transform:uppercase;
+  }
+  .mathKeyboardGrid{
+    display:grid;
+    grid-template-columns:repeat(8,1fr);
+    gap:5px;
+  }
+  .mathCharBtn{
+    width:100%;
+    min-width:0;
+    height:32px;
+    padding:0;
+    border-radius:7px;
+    font:500 18px/1 "Cambria Math","STIX Two Math","Times New Roman",serif;
+  }
+  .mathCharBtn:hover{
+    background:#f1f4f8;
+  }
 
   #textEditor{
     position:absolute;
@@ -750,6 +800,74 @@
       </svg>
     </button>
 
+    <div class="mathKeyboardWrap">
+      <button id="mathKeyboardBtn" class="iconBtn" title="Matematik klavyesi" aria-label="Matematik klavyesi">α</button>
+      <div id="mathKeyboardMenu" role="menu" aria-label="Matematik klavyesi">
+        <div class="mathKeyboardSection">
+          <div class="mathKeyboardLabel">Harfler</div>
+          <div class="mathKeyboardGrid">
+            <button class="mathCharBtn" data-math-char="x">x</button>
+            <button class="mathCharBtn" data-math-char="y">y</button>
+            <button class="mathCharBtn" data-math-char="z">z</button>
+            <button class="mathCharBtn" data-math-char="a">a</button>
+            <button class="mathCharBtn" data-math-char="b">b</button>
+            <button class="mathCharBtn" data-math-char="c">c</button>
+            <button class="mathCharBtn" data-math-char="n">n</button>
+            <button class="mathCharBtn" data-math-char="m">m</button>
+          </div>
+        </div>
+        <div class="mathKeyboardSection">
+          <div class="mathKeyboardLabel">Yunan</div>
+          <div class="mathKeyboardGrid">
+            <button class="mathCharBtn" data-math-char="α">α</button>
+            <button class="mathCharBtn" data-math-char="β">β</button>
+            <button class="mathCharBtn" data-math-char="γ">γ</button>
+            <button class="mathCharBtn" data-math-char="δ">δ</button>
+            <button class="mathCharBtn" data-math-char="θ">θ</button>
+            <button class="mathCharBtn" data-math-char="λ">λ</button>
+            <button class="mathCharBtn" data-math-char="μ">μ</button>
+            <button class="mathCharBtn" data-math-char="π">π</button>
+            <button class="mathCharBtn" data-math-char="σ">σ</button>
+            <button class="mathCharBtn" data-math-char="φ">φ</button>
+            <button class="mathCharBtn" data-math-char="ω">ω</button>
+          </div>
+        </div>
+        <div class="mathKeyboardSection">
+          <div class="mathKeyboardLabel">Rakamlar</div>
+          <div class="mathKeyboardGrid">
+            <button class="mathCharBtn" data-math-char="0">0</button>
+            <button class="mathCharBtn" data-math-char="1">1</button>
+            <button class="mathCharBtn" data-math-char="2">2</button>
+            <button class="mathCharBtn" data-math-char="3">3</button>
+            <button class="mathCharBtn" data-math-char="4">4</button>
+            <button class="mathCharBtn" data-math-char="5">5</button>
+            <button class="mathCharBtn" data-math-char="6">6</button>
+            <button class="mathCharBtn" data-math-char="7">7</button>
+            <button class="mathCharBtn" data-math-char="8">8</button>
+            <button class="mathCharBtn" data-math-char="9">9</button>
+          </div>
+        </div>
+        <div class="mathKeyboardSection">
+          <div class="mathKeyboardLabel">İşlemler</div>
+          <div class="mathKeyboardGrid">
+            <button class="mathCharBtn" data-math-char="+">+</button>
+            <button class="mathCharBtn" data-math-char="−">−</button>
+            <button class="mathCharBtn" data-math-char="×">×</button>
+            <button class="mathCharBtn" data-math-char="÷">÷</button>
+            <button class="mathCharBtn" data-math-char="=">=</button>
+            <button class="mathCharBtn" data-math-char="≠">≠</button>
+            <button class="mathCharBtn" data-math-char="<">&lt;</button>
+            <button class="mathCharBtn" data-math-char=">">&gt;</button>
+            <button class="mathCharBtn" data-math-char="≤">≤</button>
+            <button class="mathCharBtn" data-math-char="≥">≥</button>
+            <button class="mathCharBtn" data-math-char="±">±</button>
+            <button class="mathCharBtn" data-math-char="∞">∞</button>
+            <button class="mathCharBtn" data-math-char="°">°</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <button id="imageBtn" class="iconBtn" title="Fotoğraf ekle" aria-label="Fotoğraf ekle">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <rect x="3.5" y="4.5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/>
@@ -845,7 +963,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.14 (Shift ile 15° adımlı döndürme)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.15 (matematik klavyesi)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -883,6 +1001,7 @@
               <li>Çizgi, yay, dikdörtgen, elips, üçgen, beşgen, altıgen.</li>
               <li>Parabol, sin x, tan x, eˣ ve x-y eksenleri.</li>
               <li>Metin kutusu, karekök ve integral sembolü.</li>
+              <li>Matematik klavyesinden harf, Yunan harfi, rakam ve işlem sembolü ekle.</li>
               <li>Fotoğraf / resim ekleme.</li>
             </ul>
           </section>
@@ -1047,6 +1166,9 @@
   const textBtn = document.getElementById('textBtn');
   const sqrtBtn = document.getElementById('sqrtBtn');
   const integralBtn = document.getElementById('integralBtn');
+  const mathKeyboardBtn = document.getElementById('mathKeyboardBtn');
+  const mathKeyboardMenu = document.getElementById('mathKeyboardMenu');
+  const mathCharButtons = Array.from(document.querySelectorAll('.mathCharBtn'));
   const textEditor = document.getElementById('textEditor');
   const imageBtn = document.getElementById('imageBtn');
   const imageInput = document.getElementById('imageInput');
@@ -9778,7 +9900,9 @@
         textEditing &&
         document.activeElement!==textEditor &&
         document.activeElement!==sqrtBtn &&
-        document.activeElement!==integralBtn
+        document.activeElement!==integralBtn &&
+        document.activeElement!==mathKeyboardBtn &&
+        !document.activeElement?.classList?.contains('mathCharBtn')
       ){
         closeTextEditor(true);
       }
@@ -9833,13 +9957,103 @@
     statusEl.textContent='Sembol eklendi';
   }
 
+  function closeMathKeyboard(){
+    mathKeyboardMenu.classList.remove('open');
+    mathKeyboardBtn.classList.remove('active');
+  }
+
+  function addMathTextSymbol(symbol){
+    if(!symbol) return;
+
+    if(textEditing) closeTextEditor(true);
+    closeContextMenu();
+    closeFillMenu();
+    eraserMenu.classList.remove('open');
+    colorMenu.classList.remove('open');
+
+    saveState();
+
+    const r=canvas.getBoundingClientRect();
+    const center=screenToWorld({x:r.width/2,y:r.height/2});
+    const scale=1/viewZoom;
+    const fontSize=44*scale;
+
+    ctx.save();
+    ctx.font=`${fontSize}px ${textFontFamily()}`;
+    const measured=Math.max(18,ctx.measureText(symbol).width);
+    ctx.restore();
+
+    const obj={
+      id:makeObjectId(),
+      kind:'text',
+      center,
+      w:Math.max(48*scale,measured+18*scale),
+      h:62*scale,
+      angle:0,
+      text:symbol,
+      fontSize,
+      style:{color:currentColor,width:currentWidth},
+      source:'math-keyboard',
+      shapeName:'math-symbol',
+      boxAngle:0
+    };
+
+    objects.push(obj);
+    setSelection([objects.length-1]);
+
+    mode='select';
+    selectBtn.classList.add('active');
+    inkBtn.classList.remove('active');
+    textBtn.classList.remove('active');
+    eraserBtn.classList.remove('active');
+    fillBtn.classList.remove('active');
+    eraserCursor=null;
+
+    closeMathKeyboard();
+    restoreToolCursor();
+    redraw();
+    statusEl.textContent=`${symbol} sembolü eklendi`;
+  }
+
+  mathKeyboardBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    closeContextMenu();
+    closeFillMenu();
+    eraserMenu.classList.remove('open');
+    colorMenu.classList.remove('open');
+
+    const opening=!mathKeyboardMenu.classList.contains('open');
+    if(opening){
+      mathKeyboardMenu.classList.add('open');
+      mathKeyboardBtn.classList.add('active');
+      statusEl.textContent='Matematik klavyesi — bir sembol seç';
+    }else{
+      closeMathKeyboard();
+    }
+  });
+
+  mathCharButtons.forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      addMathTextSymbol(btn.dataset.mathChar || btn.textContent || '');
+    });
+  });
+
+  document.addEventListener('pointerdown',e=>{
+    if(!e.target.closest('.mathKeyboardWrap')){
+      closeMathKeyboard();
+    }
+  });
+
   sqrtBtn.addEventListener('click',e=>{
     e.stopPropagation();
+    closeMathKeyboard();
     addMathSymbol('sqrt');
   });
 
   integralBtn.addEventListener('click',e=>{
     e.stopPropagation();
+    closeMathKeyboard();
     addMathSymbol('integral');
   });
 
