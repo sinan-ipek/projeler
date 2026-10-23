@@ -4219,7 +4219,7 @@ async function n12OuterClearAnimated(){
  ghost.style.top=(dotCenter.y+anchorY-sceneRect.top)+'px';
  ghost.style.fontSize=((parseFloat(getComputedStyle(eq).fontSize)||50)*scale)+'px';
  busy=true;scene.classList.add('busy');save();step++;
- n12ClearHover();
+ // İşaretlenmiş çizginin rengi snap boyunca aynı kalır.
  scene.append(ghost);
  try{
   const duration=fastMode()?520:640;
@@ -4261,7 +4261,7 @@ function n12ClearHover(){
  if(outer)outer.classList.remove('n12-hl-plus','n12-hl-outer');
 }
 function n12HighlightFromPointer(e){
- if(!nestedPreview)return;
+ if(!nestedPreview||busy)return;
  const outer=eq.querySelector('.n12-preview > .fraction');
  const plus=byId('n12-plus');
  if(!outer||!plus)return;
