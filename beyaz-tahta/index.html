@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.20</title>
+<title>Beyaz Tahta v16.21</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -970,7 +970,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.20 (yapıştırma imleç konumuna)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.21 (daha düzgün ink + sağ sürükleme silgi)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -998,6 +998,7 @@
               <li>Çizgi rengini ve kalınlığını değiştir.</li>
               <li>Uygun çizimler bekletildiğinde otomatik şekle dönüşebilir.</li>
               <li>Silgi ile tüm ink nesnesini veya yalnız belirli bir bölümü sil.</li>
+              <li>Farede sağ tık sabit tutulursa menü açılır; sağ tık sürüklenirse silgi moduna geçer.</li>
               <li>Dikdörtgen, elips ve çokgenlerin içini renkle doldur.</li>
             </ul>
           </section>
@@ -2564,16 +2565,28 @@
       width:baseWidth*inkPointWidthFactor(pts,i)
     }));
 
-    // Very light spatial smoothing: enough to remove micro-jitter without
-    // rounding away handwriting corners.
-    const smoothed=raw.map((p,i)=>{
+    // Two restrained smoothing passes remove mouse/pen micro-jitter while
+    // keeping handwriting corners readable. Raw points remain untouched, so
+    // recognition and collaboration still use the original trajectory.
+    const pass1=raw.map((p,i)=>{
       if(i===0 || i===raw.length-1) return {...p};
       const a=raw[i-1],b=p,d=raw[i+1];
       return {
         ...p,
-        x:a.x*.16+b.x*.68+d.x*.16,
-        y:a.y*.16+b.y*.68+d.y*.16,
-        width:a.width*.18+b.width*.64+d.width*.18
+        x:a.x*.20+b.x*.60+d.x*.20,
+        y:a.y*.20+b.y*.60+d.y*.20,
+        width:a.width*.20+b.width*.60+d.width*.20
+      };
+    });
+
+    const smoothed=pass1.map((p,i)=>{
+      if(i===0 || i===pass1.length-1) return {...p};
+      const a=pass1[i-1],b=p,d=pass1[i+1];
+      return {
+        ...p,
+        x:a.x*.12+b.x*.76+d.x*.12,
+        y:a.y*.12+b.y*.76+d.y*.12,
+        width:a.width*.14+b.width*.72+d.width*.14
       };
     });
 
@@ -7993,9 +8006,12 @@
       rightPress={
         pointerId:e.pointerId,
         startScreen:{...screenP},
-        startView:{x:viewX,y:viewY},
+        startWorld:{x:p.x,y:p.y},
         hit:hitTestObjectAny(p),
-        dragged:false
+        dragged:false,
+        eraserStarted:false,
+        eraserChanged:false,
+        lastWorld:{x:p.x,y:p.y}
       };
       canvas.setPointerCapture(e.pointerId);
       return;
@@ -8362,20 +8378,50 @@
     if(rightPress && e.pointerId===rightPress.pointerId){
       const dx=screenP.x-rightPress.startScreen.x;
       const dy=screenP.y-rightPress.startScreen.y;
+
       if(!rightPress.dragged && Math.hypot(dx,dy)>4){
         rightPress.dragged=true;
-        isPanning=true;
-        panPointerId=e.pointerId;
-        panStartScreen=rightPress.startScreen;
-        panStartView=rightPress.startView;
-        canvas.style.cursor='grabbing';
+        rightPress.eraserStarted=true;
+
+        // A moving right-click is a shortcut to the default whole-object
+        // eraser. A stationary right-click still opens the context menu.
+        activateEraserTool('stroke');
+        erasing=true;
+        eraserCursor=p;
+        eraserLastPoint=rightPress.startWorld;
+        eraserChanged=false;
+        saveState();
+
+        const firstSamples=eraserSampleSegment(
+          rightPress.startWorld,
+          p,
+          4
+        );
+        for(const sp of firstSamples){
+          eraserChanged=eraseWholeInkAt(sp) || eraserChanged;
+        }
+        rightPress.eraserChanged=eraserChanged;
+        rightPress.lastWorld={x:p.x,y:p.y};
+        statusEl.textContent='Sağ sürükleme — silgi';
+        redraw();
+        return;
       }
 
-      if(rightPress.dragged){
-        viewX=rightPress.startView.x+dx;
-        viewY=rightPress.startView.y+dy;
+      if(rightPress.dragged && rightPress.eraserStarted){
+        eraserCursor=p;
+        const samples=eraserSampleSegment(
+          rightPress.lastWorld || p,
+          p,
+          4
+        );
+        let changed=false;
+        for(const sp of samples){
+          changed=eraseWholeInkAt(sp) || changed;
+        }
+        eraserChanged=eraserChanged || changed;
+        rightPress.eraserChanged=eraserChanged;
+        rightPress.lastWorld={x:p.x,y:p.y};
         redraw();
-        if(textEditing) positionTextEditor();
       }
       return;
     }
@@ -8945,10 +8991,23 @@
       }
 
       if(rp.dragged){
-        isPanning=false;
-        panPointerId=null;
-        panStartScreen=null;
-        panStartView=null;
+        if(rp.eraserStarted){
+          erasing=false;
+          eraserLastPoint=null;
+          eraserCursor=null;
+
+          // Remove the undo snapshot if the shortcut erased nothing.
+          if(!rp.eraserChanged && undoStack.length){
+            undoStack.pop();
+          }
+
+          eraserChanged=false;
+          statusEl.textContent='Silgi modu';
+          restoreToolCursor();
+          redraw();
+          return;
+        }
+
         restoreToolCursor();
         redraw();
         return;
