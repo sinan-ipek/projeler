@@ -650,11 +650,19 @@ function cfCombinedHTML(){
  const upper=fractionReduction?
   sLinkedHit('cf-combined-num',cfText(n),'complexReduceCombined','cf-combined-reduction',null,true):
   atom('cf-combined-num',cfText(n));
- const denominator=fractionReduction?
+ // İki seçenek de korunur. Yavaş: pay ve payda ortak sadeleşme HL.
+ // Hızlı: pay sadeleştirmeyi, payda doğrudan karşıya geçmeyi seçtirir.
+ // Çözüm zaten bittiyse karşıya geçiş kapalı, iki sayı yine birlikte HL.
+ const reduceOnDen=!!fractionReduction&&(!fastMode()||!denominatorAction);
+ const crossedDen=denominatorAction?
+  hit('cf-combined-den',cfText(d),denominatorAction):
+  atom('cf-combined-den',cfText(d));
+ const denominator=reduceOnDen?
   sLinkedHit('cf-combined-den',cfText(d),'complexReduceCombined','cf-combined-reduction',null,true):
-  denominatorAction?
-   hit('cf-combined-den',cfText(d),denominatorAction):
-   atom('cf-combined-den',cfText(d));
+  fractionReduction&&denominatorAction?
+   crossedDen.replace('data-id="cf-combined-den"',
+    'data-id="cf-combined-den" data-hl-participant="cf-combined-reduction"'):
+   crossedDen;
  const frac=denIsOne
   ?(solved?upper:hit('cf-combined-unit',cfText(n),'complexUseLinear'))
   :fhtml(upper,denominator,'cf-combined-frac',null);
