@@ -371,6 +371,14 @@ const nFrac=(num,den)=>nNode('frac',{num,den});
 const nProd=(a,b)=>nNode('prod',{a,b});
 const nSum=terms=>nNode('sum',{terms});
 const nClone=x=>structuredClone(x);
+// Kopyalanan cebirsel terimler aynı metin olsalar da AYRI nesnelerdir.
+// Aksi hâlde hedef haritadaki data-id'ler çakışıp animasyonu bozar.
+function nCopy(node){
+ const copy=nClone(node);
+ const renew=x=>{x.id='nf'+(++nestedSerial);nChildren(x).forEach(renew)};
+ renew(copy);
+ return copy;
+}
 function nSplitTop(text,operators){
  const result=[];let depth=0,last=0;
  for(let i=0;i<text.length;i++){
@@ -532,11 +540,11 @@ function nSimplifyProduct(node){
  if(b.k==='num'&&a.k==='frac')return nFrac(nSimplifyProduct(nProd(a.num,b)),a.den);
  if(a.k==='num'&&b.k==='sum'){
   return nSum(b.terms.map(t=>({s:t.s,
-   e:nSimplifyProduct(nProd(nClone(a),t.e))})));
+   e:nSimplifyProduct(nProd(nCopy(a),t.e))})));
  }
  if(b.k==='num'&&a.k==='sum'){
   return nSum(a.terms.map(t=>({s:t.s,
-   e:nSimplifyProduct(nProd(t.e,nClone(b)))})));
+   e:nSimplifyProduct(nProd(t.e,nCopy(b)))})));
  }
  return null;
 }
@@ -546,15 +554,15 @@ function nSumCombine(node,fast){
  if(entries.every(t=>t.e.k==='frac')){
   const denominator=JSON.stringify(nRational(entries[0].e.den));
   if(entries.every(t=>JSON.stringify(nRational(t.e.den))===denominator)){
-   return nFrac(nSum(entries.map(t=>({s:t.s,e:t.e.num}))),nClone(entries[0].e.den));
+   return nFrac(nSum(entries.map(t=>({s:t.s,e:t.e.num}))),nCopy(entries[0].e.den));
   }
  }
  const fraction=entries.find(t=>t.e.k==='frac');
  const others=entries.filter(t=>t.e.k!=='frac');
  if(fraction&&others.length===1&&entries.length===2){
   const other=others[0],d=fraction.e.den;
-  const newPart=nFrac(nSimplifyProduct(nProd(nClone(other.e),nClone(d)))||
-     nProd(nClone(other.e),nClone(d)),nClone(d));
+  const scaled=nProd(nCopy(other.e),nCopy(d));
+  const newPart=nFrac(nSimplifyProduct(scaled)||scaled,nCopy(d));
   const terms=entries.map(t=>t===other?{s:t.s,e:newPart}:t);
   const intermediate=nSum(terms);
   return fast?nSumCombine(intermediate,false):intermediate;
@@ -674,16 +682,27 @@ async function nAnimTransition(next,{flight=null,flip=null}={}){
  const scale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
  const items=[];
  const seen=new Set();
- // Atomlar: ebeveynlerinin dönüşümüyle birlikte iki kez hareket etmezler.
+ const flipPair=flip&&flip.length===2?flip:null;
+ // Dönüşte payın kendisi TOPLAM da olabilir. Bir makarada bütün
+ // pay kabin olarak yer değiştirir; içindeki x ve 1 ayrı uçuşmaz.
+ const flipBlocks=flipPair?flipPair.map(id=>byId(id)).filter(Boolean):[];
+ const insideFlippingBlock=el=>flipBlocks.some(block=>block!==el&&block.contains(el));
  for(const el of eq.querySelectorAll('.n-item')){
+  if(insideFlippingBlock(el))continue;
   const id=el.dataset.id,target=goal.get(id);
   if(!id||!target||seen.has(id))continue;
   seen.add(id);
   items.push({el,id,a:MotionEngine.center(el.getBoundingClientRect()),
    b:MotionEngine.center(target)});
  }
+ for(const block of flipBlocks){
+  const id=block.dataset.id,target=goal.get(id);
+  if(!target||seen.has(id))continue;
+  seen.add(id);
+  items.push({el:block,id,a:MotionEngine.center(block.getBoundingClientRect()),
+   b:MotionEngine.center(target)});
+ }
  const duration=fastMode()?550:720;
- const flipPair=flip&&flip.length===2?flip:null;
  await new Promise(resolve=>{
   let start=null;
   const draw=now=>{
