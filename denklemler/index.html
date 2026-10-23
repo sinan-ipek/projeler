@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 85</title>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 86</title>
 <style>
 :root{font-family:Arial,Helvetica,sans-serif;color:#1d2a3b;background:#f4f6fa}*{box-sizing:border-box}body{margin:0;min-height:100vh}header{padding:18px 25px;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:22px;margin:0;font-weight:600}.subtitle{font-size:12px;color:#77869a;margin-top:6px}.home{width:45px;height:45px;border-radius:12px;background:#ffcf31;border:2px solid #e4ac14;box-shadow:0 3px 8px #5a461525;display:grid;place-items:center;color:#383019;text-decoration:none}.home svg{height:23px;width:23px;fill:currentColor}main{width:min(1120px,calc(100% - 28px));margin:auto}.toolbar,.examples,.entry{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:8px 0 14px}button,select,input{font:inherit;border:1px solid #d5dfea;border-radius:10px;background:white;color:#273954;padding:10px 13px}button{cursor:pointer;box-shadow:0 2px 5px #182b3a0c}button:hover:not(:disabled){border-color:#8fa6c4}button:disabled{opacity:.42;cursor:default}.toolbar label{font-size:13px;color:#69768c;margin-left:auto}.mode-switch{display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid #d5dfea;border-radius:12px;background:#eaf0f7}.mode-switch button{padding:7px 13px;border:1px solid transparent;background:transparent;box-shadow:none;border-radius:9px;font-size:14px;min-width:67px}.mode-switch button.selected{color:white;background:#273e5e;border-color:#273e5e;box-shadow:0 2px 5px #182b3a20}.mode-switch button:focus-visible{outline:2px solid #e1a518;outline-offset:2px}.board{border:1px solid #e1e7ee;background:white;border-radius:22px;min-height:430px;box-shadow:0 14px 45px #192e4b0b;overflow:hidden}.board-top{display:flex;justify-content:space-between;color:#78869b;padding:18px 20px;font-size:12px}.scene{height:316px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}.equation{position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1.3;font-size:clamp(26px,4.5vw,50px);font-weight:400;max-width:97%;transform-origin:center center;font-variant-numeric:lining-nums}.side{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative}.equals{padding:0 .36em}.part{display:inline-flex;align-items:center;white-space:nowrap;position:relative}.atom{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border-radius:7px;position:relative;padding:0 .035em}.sign{padding:0 .06em}.hit{cursor:pointer;position:relative;border-radius:8px;outline:none;background:transparent;box-shadow:none;transition:background .18s,box-shadow .18s}.hit:hover,.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.busy .hit{pointer-events:none}.combine{display:inline-flex;align-items:center;border-radius:8px}.combine.hit{padding:0 .04em}.multi-combine{display:inline-flex;align-items:center;white-space:nowrap;border-radius:8px}.multi-combine .part{white-space:nowrap}.multi-combine.hit{padding:0 .05em}.multiply-factor{display:inline-flex;align-items:center;white-space:nowrap}.mul-dot{display:inline-block;padding:0 .08em}.multiply-factor .hit{padding:0 .055em}.fraction{display:inline-grid;grid-template-rows:auto 3px auto;align-items:center;justify-items:center;position:relative;margin:0 .08em;min-width:1em;border-radius:9px}.numerator,.denominator{display:flex;justify-content:center;align-items:center;min-height:.92em;padding:0 .14em;white-space:nowrap}.numerator{transform:translateY(-.09em)}.denominator{transform:translateY(.09em)}.fracbar{height:2px;width:100%;background:#293852;border-radius:2px;align-self:center;transform:scaleX(1);transform-origin:center}.fraction.constructing .fracbar{transform:scaleX(0)}.fraction.constructed .fracbar{transform:scaleX(1);transition:transform .34s cubic-bezier(.45,0,.18,1)}.fraction.hit:hover,.fraction.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.tip{min-height:32px;text-align:center;font-size:13px;color:#7d8ca0}.examples button.active,.modules button.active{background:#273e5e;color:white}.modules{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 14px}.modules button{font-weight:600;min-width:115px}.module-label{display:none}.examples button{font-size:14px}.entry input{width:min(340px,65vw)}.feedback{min-height:18px;color:#ad3e3e;font-size:12px}.notice{font-size:12px;color:#8390a3;line-height:1.6}.measure-layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;pointer-events:none}.measurement{max-width:97%}.ghost{position:fixed;z-index:2000;pointer-events:none;white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-weight:400;line-height:1.3;color:#bf7c1d;will-change:transform,opacity}.done{color:#188a5c}.cross{position:relative}@media(max-width:620px){header{padding:12px 16px}.board{min-height:375px}.board-top{padding:14px}.scene{height:270px}.equals{padding:0 .18em}.toolbar label{margin-left:0}}
 
@@ -73,7 +73,7 @@
 .equals.eq-switch{cursor:pointer;border-radius:9px;outline:0;transition:background .16s,box-shadow .16s;user-select:none}
 .equals.eq-switch:hover,.equals.eq-switch:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}
 </style></head><body>
-<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 85</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
+<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 86</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
 <main><div class="toolbar"><button id="reset">↺ Baştan</button><button id="back">← Geri</button><div class="mode-switch" role="group" aria-label="Çözüm yöntemi"><button type="button" id="modeSlow" class="selected" aria-pressed="true" title="Bütün öğretici işlem adımlarını göster">Yavaş</button><button type="button" id="modeFast" aria-pressed="false" title="Bariz işlemleri tek adımda tamamla">Hızlı</button></div><label for="level">Seviye</label><select id="level"><option>A1</option><option selected>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></div>
 <div class="modules" id="modules" aria-label="Alıştırma seçimi"></div><div class="module-label" id="moduleLabel"></div><div class="board"><div class="board-top"><span>Denklemi adım adım çöz</span><span id="stepLabel">Adım 1</span></div><div id="scene" class="scene"><div id="equation" class="equation"></div></div><div id="tip" class="tip" aria-live="polite"></div></div>
 <div id="startupNotice" class="startup-notice" role="alert">Denklem motoru başlatılamadı. Hata bilgisi için tarayıcı konsolunu açabilirsiniz.</div><div id="examples" class="examples"></div><div class="entry"><input id="custom" aria-label="Denklem" placeholder="Örn. 3x+5=x+13" spellcheck="false"><button id="load">Denklemi aç</button><span id="feedback" class="feedback"></span></div><p class="notice">Bir bilinmeyenli birinci dereceden denklemler. Alıştırma seçebilir veya kendi denklemini yazabilirsin. Fareyle üzerine gelince yalnızca yapılabilecek işlemler vurgulanır.</p></main>
@@ -559,6 +559,9 @@ function cfFraction(top,bottom,id,topId,bottomId,barId,topAction=null){
 function cfCombinedFactors(){
  const q=complexEq;
  if(!q||!q.model)return null;
+ // Daha önce tek kesre çevrildiyse sonraki işlemler gösterilen
+ // pay/payda üstünde yapılır; eski çarpanlara geri dönülmez.
+ if(q.combinedFraction)return structuredClone(q.combinedFraction);
  const top=parseAffineNumerator(q.upper.n);
  const bottom=parseAffineNumerator(q.lower.n);
  const B=Number(q.upper.d),D=Number(q.lower.d);
@@ -569,6 +572,35 @@ function cfCombinedFactors(){
  if(![numerator.a,numerator.b,denominator.a,denominator.b]
   .every(Number.isSafeInteger))return null;
  return {numerator,denominator};
+}
+
+// Bütün kesir aşamalarında kullanılabilir matematiksel kural:
+// sadeleştirilecek iki polinomun HER katsayısının ortak tam böleni.
+function cfFractionCommonDivisor(numerator,denominator){
+ if(!numerator||!denominator)return 1;
+ const content=p=>gcd(Math.abs(p.a),Math.abs(p.b));
+ return gcd(content(numerator),content(denominator));
+}
+function cfCombinedReductionCandidate(){
+ if(!complexEq||complexEq.mode!=='combined')return null;
+ const pair=cfCombinedFactors();
+ if(!pair)return null;
+ const g=cfFractionCommonDivisor(pair.numerator,pair.denominator);
+ return g>1?{...pair,g}:null;
+}
+function cfReducedAffine(p,g){
+ if(g<2||p.a%g!==0||p.b%g!==0)throw Error('Pay veya payda tam bölünemiyor');
+ return {a:p.a/g,b:p.b/g};
+}
+function cfRefreshCombinedModel(){
+ const q=complexEq,f=cfCombinedFactors(),r=parseAffineNumerator(String(q.rhs));
+ if(!f||!r)return;
+ const n=f.numerator,d=f.denominator;
+ if(d.a!==0&&r.a!==0)throw Error('İkinci derece denklem oluşuyor');
+ const model={a:n.a,b:n.b,c:d.a*r.b+d.b*r.a,d:d.b*r.b};
+ if(!Object.values(model).every(Number.isSafeInteger))throw Error('Sayı sınırı aşıldı');
+ q.model=model;
+ m={...model};
 }
 function cfLinearText(p){
  const a=p.a,b=p.b;
@@ -596,6 +628,7 @@ function cfCombinedHTML(){
  const n=cfLinearText(c.numerator),d=cfLinearText(c.denominator);
  const denIsOne=c.denominator.a===0&&c.denominator.b===1;
  const solved=cfCombinedSolved();
+ const fractionReduction=cfCombinedReductionCandidate();
  const factor=t=>/[+−]/.test(t.slice(1))?'('+t+')':t;
  const rhsText=cfText(q.rhs||'?');
  const equationSign='<span class="equals" data-id="cf-equals">=</span>';
@@ -608,10 +641,14 @@ function cfCombinedHTML(){
    '<span class="side">'+right+'</span>';
  }
  const denominatorAction=solved?'':'complexClearDenominator';
- const upper='<span class="atom" data-id="cf-combined-num">'+cfText(n)+'</span>';
- const denominator=denominatorAction?
-  hit('cf-combined-den',cfText(d),denominatorAction):
-  atom('cf-combined-den',cfText(d));
+ const upper=fractionReduction?
+  sLinkedHit('cf-combined-num',cfText(n),'complexReduceCombined','cf-combined-reduction',null,true):
+  atom('cf-combined-num',cfText(n));
+ const denominator=fractionReduction?
+  sLinkedHit('cf-combined-den',cfText(d),'complexReduceCombined','cf-combined-reduction',null,true):
+  denominatorAction?
+   hit('cf-combined-den',cfText(d),denominatorAction):
+   atom('cf-combined-den',cfText(d));
  const frac=denIsOne
   ?(solved?upper:hit('cf-combined-unit',cfText(n),'complexUseLinear'))
   :fhtml(upper,denominator,'cf-combined-frac',null);
@@ -838,8 +875,31 @@ async function complexCrossReduce(){
   });
  }finally{busy=false;scene.classList.remove('busy');update()}
 }
+// Uygun pay/payda her nerede oluşursa oluşsun ortak böleni denetle.
+// Aynı HL grubu iki parçayı birlikte vurgular; işlem sonucunu yalnızca
+// seçilen kesre uygula ve tek kesir aşamasında kal.
+async function complexReduceCombined(){
+ const candidate=cfCombinedReductionCandidate();
+ if(!candidate||busy)return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  if(!fastMode())await Promise.all([
+   drawStroke(byId('cf-combined-num')),
+   drawStroke(byId('cf-combined-den'))
+  ]);
+  await finishCancellation(()=>{
+   const q=complexEq,g=candidate.g;
+   q.combinedFraction={
+    numerator:cfReducedAffine(candidate.numerator,g),
+    denominator:cfReducedAffine(candidate.denominator,g)
+   };
+   cfRefreshCombinedModel();
+  });
+ }finally{busy=false;scene.classList.remove('busy');update()}
+}
 async function complexAction(action){
  if(!complexEq||busy)return;
+ if(action==='complexReduceCombined')return complexReduceCombined();
  if(action==='complexDivide')return complexDivideAnimated();
  if(action==='complexCrossReduce')return complexCrossReduce();
  if(action.startsWith('complexProductReduce_'))return complexProductReduce(action);
