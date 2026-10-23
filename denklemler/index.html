@@ -515,15 +515,17 @@ function nAff(node){
  return null;
 }
 function nAffNode(a,b){
- const terms=[];
- if(a!==0)terms.push({s:a<0?-1:1,e:Math.abs(a)===1?nVar():nProd(nNum(Math.abs(a)),nVar())});
- if(b!==0||!terms.length)terms.push({s:b<0?-1:1,e:nNum(Math.abs(b))});
- return terms.length===1?(terms[0].s<0?nProd(nNum(-1),terms[0].e):terms[0].e):nSum(terms);
+ if(a===0)return nNum(b);
+ if(b===0)return a===1?nVar():nProd(nNum(a),nVar());
+ return nSum([{s:a<0?-1:1,e:Math.abs(a)===1?nVar():nProd(nNum(Math.abs(a)),nVar())},
+  {s:b<0?-1:1,e:nNum(Math.abs(b))}]);
 }
 function nSimplifyProduct(node){
  const a=node.a,b=node.b,ap=nAff(a),bp=nAff(b);
  if(a.k==='num'&&a.v===1)return b;
  if(b.k==='num'&&b.v===1)return a;
+ // 3x zaten tek terimdir; 3·x şeklinde yeniden işletilmez.
+ if(a.k==='num'&&b.k==='var'||b.k==='num'&&a.k==='var')return null;
  if(a.k==='num'&&b.k==='num')return nNum(a.v*b.v);
  if(ap&&bp&&((ap.a===0)||(bp.a===0)))return nAffNode(ap.a*bp.b+ap.b*bp.a,ap.b*bp.b);
  if(a.k==='num'&&b.k==='frac')return nFrac(nSimplifyProduct(nProd(a,b.num)),b.den);
@@ -558,7 +560,7 @@ function nSumCombine(node,fast){
   return fast?nSumCombine(intermediate,false):intermediate;
  }
  const poly=nAff(node);
- if(poly)return nAffNode(poly.a,poly.b);
+ if(poly&&node.terms.length>2)return nAffNode(poly.a,poly.b);
  return null;
 }
 function nFracReduction(node){
@@ -595,6 +597,9 @@ function nHTMLTerm(node,env={}){
   '" data-action="'+action+'" data-hl-group="'+group+'" tabindex="0" role="button">'+content+'</span>';
  if(node.k==='num'||node.k==='var'){
   const txt=node.k==='num'?fmt(node.v):'x';
+  if(nestedEq?.pending?.copyId===id)
+   return '<span class="simple-linked hit n-item" data-id="'+id+
+    '" data-action="nestedCancel" data-hl-group="n-cancel" tabindex="0">'+txt+'</span>';
   if(env.canMove&&node.k==='num'&&node.v!==0)
    return hit(id,txt,'nestedMove:'+env.side+':'+id);
   return '<span class="atom n-item" data-id="'+id+'">'+txt+'</span>';
@@ -613,13 +618,14 @@ function nHTMLTerm(node,env={}){
   return '<span class="n-add" data-id="'+id+'">'+rows.join('')+'</span>';
  }
  if(node.k==='prod'){
-  const simplifiable=nSimplifyProduct(node);
+  const coefficient=node.a.k==='num'&&node.b.k==='var'||
+                    node.b.k==='num'&&node.a.k==='var';
+  const simplifiable=coefficient?null:nSimplifyProduct(node);
   const a=nHTMLTerm(node.a,{side:env.side});
   const b=nHTMLTerm(node.b,{side:env.side});
   const parenthesized=(child,txt)=>child.k==='sum'?'<span class="n-paren">(</span>'+txt+'<span class="n-paren">)</span>':txt;
-  const dot=simplifiable?
-   hit('ndot'+id,'·','nestedProduct:'+id):
-   '<span class="mul-dot">·</span>';
+  const dot=coefficient?'':simplifiable?
+   hit('ndot'+id,'·','nestedProduct:'+id):'<span class="mul-dot">·</span>';
   return '<span class="n-product" data-id="'+id+'">'+
    parenthesized(node.a,a)+dot+parenthesized(node.b,b)+'</span>';
  }
@@ -723,8 +729,21 @@ async function nAnimTransition(next,{flight=null,flip=null}={}){
 }
 function nSideSet(q,side,node){if(side==='L')q.left=node;else q.right=node}
 function nApply(q,side,id,node){nSideSet(q,side,nReplace(side==='L'?q.left:q.right,id,node))}
+function nStillHasVisibleArithmetic(node){
+ if(node.k==='frac')return true;
+ if(node.k==='prod'){
+  const coefficient=node.a.k==='num'&&node.b.k==='var'||
+                    node.b.k==='num'&&node.a.k==='var';
+  if(!coefficient)return true;
+ }
+ if(node.k==='sum'&&node.terms.every(t=>t.e.k==='num'))return true;
+ return nChildren(node).some(nStillHasVisibleArithmetic);
+}
 function nHandoff(){
  if(!nestedEq||nestedEq.pending)return;
+ // Henüz görünen çarpma veya kesir varsa sonraki adım ATLANMAZ.
+ if(nStillHasVisibleArithmetic(nestedEq.left)||
+    nStillHasVisibleArithmetic(nestedEq.right))return;
  const left=nAff(nestedEq.left),right=nAff(nestedEq.right);
  if(!left||!right||left.a===0&&right.a===0)return;
  m={a:left.a,b:left.b,c:right.a,d:right.b};
