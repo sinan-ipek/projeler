@@ -617,7 +617,8 @@ function nHTMLTerm(node,env={}){
   return '<span class="atom n-item" data-id="'+id+'">'+txt+'</span>';
  }
  if(node.k==='sum'){
-  const unified=nSumCombine(node,fastMode());
+  // Yavaş modda payda iptali beklenirken yeni işlem açmayalım.
+  const unified=nestedEq.pending?null:nSumCombine(node,fastMode());
   const canSum=!!unified;
   const rows=node.terms.map((t,i)=>{
    const lead=i===0?(t.s<0?'−':''):t.s<0?'−':'+';
@@ -632,7 +633,7 @@ function nHTMLTerm(node,env={}){
  if(node.k==='prod'){
   const coefficient=node.a.k==='num'&&node.b.k==='var'||
                     node.b.k==='num'&&node.a.k==='var';
-  const simplifiable=coefficient?null:nSimplifyProduct(node);
+  const simplifiable=coefficient||nestedEq.pending?null:nSimplifyProduct(node);
   const a=nHTMLTerm(node.a,{side:env.side});
   const b=nHTMLTerm(node.b,{side:env.side});
   const parenthesized=(child,txt)=>child.k==='sum'?'<span class="n-paren">(</span>'+txt+'<span class="n-paren">)</span>':txt;
@@ -642,7 +643,7 @@ function nHTMLTerm(node,env={}){
    parenthesized(node.a,a)+dot+parenthesized(node.b,b)+'</span>';
  }
  if(node.k==='frac'){
-  const g=nFracReduction(node);
+  const g=nestedEq.pending?1:nFracReduction(node);
   const root=env.root&&!!env.side;
   const invert=root&&node.den.k==='frac';
   const pending=nestedEq.pending;
@@ -778,6 +779,7 @@ function nHandoff(){
 }
 async function nestedAction(action){
  if(busy||!nestedEq)return;
+ if(nestedEq.pending&&action!=='nestedCancel')return;
  const [type,side,id]=action.split(':');
  const current=nestedEq;
  const next=nClone(current);
