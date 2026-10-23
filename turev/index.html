@@ -234,6 +234,20 @@
     color:#777;
     padding:0 2px;
   }
+  .factor-part{display:inline-block;position:relative;vertical-align:baseline;transform-origin:center;will-change:transform}
+  .factor-join{display:inline-block;cursor:pointer;color:#2563eb;font-weight:700;padding:0 4px;margin:0 1px;border-radius:5px;user-select:none;touch-action:manipulation;vertical-align:baseline}
+  .factor-join:hover,.factor-join:focus-visible{background:#dbeafe;outline:1px solid #93c5fd}
+  .factor-join.snapping{pointer-events:none}
+  .factor-fused{cursor:pointer;padding:0 2px;border-bottom:1px dotted #94a3b8;border-radius:4px}
+  .factor-fused:hover{background:#eff6ff}
+  .factor-fused.just-fused{animation:fused-arrival .32s cubic-bezier(.18,.9,.18,1.35) both}
+  @keyframes fused-arrival{
+    0%{transform:scale(.50,1.35);opacity:.25}
+    50%{transform:scale(1.24,.82);opacity:1}
+    74%{transform:scale(.91,1.07)}
+    100%{transform:scale(1,1);opacity:1}
+  }
+  @media(prefers-reduced-motion:reduce){.factor-fused.just-fused{animation:none}}
   .common-factor{
     display:inline-block;
     padding:0 1px;
@@ -1493,6 +1507,8 @@ function prepareFactorStage(row){
   row.factorExpanded=[];
   row.revealCount=0;
   row.factorClickable=false;
+  row.factorGroups=[];
+  row.fusionHighlight=null;
 
   if(row.factorPending){
     const terms=flattenSignedTerms(row.factorInside,1,[]);
@@ -1545,6 +1561,10 @@ function applyCommonFactor(order,factorId){
     : canonicalize(clone(spec.node));
 
   row.ast=canonicalize(N.mul(clone(row.factorOutside),clone(row.factorInside)));
+
+  // Terimler yeniden kuruldu: sayısal birleşme gruplarını sıfırla.
+  row.factorGroups=[];
+  row.fusionHighlight=null;
 
   // Her seçimden sonra ortaklıkları sıfırdan hesapla; eski renk/spec bilgisi kalmasın.
   row.commonFactors=commonFactorSpecs(row.factorInside);
@@ -1625,43 +1645,79 @@ function matchSpecToPiece(spec,piece){
   return false;
 }
 
-function renderExpandedFactoringTerm(term,row){
+
+/* Sayısal birleşmeler yalnızca görseldir; gerçek çarpanlar ve ortak çarpan hesabı korunur. */
+function factorGroupsFor(row,index,pieces){
+  const saved=row.factorGroups && row.factorGroups[index];
+  if(Array.isArray(saved) && saved.length &&
+    saved.every(g=>Array.isArray(g) && g.length && g.every(k=>Number.isInteger(k) && k>=0 && k<pieces.length)) &&
+    saved.flat().length===pieces.length && new Set(saved.flat()).size===pieces.length){
+    return saved;
+  }
+  return pieces.map((_,i)=>[i]);
+}
+function displayedTermPieces(row,index){
+  const terms=flattenSignedTerms(row.factorInside,1,[]);
+  let term=terms[index];
+  if(!term) return [];
+  const p=decomposeTermForFactor(term);
+  if(p.coeff<0){
+    p.coeff=Math.abs(p.coeff);
+    term=rebuildTermFromParts(p);
+  }
+  return factorPiecesForExpandedTerm(term);
+}
+function numericGroupValue(group,pieces){
+  if(!group.length || !group.every(k=>pieces[k] && pieces[k].kind==="num" && Number.isFinite(pieces[k].value))) return null;
+  return group.reduce((v,k)=>v*pieces[k].value,1);
+}
+function renderExpandedFactoringTerm(term,row,index){
   const pieces=factorPiecesForExpandedTerm(term);
+  const groups=factorGroupsFor(row,index,pieces);
   const used=new Set();
-  const html=[];
-
-  for(const piece of pieces){
-    let specIndex=-1;
-
-    // Bu terim içinde her ortak spec yalnızca bir kez eşleşebilir.
+  const matched=pieces.map(piece=>{
     for(let i=0;i<row.commonFactors.length;i++){
       if(used.has(i)) continue;
-      if(matchSpecToPiece(row.commonFactors[i],piece)){
-        specIndex=i;
-        used.add(i);
-        break;
-      }
+      if(matchSpecToPiece(row.commonFactors[i],piece)){used.add(i);return i;}
     }
-
-    const raw=renderFactorAtom(piece.node);
-
-    if(specIndex>=0 && specIndex<row.revealCount){
-      const sp=row.commonFactors[specIndex];
-      const cls="cf"+(specIndex%6);
-      html.push(`<span class="common-factor ${cls}" data-factor-id="${escapeHtmlAttr(sp.id)}">${raw}</span>`);
+    return -1;
+  });
+  const html=[];
+  groups.forEach((group,g)=>{
+    const value=numericGroupValue(group,pieces);
+    let content="";
+    let classes="factor-part";
+    let attr="";
+    if(group.length>1 && value!==null){
+      content=String(value);
+      classes+=" factor-fused";
+      attr=` data-split-index="${g}" title="Çarpanları yeniden ayır" tabindex="0" role="button" aria-label="${value} sayısını çarpanlarına ayır"`;
+      if(row.fusionHighlight && row.fusionHighlight.term===index && row.fusionHighlight.group===g) classes+=" just-fused";
     }else{
-      html.push(raw);
+      const k=group[0];
+      const raw=renderFactorAtom(pieces[k].node);
+      const specIndex=matched[k];
+      if(specIndex>=0 && specIndex<row.revealCount){
+        const spec=row.commonFactors[specIndex];
+        content=`<span class="common-factor cf${specIndex%6}" data-factor-id="${escapeHtmlAttr(spec.id)}">${raw}</span>`;
+      }else{content=raw;}
     }
-  }
-
-  return `<span class="factor-term-expanded">${html.join('<span class="factor-dot">·</span>')}</span>`;
+    html.push(`<span class="${classes}"${attr}>${content}</span>`);
+    if(g<groups.length-1){
+      const canFuse=numericGroupValue(group,pieces)!==null && numericGroupValue(groups[g+1],pieces)!==null;
+      html.push(canFuse
+        ? `<span class="factor-join" data-join-index="${g}" tabindex="0" role="button" title="Sayıları çarp" aria-label="Bu iki sayıyı çarp">·</span>`
+        : `<span class="factor-dot">·</span>`);
+    }
+  });
+  return `<span class="factor-term-expanded" data-term-index="${index}">${html.join("")}</span>`;
 }
 
 function renderFactoringTerm(term,row,index){
   if(!row.factorExpanded || !row.factorExpanded[index]){
     return `<span class="factor-term-expand" data-term-index="${index}" title="Çarpanlarına ayır">${renderNode(term,[],0)}</span>`;
   }
-  return renderExpandedFactoringTerm(term,row);
+  return renderExpandedFactoringTerm(term,row,index);
 }
 
 function escapeHtmlAttr(v){
@@ -1693,6 +1749,82 @@ function renderFactorStage(row){
   const inside=rendered.join("");
   const outside=row.factorOutside ? renderNode(row.factorOutside,[],2) : "";
   return `<span class="factor-stage">${outside ? outside : ""}<span class="factor-paren">${outside ? "(" : ""}${inside}${outside ? ")" : ""}</span></span>`;
+}
+
+
+/* ---------------- Kuvvetli lastik etkili sayı birleştirme ---------------- */
+let factorSnapBusy=false;
+let factorRenderSerial=0;
+
+function undoFactorFusion(order,termIndex,groupIndex){
+  if(factorSnapBusy) return;
+  const row=rows.find(r=>r.order===order);
+  if(!row || !row.factorPending) return;
+  const pieces=displayedTermPieces(row,termIndex);
+  const groups=factorGroupsFor(row,termIndex,pieces).map(g=>g.slice());
+  const group=groups[groupIndex];
+  if(!group || group.length<2) return;
+  snapshotState();
+  groups.splice(groupIndex,1,...group.map(i=>[i]));
+  if(!row.factorGroups) row.factorGroups=[];
+  row.factorGroups[termIndex]=groups;
+  row.fusionHighlight=null;
+  render();
+}
+
+function snapFactorJoin(order,termIndex,joinIndex,dot){
+  if(factorSnapBusy) return;
+  const row=rows.find(r=>r.order===order);
+  if(!row || !row.factorPending || !row.factorExpanded?.[termIndex]) return;
+  const pieces=displayedTermPieces(row,termIndex);
+  const groups=factorGroupsFor(row,termIndex,pieces).map(g=>g.slice());
+  const left=groups[joinIndex], right=groups[joinIndex+1];
+  if(!left || !right || numericGroupValue(left,pieces)===null || numericGroupValue(right,pieces)===null) return;
+  groups.splice(joinIndex,2,[...left,...right]);
+  const serial=factorRenderSerial;
+  const leftEl=dot.previousElementSibling;
+  const rightEl=dot.nextElementSibling;
+  const canAnimate=leftEl && rightEl && leftEl.classList.contains("factor-part") &&
+    rightEl.classList.contains("factor-part") && typeof leftEl.animate==="function" &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function finish(){
+    factorSnapBusy=false;
+    if(factorRenderSerial!==serial || !dot.isConnected) return;
+    snapshotState();
+    if(!row.factorGroups) row.factorGroups=[];
+    row.factorGroups[termIndex]=groups;
+    row.fusionHighlight={term:termIndex,group:joinIndex};
+    render();
+    row.fusionHighlight=null;
+  }
+  if(!canAnimate){finish();return;}
+
+  factorSnapBusy=true;
+  dot.classList.add("snapping");
+  const dr=dot.getBoundingClientRect();
+  const center=dr.left+dr.width/2;
+  const lr=leftEl.getBoundingClientRect(), rr=rightEl.getBoundingClientRect();
+  const leftDx=center-(lr.left+lr.width/2), rightDx=center-(rr.left+rr.width/2);
+  const springFrames=dx=>[
+    {transform:"translateX(0px) scale(1)",opacity:1,offset:0},
+    {transform:`translateX(${dx*.06}px) scale(1.08,.95)`,opacity:1,offset:.25,easing:"cubic-bezier(.55,0,.95,.5)"},
+    {transform:`translateX(${dx*1.13}px) scale(1.3,.75)`,opacity:1,offset:.57,easing:"ease-out"},
+    {transform:`translateX(${dx*.89}px) scale(.88,1.12)`,opacity:1,offset:.72,easing:"ease-in-out"},
+    {transform:`translateX(${dx}px) scale(.10,.78)`,opacity:0,offset:1}
+  ];
+  try{
+    const options={duration:470,fill:"forwards",easing:"ease-out"};
+    const a=leftEl.animate(springFrames(leftDx),options);
+    const b=rightEl.animate(springFrames(rightDx),options);
+    const d=dot.animate([
+      {transform:"scale(1)",opacity:1,offset:0},
+      {transform:"scale(1.2)",opacity:1,offset:.22},
+      {transform:"scale(.08)",opacity:0,offset:.58},
+      {transform:"scale(.08)",opacity:0,offset:1}
+    ],options);
+    Promise.allSettled([a.finished,b.finished,d.finished]).then(finish);
+  }catch(err){finish();}
 }
 
 /* ---------------- Öğretim durumu ---------------- */
@@ -1840,6 +1972,7 @@ function normalizeRow(order){
 }
 
 function render(){
+  factorRenderSerial++;
   const stage=document.getElementById("stage");
   stage.innerHTML="";
 
@@ -1894,6 +2027,30 @@ function render(){
         ev.stopPropagation();
         expandFactorTerm(order,Number(el.dataset.termIndex));
       });
+    });
+
+
+    expr.querySelectorAll(".factor-join").forEach(el=>{
+      const activate=ev=>{
+        if(ev.type==="keydown" && ev.key!=="Enter" && ev.key!==" ") return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        const term=el.closest(".factor-term-expanded");
+        if(term) snapFactorJoin(order,Number(term.dataset.termIndex),Number(el.dataset.joinIndex),el);
+      };
+      el.addEventListener("click",activate);
+      el.addEventListener("keydown",activate);
+    });
+    expr.querySelectorAll(".factor-fused").forEach(el=>{
+      const activate=ev=>{
+        if(ev.type==="keydown" && ev.key!=="Enter" && ev.key!==" ") return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        const term=el.closest(".factor-term-expanded");
+        if(term) undoFactorFusion(order,Number(term.dataset.termIndex),Number(el.dataset.splitIndex));
+      };
+      el.addEventListener("click",activate);
+      el.addEventListener("keydown",activate);
     });
 
     expr.querySelectorAll(".common-factor").forEach(el=>{
