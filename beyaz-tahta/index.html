@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.22</title>
+<title>Beyaz Tahta v16.23</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -970,7 +970,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.22 (sağ sürükleme pan + Ctrl sağ tık geçici silgi)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.23 (nesne taşırken köşe noktalarına snap)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1024,6 +1024,7 @@
               <li>Doğru parçasında A ve B uçlarına ek olarak orta noktadan çıkan döndürme tutamacını kullan.</li>
               <li>Hazır şekillerin gerçek düzenleme handle'larını tek tek taşı.</li>
               <li>Nokta Snap düğmesi açıkken gerçek düzenleme noktaları diğer nesnelerin köşe/uç/düzenleme noktalarına yapışır.</li>
+              <li>Ayrıca köşe/uç noktaları olan bir nesne taşınırken, bu noktalar başka bir nesnenin köşe/uç noktasına yaklaşırsa tüm nesne snap olur.</li>
               <li>Ctrl ile birden fazla gerçek handle seçip birlikte taşı.</li>
               <li>Bounding-box resize ve rotate tutamaçları handle çoklu seçimine dahil değildir.</li>
             </ul>
@@ -3969,6 +3970,83 @@
       objectIndex:best.objectIndex,
       handleName:best.handleName
     };
+  }
+
+  function objectCornerSnapPoints(o){
+    if(!o) return [];
+
+    if(o.kind==='line'){
+      return [
+        {x:o.a.x,y:o.a.y},
+        {x:o.b.x,y:o.b.y}
+      ];
+    }
+
+    if(o.kind==='rect'){
+      return rectWorldVertices(o).map(p=>({x:p.x,y:p.y}));
+    }
+
+    if(o.kind==='polygon'){
+      return polygonWorldVertices(o).map(p=>({x:p.x,y:p.y}));
+    }
+
+    if(o.kind==='sector'){
+      return [
+        {x:o.center.x,y:o.center.y},
+        {x:o.a.x,y:o.a.y},
+        {x:o.b.x,y:o.b.y}
+      ];
+    }
+
+    return [];
+  }
+
+  function snapWholeObjectMove(snapshot,dx,dy,excludeIndex=-1){
+    if(!pointSnapEnabled || !snapshot){
+      return {dx,dy,snapped:false};
+    }
+
+    const movingPoints=objectCornerSnapPoints(snapshot);
+    if(!movingPoints.length){
+      return {dx,dy,snapped:false};
+    }
+
+    const targetPoints=[];
+    for(let i=0;i<objects.length;i++){
+      if(i===excludeIndex) continue;
+      const pts=objectCornerSnapPoints(objects[i]);
+      for(const p of pts){
+        targetPoints.push({x:p.x,y:p.y,objectIndex:i});
+      }
+    }
+
+    if(!targetPoints.length){
+      return {dx,dy,snapped:false};
+    }
+
+    const threshold=12/viewZoom;
+    let best=null;
+    let bestD=Infinity;
+
+    for(const mp of movingPoints){
+      const moved={x:mp.x+dx,y:mp.y+dy};
+
+      for(const tp of targetPoints){
+        const d=Math.hypot(tp.x-moved.x,tp.y-moved.y);
+        if(d<=threshold && d<bestD){
+          bestD=d;
+          best={
+            dx:dx+(tp.x-moved.x),
+            dy:dy+(tp.y-moved.y),
+            objectIndex:tp.objectIndex
+          };
+        }
+      }
+    }
+
+    return best
+      ? {...best,snapped:true}
+      : {dx,dy,snapped:false};
   }
 
   function realHandlePosition(o,name){
@@ -8640,7 +8718,20 @@
 
       if(selectAction==='move'){
         const rawDx=p.x-selectStart.x,rawDy=p.y-selectStart.y;
-        const d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
+        let d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
+
+        const snappedMove=snapWholeObjectMove(
+          selectSnapshot,
+          d.dx,
+          d.dy,
+          selectedIndex
+        );
+
+        if(snappedMove.snapped){
+          d={dx:snappedMove.dx,dy:snappedMove.dy};
+          statusEl.textContent='Nesne snap — köşe/uç noktaları hizalandı';
+        }
+
         if(Math.hypot(d.dx,d.dy)>1e-5){
           pendingRepeatTransform={type:'move',dx:d.dx,dy:d.dy};
         }
