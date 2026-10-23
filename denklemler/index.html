@@ -601,13 +601,17 @@ function nSolved(){
 }
 function nHTMLTerm(node,env={}){
  const id=node.id;
- const highlighted=(action,group,content)=>'<span class="simple-linked hit n-item" data-id="'+id+
+ // Yavaş modda paydadaki (x+1) ile yanındaki (x+1), tıpkı iki
+ // sayının sadeleşmesinde olduğu gibi TEK HL grubuna bağlıdır.
+ if(nestedEq?.pending?.copyId===id&&!env.skipPending){
+  const inner=nHTMLTerm(node,{...env,skipPending:true});
+  return '<span class="simple-linked hit" data-id="n-cancel-factor-'+id+
+   '" data-action="nestedCancel" data-hl-group="n-cancel" tabindex="0" role="button">'+inner+'</span>';
+ }
+ const highlighted=(action,group,content)=>'<span class="simple-linked hit" data-id="n-highlight-'+id+
   '" data-action="'+action+'" data-hl-group="'+group+'" tabindex="0" role="button">'+content+'</span>';
  if(node.k==='num'||node.k==='var'){
   const txt=node.k==='num'?fmt(node.v):'x';
-  if(nestedEq?.pending?.copyId===id)
-   return '<span class="simple-linked hit n-item" data-id="'+id+
-    '" data-action="nestedCancel" data-hl-group="n-cancel" tabindex="0">'+txt+'</span>';
   if(env.canMove&&node.k==='num'&&node.v!==0)
    return hit(id,txt,'nestedMove:'+env.side+':'+id);
   return '<span class="atom n-item" data-id="'+id+'">'+txt+'</span>';
