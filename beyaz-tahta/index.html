@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.21</title>
+<title>Beyaz Tahta v16.22</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -970,7 +970,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.21 (daha düzgün ink + sağ sürükleme silgi)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.22 (sağ sürükleme pan + Ctrl sağ tık geçici silgi)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -998,7 +998,8 @@
               <li>Çizgi rengini ve kalınlığını değiştir.</li>
               <li>Uygun çizimler bekletildiğinde otomatik şekle dönüşebilir.</li>
               <li>Silgi ile tüm ink nesnesini veya yalnız belirli bir bölümü sil.</li>
-              <li>Farede sağ tık sabit tutulursa menü açılır; sağ tık sürüklenirse silgi moduna geçer.</li>
+              <li>Farede sağ tık sabit tutulursa menü açılır; sağ tık sürüklenirse tahta kaydırılır.</li>
+              <li>Ctrl + sağ tık geçici silgidir; Ctrl bırakılınca önceki araca dönülür.</li>
               <li>Dikdörtgen, elips ve çokgenlerin içini renkle doldur.</li>
             </ul>
           </section>
@@ -1245,6 +1246,9 @@
   let rightPress = null;
   let contextTargetIndices = [];
   let lastCanvasPointerWorld = null;
+
+  let temporaryEraserActive=false;
+  let temporaryEraserPreviousTool=null;
   let pendingBoardLoad = null;
   const imageCache = new Map();
   const imageAssetCache = new Map();      // assetId -> data URL
@@ -7999,21 +8003,45 @@
       }
     }
 
-    // Right button: click = context menu, drag = pan.
+    // Right button:
+    // - normal click = context menu
+    // - normal drag = pan
+    // - Ctrl + right click/drag = temporary eraser
     if(e.button===2){
       e.preventDefault();
       closeContextMenu();
+
+      const ctrlEraser=!!e.ctrlKey;
+
       rightPress={
         pointerId:e.pointerId,
         startScreen:{...screenP},
         startWorld:{x:p.x,y:p.y},
+        startView:{x:viewX,y:viewY},
         hit:hitTestObjectAny(p),
         dragged:false,
-        eraserStarted:false,
+        ctrlEraser,
         eraserChanged:false,
         lastWorld:{x:p.x,y:p.y}
       };
+
       canvas.setPointerCapture(e.pointerId);
+
+      if(ctrlEraser){
+        activateTemporaryEraser();
+        erasing=true;
+        eraserCursor=p;
+        eraserLastPoint=p;
+        eraserChanged=false;
+        saveState();
+
+        const changed=eraseWholeInkAt(p);
+        eraserChanged=changed;
+        rightPress.eraserChanged=changed;
+        statusEl.textContent='Ctrl + sağ tık — geçici silgi';
+        redraw();
+      }
+
       return;
     }
 
@@ -8379,49 +8407,42 @@
       const dx=screenP.x-rightPress.startScreen.x;
       const dy=screenP.y-rightPress.startScreen.y;
 
-      if(!rightPress.dragged && Math.hypot(dx,dy)>4){
-        rightPress.dragged=true;
-        rightPress.eraserStarted=true;
+      if(rightPress.ctrlEraser){
+        if(Math.hypot(dx,dy)>4) rightPress.dragged=true;
 
-        // A moving right-click is a shortcut to the default whole-object
-        // eraser. A stationary right-click still opens the context menu.
-        activateEraserTool('stroke');
-        erasing=true;
-        eraserCursor=p;
-        eraserLastPoint=rightPress.startWorld;
-        eraserChanged=false;
-        saveState();
-
-        const firstSamples=eraserSampleSegment(
-          rightPress.startWorld,
-          p,
-          4
-        );
-        for(const sp of firstSamples){
-          eraserChanged=eraseWholeInkAt(sp) || eraserChanged;
-        }
-        rightPress.eraserChanged=eraserChanged;
-        rightPress.lastWorld={x:p.x,y:p.y};
-        statusEl.textContent='Sağ sürükleme — silgi';
-        redraw();
-        return;
-      }
-
-      if(rightPress.dragged && rightPress.eraserStarted){
         eraserCursor=p;
         const samples=eraserSampleSegment(
           rightPress.lastWorld || p,
           p,
           4
         );
+
         let changed=false;
         for(const sp of samples){
           changed=eraseWholeInkAt(sp) || changed;
         }
+
         eraserChanged=eraserChanged || changed;
         rightPress.eraserChanged=eraserChanged;
         rightPress.lastWorld={x:p.x,y:p.y};
         redraw();
+        return;
+      }
+
+      if(!rightPress.dragged && Math.hypot(dx,dy)>4){
+        rightPress.dragged=true;
+        isPanning=true;
+        panPointerId=e.pointerId;
+        panStartScreen=rightPress.startScreen;
+        panStartView=rightPress.startView;
+        canvas.style.cursor='grabbing';
+      }
+
+      if(rightPress.dragged){
+        viewX=rightPress.startView.x+dx;
+        viewY=rightPress.startView.y+dy;
+        redraw();
+        if(textEditing) positionTextEditor();
       }
       return;
     }
@@ -8990,24 +9011,25 @@
         return;
       }
 
-      if(rp.dragged){
-        if(rp.eraserStarted){
-          erasing=false;
-          eraserLastPoint=null;
-          eraserCursor=null;
+      if(rp.ctrlEraser){
+        erasing=false;
+        eraserLastPoint=null;
+        eraserCursor=null;
 
-          // Remove the undo snapshot if the shortcut erased nothing.
-          if(!rp.eraserChanged && undoStack.length){
-            undoStack.pop();
-          }
-
-          eraserChanged=false;
-          statusEl.textContent='Silgi modu';
-          restoreToolCursor();
-          redraw();
-          return;
+        if(!rp.eraserChanged && undoStack.length){
+          undoStack.pop();
         }
 
+        eraserChanged=false;
+        redraw();
+        return;
+      }
+
+      if(rp.dragged){
+        isPanning=false;
+        panPointerId=null;
+        panStartScreen=null;
+        panStartView=null;
         restoreToolCursor();
         redraw();
         return;
@@ -10460,6 +10482,75 @@
     redraw();
   };
 
+  function currentToolSnapshot(){
+    return {
+      mode,
+      eraserKind,
+      eraserRadius,
+      fillActive:fillBtn.classList.contains('active'),
+      textActive:textBtn.classList.contains('active')
+    };
+  }
+
+  function restoreToolSnapshot(snapshot){
+    if(!snapshot) return;
+
+    mode=snapshot.mode;
+    eraserKind=snapshot.eraserKind;
+    eraserRadius=snapshot.eraserRadius;
+
+    inkBtn.classList.toggle('active',mode==='ink');
+    selectBtn.classList.toggle('active',mode==='select');
+    eraserBtn.classList.toggle('active',mode==='eraser');
+    fillBtn.classList.toggle('active',mode==='fill');
+    textBtn.classList.toggle('active',mode==='text');
+
+    eraserCursor=null;
+    erasing=false;
+    eraserLastPoint=null;
+    eraserChanged=false;
+
+    restoreToolCursor();
+    redraw();
+  }
+
+  function activateTemporaryEraser(){
+    if(temporaryEraserActive) return;
+
+    temporaryEraserPreviousTool=currentToolSnapshot();
+    temporaryEraserActive=true;
+
+    cancelFormatPainter();
+    if(textEditing) closeTextEditor(true);
+
+    mode='eraser';
+    eraserKind='stroke';
+
+    textBtn.classList.remove('active');
+    fillBtn.classList.remove('active');
+    inkBtn.classList.remove('active');
+    selectBtn.classList.remove('active');
+    eraserBtn.classList.add('active');
+
+    closeFillMenu();
+    closeContextMenu();
+    colorMenu.classList.remove('open');
+    eraserMenu.classList.remove('open');
+
+    canvas.style.cursor='none';
+  }
+
+  function releaseTemporaryEraser(){
+    if(!temporaryEraserActive) return;
+
+    const previous=temporaryEraserPreviousTool;
+    temporaryEraserActive=false;
+    temporaryEraserPreviousTool=null;
+
+    restoreToolSnapshot(previous);
+    statusEl.textContent='Önceki araca dönüldü';
+  }
+
   function activateEraserTool(kind='stroke',radius=eraserRadius){
     cancelFormatPainter();
     if(textEditing) closeTextEditor(true);
@@ -10844,6 +10935,12 @@
     e.preventDefault();
   });
 
+
+  window.addEventListener('keyup',e=>{
+    if(e.key==='Control' && temporaryEraserActive){
+      releaseTemporaryEraser();
+    }
+  });
 
   window.addEventListener('keydown',e=>{
     const cmd=e.ctrlKey || e.metaKey;
