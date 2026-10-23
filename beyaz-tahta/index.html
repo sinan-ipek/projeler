@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.19</title>
+<title>Beyaz Tahta v16.20</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -970,7 +970,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.19 (matematik klavyesi sembollerinde silgi düzeltildi)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.20 (yapıştırma imleç konumuna)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1243,6 +1243,7 @@
 
   let rightPress = null;
   let contextTargetIndices = [];
+  let lastCanvasPointerWorld = null;
   let pendingBoardLoad = null;
   const imageCache = new Map();
   const imageAssetCache = new Map();      // assetId -> data URL
@@ -4663,21 +4664,47 @@
     return internalClipboard.length;
   }
 
-  function pasteInternalClipboard(){
+  function pasteInternalClipboard(targetPoint=lastCanvasPointerWorld){
     if(!internalClipboard.length) return 0;
 
     saveState();
 
+    const rawCopies=internalClipboard.map(original=>{
+      const copy=cloneObject(original);
+      copy.id=makeObjectId();
+      copy.locked=false;
+      return copy;
+    });
+
+    let dx=0,dy=0;
+
+    if(targetPoint){
+      const bounds=rawCopies
+        .map(objectBounds)
+        .filter(b=>b && Number.isFinite(b.x) && Number.isFinite(b.y) &&
+                   Number.isFinite(b.w) && Number.isFinite(b.h));
+
+      if(bounds.length){
+        const minX=Math.min(...bounds.map(b=>b.x));
+        const minY=Math.min(...bounds.map(b=>b.y));
+        const maxX=Math.max(...bounds.map(b=>b.x+b.w));
+        const maxY=Math.max(...bounds.map(b=>b.y+b.h));
+        const cx=(minX+maxX)/2;
+        const cy=(minY+maxY)/2;
+        dx=targetPoint.x-cx;
+        dy=targetPoint.y-cy;
+      }
+    }else{
+      dx=pasteOffsetStep;
+      dy=pasteOffsetStep;
+    }
+
+    for(const copy of rawCopies){
+      translateObject(copy,dx,dy);
+    }
+
+    const pastedCopies=remapGroupIdsForCopies(rawCopies);
     const start=objects.length;
-    const pastedCopies=remapGroupIdsForCopies(
-      internalClipboard.map(original=>{
-        const copy=cloneObject(original);
-        copy.id=makeObjectId();
-        copy.locked=false;
-        translateObject(copy,pasteOffsetStep,pasteOffsetStep);
-        return copy;
-      })
-    );
 
     for(const copy of pastedCopies) objects.push(copy);
 
@@ -4687,7 +4714,6 @@
     );
 
     setSelection(pastedIndices);
-    pasteOffsetStep+=24;
     redraw();
 
     return pastedCopies.length;
@@ -7917,6 +7943,7 @@
   canvas.addEventListener('pointerdown',e=>{
     const screenP=screenPointFromEvent(e);
     const p=pFromEvent(e);
+    lastCanvasPointerWorld={x:p.x,y:p.y};
 
     if(e.pointerType==='touch'){
       e.preventDefault();
@@ -8290,6 +8317,7 @@
   canvas.addEventListener('pointermove',e=>{
     const screenP=screenPointFromEvent(e);
     const p=pFromEvent(e);
+    lastCanvasPointerWorld={x:p.x,y:p.y};
 
     if(e.pointerType==='touch'){
       e.preventDefault();
