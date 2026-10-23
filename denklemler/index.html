@@ -653,11 +653,14 @@ function nHTMLTerm(node,env={}){
    root&&!invert?
     '<span class="n-clearden hit" data-id="n-den-'+id+'" data-action="nestedClear:'+env.side+'" tabindex="0" role="button">'+reduceDen+'</span>':
     reduceDen;
-  const bar=invert?hit('nbar'+id,'','nestedInvert:'+env.side):
-   root&&!pending?'<span class="fracbar hit n-bar" data-id="nbar'+id+'" data-action="nestedClear:'+env.side+'" role="button" tabindex="0"></span>':
+  // Dış çizgi, içerideki iki kesri tek kesirde toplamak için de
+  // kullanılabilir; paydadaki sayıya dokunmak ise karşıya taşır.
+  const flatten=root&&node.num.k==='frac'&&node.den.k!=='frac';
+  const barAction=invert?'nestedInvert:':flatten?'nestedFlatten:':'nestedClear:';
+  const barHTML=root&&!pending?
+   '<span class="fracbar hit n-bar" data-id="nbar'+id+
+    '" data-action="'+barAction+env.side+'" role="button" tabindex="0"></span>':
    '<span class="fracbar" data-id="nbar'+id+'"></span>';
-  const barHTML=invert?'<span class="fracbar hit n-bar" data-id="nbar'+id+
-    '" data-action="nestedInvert:'+env.side+'" role="button" tabindex="0"></span>':bar;
   return '<span class="fraction n-fraction" data-id="'+id+'"><span class="numerator">'+
    numerator+'</span>'+barHTML+'<span class="denominator">'+den+'</span></span>';
  }
@@ -833,6 +836,11 @@ async function nestedAction(action){
   flip=[frac.den.num.id,frac.den.den.id];
   const inverted=nFrac(frac.den.den,frac.den.num);
   nSideSet(next,side,nProd(frac.num,inverted));
+ }else if(type==='nestedFlatten'){
+  // (A/B)/C = A/(B·C); çarpım hesabı ayrı tıklamadır.
+  const frac=side==='L'?next.left:next.right;
+  if(frac.k!=='frac'||frac.num.k!=='frac')return;
+  nSideSet(next,side,nFrac(frac.num.num,nProd(frac.num.den,frac.den)));
  }else return;
  busy=true;scene.classList.add('busy');save();step++;
  try{
