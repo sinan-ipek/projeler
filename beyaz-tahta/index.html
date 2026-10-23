@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.18</title>
+<title>Beyaz Tahta v16.19</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -970,7 +970,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.18 (matematik sembollerinde dikey yansıtma düzeltildi)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.19 (matematik klavyesi sembollerinde silgi düzeltildi)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -7250,9 +7250,14 @@
   function isErasableInk(o){
     // Both ink-created and menu-created drawable objects can be erased,
     // but locked objects are always protected from the eraser.
+    // Math-keyboard symbols are stored as text objects, so explicitly
+    // include only those text objects without making normal text erasable.
     return !!o &&
       !o.locked &&
-      ['stroke','line','arc','sector','ellipse','rect','polygon','parabola','axes','symbol'].includes(o.kind);
+      (
+        ['stroke','line','arc','sector','ellipse','rect','polygon','parabola','axes','symbol'].includes(o.kind) ||
+        (o.kind==='text' && o.source==='math-keyboard')
+      );
   }
 
   function inkObjectHit(o,p,r){
@@ -7338,6 +7343,24 @@
         if(eraserPointSegDistance(p,pts[i-1],pts[i])<=r) return true;
       }
       return false;
+    }
+
+    if(o.kind==='text' && o.source==='math-keyboard'){
+      // Math keyboard symbols are text-backed objects. For erasing, use
+      // their transformed visual box instead of sampling font glyph outlines.
+      const w=Math.max(12,Number(o.w)||48);
+      const h=Math.max(12,Number(o.h)||62);
+      const a=-(o.angle||0);
+      const cs=Math.cos(a), sn=Math.sin(a);
+      const dx=p.x-o.center.x, dy=p.y-o.center.y;
+      const lx=dx*cs-dy*sn;
+      let ly=dx*sn+dy*cs;
+      if(o.mirrorY) ly=-ly;
+
+      return (
+        Math.abs(lx)<=w/2+r &&
+        Math.abs(ly)<=h/2+r
+      );
     }
 
     let verts=[];
@@ -7532,6 +7555,14 @@
     for(const o of objects){
       if(!isErasableInk(o) || !inkObjectHit(o,p,eraserRadius/viewZoom)){
         next.push(o);
+        continue;
+      }
+
+      // Math-keyboard symbols are text-backed, so partial erasing cannot
+      // meaningfully split their glyph contours. In point-eraser mode,
+      // touching the symbol removes that symbol as one object.
+      if(o.kind==='text' && o.source==='math-keyboard'){
+        changed=true;
         continue;
       }
 
