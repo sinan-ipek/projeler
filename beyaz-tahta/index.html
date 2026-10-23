@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.23</title>
+<title>Beyaz Tahta v16.24</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -970,7 +970,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.23 (nesne taşırken köşe noktalarına snap)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.24 (grup taşımada köşe noktalarına snap)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1025,6 +1025,7 @@
               <li>Hazır şekillerin gerçek düzenleme handle'larını tek tek taşı.</li>
               <li>Nokta Snap düğmesi açıkken gerçek düzenleme noktaları diğer nesnelerin köşe/uç/düzenleme noktalarına yapışır.</li>
               <li>Ayrıca köşe/uç noktaları olan bir nesne taşınırken, bu noktalar başka bir nesnenin köşe/uç noktasına yaklaşırsa tüm nesne snap olur.</li>
+              <li>Çoklu seçim taşınırken de seçili nesnelerden herhangi birinin köşe/uç noktası seçili olmayan başka bir nesnenin köşe/uç noktasına yaklaşırsa tüm seçim birlikte snap olur.</li>
               <li>Ctrl ile birden fazla gerçek handle seçip birlikte taşı.</li>
               <li>Bounding-box resize ve rotate tutamaçları handle çoklu seçimine dahil değildir.</li>
             </ul>
@@ -4014,6 +4015,62 @@
     const targetPoints=[];
     for(let i=0;i<objects.length;i++){
       if(i===excludeIndex) continue;
+      const pts=objectCornerSnapPoints(objects[i]);
+      for(const p of pts){
+        targetPoints.push({x:p.x,y:p.y,objectIndex:i});
+      }
+    }
+
+    if(!targetPoints.length){
+      return {dx,dy,snapped:false};
+    }
+
+    const threshold=12/viewZoom;
+    let best=null;
+    let bestD=Infinity;
+
+    for(const mp of movingPoints){
+      const moved={x:mp.x+dx,y:mp.y+dy};
+
+      for(const tp of targetPoints){
+        const d=Math.hypot(tp.x-moved.x,tp.y-moved.y);
+        if(d<=threshold && d<bestD){
+          bestD=d;
+          best={
+            dx:dx+(tp.x-moved.x),
+            dy:dy+(tp.y-moved.y),
+            objectIndex:tp.objectIndex
+          };
+        }
+      }
+    }
+
+    return best
+      ? {...best,snapped:true}
+      : {dx,dy,snapped:false};
+  }
+
+  function snapGroupMove(groupSnapshots,dx,dy,selectedSet){
+    if(!pointSnapEnabled || !Array.isArray(groupSnapshots) || !groupSnapshots.length){
+      return {dx,dy,snapped:false};
+    }
+
+    const movingPoints=[];
+    for(const item of groupSnapshots){
+      if(!item || !item.object) continue;
+      const pts=objectCornerSnapPoints(item.object);
+      for(const p of pts){
+        movingPoints.push({x:p.x,y:p.y});
+      }
+    }
+
+    if(!movingPoints.length){
+      return {dx,dy,snapped:false};
+    }
+
+    const targetPoints=[];
+    for(let i=0;i<objects.length;i++){
+      if(selectedSet && selectedSet.has(i)) continue;
       const pts=objectCornerSnapPoints(objects[i]);
       for(const p of pts){
         targetPoints.push({x:p.x,y:p.y,objectIndex:i});
@@ -8700,10 +8757,30 @@
       if(selectAction==='groupMove'){
         if(!groupSnapshots) return;
         const rawDx=p.x-selectStart.x,rawDy=p.y-selectStart.y;
-        const d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
+        let d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
+
+        const selectedSet=new Set(
+          groupSnapshots
+            .map(item=>item && item.index)
+            .filter(i=>Number.isInteger(i))
+        );
+
+        const snappedGroup=snapGroupMove(
+          groupSnapshots,
+          d.dx,
+          d.dy,
+          selectedSet
+        );
+
+        if(snappedGroup.snapped){
+          d={dx:snappedGroup.dx,dy:snappedGroup.dy};
+          statusEl.textContent='Grup snap — köşe/uç noktaları hizalandı';
+        }
+
         if(Math.hypot(d.dx,d.dy)>1e-5){
           pendingRepeatTransform={type:'move',dx:d.dx,dy:d.dy};
         }
+
         for(const item of groupSnapshots){
           objects[item.index]=cloneObject(item.object);
           translateObject(objects[item.index],d.dx,d.dy);
