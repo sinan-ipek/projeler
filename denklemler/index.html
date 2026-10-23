@@ -540,7 +540,7 @@ function cfProductTerm(id,content,ui){
 // Tek başına işaretli sayı veya tek terim için gereksiz parantez yok.
 function cfNeedsProductParentheses(expr){
  const text=String(expr).trim();
- if(isWrappedBySinglePair(text))return false;
+ if(text.startsWith('(')&&text.endsWith(')')&&cfStrip(text)!==text)return false;
  let depth=0;
  for(let i=0;i<text.length;i++){
   const c=text[i];
