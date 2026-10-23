@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 83</title>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 84</title>
 <style>
 :root{font-family:Arial,Helvetica,sans-serif;color:#1d2a3b;background:#f4f6fa}*{box-sizing:border-box}body{margin:0;min-height:100vh}header{padding:18px 25px;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:22px;margin:0;font-weight:600}.subtitle{font-size:12px;color:#77869a;margin-top:6px}.home{width:45px;height:45px;border-radius:12px;background:#ffcf31;border:2px solid #e4ac14;box-shadow:0 3px 8px #5a461525;display:grid;place-items:center;color:#383019;text-decoration:none}.home svg{height:23px;width:23px;fill:currentColor}main{width:min(1120px,calc(100% - 28px));margin:auto}.toolbar,.examples,.entry{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:8px 0 14px}button,select,input{font:inherit;border:1px solid #d5dfea;border-radius:10px;background:white;color:#273954;padding:10px 13px}button{cursor:pointer;box-shadow:0 2px 5px #182b3a0c}button:hover:not(:disabled){border-color:#8fa6c4}button:disabled{opacity:.42;cursor:default}.toolbar label{font-size:13px;color:#69768c;margin-left:auto}.mode-switch{display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid #d5dfea;border-radius:12px;background:#eaf0f7}.mode-switch button{padding:7px 13px;border:1px solid transparent;background:transparent;box-shadow:none;border-radius:9px;font-size:14px;min-width:67px}.mode-switch button.selected{color:white;background:#273e5e;border-color:#273e5e;box-shadow:0 2px 5px #182b3a20}.mode-switch button:focus-visible{outline:2px solid #e1a518;outline-offset:2px}.board{border:1px solid #e1e7ee;background:white;border-radius:22px;min-height:430px;box-shadow:0 14px 45px #192e4b0b;overflow:hidden}.board-top{display:flex;justify-content:space-between;color:#78869b;padding:18px 20px;font-size:12px}.scene{height:316px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}.equation{position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1.3;font-size:clamp(26px,4.5vw,50px);font-weight:400;max-width:97%;transform-origin:center center;font-variant-numeric:lining-nums}.side{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative}.equals{padding:0 .36em}.part{display:inline-flex;align-items:center;white-space:nowrap;position:relative}.atom{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border-radius:7px;position:relative;padding:0 .035em}.sign{padding:0 .06em}.hit{cursor:pointer;position:relative;border-radius:8px;outline:none;background:transparent;box-shadow:none;transition:background .18s,box-shadow .18s}.hit:hover,.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.busy .hit{pointer-events:none}.combine{display:inline-flex;align-items:center;border-radius:8px}.combine.hit{padding:0 .04em}.multi-combine{display:inline-flex;align-items:center;white-space:nowrap;border-radius:8px}.multi-combine .part{white-space:nowrap}.multi-combine.hit{padding:0 .05em}.multiply-factor{display:inline-flex;align-items:center;white-space:nowrap}.mul-dot{display:inline-block;padding:0 .08em}.multiply-factor .hit{padding:0 .055em}.fraction{display:inline-grid;grid-template-rows:auto 3px auto;align-items:center;justify-items:center;position:relative;margin:0 .08em;min-width:1em;border-radius:9px}.numerator,.denominator{display:flex;justify-content:center;align-items:center;min-height:.92em;padding:0 .14em;white-space:nowrap}.numerator{transform:translateY(-.09em)}.denominator{transform:translateY(.09em)}.fracbar{height:2px;width:100%;background:#293852;border-radius:2px;align-self:center;transform:scaleX(1);transform-origin:center}.fraction.constructing .fracbar{transform:scaleX(0)}.fraction.constructed .fracbar{transform:scaleX(1);transition:transform .34s cubic-bezier(.45,0,.18,1)}.fraction.hit:hover,.fraction.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.tip{min-height:32px;text-align:center;font-size:13px;color:#7d8ca0}.examples button.active,.modules button.active{background:#273e5e;color:white}.modules{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 14px}.modules button{font-weight:600;min-width:115px}.module-label{display:none}.examples button{font-size:14px}.entry input{width:min(340px,65vw)}.feedback{min-height:18px;color:#ad3e3e;font-size:12px}.notice{font-size:12px;color:#8390a3;line-height:1.6}.measure-layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;pointer-events:none}.measurement{max-width:97%}.ghost{position:fixed;z-index:2000;pointer-events:none;white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-weight:400;line-height:1.3;color:#bf7c1d;will-change:transform,opacity}.done{color:#188a5c}.cross{position:relative}@media(max-width:620px){header{padding:12px 16px}.board{min-height:375px}.board-top{padding:14px}.scene{height:270px}.equals{padding:0 .18em}.toolbar label{margin-left:0}}
 
@@ -66,8 +66,14 @@
 
 /* Payda 1 sadeleştirildiğinde çarpımda gereksiz /1 çizilmez. */
 .cf-inline-factor{display:inline-flex;align-items:center;justify-content:center;margin:0 .085em;position:relative}
+
+/* Beta 84 — Eşittir sabit; iki matematiksel taraf bir dönme dolabın
+   dik duran kabinleri gibi birbirlerinin konumuna gider. */
+.eq-cabin{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative;flex-shrink:0;will-change:transform}
+.equals.eq-switch{cursor:pointer;border-radius:9px;outline:0;transition:background .16s,box-shadow .16s;user-select:none}
+.equals.eq-switch:hover,.equals.eq-switch:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}
 </style></head><body>
-<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 83</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
+<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 84</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
 <main><div class="toolbar"><button id="reset">↺ Baştan</button><button id="back">← Geri</button><div class="mode-switch" role="group" aria-label="Çözüm yöntemi"><button type="button" id="modeSlow" class="selected" aria-pressed="true" title="Bütün öğretici işlem adımlarını göster">Yavaş</button><button type="button" id="modeFast" aria-pressed="false" title="Bariz işlemleri tek adımda tamamla">Hızlı</button></div><label for="level">Seviye</label><select id="level"><option>A1</option><option selected>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></div>
 <div class="modules" id="modules" aria-label="Alıştırma seçimi"></div><div class="module-label" id="moduleLabel"></div><div class="board"><div class="board-top"><span>Denklemi adım adım çöz</span><span id="stepLabel">Adım 1</span></div><div id="scene" class="scene"><div id="equation" class="equation"></div></div><div id="tip" class="tip" aria-live="polite"></div></div>
 <div id="startupNotice" class="startup-notice" role="alert">Denklem motoru başlatılamadı. Hata bilgisi için tarayıcı konsolunu açabilirsiniz.</div><div id="examples" class="examples"></div><div class="entry"><input id="custom" aria-label="Denklem" placeholder="Örn. 3x+5=x+13" spellcheck="false"><button id="load">Denklemi aç</button><span id="feedback" class="feedback"></span></div><p class="notice">Bir bilinmeyenli birinci dereceden denklemler. Alıştırma seçebilir veya kendi denklemini yazabilirsin. Fareyle üzerine gelince yalnızca yapılabilecek işlemler vurgulanır.</p></main>
@@ -260,7 +266,7 @@ const exerciseCatalog=Object.entries(exampleGroupsByModule).flatMap(([module,gro
  groups.map((group,groupIndex)=>({module:Number(module),groupIndex,examples:group.examples})));
 let currentExercise=0;
 let layoutShiftX=0;
-let currentModule=1;let bracket=null;let fractionEq=null;let pairEq=null;let multiEq=null;let simpleEq=null;let complexEq=null;let complexDomain=[];let preCommon=1;
+let currentModule=1;let bracket=null;let fractionEq=null;let pairEq=null;let multiEq=null;let simpleEq=null;let complexEq=null;let complexDomain=[];let preCommon=1;let sidesFlipped=false;
 let m={a:4,b:6,c:0,d:12},s,history=[],busy=false,step=0;
 // ÖĞRETİM MODU: Animasyon hızından bağımsızdır. Yavaş, Beta 37 adımlarını korur.
 let teachingMode='slow';
@@ -2921,7 +2927,7 @@ async function bracketAction(action){
 }
 // Temsil: her adım cebirsel eşitliği korur, işaretin yanında hangi terimin olduğu veri modelinde saklanır.
 function initial(){return {movedB:m.b===0,movedC:m.c===0,combinedL:m.c===0,combinedR:m.b===0,divided:false,leftDone:false,rightDone:false};}
-function stateCopy(){return structuredClone({s,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX})}
+function stateCopy(){return structuredClone({s,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX,sidesFlipped})}
 function save(){history.push(stateCopy());}
 function hit(id,txt,action){return `<span class="atom hit" role="button" tabindex="0" data-action="${action}" data-id="${id}" aria-label="${txt.replace(/<[^>]*>/g,'')}" >${txt}</span>`}
 function atom(id,txt){return `<span class="atom" data-id="${id}">${txt}</span>`}
@@ -3202,7 +3208,32 @@ function markup(){
  if(stage.type==='wholeReduction')return preCoefficientMarkup();
  return markupCore();
 }
-function render(animateBars=false){hideDistributionHint();clearLinkedHighlight();const chosen=currentPriorityRule();eq.innerHTML=markup();$('#stepLabel').textContent=chosen.type==='readyReduction'?`Ortak bölen: ${fmt(chosen.details.g)}`:chosen.type==='wholeReduction'?`Ortak bölen: ${fmt(preSignedDivisor())}`:complexEq?`Adım ${step+1}`:(simpleEq&&simpleEq.mode!=='linear')?`Adım ${step+1}`:(multiEq&&multiEq.mode!=='linear')?`Adım ${step+1}`:(pairEq&&pairEq.mode!=='linear')?`Adım ${step+1}`:(fractionEq&&fractionEq.mode!=='linear')?`Adım ${step+1}`:(bracket&&bracket.mode!=='linear')?`Adım ${step+1}`:ready()&&A()===0?'Özel durum':(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'Çözüldü':`Adım ${step+1}`;$('#tip').innerHTML=preCommon>1?'':complexEq?'':(simpleEq&&simpleEq.mode!=='linear')?'':(multiEq&&multiEq.mode!=='linear')?'':(pairEq&&pairEq.mode!=='linear')?'':(fractionEq&&fractionEq.mode!=='linear')?'':(bracket&&bracket.mode!=='linear')?'':ready()&&A()===0?(D()===0?'<span class="done">Sonsuz çözüm</span>':'Çözüm yok'):(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'<span class="done">✓</span>':'';$('#back').disabled=busy||history.length===0;$('#reset').disabled=busy;if(complexEq?.domain.length||complexDomain.length){
+
+// Aynı matematiksel denklem, farklı görünüm sırasına sahip olabilir.
+// İki taraf kendi DOM ve işlem kimliklerini korur. Eşittir simgesi,
+// hiçbir modülün işlem önceliğine tabi olmayan bağımsız bir tıklama hedefidir.
+function prepareEqualsMarkup(raw,reverse=sidesFlipped){
+ const root=document.createElement('div');
+ root.innerHTML=raw;
+ if(root.querySelector('[data-id="eq-cabin-l"]'))return raw;
+ const sign=[...root.children].find(node=>node.classList.contains('equals'));
+ if(!sign)return raw;
+ const nodes=[...root.childNodes],cut=nodes.indexOf(sign);
+ if(cut<1||cut>=nodes.length-1)return raw;
+ const first=document.createElement('span'),last=document.createElement('span');
+ first.className='eq-cabin';first.dataset.id='eq-cabin-l';
+ last.className='eq-cabin';last.dataset.id='eq-cabin-r';
+ for(const node of nodes.slice(0,cut))first.append(node);
+ for(const node of nodes.slice(cut+1))last.append(node);
+ sign.classList.add('eq-switch');
+ sign.dataset.action='swapEquals';
+ sign.title='Denklemin iki tarafını yer değiştir';
+ sign.setAttribute('role','button');sign.setAttribute('tabindex','0');
+ sign.setAttribute('aria-label','Eşitliğin sağ ve sol taraflarını değiştir');
+ root.replaceChildren(...(reverse?[last,sign,first]:[first,sign,last]));
+ return root.innerHTML;
+}
+function render(animateBars=false){hideDistributionHint();clearLinkedHighlight();const chosen=currentPriorityRule();eq.innerHTML=prepareEqualsMarkup(markup());$('#stepLabel').textContent=chosen.type==='readyReduction'?`Ortak bölen: ${fmt(chosen.details.g)}`:chosen.type==='wholeReduction'?`Ortak bölen: ${fmt(preSignedDivisor())}`:complexEq?`Adım ${step+1}`:(simpleEq&&simpleEq.mode!=='linear')?`Adım ${step+1}`:(multiEq&&multiEq.mode!=='linear')?`Adım ${step+1}`:(pairEq&&pairEq.mode!=='linear')?`Adım ${step+1}`:(fractionEq&&fractionEq.mode!=='linear')?`Adım ${step+1}`:(bracket&&bracket.mode!=='linear')?`Adım ${step+1}`:ready()&&A()===0?'Özel durum':(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'Çözüldü':`Adım ${step+1}`;$('#tip').innerHTML=preCommon>1?'':complexEq?'':(simpleEq&&simpleEq.mode!=='linear')?'':(multiEq&&multiEq.mode!=='linear')?'':(pairEq&&pairEq.mode!=='linear')?'':(fractionEq&&fractionEq.mode!=='linear')?'':(bracket&&bracket.mode!=='linear')?'':ready()&&A()===0?(D()===0?'<span class="done">Sonsuz çözüm</span>':'Çözüm yok'):(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'<span class="done">✓</span>':'';$('#back').disabled=busy||history.length===0;$('#reset').disabled=busy;if(complexEq?.domain.length||complexDomain.length){
  const constraints=complexEq?.domain||complexDomain;
  const label=constraints.map(r=>'x ≠ '+complexRestrictionLabel(r)).join(', ');
  $('#tip').textContent=complexNoSolution()?'Çözüm yok: '+label:label;
@@ -3222,7 +3253,7 @@ const MotionEngine={
  targetLayout(nextMarkup){
   const layer=document.createElement('div');
   layer.className='measure-layer';
-  layer.innerHTML=`<div class="equation measurement">${nextMarkup}</div>`;
+  layer.innerHTML=`<div class="equation measurement">${prepareEqualsMarkup(nextMarkup)}</div>`;
   scene.append(layer);
   const clone=layer.firstElementChild;
   const w=clone.scrollWidth,h=clone.scrollHeight, max=scene.clientWidth*.95;
@@ -3486,7 +3517,69 @@ async function preLinearMoveAlternative(type){
  try{await moveTerm(type)}
  finally{busy=false;scene.classList.remove('busy');update()}
 }
-async function act(action){if(action.startsWith('complex'))return complexAction(action);const priority=currentPriorityRule();if(priority.type==='invalidSolution')return;if(priority.type==='readyReduction')return action==='readyReduce'?readyReductionAction():undefined;if(priority.type==='finalDivide')return action==='finalDivide'?finalDivideAction():undefined;if(priority.type==='pairReduction'){
+
+// Tek bir zaman çizelgesinde karşılıklı iki yarım yay.
+// İki tarafın yazısı dönmez; sadece kapalı matematiksel 'kabinler'
+// hareket eder. Çizim motoru yeni ifade üretmez, mevcut DOM'u taşır.
+async function swapEqualsAnimated(){
+ if(busy)return;
+ const lhs=byId('eq-cabin-l'),rhs=byId('eq-cabin-r');
+ const equal=eq.querySelector('.equals.eq-switch');
+ if(!lhs||!rhs||!equal)return;
+ const oldEqual=MotionEngine.center(equal.getBoundingClientRect());
+ // Önce, aynı sahnedeki gizli DOM üzerinde hedef yerleşimi hesapla.
+ const targetMarkup=prepareEqualsMarkup(markup(),!sidesFlipped);
+ const target=MotionEngine.targetLayout(targetMarkup);
+ const equalTarget=target.get('equals');
+ const lTarget=target.get('eq-cabin-l'),rTarget=target.get('eq-cabin-r');
+ if(!equalTarget||!lTarget||!rTarget)return;
+ const anchorX=oldEqual.x-MotionEngine.center(equalTarget).x;
+ const anchorY=oldEqual.y-MotionEngine.center(equalTarget).y;
+ const stageRect=scene.getBoundingClientRect();
+ const scale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
+ const leftFrom=MotionEngine.center(lhs.getBoundingClientRect());
+ const rightFrom=MotionEngine.center(rhs.getBoundingClientRect());
+ const travel=Math.abs(leftFrom.x-rightFrom.x);
+ const arc=Math.min(88,Math.max(32,travel*.24),stageRect.height*.29);
+ const cabins=[
+  {node:lhs,origin:leftFrom,target:MotionEngine.center(lTarget),sign:leftFrom.x<rightFrom.x?-1:1},
+  {node:rhs,origin:rightFrom,target:MotionEngine.center(rTarget),sign:rightFrom.x<leftFrom.x?-1:1}
+ ];
+ busy=true;scene.classList.add('busy');save();step++;
+ equal.style.pointerEvents='none';
+ try{
+  const duration=(fastMode()?430:570)*speed();
+  await new Promise(resolve=>{
+   let started=null;
+   const frame=now=>{
+    if(started===null)started=now;
+    const t=Math.min(1,(now-started)/duration);
+    // Aynı makaralı dönüş: ortada frenleme yok, son anda kısa oturuş.
+    const u=cfReelSnap(t);
+    const circular=Math.sin(Math.PI*Math.min(1,u));
+    for(const cabin of cabins){
+     const endX=cabin.target.x+anchorX;
+     const endY=cabin.target.y+anchorY;
+     const x=(endX-cabin.origin.x)*u;
+     const y=(endY-cabin.origin.y)*u+cabin.sign*arc*circular;
+     cabin.node.style.transform='translate3d('+(x/scale)+'px,'+(y/scale)+'px,0)';
+    }
+    if(t<1)requestAnimationFrame(frame);else resolve();
+   };
+   requestAnimationFrame(frame);
+  });
+  sidesFlipped=!sidesFlipped;
+  // Nihai düzen kopyası eşittirin ilk X/Y merkezine sabitlenir.
+  // Bu yerleşim sonraki adımlarda da korunur; işlem ağacı değişmez.
+  layoutShiftX=anchorX;
+ }catch(err){
+  history.pop();step=Math.max(0,step-1);
+  $('#feedback').textContent='Taraflar değiştirilemedi: '+err.message;
+ }finally{
+  busy=false;scene.classList.remove('busy');update();
+ }
+}
+async function act(action){if(action==='swapEquals')return swapEqualsAnimated();if(action.startsWith('complex'))return complexAction(action);const priority=currentPriorityRule();if(priority.type==='invalidSolution')return;if(priority.type==='readyReduction')return action==='readyReduce'?readyReductionAction():undefined;if(priority.type==='finalDivide')return action==='finalDivide'?finalDivideAction():undefined;if(priority.type==='pairReduction'){
  if(action==='preCancelPair')return crossCancelAction();
  if(priority.details.kind==='simple'&&structuralAlternativeToReduction(action))return simpleAction(action);
  if(priority.details.kind==='bracket'&&action==='bracketExpand')return bracketAction(action);
@@ -3722,7 +3815,7 @@ function drawExamples(){
 }
 function restart(newM=null,module=currentModule){
  if(busy)return;
- layoutShiftX=0;
+ layoutShiftX=0;sidesFlipped=false;
  const fresh=newM||parseModule($('#custom').value,module);
  if(!fresh)return;
  simpleEq=null;multiEq=null;pairEq=null;fractionEq=null;bracket=null;complexEq=null;complexDomain=[];
@@ -3777,7 +3870,7 @@ function changeModule(number){
 $('#reset').onclick=()=>restart();
 $('#back').onclick=()=>{
  if(busy||!history.length)return;
- ({s,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX}=history.pop());
+ ({s,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX,sidesFlipped}=history.pop());
  step=Math.max(0,step-1);update();
 };
 $('#level').onchange=()=>{if(!busy)update()};
