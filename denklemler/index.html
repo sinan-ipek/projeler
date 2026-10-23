@@ -471,7 +471,10 @@ function cfProductFractionCandidates(){
   {id:'cross-right',num:'cf-rden',den:'cf-lden'}
  ];
  return patterns.map(item=>{
-  const g=gcd(cfNumericContent(fields[item.num]),cfNumericContent(fields[item.den]));
+  const g=cfFractionCommonDivisor(
+   parseAffineNumerator(fields[item.num]),
+   parseAffineNumerator(fields[item.den])
+  );
   return {...item,g};
  }).filter(item=>item.g>1);
 }
@@ -3396,7 +3399,7 @@ function prepareEqualsMarkup(raw,reverse=sidesFlipped){
  root.replaceChildren(...(reverse?[last,sign,first]:[first,sign,last]));
  return root.innerHTML;
 }
-function render(animateBars=false){hideDistributionHint();clearLinkedHighlight();const chosen=currentPriorityRule();eq.innerHTML=prepareEqualsMarkup(markup());$('#stepLabel').textContent=chosen.type==='readyReduction'?`Ortak bölen: ${fmt(chosen.details.g)}`:chosen.type==='wholeReduction'?`Ortak bölen: ${fmt(preSignedDivisor())}`:complexEq?`Adım ${step+1}`:(simpleEq&&simpleEq.mode!=='linear')?`Adım ${step+1}`:(multiEq&&multiEq.mode!=='linear')?`Adım ${step+1}`:(pairEq&&pairEq.mode!=='linear')?`Adım ${step+1}`:(fractionEq&&fractionEq.mode!=='linear')?`Adım ${step+1}`:(bracket&&bracket.mode!=='linear')?`Adım ${step+1}`:ready()&&A()===0?'Özel durum':(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'Çözüldü':`Adım ${step+1}`;$('#tip').innerHTML=preCommon>1?'':complexEq?'':(simpleEq&&simpleEq.mode!=='linear')?'':(multiEq&&multiEq.mode!=='linear')?'':(pairEq&&pairEq.mode!=='linear')?'':(fractionEq&&fractionEq.mode!=='linear')?'':(bracket&&bracket.mode!=='linear')?'':ready()&&A()===0?(D()===0?'<span class="done">Sonsuz çözüm</span>':'Çözüm yok'):(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'<span class="done">✓</span>':'';if(complexEq?.mode==='combined'&&cfCombinedSolved()){
+function render(animateBars=false){hideDistributionHint();clearLinkedHighlight();const chosen=currentPriorityRule();eq.innerHTML=prepareEqualsMarkup(markup());$('#stepLabel').textContent=chosen.type==='readyReduction'?`Ortak bölen: ${fmt(chosen.details.g)}`:chosen.type==='wholeReduction'?`Ortak bölen: ${fmt(preSignedDivisor())}`:complexEq?`Adım ${step+1}`:(simpleEq&&simpleEq.mode!=='linear')?`Adım ${step+1}`:(multiEq&&multiEq.mode!=='linear')?`Adım ${step+1}`:(pairEq&&pairEq.mode!=='linear')?`Adım ${step+1}`:(fractionEq&&fractionEq.mode!=='linear')?`Adım ${step+1}`:(bracket&&bracket.mode!=='linear')?`Adım ${step+1}`:ready()&&A()===0?'Özel durum':(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'Çözüldü':`Adım ${step+1}`;$('#tip').innerHTML=preCommon>1?'':complexEq?'':(simpleEq&&simpleEq.mode!=='linear')?'':(multiEq&&multiEq.mode!=='linear')?'':(pairEq&&pairEq.mode!=='linear')?'':(fractionEq&&fractionEq.mode!=='linear')?'':(bracket&&bracket.mode!=='linear')?'':ready()&&A()===0?(D()===0?'<span class="done">Sonsuz çözüm</span>':'Çözüm yok'):(ready()&&A()===1||s.divided&&s.leftDone&&s.rightDone)?'<span class="done">✓</span>':'';if(complexEq?.mode==='combined'&&cfCombinedSolved()&&!cfCombinedReductionCandidate()){
  $('#stepLabel').textContent='Çözüldü';
  $('#tip').innerHTML='<span class="done">✓</span>';
 }
