@@ -197,6 +197,14 @@
 
 /* Deneme 12.27: içten dışa çözüm yolu */
 .n12-third-plus.hit{cursor:pointer;border-radius:7px;outline:none;touch-action:manipulation}
+/* Dış kesir çizgisi tıklanabilecek kadar geniş; görsel çizgi ince. */
+[data-id="n12thirdOuterBar"]{height:3px;position:relative;overflow:visible}
+[data-id="n12thirdOuterBar"]::before{
+ content:"";position:absolute;inset:-12px 0;cursor:pointer
+}
+[data-id="n12thirdOuterBar"]:hover,[data-id="n12thirdOuterBar"]:focus-visible{
+ background:#dda013;box-shadow:0 0 0 2px #e9ae24,0 3px 10px #a9821930
+}
 .n12-third-plus.hit:hover,.n12-third-plus.hit:focus-visible{
  background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}
 .n12-third-sum,.n12-third-numerator{
@@ -3444,7 +3452,7 @@ function nestedPreviewHTML(){
    'title="Terimi karşıya geçir" aria-label="Terimi karşıya geçir">'+
    '<span class="sign n12-plus" data-id="n12-plus">'+operator+'</span>'+
    atom('n12one',offsetMagnitude)+'</span>':
-  '<span class="sign n12-plus" data-id="n12-plus" '+
+  '<span class="sign n12-plus '+(stage==='initial'?'hit n12-third-plus':'')+'" data-id="n12-plus" '+
    (stage==='initial'?'data-action="n12ThirdStart" role="button" tabindex="0" '+
    'aria-label="Paydaki toplamayı ortak paydada göster" title="Ortak paydaya dönüştür"':'')+
    '>'+operator+'</span>'+
@@ -3938,7 +3946,7 @@ function rect(id){return byId(id)?.getBoundingClientRect()}
 // Doğrudan gerçek çizgiyi '=' ile hizala; alt satırı uzatma.
 function n12AlignMainBar(root=eq){
  if(!nestedPreview||!root)return;
- const outer=root.querySelector('.n12-preview > .fraction');
+ const outer=root.querySelector('.n12-preview > .fraction, [data-id="n12thirdOuter"]');
  const bar=outer?.querySelector(':scope > .fracbar'),equal=root.querySelector('.equals');
  if(!bar||!equal)return;
  outer.style.top='0px';
