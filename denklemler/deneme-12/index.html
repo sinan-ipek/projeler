@@ -4936,8 +4936,11 @@ async function n12ThirdAdvance(toStage){
    const sceneBox=scene.getBoundingClientRect();
    const fromX=unitRect.left+unitRect.width/2;
    const fromY=unitRect.top+unitRect.height/2;
-   const ghostDen=unitRight;
-   ghostDen.remove();
+   // Retain the source DOM geometry until the next layout is installed.
+   // Only the redundant denominator is duplicated for its final collision.
+   const ghostDen=unitRight.cloneNode(true);
+   ghostDen.removeAttribute('data-id');
+   unitRight.style.visibility='hidden';
    Object.assign(ghostDen.style,{
     position:'absolute',left:(fromX-sceneBox.left)+'px',
     top:(fromY-sceneBox.top)+'px',
