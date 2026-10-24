@@ -3901,8 +3901,9 @@ async function n14Action(action){
   if(![0,1].some(hasWork))return;
   const source=quadEq.selected;
   if(!source||source.side!==side||source.group===group){
-   quadEq.selected=source&&source.side===side&&source.group===group&&source.index===index?
-    null:{side,group,index};
+   // Tekrar ayni kaynaga tiklamak secimi iptal etmez.
+   // Ogrenci kaynaga yeniden tiklayarak da kalan hedefe devam edebilir.
+   quadEq.selected={side,group,index};
    update();return;
   }
   const i=source.group===0?source.index:index;
