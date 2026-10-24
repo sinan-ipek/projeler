@@ -4074,6 +4074,146 @@ async function n14Action(action){
   }finally{busy=false;scene.classList.remove('busy');update();}
  }
 }
+
+/* DENEME 15.01 — Beta95'in mevcut denklem sahnesi ve animasyon araçları.
+   Yalnızca ilk üç adım. Denklem içindeki bütün kesirler fhtml() kullanır. */
+function n15Parse(raw){
+ const normal=String(raw).replace(/\s+/g,'').replace(/[−–]/g,'-');
+ return normal==='2-1/(1+3/(1-1/a))=1/2'?
+  {kind:'nested-fraction-15',raw:normal,phase:'initial'}:null;
+}
+function n15Frac(n,d,id){return fhtml(n,d,id,null)}
+function n15Choice(id,markup,action,group){
+ return '<span class="simple-linked hit n15-choice" data-id="'+id+'" '+
+  'data-action="'+action+'" data-hl-group="'+group+'" '+
+  'role="button" tabindex="0">'+markup+'</span>';
+}
+function n15Inside(){
+ const innermost=n15Frac(atom('n15unitOne','1'),atom('n15letter','a'),'n15innerFraction');
+ const den='<span class="n15-right-inner" data-id="n15innerPart">'+
+  atom('n15minusOne','1')+'<span class="n15-sign">−</span>'+innermost+'</span>';
+ const middle=n15Frac(atom('n15middleThree','3'),den,'n15middleFraction');
+ return '<span class="n15-right-inner">'+atom('n15plusOne','1')+
+  '<span class="n15-sign">+</span>'+middle+'</span>';
+}
+function n15Outer(){
+ const a=layer15.phase;
+ const flipped=a==='flipping'||a==='complete';
+ if(a==='complete')return atom('n15rightDen',n15Inside());
+ return n15Frac(
+  flipped?atom('n15rightDen',n15Inside()):atom('n15rightNum','1'),
+  flipped?atom('n15rightNum','1'):atom('n15rightDen',n15Inside()),
+  'n15block');
+}
+function n15Half(){
+ return n15Frac(atom('n15leftNum','1'),atom('n15leftDen','2'),'n15half');
+}
+function n15LeftResult(){
+ const swapped=layer15.phase==='flipping'||layer15.phase==='complete';
+ return n15Frac(
+  atom('n15leftNum',swapped?'2':'3'),
+  atom('n15leftDen',swapped?'3':'2'),'n15leftFrac');
+}
+function n15Markup(){
+ const phase=layer15.phase,equals='<span class="equals">=</span>';
+ const side=html=>'<span class="side">'+html+'</span>';
+ if(phase==='initial'){
+  const right=n15Choice('n15pickHalf',n15Half(),'n15Move','n15-first');
+  const left=atom('n15two','2')+'<span class="n15-minus">−</span>'+
+   n15Choice('n15pickBlock',n15Outer(),'n15Move','n15-first');
+  return side(left)+equals+side(right);
+ }
+ if(phase==='gathered'){
+  const left=n15Choice('n15calculation',
+   '<span class="n15-calc">'+atom('n15two','2')+
+    '<span class="n15-minus">−</span>'+n15Half()+'</span>',
+   'n15Subtract','n15-calculate');
+  return side(left)+equals+side(n15Outer());
+ }
+ if(phase==='calculated'){
+  return side(n15Choice('n15leftSelect',n15LeftResult(),'n15Invert','n15-invert'))+
+    equals+side(n15Choice('n15rightSelect',n15Outer(),'n15Invert','n15-invert'));
+ }
+ return side(n15LeftResult())+equals+side(n15Outer());
+}
+// Eski matematiksel öğeleri yerinden söküp yeni yerlerine fiziksel olarak
+// taşıyoruz: aynı DOM düğümleri ve data-id'leri korunur.
+async function n15RetainAndMove(ids,advance,arc=false){
+ const items=ids.map(id=>{
+  const node=byId(id);return node?{id,node,before:node.getBoundingClientRect()}:null;
+ }).filter(Boolean);
+ advance();
+ update();
+ const scale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
+ const flights=[];
+ for(const it of items){
+  const ghost=byId(it.id);if(!ghost)continue;
+  // Başlangıçta ayrı HL alanı olan kesir, karşıya geçtikten sonra
+  // gereksiz ikinci tıklanabilir kutu oluşturamaz.
+  if(it.id==='n15half'||it.id==='n15block'){
+   it.node.removeAttribute('data-action');
+   it.node.removeAttribute('tabindex');
+   it.node.removeAttribute('role');
+   it.node.classList.remove('hit');
+  }
+  ghost.replaceWith(it.node);
+  const end=it.node.getBoundingClientRect();
+  const dx=(it.before.left+it.before.width/2-end.left-end.width/2)/scale;
+  const dy=(it.before.top+it.before.height/2-end.top-end.height/2)/scale;
+  if(Math.abs(dx)+Math.abs(dy)<.35)continue;
+  if(!arc){
+   const anim=it.node.animate([
+    {transform:'translate3d('+dx+'px,'+dy+'px,0)'},
+    {transform:'translate3d(0,0,0)'}
+   ],{duration:fastMode()?350:690,easing:'cubic-bezier(.42,0,.17,1)',fill:'both'});
+   flights.push(anim.finished.catch(()=>{}).then(()=>anim.cancel()));
+  }else{
+   // Yayın iki kolu: pay saat yönünün tersine, payda ters yöne ilerler.
+   const counter=/Num$/.test(it.id)||it.id==='n15rightNum';
+   const bend=(counter?-1:1)*Math.max(28,Math.min(84,Math.abs(dy)*.62+30))/scale;
+   it.node.style.transform='translate3d('+dx+'px,'+dy+'px,0)';
+   flights.push(n12RafMotion(fastMode()?440:830,t=>{
+    const u=t*t*(3-2*t),v=1-u;
+    it.node.style.transform='translate3d('+(dx*v+bend*Math.sin(Math.PI*u))+'px,'+
+     (dy*v)+'px,0)';
+   }).finally(()=>{it.node.style.transform=''}));
+  }
+ }
+ await Promise.all(flights);
+ positionScale();
+}
+async function n15Action(action){
+ if(!layer15||busy)return;
+ const correct=layer15.phase==='initial'&&action==='n15Move'||
+  layer15.phase==='gathered'&&action==='n15Subtract'||
+  layer15.phase==='calculated'&&action==='n15Invert';
+ if(!correct)return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  if(action==='n15Move'){
+   await n15RetainAndMove(['n15two','n15half','n15block'],
+    ()=>{layer15.phase='gathered'});
+  }else if(action==='n15Subtract'){
+   // Mevcut sağdaki karmaşık kesir aynı nesne olarak kalır;
+   // 2−1/2 hesaplandığında sadeleştirmeye geçilir.
+   await n15RetainAndMove(['n15block','n15leftDen'],
+    ()=>{layer15.phase='calculated'});
+  }else{
+   await n15RetainAndMove(['n15leftNum','n15leftDen','n15rightNum','n15rightDen'],
+    ()=>{layer15.phase='flipping'},true);
+   // Tam kesrin (payda)/1 hâli sadece görsel olarak ters çevrilme
+   // sırasında yaşar; sonrasında 1 paydası görünmez.
+   const keep=byId('n15rightDen');
+   layer15.phase='complete';
+   update();
+   const newPlace=byId('n15rightDen');
+   if(keep&&newPlace)newPlace.replaceWith(keep);
+   positionScale();
+  }
+ }finally{
+  busy=false;scene.classList.remove('busy');update();
+ }
+}
 function parseNestedPreview(raw){
  const clean=String(raw).replace(/\s+/g,'').replace(/[−–]/g,'-');
  const match=clean.match(/^\(\(x\/([1-9]\d*)\)([+-])([1-9]\d*)\)\/([1-9]\d*)=(-?\d+)$/i);
