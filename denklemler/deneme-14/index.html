@@ -3554,14 +3554,19 @@ function n13Markup(){
  // Kesir çizgisi pay ve paydayı zaten gruplar: parantez gereksiz.
  // Parantez yalnızca çapraz çarpımdaki çarpanları göstermek için oluşur.
  const p=variableDenEq,top=n13Affine(p.a,p.b);
- const den=n13Affine(p.d,p.e),k=fmt(p.k),q=fmt(p.rightDen||1);
+ const den=n13Affine(p.d,p.e),k=p.kind==='both-variable'?
+  n13Affine(p.rhsA,p.rhsB):fmt(p.k),q=p.kind==='both-variable'?
+  n13Affine(p.rhsD,p.rhsE):fmt(p.rightDen||1);
  const topProduct='('+top+')',denProduct='('+den+')';
+ const rightProduct=p.kind==='both-variable'?'('+k+')':k;
  const left=v=>'<span class="side" data-id="sideL">'+v+'</span>';
  const right=v=>'<span class="side" data-id="sideR">'+v+'</span>';
  const equal='<span class="equals">=</span>';
- if(p.stage==='crossed')return left('<span class="n13-product">'+atom('n13denR',q)+atom('n13numL',topProduct)+'</span>')+
-  equal+right('<span class="n13-product">'+atom('n13numR',k)+atom('n13denL',denProduct)+'</span>');
- if(p.stage==='initial'&&(p.rightDen||1)===1)return left(fhtml(atom('n13numL',top),atom('n13denL',den),'n13fracL',null))+
+ if(p.stage==='crossed')return left('<span class="n13-product">'+atom('n13denR',
+   p.kind==='both-variable'?'('+q+')':q)+atom('n13numL',topProduct)+'</span>')+
+  equal+right('<span class="n13-product">'+atom('n13numR',rightProduct)+
+   atom('n13denL',denProduct)+'</span>');
+ if(p.stage==='initial'&&p.kind!=='both-variable'&&(p.rightDen||1)===1)return left(fhtml(atom('n13numL',top),atom('n13denL',den),'n13fracL',null))+
   equal+right(hit('n13numR',k,'n13ShowUnit'));
  // a) sol pay ile sag payda (1). b) sol payda ile sag pay (2).
  const topL=sLinkedHit('n13numL',top,'n13CrossA','n13-diagonal-a',null,true);
@@ -3614,7 +3619,8 @@ async function n13Action(action){
  }
  if(!['n13CrossA','n13CrossB'].includes(action)||
     !(variableDenEq.stage==='unit'||
-      (variableDenEq.stage==='initial'&&(variableDenEq.rightDen||1)>1)))return;
+      (variableDenEq.stage==='initial'&&
+        (variableDenEq.kind==='both-variable'||(variableDenEq.rightDen||1)>1))))return;
  busy=true;scene.classList.add('busy');save();step++;
  const beforeStage=variableDenEq.stage,previousShift=layoutShiftX;
  try{
@@ -3639,6 +3645,12 @@ async function n13Action(action){
    // Orijinal nesne ve veri kimliği aynen korunur.
    if(item.id==='n13numL')item.node.textContent='('+n13Affine(variableDenEq.a,variableDenEq.b)+')';
    if(item.id==='n13denL')item.node.textContent='('+n13Affine(variableDenEq.d,variableDenEq.e)+')';
+   if(variableDenEq.kind==='both-variable'){
+    if(item.id==='n13numR')item.node.textContent='('+
+     n13Affine(variableDenEq.rhsA,variableDenEq.rhsB)+')';
+    if(item.id==='n13denR')item.node.textContent='('+
+     n13Affine(variableDenEq.rhsD,variableDenEq.rhsE)+')';
+   }
    target.replaceWith(item.node);
   }
   if(previousEqual)eq.querySelector('.equals')?.replaceWith(previousEqual);
@@ -3662,7 +3674,9 @@ async function n13Action(action){
    return anim.finished.catch(()=>{}).then(()=>anim.cancel());
   });
   await Promise.all(flights);
-  n13ToExistingEngine();update();
+  if(variableDenEq.kind==='both-variable')n14Enter();
+  else n13ToExistingEngine();
+  update();
  }catch(error){
   variableDenEq.stage=beforeStage;layoutShiftX=previousShift;
   history.pop();step=Math.max(0,step-1);
