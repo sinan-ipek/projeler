@@ -4908,7 +4908,7 @@ async function n12ThirdAdvance(toStage){
    positionScale();
    const animateFactor=factor.animate([
     {opacity:0,transform:'translate(-50%,-.12em) scale(.78)'},
-    {opacity:1,transform:'translate(-50%,.66em) scale(1)'}
+    {opacity:1,transform:'translate(-50%,.85em) scale(1)'}
    ],{duration:duration*.85,easing:ease,fill:'both'});
    await animateFactor.finished.catch(()=>{});
    animateFactor.cancel();
@@ -5006,11 +5006,15 @@ async function n12ThirdAdvance(toStage){
     const finalBar=eq.querySelector('[data-id="n12thirdMergedInner"] > .fracbar');
     if(!finalDen||!finalBar)throw Error('Birleşmenin hedefi bulunamadı');
     finalDen.style.visibility='hidden';
-    const collision=center(finalDen.getBoundingClientRect());
-    const endBar=finalBar.getBoundingClientRect();
     const runTime=fastMode()?390:560;
+    // First apply the layout correction for a fixed '='.
+    // Only THEN measure where the final denominator REALLY is.
+    // This guarantees both denominator ghosts and the surviving 2
+    // share exactly one screen coordinate, even on narrow windows.
     const moveRest=n12ThirdSnapAndAnimate(
       preserved.filter(item=>item.node!==finalDen),runTime,'equals');
+    const collision=center(finalDen.getBoundingClientRect());
+    const endBar=finalBar.getBoundingClientRect();
     const mergeFlight=n12RafMotion(runTime,t=>{
      // Monotonic easing: each number reaches the EXACT same end.
      const u=t*t*(3-2*t);
