@@ -3562,10 +3562,16 @@ function n13Markup(){
  const left=v=>'<span class="side" data-id="sideL">'+v+'</span>';
  const right=v=>'<span class="side" data-id="sideR">'+v+'</span>';
  const equal='<span class="equals">=</span>';
- if(p.stage==='crossed')return left('<span class="n13-product">'+atom('n13denR',
-   p.kind==='both-variable'?'('+q+')':q)+atom('n13numL',topProduct)+'</span>')+
-  equal+right('<span class="n13-product">'+atom('n13numR',rightProduct)+
-   atom('n13denL',denProduct)+'</span>');
+ if(p.stage==='crossed'){
+  // Degiskenli iki kesirde carpim sirasi, dagitma asamasinda da korunur.
+  // Modul 13'un 1(x+1) sirasini ise degistirmeyiz.
+  const productLeft=p.kind==='both-variable'?
+   atom('n13numL',topProduct)+atom('n13denR','('+q+')'):
+   atom('n13denR',q)+atom('n13numL',topProduct);
+  return left('<span class="n13-product">'+productLeft+'</span>')+
+   equal+right('<span class="n13-product">'+atom('n13numR',rightProduct)+
+    atom('n13denL',denProduct)+'</span>');
+ }
  if(p.stage==='initial'&&p.kind!=='both-variable'&&(p.rightDen||1)===1)return left(fhtml(atom('n13numL',top),atom('n13denL',den),'n13fracL',null))+
   equal+right(hit('n13numR',k,'n13ShowUnit'));
  // a) sol pay ile sag payda (1). b) sol payda ile sag pay (2).
