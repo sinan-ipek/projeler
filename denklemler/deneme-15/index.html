@@ -4077,6 +4077,72 @@ async function n14Action(action){
 
 /* DENEME 15.01 — Beta95'in mevcut denklem sahnesi ve animasyon araçları.
    Yalnızca ilk üç adım. Denklem içindeki bütün kesirler fhtml() kullanır. */
+
+/* Deneme 15.02 — Matematiksel hizalama: ortak eksen kutu ortası
+   değil, her kesrin gerçek kesir çizgisinin orta noktasıdır.
+   Yalnızca Alıştırma 15 için; genel fhtml ve eski CSS değişmez. */
+function n15AlignEquation(){
+ if(!layer15)return;
+ const scale=Math.max(.001,eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth));
+ const bar=id=>byId(id)?.querySelector(':scope > .fracbar');
+ const cy=node=>{const r=node.getBoundingClientRect();return (r.top+r.bottom)/2};
+ const toward=(moving,target)=>{
+  if(!moving||!target)return;
+  const offset=(cy(target)-cy(moving))/scale;
+  moving.style.transform='translateY('+offset.toFixed(3)+'px)';
+ };
+ const towardCenter=(moving,goal)=>{
+  if(!moving||!Number.isFinite(goal))return;
+  const offset=(goal-cy(moving))/scale;
+  moving.style.transform='translateY('+offset.toFixed(3)+'px)';
+ };
+ // 1−1/a: içteki 1 ve eksi, 1/a'nın yatay kesir çizgisine hizalanır.
+ const innerBar=bar('n15innerFraction');
+ const innerGroup=byId('n15innerFraction')?.parentElement;
+ if(innerGroup?.classList.contains('n15-right-inner')&&innerBar){
+  toward(innerGroup.children[0],innerBar);
+  toward(innerGroup.children[1],innerBar);
+ }
+ // 1+3/(...): dıştaki 1 ve artı, 3/(...) çizgisine hizalanır.
+ const middleBar=bar('n15middleFraction');
+ const middleGroup=byId('n15middleFraction')?.parentElement;
+ if(middleGroup?.classList.contains('n15-right-inner')&&middleBar){
+  toward(middleGroup.children[0],middleBar);
+  toward(middleGroup.children[1],middleBar);
+ }
+ const mainBar=bar('n15block')||middleBar;
+ if(!mainBar)return;
+ const leftBar=bar('n15leftFrac')||bar('n15half');
+ const two=byId('n15two');
+ // 2−1/2 gibi kısa aritmetik ifadelerde 2 ve − aynı kesir
+ // çizgisini paylaşır; sonra bütün taraf ana kesir çizgisine taşınır.
+ if(two){
+  const localBar=layer15.phase==='initial'?mainBar:leftBar;
+  if(localBar){
+   toward(two,localBar);
+   if(two.nextElementSibling?.classList.contains('n15-minus'))
+    toward(two.nextElementSibling,localBar);
+  }
+ }
+ const leftCabin=byId('eq-cabin-l'),rightCabin=byId('eq-cabin-r');
+ if(layer15.phase==='initial'){
+  // Sağdaki 1/2 çizgisini ana kesrin çizgisiyle aynı düzleme getir.
+  if(rightCabin) {
+   const halfBar=bar('n15half');
+   if(halfBar) {
+    // Kabini hizalarken hedef, kabinin merkezi değil içindeki çizgidir.
+    const shift=(cy(mainBar)-cy(halfBar))/scale;
+    rightCabin.style.transform='translateY('+shift.toFixed(3)+'px)';
+   }
+  }
+ }else if(leftBar&&leftCabin){
+  // Toplanan terimler ve iki tarafı ters çevrilecek kesirler.
+  const shift=(cy(mainBar)-cy(leftBar))/scale;
+  leftCabin.style.transform='translateY('+shift.toFixed(3)+'px)';
+ }
+ const equality=eq.querySelector(':scope > .equals');
+ if(equality)toward(equality,mainBar);
+}
 function n15Parse(raw){
  const normal=String(raw).replace(/\s+/g,'').replace(/[−–]/g,'-');
  return normal==='2-1/(1+3/(1-1/a))=1/2'?
@@ -4147,8 +4213,9 @@ async function n15RetainAndMove(ids,advance,arc=false){
  }).filter(Boolean);
  advance();
  update();
- const scale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
- const flights=[];
+ // Eski matematiksel nesneleri yeni DOM'daki yerlerine monte ediyoruz.
+ // Ölçümleri ancak TÜM nesneler yerleştikten ve kesir çizgileri
+ // yeniden hizalandıktan sonra alacağız.
  for(const it of items){
   const ghost=byId(it.id);if(!ghost)continue;
   // Başlangıçta ayrı HL alanı olan kesir, karşıya geçtikten sonra
@@ -4160,6 +4227,13 @@ async function n15RetainAndMove(ids,advance,arc=false){
    it.node.classList.remove('hit');
   }
   ghost.replaceWith(it.node);
+  it.node.style.transform='';
+ }
+ n15AlignEquation();
+ const scale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
+ const flights=[];
+ for(const it of items){
+  if(!it.node.isConnected)continue;
   const end=it.node.getBoundingClientRect();
   const dx=(it.before.left+it.before.width/2-end.left-end.width/2)/scale;
   const dy=(it.before.top+it.before.height/2-end.top-end.height/2)/scale;
@@ -4184,6 +4258,7 @@ async function n15RetainAndMove(ids,advance,arc=false){
  }
  await Promise.all(flights);
  positionScale();
+ n15AlignEquation();
 }
 async function n15Action(action){
  if(!layer15||busy)return;
@@ -4896,11 +4971,11 @@ function positionScale(){
  eq.style.translate='';
  const max=scene.clientWidth*.95;
  const w=Math.max(1,eq.scrollWidth),h=Math.max(1,eq.scrollHeight);
- const heightScale=third?
+ const heightScale=layer15?scene.clientHeight*.86/h:third?
   scene.clientHeight*.82/h:
   complexEq?scene.clientHeight*.9/h:1;
  const auto=Math.min(1,max/w,heightScale);
- let scale=complexEq?.scaleLock??Math.max(third?.15:.32,auto);
+ let scale=complexEq?.scaleLock??Math.max(layer15?.12:third?.15:.32,auto);
  const setTransform=()=>{
   eq.style.transform='translateX('+layoutShiftX+'px) scale('+scale+')';
   n12AlignMainBar(eq);
@@ -5079,6 +5154,7 @@ function n12UpdateSolutionSeal(){
 function update(animateBars=false){
  render(animateBars);
  positionScale();
+ if(layer15)n15AlignEquation();
  n14DrawGuides();
  n12UpdateSolutionSeal();
 }
