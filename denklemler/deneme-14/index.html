@@ -3719,6 +3719,117 @@ function n14Signed(value,degree,isFirst=false){
  if(degree===0)return prefix+fmt(magnitude);
  return prefix+(magnitude===1?'':fmt(magnitude))+(degree===2?'x²':'x');
 }
+
+function n14Key(side,group,index){return 'n14'+side+group+index}
+function n14TermMarkup(side,group,index){
+ const q=quadEq[side],selected=quadEq.selected;
+ const item=n14Member(side,group,index);
+ const value=n14Signed(item.value,item.degree,index===0);
+ const used=group===0?
+  [0,1].every(j=>q.done.includes(''+index+j)):
+  [0,1].every(i=>q.done.includes(''+i+index));
+ const id=n14Key(side,group,index);
+ if(used)return '<span class="n14-term n14-used" data-id="'+id+'">'+value+'</span>';
+ const same=selected&&selected.side===side&&selected.group===group&&selected.index===index;
+ const available=selected&&selected.side===side&&selected.group!==group&&
+  !q.done.includes(selected.group===0?''+selected.index+index:''+index+selected.index);
+ return '<span class="n14-term hit'+(same?' n14-selected':'')+
+  (available?' n14-target':'')+'" role="button" tabindex="0" data-id="'+id+
+  '" data-action="n14Term_'+side+'_'+group+'_'+index+'">'+value+'</span>';
+}
+function n14FactorMarkup(side,group){
+ return '<span class="n14-factor">('+n14TermMarkup(side,group,0)+
+  n14TermMarkup(side,group,1)+')</span>';
+}
+function n14ProductMarkup(side,p,index){
+ return '<span class="n14-result" data-id="n14product'+side+p.key+'">'+
+  n14Signed(p.value,p.degree,index===0)+'</span>';
+}
+function n14MultiplySide(side){
+ const q=quadEq[side];
+ const results=q.products.length?'<span class="n14-results">'+
+  q.products.map((p,i)=>n14ProductMarkup(side,p,i)).join('')+'</span>':'';
+ return '<span class="side n14-side" data-id="side'+side+'">'+
+  '<span class="n14-factor-row">'+n14FactorMarkup(side,0)+n14FactorMarkup(side,1)+'</span>'+
+  results+'</span>';
+}
+function n14ExpandedSide(side){
+ const q=quadEq[side],poly=n14Poly(side);
+ let content='';
+ if(q.combined){
+  content='<span class="n14-term" data-id="n14quadratic'+side+'">'+
+   n14Signed(poly.q,2,true)+'</span>';
+  if(poly.x)content+='<span class="n14-term">'+n14Signed(poly.x,1)+'</span>';
+  if(poly.c)content+='<span class="n14-term">'+n14Signed(poly.c,0)+'</span>';
+ }else{
+  content=q.products.map((p,i)=>{
+   const active=p.degree===1;
+   const id=p.degree===2?'n14quadratic'+side:'n14expanded'+side+p.key;
+   return '<span class="n14-term'+(active?' hit n14-like':'')+'" data-id="'+id+'"'+
+    (active?' data-action="n14Combine_'+side+'" data-hl-group="n14-like-'+side+'" role="button" tabindex="0"':'')+
+    '>'+n14Signed(p.value,p.degree,i===0)+'</span>';
+  }).join('');
+ }
+ if(q.combined&&quadEq.L.combined&&quadEq.R.combined){
+  content=content.replace('class="n14-term" data-id="n14quadratic'+side+'"',
+   'class="n14-term hit n14-like" data-action="n14Cancel" data-hl-group="n14-cancel" role="button" tabindex="0" data-id="n14quadratic'+side+'"');
+ }
+ return '<span class="side" data-id="side'+side+'"><span class="n14-expanded">'+content+'</span></span>';
+}
+function n14Markup(){
+ const left=quadEq.mode==='multiply'?n14MultiplySide('L'):n14ExpandedSide('L');
+ const right=quadEq.mode==='multiply'?n14MultiplySide('R'):n14ExpandedSide('R');
+ return left+'<span class="equals">=</span>'+right;
+}
+function n14ClearGuides(){scene.querySelectorAll('.n14-guides').forEach(n=>n.remove())}
+function n14DrawGuides(){
+ n14ClearGuides();
+ if(!quadEq||quadEq.mode!=='multiply'||!quadEq.selected)return;
+ const {side,group,index}=quadEq.selected;
+ const source=byId(n14Key(side,group,index)),q=quadEq[side];
+ if(!source)return;
+ const otherGroup=1-group;
+ const targets=[0,1].filter(v=>!q.done.includes(group===0?''+index+v:''+v+index));
+ if(!targets.length)return;
+ const ns='http://www.w3.org/2000/svg';
+ const svg=document.createElementNS(ns,'svg');
+ svg.classList.add('n14-guides');
+ svg.setAttribute('width',String(scene.clientWidth));svg.setAttribute('height',String(scene.clientHeight));
+ svg.setAttribute('viewBox','0 0 '+scene.clientWidth+' '+scene.clientHeight);
+ const defs=document.createElementNS(ns,'defs'),marker=document.createElementNS(ns,'marker');
+ for(const [k,v] of Object.entries({id:'n14-arrowhead',viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:6,markerHeight:6,orient:'auto-start-reverse'}))
+  marker.setAttribute(k,String(v));
+ const arrow=document.createElementNS(ns,'path');
+ arrow.setAttribute('d','M 0 1 L 9 5 L 0 9');
+ arrow.setAttribute('stroke','#9d6945');arrow.setAttribute('stroke-width','2.1');
+ arrow.setAttribute('fill','none');arrow.setAttribute('stroke-linecap','round');
+ marker.append(arrow);defs.append(marker);svg.append(defs);
+ const sceneBox=scene.getBoundingClientRect();
+ const point=node=>{
+  const box=node.getBoundingClientRect();
+  return {x:(box.left+box.width/2-sceneBox.left),y:box.top-sceneBox.top};
+ };
+ const start=point(source);
+ targets.forEach((i,indexArc)=>{
+  const target=byId(n14Key(side,otherGroup,i));if(!target)return;
+  const end=point(target),distance=Math.abs(end.x-start.x);
+  const top=Math.max(9,Math.min(start.y,end.y)-Math.max(39,Math.min(85,distance*.4))-indexArc*12);
+  const dir=end.x>=start.x?1:-1;
+  const guide=document.createElementNS(ns,'path');
+  const startX=start.x,finishX=end.x;
+  const shape='M '+startX+' '+(start.y-6)+
+   ' C '+(startX+dir*distance*.22)+' '+top+' '+
+    (finishX-dir*distance*.2)+' '+top+' '+finishX+' '+(end.y-6);
+  guide.setAttribute('d',shape);
+  guide.setAttribute('fill','none');guide.setAttribute('stroke','#9d6945');
+  guide.setAttribute('stroke-width','3.6');
+  guide.setAttribute('stroke-linecap','round');
+  guide.setAttribute('stroke-dasharray','10 8');
+  guide.setAttribute('marker-end','url(#n14-arrowhead)');
+  svg.append(guide);
+ });
+ scene.append(svg);
+}
 function parseNestedPreview(raw){
  const clean=String(raw).replace(/\s+/g,'').replace(/[−–]/g,'-');
  const match=clean.match(/^\(\(x\/([1-9]\d*)\)([+-])([1-9]\d*)\)\/([1-9]\d*)=(-?\d+)$/i);
