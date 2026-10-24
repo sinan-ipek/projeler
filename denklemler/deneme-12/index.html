@@ -4680,83 +4680,147 @@ const n12ThirdEdges={
  thirdFactorHint:'thirdEquivalent',
  thirdEquivalent:'thirdMerged'
 };
+/* Deneme 12.28 — Geçiş animasyonları tek tek elemanları izler.
+   Öğrenci yalnızca sonucu görmez: 1 → 1/1, çarpanın alttan
+   belirmesi, 1/1→(a·b)/a ve iki payın birleşmesini izler. */
 async function n12ThirdAdvance(toStage){
  const fromStage=nestedPreview?.stage;
  if(busy||n12ThirdEdges[fromStage]!==toStage)return;
- const equals=eq.querySelector('.equals');
- if(!equals)return;
+
+ // '+' seçilince matematiksel nesneler HİÇ değişmez, yalnız 1 HL olur.
+ if(toStage==='thirdSelectUnit'){
+  save();step++;nestedPreview.stage=toStage;update();return;
+ }
+ const equal=eq.querySelector('.equals');
+ if(!equal)return;
  let plan;
  try{
   nestedPreview.stage=toStage;
   plan=MotionEngine.targetLayout(nestedPreviewHTML());
  }finally{nestedPreview.stage=fromStage}
  if(!plan.has('equals'))return;
- const center=MotionEngine.center;
- const origin=center(equals.getBoundingClientRect()),goal=center(plan.get('equals'));
- const shift=origin.x-goal.x,previousShift=layoutShiftX;
- const bounds=scene.getBoundingClientRect(),oldRect=eq.getBoundingClientRect();
- const scale=oldRect.width/Math.max(1,eq.offsetWidth);
+ const midpoint=MotionEngine.center;
+ const at=midpoint(equal.getBoundingClientRect()),dest=midpoint(plan.get('equals'));
+ const wantedX=at.x-dest.x,previousShift=layoutShiftX;
+ const board=scene.getBoundingClientRect();
+ const current=eq.getBoundingClientRect();
+ const scale=current.width/Math.max(1,eq.offsetWidth);
  if(!Number.isFinite(scale)||scale<=0)return;
- // Eski denklem görüntüsünü geçiş sırasında koru.
- const oldLayer=eq.cloneNode(true);
- oldLayer.removeAttribute('id');oldLayer.classList.add('n12-third-old');
- Object.assign(oldLayer.style,{
-  position:'absolute',left:(oldRect.left-bounds.left)+'px',
-  top:(oldRect.top-bounds.top)+'px',
+ const fromView=eq.cloneNode(true);
+ fromView.removeAttribute('id');
+ fromView.classList.add('n12-third-old');
+ Object.assign(fromView.style,{
+  position:'absolute',
+  left:(current.left-board.left)+'px',top:(current.top-board.top)+'px',
   width:eq.offsetWidth+'px',height:eq.offsetHeight+'px',
   maxWidth:'none',margin:'0',opacity:'1',
-  transform:'scale('+scale+')',transformOrigin:'top left',pointerEvents:'none'
+  transform:'scale('+scale+')',transformOrigin:'top left',
+  pointerEvents:'none'
  });
- const denCross=fromStage==='thirdFlattened'&&toStage==='thirdCrossed';
- const termCross=fromStage==='thirdComputed'&&toStage==='thirdMoved';
- const sourceId=denCross?'n12thirdDenom':termCross?'n12thirdMoveTerm':null;
- const source=sourceId?byId(sourceId):null;
- const sourcePoint=source?center(source.getBoundingClientRect()):null;
- if(source)oldLayer.querySelector('[data-id="'+sourceId+'"]')?.style.setProperty('visibility','hidden');
- let ghost=null,targetNode=null,arc=null;
- busy=true;scene.classList.add('busy','n12-third-animating');save();step++;
- scene.append(oldLayer);
+
+ // Her hareket eden karakterin kaynak ve hedefi ayrı DOM kimliğidir.
+ const specs=toStage==='thirdUnitFraction'?
+   [['n12one','n12one']]:
+  toStage==='thirdEquivalent'?
+   [['n12one','n12thirdAdd'],['n12thirdUnitDen','n12thirdNewDen']]:
+  toStage==='thirdMerged'?
+   [['n12x','n12thirdX'],['n12thirdAdd','n12thirdAdd']]:[];
+ const flying=specs.map(([a,b])=>{
+  const node=byId(a);
+  if(!node)return null;
+  const rect=node.getBoundingClientRect();
+  fromView.querySelector('[data-id="'+a+'"]')?.style.setProperty('visibility','hidden');
+  return {sourceId:a,targetId:b,from:midpoint(rect),
+   text:node.textContent,
+   size:(parseFloat(getComputedStyle(node).fontSize)||50)*scale};
+ }).filter(Boolean);
+
+ busy=true;scene.classList.add('busy','n12-third-animating');
+ save();step++;scene.append(fromView);
+ let moving=[],bar=null,den=null,factor=null;
  try{
-  nestedPreview.stage=toStage;layoutShiftX=shift;update();
+  nestedPreview.stage=toStage;
+  layoutShiftX=wantedX;
+  update();
+  // Mümkünse '=' sabit; küçük ekranlarda taşmayı önlemek daha öncelikli.
+  const area=scene.getBoundingClientRect(),newRect=eq.getBoundingClientRect();
+  if(newRect.width<=area.width-24){
+   let correction=0;
+   if(newRect.left<area.left+12)correction=area.left+12-newRect.left;
+   else if(newRect.right>area.right-12)correction=area.right-12-newRect.right;
+   if(Math.abs(correction)>0.5){
+    layoutShiftX+=correction;positionScale();
+   }
+  }
   eq.style.opacity='0';
-  if(sourcePoint){
-   targetNode=byId(denCross?'n12thirdFactor':'n12thirdAdd');
-   const endpoint=targetNode?center(targetNode.getBoundingClientRect()):sourcePoint;
-   arc=n12TransferArc(sourcePoint,endpoint,denCross?'denominator':'normal');
-   ghost=n12MakeTransient('n12-third-flight',source.textContent,{
-    x:sourcePoint.x-bounds.left,y:sourcePoint.y-bounds.top
-   },(parseFloat(getComputedStyle(source).fontSize)||50)*scale);
-   ghost.dataset.endX=String(endpoint.x);
-   ghost.dataset.endY=String(endpoint.y);
-   if(targetNode)targetNode.style.opacity='0';
+
+  for(const item of flying){
+   const target=byId(item.targetId);
+   if(!target)continue;
+   const point=midpoint(target.getBoundingClientRect());
+   const ghost=n12MakeTransient('n12-third-flight',item.text,{
+    x:item.from.x-board.left,y:item.from.y-board.top
+   },item.size);
+   item.to=point;item.target=target;item.ghost=ghost;
+   item.finalText=target.textContent;
+   target.style.visibility='hidden';
+   moving.push(item);
+  }
+
+  bar=toStage==='thirdUnitFraction'?byId('n12thirdNewBar'):null;
+  den=toStage==='thirdUnitFraction'?byId('n12thirdUnitDen'):null;
+  factor=toStage==='thirdFactorHint'?byId('n12thirdExpandFactor'):null;
+  if(bar)bar.style.transform='scaleX(0)';
+  if(den){den.style.opacity='0';den.style.transform='translateY(-.32em)';}
+  if(factor){
+   factor.style.opacity='0';
+   factor.style.transform='translate(-50%,-.25em) scale(.72)';
   }
   const smooth=t=>t*t*(3-2*t);
-  await n12RafMotion(fastMode()?435:610,t=>{
-   const blend=smooth(n12Clamp((t-.16)/.72));
-   oldLayer.style.opacity=String(1-blend);
+  await n12RafMotion(fastMode()?470:650,t=>{
+   const blend=smooth(n12Clamp((t-.12)/.75));
+   fromView.style.opacity=String(1-blend);
    eq.style.opacity=String(blend);
-   if(ghost&&sourcePoint){
-    const u=smooth(t);
-    const x=sourcePoint.x+(Number(ghost.dataset.endX)-sourcePoint.x)*u;
-    const y=sourcePoint.y+(Number(ghost.dataset.endY)-sourcePoint.y)*u+
-      arc.sign*arc.amp*Math.sin(Math.PI*u);
-    ghost.style.left=(x-bounds.left)+'px';
-    ghost.style.top=(y-bounds.top)+'px';
-    if(termCross&&t>.5)
-      ghost.textContent=(n12Values().offset>0?'−':'+')+
-       n12Number(n12Values().addedNumerator);
-    ghost.style.opacity=String(1-n12Clamp((t-.8)/.18));
-    if(targetNode)targetNode.style.opacity=String(n12Clamp((t-.74)/.22));
+   const travel=smooth(n12Clamp((t-.07)/.78));
+   for(const item of moving){
+    const x=item.from.x+(item.to.x-item.from.x)*travel;
+    const y=item.from.y+(item.to.y-item.from.y)*travel;
+    item.ghost.style.left=(x-board.left)+'px';
+    item.ghost.style.top=(y-board.top)+'px';
+    // Genişletme sırasında 1, ancak işlem ilerledikçe a·b olur.
+    if(toStage==='thirdEquivalent'&&t>.58)
+     item.ghost.textContent=item.finalText;
+    item.ghost.style.opacity=String(1-n12Clamp((t-.81)/.14));
+    if(t>.80)item.target.style.visibility='';
+   }
+   const appear=smooth(n12Clamp((t-.26)/.58));
+   if(bar)bar.style.transform='scaleX('+appear+')';
+   if(den){
+    den.style.opacity=String(appear);
+    den.style.transform='translateY('+(-.32*(1-appear))+'em)';
+   }
+   if(factor){
+    factor.style.opacity=String(appear);
+    factor.style.transform='translate(-50%,'+
+     (-.25+.43*appear)+'em) scale('+(.72+.28*appear)+')';
    }
   });
  }catch(err){
   nestedPreview.stage=fromStage;layoutShiftX=previousShift;
   history.pop();step=Math.max(0,step-1);
-  $('#feedback').textContent='Üçüncü yöntem animasyonu: '+err.message;
+  $('#feedback').textContent='Payda eşitleme animasyonu: '+err.message;
  }finally{
-  oldLayer.remove();ghost?.remove();eq.style.opacity='';
-  if(targetNode)targetNode.style.opacity='';
-  busy=false;scene.classList.remove('busy','n12-third-animating');update();
+  fromView.remove();
+  for(const item of moving){
+   item.target.style.visibility='';
+   item.ghost.remove();
+  }
+  eq.style.opacity='';
+  if(bar)bar.style.transform='';
+  if(den){den.style.opacity='';den.style.transform='';}
+  if(factor){factor.style.opacity='';factor.style.transform='';}
+  busy=false;scene.classList.remove('busy','n12-third-animating');
+  update();
  }
 }
 
