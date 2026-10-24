@@ -4423,7 +4423,7 @@ async function swapEqualsAnimated(){
   busy=false;scene.classList.remove('busy');update();
  }
 }
-async function act(action){if(action==='n12SimplifyUnitDenominator')return n12SimplifyUnitDenominatorAnimated();if(action==='n12CrossReciprocal')return n12CrossReciprocalAnimated();if(action==='n12ComputeFinalProduct')return n12ComputeFinalProductAnimated();if(action==='n12MoveInnerDenominator')return n12MoveInnerDenominatorAnimated();if(action==='n12Subtract')return n12SubtractAnimated();if(action==='n12MoveOne')return n12MoveOneAnimated();if(action==='n12DivideToProduct')return n12DivideToProductAnimated();if(action==='n12ComputeProduct')return n12ComputeProductAnimated();if(action==='n12OuterClear')return n12OuterClearAnimated();if(action==='swapEquals')return swapEqualsAnimated();if(action.startsWith('complex'))return complexAction(action);const priority=currentPriorityRule();if(priority.type==='invalidSolution')return;if(priority.type==='readyReduction')return action==='readyReduce'?readyReductionAction():undefined;if(priority.type==='finalDivide')return action==='finalDivide'?finalDivideAction():undefined;if(priority.type==='pairReduction'){
+async function act(action){if(action==='n12ThirdStart')return n12ThirdAdvance('thirdEquivalent');if(action==='n12ThirdMerge')return n12ThirdAdvance('thirdMerged');if(action==='n12ThirdFlatten')return n12ThirdAdvance('thirdFlattened');if(action==='n12ThirdCrossDenominator')return n12ThirdAdvance('thirdCrossed');if(action==='n12ThirdCompute')return n12ThirdAdvance('thirdComputed');if(action==='n12ThirdMove')return n12ThirdAdvance('thirdMoved');if(action==='n12ThirdFinish')return n12ThirdAdvance('solved');if(action==='n12SimplifyUnitDenominator')return n12SimplifyUnitDenominatorAnimated();if(action==='n12CrossReciprocal')return n12CrossReciprocalAnimated();if(action==='n12ComputeFinalProduct')return n12ComputeFinalProductAnimated();if(action==='n12MoveInnerDenominator')return n12MoveInnerDenominatorAnimated();if(action==='n12Subtract')return n12SubtractAnimated();if(action==='n12MoveOne')return n12MoveOneAnimated();if(action==='n12DivideToProduct')return n12DivideToProductAnimated();if(action==='n12ComputeProduct')return n12ComputeProductAnimated();if(action==='n12OuterClear')return n12OuterClearAnimated();if(action==='swapEquals')return swapEqualsAnimated();if(action.startsWith('complex'))return complexAction(action);const priority=currentPriorityRule();if(priority.type==='invalidSolution')return;if(priority.type==='readyReduction')return action==='readyReduce'?readyReductionAction():undefined;if(priority.type==='finalDivide')return action==='finalDivide'?finalDivideAction():undefined;if(priority.type==='pairReduction'){
  if(action==='preCancelPair')return crossCancelAction();
  if(priority.details.kind==='simple'&&structuralAlternativeToReduction(action))return simpleAction(action);
  if(priority.details.kind==='bracket'&&action==='bracketExpand')return bracketAction(action);
@@ -4655,6 +4655,94 @@ async function n12RafMotion(duration,draw){
   requestAnimationFrame(tick);
  });
 }
+
+/* Alıştırma 12 / üçüncü yöntem — tek bir kontrol zinciri.
+   İçerideki toplama ile başlanır ve her işlem ayrı tıklanır. */
+const n12ThirdEdges={
+ initial:'thirdEquivalent',thirdEquivalent:'thirdMerged',
+ thirdMerged:'thirdFlattened',thirdFlattened:'thirdCrossed',
+ thirdCrossed:'thirdComputed',thirdComputed:'thirdMoved',thirdMoved:'solved'
+};
+async function n12ThirdAdvance(toStage){
+ const fromStage=nestedPreview?.stage;
+ if(busy||n12ThirdEdges[fromStage]!==toStage)return;
+ const equals=eq.querySelector('.equals');
+ if(!equals)return;
+ let plan;
+ try{
+  nestedPreview.stage=toStage;
+  plan=MotionEngine.targetLayout(nestedPreviewHTML());
+ }finally{nestedPreview.stage=fromStage}
+ if(!plan.has('equals'))return;
+ const center=MotionEngine.center;
+ const origin=center(equals.getBoundingClientRect()),goal=center(plan.get('equals'));
+ const shift=origin.x-goal.x,previousShift=layoutShiftX;
+ const bounds=scene.getBoundingClientRect(),oldRect=eq.getBoundingClientRect();
+ const scale=oldRect.width/Math.max(1,eq.offsetWidth);
+ if(!Number.isFinite(scale)||scale<=0)return;
+ // Eski denklem görüntüsünü geçiş sırasında koru.
+ const oldLayer=eq.cloneNode(true);
+ oldLayer.removeAttribute('id');oldLayer.classList.add('n12-third-old');
+ Object.assign(oldLayer.style,{
+  position:'absolute',left:(oldRect.left-bounds.left)+'px',
+  top:(oldRect.top-bounds.top)+'px',
+  width:eq.offsetWidth+'px',height:eq.offsetHeight+'px',
+  maxWidth:'none',margin:'0',opacity:'1',
+  transform:'scale('+scale+')',transformOrigin:'top left',pointerEvents:'none'
+ });
+ const denCross=fromStage==='thirdFlattened'&&toStage==='thirdCrossed';
+ const termCross=fromStage==='thirdComputed'&&toStage==='thirdMoved';
+ const sourceId=denCross?'n12thirdDenom':termCross?'n12thirdMoveTerm':null;
+ const source=sourceId?byId(sourceId):null;
+ const sourcePoint=source?center(source.getBoundingClientRect()):null;
+ if(source)oldLayer.querySelector('[data-id="'+sourceId+'"]')?.style.setProperty('visibility','hidden');
+ let ghost=null,targetNode=null,arc=null;
+ busy=true;scene.classList.add('busy','n12-third-animating');save();step++;
+ scene.append(oldLayer);
+ try{
+  nestedPreview.stage=toStage;layoutShiftX=shift;update();
+  eq.style.opacity='0';
+  if(sourcePoint){
+   targetNode=byId(denCross?'n12thirdFactor':'n12thirdAdd');
+   const endpoint=targetNode?center(targetNode.getBoundingClientRect()):sourcePoint;
+   arc=n12TransferArc(sourcePoint,endpoint,denCross?'denominator':'normal');
+   ghost=n12MakeTransient('n12-third-flight',source.textContent,{
+    x:sourcePoint.x-bounds.left,y:sourcePoint.y-bounds.top
+   },(parseFloat(getComputedStyle(source).fontSize)||50)*scale);
+   ghost.dataset.endX=String(endpoint.x);
+   ghost.dataset.endY=String(endpoint.y);
+   if(targetNode)targetNode.style.opacity='0';
+  }
+  const smooth=t=>t*t*(3-2*t);
+  await n12RafMotion(fastMode()?435:610,t=>{
+   const blend=smooth(n12Clamp((t-.16)/.72));
+   oldLayer.style.opacity=String(1-blend);
+   eq.style.opacity=String(blend);
+   if(ghost&&sourcePoint){
+    const u=smooth(t);
+    const x=sourcePoint.x+(Number(ghost.dataset.endX)-sourcePoint.x)*u;
+    const y=sourcePoint.y+(Number(ghost.dataset.endY)-sourcePoint.y)*u+
+      arc.sign*arc.amp*Math.sin(Math.PI*u);
+    ghost.style.left=(x-bounds.left)+'px';
+    ghost.style.top=(y-bounds.top)+'px';
+    if(termCross&&t>.5)
+      ghost.textContent=(n12Values().offset>0?'−':'+')+
+       n12Number(n12Values().addedNumerator);
+    ghost.style.opacity=String(1-n12Clamp((t-.8)/.18));
+    if(targetNode)targetNode.style.opacity=String(n12Clamp((t-.74)/.22));
+   }
+  });
+ }catch(err){
+  nestedPreview.stage=fromStage;layoutShiftX=previousShift;
+  history.pop();step=Math.max(0,step-1);
+  $('#feedback').textContent='Üçüncü yöntem animasyonu: '+err.message;
+ }finally{
+  oldLayer.remove();ghost?.remove();eq.style.opacity='';
+  if(targetNode)targetNode.style.opacity='';
+  busy=false;scene.classList.remove('busy','n12-third-animating');update();
+ }
+}
+
 // Tek hareketin tamamı matematiksel SON durumun koordinatlarından
 // planlanır. Paydaki (x/2+1) alt düğümleri tek tek uçmaz.
 async function n12DivideToProductAnimated(){
@@ -5688,7 +5776,8 @@ eq.addEventListener('click',e=>{
    hideDistributionHint();clearLinkedHighlight();n12ClearHover();
    if(choice==='den')n12OuterClearAnimated();
    else if(choice==='bar')n12DivideToProductAnimated();
-   // '+' henüz bir eylem değil; matematiksel adım uydurmayız.
+   else if(choice==='plus')n12ThirdAdvance('thirdEquivalent');
+   // Paydaki + veya − üzerine tıkla: üçüncü çözüm yolunu seç.
    return;
   }
  }
