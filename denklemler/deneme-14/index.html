@@ -3727,10 +3727,10 @@ function n14DomainLabels(){
 }
 function n14Enter(){
  const p=variableDenEq;
- const side=(first,second)=>({first,second,done:[],products:[],combined:false});
+ const side=(first,second)=>({first,second,done:[],products:[],expanded:false,combined:false});
  quadEq={mode:'multiply',
   L:side({a:p.a,b:p.b},{a:p.rhsD,b:p.rhsE}),
-  R:side({a:p.rhsA,b:p.rhsB},{a:p.d,b:p.e}),selected:null};
+  R:side({a:p.rhsA,b:p.rhsB},{a:p.d,b:p.e}),selected:null,cancelled:false};
  variableDenEq.stage='handoff';
 }
 function n14Member(side,group,index){
@@ -3776,45 +3776,63 @@ function n14FactorMarkup(side,group){
  return '<span class="n14-factor">('+n14TermMarkup(side,group,0)+
   n14TermMarkup(side,group,1)+')</span>';
 }
+
+/* Her taraf kendi basina dagilir ve duzenlenir. Ayrica iki x²
+   gorunur oldugu andan itibaren, benzer terimlerden bagimsiz olarak
+   esitligin iki tarafindan cikarilabilir. */
+function n14CanCancel(){
+ return !!quadEq&&!quadEq.cancelled&&
+  quadEq.L.done.includes('00')&&quadEq.R.done.includes('00');
+}
 function n14ProductMarkup(side,p,index){
- return '<span class="n14-result" data-id="n14product'+side+p.key+'">'+
+ const cancellable=p.degree===2&&n14CanCancel();
+ const id=p.degree===2?'n14quadratic'+side:'n14product'+side+p.key;
+ const props=cancellable?' hit n14-like" data-hl-group="n14-cancel" data-action="n14Cancel" role="button" tabindex="0"':'"';
+ return '<span class="n14-result'+props+' data-id="'+id+'">'+
   n14Signed(p.value,p.degree,index===0)+'</span>';
 }
 function n14MultiplySide(side){
  const q=quadEq[side];
- const results=q.products.length?'<span class="n14-results">'+
-  q.products.map((p,i)=>n14ProductMarkup(side,p,i)).join('')+'</span>':'';
+ const products=q.products.filter(p=>!(quadEq.cancelled&&p.degree===2));
+ const results=products.length?'<span class="n14-results">'+
+  products.map((p,i)=>n14ProductMarkup(side,p,i)).join('')+'</span>':'';
  return '<span class="side n14-side" data-id="side'+side+'">'+
   '<span class="n14-factor-row">'+n14FactorMarkup(side,0)+n14FactorMarkup(side,1)+'</span>'+
   results+'</span>';
 }
 function n14ExpandedSide(side){
  const q=quadEq[side],poly=n14Poly(side);
+ const cancellable=n14CanCancel();
  let content='';
+ const markupTerm=(value,degree,index,id,action,group)=>{
+  const active=!!action;
+  const props=active?' hit n14-like" data-action="'+action+
+   '" data-hl-group="'+group+'" role="button" tabindex="0"':'"';
+  return '<span class="n14-term'+props+' data-id="'+id+'">'+
+   n14Signed(value,degree,index===0)+'</span>';
+ };
  if(q.combined){
-  content='<span class="n14-term" data-id="n14quadratic'+side+'">'+
-   n14Signed(poly.q,2,true)+'</span>';
-  if(poly.x)content+='<span class="n14-term">'+n14Signed(poly.x,1)+'</span>';
-  if(poly.c)content+='<span class="n14-term">'+n14Signed(poly.c,0)+'</span>';
+  const items=[];
+  if(!quadEq.cancelled&&poly.q)items.push({value:poly.q,degree:2,id:'n14quadratic'+side,
+   action:cancellable?'n14Cancel':null,group:'n14-cancel'});
+  if(poly.x)items.push({value:poly.x,degree:1,id:'n14combinedX'+side});
+  if(poly.c)items.push({value:poly.c,degree:0,id:'n14combinedC'+side});
+  if(!items.length)items.push({value:0,degree:0,id:'n14zero'+side});
+  content=items.map((p,i)=>markupTerm(p.value,p.degree,i,p.id,p.action,p.group)).join('');
  }else{
-  content=q.products.map((p,i)=>{
-   const active=p.degree===1;
-   const id=p.degree===2?'n14quadratic'+side:'n14expanded'+side+p.key;
-   return '<span class="n14-term'+(active?' hit n14-like':'')+'" data-id="'+id+'"'+
-    (active?' data-action="n14Combine_'+side+'" data-hl-group="n14-like-'+side+'" role="button" tabindex="0"':'')+
-    '>'+n14Signed(p.value,p.degree,i===0)+'</span>';
-  }).join('');
- }
- if(q.combined&&quadEq.L.combined&&quadEq.R.combined){
-  content=content.replace('class="n14-term" data-id="n14quadratic'+side+'"',
-   'class="n14-term hit n14-like" data-action="n14Cancel" data-hl-group="n14-cancel" role="button" tabindex="0" data-id="n14quadratic'+side+'"');
+  const products=q.products.filter(p=>!(quadEq.cancelled&&p.degree===2));
+  const canCombine=products.filter(p=>p.degree===1).length>=2;
+  content=products.map((p,i)=>markupTerm(p.value,p.degree,i,
+   p.degree===2?'n14quadratic'+side:'n14expanded'+side+p.key,
+   p.degree===2?(cancellable?'n14Cancel':null):
+    (p.degree===1&&canCombine?'n14Combine_'+side:null),
+   p.degree===2?'n14-cancel':'n14-like-'+side)).join('');
  }
  return '<span class="side" data-id="side'+side+'"><span class="n14-expanded">'+content+'</span></span>';
 }
 function n14Markup(){
- const left=quadEq.mode==='multiply'?n14MultiplySide('L'):n14ExpandedSide('L');
- const right=quadEq.mode==='multiply'?n14MultiplySide('R'):n14ExpandedSide('R');
- return left+'<span class="equals">=</span>'+right;
+ const side=letter=>quadEq[letter].expanded?n14ExpandedSide(letter):n14MultiplySide(letter);
+ return side('L')+'<span class="equals">=</span>'+side('R');
 }
 function n14ClearGuides(){scene.querySelectorAll('.n14-guides').forEach(n=>n.remove())}
 function n14DrawGuides(){
