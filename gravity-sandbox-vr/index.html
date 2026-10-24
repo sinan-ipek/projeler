@@ -209,6 +209,45 @@ function setup(){
  for(let i=1;i<bodies.length;i++)bodies[i].v.add(recoil);
  for(const body of bodies){body.history=[];updateTrail(body)}
 }
+function addVRPreset(id){
+ dismount();vectorDrag=null;endTwoHand();grabs.clear();choosePlanets([]);
+ clearBodies();accumulator=0;running=false;
+ const add=(r,color,x,y,z,vx=0,vy=0,vz=0,mass=null)=>{
+  const b=makeBody(r,color,x,y,z,vx,vy,vz);
+  if(mass!==null)b.mass=mass;
+  b.history=[];updateTrail(b);return b;
+ };
+ if(id==='solar'){
+  planetMode=false;
+  const star=add(5,0xffc451,0,0,0);
+  const radii=[.6,.7,.8,.7,1.5,1.4,1,1],dist=[14,20,27,35,47,63,80,100];
+  for(let i=0;i<8;i++){
+   const a=i*2.39996,d=dist[i],v=Math.sqrt(G*star.mass*d*d/Math.pow(d*d+SOFT,1.5));
+   add(radii[i],[0xc9c2b4,0xedab55,0x58a7ff,0xdd8068,0xe6be83,0xd6bd94,0x7ad6e8,0x678ce3][i],
+    Math.cos(a)*d,0,Math.sin(a)*d,-Math.sin(a)*v,0,Math.cos(a)*v);
+  }
+ }else if(id==='fireworks'){
+  planetMode=false;
+  const count=48,golden=Math.PI*(3-Math.sqrt(5)),colors=[0xffd166,0xff6b6b,0x67d8ff,0x9d8bff,0x83edab,0xff9ce5];
+  for(let i=0;i<count;i++){
+   const y=1-2*(i+.5)/count,theta=i*golden,t=Math.sqrt(1-y*y);
+   const dx=t*Math.cos(theta),dz=t*Math.sin(theta),v=12+2*((i*17)%count)/(count-1);
+   add(.20,colors[i%6],dx*.7,y*.7,dz*.7,dx*v,y*v,dz*v,.015);
+  }
+ }else{
+  planetMode=true;
+  const launches={
+   horizontal:{y:35,vx:24,vy:0,color:0x52a1f4},
+   angled:{y:-8,vx:22,vy:24,color:0x55be8a},
+   vertical:{y:-8,vx:0,vy:29,color:0xe8a64a}
+  };
+  const l=launches[id];if(!l)return;
+  add(1.4,l.color,-25,l.y,0,l.vx,l.vy,0);
+ }
+ for(const b of bodies){b.history=[];updateTrail(b)}
+ syncButtons();refreshRightPanel();
+ $('status').textContent='Hazır sistem: '+id+' · Başlat ile çalıştır';
+}
 function accelerations(){
  if(planetMode)return bodies.map(()=>new THREE.Vector3(0,-G_PLANET,0));
  const acc=bodies.map(()=>new THREE.Vector3());
@@ -251,6 +290,8 @@ function action(name){
  if(name==='velocities')showVelocities=!showVelocities;
  if(name==='near')bringNear();
  if(name==='new')createPlanet();
+ if(name==='clearSelection')choosePlanets([]);
+ if(name.startsWith('preset:'))addVRPreset(name.slice(7));
  if(name==='grow')resizeSelected(1.2);
  if(name==='shrink')resizeSelected(1/1.2);
  if(name==='copy')copySelected();
@@ -264,71 +305,81 @@ function action(name){
 }
 for(const id of ['play','reset','mode','trails'])$(id).onclick=()=>action(id);
 // VR panel uses a shared canvas texture; buttons remain selectable via controller rays.
-const panelCanvas=document.createElement('canvas');panelCanvas.width=720;panelCanvas.height=505;
-const ctx=panelCanvas.getContext('2d'),panelTexture=new THREE.CanvasTexture(panelCanvas);panelTexture.colorSpace=THREE.SRGBColorSpace;
-const panel=new THREE.Mesh(new THREE.PlaneGeometry(.275,.195),new THREE.MeshBasicMaterial({map:panelTexture,transparent:true,side:THREE.DoubleSide,depthTest:false}));
-panel.renderOrder=20;
-let handMenuOpen=false,rightMenuOpen=false;
-let rightController=null;
-const lastMenuPress=new Map();
-let leftController=null;
-function toggleHandMenu(){
- handMenuOpen=!handMenuOpen;
- if(handMenuOpen)rightMenuOpen=false;
- updateHandMenu();
- $('status').textContent=handMenuOpen?'Menü açık':'Menü kapalı';
+// Five inward-facing panels arranged around an open-front concave menu.
+const FACE_CW=720,FACE_CH=505;
+function createMenuFace(width,height){
+ const canvas=document.createElement('canvas');canvas.width=FACE_CW;canvas.height=FACE_CH;
+ const ctx=canvas.getContext('2d'),texture=new THREE.CanvasTexture(canvas);
+ texture.colorSpace=THREE.SRGBColorSpace;
+ const mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,height),
+  new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,depthTest:false}));
+ mesh.renderOrder=20;
+ return {canvas,ctx,texture,mesh,buttons:[]};
 }
-const menuAnchorOffset=new THREE.Vector3(.10,.025,-.13);
-const rightMenuCanvas=document.createElement('canvas');
-rightMenuCanvas.width=720;rightMenuCanvas.height=505;
-const rightMenuCtx=rightMenuCanvas.getContext('2d');
-const rightMenuTexture=new THREE.CanvasTexture(rightMenuCanvas);
-rightMenuTexture.colorSpace=THREE.SRGBColorSpace;
-const rightPanel=new THREE.Mesh(new THREE.PlaneGeometry(.275,.195),new THREE.MeshBasicMaterial({map:rightMenuTexture,transparent:true,side:THREE.DoubleSide,depthTest:false}));
-rightPanel.renderOrder=20;rightPanel.visible=true;
+const backFace=createMenuFace(.33,.265);
+const leftFace=createMenuFace(.205,.265);
+const rightFace=createMenuFace(.205,.265);
+const ceilingFace=createMenuFace(.33,.14);
+const bottomFace=createMenuFace(.33,.115);
+const menuFaces=[backFace,leftFace,rightFace,ceilingFace,bottomFace];
+const panel=backFace.mesh,rightPanel=rightFace.mesh,topPanel=bottomFace.mesh;
+const prism=new THREE.Group(),hingeZ=-.07,halfW=.165,halfH=.1325;
+// The back is recessed; wing faces open toward the user at 66 degrees.
+panel.position.z=hingeZ;
+const wingAngle=Math.PI*66/180,wingW=.205;
+leftFace.mesh.rotation.y=-wingAngle;
+leftFace.mesh.position.set(-halfW-Math.cos(wingAngle)*wingW/2,0,hingeZ+Math.sin(wingAngle)*wingW/2);
+rightPanel.rotation.y=wingAngle;
+rightPanel.position.set(halfW+Math.cos(wingAngle)*wingW/2,0,hingeZ+Math.sin(wingAngle)*wingW/2);
+// Top and bottom fold toward the viewer instead of projecting beyond the back edges.
+ceilingFace.mesh.rotation.x=-Math.PI/3;
+ceilingFace.mesh.position.set(0,halfH+Math.cos(Math.PI/3)*.14/2,hingeZ+Math.sin(Math.PI/3)*.14/2);
+topPanel.rotation.x=Math.PI/3;
+topPanel.position.set(0,-halfH-Math.cos(Math.PI/3)*.115/2,hingeZ+Math.sin(Math.PI/3)*.115/2);
+for(const face of menuFaces)prism.add(face.mesh);
+scene.add(prism);
+let handMenuOpen=false,rightMenuOpen=false;
+let rightController=null,leftController=null;
+const lastMenuPress=new Map();
+function toggleHandMenu(){handMenuOpen=!handMenuOpen;updateHandMenu();$('status').textContent=handMenuOpen?'Menü açık':'Menü kapalı'}
+const menuAnchorOffset=new THREE.Vector3(.13,.035,-.19);
+const menuWristRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/3);
+const labels=['play','reset','mode','trails','velocities'];
 const rightButtons=[['near','YAKINA GETIR'],['shrink','KUCULT'],['grow','BUYUT'],['copy','KOPYALA'],['delete','SIL']];
 const topButtons=[['ride','BIN'],['dismount','IN'],['micro','MIKRO'],['macro','MAKRO']];
-const topCanvas=document.createElement('canvas');topCanvas.width=720;topCanvas.height=505;
-const topCtx=topCanvas.getContext('2d'),topTexture=new THREE.CanvasTexture(topCanvas);
-topTexture.colorSpace=THREE.SRGBColorSpace;
-const topPanel=new THREE.Mesh(new THREE.PlaneGeometry(.275,.17),new THREE.MeshBasicMaterial({map:topTexture,side:THREE.DoubleSide,depthTest:false}));
-topPanel.renderOrder=20;
-const prism=new THREE.Group(),FACE_W=.275,FACE_H=.195,PRISM_DEPTH=.17;
-panel.position.z=PRISM_DEPTH/2;
-rightPanel.geometry.dispose();
-rightPanel.geometry=new THREE.PlaneGeometry(PRISM_DEPTH,FACE_H);
-rightPanel.rotation.y=Math.PI/2;rightPanel.position.x=FACE_W/2;
-topPanel.rotation.x=Math.PI/2;topPanel.position.y=-FACE_H/2;
-prism.add(panel,rightPanel,topPanel);
-const edges=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(FACE_W,FACE_H,PRISM_DEPTH)),new THREE.LineBasicMaterial({color:0xa8c4da,depthTest:false}));
-edges.renderOrder=21;prism.add(edges);scene.add(prism);
-function faceButtons(c,items,active){
- for(let i=0;i<items.length;i++){
-  const [id,label]=items[i],x=20+(i%2)*350,y=135+Math.floor(i/2)*100;
-  c.fillStyle=active===id?'#2d856d':'#285a8d';
-  c.beginPath();c.roundRect(x,y,330,83,12);c.fill();
-  c.fillStyle='#fff';c.font='bold 28px system-ui';c.fillText(label,x+16,y+52);
+const presetButtons=[['new','YENI GEZEGEN'],['preset:solar','GUNES SISTEMI'],['preset:fireworks','HAVAİ FİŞEK'],['preset:horizontal','YATAY ATIS'],['preset:angled','EGIK ATIS'],['preset:vertical','DIKEY ATIS']];
+const utilityButtons=[['clearSelection','SECIMI KALDIR'],['trails','YORUNGELER'],['velocities','HIZ OKLARI'],['reset','SIFIRLA']];
+function drawMenuFace(face,title,subtitle,buttons,highlight){
+ const c=face.ctx;c.clearRect(0,0,FACE_CW,FACE_CH);
+ c.fillStyle='#15253a';c.fillRect(0,0,FACE_CW,FACE_CH);
+ c.fillStyle='#eaf5ff';c.font='bold 36px system-ui';c.fillText(title,26,57);
+ if(subtitle){c.fillStyle='#a8d7ed';c.font='22px system-ui';c.fillText(subtitle,26,103)}
+ face.buttons=[];
+ const rows=Math.ceil(buttons.length/2),startY=subtitle?128:100;
+ const gap=12,rowH=Math.min(94,(FACE_CH-startY-20-(rows-1)*gap)/rows);
+ for(let i=0;i<buttons.length;i++){
+  const [id,name]=buttons[i],x=20+(i%2)*349,y=startY+Math.floor(i/2)*(rowH+gap),w=330,h=rowH;
+  c.fillStyle=highlight===id?'#268769':'#285a8d';
+  c.beginPath();c.roundRect(x,y,w,h,13);c.fill();
+  c.font='bold 25px system-ui';c.fillStyle='#fff';c.fillText(name,x+15,y+h/2+9);
+  face.buttons.push({id,x,y,w,h});
  }
+ face.texture.needsUpdate=true;
+}
+function refreshPanel(){
+ drawMenuFace(backFace,'SIMULASYON','',
+ [['play',$('play').textContent],['reset','SIFIRLA'],['mode',$('mode').textContent],['trails','YORUNGELER'],['velocities',showVelocities?'HIZLARI GIZLE':'HIZLARI GOSTER']],null);
 }
 function refreshRightPanel(){
- const c=rightMenuCtx;c.clearRect(0,0,720,505);
- c.fillStyle='#15253a';c.fillRect(0,0,720,505);
- c.fillStyle='#fff';c.font='bold 38px system-ui';c.fillText('NESNE',24,58);
- const b=selectedPlanet;c.fillStyle='#b8e2ff';c.font='21px system-ui';
- c.fillText(b?'R '+b.radius.toFixed(2)+'  M '+b.mass.toFixed(1)+'  V '+b.v.length().toFixed(1):'Secim yok',24,103);
- faceButtons(c,rightButtons,null);rightMenuTexture.needsUpdate=true;
+ const b=selectedPlanet;
+ drawMenuFace(leftFace,'NESNE',b?'R '+b.radius.toFixed(1)+'  M '+b.mass.toFixed(1)+'  V '+b.v.length().toFixed(1):'Secim yok',rightButtons,null);
  refreshTopPanel();
 }
 function refreshTopPanel(){
- const c=topCtx;c.clearRect(0,0,720,505);
- c.fillStyle='#15253a';c.fillRect(0,0,720,505);
- c.fillStyle='#fff';c.font='bold 38px system-ui';c.fillText('GOZLEM',24,58);
- c.fillStyle='#b8e2ff';c.font='23px system-ui';
- c.fillText(ridingBody?'Gezegende · '+(rideViewMode==='micro'?'Mikro':'Makro'):'Serbest gozlem',24,105);
- faceButtons(c,topButtons,rideViewMode);topTexture.needsUpdate=true;
+ drawMenuFace(rightFace,'GOZLEM',ridingBody?'Gezegende: '+(rideViewMode==='micro'?'MIKRO':'MAKRO'):'Serbest gozlem',topButtons,rideViewMode);
+ drawMenuFace(ceilingFace,'EKLE','',presetButtons,null);
+ drawMenuFace(bottomFace,'ARACLAR','',utilityButtons,null);
 }
-const rightMenuOffset=new THREE.Vector3(0,.025,-.11);
-const menuWristRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/3);
 function updateHandMenu(){
  if(!renderer.xr.isPresenting){prism.visible=true;prism.position.set(-.5,1.7,-1.3);prism.quaternion.identity();return}
  prism.visible=handMenuOpen&&!!leftController;
@@ -338,19 +389,6 @@ function updateHandMenu(){
   prism.quaternion.setFromRotationMatrix(new THREE.Matrix4().extractRotation(leftController.matrixWorld)).multiply(menuWristRotation);
   prism.updateMatrixWorld(true);
  }
-}
-const labels=['play','reset','mode','trails','new','velocities'];
-function refreshPanel(){
- ctx.clearRect(0,0,720,505);ctx.fillStyle='#15253aeF';ctx.fillRect(0,0,720,505);
- ctx.fillStyle='#e7f4ff';ctx.font='bold 33px system-ui';ctx.fillText('SIMULASYON',34,60);
- const names=[$('play').textContent,$('reset').textContent,$('mode').textContent,$('trails').textContent,'Yeni Gezegen',showVelocities?'Hızları Gizle':'Hızları Göster'];
- for(let i=0;i<6;i++){
-  const x=35+(i%2)*345,y=100+Math.floor(i/2)*105;
-  ctx.fillStyle='#285a8d';ctx.beginPath();ctx.roundRect(x,y,310,76,12);ctx.fill();
-  ctx.fillStyle='#ffffff';ctx.font='25px system-ui';ctx.fillText(names[i],x+18,y+47);
- }
-
- panelTexture.needsUpdate=true;
 }
 const raycaster=new THREE.Raycaster(),tempMatrix=new THREE.Matrix4();
 const controllers=[];
@@ -582,7 +620,7 @@ function updateGrabsAndHover(dt){
  updateHandMenu();
  for(const controller of controllers){
   rayFromController(controller);
-  const menuHit=raycaster.intersectObjects([panel,rightPanel,topPanel].filter(p=>prism.visible&&p.visible),false)[0];
+  const menuHit=raycaster.intersectObjects(menuFaces.map(f=>f.mesh).filter(p=>prism.visible&&p.visible),false)[0];
   const beam=controller.userData.beam;
   if(beam){
    beam.visible=!(controller===leftController&&handMenuOpen);
@@ -687,20 +725,13 @@ for(let i=0;i<2;i++){
  controller.addEventListener('disconnected',()=>{controllerInputs.delete(controller);releaseGrab(controller)});
  controller.addEventListener('selectstart',()=>{
   rayFromController(controller);
-  const panelHit=raycaster.intersectObjects([panel,rightPanel,topPanel].filter(p=>prism.visible&&p.visible),false)[0];
+  const panelHit=raycaster.intersectObjects(menuFaces.map(f=>f.mesh).filter(p=>prism.visible&&p.visible),false)[0];
   if(panelHit){
-   const px=panelHit.uv.x*720,py=(1-panelHit.uv.y)*505;
-   if(panelHit.object===panel){
-    for(let i=0;i<labels.length;i++){
-     const x=35+(i%2)*345,y=100+Math.floor(i/2)*105;
-     if(px>=x&&px<=x+310&&py>=y&&py<=y+76){action(labels[i]);break}
-    }
-   }else{
-    const items=panelHit.object===rightPanel?rightButtons:topButtons;
-    for(let i=0;i<items.length;i++){
-     const x=20+(i%2)*350,y=135+Math.floor(i/2)*100;
-     if(px>=x&&px<=x+330&&py>=y&&py<=y+83){action(items[i][0]);break}
-    }
+   const face=menuFaces.find(f=>f.mesh===panelHit.object);
+   if(face){
+    const px=panelHit.uv.x*FACE_CW,py=(1-panelHit.uv.y)*FACE_CH;
+    const button=face.buttons.find(b=>px>=b.x&&px<=b.x+b.w&&py>=b.y&&py<=b.y+b.h);
+    if(button)action(button.id);
    }
    return;
   }
