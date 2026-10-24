@@ -294,6 +294,21 @@
 }
 .n13-product{display:inline-flex;align-items:center;white-space:nowrap}
 .n13-restriction{font-size:12px;color:#73849b}
+
+/* DENEME 14 — iki parantez, seçilebilir çarpım çiftleri ve kesik yay okları. */
+.n14-side{display:inline-flex;flex-direction:column;gap:.18em;align-items:center;justify-content:center;min-width:0}
+.n14-factor-row{display:inline-flex;align-items:center;white-space:nowrap}
+.n14-factor{display:inline-flex;align-items:center;white-space:nowrap}
+.n14-term{display:inline-flex;align-items:center;justify-content:center;padding:0 .025em;border-radius:7px;white-space:nowrap}
+.n14-term.n14-selected{background:#e4bf56!important;box-shadow:0 0 0 2px #c68a13!important}
+.n14-term.n14-target{background:#fff0c5;box-shadow:0 0 0 1px #d9aa47}
+.n14-term.n14-used{color:#86909e}
+.n14-results{font-size:.73em;display:inline-flex;justify-content:center;white-space:nowrap;min-height:1.15em;gap:.05em;color:#293852}
+.n14-result{display:inline-flex;align-items:center;justify-content:center}
+.n14-expanded{display:inline-flex;align-items:center;white-space:nowrap}
+.n14-like.hl-linked{background:#ffedb3;box-shadow:0 0 0 2px #e1a518}
+.n14-guides{position:absolute;inset:0;z-index:35;pointer-events:none;overflow:visible}
+.n14-flight{position:absolute;transform:translate(-50%,-50%);color:#293852;white-space:nowrap;z-index:45;pointer-events:none;font-family:Arial,Helvetica,sans-serif;font-size:31px;font-weight:400}
 </style></head><body>
 <header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">deneme 14.01</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
 <main><div class="toolbar"><button id="reset">↺ Baştan</button><button id="back">← Geri</button><div class="mode-switch" role="group" aria-label="Çözüm yöntemi"><button type="button" id="modeSlow" class="selected" aria-pressed="true" title="Bütün öğretici işlem adımlarını göster">Yavaş</button><button type="button" id="modeFast" aria-pressed="false" title="Bariz işlemleri tek adımda tamamla">Hızlı</button></div></div>
@@ -523,7 +538,7 @@ const exerciseCatalog=Object.entries(exampleGroupsByModule).flatMap(([module,gro
  groups.map((group,groupIndex)=>({module:Number(module),groupIndex,examples:group.examples})));
 let currentExercise=0;
 let layoutShiftX=0;
-let currentModule=1;let variableDenEq=null;let nestedPreview=null;let bracket=null;let fractionEq=null;let pairEq=null;let multiEq=null;let simpleEq=null;let complexEq=null;let complexDomain=[];let preCommon=1;let sidesFlipped=false;
+let currentModule=1;let variableDenEq=null;let quadEq=null;let nestedPreview=null;let bracket=null;let fractionEq=null;let pairEq=null;let multiEq=null;let simpleEq=null;let complexEq=null;let complexDomain=[];let preCommon=1;let sidesFlipped=false;
 let m={a:4,b:6,c:0,d:12},s,history=[],busy=false,step=0;
 let n12SealPlayed=false,n12SealNode=null;
 // ÖĞRETİM MODU: Animasyon hızından bağımsızdır. Yavaş, Beta 37 adımlarını korur.
@@ -3485,7 +3500,7 @@ async function bracketAction(action){
 }
 // Temsil: her adım cebirsel eşitliği korur, işaretin yanında hangi terimin olduğu veri modelinde saklanır.
 function initial(){return {movedB:m.b===0,movedC:m.c===0,combinedL:m.c===0,combinedR:m.b===0,divided:false,leftDone:false,rightDone:false};}
-function stateCopy(){return structuredClone({s,variableDenEq,nestedPreview,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX,sidesFlipped})}
+function stateCopy(){return structuredClone({s,variableDenEq,quadEq,nestedPreview,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX,sidesFlipped})}
 function save(){history.push(stateCopy());}
 function hit(id,txt,action){return `<span class="atom hit" role="button" tabindex="0" data-action="${action}" data-id="${id}" aria-label="${txt.replace(/<[^>]*>/g,'')}" >${txt}</span>`}
 function atom(id,txt){return `<span class="atom" data-id="${id}">${txt}</span>`}
@@ -4228,7 +4243,7 @@ function n12ThirdHTML(){
  return left(outer(sum))+equal+right(atom('n12rhs',n(rhs)));
 }
 
-function markupCore(){if(variableDenEq&&variableDenEq.stage!=='handoff')return n13Markup();if(nestedPreview)return nestedPreviewHTML();if(complexEq)return complexHTML();if(complexNoSolution())return `<span class="side">Çözüm yok</span>`;if(simpleEq&&simpleEq.mode!=='linear')return simpleMarkup();if(multiEq&&multiEq.mode!=='linear')return multiMarkup();if(pairEq&&pairEq.mode!=='linear')return pairHTML();if(fractionEq&&fractionEq.mode!=='linear')return fractionHTML();if(bracket&&bracket.mode!=='linear')return bracketHTML();if(ready()&&A()===0){return `<span class="side">${atom('zz','0')}</span><span class="equals">=</span><span class="side">${atom('verdict',D()===0?'0':' '+fmt(D()))}</span>`;}
+function markupCore(){if(quadEq&&quadEq.mode!=='handoff')return n14Markup();if(variableDenEq&&variableDenEq.stage!=='handoff')return n13Markup();if(nestedPreview)return nestedPreviewHTML();if(complexEq)return complexHTML();if(complexNoSolution())return `<span class="side">Çözüm yok</span>`;if(simpleEq&&simpleEq.mode!=='linear')return simpleMarkup();if(multiEq&&multiEq.mode!=='linear')return multiMarkup();if(pairEq&&pairEq.mode!=='linear')return pairHTML();if(fractionEq&&fractionEq.mode!=='linear')return fractionHTML();if(bracket&&bracket.mode!=='linear')return bracketHTML();if(ready()&&A()===0){return `<span class="side">${atom('zz','0')}</span><span class="equals">=</span><span class="side">${atom('verdict',D()===0?'0':' '+fmt(D()))}</span>`;}
 if(!s.divided){let l=expression(leftTerms()),r=expression(rightTerms());if(s.movedC&&!s.combinedL&&m.c!==0){let pieces=leftTerms().filter(t=>t.kind==='x');if(pieces.length>1){let prefix=expression(pieces);// Sabit terimin kimliği ve işareti korunmalı ki hedef planda hareket edebilsin.
  let suffix=!s.movedB&&m.b!==0?expression([{kind:'k',n:m.b,id:'lb',action:'moveB'}],false):'';
  l=`<span class="combine hit" role="button" tabindex="0" data-action="combineL" data-id="groupL">${prefix}</span>${suffix}`;}}
@@ -4395,6 +4410,7 @@ async function pairChoiceAction(action){
 }
 
 function currentPriorityRule(){
+ if(quadEq&&quadEq.mode!=='handoff')return {type:'moduleOperation'};
  if(variableDenEq&&variableDenEq.stage!=='handoff')return {type:'moduleOperation'};
  if(nestedPreview)return {type:'moduleOperation'};
  if(complexEq)return {type:'moduleOperation'};
@@ -4539,8 +4555,12 @@ $('#back').disabled=busy||history.length===0;$('#reset').disabled=busy;if(comple
 if(nestedPreview)n12ThirdBindFinalTargets();
 if(variableDenEq){
  const previous=$('#tip').innerHTML.trim();
- const restriction='<span class="n13-restriction">'+n13Forbidden()+'</span>';
+ const restriction='<span class="n13-restriction">'+
+  (variableDenEq.kind==='both-variable'?n14DomainLabels():n13Forbidden())+'</span>';
  $('#tip').innerHTML=previous?previous+' &nbsp; '+restriction:restriction;
+ if(quadEq&&quadEq.mode!=='handoff'){
+  $('#stepLabel').textContent='Adım '+(step+1);
+ }
 }
 if(animateBars){requestAnimationFrame(()=>requestAnimationFrame(()=>eq.querySelectorAll('.fraction.constructing').forEach(el=>{el.classList.remove('constructing');el.classList.add('constructed')})));}}
 function byId(id){return eq.querySelector(`[data-id="${id}"]`)}
@@ -4637,6 +4657,7 @@ function positionScale(){
    çözülmemiş ifadeler veya yapılacak aritmetik işlem kalan
    görünümler çözüldü sanılmaz. */
 function n12SolvedEquation(){
+ if(quadEq&&quadEq.mode!=='handoff')return false;
  if(nestedPreview)return nestedPreview.stage==='solved'||nestedPreview.stage==='thirdSolved';
  if(complexNoSolution())return false;
  const label=$('#stepLabel').textContent.trim();
@@ -4768,6 +4789,7 @@ function n12UpdateSolutionSeal(){
 function update(animateBars=false){
  render(animateBars);
  positionScale();
+ n14DrawGuides();
  n12UpdateSolutionSeal();
 }
 async function fade(change){const animation=eq.animate([{opacity:1},{opacity:.15}],{duration:190,easing:'ease-in-out'});await animation.finished.catch(()=>{});change();update();await eq.animate([{opacity:.15},{opacity:1}],{duration:300,easing:'ease-in-out'}).finished.catch(()=>{});}
@@ -5108,6 +5130,7 @@ async function swapEqualsAnimated(){
  }
 }
 async function act(action){
+ if(action.startsWith('n14'))return n14Action(action);
  if(action.startsWith('n13'))return n13Action(action);
  if(action==='n12ThirdWrapUnit')return n12ThirdAdvance('thirdUnitFraction');
  if(action==='n12ThirdShowFactor')return n12ThirdAdvance('thirdFactorHint');
@@ -7475,6 +7498,7 @@ eq.addEventListener('click',e=>{
 eq.addEventListener('keydown',e=>{const t=e.target.closest('[data-action]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();hideDistributionHint();clearLinkedHighlight();act(t.dataset.action)}});
 function formatModel(o){let str=coefficient(o.a)+'x';if(o.b!==0)str+=(o.b<0?'-':'+')+abs(o.b);str+='=';if(o.c!==0)str+=coefficient(o.c)+'x';if(o.d!==0)str+=(o.d<0?'-':o.c!==0?'+':'')+abs(o.d);return str}
 function parseModule(raw,module){
+ if(module===11)return parseBothVariableFractions(raw);
  if(module===10)return parseVariableDenominator(raw);
  if(module===9)return parseNestedPreview(raw);
  if(module===8)return parseComplex(raw);
@@ -7520,8 +7544,11 @@ function restart(newM=null,module=currentModule){
  layoutShiftX=0;sidesFlipped=false;
  const fresh=newM||parseModule($('#custom').value,module);
  if(!fresh)return;
- simpleEq=null;multiEq=null;pairEq=null;fractionEq=null;bracket=null;complexEq=null;nestedPreview=null;variableDenEq=null;complexDomain=[];
- if(module===10){
+ simpleEq=null;multiEq=null;pairEq=null;fractionEq=null;bracket=null;complexEq=null;nestedPreview=null;variableDenEq=null;quadEq=null;complexDomain=[];
+ if(module===11){
+  variableDenEq=structuredClone(fresh);
+  m={a:1,b:0,c:0,d:0};
+ }else if(module===10){
   variableDenEq=structuredClone(fresh);
   m={a:fresh.a,b:fresh.b,c:fresh.k*fresh.d,d:fresh.k*fresh.e};
  }else if(module===9){
@@ -7578,7 +7605,7 @@ function changeModule(number){
 $('#reset').onclick=()=>restart();
 $('#back').onclick=()=>{
  if(busy||!history.length)return;
- ({s,variableDenEq,nestedPreview,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX,sidesFlipped}=history.pop());
+ ({s,variableDenEq,quadEq,nestedPreview,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX,sidesFlipped}=history.pop());
  step=Math.max(0,step-1);update();
 };
 $('#modeSlow').onclick=()=>setTeachingMode('slow');
@@ -7586,6 +7613,12 @@ $('#modeFast').onclick=()=>setTeachingMode('fast');
 $('#load').onclick=()=>{
  if(busy)return;
  const raw=$('#custom').value;
+ const both=parseBothVariableFractions(raw);
+ if(both){
+  const idx=exerciseCatalog.findIndex(page=>page.module===11);
+  if(idx>=0){currentExercise=idx;currentModule=11;drawExamples()}
+  $('#feedback').textContent='';restart(both,11);return;
+ }
  const rational=parseVariableDenominator(raw);
  if(rational){
   const idx=exerciseCatalog.findIndex(page=>page.module===10);
@@ -7630,7 +7663,7 @@ $('#modules').addEventListener('click',e=>{
  const btn=e.target.closest('button[data-exercise]');
  if(btn)changeExercise(Number(btn.dataset.exercise));
 });
-window.addEventListener('resize',()=>{hideDistributionHint();if(!busy){positionScale();n12PlaceSolutionSeal()}});
+window.addEventListener('resize',()=>{hideDistributionHint();if(!busy){positionScale();n14DrawGuides();n12PlaceSolutionSeal()}});
 changeExercise(0);
 const startup=document.getElementById("startupNotice");if(startup)startup.remove();
 })();
