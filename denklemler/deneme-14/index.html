@@ -3658,6 +3658,67 @@ async function n13Action(action){
   $('#back').disabled=history.length===0;$('#reset').disabled=false;
  }
 }
+
+/* Deneme 14.01 — pay ve paydada dogrusal ifade, iki kare terimi esit. */
+function parseBothVariableFractions(raw){
+ const t=String(raw).replace(/\s+/g,'').replace(/[−–]/g,'-');
+ const one='\\(([+-]?\\d*)x([+-]\\d+)?\\)\\/\\(([+-]?\\d*)x([+-]\\d+)?\\)';
+ const match=new RegExp('^'+one+'='+one+'$','i').exec(t);
+ if(!match)return null;
+ const coeff=v=>v===''||v==='+'?1:v==='-'?-1:Number(v);
+ const values=[
+  coeff(match[1]),Number(match[2]||0),coeff(match[3]),Number(match[4]||0),
+  coeff(match[5]),Number(match[6]||0),coeff(match[7]),Number(match[8]||0)
+ ];
+ if(!values.every(v=>Number.isSafeInteger(v)&&v!==0&&Math.abs(v)<=80))return null;
+ const [a,b,d,e,c,f,g,h]=values;
+ if(a*g!==c*d)return null;
+ const coefX=a*h+b*g-c*e-f*d,constant=f*e-b*h;
+ if(coefX===0)return null;
+ const solution=constant/coefX;
+ if(solution===-e/d||solution===-h/g)return null;
+ return {kind:'both-variable',stage:'initial',a,b,d,e,
+  rhsA:c,rhsB:f,rhsD:g,rhsE:h,raw:t};
+}
+function n14DomainLabels(){
+ if(!variableDenEq||variableDenEq.kind!=='both-variable')return '';
+ const p=variableDenEq;
+ const rational=(n,d)=>{
+  if(n%d===0)return fmt(n/d);
+  const g=gcd(Math.abs(n),Math.abs(d)),a=n/g,b=d/g;
+  return (a*b<0?'−':'')+fmt(Math.abs(a))+'/'+fmt(Math.abs(b));
+ };
+ return 'x ≠ '+rational(-p.e,p.d)+', x ≠ '+rational(-p.rhsE,p.rhsD);
+}
+function n14Enter(){
+ const p=variableDenEq;
+ const side=(first,second)=>({first,second,done:[],products:[],combined:false});
+ quadEq={mode:'multiply',
+  L:side({a:p.a,b:p.b},{a:p.rhsD,b:p.rhsE}),
+  R:side({a:p.rhsA,b:p.rhsB},{a:p.d,b:p.e}),selected:null};
+ variableDenEq.stage='handoff';
+}
+function n14Member(side,group,index){
+ const item=quadEq[side][group===0?'first':'second'];
+ return index===0?{value:item.a,degree:1}:{value:item.b,degree:0};
+}
+function n14Product(side,i,j){
+ const a=n14Member(side,0,i),b=n14Member(side,1,j);
+ return {key:''+i+j,value:a.value*b.value,degree:a.degree+b.degree};
+}
+function n14Poly(side){
+ const values=[0,0,0];
+ for(let i=0;i<2;i++)for(let j=0;j<2;j++){
+  const p=n14Product(side,i,j);values[p.degree]+=p.value;
+ }
+ return {q:values[2],x:values[1],c:values[0]};
+}
+function n14Signed(value,degree,isFirst=false){
+ const prefix=value<0?'−':isFirst?'':'+';
+ const magnitude=Math.abs(value);
+ if(degree===0)return prefix+fmt(magnitude);
+ return prefix+(magnitude===1?'':fmt(magnitude))+(degree===2?'x²':'x');
+}
 function parseNestedPreview(raw){
  const clean=String(raw).replace(/\s+/g,'').replace(/[−–]/g,'-');
  const match=clean.match(/^\(\(x\/([1-9]\d*)\)([+-])([1-9]\d*)\)\/([1-9]\d*)=(-?\d+)$/i);
