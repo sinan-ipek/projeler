@@ -5342,6 +5342,191 @@ async function n12ThirdChoose(toStage){
  }
 }
 
+/* Deneme 12.34 — üçüncü yöntemin BÜTÜN KALAN İŞLEMLERİ.
+   (1) İki operandın gerçek SON noktada çarpışması, yaysız.
+   (2) Payda geçişi eşittirin ALTINDAN, parçayı koruyarak.
+   (3) Sabit terim eşittirin ÜSTÜNDEN, işareti tersine dönerek.
+   (4) Son aritmetik, tek çözüm mührü. Başka alıştırmalara etki yok. */
+const n12ThirdFinishPaths={
+ thirdCrossed:{product:'thirdCrossComputed'},
+ thirdCrossComputed:{innerCross:'thirdInnerCrossed'},
+ thirdInnerCrossed:{product:'thirdTotalComputed'},
+ thirdDenProduct:{denProduct:'thirdDenComputed'},
+ thirdDenComputed:{wholeCross:'thirdWholeCrossed'},
+ thirdWholeCrossed:{product:'thirdTotalComputed'},
+ thirdTotalComputed:{moveConstant:'thirdTermMoved'},
+ thirdTermMoved:{final:'thirdSolved'}
+};
+function n12ThirdFlightFrom(node){
+ if(!node)throw Error('Uçacak işlem nesnesi bulunamadı');
+ const mid=MotionEngine.center(node.getBoundingClientRect());
+ const area=scene.getBoundingClientRect();
+ const font=parseFloat(getComputedStyle(node).fontSize)||50;
+ const actualScale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
+ const sprite=n12MakeTransient('n12-third-flight',node.textContent,{
+  x:mid.x-area.left,y:mid.y-area.top
+ },font*actualScale);
+ sprite.setAttribute('aria-hidden','true');
+ return {sprite,from:mid};
+}
+function n12ThirdFractionBarGhost(){
+ const node=eq.querySelector('[data-id="n12thirdMergedInner"] > .fracbar');
+ if(!node)return null;
+ const rect=node.getBoundingClientRect(),area=scene.getBoundingClientRect();
+ const ghost=document.createElement('span');
+ ghost.className='n12-third-vanishing-bar';
+ Object.assign(ghost.style,{
+  left:(rect.left-area.left)+'px',
+  top:(rect.top-area.top)+'px',
+  width:rect.width+'px',
+  height:Math.max(1.5,rect.height)+'px',
+  position:'absolute',transformOrigin:'center',zIndex:'44',
+  pointerEvents:'none'
+ });
+ scene.append(ghost);return ghost;
+}
+async function n12ThirdFinishAction(kind){
+ const stage=nestedPreview?.stage;
+ const next=n12ThirdFinishPaths[stage]?.[kind];
+ if(!next||busy)return;
+ const startStage=stage,oldShift=layoutShiftX;
+ const cross=kind==='innerCross'||kind==='wholeCross';
+ const subtract=kind==='moveConstant';
+ const v=n12Values();
+ const sourceIds=kind==='denProduct'?
+  ['n12thirdInnerDen','n12thirdFactor3']:
+  kind==='product'?
+   ['n12rhs',stage==='thirdCrossed'?'n12thirdFactor3':
+     stage==='thirdInnerCrossed'?'n12thirdFactorA':'n12thirdDenFinal']:
+  kind==='final'?['n12rhs','n12thirdAdd']:[];
+ const srcNodes=sourceIds.map(byId);
+ if(sourceIds.length&&srcNodes.some(n=>!n))return;
+ const departing=cross?
+  byId(kind==='innerCross'?'n12thirdInnerDen':'n12thirdDenFinal'):
+  subtract?byId('n12thirdTerm'):null;
+ if((cross||subtract)&&!departing)return;
+ const origin=departing?MotionEngine.center(departing.getBoundingClientRect()):null;
+ const ghosts=srcNodes.map(n12ThirdFlightFrom);
+ const flyingTerm=subtract?n12ThirdFlightFrom(departing):null;
+ const disappearingBar=cross?n12ThirdFractionBarGhost():null;
+ const specs=kind==='product'?
+  (stage==='thirdCrossed'?[{from:'n12thirdMergedInner'}]:
+   [{from:'n12thirdNumerator'}]):
+  kind==='denProduct'?
+   [{from:'n12thirdNumerator'},
+    {selector:'[data-id="n12thirdMergedInner"] > .fracbar',
+     targetSelector:'[data-id="n12thirdMergedInner"] > .fracbar',stretch:true},
+    {from:'n12rhs'}]:
+  cross?
+   [{from:'n12thirdNumerator'},{from:'n12rhs'},
+    {from:kind==='innerCross'?'n12thirdInnerDen':'n12thirdDenFinal',
+     to:kind==='innerCross'?'n12thirdFactorA':'n12thirdDenFinal',
+     restyle:n=>{
+      n12ThirdDropAction(n);n.classList.remove('n12-third-den-choice');
+     }}]:
+  subtract?[{from:'n12thirdX'},{from:'n12rhs'}]:
+  kind==='final'?[{from:'n12thirdX'}]:[];
+ let movedNode=null,targetNode=null,keepActions=[],destination=null;
+ const elapsed=fastMode()?410:580;
+ let failure=null;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  // Preserve unchanged objects in the real DOM, not re-drawn snapshots.
+  const live=n12ThirdTransferTo(next,specs);
+  movedNode=cross?byId(kind==='innerCross'?'n12thirdFactorA':'n12thirdDenFinal'):null;
+  targetNode=kind==='denProduct'?byId('n12thirdDenFinal'):
+   kind==='product'||kind==='final'?byId('n12rhs'):
+   subtract?byId('n12thirdAdd'):null;
+  if((cross&&!movedNode)||(!cross&&!targetNode))
+    throw Error('İşlemin hedef nesnesi bulunamadı');
+
+  // Alignment and viewport correction occur BEFORE computing destinations.
+  const keepPromises=n12ThirdSnapAndAnimate(live.filter(o=>o.node!==movedNode),elapsed,'equals');
+  const center=MotionEngine.center;
+  const region=scene.getBoundingClientRect();
+  const scale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
+  if(!Number.isFinite(scale)||scale<=0)throw Error('Ölçek geçersiz');
+  const smooth=t=>t*t*(3-2*t);
+  const moveSprite=(sprite,from,to,u,height=0)=>{
+   sprite.style.left=(from.x+(to.x-from.x)*u-region.left)+'px';
+   sprite.style.top=(from.y+(to.y-from.y)*u+height-region.top)+'px';
+  };
+  let actionMotion;
+  if(cross){
+   const to=center(movedNode.getBoundingClientRect());
+   const arc=n12TransferArc(origin,to,'denominator');
+   const dx=(origin.x-to.x)/scale,dy=(origin.y-to.y)/scale;
+   movedNode.style.transform='translate3d('+dx+'px,'+dy+'px,0)';
+   actionMotion=n12RafMotion(elapsed,t=>{
+    const u=smooth(t);
+    movedNode.style.transform='translate3d('+
+     (dx*(1-u))+'px,'+
+     (dy*(1-u)+arc.sign*arc.amp*Math.sin(Math.PI*u)/scale)+'px,0)';
+    if(disappearingBar)disappearingBar.style.transform=
+     'scaleX('+Math.max(0,1-Math.min(1,t/.63))+')';
+   });
+  }else if(subtract){
+   const destNumber=center(targetNode.getBoundingClientRect());
+   const targetSign=byId('n12thirdReverse');
+   const signRect=targetSign?.getBoundingClientRect();
+   const to=signRect?{
+    x:(signRect.left+destNumber.x)/2,
+    y:destNumber.y
+   }:destNumber;
+   const arc=n12TransferArc(origin,to,'normal');
+   targetNode.style.visibility='hidden';
+   if(targetSign)targetSign.style.visibility='hidden';
+   let changed=false;
+   actionMotion=n12RafMotion(elapsed,t=>{
+    const u=smooth(t);
+    moveSprite(flyingTerm.sprite,origin,to,u,
+     arc.sign*arc.amp*Math.sin(Math.PI*u));
+    const atX=origin.x+(to.x-origin.x)*u;
+    if(!changed&&atX>=center(eq.querySelector('.equals').getBoundingClientRect()).x){
+     changed=true;
+     flyingTerm.sprite.textContent=(v.offset>0?'−':'+')+n12Number(v.addedNumerator);
+    }
+   });
+   keepActions.push(()=>{targetNode.style.visibility='';
+    if(targetSign)targetSign.style.visibility='';});
+  }else{
+   const goal=center(targetNode.getBoundingClientRect());
+   // New total remains hidden until BOTH operands collide exactly at
+   // the eventual result, not somewhere in between or past it.
+   targetNode.style.visibility='hidden';
+   actionMotion=n12RafMotion(elapsed,t=>{
+    const u=t<.78?smooth(t/.78):1;
+    for(const g of ghosts){
+     moveSprite(g.sprite,g.from,goal,u);
+     g.sprite.style.opacity=t>=.78?'0':'1';
+    }
+    if(t>=.78)targetNode.style.visibility='';
+   });
+   keepActions.push(()=>{targetNode.style.visibility='';});
+  }
+  await Promise.all([keepPromises,actionMotion]);
+ }catch(err){
+  failure=err;
+  nestedPreview.stage=startStage;layoutShiftX=oldShift;
+  history.pop();step=Math.max(0,step-1);
+  $('#feedback').textContent='Çözüm işlemi tamamlanamadı: '+err.message;
+  render();positionScale();
+ }finally{
+  ghosts.forEach(g=>g.sprite.remove());
+  flyingTerm?.sprite.remove();
+  disappearingBar?.remove();
+  if(movedNode)movedNode.style.transform='';
+  keepActions.forEach(fn=>fn());
+  busy=false;scene.classList.remove('busy');
+  if(!failure&&next==='thirdSolved'){
+   // The one-stroke completion seal is triggered only AFTER motion.
+   n12ThirdShowStep();update();
+  }else{
+   n12ThirdShowStep();
+   positionScale();
+  }
+ }
+}
 // Tek hareketin tamamı matematiksel SON durumun koordinatlarından
 // planlanır. Paydaki (x/2+1) alt düğümleri tek tek uçmaz.
 async function n12DivideToProductAnimated(){
