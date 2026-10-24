@@ -4110,9 +4110,12 @@ function n15Half(){
 }
 function n15LeftResult(){
  const swapped=layer15.phase==='flipping'||layer15.phase==='complete';
+ // Ters çevirirken DEĞERLERİ değil nesne kimliklerinin konumlarını
+ // değiştiriyoruz: 3 üstten alta, 2 alttan üste yay boyunca ilerler.
  return n15Frac(
-  atom('n15leftNum',swapped?'2':'3'),
-  atom('n15leftDen',swapped?'3':'2'),'n15leftFrac');
+  swapped?atom('n15leftDen','2'):atom('n15leftNum','3'),
+  swapped?atom('n15leftNum','3'):atom('n15leftDen','2'),
+  'n15leftFrac');
 }
 function n15Markup(){
  const phase=layer15.phase,equals='<span class="equals">=</span>';
