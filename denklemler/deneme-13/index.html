@@ -3494,6 +3494,140 @@ function rightResult(){return resultFrac(D(),A())}
 /* Deneme 12.18: ((x/a)±b)/c=d.
    İçteki terimin işareti ve negatif ara sonuçlar artık model verisi.
    a, b ve c pozitif; sağ taraf işaretli tam sayı olabilir. */
+
+/* Deneme 13.01: Paydasinda bilinmeyen bulunan kesir.
+   2 -> 2/1 -> iki capraz secim -> mevcut ifade agaci. */
+function parseVariableDenominator(raw){
+ const str=String(raw).replace(/\s+/g,'').replace(/[−–]/g,'-');
+ const z=str.match(/^\(([+-]?\d*)x([+-]\d+)?\)\/\(([+-]?\d*)x([+-]\d+)?\)=([+-]?\d+)$/i);
+ if(!z)return null;
+ const cv=t=>t===''||t==='+'?1:t==='-'?-1:Number(t);
+ const a=cv(z[1]),b=Number(z[2]||0),d=cv(z[3]),e=Number(z[4]||0),k=Number(z[5]);
+ if(![a,b,d,e,k,a-k*d,k*e-b].every(Number.isSafeInteger)||d===0||
+    Math.max(...[a,b,d,e,k].map(Math.abs))>999)return null;
+ return {kind:'variable-denominator',stage:'initial',a,b,d,e,k,raw:str};
+}
+function n13Affine(a,b){return (a?signedX(a,true):'')+(b?signedConst(b,!a):'')||'0'}
+function n13Forbidden(){
+ if(!variableDenEq)return '';
+ const {d,e}=variableDenEq,num=-e;
+ if(num%d===0)return 'x ≠ '+fmt(num/d);
+ const g=gcd(Math.abs(num),Math.abs(d)),n=num/g,q=d/g;
+ return 'x ≠ '+(n*q<0?'−':'')+fmt(Math.abs(n))+'/'+fmt(Math.abs(q));
+}
+function n13Markup(){
+ const p=variableDenEq,top='('+n13Affine(p.a,p.b)+')';
+ const den='('+n13Affine(p.d,p.e)+')',k=fmt(p.k);
+ const left=v=>'<span class="side" data-id="sideL">'+v+'</span>';
+ const right=v=>'<span class="side" data-id="sideR">'+v+'</span>';
+ const equal='<span class="equals">=</span>';
+ if(p.stage==='crossed')return left('<span class="n13-product">'+atom('n13denR','1')+atom('n13numL',top)+'</span>')+
+  equal+right('<span class="n13-product">'+atom('n13numR',k)+atom('n13denL',den)+'</span>');
+ if(p.stage==='initial')return left(fhtml(atom('n13numL',top),atom('n13denL',den),'n13fracL',null))+
+  equal+right(hit('n13numR',k,'n13ShowUnit'));
+ // a) sol pay ile sag payda (1). b) sol payda ile sag pay (2).
+ const topL=sLinkedHit('n13numL',top,'n13CrossA','n13-diagonal-a',null,true);
+ const denL=sLinkedHit('n13denL',den,'n13CrossB','n13-diagonal-b',null,true);
+ const topR=sLinkedHit('n13numR',k,'n13CrossB','n13-diagonal-b',null,true);
+ const denR=sLinkedHit('n13denR','1','n13CrossA','n13-diagonal-a',null,true);
+ return left(fhtml(topL,denL,'n13fracL',null))+equal+
+  right(fhtml(topR,denR,'n13fracR',null));
+}
+function n13ToExistingEngine(){
+ const p=variableDenEq;
+ const numerator=parseSimpleExpr(n13Affine(p.a,p.b));
+ const denominator=parseSimpleExpr(n13Affine(p.d,p.e));
+ if(!numerator||!denominator)throw Error('Parantezler olusturulamadi');
+ const left=sSum([{sign:1,node:sn('mul',{factors:[sNumber(1),sGroup(numerator)]})}]);
+ const right=sSum([{sign:1,node:sn('mul',{factors:[sNumber(p.k),sGroup(denominator)]})}]);
+ const L=sPoly(left),R=sPoly(right);
+ if(![L.a,L.b,R.a,R.b].every(Number.isSafeInteger))throw Error('Islem araligi asildi');
+ simpleEq={mode:'expression',left,right};
+ m={a:L.a,b:L.b,c:R.a,d:R.b};
+ s=initial();s.barsReady=true;preCommon=1;
+ variableDenEq.stage='handoff';
+}
+async function n13Action(action){
+ if(!variableDenEq||busy)return;
+ if(action==='n13ShowUnit'&&variableDenEq.stage==='initial'){
+  busy=true;scene.classList.add('busy');save();step++;
+  try{
+   const previousEquals=eq.querySelector('.equals')?.getBoundingClientRect();
+   const previousNumber=byId('n13numR')?.getBoundingClientRect();
+   variableDenEq.stage='unit';render();positionScale();
+   const equals=eq.querySelector('.equals');
+   if(equals&&previousEquals){
+    layoutShiftX+=MotionEngine.center(previousEquals).x-
+     MotionEngine.center(equals.getBoundingClientRect()).x;positionScale();
+   }
+   const number=byId('n13numR');
+   if(number&&previousNumber){
+    const destination=number.getBoundingClientRect();
+    const scale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
+    const anim=number.animate([
+     {transform:'translate3d('+((previousNumber.left-destination.left)/scale)+'px,'+
+       ((previousNumber.top-destination.top)/scale)+'px,0)'},
+     {transform:'translate3d(0,0,0)'}
+    ],{duration:fastMode()?230:360,easing:'cubic-bezier(.4,0,.2,1)'});
+    await anim.finished.catch(()=>{});
+   }
+  }finally{busy=false;scene.classList.remove('busy');update();}
+  return;
+ }
+ if(!['n13CrossA','n13CrossB'].includes(action)||variableDenEq.stage!=='unit')return;
+ busy=true;scene.classList.add('busy');save();step++;
+ const beforeStage=variableDenEq.stage,previousShift=layoutShiftX;
+ try{
+  const names=['n13numL','n13denL','n13numR','n13denR'];
+  const tracked=names.map(id=>{
+   const node=byId(id);if(!node)throw Error('Kaynak bulunamadi: '+id);
+   return {id,node,before:node.getBoundingClientRect()};
+  });
+  const previousEqual=eq.querySelector('.equals');
+  const equalRect=previousEqual?.getBoundingClientRect();
+  tracked.forEach(item=>item.node.remove());
+  previousEqual?.remove();
+  variableDenEq.stage='crossed';render();
+  // Ayni DOM nesneleri hedef carpimlara tasiniyor.
+  for(const item of tracked){
+   const target=byId(item.id);if(!target)throw Error('Hedef bulunamadi: '+item.id);
+   item.node.className='atom';
+   for(const attr of ['data-action','data-hl-group','role','tabindex','aria-label','title'])
+    item.node.removeAttribute(attr);
+   target.replaceWith(item.node);
+  }
+  if(previousEqual)eq.querySelector('.equals')?.replaceWith(previousEqual);
+  positionScale();
+  const newEqual=eq.querySelector('.equals');
+  if(newEqual&&equalRect){
+   layoutShiftX+=MotionEngine.center(equalRect).x-
+    MotionEngine.center(newEqual.getBoundingClientRect()).x;
+   positionScale();
+  }
+  const scale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
+  const ms=fastMode()?390:650;
+  const flights=tracked.map(item=>{
+   const finish=item.node.getBoundingClientRect();
+   const dx=(MotionEngine.center(item.before).x-MotionEngine.center(finish).x)/scale;
+   const dy=(MotionEngine.center(item.before).y-MotionEngine.center(finish).y)/scale;
+   const anim=item.node.animate([
+    {transform:'translate3d('+dx+'px,'+dy+'px,0)'},
+    {transform:'translate3d(0,0,0)'}
+   ],{duration:ms,easing:'cubic-bezier(.42,0,.17,1)',fill:'both'});
+   return anim.finished.catch(()=>{}).then(()=>anim.cancel());
+  });
+  await Promise.all(flights);
+  n13ToExistingEngine();update();
+ }catch(error){
+  variableDenEq.stage=beforeStage;layoutShiftX=previousShift;
+  history.pop();step=Math.max(0,step-1);
+  $('#feedback').textContent='Icler-dislar: '+error.message;
+  update();
+ }finally{
+  busy=false;scene.classList.remove('busy');
+  $('#back').disabled=history.length===0;$('#reset').disabled=false;
+ }
+}
 function parseNestedPreview(raw){
  const clean=String(raw).replace(/\s+/g,'').replace(/[−–]/g,'-');
  const match=clean.match(/^\(\(x\/([1-9]\d*)\)([+-])([1-9]\d*)\)\/([1-9]\d*)=(-?\d+)$/i);
