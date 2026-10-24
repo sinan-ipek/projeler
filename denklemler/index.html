@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 93</title>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 94</title>
 <style>
 :root{font-family:Arial,Helvetica,sans-serif;color:#1d2a3b;background:#f4f6fa}*{box-sizing:border-box}body{margin:0;min-height:100vh}header{padding:18px 25px;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:22px;margin:0;font-weight:600}.subtitle{font-size:12px;color:#77869a;margin-top:6px}.home{width:45px;height:45px;border-radius:12px;background:#ffcf31;border:2px solid #e4ac14;box-shadow:0 3px 8px #5a461525;display:grid;place-items:center;color:#383019;text-decoration:none}.home svg{height:23px;width:23px;fill:currentColor}main{width:min(1120px,calc(100% - 28px));margin:auto}.toolbar,.examples,.entry{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:8px 0 14px}button,select,input{font:inherit;border:1px solid #d5dfea;border-radius:10px;background:white;color:#273954;padding:10px 13px}button{cursor:pointer;box-shadow:0 2px 5px #182b3a0c}button:hover:not(:disabled){border-color:#8fa6c4}button:disabled{opacity:.42;cursor:default}.toolbar label{font-size:13px;color:#69768c;margin-left:auto}.mode-switch{display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid #d5dfea;border-radius:12px;background:#eaf0f7}.mode-switch button{padding:7px 13px;border:1px solid transparent;background:transparent;box-shadow:none;border-radius:9px;font-size:14px;min-width:67px}.mode-switch button.selected{color:white;background:#273e5e;border-color:#273e5e;box-shadow:0 2px 5px #182b3a20}.mode-switch button:focus-visible{outline:2px solid #e1a518;outline-offset:2px}.board{border:1px solid #e1e7ee;background:white;border-radius:22px;min-height:430px;box-shadow:0 14px 45px #192e4b0b;overflow:hidden}.board-top{display:flex;justify-content:space-between;color:#78869b;padding:18px 20px;font-size:12px}.scene{height:316px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}.equation{position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1.3;font-size:clamp(26px,4.5vw,50px);font-weight:400;max-width:97%;transform-origin:center center;font-variant-numeric:lining-nums}.side{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative}.equals{padding:0 .36em}.part{display:inline-flex;align-items:center;white-space:nowrap;position:relative}.atom{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border-radius:7px;position:relative;padding:0 .035em}.sign{padding:0 .06em}.hit{cursor:pointer;position:relative;border-radius:8px;outline:none;background:transparent;box-shadow:none;transition:background .18s,box-shadow .18s}.hit:hover,.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.busy .hit{pointer-events:none}.combine{display:inline-flex;align-items:center;border-radius:8px}.combine.hit{padding:0 .04em}.multi-combine{display:inline-flex;align-items:center;white-space:nowrap;border-radius:8px}.multi-combine .part{white-space:nowrap}.multi-combine.hit{padding:0 .05em}.multiply-factor{display:inline-flex;align-items:center;white-space:nowrap}.mul-dot{display:inline-block;padding:0 .08em}.multiply-factor .hit{padding:0 .055em}.fraction{display:inline-grid;grid-template-rows:auto 3px auto;align-items:center;justify-items:center;position:relative;margin:0 .08em;min-width:1em;border-radius:9px}.numerator,.denominator{display:flex;justify-content:center;align-items:center;min-height:.92em;padding:0 .14em;white-space:nowrap}.numerator{transform:translateY(-.09em)}.denominator{transform:translateY(.09em)}.fracbar{height:2px;width:100%;background:#293852;border-radius:2px;align-self:center;transform:scaleX(1);transform-origin:center}.fraction.constructing .fracbar{transform:scaleX(0)}.fraction.constructed .fracbar{transform:scaleX(1);transition:transform .34s cubic-bezier(.45,0,.18,1)}.fraction.hit:hover,.fraction.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.tip{min-height:32px;text-align:center;font-size:13px;color:#7d8ca0}.examples button.active,.modules button.active{background:#273e5e;color:white}.modules{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 14px}.modules button{font-weight:600;min-width:115px}.module-label{display:none}.examples button{font-size:14px}.entry input{width:min(340px,65vw)}.feedback{min-height:18px;color:#ad3e3e;font-size:12px}.notice{font-size:12px;color:#8390a3;line-height:1.6}.measure-layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;pointer-events:none}.measurement{max-width:97%}.ghost{position:fixed;z-index:2000;pointer-events:none;white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-weight:400;line-height:1.3;color:#bf7c1d;will-change:transform,opacity}.done{color:#188a5c}.cross{position:relative}@media(max-width:620px){header{padding:12px 16px}.board{min-height:375px}.board-top{padding:14px}.scene{height:270px}.equals{padding:0 .18em}.toolbar label{margin-left:0}}
 
@@ -292,8 +292,10 @@
  transform:translate(-50%,-50%);transform-origin:center;
  background:transparent!important;box-shadow:none!important
 }
+.n13-product{display:inline-flex;align-items:center;white-space:nowrap}
+.n13-restriction{font-size:12px;color:#73849b}
 </style></head><body>
-<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 93</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
+<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 94</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
 <main><div class="toolbar"><button id="reset">↺ Baştan</button><button id="back">← Geri</button><div class="mode-switch" role="group" aria-label="Çözüm yöntemi"><button type="button" id="modeSlow" class="selected" aria-pressed="true" title="Bütün öğretici işlem adımlarını göster">Yavaş</button><button type="button" id="modeFast" aria-pressed="false" title="Bariz işlemleri tek adımda tamamla">Hızlı</button></div></div>
 <div class="modules" id="modules" aria-label="Alıştırma seçimi"></div><div class="module-label" id="moduleLabel"></div><div class="board"><div class="board-top"><span>Denklemi adım adım çöz</span><span id="stepLabel">Adım 1</span></div><div id="scene" class="scene"><div id="equation" class="equation"></div></div><div id="tip" class="tip" aria-live="polite"></div></div>
 <div id="startupNotice" class="startup-notice" role="alert">Denklem motoru başlatılamadı. Hata bilgisi için tarayıcı konsolunu açabilirsiniz.</div><div id="examples" class="examples"></div><div class="entry"><input id="custom" aria-label="Denklem" placeholder="Örn. 3x+5=x+13" spellcheck="false"><button id="load">Denklemi aç</button><span id="feedback" class="feedback"></span></div><p class="notice">Bir bilinmeyenli birinci dereceden denklemler. Alıştırma seçebilir veya kendi denklemini yazabilirsin. Fareyle üzerine gelince yalnızca yapılabilecek işlemler vurgulanır.</p></main>
@@ -485,6 +487,21 @@ const exampleGroupsByModule={
       "((x/3)+5)/2=2",
       "((x/2)-1)/3=-2"
     ]
+  }],
+  10: [{
+    title: "Paydasında Bilinmeyen",
+    examples: [
+      "(x+1)/(x-2)=2",
+      "(2x+3)/(x-1)=3",
+      "(x-1)/(x+2)=2",
+      "(3x+2)/(x-1)=2",
+      "(x+4)/(2x-3)=3",
+      "(x+1)/(x-2)=2/3",
+      "(2x+3)/(x-1)=3/2",
+      "(x-1)/(x+2)=3/4",
+      "(3x+2)/(2x-1)=5/3",
+      "(2x+5)/(x-4)=4/3"
+    ]
   }]
 };
 const examplesByModule=Object.fromEntries(
@@ -496,7 +513,7 @@ const exerciseCatalog=Object.entries(exampleGroupsByModule).flatMap(([module,gro
  groups.map((group,groupIndex)=>({module:Number(module),groupIndex,examples:group.examples})));
 let currentExercise=0;
 let layoutShiftX=0;
-let currentModule=1;let nestedPreview=null;let bracket=null;let fractionEq=null;let pairEq=null;let multiEq=null;let simpleEq=null;let complexEq=null;let complexDomain=[];let preCommon=1;let sidesFlipped=false;
+let currentModule=1;let variableDenEq=null;let nestedPreview=null;let bracket=null;let fractionEq=null;let pairEq=null;let multiEq=null;let simpleEq=null;let complexEq=null;let complexDomain=[];let preCommon=1;let sidesFlipped=false;
 let m={a:4,b:6,c:0,d:12},s,history=[],busy=false,step=0;
 let n12SealPlayed=false,n12SealNode=null;
 // ÖĞRETİM MODU: Animasyon hızından bağımsızdır. Yavaş, Beta 37 adımlarını korur.
@@ -3458,7 +3475,7 @@ async function bracketAction(action){
 }
 // Temsil: her adım cebirsel eşitliği korur, işaretin yanında hangi terimin olduğu veri modelinde saklanır.
 function initial(){return {movedB:m.b===0,movedC:m.c===0,combinedL:m.c===0,combinedR:m.b===0,divided:false,leftDone:false,rightDone:false};}
-function stateCopy(){return structuredClone({s,nestedPreview,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX,sidesFlipped})}
+function stateCopy(){return structuredClone({s,variableDenEq,nestedPreview,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX,sidesFlipped})}
 function save(){history.push(stateCopy());}
 function hit(id,txt,action){return `<span class="atom hit" role="button" tabindex="0" data-action="${action}" data-id="${id}" aria-label="${txt.replace(/<[^>]*>/g,'')}" >${txt}</span>`}
 function atom(id,txt){return `<span class="atom" data-id="${id}">${txt}</span>`}
@@ -3482,6 +3499,155 @@ function rightResult(){return resultFrac(D(),A())}
 /* Deneme 12.18: ((x/a)±b)/c=d.
    İçteki terimin işareti ve negatif ara sonuçlar artık model verisi.
    a, b ve c pozitif; sağ taraf işaretli tam sayı olabilir. */
+
+/* Deneme 13.01: Paydasinda bilinmeyen bulunan kesir.
+   2 -> 2/1 -> iki capraz secim -> mevcut ifade agaci. */
+function parseVariableDenominator(raw){
+ const str=String(raw).replace(/\s+/g,'').replace(/[−–]/g,'-');
+ // Sag taraf k (yani k/1) ya da k/q biciminde olabilir (q>0).
+ // Ikinci durumda k/q zaten iki kesirden olustugu icin /1 adimi atlanir.
+ const z=str.match(/^\(([+-]?\d*)x([+-]\d+)?\)\/\(([+-]?\d*)x([+-]\d+)?\)=([+-]?\d+)(?:\/([1-9]\d*))?$/i);
+ if(!z)return null;
+ const cv=t=>t===''||t==='+'?1:t==='-'?-1:Number(t);
+ const a=cv(z[1]),b=Number(z[2]||0),d=cv(z[3]),e=Number(z[4]||0);
+ const k=Number(z[5]),rightDen=Number(z[6]||1);
+ const A=rightDen*a-k*d,B=k*e-rightDen*b;
+ if(![a,b,d,e,k,rightDen,A,B].every(Number.isSafeInteger)||
+    d===0||rightDen<1||Math.max(...[a,b,d,e,k,rightDen].map(Math.abs))>999||
+    Math.max(Math.abs(A),Math.abs(B))>1000000)return null;
+ return {kind:'variable-denominator',stage:'initial',a,b,d,e,k,rightDen,raw:str};
+}
+function n13Affine(a,b){return (a?signedX(a,true):'')+(b?signedConst(b,!a):'')||'0'}
+function n13Forbidden(){
+ if(!variableDenEq)return '';
+ const {d,e}=variableDenEq,num=-e;
+ if(num%d===0)return 'x ≠ '+fmt(num/d);
+ const g=gcd(Math.abs(num),Math.abs(d)),n=num/g,q=d/g;
+ return 'x ≠ '+(n*q<0?'−':'')+fmt(Math.abs(n))+'/'+fmt(Math.abs(q));
+}
+function n13Markup(){
+ // Kesir çizgisi pay ve paydayı zaten gruplar: parantez gereksiz.
+ // Parantez yalnızca çapraz çarpımdaki çarpanları göstermek için oluşur.
+ const p=variableDenEq,top=n13Affine(p.a,p.b);
+ const den=n13Affine(p.d,p.e),k=fmt(p.k),q=fmt(p.rightDen||1);
+ const topProduct='('+top+')',denProduct='('+den+')';
+ const left=v=>'<span class="side" data-id="sideL">'+v+'</span>';
+ const right=v=>'<span class="side" data-id="sideR">'+v+'</span>';
+ const equal='<span class="equals">=</span>';
+ if(p.stage==='crossed')return left('<span class="n13-product">'+atom('n13denR',q)+atom('n13numL',topProduct)+'</span>')+
+  equal+right('<span class="n13-product">'+atom('n13numR',k)+atom('n13denL',denProduct)+'</span>');
+ if(p.stage==='initial'&&(p.rightDen||1)===1)return left(fhtml(atom('n13numL',top),atom('n13denL',den),'n13fracL',null))+
+  equal+right(hit('n13numR',k,'n13ShowUnit'));
+ // a) sol pay ile sag payda (1). b) sol payda ile sag pay (2).
+ const topL=sLinkedHit('n13numL',top,'n13CrossA','n13-diagonal-a',null,true);
+ const denL=sLinkedHit('n13denL',den,'n13CrossB','n13-diagonal-b',null,true);
+ const topR=sLinkedHit('n13numR',k,'n13CrossB','n13-diagonal-b',null,true);
+ const denR=sLinkedHit('n13denR',q,'n13CrossA','n13-diagonal-a',null,true);
+ return left(fhtml(topL,denL,'n13fracL',null))+equal+
+  right(fhtml(topR,denR,'n13fracR',null));
+}
+function n13ToExistingEngine(){
+ const p=variableDenEq;
+ const numerator=parseSimpleExpr(n13Affine(p.a,p.b));
+ const denominator=parseSimpleExpr(n13Affine(p.d,p.e));
+ if(!numerator||!denominator)throw Error('Parantezler olusturulamadi');
+ const left=sSum([{sign:1,node:sn('mul',{factors:[sNumber(p.rightDen||1),sGroup(numerator)]})}]);
+ const right=sSum([{sign:1,node:sn('mul',{factors:[sNumber(p.k),sGroup(denominator)]})}]);
+ const L=sPoly(left),R=sPoly(right);
+ if(![L.a,L.b,R.a,R.b].every(Number.isSafeInteger))throw Error('Islem araligi asildi');
+ simpleEq={mode:'expression',left,right};
+ m={a:L.a,b:L.b,c:R.a,d:R.b};
+ s=initial();s.barsReady=true;preCommon=1;
+ variableDenEq.stage='handoff';
+}
+async function n13Action(action){
+ if(!variableDenEq||busy)return;
+ if(action==='n13ShowUnit'&&variableDenEq.stage==='initial'){
+  busy=true;scene.classList.add('busy');save();step++;
+  try{
+   const previousEquals=eq.querySelector('.equals')?.getBoundingClientRect();
+   const previousNumber=byId('n13numR')?.getBoundingClientRect();
+   variableDenEq.stage='unit';render();positionScale();
+   const equals=eq.querySelector('.equals');
+   if(equals&&previousEquals){
+    layoutShiftX+=MotionEngine.center(previousEquals).x-
+     MotionEngine.center(equals.getBoundingClientRect()).x;positionScale();
+   }
+   const number=byId('n13numR');
+   if(number&&previousNumber){
+    const destination=number.getBoundingClientRect();
+    const scale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
+    const anim=number.animate([
+     {transform:'translate3d('+((previousNumber.left-destination.left)/scale)+'px,'+
+       ((previousNumber.top-destination.top)/scale)+'px,0)'},
+     {transform:'translate3d(0,0,0)'}
+    ],{duration:fastMode()?230:360,easing:'cubic-bezier(.4,0,.2,1)'});
+    await anim.finished.catch(()=>{});
+   }
+  }finally{busy=false;scene.classList.remove('busy');update();}
+  return;
+ }
+ if(!['n13CrossA','n13CrossB'].includes(action)||
+    !(variableDenEq.stage==='unit'||
+      (variableDenEq.stage==='initial'&&(variableDenEq.rightDen||1)>1)))return;
+ busy=true;scene.classList.add('busy');save();step++;
+ const beforeStage=variableDenEq.stage,previousShift=layoutShiftX;
+ try{
+  const names=['n13numL','n13denL','n13numR','n13denR'];
+  const tracked=names.map(id=>{
+   const node=byId(id);if(!node)throw Error('Kaynak bulunamadi: '+id);
+   return {id,node,before:node.getBoundingClientRect()};
+  });
+  const previousEqual=eq.querySelector('.equals');
+  const equalRect=previousEqual?.getBoundingClientRect();
+  tracked.forEach(item=>item.node.remove());
+  previousEqual?.remove();
+  variableDenEq.stage='crossed';render();
+  // Ayni DOM nesneleri hedef carpimlara tasiniyor.
+  for(const item of tracked){
+   const target=byId(item.id);if(!target)throw Error('Hedef bulunamadi: '+item.id);
+   item.node.className='atom';
+   for(const attr of ['data-action','data-hl-group','role','tabindex','aria-label','title'])
+    item.node.removeAttribute(attr);
+   // Çapraz çarpım anında, kesir çizgisinin sağladığı gruplama
+   // artık bulunmadığı için ilgili çarpanın parantezleri görünür.
+   // Orijinal nesne ve veri kimliği aynen korunur.
+   if(item.id==='n13numL')item.node.textContent='('+n13Affine(variableDenEq.a,variableDenEq.b)+')';
+   if(item.id==='n13denL')item.node.textContent='('+n13Affine(variableDenEq.d,variableDenEq.e)+')';
+   target.replaceWith(item.node);
+  }
+  if(previousEqual)eq.querySelector('.equals')?.replaceWith(previousEqual);
+  positionScale();
+  const newEqual=eq.querySelector('.equals');
+  if(newEqual&&equalRect){
+   layoutShiftX+=MotionEngine.center(equalRect).x-
+    MotionEngine.center(newEqual.getBoundingClientRect()).x;
+   positionScale();
+  }
+  const scale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
+  const ms=fastMode()?390:650;
+  const flights=tracked.map(item=>{
+   const finish=item.node.getBoundingClientRect();
+   const dx=(MotionEngine.center(item.before).x-MotionEngine.center(finish).x)/scale;
+   const dy=(MotionEngine.center(item.before).y-MotionEngine.center(finish).y)/scale;
+   const anim=item.node.animate([
+    {transform:'translate3d('+dx+'px,'+dy+'px,0)'},
+    {transform:'translate3d(0,0,0)'}
+   ],{duration:ms,easing:'cubic-bezier(.42,0,.17,1)',fill:'both'});
+   return anim.finished.catch(()=>{}).then(()=>anim.cancel());
+  });
+  await Promise.all(flights);
+  n13ToExistingEngine();update();
+ }catch(error){
+  variableDenEq.stage=beforeStage;layoutShiftX=previousShift;
+  history.pop();step=Math.max(0,step-1);
+  $('#feedback').textContent='Icler-dislar: '+error.message;
+  update();
+ }finally{
+  busy=false;scene.classList.remove('busy');
+  $('#back').disabled=history.length===0;$('#reset').disabled=false;
+ }
+}
 function parseNestedPreview(raw){
  const clean=String(raw).replace(/\s+/g,'').replace(/[−–]/g,'-');
  const match=clean.match(/^\(\(x\/([1-9]\d*)\)([+-])([1-9]\d*)\)\/([1-9]\d*)=(-?\d+)$/i);
@@ -3790,7 +3956,7 @@ function n12ThirdHTML(){
  return left(outer(sum))+equal+right(atom('n12rhs',n(rhs)));
 }
 
-function markupCore(){if(nestedPreview)return nestedPreviewHTML();if(complexEq)return complexHTML();if(complexNoSolution())return `<span class="side">Çözüm yok</span>`;if(simpleEq&&simpleEq.mode!=='linear')return simpleMarkup();if(multiEq&&multiEq.mode!=='linear')return multiMarkup();if(pairEq&&pairEq.mode!=='linear')return pairHTML();if(fractionEq&&fractionEq.mode!=='linear')return fractionHTML();if(bracket&&bracket.mode!=='linear')return bracketHTML();if(ready()&&A()===0){return `<span class="side">${atom('zz','0')}</span><span class="equals">=</span><span class="side">${atom('verdict',D()===0?'0':' '+fmt(D()))}</span>`;}
+function markupCore(){if(variableDenEq&&variableDenEq.stage!=='handoff')return n13Markup();if(nestedPreview)return nestedPreviewHTML();if(complexEq)return complexHTML();if(complexNoSolution())return `<span class="side">Çözüm yok</span>`;if(simpleEq&&simpleEq.mode!=='linear')return simpleMarkup();if(multiEq&&multiEq.mode!=='linear')return multiMarkup();if(pairEq&&pairEq.mode!=='linear')return pairHTML();if(fractionEq&&fractionEq.mode!=='linear')return fractionHTML();if(bracket&&bracket.mode!=='linear')return bracketHTML();if(ready()&&A()===0){return `<span class="side">${atom('zz','0')}</span><span class="equals">=</span><span class="side">${atom('verdict',D()===0?'0':' '+fmt(D()))}</span>`;}
 if(!s.divided){let l=expression(leftTerms()),r=expression(rightTerms());if(s.movedC&&!s.combinedL&&m.c!==0){let pieces=leftTerms().filter(t=>t.kind==='x');if(pieces.length>1){let prefix=expression(pieces);// Sabit terimin kimliği ve işareti korunmalı ki hedef planda hareket edebilsin.
  let suffix=!s.movedB&&m.b!==0?expression([{kind:'k',n:m.b,id:'lb',action:'moveB'}],false):'';
  l=`<span class="combine hit" role="button" tabindex="0" data-action="combineL" data-id="groupL">${prefix}</span>${suffix}`;}}
@@ -3957,6 +4123,7 @@ async function pairChoiceAction(action){
 }
 
 function currentPriorityRule(){
+ if(variableDenEq&&variableDenEq.stage!=='handoff')return {type:'moduleOperation'};
  if(nestedPreview)return {type:'moduleOperation'};
  if(complexEq)return {type:'moduleOperation'};
  // A fraction's pending multiplication/cancellation is a real mathematical
@@ -4098,6 +4265,11 @@ $('#back').disabled=busy||history.length===0;$('#reset').disabled=busy;if(comple
  $('#tip').textContent=complexNoSolution()?'Çözüm yok: '+label:label;
 }
 if(nestedPreview)n12ThirdBindFinalTargets();
+if(variableDenEq){
+ const previous=$('#tip').innerHTML.trim();
+ const restriction='<span class="n13-restriction">'+n13Forbidden()+'</span>';
+ $('#tip').innerHTML=previous?previous+' &nbsp; '+restriction:restriction;
+}
 if(animateBars){requestAnimationFrame(()=>requestAnimationFrame(()=>eq.querySelectorAll('.fraction.constructing').forEach(el=>{el.classList.remove('constructing');el.classList.add('constructed')})));}}
 function byId(id){return eq.querySelector(`[data-id="${id}"]`)}
 function rect(id){return byId(id)?.getBoundingClientRect()}
@@ -4664,6 +4836,7 @@ async function swapEqualsAnimated(){
  }
 }
 async function act(action){
+ if(action.startsWith('n13'))return n13Action(action);
  if(action==='n12ThirdWrapUnit')return n12ThirdAdvance('thirdUnitFraction');
  if(action==='n12ThirdShowFactor')return n12ThirdAdvance('thirdFactorHint');
  if(action==='n12ThirdExpand')return n12ThirdAdvance('thirdEquivalent');
@@ -7030,6 +7203,7 @@ eq.addEventListener('click',e=>{
 eq.addEventListener('keydown',e=>{const t=e.target.closest('[data-action]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();hideDistributionHint();clearLinkedHighlight();act(t.dataset.action)}});
 function formatModel(o){let str=coefficient(o.a)+'x';if(o.b!==0)str+=(o.b<0?'-':'+')+abs(o.b);str+='=';if(o.c!==0)str+=coefficient(o.c)+'x';if(o.d!==0)str+=(o.d<0?'-':o.c!==0?'+':'')+abs(o.d);return str}
 function parseModule(raw,module){
+ if(module===10)return parseVariableDenominator(raw);
  if(module===9)return parseNestedPreview(raw);
  if(module===8)return parseComplex(raw);
  if(module===7)return parseMulti(raw);
@@ -7074,8 +7248,11 @@ function restart(newM=null,module=currentModule){
  layoutShiftX=0;sidesFlipped=false;
  const fresh=newM||parseModule($('#custom').value,module);
  if(!fresh)return;
- simpleEq=null;multiEq=null;pairEq=null;fractionEq=null;bracket=null;complexEq=null;nestedPreview=null;complexDomain=[];
- if(module===9){
+ simpleEq=null;multiEq=null;pairEq=null;fractionEq=null;bracket=null;complexEq=null;nestedPreview=null;variableDenEq=null;complexDomain=[];
+ if(module===10){
+  variableDenEq=structuredClone(fresh);
+  m={a:fresh.a,b:fresh.b,c:fresh.k*fresh.d,d:fresh.k*fresh.e};
+ }else if(module===9){
   nestedPreview=structuredClone(fresh);
   m={a:1,b:2,c:0,d:12};
  }else if(module===8){
@@ -7129,7 +7306,7 @@ function changeModule(number){
 $('#reset').onclick=()=>restart();
 $('#back').onclick=()=>{
  if(busy||!history.length)return;
- ({s,nestedPreview,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX,sidesFlipped}=history.pop());
+ ({s,variableDenEq,nestedPreview,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX,sidesFlipped}=history.pop());
  step=Math.max(0,step-1);update();
 };
 $('#modeSlow').onclick=()=>setTeachingMode('slow');
@@ -7137,6 +7314,12 @@ $('#modeFast').onclick=()=>setTeachingMode('fast');
 $('#load').onclick=()=>{
  if(busy)return;
  const raw=$('#custom').value;
+ const rational=parseVariableDenominator(raw);
+ if(rational){
+  const idx=exerciseCatalog.findIndex(page=>page.module===10);
+  if(idx>=0){currentExercise=idx;currentModule=10;drawExamples()}
+  $('#feedback').textContent='';restart(rational,10);return;
+ }
  const nested=parseNestedPreview(raw);
  if(nested){
   const ix=exerciseCatalog.findIndex(page=>page.module===9);
