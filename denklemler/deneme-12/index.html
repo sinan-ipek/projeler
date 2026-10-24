@@ -4764,8 +4764,11 @@ function n12ThirdSnapAndAnimate(nodes,duration,anchorId='equals'){
  for(const tracked of nodes){
   if(!tracked.node||!tracked.node.isConnected)continue;
   const after=tracked.node.getBoundingClientRect();
-  const dx=(tracked.before.left-after.left)/scale;
-  const dy=(tracked.before.top-after.top)/scale;
+  // Width-changing bars still begin at their ACTUAL old centres.
+  const dx=((tracked.before.left+tracked.before.width/2)-
+    (after.left+after.width/2))/scale;
+  const dy=((tracked.before.top+tracked.before.height/2)-
+    (after.top+after.height/2))/scale;
   const oldW=tracked.before.width,newW=after.width;
   const sx=(tracked.stretch&&newW>0)?oldW/newW:1;
   if(Math.abs(dx)<.25&&Math.abs(dy)<.25&&Math.abs(sx-1)<.005)continue;
@@ -4846,7 +4849,7 @@ async function n12ThirdAdvance(toStage){
     {from:'n12-plus',restyle:n12ThirdDropAction},
     {from:'n12outer3'},
     {from:'n12rhs'},
-    {from:'n12outerbar',to:'n12thirdOuterBar',
+    {from:'n12outerbar',to:'n12thirdOuterBar',stretch:true,
       restyle:node=>{n12ThirdDropAction(node);node.className='fracbar n12-mainbar';}}
    ],'x');
    const bar=byId('n12thirdNewBar'),den=byId('n12thirdUnitDen');
