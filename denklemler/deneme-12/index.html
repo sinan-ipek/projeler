@@ -4713,144 +4713,298 @@ const n12ThirdEdges={
  thirdFactorHint:'thirdEquivalent',
  thirdEquivalent:'thirdMerged'
 };
+/* Deneme 12.29: öğelerin kendisi hareket eder, tüm denklem
+   asla opacity:0 yapılmaz. Sabit x/a aynı DOM nesnesi olarak kalır. */
+function n12ThirdShowStep(){
+ $('#stepLabel').textContent='Adım '+(step+1);
+ $('#tip').innerHTML='';
+ $('#back').disabled=busy||history.length===0;
+ $('#reset').disabled=busy;
+}
+function n12ThirdMakeActive(node,action,label){
+ if(!node)return;
+ node.classList.add('n12-third-operand');
+ node.dataset.action=action;
+ node.setAttribute('role','button');
+ node.setAttribute('tabindex','0');
+ node.setAttribute('aria-label',label);
+}
+function n12ThirdDropAction(node){
+ if(!node)return;
+ node.classList.remove('hit','n12-third-unit-den');
+ node.removeAttribute('data-action');
+ node.removeAttribute('role');
+ node.removeAttribute('tabindex');
+ node.removeAttribute('title');
+ node.removeAttribute('aria-label');
+}
+function n12ThirdClampShift(){
+ const area=scene.getBoundingClientRect(),r=eq.getBoundingClientRect();
+ const margin=12;
+ if(r.width>area.width-2*margin)return;
+ let dx=0;
+ if(r.left<area.left+margin)dx=area.left+margin-r.left;
+ else if(r.right>area.right-margin)dx=area.right-margin-r.right;
+ if(Math.abs(dx)>.3){layoutShiftX+=dx;positionScale();}
+}
+function n12ThirdSnapAndAnimate(nodes,duration,anchorId='equals'){
+ // Gelecekteki koordinat, DOM değişikliğinden SONRA; kaynak
+ // koordinatlar DOM değiştirilmeden ÖNCE ölçülmüştür.
+ // Aradaki uzaklık hareket başlangıcında örtülür (FLIP).
+ const item=nodes.find(q=>q.anchor===anchorId);
+ if(item?.node){
+  const r=item.node.getBoundingClientRect();
+  const correction=item.before.left-r.left;
+  layoutShiftX+=correction;
+  positionScale();
+ }
+ n12ThirdClampShift();
+ const scale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
+ const transitions=[];
+ for(const tracked of nodes){
+  if(!tracked.node||!tracked.node.isConnected)continue;
+  const after=tracked.node.getBoundingClientRect();
+  const dx=(tracked.before.left-after.left)/scale;
+  const dy=(tracked.before.top-after.top)/scale;
+  const oldW=tracked.before.width,newW=after.width;
+  const sx=(tracked.stretch&&newW>0)?oldW/newW:1;
+  if(Math.abs(dx)<.25&&Math.abs(dy)<.25&&Math.abs(sx-1)<.005)continue;
+  const beginning='translate('+dx+'px,'+dy+'px) scaleX('+sx+')';
+  const anim=tracked.node.animate([
+   {transform:beginning},{transform:'translate(0,0) scaleX(1)'}
+  ],{duration,easing:'cubic-bezier(.32,.04,.2,1)',fill:'both'});
+  transitions.push(anim.finished.catch(()=>{}).then(()=>anim.cancel()));
+ }
+ return Promise.all(transitions);
+}
+/* Transfer the EXISTING math DOM nodes, rather than fading or creating
+   replacements. An HTML reflow may move them, but never destroys them. */
+function n12ThirdTransferTo(toStage,preserved,anchor='equals'){
+ const tracked=[];
+ const sign=eq.querySelector('.equals');
+ if(sign)tracked.push({node:sign,before:sign.getBoundingClientRect(),anchor:'equals'});
+ for(const p of preserved){
+  const element=p.selector?eq.querySelector(p.selector):byId(p.from);
+  if(!element)throw Error('Öğe bulunamadı: '+(p.from||p.selector));
+  const b=element.getBoundingClientRect();
+  tracked.push({node:element,before:b,anchor:p.anchor||'',stretch:!!p.stretch});
+ }
+ // Measure the complete target before moving ANY element.
+ let layout;
+ const oldStage=nestedPreview.stage;
+ try{
+  nestedPreview.stage=toStage;
+  layout=MotionEngine.targetLayout(nestedPreviewHTML());
+ }finally{nestedPreview.stage=oldStage;}
+ if(!layout.has('equals'))throw Error('Hedef yerleşimde eşitlik yok');
+ // Keep the old objects alive while replacing the structural markup.
+ const alive=new Map();
+ for(const p of preserved){
+  const node=p.selector?eq.querySelector(p.selector):byId(p.from);
+  alive.set(p,node);node.remove();
+ }
+ const oldEquals=eq.querySelector('.equals');
+ oldEquals?.remove();
+ nestedPreview.stage=toStage;
+ render();
+ // Before another screen frame, transplant every original node.
+ for(const p of preserved){
+  const target=p.targetSelector?eq.querySelector(p.targetSelector):byId(p.to||p.from);
+  if(!target)throw Error('Hedef öğe bulunamadı: '+(p.to||p.targetSelector));
+  const node=alive.get(p);
+  target.replaceWith(node);
+  if(p.to)node.dataset.id=p.to;
+  if(p.restyle) p.restyle(node);
+ }
+ if(oldEquals){
+  const nextEquals=eq.querySelector('.equals');
+  nextEquals?.replaceWith(oldEquals);
+ }
+ positionScale();
+ // No opacity operation anywhere: the unchanged x/a object stays solid.
+ return tracked;
+}
 async function n12ThirdAdvance(toStage){
  const fromStage=nestedPreview?.stage;
  if(busy||n12ThirdEdges[fromStage]!==toStage)return;
-
- // '+' seçilince matematiksel nesneler HİÇ değişmez, yalnız 1 HL olur.
- if(toStage==='thirdSelectUnit'){
-  save();step++;nestedPreview.stage=toStage;update();return;
- }
- const equal=eq.querySelector('.equals');
- if(!equal)return;
- let plan;
+ const a=n12Values().innerDen,values=n12Values();
+ const duration=fastMode()?320:475;
+ const ease='cubic-bezier(.4,0,.2,1)';
+ let animations=[];
+ busy=true;scene.classList.add('busy');save();step++;
+ const originalShift=layoutShiftX;
  try{
-  nestedPreview.stage=toStage;
-  plan=MotionEngine.targetLayout(nestedPreviewHTML());
- }finally{nestedPreview.stage=fromStage}
- if(!plan.has('equals'))return;
- const midpoint=MotionEngine.center;
- const at=midpoint(equal.getBoundingClientRect()),dest=midpoint(plan.get('equals'));
- const wantedX=at.x-dest.x,previousShift=layoutShiftX;
- const board=scene.getBoundingClientRect();
- const current=eq.getBoundingClientRect();
- const scale=current.width/Math.max(1,eq.offsetWidth);
- if(!Number.isFinite(scale)||scale<=0)return;
- const fromView=eq.cloneNode(true);
- fromView.removeAttribute('id');
- fromView.classList.add('n12-third-old');
- Object.assign(fromView.style,{
-  position:'absolute',
-  left:(current.left-board.left)+'px',top:(current.top-board.top)+'px',
-  width:eq.offsetWidth+'px',height:eq.offsetHeight+'px',
-  maxWidth:'none',margin:'0',opacity:'1',
-  transform:'scale('+scale+')',transformOrigin:'top left',
-  pointerEvents:'none'
- });
-
- // Her hareket eden karakterin kaynak ve hedefi ayrı DOM kimliğidir.
- const specs=toStage==='thirdUnitFraction'?
-   [['n12one','n12one']]:
-  toStage==='thirdEquivalent'?
-   [['n12one','n12thirdAdd'],['n12thirdUnitDen','n12thirdNewDen']]:
-  toStage==='thirdMerged'?
-   [['n12x','n12thirdX'],['n12thirdAdd','n12thirdAdd']]:[];
- const flying=specs.map(([a,b])=>{
-  const node=byId(a);
-  if(!node)return null;
-  const rect=node.getBoundingClientRect();
-  fromView.querySelector('[data-id="'+a+'"]')?.style.setProperty('visibility','hidden');
-  return {sourceId:a,targetId:b,from:midpoint(rect),
-   text:node.textContent,
-   size:(parseFloat(getComputedStyle(node).fontSize)||50)*scale};
- }).filter(Boolean);
-
- busy=true;scene.classList.add('busy','n12-third-animating');
- save();step++;scene.append(fromView);
- let moving=[],bar=null,den=null,factor=null;
- try{
-  nestedPreview.stage=toStage;
-  layoutShiftX=wantedX;
-  update();
-  // Mümkünse '=' sabit; küçük ekranlarda taşmayı önlemek daha öncelikli.
-  const area=scene.getBoundingClientRect(),newRect=eq.getBoundingClientRect();
-  if(newRect.width<=area.width-24){
-   let correction=0;
-   if(newRect.left<area.left+12)correction=area.left+12-newRect.left;
-   else if(newRect.right>area.right-12)correction=area.right-12-newRect.right;
-   if(Math.abs(correction)>0.5){
-    layoutShiftX+=correction;positionScale();
+  if(toStage==='thirdUnitFraction'){
+   // Initial x/a is literally the very same DOM fraction. The other
+   // side of + grows its denominator without making x/a blink.
+   const parts=n12ThirdTransferTo(toStage,[
+    {from:'n12inner',anchor:'x',restyle:node=>{
+     node.classList.remove('n12-third-operand');
+     n12ThirdDropAction(node);
+    }},
+    {from:'n12one',restyle:n12ThirdDropAction},
+    {from:'n12-plus',restyle:n12ThirdDropAction},
+    {from:'n12outer3'},
+    {from:'n12rhs'},
+    {from:'n12outerbar',to:'n12thirdOuterBar',
+      restyle:node=>{n12ThirdDropAction(node);node.className='fracbar n12-mainbar';}}
+   ],'x');
+   const bar=byId('n12thirdNewBar'),den=byId('n12thirdUnitDen');
+   // New objects may enter; the ORIGINAL numerators never fade.
+   if(bar){
+    const anim=bar.animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}],
+      {duration:duration*.77,easing:ease,fill:'both'});
+    animations.push(anim.finished.catch(()=>{}).then(()=>anim.cancel()));
    }
-  }
-  eq.style.opacity='0';
-
-  for(const item of flying){
-   const target=byId(item.targetId);
-   if(!target)continue;
-   const point=midpoint(target.getBoundingClientRect());
-   const ghost=n12MakeTransient('n12-third-flight',item.text,{
-    x:item.from.x-board.left,y:item.from.y-board.top
-   },item.size);
-   item.to=point;item.target=target;item.ghost=ghost;
-   item.finalText=target.textContent;
-   target.style.visibility='hidden';
-   moving.push(item);
-  }
-
-  bar=toStage==='thirdUnitFraction'?byId('n12thirdNewBar'):null;
-  den=toStage==='thirdUnitFraction'?byId('n12thirdUnitDen'):null;
-  factor=toStage==='thirdFactorHint'?byId('n12thirdExpandFactor'):null;
-  if(bar)bar.style.transform='scaleX(0)';
-  if(den){den.style.opacity='0';den.style.transform='translateY(-.32em)';}
-  if(factor){
-   factor.style.opacity='0';
-   factor.style.transform='translate(-50%,-.25em) scale(.72)';
-  }
-  const smooth=t=>t*t*(3-2*t);
-  await n12RafMotion(fastMode()?470:650,t=>{
-   const blend=smooth(n12Clamp((t-.12)/.75));
-   fromView.style.opacity=String(1-blend);
-   eq.style.opacity=String(blend);
-   const travel=smooth(n12Clamp((t-.07)/.78));
-   for(const item of moving){
-    const x=item.from.x+(item.to.x-item.from.x)*travel;
-    const y=item.from.y+(item.to.y-item.from.y)*travel;
-    item.ghost.style.left=(x-board.left)+'px';
-    item.ghost.style.top=(y-board.top)+'px';
-    // Genişletme sırasında 1, ancak işlem ilerledikçe a·b olur.
-    if(toStage==='thirdEquivalent'&&t>.58)
-     item.ghost.textContent=item.finalText;
-    item.ghost.style.opacity=String(1-n12Clamp((t-.81)/.14));
-    if(t>.80)item.target.style.visibility='';
-   }
-   const appear=smooth(n12Clamp((t-.26)/.58));
-   if(bar)bar.style.transform='scaleX('+appear+')';
    if(den){
-    den.style.opacity=String(appear);
-    den.style.transform='translateY('+(-.32*(1-appear))+'em)';
+    const anim=den.animate([
+      {transform:'translateY(-.32em)',opacity:0},
+      {transform:'translateY(0)',opacity:1}
+    ],{duration:duration*.8,easing:ease,fill:'both'});
+    animations.push(anim.finished.catch(()=>{}).then(()=>anim.cancel()));
    }
-   if(factor){
-    factor.style.opacity=String(appear);
-    factor.style.transform='translate(-50%,'+
-     (-.25+.43*appear)+'em) scale('+(.72+.28*appear)+')';
-   }
-  });
- }catch(err){
-  nestedPreview.stage=fromStage;layoutShiftX=previousShift;
-  history.pop();step=Math.max(0,step-1);
-  $('#feedback').textContent='Payda eşitleme animasyonu: '+err.message;
- }finally{
-  fromView.remove();
-  for(const item of moving){
-   item.target.style.visibility='';
-   item.ghost.remove();
+   animations.push(n12ThirdSnapAndAnimate(parts,duration,'x'));
+   await Promise.all(animations);
+  }else if(toStage==='thirdFactorHint'){
+   const fraction=byId('n12thirdNewFrac'),unit=byId('n12thirdUnitDen');
+   const outer=byId('n12thirdOuter');
+   if(!fraction||!unit||!outer)throw Error('Payda eşitleme nesnesi yok');
+   // The denominator 1 itself is reused, wrapped inside the
+   // Alıştırma 10 stack. (a) is below the 1, not beside it.
+   n12ThirdDropAction(unit);
+   const stack=document.createElement('span');
+   stack.className='six-den-stack';
+   const factor=document.createElement('span');
+   factor.className='six-factor hit';
+   factor.dataset.id='n12thirdExpandFactor';
+   factor.dataset.action='n12ThirdExpand';
+   factor.setAttribute('role','button');
+   factor.setAttribute('tabindex','0');
+   factor.setAttribute('aria-label',a+' ile genişlet');
+   factor.title=a+' ile genişlet';
+   factor.textContent='('+n12Number(a)+')';
+   unit.replaceWith(stack);stack.append(unit,factor);
+   outer.classList.add('n12-third-hint');
+   nestedPreview.stage=toStage;
+   positionScale();
+   const animateFactor=factor.animate([
+    {opacity:0,transform:'translate(-50%,-.12em) scale(.78)'},
+    {opacity:1,transform:'translate(-50%,.66em) scale(1)'}
+   ],{duration:duration*.85,easing:ease,fill:'both'});
+   await animateFactor.finished.catch(()=>{});
+   animateFactor.cancel();
+  }else if(toStage==='thirdEquivalent'){
+   const fraction=byId('n12thirdNewFrac');
+   const outer=byId('n12thirdOuter');
+   const factor=byId('n12thirdExpandFactor');
+   const unit=byId('n12thirdUnitDen');
+   const numerator=byId('n12one');
+   if(!fraction||!outer||!factor||!unit||!numerator)
+    throw Error('Genişletme parçaları bulunamadı');
+   // The tiny factor travels into the fraction, as in practice 10.
+   const grow=factor.animate([
+    {transform:'translate(-50%,.66em) scale(1)'},
+    {transform:'translate(-50%,-.25em) scale(.76)'}
+   ],{duration:duration*.72,easing:ease,fill:'both'});
+   await grow.finished.catch(()=>{});
+   grow.cancel();
+   const parent=unit.closest('.six-den-stack');
+   parent.replaceWith(unit);
+   factor.remove();
+   unit.dataset.id='n12thirdNewDen';
+   unit.textContent=n12Number(a);
+   numerator.dataset.id='n12thirdAdd';
+   numerator.textContent=n12Number(values.addedNumerator);
+   outer.classList.remove('n12-third-hint');
+   n12ThirdMakeActive(byId('n12inner'),'n12ThirdMerge',
+     'İki ortak paydalı kesri topla');
+   n12ThirdMakeActive(fraction,'n12ThirdMerge',
+     'İki ortak paydalı kesri topla');
+   nestedPreview.stage=toStage;
+   positionScale();
+  }else if(toStage==='thirdMerged'){
+   // Merge x/a + k/a into (x+k)/a. Every OPERAND moves; the
+   // '+' is not a clickable control, only both fractions are.
+   const unitRight=byId('n12thirdNewDen');
+   const unitRect=unitRight?.getBoundingClientRect();
+   const rightBar=byId('n12thirdNewBar');
+   const barRect=rightBar?.getBoundingClientRect();
+   // The repeated denominator is allowed to disappear ONLY on
+   // contact with the surviving common denominator.
+   if(!unitRight||!unitRect||!rightBar||!barRect)
+    throw Error('Ortak payda nesneleri bulunamadı');
+   const sceneBox=scene.getBoundingClientRect();
+   const fromX=unitRect.left+unitRect.width/2;
+   const fromY=unitRect.top+unitRect.height/2;
+   const ghostDen=unitRight;
+   ghostDen.remove();
+   Object.assign(ghostDen.style,{
+    position:'absolute',left:(fromX-sceneBox.left)+'px',
+    top:(fromY-sceneBox.top)+'px',
+    transform:'translate(-50%,-50%)',
+    fontSize:parseFloat(getComputedStyle(eq).fontSize)*
+      (eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth))+'px',
+    pointerEvents:'none',zIndex:'45'
+   });
+   ghostDen.classList.add('n12-third-flying-den');
+   scene.append(ghostDen);
+   const ghostBar=document.createElement('span');
+   ghostBar.className='n12-third-vanishing-bar';
+   Object.assign(ghostBar.style,{
+    left:(barRect.left-sceneBox.left)+'px',
+    top:(barRect.top-sceneBox.top)+'px',
+    width:barRect.width+'px',height:Math.max(1.8,barRect.height)+'px'
+   });
+   scene.append(ghostBar);
+   let live;
+   try{
+    live=n12ThirdTransferTo(toStage,[
+     {from:'n12x',to:'n12thirdX',restyle:n12ThirdDropAction},
+     {from:'n12-plus',to:'n12thirdPlus',restyle:node=>{
+       n12ThirdDropAction(node);node.className='sign';
+     }},
+     {from:'n12thirdAdd',restyle:n12ThirdDropAction},
+     {from:'n12inner2',to:'n12thirdInnerDen',restyle:n12ThirdDropAction},
+     {selector:'[data-id="n12inner"] > .fracbar',
+       targetSelector:'[data-id="n12thirdMergedInner"] > .fracbar',
+       stretch:true},
+     {from:'n12outer3'},
+     {from:'n12rhs'},
+     {from:'n12thirdOuterBar'}
+    ]);
+    const targetDen=byId('n12thirdInnerDen');
+    const targetRect=targetDen.getBoundingClientRect();
+    const endX=targetRect.left+targetRect.width/2;
+    const endY=targetRect.top+targetRect.height/2;
+    const lastBar=eq.querySelector('[data-id="n12thirdMergedInner"] > .fracbar');
+    const finalBar=lastBar.getBoundingClientRect();
+    const scale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
+    const durationMs=fastMode()?390:560;
+    const shadow=ghostDen.animate([
+     {transform:'translate(-50%,-50%)'},
+     {transform:'translate(calc(-50% + '+(endX-fromX)+'px),calc(-50% + '+(endY-fromY)+'px))'}
+    ],{duration:durationMs,easing:ease,fill:'both'});
+    const disappearingBar=ghostBar.animate([
+     {transform:'translate(0,0) scaleX(1)'},
+     {transform:'translate('+(finalBar.left-barRect.left)+'px,'+
+       (finalBar.top-barRect.top)+'px) scaleX(.01)'}
+    ],{duration:durationMs,easing:ease,fill:'both'});
+    const move= n12ThirdSnapAndAnimate(live,durationMs,'equals');
+    await Promise.all([move,shadow.finished.catch(()=>{}),
+      disappearingBar.finished.catch(()=>{})]);
+    shadow.cancel();disappearingBar.cancel();
+   }finally{ghostDen.remove();ghostBar.remove();}
   }
-  eq.style.opacity='';
-  if(bar)bar.style.transform='';
-  if(den){den.style.opacity='';den.style.transform='';}
-  if(factor){factor.style.opacity='';factor.style.transform='';}
-  busy=false;scene.classList.remove('busy','n12-third-animating');
-  update();
+  n12ThirdShowStep();
+ }catch(err){
+  nestedPreview.stage=fromStage;
+  layoutShiftX=originalShift;
+  history.pop();step=Math.max(0,step-1);
+  $('#feedback').textContent='Payda eşitleme: '+err.message;
+  render();positionScale();
+ }finally{
+  busy=false;scene.classList.remove('busy');
+  n12ThirdShowStep();
  }
 }
 
