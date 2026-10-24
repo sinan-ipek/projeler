@@ -3868,6 +3868,8 @@ async function n14FlyProduct(id,from,to){
  const start=center(from),finish=center(to);
  const ghost=document.createElement('span');ghost.className='n14-flight';
  ghost.textContent=target.textContent;
+ const visibleScale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
+ ghost.style.fontSize=(parseFloat(getComputedStyle(target).fontSize)*visibleScale)+'px';
  ghost.style.left=start.x+'px';ghost.style.top=start.y+'px';
  scene.append(ghost);target.style.visibility='hidden';
  try{
@@ -4569,12 +4571,17 @@ $('#back').disabled=busy||history.length===0;$('#reset').disabled=busy;if(comple
 }
 if(nestedPreview)n12ThirdBindFinalTargets();
 if(variableDenEq){
- const previous=$('#tip').innerHTML.trim();
  const restriction='<span class="n13-restriction">'+
   (variableDenEq.kind==='both-variable'?n14DomainLabels():n13Forbidden())+'</span>';
- $('#tip').innerHTML=previous?previous+' &nbsp; '+restriction:restriction;
- if(quadEq&&quadEq.mode!=='handoff'){
-  $('#stepLabel').textContent='Adım '+(step+1);
+ const isTeaching14=variableDenEq.kind==='both-variable'&&
+  (!quadEq||quadEq.mode!=='handoff');
+ if(isTeaching14){
+  // Diger modulun lineer m modeli henüz gecis yapmadan "Cozuldu" dememeli.
+  $('#stepLabel').textContent=step===0?'Başlangıç':'Adım '+(step+1);
+  $('#tip').innerHTML=restriction;
+ }else{
+  const previous=$('#tip').innerHTML.trim();
+  $('#tip').innerHTML=previous?previous+' &nbsp; '+restriction:restriction;
  }
 }
 if(animateBars){requestAnimationFrame(()=>requestAnimationFrame(()=>eq.querySelectorAll('.fraction.constructing').forEach(el=>{el.classList.remove('constructing');el.classList.add('constructed')})));}}
@@ -4672,7 +4679,7 @@ function positionScale(){
    çözülmemiş ifadeler veya yapılacak aritmetik işlem kalan
    görünümler çözüldü sanılmaz. */
 function n12SolvedEquation(){
- if(quadEq&&quadEq.mode!=='handoff')return false;
+ if(variableDenEq?.kind==='both-variable'&&(!quadEq||quadEq.mode!=='handoff'))return false;
  if(nestedPreview)return nestedPreview.stage==='solved'||nestedPreview.stage==='thirdSolved';
  if(complexNoSolution())return false;
  const label=$('#stepLabel').textContent.trim();
