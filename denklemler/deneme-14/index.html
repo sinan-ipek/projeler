@@ -3897,6 +3897,59 @@ function n14DrawGuides(){
  scene.append(svg);
 }
 
+// Alt satirda oluşmuş terimlerin gercek ekran koordinatlarini sakla.
+function n14CaptureResultPositions(side){
+ const map=new Map();
+ const items=eq.querySelectorAll('[data-id^="n14product'+side+'"]');
+ for(const node of items)map.set(node.dataset.id,node.getBoundingClientRect());
+ return map;
+}
+function n14Scale(){
+ const style=getComputedStyle(eq);
+ const scale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
+ return Number.isFinite(scale)&&scale>0?scale:1;
+}
+// Yeni bir çarpim araya yerleşirken eski alt satir terimleri de
+// kendi yeni konumlarına yumuşakça gider. Kaynak ve hedef ID'leri sabit.
+async function n14ShiftResults(before,excludeId){
+ const scale=n14Scale();
+ const animations=[];
+ for(const [id,origin] of before){
+  if(id===excludeId)continue;
+  const node=byId(id);
+  if(!node)continue;
+  const target=node.getBoundingClientRect();
+  const dx=(origin.left-target.left)/scale;
+  const dy=(origin.top-target.top)/scale;
+  if(Math.abs(dx)+Math.abs(dy)<.35)continue;
+  const move=node.animate([
+    {transform:'translate3d('+dx+'px,'+dy+'px,0)'},
+    {transform:'translate3d(0,0,0)'}
+  ],{duration:fastMode()?290:520,easing:'cubic-bezier(.42,0,.17,1)',fill:'both'});
+  animations.push(move.finished.catch(()=>{}).then(()=>move.cancel()));
+ }
+ await Promise.all(animations);
+}
+// Son carpimdan sonra alt satirdaki DORT gerçek terimi üst satirdaki
+// (= ile ayni seviyedeki) hedeflerine eşzamanli taşir.
+// Pozisyonlar HTML metninden degil DOM'un canli sinirlarindan okunur.
+async function n14LiftResults(side,lowerRects){
+ const scale=n14Scale();
+ const moves=[];
+ for(const [id,start] of lowerRects){
+  const node=byId(id);
+  if(!node)continue;
+  const end=node.getBoundingClientRect();
+  const dx=(start.left-end.left)/scale;
+  const dy=(start.top-end.top)/scale;
+  const anim=node.animate([
+   {transform:'translate3d('+dx+'px,'+dy+'px,0)'},
+   {transform:'translate3d(0,0,0)'}
+  ],{duration:fastMode()?390:640,easing:'cubic-bezier(.42,0,.17,1)',fill:'both'});
+  moves.push(anim.finished.catch(()=>{}).then(()=>anim.cancel()));
+ }
+ await Promise.all(moves);
+}
 async function n14FlyProduct(id,from,to){
  const target=byId(id);
  if(!target||!from||!to)return;
@@ -3954,9 +4007,11 @@ async function n14Action(action){
   const j=source.group===1?source.index:index;
   const result=n14Product(side,i,j);
   if(q.done.includes(result.key))return;
-  const srcEl=byId(n14Key(side,source.group,source.index));
-  const destEl=byId(n14Key(side,group,index));
-  const sourceBox=srcEl?.getBoundingClientRect(),destBox=destEl?.getBoundingClientRect();
+  // Çarpimin oluşumu her zaman ikinci PARANTEZDEKI operanddan başlar.
+  // ac ve bc c'den; ad ve bd d'den hareket eder. Tiklama sirasi onemsiz.
+  const secondFactor=byId(n14Key(side,1,j));
+  const flightStart=secondFactor?.getBoundingClientRect();
+  const oldResults=n14CaptureResultPositions(side);
   busy=true;scene.classList.add('busy');save();step++;
   try{
    q.done.push(result.key);q.products.push(result);
@@ -3964,19 +4019,20 @@ async function n14Action(action){
    if([0,1].every(v=>q.done.includes(source.group===0?''+source.index+v:''+v+source.index)))
     quadEq.selected=null;
    update();
-   const resultEl=byId('n14product'+side+result.key);
-   const mid=sourceBox&&destBox?{
-    left:(sourceBox.left+destBox.left)/2,top:(sourceBox.top+destBox.top)/2,
-    width:(sourceBox.width+destBox.width)/2,
-    height:(sourceBox.height+destBox.height)/2
-   }:sourceBox;
-   await n14FlyProduct('n14product'+side+result.key,mid,resultEl?.getBoundingClientRect());
+   const newId='n14product'+side+result.key;
+   const resultEl=byId(newId);
+   await Promise.all([
+    n14FlyProduct(newId,flightStart,resultEl?.getBoundingClientRect()),
+    n14ShiftResults(oldResults,newId)
+   ]);
    if(q.done.length===4){
-    // Yalnizca tamamlanan taraf artik parantezden acilmis ifadeye donussun.
-    // Diger tarafta secim ve carpim islemleri serbest kalir.
+    // Yalnizca BU tarafta dagilma bitti: mevcut alt satir terimleri,
+    // göründükleri noktadan ust satirin dinamik konumlarina taşınır.
+    const lowerRects=n14CaptureResultPositions(side);
     q.expanded=true;
     quadEq.selected=null;
     update();
+    await n14LiftResults(side,lowerRects);
     n14MaybeLinear();
    }
   }finally{busy=false;scene.classList.remove('busy');update();}
