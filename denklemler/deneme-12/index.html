@@ -5382,8 +5382,16 @@ async function n12ThirdElasticDenSnap(){
  };
  const originalStyles=[fontFor(two),fontFor(three)];
  const sprite=(source,point,style)=>{
-  // Move ACTUAL number nodes to the scene: no fade-out/recreate.
-  // This happens before the next paint, with unchanged coordinates.
+  // Leave an invisible EXACT-SIZE placeholder in the old fraction
+  // until the next DOM is committed. The equation cannot reflow or
+  // jump between extracting the two digits and measuring FLIP starts.
+  // The actual number node, not a fading duplicate, does the flight.
+  const placeholder=source.cloneNode(true);
+  placeholder.removeAttribute('data-id');
+  placeholder.removeAttribute('data-action');
+  placeholder.style.visibility='hidden';
+  placeholder.style.pointerEvents='none';
+  source.replaceWith(placeholder);
   source.classList.remove('hit','n12-third-operand','n12-third-den-choice');
   n12ThirdDropAction(source);
   source.style.cssText='';
