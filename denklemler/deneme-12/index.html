@@ -5160,6 +5160,116 @@ async function n12ThirdAdvance(toStage){
  }
 }
 
+/* Deneme 12.33 — iki eşdeğer cebirsel yol.
+   c'ye tıklamak payda c'yi EŞİTTİRİN ALTINDAN karşıya geçirir;
+   a'ya tıklamak iki paydayı aynı tarafta a·c olarak birleştirir.
+   Bu aşamadan sonrası öğrenci onayıyla eklenecek. */
+async function n12ThirdChoose(toStage){
+ if(busy||nestedPreview?.stage!=='thirdMerged'||
+    !['thirdCrossed','thirdDenProduct'].includes(toStage))return;
+ const crosses=toStage==='thirdCrossed';
+ const savedStage=nestedPreview.stage,previousShift=layoutShiftX;
+ const original3=byId('n12outer3');
+ const outerLine=byId('n12thirdOuterBar');
+ if(!original3||!outerLine||!eq.querySelector('.equals'))return;
+ const mid=MotionEngine.center;
+ const from3=mid(original3.getBoundingClientRect());
+ const sceneBox=scene.getBoundingClientRect();
+ const barRect=outerLine.getBoundingClientRect();
+ const oldLine=document.createElement('span');
+ oldLine.className='n12-third-vanishing-bar';
+ Object.assign(oldLine.style,{
+  position:'absolute',
+  left:(barRect.left-sceneBox.left)+'px',
+  top:(barRect.top-sceneBox.top)+'px',
+  width:barRect.width+'px',
+  height:Math.max(2,barRect.height)+'px',
+  pointerEvents:'none',zIndex:'44',transformOrigin:'center center'
+ });
+
+ busy=true;scene.classList.add('busy');save();step++;
+ let moved3=null,dot=null;
+ try{
+  scene.append(oldLine);
+  // Transfer actual existing objects into the final layout without
+  // fading or recreating x, +, the constant, or the inner fraction.
+  const keep=crosses?[
+   {from:'n12thirdMergedInner',restyle:node=>{
+    const inner2=node.querySelector('[data-id="n12thirdInnerDen"]');
+    n12ThirdDropAction(inner2);
+    inner2?.classList.remove('n12-third-den-choice','n12-third-operand');
+   }},
+   {from:'n12outer3',to:'n12thirdFactor3',restyle:node=>{
+    n12ThirdDropAction(node);
+    node.classList.remove('n12-third-den-choice','n12-third-operand');
+   }},
+   {from:'n12rhs'}
+  ]:[
+   {from:'n12thirdNumerator'},
+   {from:'n12thirdInnerDen',restyle:node=>{
+    n12ThirdDropAction(node);
+    node.classList.remove('n12-third-den-choice','n12-third-operand');
+   }},
+   {selector:'[data-id="n12thirdMergedInner"] > .fracbar',
+    targetSelector:'[data-id="n12thirdMergedInner"] > .fracbar',stretch:true},
+   {from:'n12outer3',to:'n12thirdFactor3',restyle:node=>{
+    n12ThirdDropAction(node);
+    node.classList.remove('n12-third-den-choice','n12-third-operand');
+   }},
+   {from:'n12rhs'}
+  ];
+  const records=n12ThirdTransferTo(toStage,keep);
+  moved3=byId('n12thirdFactor3');
+  dot=byId('n12thirdDot');
+  if(!moved3||!dot)throw Error('Payda çarpımı hedefleri bulunamadı');
+
+  const duration=fastMode()?465:635;
+  // First fix the equals sign, THEN obtain the final arrival.
+  const otherMoves=n12ThirdSnapAndAnimate(
+    records.filter(r=>r.node!==moved3),duration,'equals');
+  const to3=mid(moved3.getBoundingClientRect());
+  const scale=eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth);
+  if(!Number.isFinite(scale)||scale<=0)throw Error('Ölçek geçersiz');
+  const deltaX=(from3.x-to3.x)/scale;
+  const deltaY=(from3.y-to3.y)/scale;
+  const arc=crosses?
+   n12TransferArc(from3,to3,'denominator'):{sign:1,amp:0};
+  moved3.style.transform='translate3d('+deltaX+'px,'+deltaY+'px,0)';
+  dot.style.opacity='0';
+  dot.style.transform='scale(0)';
+
+  const moving=n12RafMotion(duration,t=>{
+   // Smoothstep is monotonic: no overshoot or reverse movement.
+   const u=t*t*(3-2*t);
+   const x=deltaX*(1-u);
+   const y=deltaY*(1-u)+arc.sign*arc.amp*Math.sin(Math.PI*u)/scale;
+   moved3.style.transform='translate3d('+x+'px,'+y+'px,0)';
+   const show=Math.max(0,Math.min(1,(t-.72)/.20));
+   dot.style.transform='scale('+show+')';
+   dot.style.opacity=String(show);
+   // Old outer bar snaps toward its middle; no whole-expression fade.
+   const pinch=Math.max(0,1-Math.min(1,t/.69));
+   oldLine.style.transform='scaleX('+pinch+')';
+  });
+  await Promise.all([moving,otherMoves]);
+  moved3.style.transform='';
+  dot.style.opacity='';
+  dot.style.transform='';
+ }catch(error){
+  nestedPreview.stage=savedStage;
+  layoutShiftX=previousShift;
+  history.pop();step=Math.max(0,step-1);
+  $('#feedback').textContent='Payda yolu: '+error.message;
+  render();positionScale();
+ }finally{
+  oldLine.remove();
+  if(moved3)moved3.style.transform='';
+  if(dot){dot.style.opacity='';dot.style.transform='';}
+  busy=false;scene.classList.remove('busy');
+  n12ThirdShowStep();
+ }
+}
+
 // Tek hareketin tamamı matematiksel SON durumun koordinatlarından
 // planlanır. Paydaki (x/2+1) alt düğümleri tek tek uçmaz.
 async function n12DivideToProductAnimated(){
