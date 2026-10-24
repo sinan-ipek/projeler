@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Denklem Atölyesi — Deneme 15.01</title>
+<style>
+:root{color-scheme:light;--ink:#29384c;--muted:#718096;--cream:#fffdf7;--line:#dfe5ec;--highlight:#ffebad;--accent:#d99b25;--arc:#ad7b59;--easing:cubic-bezier(.42,0,.17,1)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#f5f6f8;color:var(--ink);font-family:Arial,Helvetica,sans-serif;font-style:normal}
+header{min-height:82px;display:flex;align-items:center;justify-content:space-between;padding:18px clamp(18px,4vw,58px);gap:12px}
+h1{font-size:21px;margin:0;font-weight:600;letter-spacing:-.02em}
+h1 small{font-size:12px;font-weight:400;color:#8190a3;margin-left:10px;white-space:nowrap}
+.subtitle{font-size:12px;color:#8792a3;margin-top:7px}
+.home{width:47px;height:47px;border-radius:13px;background:#ffda52;box-shadow:0 2px 0 #ce9f19;display:grid;place-items:center;flex-shrink:0;color:#684b08;text-decoration:none}
+.home svg{width:27px;height:27px;fill:currentColor}
+main{max-width:1230px;margin:5px auto 0;padding:0 clamp(14px,3vw,34px) 32px}
+.workspace{border:1px solid var(--line);border-radius:19px;background:var(--cream);box-shadow:0 9px 38px #172c4210;overflow:hidden}
+.workspace-head{height:69px;border-bottom:1px solid #ecedf0;padding:19px 24px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.workspace-title{font-size:15px;font-weight:600}
+.progress{display:flex;gap:9px;align-items:center}
+.progress-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid #c7cfd9;background:white;transition:background .2s,border-color .2s}
+.progress-dot.done{background:#d8e2c9;border-color:#b3c297}.progress-dot.active{background:#e2ac36;border-color:#d3931b}
+.scene{height:418px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;isolation:isolate}
+.equation{display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1.18;font-size:clamp(34px,4vw,55px);font-weight:400;transform-origin:center center;position:relative;min-width:max-content;font-variant-numeric:lining-nums}
+.math-side{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative;min-height:1.1em}
+.term{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+.operation{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;gap:.045em}
+.op-minus{padding:0 .08em}
+.equals{padding:0 .32em}
+.frac{display:inline-grid;grid-template-columns:minmax(0,max-content);grid-template-rows:max-content 2px max-content;align-items:center;justify-items:stretch;vertical-align:middle;white-space:nowrap;line-height:1.12;position:relative;min-width:.69em;margin:0 .085em}
+.frac-num,.frac-den{display:flex;justify-content:center;align-items:center;white-space:nowrap;padding:.045em .15em;min-width:100%;position:relative}
+.frac-num{padding-bottom:.14em}.frac-den{padding-top:.14em}
+.frac-bar{background:var(--ink);width:100%;height:2px;border-radius:10px}
+.frac .frac{font-size:.83em;line-height:1.12}
+.frac .frac .frac{font-size:.85em}
+.frac .frac .frac .frac{font-size:.86em}
+.hit{border-radius:10px;cursor:pointer;outline:none;transition:background .14s,box-shadow .14s;background:var(--highlight);box-shadow:0 0 0 1.4px #e2b642;position:relative;z-index:2}
+.hit:hover,.hit:focus-visible,.hit.hover-linked{background:#ffdf79;box-shadow:0 0 0 2.5px var(--accent),0 3px 11px #bd8c2924}
+.block-hit{padding:.025em .065em;margin:.025em .03em}
+.math-side.hit{padding:0 .085em}
+.operation.hit{padding:.05em .1em}
+.busy .hit{pointer-events:none}
+.guide-arcs{position:absolute;inset:0;pointer-events:none;z-index:6;overflow:visible}
+.motion-symbol{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;pointer-events:none;color:var(--ink);font-size:40px;line-height:1.1;white-space:nowrap;z-index:7}
+.motion-symbol .frac{font-size:inherit}
+.status{border-top:1px solid #ecedf0;padding:17px 24px;display:flex;justify-content:center;align-items:center;min-height:71px;gap:14px}
+.status-label{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:#8993a4;font-weight:600}
+.status-text{font-size:15px;color:#445369}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px;flex-wrap:wrap}
+.controls-left{display:flex;align-items:center;gap:9px}
+.btn{border:1px solid #dce2e9;background:#eef0f2;border-radius:10px;padding:11px 16px;font-size:14px;color:#415067;font-family:inherit;cursor:pointer;transition:background .15s}
+.btn:hover:enabled{background:#e1e7ec}.btn:disabled{opacity:.4;cursor:default}
+.helper{font-size:12px;color:#8893a2;line-height:1.5;text-align:right}
+.done-mark{display:inline-grid;place-items:center;width:20px;height:20px;border:1px solid #9ebd7a;color:#638b36;border-radius:50%;font-size:12px;margin-right:8px}
+@media(max-width:650px){header{padding:13px 15px}.workspace-head{height:58px;padding:14px}.scene{height:385px}.status{padding:14px;flex-wrap:wrap;gap:6px}.helper{text-align:left}h1{font-size:18px}h1 small{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.hit,.progress-dot{transition:none}}
+</style>
+</head>
+<body>
+<header>
+ <div><h1>Denklem Atölyesi <small>deneme 15.01</small></h1><div class="subtitle">Alıştırma 15 · İç içe kesirler · İlk üç işlem</div></div>
+ <a class="home" href="https://sinan-ipek.github.io/projeler/" title="Ana sayfa" aria-label="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 1.7 11.4l2.1 2.3L5.5 12v9h5v-6h3v6h5v-9l1.7 1.7 2.1-2.3z"/></svg></a>
+</header>
+<main>
+ <section class="workspace" aria-label="Etkileşimli denklem">
+  <div class="workspace-head"><span class="workspace-title">İç içe kesirli denklem</span><div class="progress" aria-label="Üç işlem"><span class="progress-dot active"></span><span class="progress-dot"></span><span class="progress-dot"></span></div></div>
+  <div class="scene" id="scene"><div class="equation" id="equation" aria-live="polite"></div></div>
+  <div class="status"><span class="status-label">İŞLEM</span><span id="instruction" class="status-text"></span></div>
+ </section>
+ <div class="controls"><div class="controls-left"><button class="btn" id="back">← Geri</button><button class="btn" id="reset">Baştan</button></div><span class="helper">Sarı vurgulu ifadeye tıklayarak işlemi gerçekleştir.</span></div>
+</main>
+<script>
+// Deneme 15.01 — Birinci aşama: taşıma → çıkarma → iki tarafta yayla ters çevirme.
+// Tek bağımsız HTML dosyası; harici kütüphane ya da Canvas kullanılmaz.
+(()=>{
+ 'use strict';
+ const scene=document.getElementById('scene');
+ const eq=document.getElementById('equation');
+ const instruction=document.getElementById('instruction');
+ const back=document.getElementById('back');
+ const reset=document.getElementById('reset');
+ const progress=[...document.querySelectorAll('.progress-dot')];
+ let stage=0, busy=false, backRequested=false;
+ const ease=t=>t*t*(3-2*t);
+ const slowMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const dur=n=>slowMotion?0:n;
+ const wait=ms=>new Promise(r=>setTimeout(r,ms));
+ const span=(cls,html,key)=>`<span class="${cls}"${key?` data-key="${key}"`:''}>${html}</span>`;
+ function frac(num,den,key,topKey,bottomKey){
+  return `<span class="frac"${key?` data-key="${key}"`:''}>`+
+  `<span class="frac-num"${topKey?` data-key="${topKey}"`:''}>${num}</span>`+
+  `<span class="frac-bar"></span>`+
+  `<span class="frac-den"${bottomKey?` data-key="${bottomKey}"`:''}>${den}</span></span>`;
+ }
+ const smallInner=()=>frac('1','a');
+ const innerDen=()=>`1${span('op-minus','−')}${smallInner()}`;
+ const middleFraction=()=>frac('3',innerDen());
+ const bigDenominator=()=>`1${span('term','+')}${middleFraction()}`;
+ const bigOuter=()=>frac('1',bigDenominator(),'outer-frac','outer-num','outer-den');
+ const half=()=>frac('1','2','half');
+ const leftReciprocal=(valueNum,valueDen)=>frac(valueNum,valueDen,'leftrec','left-num','left-den');
+ const side=(html,key,hitAction='')=>`<span class="math-side${hitAction?' hit block-hit':''}" data-key="${key}"${hitAction?` data-action="${hitAction}" role="button" tabindex="0"`:''}>${html}</span>`;
+ const group=(html,key,hitAction='')=>`<span class="operation${hitAction?' hit':''}" data-key="${key}"${hitAction?` data-action="${hitAction}" role="button" tabindex="0"`:''}>${html}</span>`;
+ function equationMarkup(st,transient=false){
+  const two=span('term','2','two');
+  const minus=span('op-minus','−','minus');
+  const equals=span('equals','=','equals');
+  if(st===0){
+   return side(two+minus+group(bigOuter(),'outer','rearrange'),'L')+equals+
+    side(half(),'R','rearrange');
+  }
+  if(st===1){
+   return side(group(two+minus+half(),'calculation','subtract'),'L')+equals+
+    side(bigOuter(),'outer');
+  }
+  if(st===2){
+   return side(leftReciprocal('3','2'),'L','invert')+equals+
+    side(bigOuter(),'outer','invert');
+  }
+  if(st===3){
+   const right=transient?frac(bigDenominator(),'1','rec-right-frac','right-num','right-den'):
+    span('term',bigDenominator(),'right-expression');
+   return side(leftReciprocal('2','3'),'L')+equals+side(right,'R');
+  }
+  throw Error('Tanimsiz adim');
+ }
+ const messages=[
+  'Soldaki büyük kesri veya sağdaki 1/2 kesrini seç.',
+  '2 − 1/2 işlemini seç.',
+  'Eşitliğin herhangi bir tarafını seç: iki taraf birlikte ters çevrilecek.',
+  'İlk üç cebirsel işlem tamamlandı.'
+ ];
+ function fit(){
+  eq.style.transform='scale(1)';
+  const available=scene.clientWidth-34;
+  const width=eq.scrollWidth;
+  const scale=Math.min(1,available/Math.max(1,width));
+  eq.style.transform=`scale(${Math.max(.27,scale)})`;
+ }
+ function rects(ids){
+  return new Map(ids.map(id=>[id,eq.querySelector(`[data-key="${id}"]`)?.getBoundingClientRect()]).filter(([,v])=>!!v));
+ }
+ function update(st=stage,transient=false){
+  eq.innerHTML=equationMarkup(st,transient);
+  fit();
+  instruction.innerHTML=st===3?'<span class="done-mark">✓</span>'+messages[st]:messages[st];
+  back.disabled=busy||stage===0;
+  reset.disabled=busy;
+  progress.forEach((node,i)=>{node.classList.toggle('done',i<stage);node.classList.toggle('active',i===stage&&stage<3)});
+ }
+ function animateElement(el,dx,dy,duration=500){
+  if(!el||(!dx&&!dy)||duration===0)return Promise.resolve();
+  const anim=el.animate([
+    {transform:`translate3d(${dx}px,${dy}px,0)`},
+    {transform:'translate3d(0,0,0)'}
+  ],{duration:dur(duration),easing:'cubic-bezier(.42,0,.17,1)',fill:'both'});
+  return anim.finished.catch(()=>{}).then(()=>anim.cancel());
+ }
+ async function flowRearrange(){
+  const keys=['outer','half','two','minus','equals'];
+  const before=rects(keys);
+  stage=1;update();
+  const promises=[];
+  for(const key of keys){
+   const el=eq.querySelector(`[data-key="${key}"]`),old=before.get(key);
+   if(!el||!old)continue;
+   const dest=el.getBoundingClientRect();
+   promises.push(animateElement(el,old.left-dest.left,old.top-dest.top,760));
+  }
+  await Promise.all(promises);
+ }
+ async function flowSubtract(){
+  const start=eq.querySelector('[data-key="calculation"]')?.getBoundingClientRect();
+  const origin=eq.querySelector('[data-key="outer"]')?.getBoundingClientRect();
+  const oldEquals=eq.querySelector('[data-key="equals"]')?.getBoundingClientRect();
+  stage=2;update();
+  const left=eq.querySelector('[data-key="L"]'),right=eq.querySelector('[data-key="outer"]');
+  const sign=eq.querySelector('[data-key="equals"]');
+  const promise=[];
+  if(start&&left){const dest=left.getBoundingClientRect();promise.push(animateElement(left,start.left-dest.left,start.top-dest.top,500));}
+  if(origin&&right){const dest=right.getBoundingClientRect();promise.push(animateElement(right,origin.left-dest.left,origin.top-dest.top,500));}
+  if(oldEquals&&sign){const dest=sign.getBoundingClientRect();promise.push(animateElement(sign,oldEquals.left-dest.left,oldEquals.top-dest.top,500));}
+  await Promise.all(promise);
+ }
+ function point(box){const base=scene.getBoundingClientRect();return {x:box.left+box.width/2-base.left,y:box.top+box.height/2-base.top}}
+ function ghostNode(source){
+  const node=document.createElement('span');node.className='motion-symbol';node.innerHTML=source.innerHTML;
+  const cs=getComputedStyle(source);
+  node.style.fontSize=cs.fontSize;
+  node.style.color=cs.color;
+  scene.append(node);
+  return node;
+ }
+ function arrowsSvg(flows){
+  const ns='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(ns,'svg');svg.classList.add('guide-arcs');
+  svg.setAttribute('width',scene.clientWidth);svg.setAttribute('height',scene.clientHeight);
+  svg.setAttribute('viewBox',`0 0 ${scene.clientWidth} ${scene.clientHeight}`);
+  for(const flow of flows){
+   const path=document.createElementNS(ns,'path');
+   const dx=flow.sign*Math.min(95,Math.max(34,flow.width*.45));
+   const bendX=(flow.from.x+flow.to.x)/2+dx;
+   const bendY=(flow.from.y+flow.to.y)/2+(flow.sign>0?-35:35);
+   path.setAttribute('d',`M ${flow.from.x} ${flow.from.y} Q ${bendX} ${bendY} ${flow.to.x} ${flow.to.y}`);
+   path.setAttribute('fill','none');path.setAttribute('stroke','#ad7b59');
+   path.setAttribute('stroke-width','2.3');path.setAttribute('stroke-dasharray','8 7');
+   path.setAttribute('stroke-linecap','round');path.setAttribute('opacity','.75');
+   svg.append(path);
+  }
+  scene.append(svg);return svg;
+ }
+ function animateArcs(flows,ms){
+  return new Promise(resolve=>{
+   if(!ms){for(const flow of flows)flow.ghost.remove();resolve();return;}
+   let start=null;
+   const frame=now=>{
+    if(start===null)start=now;
+    const t=Math.min(1,(now-start)/ms),u=ease(t),s=Math.sin(Math.PI*u);
+    for(const f of flows){
+     const bx=f.sign*Math.min(95,Math.max(34,f.width*.45));
+     const by=f.sign>0?-35:35;
+     f.ghost.style.left=(f.from.x+(f.to.x-f.from.x)*u+bx*s)+'px';
+     f.ghost.style.top=(f.from.y+(f.to.y-f.from.y)*u+by*s)+'px';
+    }
+    if(t<1)requestAnimationFrame(frame);else resolve();
+   };
+   requestAnimationFrame(frame);
+  });
+ }
+ async function flowReciprocal(){
+  // İki tarafın pay ve paydaları eşzamanlı iki yönlü yaylar boyunca yer değiştirir.
+  const ids=['left-num','left-den','outer-num','outer-den'];
+  const saved={};for(const id of ids){const el=eq.querySelector(`[data-key="${id}"]`);saved[id]=el?{node:el.cloneNode(true),box:el.getBoundingClientRect()}:null;}
+  stage=3;update(3,true);
+  const moves=[
+   {source:'left-num',target:'left-den',sign:1},
+   {source:'left-den',target:'left-num',sign:-1},
+   {source:'outer-num',target:'right-den',sign:1},
+   {source:'outer-den',target:'right-num',sign:-1}
+  ];
+  const flows=[];
+  for(const pair of moves){
+   const from=saved[pair.source],target=eq.querySelector(`[data-key="${pair.target}"]`);
+   if(!from||!target)continue;
+   const dest=target.getBoundingClientRect();
+   const ghost=ghostNode(from.node);
+   const first=point(from.box),last=point(dest);
+   ghost.style.left=first.x+'px';ghost.style.top=first.y+'px';
+   target.style.visibility='hidden';
+   flows.push({ghost,target,from:first,to:last,sign:pair.sign,width:Math.max(from.box.width,dest.width)});
+  }
+  const svg=arrowsSvg(flows);
+  try{
+   await animateArcs(flows,dur(850));
+  }finally{
+   flows.forEach(f=>{f.ghost.remove();f.target.style.visibility='';});
+   svg.remove();
+  }
+  // Paydada bulunan 1, ters çevirmeden sonra etkisizdir.
+  await wait(dur(190));
+  const before=rects(['L','R','equals']);
+  update(3,false);
+  await Promise.all(['L','R','equals'].map(key=>{
+   const dest=eq.querySelector(`[data-key="${key}"]`),src=before.get(key);
+   if(!src||!dest)return Promise.resolve();
+   const d=dest.getBoundingClientRect();
+   return animateElement(dest,src.left-d.left,src.top-d.top,330);
+  }));
+ }
+ async function advance(action){
+  if(busy||!((stage===0&&action==='rearrange')||(stage===1&&action==='subtract')||(stage===2&&action==='invert')))return;
+  busy=true;scene.classList.add('busy');
+  try{
+   if(stage===0)await flowRearrange();
+   else if(stage===1)await flowSubtract();
+   else if(stage===2)await flowReciprocal();
+  }catch(e){console.error('Animasyon hatası:',e);update();}
+  finally{busy=false;scene.classList.remove('busy');update();}
+ }
+ eq.addEventListener('click',ev=>{const el=ev.target.closest('[data-action]');if(el)advance(el.dataset.action)});
+ eq.addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev.target.closest('[data-action]')){ev.preventDefault();advance(ev.target.closest('[data-action]').dataset.action)}});
+ eq.addEventListener('pointerover',ev=>{
+  const hit=ev.target.closest('[data-action]');if(!hit)return;
+  if(stage===0||stage===2)eq.querySelectorAll('[data-action="'+hit.dataset.action+'"]').forEach(n=>n.classList.add('hover-linked'));
+ });
+ eq.addEventListener('pointerout',ev=>{
+  if(ev.relatedTarget&&eq.contains(ev.relatedTarget)&&ev.relatedTarget.closest('[data-action]')===ev.target.closest('[data-action]'))return;
+  eq.querySelectorAll('.hover-linked').forEach(n=>n.classList.remove('hover-linked'));
+ });
+ back.addEventListener('click',()=>{if(busy||stage===0)return;stage--;update()});
+ reset.addEventListener('click',()=>{if(busy)return;stage=0;update()});
+ window.addEventListener('resize',()=>{if(!busy)fit()});
+ update();
+})();
+</script>
+</body></html>
