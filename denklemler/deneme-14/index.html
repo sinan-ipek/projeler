@@ -3830,6 +3830,96 @@ function n14DrawGuides(){
  });
  scene.append(svg);
 }
+
+async function n14FlyProduct(id,from,to){
+ const target=byId(id);
+ if(!target||!from||!to)return;
+ const area=scene.getBoundingClientRect();
+ const center=r=>({x:r.left+r.width/2-area.left,y:r.top+r.height/2-area.top});
+ const start=center(from),finish=center(to);
+ const ghost=document.createElement('span');ghost.className='n14-flight';
+ ghost.textContent=target.textContent;
+ ghost.style.left=start.x+'px';ghost.style.top=start.y+'px';
+ scene.append(ghost);target.style.visibility='hidden';
+ try{
+  await n12RafMotion(fastMode()?290:520,t=>{
+   const u=t*t*(3-2*t),v=1-u;
+   const peak=Math.min(start.y,finish.y)-38;
+   ghost.style.left=(v*start.x+u*finish.x)+'px';
+   ghost.style.top=(v*v*start.y+2*v*u*peak+u*u*finish.y)+'px';
+  });
+ }finally{target.style.visibility='';ghost.remove();}
+}
+function n14ToLinear(){
+ const L=n14Poly('L'),R=n14Poly('R');
+ if(L.q!==R.q)throw Error('x² terimleri esit degil');
+ const left=parseSimpleExpr(n13Affine(L.x,L.c));
+ const right=parseSimpleExpr(n13Affine(R.x,R.c));
+ if(!left||!right)throw Error('Dogrusal ifadeler olusturulamadi');
+ simpleEq={mode:'expression',left,right};
+ m={a:L.x,b:L.c,c:R.x,d:R.c};
+ s=initial();s.barsReady=true;preCommon=1;
+ quadEq.mode='handoff';
+ maybeFinishSimple();
+}
+async function n14Action(action){
+ if(!quadEq||busy)return;
+ const term=action.match(/^n14Term_([LR])_([01])_([01])$/);
+ if(term&&quadEq.mode==='multiply'){
+  const side=term[1],group=Number(term[2]),index=Number(term[3]);
+  const q=quadEq[side];
+  const hasWork=other=>!q.done.includes(group===0?''+index+other:''+other+index);
+  if(![0,1].some(hasWork))return;
+  const source=quadEq.selected;
+  if(!source||source.side!==side||source.group===group){
+   quadEq.selected=source&&source.side===side&&source.group===group&&source.index===index?
+    null:{side,group,index};
+   update();return;
+  }
+  const i=source.group===0?source.index:index;
+  const j=source.group===1?source.index:index;
+  const result=n14Product(side,i,j);
+  if(q.done.includes(result.key))return;
+  const srcEl=byId(n14Key(side,source.group,source.index));
+  const destEl=byId(n14Key(side,group,index));
+  const sourceBox=srcEl?.getBoundingClientRect(),destBox=destEl?.getBoundingClientRect();
+  busy=true;scene.classList.add('busy');save();step++;
+  try{
+   q.done.push(result.key);q.products.push(result);
+   // Seçilen terimin bütün hedefleri tamamlandıysa seçimi kaldır.
+   if([0,1].every(v=>q.done.includes(source.group===0?''+source.index+v:''+v+source.index)))
+    quadEq.selected=null;
+   update();
+   const resultEl=byId('n14product'+side+result.key);
+   const mid=sourceBox&&destBox?{
+    left:(sourceBox.left+destBox.left)/2,top:(sourceBox.top+destBox.top)/2,
+    width:(sourceBox.width+destBox.width)/2,
+    height:(sourceBox.height+destBox.height)/2
+   }:sourceBox;
+   await n14FlyProduct('n14product'+side+result.key,mid,resultEl?.getBoundingClientRect());
+   if(quadEq.L.done.length===4&&quadEq.R.done.length===4){
+    quadEq.selected=null;quadEq.mode='expanded';update();
+   }
+  }finally{busy=false;scene.classList.remove('busy');update();}
+  return;
+ }
+ if(quadEq.mode!=='expanded')return;
+ const combine=action.match(/^n14Combine_([LR])$/);
+ if(combine){
+  const side=combine[1];if(quadEq[side].combined)return;
+  busy=true;scene.classList.add('busy');save();step++;
+  try{quadEq[side].combined=true;update();}
+  finally{busy=false;scene.classList.remove('busy');update();}
+  return;
+ }
+ if(action==='n14Cancel'&&quadEq.L.combined&&quadEq.R.combined){
+  busy=true;scene.classList.add('busy');save();step++;
+  try{
+   await Promise.all([drawStroke(byId('n14quadraticL')),drawStroke(byId('n14quadraticR'))]);
+   n14ToLinear();
+  }finally{busy=false;scene.classList.remove('busy');update();}
+ }
+}
 function parseNestedPreview(raw){
  const clean=String(raw).replace(/\s+/g,'').replace(/[−–]/g,'-');
  const match=clean.match(/^\(\(x\/([1-9]\d*)\)([+-])([1-9]\d*)\)\/([1-9]\d*)=(-?\d+)$/i);
