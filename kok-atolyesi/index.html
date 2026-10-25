@@ -1320,7 +1320,7 @@ button{font:inherit;border:none;cursor:pointer}
     try{const question=parseCustomRoot(document.getElementById('customRootInput').value);error.textContent='';startQuestion(question);}
     catch(err){error.textContent=err.message;}
   });
-  $('newBtn').onclick = startQuestion;
+  $('newBtn').onclick = () => startQuestion();
   $('degree').onclick = () => {
     $('degree').classList.remove('implicit');
     setTimeout(() => { if(current && current.d === 2 && rootUnitStage === 0) $('degree').classList.add('implicit'); }, 900);
