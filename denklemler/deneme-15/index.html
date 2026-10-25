@@ -4283,6 +4283,11 @@ async function n15RetainAndMove(ids,advance,motion={}){
   // İçerik değişmişse eski metni hedefin üstüne yazmak doğru değildir.
   if(placeholder.textContent!==ent.node.textContent)continue;
   placeholder.replaceWith(ent.node);
+  // Başlangıçta tek başına çizgiye hizalanmış 2, yeni aşamada
+  // aynı translateY ile taşınmamalı: yeni kesrin payında hizası doğaldır.
+  if(ent.id==='n15two'){
+   ent.node.style.transform='';delete ent.node.dataset.n15AlignY;
+  }
   ent.node.style.translate='';
  }
  n15AlignEquation();
