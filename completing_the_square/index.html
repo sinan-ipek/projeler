@@ -133,7 +133,7 @@
 </style>
 </head>
 <body>
-<div class="app"><div class="toolbar"><a class="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 2.8 10.7a1 1 0 0 0 .63 1.78h1.02v7.02a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-4.35h2.74v4.35a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-7.02h1.02a1 1 0 0 0 .63-1.78L12 3.2Z"/></svg></a><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.9.0</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
+<div class="app"><div class="toolbar"><a class="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 2.8 10.7a1 1 0 0 0 .63 1.78h1.02v7.02a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-4.35h2.74v4.35a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-7.02h1.02a1 1 0 0 0 .63-1.78L12 3.2Z"/></svg></a><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.9.1</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
 <script>
 (()=>{
 const easyBtn=document.getElementById("easyBtn"),advancedBtn=document.getElementById("advancedBtn"),formulaBtn=document.getElementById("formulaBtn"),legacyView=document.getElementById("legacyView"),formulaView=document.getElementById("formulaView");function setActiveMode(mode){easyBtn.classList.toggle("active",mode==="easy");advancedBtn.classList.toggle("active",mode==="advanced");formulaBtn.classList.toggle("active",mode==="formula");legacyView.style.display=mode==="formula"?"none":"block";formulaView.style.display=mode==="formula"?"block":"none"}
@@ -240,6 +240,82 @@ function advImpact(x,y){
       {duration:260,easing:"cubic-bezier(.2,.8,.2,1)",fill:"forwards"}
     );
     anim.finished.catch(()=>{}).then(()=>{flash.remove();resolve()});
+  });
+}
+function advVerticalShelfThrow(el,startX,startY,shelfY,gravity=1800,overshoot=34){
+  return new Promise(resolve=>{
+    // Dikey atış: cisim raf seviyesini biraz aşar, sonra yerçekimiyle geri düşüp
+    // görünmez rafa oturur. Yatay konum sabittir.
+    const apexY=shelfY-overshoot;
+    const rise=Math.max(12,startY-apexY);
+    const vy0=-Math.sqrt(2*gravity*rise);
+    const dy=shelfY-startY;
+    const disc=Math.max(0,vy0*vy0+2*gravity*dy);
+    const total=Math.max(.44,(-vy0+Math.sqrt(disc))/gravity);
+    const t0=performance.now();
+
+    function frame(now){
+      const t=Math.min(total,(now-t0)/1000);
+      const y=startY+vy0*t+.5*gravity*t*t;
+      el.style.left=`${startX}px`;
+      el.style.top=`${y}px`;
+      if(t<total){
+        requestAnimationFrame(frame);
+      }else{
+        el.style.left=`${startX}px`;
+        el.style.top=`${shelfY}px`;
+        resolve();
+      }
+    }
+    requestAnimationFrame(frame);
+  });
+}
+function advShelfJolt(el){
+  return new Promise(resolve=>{
+    const left=parseFloat(el.style.left)||0;
+    const top=parseFloat(el.style.top)||0;
+    const anim=el.animate(
+      [
+        {left:`${left}px`,top:`${top}px`},
+        {left:`${left-2}px`,top:`${top-7}px`,offset:.22},
+        {left:`${left+2}px`,top:`${top+1}px`,offset:.48},
+        {left:`${left-1}px`,top:`${top-3}px`,offset:.72},
+        {left:`${left}px`,top:`${top}px`}
+      ],
+      {duration:300,easing:"cubic-bezier(.2,.8,.2,1)",fill:"forwards"}
+    );
+    anim.finished.catch(()=>{}).then(()=>{
+      el.style.left=`${left}px`;
+      el.style.top=`${top}px`;
+      anim.cancel();
+      resolve();
+    });
+  });
+}
+function advGravityDrop(el,start,end,gravity=2100){
+  return new Promise(resolve=>{
+    // Rafın üzerinden serbest düşüş. Yatay hareket sabit hızla, düşey hareket
+    // y = y0 + 1/2*g*t² ile ilerler.
+    const dy=Math.max(1,end.y-start.y);
+    const total=Math.sqrt((2*dy)/gravity);
+    const vx=(end.x-start.x)/Math.max(.001,total);
+    const t0=performance.now();
+
+    function frame(now){
+      const t=Math.min(total,(now-t0)/1000);
+      const x=start.x+vx*t;
+      const y=start.y+.5*gravity*t*t;
+      el.style.left=`${x}px`;
+      el.style.top=`${y}px`;
+      if(t<total){
+        requestAnimationFrame(frame);
+      }else{
+        el.style.left=`${end.x}px`;
+        el.style.top=`${end.y}px`;
+        resolve();
+      }
+    }
+    requestAnimationFrame(frame);
   });
 }
 function advRecenterBubble(bubble,html){
@@ -374,49 +450,60 @@ async function advancedCoefficientLiftNew(){
   const bubble=document.createElement("div");
   bubble.className="floatValue advHL advHLFrac";
   bubble.dataset.role="advBubble";
-  bubble.style.left=`${r.left-line.left+r.width/2}px`;
-  bubble.style.top=`${r.top-line.top}px`;
+  const shelfX=r.left-line.left+r.width/2;
+  const startY=r.top-line.top;
+  const shelfY=startY-130;
+
+  bubble.style.left=`${shelfX}px`;
+  bubble.style.top=`${startY}px`;
 
   // Üste yalnızca katsayının büyüklüğü çıkar.
-  // + / − işareti alttaki ana ifadede yerinde kalır.
+  // İşaret ana ifadede kalır. Değer dikey atışla görünmez rafa oturur.
   bubble.innerHTML=rationalHTML(ar);
   eq.append(bubble);
 
-  await animatePosition(
-    bubble,
-    r.left-line.left+r.width/2,
-    r.top-line.top-130,
-    640,
-    EASE_SOFT
-  );
+  await advVerticalShelfThrow(bubble,shelfX,startY,shelfY,1800,34);
 
+  bubble.dataset.shelfY=String(shelfY);
   bubble.onclick=advancedBubbleNew;
   advancedStage=3;
   legacyLocked=false;
 }
 
-function advancedBubbleNew(){
+async function advancedBubbleNew(){
   if(legacyLocked)return;
 
   const bubble=lq("advBubble");
+  if(!bubble)return;
+
   const qv=rAbs(rat(b,a));
   const h=rDiv(qv,rat(2));
   const s=rSquare(h);
 
   if(advancedStage===3){
+    legacyLocked=true;
+    bubble.onclick=null;
     advRecenterBubble(bubble,rationalHTML(h));
+    await advSettleMath();
+    await advShelfJolt(bubble);
     advancedStage=4;
+    bubble.onclick=advancedBubbleNew;
+    legacyLocked=false;
     return;
   }
 
   if(advancedStage===4){
+    legacyLocked=true;
+    bubble.onclick=null;
     advRecenterBubble(bubble,fractionHTML(s));
-    advancedStage=5;
-    return;
-  }
+    await advSettleMath();
+    await advShelfJolt(bubble);
 
-  if(advancedStage!==5)return;
-  advancedSplitNew();
+    // Kare alma son işlemdir: sarsıntı biter bitmez iki kopya raftan düşer.
+    advancedStage=5;
+    legacyLocked=false;
+    await advancedSplitNew();
+  }
 }
 
 function advRemovePairOverlay(){
@@ -801,9 +888,11 @@ async function advancedSplitNew(){
     y:mr.top-line.top
   };
 
+  // İki kopya aynı görünmez raftan serbest düşüşe başlar.
+  // Yatayda hedeflerine açılırken düşey hareket yerçekimi kuralına uyar.
   await Promise.all([
-    advArcMove(plusFly,{x:sx,y:sy},plusEnd,90,1100),
-    advArcMove(minusFly,{x:sx,y:sy},minusEnd,90,1100)
+    advGravityDrop(plusFly,{x:sx,y:sy},plusEnd,2100),
+    advGravityDrop(minusFly,{x:sx,y:sy},minusEnd,2100)
   ]);
 
   plusFly.remove();
