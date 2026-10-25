@@ -5028,7 +5028,7 @@ async function n15Action(action){
  try{
   if(phase==='initial'){
    // Tek hareketli terim: +2; işareti = üzerinden geçerken eksiye dönüşür.
-   await n15RetainAndMove(['n15termTwo','n15termBlock','n15termHalf'],
+   await n15RetainAndMove(['n15termTwo','n15termHalf'],
     ()=>{layer15.phase=next},{selected:'n15termTwo'});
   }else if(phase==='twoMoved'){
    await n15SwitchBothSigns();
@@ -5911,6 +5911,7 @@ function n12UpdateSolutionSeal(){
 }
 function update(animateBars=false){
  eq.classList.toggle('n15-scene',!!layer15);
+ eq.classList.toggle('n15-flip-ready',!!layer15&&layer15.phase==='calculated');
  render(animateBars);
  positionScale();
  if(layer15){
