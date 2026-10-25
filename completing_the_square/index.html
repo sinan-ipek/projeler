@@ -65,7 +65,7 @@
   z-index:2;
   left:.04em;
   right:.04em;
-  top:calc(50% + .045em);
+  top:calc(50% + .065em);
   height:var(--adv-frac-bar);
   background:currentColor;
   border-radius:999px;
@@ -88,11 +88,11 @@
   white-space:nowrap;
 }
 .eq.advancedMath .frac-top{
-  bottom:calc(50% + var(--adv-frac-gap) - .045em);
+  bottom:calc(50% + var(--adv-frac-gap) - .065em);
   transform:translateX(-50%);
 }
 .eq.advancedMath .frac-bottom{
-  top:calc(50% + var(--adv-frac-gap) + .045em);
+  top:calc(50% + var(--adv-frac-gap) + .065em);
   transform:translateX(-50%);
 }
 .eq.advancedMath .insideFrac{
@@ -119,7 +119,7 @@
   align-items:center;
   min-height:var(--adv-line-box);
   vertical-align:middle;
-  padding-right:.27em;
+  padding-right:.20em;
   margin-right:0;
 }
 .eq.advancedMath .advSquareDone .legacySquareExponent{
@@ -133,7 +133,7 @@
 </style>
 </head>
 <body>
-<div class="app"><div class="toolbar"><a class="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 2.8 10.7a1 1 0 0 0 .63 1.78h1.02v7.02a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-4.35h2.74v4.35a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-7.02h1.02a1 1 0 0 0 .63-1.78L12 3.2Z"/></svg></a><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.8.9</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
+<div class="app"><div class="toolbar"><a class="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 2.8 10.7a1 1 0 0 0 .63 1.78h1.02v7.02a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-4.35h2.74v4.35a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-7.02h1.02a1 1 0 0 0 .63-1.78L12 3.2Z"/></svg></a><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.8.10</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
 <script>
 (()=>{
 const easyBtn=document.getElementById("easyBtn"),advancedBtn=document.getElementById("advancedBtn"),formulaBtn=document.getElementById("formulaBtn"),legacyView=document.getElementById("legacyView"),formulaView=document.getElementById("formulaView");function setActiveMode(mode){easyBtn.classList.toggle("active",mode==="easy");advancedBtn.classList.toggle("active",mode==="advanced");formulaBtn.classList.toggle("active",mode==="formula");legacyView.style.display=mode==="formula"?"none":"block";formulaView.style.display=mode==="formula"?"block":"none"}
