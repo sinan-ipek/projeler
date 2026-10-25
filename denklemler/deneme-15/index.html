@@ -4619,7 +4619,11 @@ async function n15Action(action){
     phase==='expanded'?['n15block','n15leftDen']:['n15block','n15half'];
    await n15RetainAndMove(ids,()=>{layer15.phase=next});
   }
- }finally{busy=false;scene.classList.remove('busy');update();}
+ }finally{
+  // İptal, kesilmiş animasyon veya istisna durumunda sahnede 0 kalmasın.
+  scene.querySelectorAll('.n15-passing-zero').forEach(node=>node.remove());
+  busy=false;scene.classList.remove('busy');update();
+ }
 }
 function parseNestedPreview(raw){
  const clean=String(raw).replace(/\s+/g,'').replace(/[−–]/g,'-');
