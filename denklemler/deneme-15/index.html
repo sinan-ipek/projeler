@@ -5481,7 +5481,7 @@ function update(animateBars=false){
  if(layer15){
   n15AlignEquation();
   n15KeepEqualsY();
-  if(n15TwoAnchorY===null&&layer15.phase==='initial'){
+  if(n15TwoAnchorY===null&&['initial','halfMoved','blockMoved'].includes(layer15.phase)){
    const number=byId('n15two');
    if(number){
     const b=number.getBoundingClientRect(),outer=scene.getBoundingClientRect();
