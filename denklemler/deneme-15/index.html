@@ -4516,6 +4516,8 @@ async function n15RetainAndMove(ids,advance,motion={}){
   const transfer=e.id===motion.selected;
   const flipping=motion.flip?(e.id.startsWith('n15left')?'left':'right'):null;
   const sign=e.node.querySelector(':scope > .n15-term-sign');
+  const signRect=sign?.getBoundingClientRect();
+  const destinationSignX=signRect?(signRect.left+signRect.right)/2:tx;
   if(transfer&&sign)sign.classList.remove('n15-implicit');
   const restore=()=>{
    const a=e.finalState;e.node.className=a.className;
@@ -4541,7 +4543,7 @@ async function n15RetainAndMove(ids,advance,motion={}){
    if(transfer)y-=rise*wave;
    if(flipping)x+=sideBend*wave;
    e.node.style.translate=x.toFixed(3)+'px '+y.toFixed(3)+'px';
-   if(transfer&&!switched&&crossed(tx+x*scale)){
+   if(transfer&&!switched&&crossed(destinationSignX+x*scale)){
     switched=true;
     if(sign&&e.finalState.sign!==null)sign.textContent=e.finalState.sign;
    }
