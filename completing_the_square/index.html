@@ -16,6 +16,7 @@
   --adv-frac-bar:2.35px;
   --adv-frac-gap:.16em;
   align-items:center;
+  padding-left:60px;
 }
 .eq.advancedMath .factorExpression,
 .eq.advancedMath .factorParen,
@@ -118,16 +119,21 @@
   align-items:center;
   min-height:var(--adv-line-box);
   vertical-align:middle;
+  padding-right:.27em;
+  margin-right:0;
 }
 .eq.advancedMath .advSquareDone .legacySquareExponent{
   font-size:.46em;
   top:-.52em;
 }
+.eq.advancedMath .factorExpression + .advTailChoice{
+  margin-left:-.10ch;
+}
 @media(max-width:700px){body{padding:12px}.card{padding:24px 14px}.formulaStage{font-size:38px}}@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
-<div class="app"><div class="toolbar"><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.8.3</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
+<div class="app"><div class="toolbar"><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.8.4</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
 <script>
 (()=>{
 const easyBtn=document.getElementById("easyBtn"),advancedBtn=document.getElementById("advancedBtn"),formulaBtn=document.getElementById("formulaBtn"),legacyView=document.getElementById("legacyView"),formulaView=document.getElementById("formulaView");function setActiveMode(mode){easyBtn.classList.toggle("active",mode==="easy");advancedBtn.classList.toggle("active",mode==="advanced");formulaBtn.classList.toggle("active",mode==="formula");legacyView.style.display=mode==="formula"?"none":"block";formulaView.style.display=mode==="formula"?"block":"none"}
