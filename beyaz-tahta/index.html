@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.24</title>
+<title>Beyaz Tahta v16.25</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -315,6 +315,28 @@
   }
   .fillColorOption .colorSwatch{width:22px;height:22px}
   .fillColorOption.active{background:#eaf1ff;border-color:#9db7ff}
+
+  .fillOpacityControl{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    height:36px;
+    padding:0 4px;
+    color:#596273;
+    font:500 11px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+    white-space:nowrap;
+  }
+  #fillOpacity{
+    width:92px;
+    accent-color:#4b5563;
+    cursor:pointer;
+  }
+  #fillOpacityValue{
+    width:31px;
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+    color:#667085;
+  }
 
   .colorWrap{position:relative;display:inline-flex}
   #colorBtn{
@@ -765,6 +787,12 @@
       </div>
     </div>
 
+    <label class="fillOpacityControl" title="Dolgu saydamlığı: 0 opak, 100 tamamen saydam">
+      <span>Saydamlık</span>
+      <input id="fillOpacity" type="range" min="0" max="100" step="1" value="0" aria-label="Dolgu saydamlığı">
+      <span id="fillOpacityValue">0%</span>
+    </label>
+
     <div class="sep"></div>
 
     <select id="shapeType" title="Şekil" aria-label="Şekil">
@@ -970,7 +998,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.24 (grup taşımada köşe noktalarına snap)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.25 (dolgu saydamlığı sürgüsü)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1000,7 +1028,8 @@
               <li>Silgi ile tüm ink nesnesini veya yalnız belirli bir bölümü sil.</li>
               <li>Farede sağ tık sabit tutulursa menü açılır; sağ tık sürüklenirse tahta kaydırılır.</li>
               <li>Ctrl + sağ tık geçici silgidir; Ctrl bırakılınca önceki araca dönülür.</li>
-              <li>Dikdörtgen, elips ve çokgenlerin içini renkle doldur.</li>
+              <li>Dikdörtgen, elips, çokgen ve daire dilimlerinin içini renkle doldur.</li>
+              <li>Saydamlık sürgüsüyle dolgunun saydamlığını 0–100 arasında ayarla; 0 opak, 100 tamamen saydamdır.</li>
             </ul>
           </section>
 
@@ -1174,6 +1203,8 @@
   const fillMenu = document.getElementById('fillMenu');
   const fillSwatch = document.getElementById('fillSwatch');
   const fillColorOptions = Array.from(document.querySelectorAll('.fillColorOption'));
+  const fillOpacityEl = document.getElementById('fillOpacity');
+  const fillOpacityValue = document.getElementById('fillOpacityValue');
   const addShapeBtn = document.getElementById('addShape');
   const shapeType = document.getElementById('shapeType');
   const textBtn = document.getElementById('textBtn');
@@ -1206,6 +1237,8 @@
   let currentColor = '#111111';
   let currentWidth = 4;
   let currentFillColor = '#facc15';
+  let currentFillOpacity = 0;
+  let fillOpacityUndoArmed = false;
   let fillPressTimer = null;
   let fillLongPressTriggered = false;
   let eraserPressTimer = null;
@@ -2403,6 +2436,12 @@
       if(Number.isFinite(Number(o.style.width))){
         setWidthControlValue(Number(o.style.width));
       }
+
+      if(isFillableKind(o) && o.fillColor){
+        currentFillOpacity=fillTransparencyValue(o);
+        fillOpacityEl.value=String(currentFillOpacity);
+        fillOpacityValue.textContent=Math.round(currentFillOpacity)+'%';
+      }
       return;
     }
 
@@ -2456,16 +2495,18 @@
       color:style.color || currentColor,
       width:Number.isFinite(Number(style.width)) ? Number(style.width) : Number(widthEl.value)||4,
       hasFill:false,
-      fillColor:null
+      fillColor:null,
+      fillOpacity:0
     };
 
     if(
-      (o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon') &&
+      isFillableKind(o) &&
       typeof o.fillColor==='string' &&
       o.fillColor
     ){
       payload.hasFill=true;
       payload.fillColor=o.fillColor;
+      payload.fillOpacity=fillTransparencyValue(o);
     }
 
     return payload;
@@ -2488,13 +2529,48 @@
 
       if(
         payload.hasFill &&
-        (o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon')
+        isFillableKind(o)
       ){
         o.fillColor=payload.fillColor;
+        o.fillOpacity=Math.max(0,Math.min(100,Number(payload.fillOpacity)||0));
       }
       changed++;
     }
     return changed;
+  }
+
+  function fillOpacityEditableIndices(indices=selectedIndices){
+    return (indices||[])
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length)
+      .filter(i=>{
+        const o=objects[i];
+        return !!o && !o.locked && isFillableKind(o) && !!o.fillColor;
+      });
+  }
+
+  function beginFillOpacityChange(){
+    if(fillOpacityUndoArmed) return;
+    if(fillOpacityEditableIndices().length){
+      saveState();
+      fillOpacityUndoArmed=true;
+    }
+  }
+
+  function applyFillOpacityToSelection(value){
+    const transparency=Math.max(0,Math.min(100,Number(value)||0));
+    currentFillOpacity=transparency;
+    fillOpacityEl.value=String(transparency);
+    fillOpacityValue.textContent=Math.round(transparency)+'%';
+
+    const targets=fillOpacityEditableIndices();
+    if(!targets.length) return 0;
+
+    for(const i of targets){
+      objects[i].fillOpacity=transparency;
+    }
+
+    redraw();
+    return targets.length;
   }
 
   function cancelFormatPainter(){
@@ -3285,6 +3361,7 @@
       ){
         ctx.save();
         ctx.fillStyle=o.fillColor;
+        ctx.globalAlpha=1-fillTransparencyValue(o)/100;
         ctx.fill();
         ctx.restore();
       }
@@ -5404,9 +5481,18 @@
     return inside;
   }
 
-  function isFillableObject(o){
-    return !!o && !o.locked &&
+  function isFillableKind(o){
+    return !!o &&
       (o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon' || o.kind==='sector');
+  }
+
+  function isFillableObject(o){
+    return !!o && !o.locked && isFillableKind(o);
+  }
+
+  function fillTransparencyValue(o){
+    const v=Number(o && o.fillOpacity);
+    return Number.isFinite(v) ? Math.max(0,Math.min(100,v)) : 0;
   }
 
   function pointInsideFillableObject(o,p){
@@ -8195,6 +8281,7 @@
       if(hit>=0){
         saveState();
         objects[hit].fillColor=currentFillColor;
+        objects[hit].fillOpacity=currentFillOpacity;
         redraw();
         statusEl.textContent='Nesne dolduruldu';
       }else{
@@ -9483,7 +9570,11 @@
       ? fillOverride
       : (o.fillColor || 'none');
 
-    return `stroke="${svgEscapeAttr(stroke)}" stroke-width="${svgNum(width)}" stroke-linecap="round" stroke-linejoin="round" fill="${svgEscapeAttr(fill)}"`;
+    const fillOpacity=fill==='none'
+      ? ''
+      : ` fill-opacity="${svgNum(1-fillTransparencyValue(o)/100)}"`;
+
+    return `stroke="${svgEscapeAttr(stroke)}" stroke-width="${svgNum(width)}" stroke-linecap="round" stroke-linejoin="round" fill="${svgEscapeAttr(fill)}"${fillOpacity}`;
   }
 
   function svgPolylinePath(points,close=false){
@@ -10187,6 +10278,29 @@
       closeFillMenu();
       activateFillTool();
     });
+  });
+
+  fillOpacityEl.addEventListener('pointerdown',()=>{
+    fillOpacityUndoArmed=false;
+    beginFillOpacityChange();
+  });
+
+  fillOpacityEl.addEventListener('input',()=>{
+    beginFillOpacityChange();
+    const count=applyFillOpacityToSelection(fillOpacityEl.value);
+    if(count){
+      statusEl.textContent=count>1
+        ? `${count} nesnenin dolgu saydamlığı %${Math.round(currentFillOpacity)}`
+        : `Dolgu saydamlığı %${Math.round(currentFillOpacity)}`;
+    }
+  });
+
+  fillOpacityEl.addEventListener('change',()=>{
+    fillOpacityUndoArmed=false;
+  });
+
+  fillOpacityEl.addEventListener('pointerup',()=>{
+    fillOpacityUndoArmed=false;
   });
 
   document.addEventListener('pointerdown',e=>{
