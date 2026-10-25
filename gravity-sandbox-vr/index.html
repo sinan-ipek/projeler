@@ -299,6 +299,16 @@ function action(name){
  if(name==='near')bringNear();
  if(name==='new')createPlanet();
  if(name==='clearSelection')choosePlanets([]);
+ if(name==='coneMinus'||name==='conePlus'){
+  const c=rightController||controllers.find(c=>c!==leftController)||controllers[0];
+  if(c){
+   const increment=THREE.MathUtils.degToRad(3);
+   const old=coneAngles.get(c)||0;
+   const next=name==='conePlus'?Math.min(MAX_CONE,old+increment):Math.max(0,old-increment);
+   coneAngles.set(c,next);
+   $('status').textContent='Koni açısı: '+THREE.MathUtils.radToDeg(next).toFixed(0)+'° · Tetik: çoklu seçim';
+  }
+ }
  if(name.startsWith('preset:'))addVRPreset(name.slice(7));
  if(name==='grow')resizeSelected(1.2);
  if(name==='shrink')resizeSelected(1/1.2);
@@ -356,7 +366,7 @@ const labels=['play','reset','mode','trails','velocities'];
 const rightButtons=[['near','YAKINA GETIR'],['shrink','KUCULT'],['grow','BUYUT'],['copy','KOPYALA'],['delete','SIL']];
 const topButtons=[['ride','BIN'],['dismount','IN'],['micro','MIKRO'],['macro','MAKRO']];
 const presetButtons=[['new','YENI GEZEGEN'],['preset:solar','GUNES SISTEMI'],['preset:fireworks','HAVAİ FİŞEK'],['preset:horizontal','YATAY ATIS'],['preset:angled','EGIK ATIS'],['preset:vertical','DIKEY ATIS']];
-const utilityButtons=[['clearSelection','SECIMI KALDIR'],['trails','YORUNGELER'],['velocities','HIZ OKLARI'],['reset','SIFIRLA']];
+const utilityButtons=[['coneMinus','KONI -'],['conePlus','KONI +'],['clearSelection','SECIMI KALDIR'],['trails','YORUNGELER'],['velocities','HIZ OKLARI'],['reset','SIFIRLA']];
 function drawMenuFace(face,title,subtitle,buttons,highlight){
  const c=face.ctx;c.clearRect(0,0,FACE_CW,FACE_CH);
  c.fillStyle='#15253a';c.fillRect(0,0,FACE_CW,FACE_CH);
