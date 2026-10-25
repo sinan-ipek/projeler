@@ -133,7 +133,7 @@
 </style>
 </head>
 <body>
-<div class="app"><div class="toolbar"><a class="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 2.8 10.7a1 1 0 0 0 .63 1.78h1.02v7.02a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-4.35h2.74v4.35a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-7.02h1.02a1 1 0 0 0 .63-1.78L12 3.2Z"/></svg></a><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.9.2</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
+<div class="app"><div class="toolbar"><a class="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 2.8 10.7a1 1 0 0 0 .63 1.78h1.02v7.02a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-4.35h2.74v4.35a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-7.02h1.02a1 1 0 0 0 .63-1.78L12 3.2Z"/></svg></a><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.9.3</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
 <script>
 (()=>{
 const easyBtn=document.getElementById("easyBtn"),advancedBtn=document.getElementById("advancedBtn"),formulaBtn=document.getElementById("formulaBtn"),legacyView=document.getElementById("legacyView"),formulaView=document.getElementById("formulaView");function setActiveMode(mode){easyBtn.classList.toggle("active",mode==="easy");advancedBtn.classList.toggle("active",mode==="advanced");formulaBtn.classList.toggle("active",mode==="formula");legacyView.style.display=mode==="formula"?"none":"block";formulaView.style.display=mode==="formula"?"block":"none"}
@@ -336,6 +336,56 @@ function advSquareBurst(bubble){
         {opacity:0,transform:`rotate(${i*36}deg) translateX(39px) scaleX(.55)`}
       ],
       {duration:390,easing:"cubic-bezier(.16,.84,.25,1)",fill:"forwards"}
+    ));
+
+    Promise.all([
+      ringAnim.finished.catch(()=>{}),
+      ...rayAnims.map(a=>a.finished.catch(()=>{}))
+    ]).then(()=>{
+      burst.remove();
+      resolve();
+    });
+  });
+}
+function advBurstAt(x,y){
+  return new Promise(resolve=>{
+    const burst=document.createElement("div");
+    burst.className="advSquareBurst";
+    burst.style.left=`${x}px`;
+    burst.style.top=`${y}px`;
+
+    const ring=document.createElement("div");
+    ring.className="advSquareBurstRing";
+    burst.append(ring);
+
+    const rays=[];
+    for(let i=0;i<10;i++){
+      const ray=document.createElement("div");
+      ray.className="advSquareBurstRay";
+      ray.style.transform=`rotate(${i*36}deg) translateX(7px) scaleX(.25)`;
+      burst.append(ray);
+      rays.push(ray);
+    }
+    eq.append(burst);
+
+    const ringAnim=ring.animate(
+      [
+        {opacity:0,transform:"translate(-50%,-50%) scale(.35)"},
+        {opacity:1,transform:"translate(-50%,-50%) scale(.85)",offset:.20},
+        {opacity:.9,transform:"translate(-50%,-50%) scale(1.55)",offset:.58},
+        {opacity:0,transform:"translate(-50%,-50%) scale(2.35)"}
+      ],
+      {duration:360,easing:"cubic-bezier(.16,.84,.25,1)",fill:"forwards"}
+    );
+
+    const rayAnims=rays.map((ray,i)=>ray.animate(
+      [
+        {opacity:0,transform:`rotate(${i*36}deg) translateX(5px) scaleX(.20)`},
+        {opacity:1,transform:`rotate(${i*36}deg) translateX(13px) scaleX(.78)`,offset:.28},
+        {opacity:.9,transform:`rotate(${i*36}deg) translateX(24px) scaleX(1.05)`,offset:.62},
+        {opacity:0,transform:`rotate(${i*36}deg) translateX(36px) scaleX(.55)`}
+      ],
+      {duration:340,easing:"cubic-bezier(.16,.84,.25,1)",fill:"forwards"}
     ));
 
     Promise.all([
@@ -553,9 +603,8 @@ async function advancedBubbleNew(){
     advRecenterBubble(bubble,fractionHTML(s));
     await advSettleMath();
 
-    // Kare oluştuğu anda kısa bir enerji/patlama tepkisi:
-    // önce küçük bir silkinme, ardından genişleyen halka ve merkezden çıkan ışınlar.
-    await advShelfJolt(bubble);
+    // Kare oluştuğu anda doğrudan patlama tepkisi:
+    // ikinci bir silkinme yok; genişleyen halka ve merkezden çıkan ışınlar yeterli.
     await advSquareBurst(bubble);
 
     // Patlama söndükten sonra kısa bir pedagojik duraklama.
@@ -713,7 +762,12 @@ async function advancedCombineTailChoice(){
   group.onclick=null;
   group.classList.remove("advHL");
 
-  const before=group.getBoundingClientRect();
+  const outside=lq("advOutside");
+  const cMove=lq("advC");
+  if(!outside||!cMove){
+    legacyLocked=false;
+    return;
+  }
 
   // Dışarıdaki terim: -a*(b/2a)^2 = -b^2/(4a)
   const h=rat(b,2*a);
@@ -721,15 +775,65 @@ async function advancedCombineTailChoice(){
   const as=rMul(rat(a),s);
   const final=rSub(rat(c),as);
 
+  const er=eq.getBoundingClientRect();
+  const or=outside.getBoundingClientRect();
+  const cr=cMove.getBoundingClientRect();
+
+  const outsideCx=or.left-er.left+or.width/2;
+  const cCx=cr.left-er.left+cr.width/2;
+  const meetX=(outsideCx+cCx)/2;
+  const meetY=((or.top+or.height/2)+(cr.top+cr.height/2))/2-er.top;
+
+  const outDx=meetX-outsideCx;
+  const cDx=meetX-cCx;
+
+  // İki mıknatıs serbest bırakılmış gibi:
+  // önce hafif hareket, sonra giderek hızlanıp ortada "şak" diye birleşir.
+  const magnetDuration=680;
+  const outAnim=outside.animate(
+    [
+      {transform:"translateX(0)"},
+      {transform:`translateX(${outDx*.08}px)`,offset:.30},
+      {transform:`translateX(${outDx*.28}px)`,offset:.55},
+      {transform:`translateX(${outDx*.62}px)`,offset:.78},
+      {transform:`translateX(${outDx}px)`}
+    ],
+    {duration:magnetDuration,easing:"cubic-bezier(.15,.05,.25,1)",fill:"forwards"}
+  );
+  const cAnim=cMove.animate(
+    [
+      {transform:"translateX(0)"},
+      {transform:`translateX(${cDx*.08}px)`,offset:.30},
+      {transform:`translateX(${cDx*.28}px)`,offset:.55},
+      {transform:`translateX(${cDx*.62}px)`,offset:.78},
+      {transform:`translateX(${cDx}px)`}
+    ],
+    {duration:magnetDuration,easing:"cubic-bezier(.15,.05,.25,1)",fill:"forwards"}
+  );
+
+  await Promise.all([
+    outAnim.finished.catch(()=>{}),
+    cAnim.finished.catch(()=>{})
+  ]);
+
+  // Temas anında eski terimler kaybolur ve kısa bir patlama oluşur.
+  outside.style.opacity="0";
+  cMove.style.opacity="0";
+  await advBurstAt(meetX,meetY);
+
+  outAnim.cancel();
+  cAnim.cancel();
+
+  // Patlamadan hemen sonra toplam belirir.
   if(rIsZero(final)){
-    await animateOpacity(group,1,0,220);
     group.innerHTML="";
     group.style.opacity="1";
   }else{
     group.innerHTML=signedRationalHTML(final);
     group.dataset.done="1";
+    group.style.opacity="0";
     await advSettleMath();
-    await moveWithFLIP(group,before,620);
+    await animateOpacity(group,0,1,220);
   }
 
   // Parantez tarafı yapılmadıysa aktif kalır.
