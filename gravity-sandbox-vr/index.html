@@ -44,6 +44,11 @@ const light=new THREE.DirectionalLight(0xffffff,1.3);light.position.set(-3,7,5);
 const SCALE=.04;
 const world=new THREE.Group();world.position.set(0,1.4,-2.25);world.scale.setScalar(SCALE);scene.add(world);
 const originalWorldPosition=world.position.clone();
+function alignGroundToXRFloor(){
+ if(ridingBody)return;
+ world.position.copy(originalWorldPosition);
+ if(planetMode)world.position.y=-(-10)*SCALE;
+}
 let ridingBody=null;
 let rideViewMode='macro';
 const MICRO_SCALE_MULTIPLIER=1000;
@@ -88,7 +93,7 @@ const surface=new THREE.Mesh(new THREE.PlaneGeometry(120,120,1,1),
  new THREE.MeshStandardMaterial({color:0x54758e,roughness:1,side:THREE.DoubleSide}));
 surface.rotation.x=-Math.PI/2;surface.visible=false;scene.add(surface);
 function dismount(){
- ridingBody=null;surface.visible=false;microSky.visible=false;world.scale.setScalar(SCALE);world.position.copy(originalWorldPosition);
+ ridingBody=null;surface.visible=false;microSky.visible=false;world.scale.setScalar(SCALE);world.position.copy(originalWorldPosition);alignGroundToXRFloor();
  floor.position.y=-10;grid.position.y=-9.98;
  floor.visible=planetMode;grid.visible=planetMode;
  for(const b of bodies)b.mesh.visible=true;
@@ -286,6 +291,7 @@ function syncButtons(){
  $('mode').textContent=planetMode?'🌍 Gezegen':'🌌 Uzay';
  $('trails').textContent='Yörüngeler: '+(showTrails?'Açık':'Kapalı');
  floor.visible=planetMode;grid.visible=planetMode;
+ if(!ridingBody)alignGroundToXRFloor();
  surface.visible=!!ridingBody&&!planetMode&&rideViewMode==='micro';
  scene.background.set(planetMode?0x283c56:0x090e19);
  if(labels.length)refreshPanel();
@@ -293,7 +299,7 @@ function syncButtons(){
 function action(name){
  if(name==='play')running=!running
  if(name==='reset'){dismount();vectorDrag=null;endTwoHand();grabs.clear();hoverBodies.clear();magneticTargets.clear();choosePlanets([]);setup();for(const ring of selectionRings.values())ring.visible=false}
- if(name==='mode'){planetMode=!planetMode;if(planetMode)for(const b of bodies){b.pos.y=Math.max(b.pos.y,-10+b.radius);b.history=[];updateTrail(b)}}
+ if(name==='mode'){planetMode=!planetMode;if(planetMode)for(const b of bodies){b.pos.y=Math.max(b.pos.y,-10+b.radius);b.history=[];updateTrail(b)}alignGroundToXRFloor()}
  if(name==='trails')showTrails=!showTrails;
  if(name==='velocities')showVelocities=!showVelocities;
  if(name==='near')bringNear();
