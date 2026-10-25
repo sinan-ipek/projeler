@@ -9,7 +9,7 @@
 </style>
 </head>
 <body>
-<div class="app"><div class="toolbar"><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.7.8</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
+<div class="app"><div class="toolbar"><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.7.9</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
 <script>
 (()=>{
 const easyBtn=document.getElementById("easyBtn"),advancedBtn=document.getElementById("advancedBtn"),formulaBtn=document.getElementById("formulaBtn"),legacyView=document.getElementById("legacyView"),formulaView=document.getElementById("formulaView");function setActiveMode(mode){easyBtn.classList.toggle("active",mode==="easy");advancedBtn.classList.toggle("active",mode==="advanced");formulaBtn.classList.toggle("active",mode==="formula");legacyView.style.display=mode==="formula"?"none":"block";formulaView.style.display=mode==="formula"?"block":"none"}
@@ -294,6 +294,7 @@ function advEnableMultiplyPair(){
   rightTarget.classList.add("advPairTarget");
 
   const show=()=>{
+    if(advancedStage!==6||legacyLocked)return;
     leftTarget.classList.add("advPairHot");
     rightTarget.classList.add("advPairHot");
     advShowPairOverlay(leftTarget,rightTarget);
@@ -309,6 +310,88 @@ function advEnableMultiplyPair(){
   rightTarget.addEventListener("mouseenter",show);
   leftTarget.addEventListener("mouseleave",hide);
   rightTarget.addEventListener("mouseleave",hide);
+
+  leftTarget.onclick=advancedMoveNegativeOutside;
+  rightTarget.onclick=advancedMoveNegativeOutside;
+}
+
+async function advancedMoveNegativeOutside(){
+  if(legacyLocked||advancedStage!==6)return;
+  legacyLocked=true;
+
+  const factorA=lq("factorA");
+  const minusTarget=lq("advMinusS");
+  const reserve=lq("advReserve");
+  const cMove=lq("advC");
+  const factor=lq("advFactor");
+  const parenR=lq("advParenR");
+
+  if(!factorA||!minusTarget||!reserve||!cMove||!factor||!parenR){
+    legacyLocked=false;
+    return;
+  }
+
+  factorA.onclick=null;
+  minusTarget.onclick=null;
+  factorA.classList.remove("advPairHot","advPairTarget");
+  minusTarget.classList.remove("advPairHot","advPairTarget");
+  advRemovePairOverlay();
+
+  const h=rDiv(rAbs(rat(b,a)),rat(2));
+  const s=rSquare(h);
+  const product=rMul(rat(a),s);
+  const resultHTML=`−${THIN}${fractionHTML(product)}`;
+
+  const eqRect=eq.getBoundingClientRect();
+  const sourceRect=minusTarget.getBoundingClientRect();
+  const cBefore=cMove.getBoundingClientRect();
+  const factorBefore=factor.getBoundingClientRect();
+  const parenBefore=parenR.getBoundingClientRect();
+  const reserveBefore=parseFloat(getComputedStyle(reserve).width)||0;
+
+  const outside=lSpan(resultHTML,"advOutside","term");
+  outside.style.visibility="hidden";
+  eq.insertBefore(outside,cMove);
+
+  const outsideWidth=outside.getBoundingClientRect().width;
+
+  minusTarget.remove();
+
+  const factorAfter=factor.getBoundingClientRect();
+  const factorShrink=Math.max(0,factorBefore.width-factorAfter.width);
+  reserve.style.width=`${Math.max(22,reserveBefore+factorShrink-outsideWidth)}px`;
+
+  await moveWithFLIP(cMove,cBefore,1);
+
+  const targetRect=outside.getBoundingClientRect();
+
+  const fly=document.createElement("div");
+  fly.className="advArcFly";
+  fly.innerHTML=resultHTML;
+  fly.style.left=`${sourceRect.left-eqRect.left+sourceRect.width/2}px`;
+  fly.style.top=`${sourceRect.top-eqRect.top}px`;
+  fly.style.transform="translateX(-50%)";
+  eq.append(fly);
+
+  const start={
+    x:sourceRect.left-eqRect.left+sourceRect.width/2,
+    y:sourceRect.top-eqRect.top
+  };
+  const end={
+    x:targetRect.left-eqRect.left+targetRect.width/2,
+    y:targetRect.top-eqRect.top
+  };
+
+  await Promise.all([
+    advArcMove(fly,start,end,118,1080),
+    moveWithFLIP(parenR,parenBefore,620)
+  ]);
+
+  fly.remove();
+  outside.style.visibility="visible";
+
+  advancedStage=7;
+  legacyLocked=false;
 }
 
 async function advancedSplitNew(){
