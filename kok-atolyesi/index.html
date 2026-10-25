@@ -80,6 +80,11 @@ button{font:inherit;border:none;cursor:pointer}
   .radical{left:38%}.outside{right:62%;min-width:0}
 }
 .difficulty{display:inline-flex;gap:4px;background:#edf1f7;padding:4px;border-radius:12px}.difficulty-btn{font-size:15px;font-weight:750;color:#52647d;background:transparent;border-radius:9px;padding:8px 13px}.difficulty-btn.active{background:#2f64d6;color:white;box-shadow:0 1px 5px #213b6d24}.difficulty-btn:focus-visible{outline:2px solid #15274b;outline-offset:2px}
+.custom-root-form{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:8px 0 5px}
+.custom-root-form label{font-size:14px;font-weight:700;color:#51607a}
+.custom-root-form input{min-width:190px;max-width:340px;flex:1;border:1px solid #b4c0cf;border-radius:10px;padding:10px 12px;font:600 18px Cambria,serif;background:white;color:#213142}
+.custom-root-form button{padding:10px 15px;border-radius:10px;background:#265fc5;color:white;border:0;font-weight:750;cursor:pointer}
+.custom-root-error{font-size:13px;color:#b53a36}
 .nav-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}#homeBtn{display:inline-flex;align-items:center;justify-content:center;min-height:36px}
 </style>
 </head>
@@ -97,6 +102,12 @@ button{font:inherit;border:none;cursor:pointer}
       <div class="nav-actions"><div class="difficulty" role="group" aria-label="Zorluk seviyesi"><button type="button" class="difficulty-btn active" data-difficulty="easy" aria-pressed="true">Kolay</button><button type="button" class="difficulty-btn" data-difficulty="medium" aria-pressed="false">Orta</button><button type="button" class="difficulty-btn" data-difficulty="advanced" aria-pressed="false">İleri</button></div><button id="newBtn">Yeni soru</button><a id="homeBtn" href="../index.html" aria-label="Öğren ana sayfasına dön" title="Ana sayfa"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 28 L32 8 L50 28 L50 56 L14 56 Z" fill="#f7d916" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/><path d="M8 28 L32 8 L56 28" fill="none" stroke="#222222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="40" width="16" height="16" fill="#d9d9d9" stroke="#222222" stroke-width="4.5" stroke-linejoin="round"/></svg></a></div>
     </div>
 
+    <form id="customRootForm" class="custom-root-form" autocomplete="off">
+      <label for="customRootInput">Kendi kökünü yaz</label>
+      <input id="customRootInput" type="text" spellcheck="false" placeholder="√(24x²), ∛54, √(72/25)" aria-label="Kök ifadesi" />
+      <button type="submit">Başlat</button>
+      <span id="customRootError" class="custom-root-error" role="status"></span>
+    </form>
     <div class="status" id="status"></div>
 
     <div class="stage" id="stage">
@@ -290,10 +301,10 @@ button{font:inherit;border:none;cursor:pointer}
 
   function setStatus(text){ $('status').textContent = text; }
 
-  function startQuestion(){
+  function startQuestion(custom=null){
     questionNo += 1;
-    levelQuestionNo += 1;
-    current = makeQuestion();
+    if(custom && typeof custom==='object')current=custom;
+    else{levelQuestionNo += 1;current=makeQuestion();}
     phase = 'seed';
     inner = [];
     outer = [];
@@ -1258,6 +1269,56 @@ button{font:inherit;border:none;cursor:pointer}
   }
   document.querySelectorAll('.difficulty-btn').forEach(btn=>{
     btn.addEventListener('click',()=>selectDifficulty(btn.dataset.difficulty));
+  });
+  function parseCustomRoot(raw){
+    let str=raw.trim().replace(/\s+/g,'').replace(/[×·*]/g,'');
+    let d=2;
+    if(str.startsWith('∛')){d=3;str=str.slice(1);}
+    else if(str.startsWith('√'))str=str.slice(1);
+    else throw Error('İfadeye √ veya ∛ ile başla.');
+    if(str.startsWith('(')&&str.endsWith(')'))str=str.slice(1,-1);
+    const fraction=str.split('/');
+    if(fraction.length>2)throw Error('Yalnızca tek kesir çizgisi destekleniyor.');
+    function part(rawPart){
+      if(!rawPart)throw Error('Pay veya payda boş olamaz.');
+      const vars={};let n=1,pos=0;
+      while(pos<rawPart.length){
+        const remaining=rawPart.slice(pos);
+        const integer=remaining.match(/^\d+/);
+        if(integer){
+          const value=Number(integer[0]);
+          if(!Number.isSafeInteger(value)||value<1)throw Error('Pozitif tam sayılar kullan.');
+          n*=value;pos+=integer[0].length;
+        }else{
+          const letter=remaining.match(/^[a-zA-Z]/);
+          if(!letter)throw Error('Sayı ve harfli çarpımlar kullan.');
+          const name=letter[0];pos++;
+          const tail=rawPart.slice(pos);
+          const normal=tail.match(/^\^(\d+)/);
+          const raised=tail.match(/^[⁰¹²³⁴⁵⁶⁷⁸⁹]+/);
+          let exponent=1;
+          if(normal){exponent=Number(normal[1]);pos+=normal[0].length;}
+          else if(raised){
+            const supers={'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9'};
+            exponent=Number([...raised[0]].map(c=>supers[c]).join(''));pos+=raised[0].length;
+          }
+          if(!Number.isInteger(exponent)||exponent<1||exponent>12)throw Error('Üs 1 ile 12 arasında olmalı.');
+          vars[name]=(vars[name]||0)+exponent;
+        }
+        if(!Number.isSafeInteger(n)||n>1000000)throw Error('Çarpım en fazla 1.000.000 olabilir.');
+      }
+      return {n,vars};
+    }
+    const top=part(fraction[0]);
+    const bottom=fraction.length===2?part(fraction[1]):null;
+    if(bottom&&Object.keys(bottom.vars).length)throw Error('Paydada harf henüz desteklenmiyor.');
+    return {d,n:top.n,vars:top.vars,...(bottom?{den:bottom.n}:{}),stageNo:bottom?4:Object.keys(top.vars).length?3:d===3?2:1};
+  }
+  document.getElementById('customRootForm').addEventListener('submit',event=>{
+    event.preventDefault();
+    const error=document.getElementById('customRootError');
+    try{const question=parseCustomRoot(document.getElementById('customRootInput').value);error.textContent='';startQuestion(question);}
+    catch(err){error.textContent=err.message;}
   });
   $('newBtn').onclick = startQuestion;
   $('degree').onclick = () => {
