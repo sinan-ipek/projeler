@@ -89,6 +89,7 @@ const surface=new THREE.Mesh(new THREE.PlaneGeometry(120,120,1,1),
 surface.rotation.x=-Math.PI/2;surface.visible=false;scene.add(surface);
 function dismount(){
  ridingBody=null;surface.visible=false;microSky.visible=false;world.scale.setScalar(SCALE);world.position.copy(originalWorldPosition);
+ floor.position.y=-10;grid.position.y=-9.98;
  floor.visible=planetMode;grid.visible=planetMode;
  for(const b of bodies)b.mesh.visible=true;
 }
@@ -115,6 +116,11 @@ function updateRidingView(){
  surface.scale.setScalar(micro?100:1);
  surface.visible=!planetMode&&micro;
  floor.visible=planetMode;grid.visible=planetMode;
+ if(planetMode){
+  const riderGround=ridingBody.pos.y-1.55/scale;
+  floor.position.y=riderGround;
+  grid.position.y=riderGround+.02/scale;
+ }
  surface.material.color.copy(ridingBody.mesh.material.color);
  for(const b of bodies){
   b.mesh.visible=!micro&&b!==ridingBody;
@@ -211,14 +217,16 @@ function setup(){
 }
 function addVRPreset(id){
  dismount();vectorDrag=null;endTwoHand();grabs.clear();choosePlanets([]);
- clearBodies();accumulator=0;running=false;
+ accumulator=0;running=false;
+ const countBefore=bodies.length;
+ const center=new THREE.Vector3(130+countBefore*1.5,0,0);
  const add=(r,color,x,y,z,vx=0,vy=0,vz=0,mass=null)=>{
-  const b=makeBody(r,color,x,y,z,vx,vy,vz);
+  const b=makeBody(r,color,x+center.x,y+center.y,z+center.z,vx,vy,vz);
   if(mass!==null)b.mass=mass;
   b.history=[];updateTrail(b);return b;
  };
  if(id==='solar'){
-  planetMode=false;
+  if(countBefore===0)planetMode=false;
   const star=add(5,0xffc451,0,0,0);
   const radii=[.6,.7,.8,.7,1.5,1.4,1,1],dist=[14,20,27,35,47,63,80,100];
   for(let i=0;i<8;i++){
@@ -227,7 +235,7 @@ function addVRPreset(id){
     Math.cos(a)*d,0,Math.sin(a)*d,-Math.sin(a)*v,0,Math.cos(a)*v);
   }
  }else if(id==='fireworks'){
-  planetMode=false;
+  if(countBefore===0)planetMode=false;
   const count=48,golden=Math.PI*(3-Math.sqrt(5)),colors=[0xffd166,0xff6b6b,0x67d8ff,0x9d8bff,0x83edab,0xff9ce5];
   for(let i=0;i<count;i++){
    const y=1-2*(i+.5)/count,theta=i*golden,t=Math.sqrt(1-y*y);
@@ -235,7 +243,7 @@ function addVRPreset(id){
    add(.20,colors[i%6],dx*.7,y*.7,dz*.7,dx*v,y*v,dz*v,.015);
   }
  }else{
-  planetMode=true;
+  if(countBefore===0)planetMode=true;
   const launches={
    horizontal:{y:35,vx:24,vy:0,color:0x52a1f4},
    angled:{y:-8,vx:22,vy:24,color:0x55be8a},
@@ -244,9 +252,9 @@ function addVRPreset(id){
   const l=launches[id];if(!l)return;
   add(1.4,l.color,-25,l.y,0,l.vx,l.vy,0);
  }
- for(const b of bodies){b.history=[];updateTrail(b)}
+ for(const b of bodies.slice(countBefore)){b.history=[];updateTrail(b)}
  syncButtons();refreshRightPanel();
- $('status').textContent='Hazır sistem: '+id+' · Başlat ile çalıştır';
+ $('status').textContent='Sistem eklendi: '+id+' · Var olan gezegenler korundu';
 }
 function accelerations(){
  if(planetMode)return bodies.map(()=>new THREE.Vector3(0,-G_PLANET,0));
@@ -323,19 +331,19 @@ const ceilingFace=createMenuFace(.33,.14);
 const bottomFace=createMenuFace(.33,.115);
 const menuFaces=[backFace,leftFace,rightFace,ceilingFace,bottomFace];
 const panel=backFace.mesh,rightPanel=rightFace.mesh,topPanel=bottomFace.mesh;
-const prism=new THREE.Group(),hingeZ=-.07,halfW=.165,halfH=.1325;
-// The back is recessed; wing faces open toward the user at 66 degrees.
-panel.position.z=hingeZ;
-const wingAngle=Math.PI*66/180,wingW=.205;
-leftFace.mesh.rotation.y=-wingAngle;
-leftFace.mesh.position.set(-halfW-Math.cos(wingAngle)*wingW/2,0,hingeZ+Math.sin(wingAngle)*wingW/2);
-rightPanel.rotation.y=wingAngle;
-rightPanel.position.set(halfW+Math.cos(wingAngle)*wingW/2,0,hingeZ+Math.sin(wingAngle)*wingW/2);
-// Top and bottom fold toward the viewer instead of projecting beyond the back edges.
-ceilingFace.mesh.rotation.x=-Math.PI/3;
-ceilingFace.mesh.position.set(0,halfH+Math.cos(Math.PI/3)*.14/2,hingeZ+Math.sin(Math.PI/3)*.14/2);
-topPanel.rotation.x=Math.PI/3;
-topPanel.position.set(0,-halfH-Math.cos(Math.PI/3)*.115/2,hingeZ+Math.sin(Math.PI/3)*.115/2);
+// Five interior faces of a rectangular box, with the front face open.
+// Every adjacent pair of faces meets at exactly 90 degrees.
+const prism=new THREE.Group(),BOX_WIDTH=.33,BOX_HEIGHT=.265,BOX_DEPTH=.205;
+const halfW=BOX_WIDTH/2,halfH=BOX_HEIGHT/2,halfD=BOX_DEPTH/2;
+panel.position.set(0,0,-halfD);
+leftFace.mesh.geometry.dispose();leftFace.mesh.geometry=new THREE.PlaneGeometry(BOX_DEPTH,BOX_HEIGHT);
+leftFace.mesh.rotation.y=Math.PI/2;leftFace.mesh.position.set(-halfW,0,0);
+rightPanel.geometry.dispose();rightPanel.geometry=new THREE.PlaneGeometry(BOX_DEPTH,BOX_HEIGHT);
+rightPanel.rotation.y=-Math.PI/2;rightPanel.position.set(halfW,0,0);
+ceilingFace.mesh.geometry.dispose();ceilingFace.mesh.geometry=new THREE.PlaneGeometry(BOX_WIDTH,BOX_DEPTH);
+ceilingFace.mesh.rotation.x=Math.PI/2;ceilingFace.mesh.position.set(0,halfH,0);
+topPanel.geometry.dispose();topPanel.geometry=new THREE.PlaneGeometry(BOX_WIDTH,BOX_DEPTH);
+topPanel.rotation.x=-Math.PI/2;topPanel.position.set(0,-halfH,0);
 for(const face of menuFaces)prism.add(face.mesh);
 scene.add(prism);
 let handMenuOpen=false,rightMenuOpen=false;
@@ -444,7 +452,7 @@ function pickTargets(controller){
  rayFromController(controller);
  const angle=coneAngles.get(controller)||0;
  const origin=raycaster.ray.origin,direction=raycaster.ray.direction;
- const exact=raycaster.intersectObjects(bodies.map(b=>b.mesh),false)[0];
+ const exact=raycaster.intersectObjects(bodies.filter(b=>b.mesh.visible).map(b=>b.mesh),false)[0];
  if(angle>0.00001){
   const selected=[];
   for(const body of bodies){
@@ -452,9 +460,9 @@ function pickTargets(controller){
    const dist=v.length();
    if(dist<.00001)continue;
    const longitudinal=direction.dot(v);
-   if(longitudinal<-body.radius*SCALE)continue;
+   if(longitudinal<-body.radius*world.scale.x)continue;
    const error=Math.acos(THREE.MathUtils.clamp(longitudinal/dist,-1,1));
-   const apparentRadius=Math.asin(Math.min(1,body.radius*SCALE/dist));
+   const apparentRadius=Math.asin(Math.min(1,body.radius*world.scale.x/dist));
    if(error<=angle+apparentRadius)selected.push({body,distance:dist,angle:error});
   }
   selected.sort((x,y)=>x.angle-y.angle);
@@ -475,7 +483,7 @@ function pickTargets(controller){
   const alignment=direction.dot(offset)/dist;
   if(alignment<=0)continue;
   const error=Math.acos(THREE.MathUtils.clamp(alignment,-1,1));
-  const radius=Math.asin(Math.min(1,body.radius*SCALE/dist));
+  const radius=Math.asin(Math.min(1,body.radius*world.scale.x/dist));
   if(error<=magneticAngle+radius&&error<bestAngle){best={body,distance:dist,angle:error};bestAngle=error}
  }
  const previous=magneticTargets.get(controller);
@@ -483,7 +491,7 @@ function pickTargets(controller){
   const offset=previous.mesh.getWorldPosition(new THREE.Vector3()).sub(origin),dist=offset.length();
   if(dist>.00001){
    const error=Math.acos(THREE.MathUtils.clamp(direction.dot(offset)/dist,-1,1));
-   if(error<magneticAngle+THREE.MathUtils.degToRad(1.2)+Math.asin(Math.min(1,previous.radius*SCALE/dist)))best={body:previous,distance:dist,angle:error};
+   if(error<magneticAngle+THREE.MathUtils.degToRad(1.2)+Math.asin(Math.min(1,previous.radius*world.scale.x/dist)))best={body:previous,distance:dist,angle:error};
   }
  }
  magneticTargets.set(controller,best?.body||null);
@@ -629,12 +637,12 @@ function updateGrabsAndHover(dt){
   }
   const pad=controllerInputs.get(controller)?.gamepad;
   const axes=pad?.axes||[];
-  const sideAxis=axes.length>=4?axes[2]:axes.length>=2?axes[0]:0;
+  const sideAxis=axes.length>=4?(Math.abs(axes[2])>Math.abs(axes[0]||0)?axes[2]:axes[0]):axes.length>=2?axes[0]:0;
   if(!grabs.has(controller)&&Math.abs(sideAxis)>.18){
    const before=coneAngles.get(controller)||0;
-   let next=THREE.MathUtils.clamp(before+sideAxis*dt*.24,0,MAX_CONE);
-   if(next<THREE.MathUtils.degToRad(.55))next=0;
-   else if(before===0)next=THREE.MathUtils.degToRad(.7);
+   let next=THREE.MathUtils.clamp(before+sideAxis*dt*.6,0,MAX_CONE);
+   if(next<THREE.MathUtils.degToRad(.35))next=0;
+   else if(before===0)next=THREE.MathUtils.degToRad(2);
    coneAngles.set(controller,next);
   }
   // On Quest Touch left controllers the application menu is commonly button 4.
