@@ -80,6 +80,16 @@ button{font:inherit;border:none;cursor:pointer}
   .radical{left:38%}.outside{right:62%;min-width:0}
 }
 .difficulty{display:inline-flex;gap:4px;background:#edf1f7;padding:4px;border-radius:12px}.difficulty-btn{font-size:15px;font-weight:750;color:#52647d;background:transparent;border-radius:9px;padding:8px 13px}.difficulty-btn.active{background:#2f64d6;color:white;box-shadow:0 1px 5px #213b6d24}.difficulty-btn:focus-visible{outline:2px solid #15274b;outline-offset:2px}
+.math-keyboard[hidden]{display:none}
+.math-keyboard{width:min(100%,560px);margin:5px 0 12px;padding:12px;background:#f5f8fd;border:1px solid #c6d3e5;border-radius:14px;box-shadow:0 8px 22px #1b37501c}
+.math-keyboard-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;color:#334961;font-size:14px}
+#closeMathKeyboard{background:transparent;color:#64748b;border:0;font-size:25px;padding:0 7px;cursor:pointer}
+.math-keyboard-keys{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
+.math-keyboard-keys button{min-height:39px;padding:5px 1px;border:1px solid #cdd7e5;border-radius:9px;background:#fff;color:#213142;font:700 19px Cambria,"Cambria Math",serif;cursor:pointer}
+.math-keyboard-keys button:active{background:#dbeafe}
+.math-keyboard-keys .math-special{background:#e7efff;color:#204d9b}
+.math-keyboard-keys .math-delete{background:#fff0ee;color:#9b3f33}
+@media(max-width:520px){.math-keyboard{padding:8px}.math-keyboard-keys{gap:4px}.math-keyboard-keys button{font-size:17px;min-height:37px}}
 .custom-root-form{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:8px 0 5px}
 .custom-root-form label{font-size:14px;font-weight:700;color:#51607a}
 .custom-root-form input{min-width:190px;max-width:340px;flex:1;border:1px solid #b4c0cf;border-radius:10px;padding:10px 12px;font:600 18px Cambria,serif;background:white;color:#213142}
@@ -108,6 +118,10 @@ button{font:inherit;border:none;cursor:pointer}
       <button type="submit">Başlat</button>
       <span id="customRootError" class="custom-root-error" role="status"></span>
     </form>
+    <div id="mathKeyboard" class="math-keyboard" hidden aria-label="Matematik klavyesi">
+      <div class="math-keyboard-head"><strong>Matematik klavyesi</strong><button type="button" id="closeMathKeyboard" aria-label="Klavyeyi kapat">×</button></div>
+      <div class="math-keyboard-keys" id="mathKeyboardKeys"></div>
+    </div>
     <div class="status" id="status"></div>
 
     <div class="stage" id="stage">
@@ -1320,6 +1334,47 @@ button{font:inherit;border:none;cursor:pointer}
     try{const question=parseCustomRoot(document.getElementById('customRootInput').value);error.textContent='';startQuestion(question);}
     catch(err){error.textContent=err.message;}
   });
+  // Giriş alanına odaklanınca açılan, imleç konumuna yazan matematik klavyesi.
+  (function setupMathKeyboard(){
+    const input=document.getElementById('customRootInput');
+    const keyboard=document.getElementById('mathKeyboard');
+    const keys=document.getElementById('mathKeyboardKeys');
+    const symbols=[
+      ['√','√'],['∛','∛'],['x²','²'],['x³','³'],['xⁿ','^'],['a','a'],['b','b'],['x','x'],
+      ['7','7'],['8','8'],['9','9'],['/','/'],['(','('],[')',')'],['y','y'],['z','z'],
+      ['4','4'],['5','5'],['6','6'],['·','·'],['1','1'],['2','2'],['3','3'],['0','0'],
+      ['←','left'],['→','right'],['⌫','back'],['Sil','clear']
+    ];
+    function insert(value){
+      const a=input.selectionStart??input.value.length;
+      const b=input.selectionEnd??a;
+      let cursor=a;
+      if(value==='clear'){input.value='';cursor=0;}
+      else if(value==='back'){
+        if(a!==b){input.setRangeText('',a,b,'start');cursor=a;}
+        else if(a>0){input.setRangeText('',a-1,a,'start');cursor=a-1;}
+      }else if(value==='left')cursor=Math.max(0,a-1);
+      else if(value==='right')cursor=Math.min(input.value.length,b+1);
+      else{input.setRangeText(value,a,b,'end');cursor=a+value.length;}
+      input.focus({preventScroll:true});
+      input.setSelectionRange(cursor,cursor);
+      document.getElementById('customRootError').textContent='';
+    }
+    symbols.forEach(([label,value])=>{
+      const btn=document.createElement('button');
+      btn.type='button';btn.textContent=label;
+      if(['√','∛','²','³','^','/'].includes(value))btn.classList.add('math-special');
+      if(['back','clear'].includes(value))btn.classList.add('math-delete');
+      btn.addEventListener('pointerdown',event=>event.preventDefault());
+      btn.addEventListener('click',()=>insert(value));
+      keys.appendChild(btn);
+    });
+    input.addEventListener('focus',()=>{keyboard.hidden=false;});
+    document.getElementById('closeMathKeyboard').addEventListener('click',()=>{
+      keyboard.hidden=true;input.blur();
+    });
+    document.getElementById('customRootForm').addEventListener('submit',()=>{keyboard.hidden=true;});
+  })();
   $('newBtn').onclick = () => startQuestion();
   $('degree').onclick = () => {
     $('degree').classList.remove('implicit');
