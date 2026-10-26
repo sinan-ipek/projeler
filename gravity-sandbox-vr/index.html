@@ -244,6 +244,37 @@ function addVRPreset(id,replaceExisting=false){
    add(radii[i],[0xc9c2b4,0xedab55,0x58a7ff,0xdd8068,0xe6be83,0xd6bd94,0x7ad6e8,0x678ce3][i],
     Math.cos(a)*d,0,Math.sin(a)*d,-Math.sin(a)*v,0,Math.cos(a)*v);
   }
+ }else if(id==='binary'){
+  if(countBefore===0)planetMode=false;
+  // Equal-mass circular binary; both orbit their barycentre.
+  const mass=430,d=18;
+  const speed=Math.sqrt(G*mass*d*d/Math.pow(4*d*d+SOFT,1.5));
+  add(3.35,0xf9bd49,-d,0,0,0,0,-speed,mass);
+  add(3.35,0x80bcff,d,0,0,0,0,speed,mass);
+  for(let i=0;i<3;i++){
+   const r=55+i*16,angle=.65+i*2.2;
+   const v=Math.sqrt(G*2*mass*r*r/Math.pow(r*r+SOFT,1.5));
+   add(.7,[0x71dab8,0xe69a79,0x8e9cfa][i],r*Math.cos(angle),0,r*Math.sin(angle),-v*Math.sin(angle),0,v*Math.cos(angle));
+  }
+ }else if(id==='rings'){
+  if(countBefore===0)planetMode=false;
+  const star=add(4.6,0xe5be78,0,0,0,0,0,0,950);
+  const colors=[0xe7ca88,0x91bdda,0xe49f85,0xc2b6e9];
+  for(let i=0;i<44;i++){
+   const dist=15+(i%6)*3.8,angle=i*2.399963229728653;
+   const speed=Math.sqrt(G*star.mass*dist*dist/Math.pow(dist*dist+SOFT,1.5));
+   add(.25,colors[i%colors.length],dist*Math.cos(angle),0,dist*Math.sin(angle),
+    -speed*Math.sin(angle),0,speed*Math.cos(angle),.12);
+  }
+ }else if(id==='collapse'){
+  if(countBefore===0)planetMode=false;
+  // Deterministic spherical cloud with near-zero initial velocities.
+  const count=56,golden=Math.PI*(3-Math.sqrt(5)),colors=[0x8cc7ff,0xe6bb75,0x86deb7,0xd394ca];
+  for(let i=0;i<count;i++){
+   const y=1-2*(i+.5)/count,phi=i*golden,radius=14+11*((i*13)%count)/(count-1);
+   const ring=Math.sqrt(1-y*y),dx=ring*Math.cos(phi),dz=ring*Math.sin(phi);
+   add(.48,colors[i%4],radius*dx,radius*y,radius*dz,0,0,0,8);
+  }
  }else if(id==='fireworks'){
   if(countBefore===0)planetMode=false;
   const count=48,golden=Math.PI*(3-Math.sqrt(5)),colors=[0xffd166,0xff6b6b,0x67d8ff,0x9d8bff,0x83edab,0xff9ce5];
@@ -323,6 +354,8 @@ function action(name){
  if(name.startsWith('preset:')){selectedPreset=name.slice(7);refreshTopPanel();$('status').textContent='Seçilen sistem: '+presetNames[selectedPreset]+' · EKLE veya DENE';}
  if(name==='applyAdd'&&selectedPreset)addVRPreset(selectedPreset,false);
  if(name==='applyTry'&&selectedPreset)addVRPreset(selectedPreset,true);
+ if(name==='presetPrev'){presetPage=Math.max(0,presetPage-1);refreshTopPanel();}
+ if(name==='presetNext'){presetPage=Math.min(presetPages.length-1,presetPage+1);refreshTopPanel();}
  if(name==='grow')resizeSelected(1.2);
  if(name==='shrink')resizeSelected(1/1.2);
  if(name==='copy')copySelected();
@@ -378,9 +411,18 @@ const menuWristRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector
 const labels=['play','reset','mode','trails','velocities'];
 const rightButtons=[['near','YAKINA GETIR'],['shrink','KUCULT'],['grow','BUYUT'],['copy','KOPYALA'],['delete','SIL']];
 const topButtons=[['ride','BIN'],['dismount','IN'],['micro','MIKRO'],['macro','MAKRO']];
-const presetNames={solar:'GUNES SISTEMI',fireworks:'HAVAİ FİŞEK',horizontal:'YATAY ATIS',angled:'EGIK ATIS',vertical:'DIKEY ATIS'};
+const presetNames={solar:'GUNES SISTEMI',fireworks:'HAVAİ FİŞEK',horizontal:'YATAY ATIS',angled:'EGIK ATIS',vertical:'DIKEY ATIS',binary:'CIFT YILDIZ',rings:'HALKALAR',collapse:'KUTLECEKIMSEL COKUS'};
 let selectedPreset='solar';
-const presetButtons=[['preset:solar','GUNES SISTEMI'],['preset:fireworks','HAVAİ FİŞEK'],['preset:horizontal','YATAY ATIS'],['preset:angled','EGIK ATIS'],['preset:vertical','DIKEY ATIS'],['new','YENI GEZEGEN'],['applyAdd','EKLE +'],['applyTry','DENE']];
+let presetPage=0;
+const presetPages=[
+ [['preset:solar','GUNES SISTEMI'],['preset:fireworks','HAVAİ FİŞEK'],['preset:horizontal','YATAY ATIS'],['preset:angled','EGIK ATIS'],['preset:vertical','DIKEY ATIS']],
+ [['preset:binary','CIFT YILDIZ'],['preset:rings','HALKALAR'],['preset:collapse','KUTLECEKIMSEL COKUS']]
+];
+function presetButtons(){
+ return [...presetPages[presetPage],
+ ['presetPrev','< ONCEKI'],['presetNext','SONRAKI >'],
+ ['applyAdd','EKLE +'],['applyTry','DENE']];
+}
 const utilityButtons=[['coneMinus','KONI -'],['conePlus','KONI +'],['clearSelection','SECIMI KALDIR'],['trails','YORUNGELER'],['velocities','HIZ OKLARI'],['reset','SIFIRLA']];
 function drawMenuFace(face,title,subtitle,buttons,highlight){
  const c=face.ctx;c.clearRect(0,0,FACE_CW,FACE_CH);
@@ -410,7 +452,7 @@ function refreshRightPanel(){
 }
 function refreshTopPanel(){
  drawMenuFace(rightFace,'GOZLEM',ridingBody?'Gezegende: '+(rideViewMode==='micro'?'MIKRO':'MAKRO'):'Serbest gozlem',topButtons,rideViewMode);
- drawMenuFace(ceilingFace,'HAZIR SISTEM',presetNames[selectedPreset],presetButtons,'preset:'+selectedPreset);
+ drawMenuFace(ceilingFace,'HAZIR SISTEM '+(presetPage+1)+'/'+presetPages.length,presetNames[selectedPreset],presetButtons(),'preset:'+selectedPreset);
  drawMenuFace(bottomFace,'ARACLAR','',utilityButtons,null);
 }
 function updateHandMenu(){
