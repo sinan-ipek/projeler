@@ -121,11 +121,10 @@ function updateRidingView(){
  surface.scale.setScalar(micro?100:1);
  surface.visible=!planetMode&&micro;
  floor.visible=planetMode;grid.visible=planetMode;
- if(planetMode){
-  const riderGround=ridingBody.pos.y-1.55/scale;
-  floor.position.y=riderGround;
-  grid.position.y=riderGround+.02/scale;
- }
+ // The visible ground must always coincide with the physics plane y=-10.
+ // Never attach the physical ground to the ridden body's height.
+ floor.position.y=-10;
+ grid.position.y=-9.98;
  surface.material.color.copy(ridingBody.mesh.material.color);
  for(const b of bodies){
   b.mesh.visible=!micro&&b!==ridingBody;
@@ -473,7 +472,7 @@ function handPosition(c){return c.getWorldPosition(new THREE.Vector3());}
 function endTwoHand(){twoHand=null;}
 let selectedPlanet=null;
 const selectedBodies=new Set();
-const grabbedBody=b=>[...grabs.values()].some(g=>g.body===b);
+const grabbedBody=b=>[...grabs.values()].some(g=>g.body===b||(g.members&&g.members.some(m=>m.body===b)));
 const JOYSTICK_SPEED=3.5;
 function choosePlanets(items){
  selectedBodies.clear();
@@ -689,8 +688,14 @@ function releaseGrab(controller){
   return;
  }
  const g=grabs.get(controller);if(!g)return;
- g.body.v.copy(estimateThrowVelocity(g.samples));
- g.body.history=[];updateTrail(g.body);grabs.delete(controller);
+ const launch=estimateThrowVelocity(g.samples);
+ const members=g.members||[{body:g.body}];
+ for(const member of members){
+  if(!bodies.includes(member.body))continue;
+  member.body.v.copy(launch);
+  member.body.history=[];updateTrail(member.body);
+ }
+ grabs.delete(controller);
 }
 function updateGrabsAndHover(dt){
  updateHandMenu();
@@ -741,7 +746,13 @@ function updateGrabsAndHover(dt){
    if(Math.abs(axisY)>.16)g.distance=Math.max(.12,Math.min(MAX_RAY_LENGTH,g.distance-axisY*JOYSTICK_SPEED*dt));
    const pos=raycaster.ray.origin.clone().addScaledVector(raycaster.ray.direction,g.distance).add(g.offset);
    world.worldToLocal(pos);
-   g.body.pos.copy(pos);g.body.v.set(0,0,0);
+   // Group movement uses the same displacement for every selected body.
+   const delta=pos.clone().sub(g.body.pos);
+   for(const member of (g.members||[{body:g.body}])){
+    if(!bodies.includes(member.body))continue;
+    member.body.pos.add(delta);
+    member.body.v.set(0,0,0);
+   }
    const now=performance.now()/1000;
    g.samples.push({p:pos.clone(),t:now});
    while(g.samples.length>3&&now-g.samples[0].t>THROW_WINDOW)g.samples.shift();
@@ -841,9 +852,10 @@ for(let i=0;i<2;i++){
    return;
   }
   if(!selectedBodies.has(body))choosePlanet(body);
+  const members=[...selectedBodies].filter(b=>bodies.includes(b)).map(body=>({body}));
   const center=body.mesh.getWorldPosition(new THREE.Vector3());
   const point=raycaster.ray.at(hit.distance,new THREE.Vector3());
-  grabs.set(controller,{body,distance:hit.distance,offset:center.sub(point),samples:[{p:body.pos.clone(),t:performance.now()/1000}]});
+  grabs.set(controller,{body,members,distance:hit.distance,offset:center.sub(point),samples:[{p:body.pos.clone(),t:performance.now()/1000}]});
  });
  controller.addEventListener('squeezeend',()=>releaseGrab(controller));
  scene.add(controller);controllers.push(controller);
