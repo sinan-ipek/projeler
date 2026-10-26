@@ -4654,7 +4654,7 @@ function n15MakeFixedPlan(){
   n15FixedPlan.height===scene.clientHeight;
  if(valid)return n15FixedPlan;
  const savedPhase=layer15.phase,savedMode=teachingMode;
- const phases=['initial','twoMoved','unitRight','equivalentRight','combinedRight',
+ const phases=layer15.variant?n15vStages:['initial','twoMoved','unitRight','equivalentRight','combinedRight',
   'subtracted','signed','calculated','flipped','unitRemoved',
   'oneTransferred','oneCalculated','oneReciprocal',
   'rightOneRemoved','timesThreePending','threeLeftDone','threeRightDone',
@@ -4933,7 +4933,150 @@ function n15FinalRightCalculation(){
    '<span class="n15-minus">−</span>'+atom('n15minusOne','1')+
   '</span>','n15ComputeFinalRight');
 }
+
+/* 15.31 — İç içe kesir ailesinin sayıdan bağımsız öğretim görünümü.
+   Sadece n15Parse tarafından doğrulanan biçimler desteklenir. */
+function n15vA(id,value){return atom(id,String(value))}
+function n15vF(id,n,d){return n15Frac(n,d,id)}
+function n15vR(q,id,force=false){
+ if(!q)return '';
+ const neg=q.n<0?'<span class="n15-minus">−</span>':'';
+ const val=force||q.d!==1?n15vF(id+'Frac',
+  n15vA(id+'Num',Math.abs(q.n)),n15vA(id+'Den',q.d)):
+  n15vA(id+'Value',Math.abs(q.n));
+ return '<span class="n15v-value" data-id="'+id+'">'+neg+val+'</span>';
+}
+function n15vHit(id,html,action,group=id){return n15Choice(id,html,action,group)}
+function n15vInnerFraction(flip=false,selectOne=false){
+ const num=n15vA('vUnit','1'),den=atom('vVar',layer15.variable);
+ return n15vF('vInnerFrac',flip?den:num,
+  flip?(selectOne?n15vHit('vLastOnePick',num,'n15vLastOne'):num):den);
+}
+function n15vInner(selectOne=false){
+ let one=n15vA('vInnerOne','1');
+ if(selectOne)one=n15vHit('vInnerOnePick',one,'n15vMoveLastOne');
+ return '<span class="n15v-inline" data-id="vInnerExpr">'+one+
+  '<span class="n15-sign">−</span>'+n15vInnerFraction()+'</span>';
+}
+function n15vBfrac(flip=false,selectDen=false){
+ const b=n15vA('vBN',layer15.B);
+ const inner='<span class="n15v-inline" data-id="vBden">'+n15vInner()+'</span>';
+ if(!flip)return n15vF('vBfrac',b,inner);
+ const den=selectDen?n15vHit('vBPick',b,'n15vMultiplyLeft','vCancelB'):b;
+ return n15vF('vBfrac',inner,den);
+}
+function n15vDen(selectOne=false){
+ const original=n15vA('vDenOne','1');
+ const one=selectOne?n15vHit('vDenOnePick',original,'n15vMoveDenOne'):original;
+ return '<span class="n15v-inline" data-id="vOuterDen">'+one+
+  '<span class="n15-sign">+</span>'+n15vBfrac()+'</span>';
+}
+function n15vOuter(flipped=false,selectOne=false){
+ const unit=n15vA('vOuterOne','1'),den=n15vDen();
+ if(!flipped)return n15vF('vOuterFrac',unit,den);
+ return n15vF('vOuterFrac',den,
+  selectOne?n15vHit('vOuterOnePick',unit,'n15vRemoveOuterOne'):unit);
+}
+function n15vFirstR(flipped=false){
+ const r=layer15.r;
+ return n15vF('vRhsFrac',
+  flipped?n15vA('vRhsD',r.d):n15vA('vRhsN',r.n),
+  flipped?n15vA('vRhsN',r.n):n15vA('vRhsD',r.d));
+}
+function n15vSecondR(flipped=false,pick=false){
+ const v=layer15.v,first=n15vA('vSN',Math.abs(v.n)),second=n15vA('vSD',v.d);
+ return '<span class="n15v-inline"><span class="n15-minus">−</span>'+
+  n15vF('vSecondRFrac',flipped?second:first,
+   flipped?(pick?n15vHit('vSecondOnePick',first,'n15vRemoveSecondOne'):first):second)+
+  '</span>';
+}
+function n15vFinalR(flipped=false){
+ const m=layer15.m.n;
+ return n15vF('vFinalRFrac',
+  flipped?n15vA('vFinalRD','1'):n15vA('vFinalRN',m),
+  flipped?n15vA('vFinalRN',m):n15vA('vFinalRD','1'));
+}
+function n15vPair(html,side,action){
+ return n15vHit('vPair'+side,html,action,'vFractionsTogether');
+}
+function n15vMinus(side,action){
+ return n15vHit('vMinusPick'+side,
+  '<span class="n15-minus" data-id="vMinusGlyph'+side+'">−</span>',
+  action,'vBothMinus');
+}
+function n15vMultiplyL(){
+ return '<span class="n15-three-product">'+
+  n15vBfrac(true,true)+
+  '<span class="n15-three-tail" data-id="vLeftTimesTail">'+
+   '<span class="n15-three-dot">·</span>'+
+   n15vHit('vFactorBPick',n15vA('vFactorB',layer15.B),'n15vMultiplyLeft','vCancelB')+
+  '</span></span>';
+}
+function n15vMultiplyR(){
+ return n15vHit('vMultiplyRightPick',
+  '<span class="n15-three-product">'+
+    n15vR(layer15.w,'vProductW')+
+    '<span class="n15-three-dot">·</span>'+n15vA('vProductB',layer15.B)+
+  '</span>','n15vMultiplyRight');
+}
+function n15vMarkup(){
+ const v=layer15,p=v.phase,e='<span class="equals">=</span>',side=h=>'<span class="side">'+h+'</span>';
+ let L='',R='';
+ if(p==='vInitial'){
+  L=n15vHit('vMoveKPick',n15vA('vOuterK',v.K),'n15vMoveK')+
+   '<span class="n15-minus">−</span>'+n15vOuter();
+  R=n15vR(v.rhs,'vRInitial');
+ }else if(p==='vMoved'){
+  L='<span class="n15-minus">−</span>'+n15vOuter();
+  R=n15vHit('vComputeKPick',n15vR(v.rhs,'vRBefore')+
+   '<span class="n15-minus">−</span>'+n15vA('vOuterK',v.K),'n15vComputeK');
+ }else if(p==='vCalc'){
+  L=n15vMinus('Left','n15vNegate')+n15vOuter();
+  R=n15vMinus('Right','n15vNegate')+n15vR(v.r,'vRCalc');
+ }else if(p==='vNegated'){
+  L=n15vPair(n15vOuter(),'Left','n15vFlipFirst');
+  R=n15vPair(n15vFirstR(),'Right','n15vFlipFirst');
+ }else if(p==='vFirstFlipped'){
+  L=n15vOuter(true,true);R=n15vFirstR(true);
+ }else if(p==='vOuterUnitRemoved'){
+  L=n15vDen(true);R=n15vR(v.u,'vU');
+ }else if(p==='vInnerOneMoved'){
+  L=n15vBfrac();
+  R=n15vHit('vComputeUPick',n15vR(v.u,'vURight')+
+   '<span class="n15-minus">−</span>'+n15vA('vDenOne','1'),'n15vComputeU');
+ }else if(p==='vInnerCalculated'){
+  L=n15vPair(n15vBfrac(),'Left','n15vFlipSecond');
+  R=n15vPair(n15vSecondR(),'Right','n15vFlipSecond');
+ }else if(p==='vSecondFlipped'){
+  L=n15vBfrac(true);R=n15vSecondR(true,true);
+ }else if(p==='vSecondUnitRemoved'){
+  L=n15vPair(n15vBfrac(true),'Left','n15vShowMultiply');
+  R=n15vPair(n15vR(v.w,'vW'),'Right','n15vShowMultiply');
+ }else if(['vTimesPending','vTimesLeftDone','vTimesRightDone','vTimesDone'].includes(p)){
+  const ld=['vTimesLeftDone','vTimesDone'].includes(p);
+  const rd=['vTimesRightDone','vTimesDone'].includes(p);
+  L=ld?n15vInner(p==='vTimesDone'):n15vMultiplyL();
+  R=rd?n15vR(v.z,'vZ'):n15vMultiplyR();
+ }else if(p==='vFinalOneMoved'){
+  L='<span class="n15-minus">−</span>'+n15vInnerFraction();
+  R=n15vHit('vFinalCalcPick',n15vR(v.z,'vZBefore')+
+   '<span class="n15-minus">−</span>'+n15vA('vInnerOne','1'),'n15vComputeFinal');
+ }else if(p==='vFinalComputed'){
+  L=n15vMinus('Left','n15vFinalNegate')+n15vInnerFraction();
+  R=n15vMinus('Right','n15vFinalNegate')+n15vA('vFinalAbs',v.m.n);
+ }else if(p==='vFinalNegated'){
+  L=n15vPair(n15vInnerFraction(),'Left','n15vFlipFinal');
+  R=n15vPair(n15vFinalR(),'Right','n15vFlipFinal');
+ }else if(p==='vFinalFlipped'){
+  L=n15vInnerFraction(true,true);R=n15vFinalR(true);
+ }else if(p==='vSolved'){
+  L=atom('vVar',v.variable);R=n15vFinalR(true);
+ }
+ return side(L)+e+side(R);
+}
+
 function n15Markup(){
+ if(layer15?.variant)return n15vMarkup();
  const phase=layer15.phase,equals='<span class="equals">=</span>';
  const side=html=>'<span class="side">'+html+'</span>';
  if(phase==='initial')
@@ -5027,8 +5170,30 @@ function n15Markup(){
    equals+side(n15FinalRightFraction(true));
  return side(n15TwoSpace()+n15Outer())+equals+side(n15LeftResult());
 }
+
+function n15vAlign(root=eq){
+ const get=id=>root.querySelector('[data-id="'+id+'"]');
+ const frac=id=>get(id)?.querySelector(':scope > .fracbar');
+ const middle=el=>{const r=el.getBoundingClientRect();return (r.top+r.bottom)/2};
+ const scale=Math.max(.001,root.getBoundingClientRect().width/Math.max(1,root.offsetWidth));
+ const move=(node,at)=>{
+  if(!node||!Number.isFinite(at))return;
+  const prev=Number(node.dataset.n15AlignY||0);
+  const val=prev+(at-middle(node))/scale;
+  node.dataset.n15AlignY=String(val);
+  node.style.transform='translateY('+val.toFixed(3)+'px)';
+ };
+ const l=get('eq-cabin-l'),r=get('eq-cabin-r'),sign=root.querySelector(':scope > .equals');
+ const left=frac('vOuterFrac')||frac('vBfrac')||frac('vInnerFrac');
+ const right=frac('vRhsFrac')||frac('vSecondRFrac')||frac('vFinalRFrac');
+ const center=left?middle(left):right?middle(right):null;
+ if(left&&right&&r)move(r,middle(r)+middle(left)-middle(right));
+ if(sign&&center!==null)move(sign,center);
+}
+
 function n15AlignEquation(root=eq){
  if(!layer15)return;
+ if(layer15.variant){n15vAlign(root);return;}
  const scale=Math.max(.001,root.getBoundingClientRect().width/Math.max(1,root.offsetWidth));
  const get=id=>root.querySelector('[data-id="'+id+'"]');
  const bar=id=>get(id)?.querySelector(':scope > .fracbar');
