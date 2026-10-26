@@ -4725,12 +4725,25 @@ function n15AlignEquation(root=eq){
   node.dataset.n15AlignY=String(shift);
   node.style.transform='translateY('+shift.toFixed(3)+'px)';
  };
- const main=bar('n15block');if(!main)return;
+ const main=bar('n15block');
  const inner=bar('n15innerFraction'),innerPart=get('n15innerPart');
  if(inner&&innerPart){align(innerPart.children[0],cy(inner));align(innerPart.children[1],cy(inner))}
  const middle=bar('n15middleFraction'),middleParent=get('n15middleFraction')?.parentElement;
  if(middle&&middleParent?.classList.contains('n15-right-inner')){
   align(middleParent.children[0],cy(middle));align(middleParent.children[1],cy(middle));
+ }
+ // Birim payda kaldırılınca ana kesir çizgisi artık mevcut değildir.
+ // İç içe kesirleri hizala ve iki taraftaki gerçek kesir çizgisi
+ // üzerinden aynı yatay ekseni koru.
+ if(!main){
+  if(layer15.phase==='unitRemoved'){
+   const rightBar=bar('n15leftFrac'),leftBar=bar('n15middleFraction');
+   const leftCabin=get('eq-cabin-l'),equal=root.querySelector(':scope > .equals');
+   if(leftCabin&&leftBar&&rightBar)
+    align(leftCabin,cy(leftCabin)+cy(rightBar)-cy(leftBar));
+   if(equal&&rightBar)align(equal,cy(rightBar));
+  }
+  return;
  }
  const half=bar('n15half'),rightFraction=bar('n15SubtractionFrac')||
   bar('n15SecondFrac')||bar('n15leftFrac')||half;
