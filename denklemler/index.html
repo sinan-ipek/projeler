@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 95</title>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Denklem Atölyesi — Beta 96</title>
 <style>
 :root{font-family:Arial,Helvetica,sans-serif;color:#1d2a3b;background:#f4f6fa}*{box-sizing:border-box}body{margin:0;min-height:100vh}header{padding:18px 25px;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:22px;margin:0;font-weight:600}.subtitle{font-size:12px;color:#77869a;margin-top:6px}.home{width:45px;height:45px;border-radius:12px;background:#ffcf31;border:2px solid #e4ac14;box-shadow:0 3px 8px #5a461525;display:grid;place-items:center;color:#383019;text-decoration:none}.home svg{height:23px;width:23px;fill:currentColor}main{width:min(1120px,calc(100% - 28px));margin:auto}.toolbar,.examples,.entry{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:8px 0 14px}button,select,input{font:inherit;border:1px solid #d5dfea;border-radius:10px;background:white;color:#273954;padding:10px 13px}button{cursor:pointer;box-shadow:0 2px 5px #182b3a0c}button:hover:not(:disabled){border-color:#8fa6c4}button:disabled{opacity:.42;cursor:default}.toolbar label{font-size:13px;color:#69768c;margin-left:auto}.mode-switch{display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid #d5dfea;border-radius:12px;background:#eaf0f7}.mode-switch button{padding:7px 13px;border:1px solid transparent;background:transparent;box-shadow:none;border-radius:9px;font-size:14px;min-width:67px}.mode-switch button.selected{color:white;background:#273e5e;border-color:#273e5e;box-shadow:0 2px 5px #182b3a20}.mode-switch button:focus-visible{outline:2px solid #e1a518;outline-offset:2px}.board{border:1px solid #e1e7ee;background:white;border-radius:22px;min-height:430px;box-shadow:0 14px 45px #192e4b0b;overflow:hidden}.board-top{display:flex;justify-content:space-between;color:#78869b;padding:18px 20px;font-size:12px}.scene{height:316px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}.equation{position:relative;display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1.3;font-size:clamp(26px,4.5vw,50px);font-weight:400;max-width:97%;transform-origin:center center;font-variant-numeric:lining-nums}.side{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;position:relative}.equals{padding:0 .36em}.part{display:inline-flex;align-items:center;white-space:nowrap;position:relative}.atom{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border-radius:7px;position:relative;padding:0 .035em}.sign{padding:0 .06em}.hit{cursor:pointer;position:relative;border-radius:8px;outline:none;background:transparent;box-shadow:none;transition:background .18s,box-shadow .18s}.hit:hover,.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.busy .hit{pointer-events:none}.combine{display:inline-flex;align-items:center;border-radius:8px}.combine.hit{padding:0 .04em}.multi-combine{display:inline-flex;align-items:center;white-space:nowrap;border-radius:8px}.multi-combine .part{white-space:nowrap}.multi-combine.hit{padding:0 .05em}.multiply-factor{display:inline-flex;align-items:center;white-space:nowrap}.mul-dot{display:inline-block;padding:0 .08em}.multiply-factor .hit{padding:0 .055em}.fraction{display:inline-grid;grid-template-rows:auto 3px auto;align-items:center;justify-items:center;position:relative;margin:0 .08em;min-width:1em;border-radius:9px}.numerator,.denominator{display:flex;justify-content:center;align-items:center;min-height:.92em;padding:0 .14em;white-space:nowrap}.numerator{transform:translateY(-.09em)}.denominator{transform:translateY(.09em)}.fracbar{height:2px;width:100%;background:#293852;border-radius:2px;align-self:center;transform:scaleX(1);transform-origin:center}.fraction.constructing .fracbar{transform:scaleX(0)}.fraction.constructed .fracbar{transform:scaleX(1);transition:transform .34s cubic-bezier(.45,0,.18,1)}.fraction.hit:hover,.fraction.hit:focus-visible{background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940}.tip{min-height:32px;text-align:center;font-size:13px;color:#7d8ca0}.examples button.active,.modules button.active{background:#273e5e;color:white}.modules{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 14px}.modules button{font-weight:600;min-width:115px}.module-label{display:none}.examples button{font-size:14px}.entry input{width:min(340px,65vw)}.feedback{min-height:18px;color:#ad3e3e;font-size:12px}.notice{font-size:12px;color:#8390a3;line-height:1.6}.measure-layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;pointer-events:none}.measurement{max-width:97%}.ghost{position:fixed;z-index:2000;pointer-events:none;white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-weight:400;line-height:1.3;color:#bf7c1d;will-change:transform,opacity}.done{color:#188a5c}.cross{position:relative}@media(max-width:620px){header{padding:12px 16px}.board{min-height:375px}.board-top{padding:14px}.scene{height:270px}.equals{padding:0 .18em}.toolbar label{margin-left:0}}
 
@@ -310,8 +310,223 @@
 .n14-like.hl-linked{background:#ffedb3;box-shadow:0 0 0 2px #e1a518}
 .n14-guides{position:absolute;inset:0;z-index:35;pointer-events:none;overflow:visible}
 .n14-flight{position:absolute;transform:translate(-50%,-50%);color:#293852;white-space:nowrap;z-index:45;pointer-events:none;font-family:Arial,Helvetica,sans-serif;font-size:31px;font-weight:400}
+
+/* Alıştırma 15: mevcut fraction, hit, simple-linked ve board stilleri korunur. */
+.n15-choice{display:inline-flex;align-items:center;border-radius:9px;cursor:pointer}
+.n15-choice.hl-linked{background:#ffedb3;box-shadow:0 0 0 2px #e1a518}
+.n15-choice.hit:hover{background:#ffedb3}
+.n15-calc{display:inline-flex;align-items:center;gap:.015em}
+.n15-minus{padding:0 .06em}
+.n15-block{display:inline-flex;align-items:center;white-space:nowrap}
+.n15-right-inner{display:inline-flex;align-items:center;gap:.04em;white-space:nowrap}
+.n15-sign{padding:0 .015em}
+.n15-flip .fraction{white-space:nowrap}
+
+/* Deneme 15.16: bağımsız HL, sabit aritmetik ekseni ve ters çevirme okları. */
+.n15-choice .hit{pointer-events:none}
+.n15-calc{align-items:center;white-space:nowrap}
+.n15-factor-number{display:inline-flex;align-items:center;white-space:nowrap}
+.n15-factor-number .n15-choice{font-size:.48em;color:#a2680f;margin:0 .05em}
+.n15-factor-number .n15-choice .atom{padding:0}
+.n15-flip-target{display:inline-flex;align-items:center;justify-content:center;position:relative;border-radius:9px;white-space:nowrap}
+.n15-flip-ready .n15-flip-target{background:#ffedb3;box-shadow:0 0 0 2px #e1a518}
+/* Deneme 15.19: devirme okları kaldırıldı; iki kesir birlikte vurgulanır. */
+/* Deneme 15.16 — işaret ile sayının aynı matematiksel nesne olması. */
+.n15-signed-term{display:inline-flex;align-items:center;white-space:nowrap;
+ justify-content:center;border-radius:9px;position:relative}
+.n15-term-sign{display:inline-flex;align-items:center;justify-content:center;
+ width:.62em;flex-shrink:0;text-align:center}
+.n15-term-sign.n15-implicit{visibility:hidden}
+.n15-signed-term.hit:hover,.n15-signed-term.hl-linked,.n15-signed-term:focus-visible{
+ background:#ffedb3;box-shadow:0 0 0 2px #e1a518}
+.n15-signed-term.hit .fraction{pointer-events:none}
+
+/* Deneme 15.16.1 — ikinci terim ulaşana kadar geçici sıfır. */
+.n15-passing-zero{position:absolute;z-index:21;pointer-events:none;
+ display:inline-flex;align-items:center;justify-content:center;
+ transform:translate(-50%,-50%);white-space:nowrap;line-height:1;user-select:none}
+
+/* DENEME 15.16 — Kalın kesir çizgileri ve dinamik kesir derinliği. */
+.equation.n15-scene .fraction{grid-template-rows:auto 4px auto}
+.equation.n15-scene .fraction>.fracbar{
+ height:4px;min-height:4px;border-radius:2px;background:#293852;opacity:1
+}
+/* İç kesirler her kademe için küçülür; dış kesir kaldırılırsa yeniden büyür. */
+.equation.n15-scene .fraction .fraction{font-size:.88em}
+.equation.n15-scene [data-id="n15rightDen"]>.n15-right-inner{font-size:.94em}
+.equation.n15-scene [data-id="n15middleFraction"]>.denominator>.n15-right-inner{font-size:.94em}
+.equation.n15-scene [data-id="n15innerFraction"]{font-size:.95em}
+.equation.n15-scene .n15-signed-term,
+.equation.n15-scene .n15-signed-term .fraction{
+ transition-property:background,box-shadow
+}
+
+/* DENEME 15.16 — Paydadaki 2 tıklanır ama sarı HL almaz. */
+.n15-scene .n15-plain-choice{
+ display:inline-flex;align-items:center;justify-content:center;
+ white-space:nowrap;cursor:pointer;border-radius:0;
+ background:transparent!important;box-shadow:none!important;
+ outline:none!important;
+}
+.n15-scene .n15-plain-choice:hover,
+.n15-scene .n15-plain-choice:focus-visible,
+.n15-scene .n15-plain-choice.hl-linked{
+ background:transparent!important;box-shadow:none!important;
+ outline:none!important;
+}
+.n15-scene .n15-plain-choice .atom{pointer-events:none}
+
+/* Deneme 15.19 — Her iki eksi aynı anda seçilir. */
+.n15-scene .n15-reserved-two{visibility:hidden!important;pointer-events:none!important}
+.n15-scene .n15-minus-choice{
+ display:inline-flex;cursor:pointer;border-radius:7px;padding:0 .02em;
+}
+.n15-scene .n15-minus-choice:is(:hover,:focus-visible,.hl-linked){
+ background:#ffedb3;box-shadow:0 0 0 2px #e1a518;
+}
+/* İki kesrin tek ortak HL grubu: oklar yok, yalnız iki dikdörtgen. */
+.equation.n15-scene.n15-flip-ready .n15-flip-target{
+ background:transparent!important;box-shadow:none!important;
+}
+.equation.n15-scene.n15-flip-ready .n15-flip-target:is(:hover,:focus-within,.hl-linked){
+ background:#ffedb3!important;box-shadow:0 0 0 2px #e1a518!important;
+}
+/* Deneme 15.16: HL yalnızca hizalanmış gerçek 2 rakamının etrafında. */
+.equation.n15-scene [data-id="n15termTwo"]{
+ background:transparent!important;box-shadow:none!important;outline:none;
+}
+.equation.n15-scene [data-id="n15two"].n15-two-hit{
+ display:inline-flex;align-items:center;justify-content:center;
+ padding:0 .10em;border-radius:10px;cursor:pointer;position:relative;
+}
+.equation.n15-scene [data-id="n15two"].n15-two-hit:is(:hover,:focus-visible,.hl-linked){
+ background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940;
+}
+
+/* Deneme 15.16 — Büyük sarı HL alanının tamamı da devirme düğmesidir. */
+.equation.n15-scene.n15-flip-ready .n15-flip-target{
+ cursor:pointer;
+}
+.equation.n15-scene.n15-flip-ready .n15-flip-target:focus-visible{
+ outline:2px solid #e1a518;
+ outline-offset:2px;
+}
+
+/* Deneme 15.21 — soldaki tam kesir tıklanabilir; paydadaki 1 kaldırılır. */
+.equation.n15-scene [data-id="n15RemoveUnitChoice"]{
+ display:inline-flex;align-items:center;justify-content:center;
+ white-space:nowrap;border-radius:10px;padding:0 .05em;
+}
+.equation.n15-scene [data-id="n15RemoveUnitChoice"]:is(:hover,:focus-visible,.hl-linked){
+ background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940;
+}
+.equation.n15-scene [data-id="n15UnitResult"]{
+ display:inline-flex;align-items:center;white-space:nowrap;
+}
+/* Deneme 15.22 — soldaki 1'in HL alanı ve sağdaki kısa işlem. */
+.equation.n15-scene [data-id="n15MoveOneChoice"]{
+ display:inline-flex;align-items:center;justify-content:center;
+ border-radius:8px;cursor:pointer;padding:0 .05em;
+}
+.equation.n15-scene [data-id="n15MoveOneChoice"]:is(:hover,:focus-visible,.hl-linked){
+ background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940;
+}
+.equation.n15-scene .n15-one-operation,
+.equation.n15-scene .n15-one-answer{
+ display:inline-flex;align-items:center;white-space:nowrap;gap:.09em;
+}
+/* Deneme 15.24: sağ 1 HL; sonraki iki aşamada ortak HL ve ·3. */
+.equation.n15-scene [data-id="n15RightOnePick"]{
+ display:inline-flex;align-items:center;justify-content:center;
+ padding:0 .075em;border-radius:7px;cursor:pointer;
+}
+.equation.n15-scene [data-id="n15RightOnePick"]:is(:hover,:focus-visible,.hl-linked){
+ background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940;
+}
+.equation.n15-scene .n15-three-product{
+ display:inline-flex;align-items:center;gap:.10em;white-space:nowrap;
+}
+.equation.n15-scene .n15-three-dot{display:inline-flex;align-items:center}
+.equation.n15-scene .n15-three-tail{
+ display:inline-flex;
+ align-items:center;
+ gap:.10em;
+ white-space:nowrap;
+}
+/* Sol tarafta iki ayrı sarı kutu: hover/focus diğer 3'ü de vurgular. */
+.equation.n15-scene .n15-left-times-pick{
+ display:inline-flex;align-items:center;justify-content:center;
+ border-radius:8px;padding:0 .05em;white-space:nowrap;cursor:pointer;
+}
+.equation.n15-scene .n15-left-times-pick:is(:hover,:focus-visible,.hl-linked){
+ background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940;
+}
+/* Sağ taraftaki -3·3, solunkinden bağımsız TEK bir HL dikdörtgenidir. */
+.equation.n15-scene .n15-right-times-block{
+ display:inline-flex;align-items:center;justify-content:center;
+ border-radius:10px;padding:0 .12em;white-space:nowrap;cursor:pointer;
+}
+.equation.n15-scene .n15-right-times-block:is(:hover,:focus-visible,.hl-linked){
+ background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940;
+}
+/* Deneme 15.29 — Son 1 bireysel HL; yeni biçimde parça parça akış. */
+.equation.n15-scene [data-id="n15FinalOnePick"]{
+ display:inline-flex;align-items:center;justify-content:center;
+ border-radius:8px;padding:0 .07em;cursor:pointer;
+}
+.equation.n15-scene [data-id="n15FinalOnePick"]:is(:hover,:focus-visible,.hl-linked){
+ background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940;
+}
+.equation.n15-scene .n15-final-left,
+.equation.n15-scene .n15-final-right{
+ display:inline-flex;align-items:center;white-space:nowrap;gap:.08em;
+}
+/* Deneme 15.30 — son aritmetik, eşzamanlı işaret ve çözüm kutusu. */
+.equation.n15-scene [data-id="n15FinalRightCalc"]{
+ display:inline-flex;align-items:center;justify-content:center;
+ border-radius:10px;cursor:pointer;padding:0 .10em;
+}
+.equation.n15-scene [data-id="n15FinalRightCalc"]:is(:hover,:focus-visible,.hl-linked){
+ background:#ffedb3;box-shadow:0 0 0 2px #e1a518;
+}
+.equation.n15-scene .n15-final-signed{
+ display:inline-flex;align-items:center;gap:.03em;white-space:nowrap;
+}
+.equation.n15-scene [data-id="n15FinalLeftMinusPick"],
+.equation.n15-scene [data-id="n15FinalRightMinusPick"],
+.equation.n15-scene [data-id="n15FinalDenOnePick"]{
+ display:inline-flex;align-items:center;justify-content:center;
+ padding:0 .055em;border-radius:8px;cursor:pointer;
+}
+.equation.n15-scene [data-id="n15FinalLeftMinusPick"]:is(:hover,:focus-visible,.hl-linked),
+.equation.n15-scene [data-id="n15FinalRightMinusPick"]:is(:hover,:focus-visible,.hl-linked),
+.equation.n15-scene [data-id="n15FinalDenOnePick"]:is(:hover,:focus-visible,.hl-linked){
+ background:#ffedb3;box-shadow:0 0 0 2px #e1a518;
+}
+.n15-solution-outline{
+ position:absolute;z-index:12;box-sizing:border-box;
+ border:3px solid #e6a019;border-radius:13px;
+ pointer-events:none;
+ animation:n15-draw-outline .58s ease-out both;
+}
+@keyframes n15-draw-outline{
+ 0%{clip-path:inset(0 100% 0 0);opacity:.3}
+ 100%{clip-path:inset(0 0 0 0);opacity:1}
+}
+/* Deneme 15.16: bütün 1/2−2 işleminin tek HL alanı olması. */
+.equation.n15-scene [data-id="n15RightCalculation"]{
+ display:inline-flex;align-items:center;white-space:nowrap;
+ border-radius:10px;cursor:pointer;padding:0 .075em;
+}
+.equation.n15-scene [data-id="n15RightCalculation"].hl-linked,
+.equation.n15-scene [data-id="n15RightCalculation"]:is(:hover,:focus-visible){
+ background:#ffedb3;box-shadow:0 0 0 2px #e1a518,0 5px 15px #aa861940;
+}
+.equation.n15-scene .n15-right-operation{
+ display:inline-flex;align-items:center;white-space:nowrap;gap:.025em;
+}
 </style></head><body>
-<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">beta 95</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
+<header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">Beta 96</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
 <main><div class="toolbar"><button id="reset">↺ Baştan</button><button id="back">← Geri</button><div class="mode-switch" role="group" aria-label="Çözüm yöntemi"><button type="button" id="modeSlow" class="selected" aria-pressed="true" title="Bütün öğretici işlem adımlarını göster">Yavaş</button><button type="button" id="modeFast" aria-pressed="false" title="Bariz işlemleri tek adımda tamamla">Hızlı</button></div></div>
 <div class="modules" id="modules" aria-label="Alıştırma seçimi"></div><div class="module-label" id="moduleLabel"></div><div class="board"><div class="board-top"><span>Denklemi adım adım çöz</span><span id="stepLabel">Adım 1</span></div><div id="scene" class="scene"><div id="equation" class="equation"></div></div><div id="tip" class="tip" aria-live="polite"></div></div>
 <div id="startupNotice" class="startup-notice" role="alert">Denklem motoru başlatılamadı. Hata bilgisi için tarayıcı konsolunu açabilirsiniz.</div><div id="examples" class="examples"></div><div class="entry"><input id="custom" aria-label="Denklem" placeholder="Örn. 3x+5=x+13" spellcheck="false"><button id="load">Denklemi aç</button><span id="feedback" class="feedback"></span></div><p class="notice">Bir bilinmeyenli birinci dereceden denklemler. Alıştırma seçebilir veya kendi denklemini yazabilirsin. Fareyle üzerine gelince yalnızca yapılabilecek işlemler vurgulanır.</p></main>
@@ -528,6 +743,10 @@ const exampleGroupsByModule={
       "(x-1)/(x+2)=(x+3)/(x-4)",
       "(3x+2)/(x-1)=(3x-1)/(x+2)"
     ]
+  }],
+  12: [{
+    title: "İç İçe Kesirli Denklemler",
+    examples: ["2-1/(1+3/(1-1/a))=1/2"]
   }]
 };
 const examplesByModule=Object.fromEntries(
@@ -539,7 +758,7 @@ const exerciseCatalog=Object.entries(exampleGroupsByModule).flatMap(([module,gro
  groups.map((group,groupIndex)=>({module:Number(module),groupIndex,examples:group.examples})));
 let currentExercise=0;
 let layoutShiftX=0;
-let currentModule=1;let variableDenEq=null;let quadEq=null;let nestedPreview=null;let bracket=null;let fractionEq=null;let pairEq=null;let multiEq=null;let simpleEq=null;let complexEq=null;let complexDomain=[];let preCommon=1;let sidesFlipped=false;
+let currentModule=1;let layer15=null;let variableDenEq=null;let quadEq=null;let nestedPreview=null;let bracket=null;let fractionEq=null;let pairEq=null;let multiEq=null;let simpleEq=null;let complexEq=null;let complexDomain=[];let preCommon=1;let sidesFlipped=false;
 let m={a:4,b:6,c:0,d:12},s,history=[],busy=false,step=0;
 let n12SealPlayed=false,n12SealNode=null;
 // ÖĞRETİM MODU: Animasyon hızından bağımsızdır. Yavaş, Beta 37 adımlarını korur.
@@ -3501,7 +3720,7 @@ async function bracketAction(action){
 }
 // Temsil: her adım cebirsel eşitliği korur, işaretin yanında hangi terimin olduğu veri modelinde saklanır.
 function initial(){return {movedB:m.b===0,movedC:m.c===0,combinedL:m.c===0,combinedR:m.b===0,divided:false,leftDone:false,rightDone:false};}
-function stateCopy(){return structuredClone({s,variableDenEq,quadEq,nestedPreview,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX,sidesFlipped})}
+function stateCopy(){return structuredClone({s,layer15,variableDenEq,quadEq,nestedPreview,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX,sidesFlipped})}
 function save(){history.push(stateCopy());}
 function hit(id,txt,action){return `<span class="atom hit" role="button" tabindex="0" data-action="${action}" data-id="${id}" aria-label="${txt.replace(/<[^>]*>/g,'')}" >${txt}</span>`}
 function atom(id,txt){return `<span class="atom" data-id="${id}">${txt}</span>`}
@@ -4059,6 +4278,1552 @@ async function n14Action(action){
   }finally{busy=false;scene.classList.remove('busy');update();}
  }
 }
+
+/* DENEME 15.03 — Matematik nesnelerinin kimliği ve hedef geometrisi.
+   Eski motorun geri alma, HL, MotionEngine ve diğer alıştırmalarına dokunulmaz. */
+let n15AnchorY=null;
+
+/* Kesir çizgileri ve eşittir aynı matematiksel yatay eksene oturur.
+   Çocukların mevcut kaydırmaları korunur: tekrarlanan yerleşim ölçümleri
+   transform değerini sıfırlayıp ileri geri oynatmaz. */
+function n15AlignEquation(){
+ if(!layer15)return;
+ const scale=Math.max(.001,eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth));
+ const bar=id=>byId(id)?.querySelector(':scope > .fracbar');
+ const cy=node=>{const r=node.getBoundingClientRect();return (r.top+r.bottom)/2};
+ const moveY=(node,desired)=>{
+  if(!node||!Number.isFinite(desired))return;
+  const old=Number(node.dataset.n15AlignY||0);
+  const delta=(desired-cy(node))/scale;
+  const updated=old+delta;
+  node.dataset.n15AlignY=String(updated);
+  node.style.transform='translateY('+updated.toFixed(3)+'px)';
+ };
+ const main=bar('n15block');
+ if(!main)return;
+ const inner=bar('n15innerFraction'),inside=byId('n15innerPart');
+ if(inner&&inside){
+  moveY(inside.children[0],cy(inner));
+  moveY(inside.children[1],cy(inner));
+ }
+ const middle=bar('n15middleFraction');
+ const middleParent=byId('n15middleFraction')?.parentElement;
+ if(middle&&middleParent?.classList.contains('n15-right-inner')){
+  moveY(middleParent.children[0],cy(middle));
+  moveY(middleParent.children[1],cy(middle));
+ }
+ const firstBar=bar('n15half')||bar('n15unitFrac')||bar('n15leftFrac');
+ const firstCabin=byId('eq-cabin-l'),secondCabin=byId('eq-cabin-r');
+ if(layer15.phase==='initial'){
+  if(firstBar&&secondCabin)moveY(secondCabin,cy(main)+(cy(secondCabin)-cy(firstBar)));
+  const two=byId('n15two');
+  if(two){
+   moveY(two,cy(main));
+   const minus=two.nextElementSibling;
+   if(minus?.classList.contains('n15-minus'))moveY(minus,cy(main));
+  }
+ }else if(firstBar&&firstCabin){
+  moveY(firstCabin,cy(main)+(cy(firstCabin)-cy(firstBar)));
+ }
+ const equals=eq.querySelector(':scope > .equals');
+ if(equals)moveY(equals,cy(main));
+}
+
+/* Eşittirin dikey yeri sahnenin içinde sabittir. Ne kesir yüksekliği ne
+   denklem ölçeği onun başlangıçtaki matematiksel eksenini değiştirebilir. */
+function n15KeepEqualsY(){
+ if(!layer15)return;
+ const equals=eq.querySelector(':scope > .equals');
+ if(!equals)return;
+ const sr=scene.getBoundingClientRect(),er=equals.getBoundingClientRect();
+ const y=(er.top+er.bottom)/2-sr.top;
+ if(n15AnchorY===null)n15AnchorY=y;
+ const delta=n15AnchorY-y;
+ const existing=Number.parseFloat(eq.style.translate.split(/\s+/)[1])||0;
+ eq.style.translate='0px '+(existing+delta).toFixed(3)+'px';
+}
+function n15Parse(raw){
+ const normal=String(raw).replace(/\s+/g,'').replace(/[−–]/g,'-');
+ return normal==='2-1/(1+3/(1-1/a))=1/2'?
+  {kind:'nested-fraction-15',raw:normal,phase:'initial'}:null;
+}
+function n15Frac(n,d,id){return fhtml(n,d,id,null)}
+function n15Choice(id,markup,action,group=id){
+ return '<span class="simple-linked hit n15-choice" data-id="'+id+'" '+
+  'data-action="'+action+'" data-hl-group="'+group+'" '+
+  'role="button" tabindex="0">'+markup+'</span>';
+}
+// İşlem seçilebilir, fakat sarı HL oluşmaz. İşlem mantığı değişmez.
+function n15PlainChoice(id,markup,action){
+ return '<span class="n15-plain-choice" data-id="'+id+'" '+
+  'data-action="'+action+'" role="button" tabindex="0">'+markup+'</span>';
+}
+function n15InnerDenom(){
+ const inner=n15Frac(atom('n15unitOne','1'),atom('n15letter','a'),'n15innerFraction');
+ // Üçlerle ilgili İKİ işlem de tamamlanınca yalnız soldaki 1 HL olur.
+ // Gerçek 1 aynı DOM kimliğiyle karşı tarafa taşınır.
+ const originalOne=atom('n15minusOne','1');
+ const one=layer15?.phase==='threeCalculated'?
+  n15Choice('n15FinalOnePick',originalOne,'n15MoveFinalOne'):originalOne;
+ return '<span class="n15-right-inner" data-id="n15innerPart">'+
+  one+'<span class="n15-sign">−</span>'+inner+'</span>';
+}
+function n15Remaining(){
+ const den=n15InnerDenom();
+ const upsideDown=['oneReciprocal','rightOneRemoved','timesThreePending'].includes(layer15?.phase);
+ return n15Frac(
+  upsideDown?den:atom('n15middleThree','3'),
+  upsideDown?atom('n15middleThree','3'):den,
+  'n15middleFraction');
+}
+function n15Inside(){
+ const one=layer15?.phase==='unitRemoved'?
+  n15Choice('n15MoveOneChoice',atom('n15plusOne','1'),'n15MoveOne'):
+  atom('n15plusOne','1');
+ return '<span class="n15-right-inner">'+one+
+  '<span class="n15-sign">+</span>'+n15Remaining()+'</span>';
+}
+function n15Outer(){
+ const flipped=layer15.phase==='flipped'||layer15.phase==='unitRemoved';
+ return n15Frac(
+  flipped?atom('n15rightDen',n15Inside()):atom('n15rightNum','1'),
+  flipped?atom('n15rightNum','1'):atom('n15rightDen',n15Inside()),
+  'n15block');
+}
+function n15Half(denominatorMarkup=null){
+ return n15Frac(atom('n15leftNum','1'),
+  denominatorMarkup||atom('n15leftDen','2'),'n15half');
+}
+function n15LeftResult(){
+ const flipped=['flipped','unitRemoved','oneTransferred','oneCalculated'].includes(layer15.phase);
+ return n15Frac(
+  flipped?atom('n15leftDen','2'):atom('n15leftNum','3'),
+  flipped?atom('n15leftNum','3'):atom('n15leftDen','2'),
+  'n15leftFrac');
+}
+function n15Arithmetic(){
+ const stage=layer15.phase;
+ if(stage==='gathered'){
+  const two=fastMode()?atom('n15two','2'):
+   n15Choice('n15twoChoice',atom('n15two','2'),'n15MakeUnit');
+  const expression='<span class="n15-calc">'+two+
+   '<span class="n15-minus">−</span>'+n15Half()+'</span>';
+  return fastMode()?
+   n15Choice('n15calculation',expression,'n15ComputeFast'):expression;
+ }
+ const factors=stage==='factors',expanded=stage==='expanded';
+ const denomPick=stage==='unit';
+ const firstNum=expanded?atom('n15two','4'):atom('n15two','2');
+ const leftNum=factors?'<span class="n15-factor-number">'+firstNum+
+  n15Choice('n15FactorTop','×2','n15Expand')+'</span>':firstNum;
+ const firstDen=expanded?atom('n15unitDen','2'):
+  denomPick?n15Choice('n15UnitDenPick',atom('n15unitDen','1'),'n15ShowFactors'):
+  factors?'<span class="n15-factor-number">'+atom('n15unitDen','1')+
+   n15Choice('n15FactorBottom','×2','n15Expand')+'</span>':
+  atom('n15unitDen','1');
+ const own=n15Frac(leftNum,firstDen,'n15unitFrac');
+ const secondDen=denomPick?n15Choice('n15HalfDenPick',atom('n15leftDen','2'),'n15ShowFactors'):
+  atom('n15leftDen','2');
+ const minus=expanded?n15Choice('n15Operator','−','n15SubtractSlow'):
+  '<span class="n15-minus">−</span>';
+ return '<span class="n15-calc">'+own+minus+n15Half(secondDen)+'</span>';
+}
+function n15FlipTarget(markup,side){
+ const phase=layer15.phase;
+ const action=phase==='calculated'?'n15Invert':
+  phase==='oneCalculated'?'n15InvertSecond':
+  phase==='rightOneRemoved'?'n15ShowTimesThree':
+  phase==='finalNoMinus'?'n15FinalInvert':null;
+ // Sağ veya solda gezinen fare iki HL dikdörtgenini birlikte etkinleştirir.
+ const attrs=action?
+  ' data-action="'+action+'" data-hl-group="n15BothFractions" '+
+  'tabindex="0" role="button" aria-label="İki tarafın pay ve paydasını çevir"':'';
+ return '<span class="n15-flip-target '+side+'"'+attrs+'>'+markup+'</span>';
+}
+function n15Markup(){
+ const phase=layer15.phase,equals='<span class="equals">=</span>';
+ const side=html=>'<span class="side">'+html+'</span>';
+ if(phase==='initial'){
+  const half=n15Choice('n15pickHalf',n15Half(),'n15MoveHalf');
+  const block=n15Choice('n15pickBlock',n15Outer(),'n15MoveBlock');
+  return side(atom('n15two','2')+'<span class="n15-minus">−</span>'+block)+
+   equals+side(half);
+ }
+ if(['gathered','unit','factors','expanded'].includes(phase)){
+  return side(n15Arithmetic())+equals+side(n15Outer());
+ }
+ if(phase==='calculated'){
+  return side(n15FlipTarget(n15LeftResult(),'left'))+
+   equals+side(n15FlipTarget(n15Outer(),'right'));
+ }
+ return side(n15FlipTarget(n15LeftResult(),'left'))+
+  equals+side(n15FlipTarget(n15Outer(),'right'));
+}
+
+/* FINAL-FIRST FLIP: önceden hangi kutunun nereye gideceği ölçülür.
+   Değişecek bloklar gerçek DOM nesneleri olarak korunur; translate ile
+   başlangıç yerlerine alınır ve tek parça halinde hedefe akar.
+   Hiçbir animasyon hedefin ötesine gidip son anda düzeltme yapmaz. */
+async function n15RetainAndMove(ids,advance,motion={}){
+ const equals=eq.querySelector(':scope > .equals');
+ const beforeEq=equals?.getBoundingClientRect();
+ const beforeX=beforeEq?(beforeEq.left+beforeEq.right)/2:null;
+ const entries=ids.map(id=>{
+  const node=byId(id);
+  return node?{id,node,from:node.getBoundingClientRect()}:null;
+ }).filter(Boolean);
+ // Yeni model bütün olarak hazırlanır; ilk animasyon karesinden önce
+ // nihai layout, taşıma yönü ve yatay yer ihtiyacı hesaplanmış olur.
+ advance();
+ update();
+ if(beforeX!==null){
+  const afterEq=eq.querySelector(':scope > .equals')?.getBoundingClientRect();
+  if(afterEq){
+   const wanted=beforeX-(afterEq.left+afterEq.right)/2;
+   const er=eq.getBoundingClientRect(),sr=scene.getBoundingClientRect(),pad=12;
+   const dx=Math.min(sr.right-pad-er.right,
+     Math.max(sr.left+pad-er.left,wanted));
+   if(Math.abs(dx)>.1){
+    layoutShiftX+=dx;
+    positionScale();
+    n15AlignEquation();
+    n15KeepEqualsY();
+   }
+  }
+ }
+ // Korunan nesneler yeni DOM'daki varış noktalarına geçirilir.
+ for(const ent of entries){
+  const placeholder=byId(ent.id);
+  if(!placeholder)continue;
+  // İçerik değişmişse eski metni hedefin üstüne yazmak doğru değildir.
+  if(placeholder.textContent!==ent.node.textContent)continue;
+  placeholder.replaceWith(ent.node);
+  // Başlangıçta tek başına çizgiye hizalanmış 2, yeni aşamada
+  // aynı translateY ile taşınmamalı: yeni kesrin payında hizası doğaldır.
+  if(ent.id==='n15two'){
+   ent.node.style.transform='';delete ent.node.dataset.n15AlignY;
+  }
+  ent.node.style.translate='';
+ }
+ n15AlignEquation();
+ n15KeepEqualsY();
+ const scale=Math.max(.001,eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth));
+ const flight=[];
+ for(const ent of entries){
+  if(!ent.node.isConnected||byId(ent.id)!==ent.node)continue;
+  const dest=ent.node.getBoundingClientRect();
+  const sx=(ent.from.left+ent.from.right)/2,sy=(ent.from.top+ent.from.bottom)/2;
+  const tx=(dest.left+dest.right)/2,ty=(dest.top+dest.bottom)/2;
+  const dx=(sx-tx)/scale,dy=(sy-ty)/scale;
+  const isMain=motion.selected===ent.id;
+  const flipSide=motion.flip?(ent.id.startsWith('n15left')?'left':'right'):null;
+  if(Math.abs(dx)+Math.abs(dy)<.3&&!isMain&&!flipSide)continue;
+  const rise=Math.max(28,Math.min(82,Math.hypot(tx-sx,ty-sy)*.27))/scale;
+  const outward=flipSide?(flipSide==='left'?-1:1)*
+   (ent.id.endsWith('Num')?rise*1.2:rise*.8):0;
+  // Yerleşim son konumu bu kareden ÖNCE kesinleşmiştir.
+  ent.node.style.translate=dx.toFixed(3)+'px '+dy.toFixed(3)+'px';
+  flight.push(n12RafMotion(fastMode()?490:900,t=>{
+   const u=(1-Math.cos(Math.PI*t))/2; // yavaş → hızlı → yavaş
+   const wave=Math.sin(Math.PI*u);
+   let x=dx*(1-u),y=dy*(1-u);
+   if(isMain)y-=rise*wave;          // = üzerinden geçen yay
+   if(flipSide)x+=outward*wave;      // soldan / sağdan dönüş yayı
+   ent.node.style.translate=x.toFixed(3)+'px '+y.toFixed(3)+'px';
+  }).finally(()=>{ent.node.style.translate=''}));
+ }
+ await Promise.all(flight);
+ n15AlignEquation();
+ n15KeepEqualsY();
+}
+
+/* Bir tek tıklama bir tek matematiksel karara karşılık gelir. */
+async function n15Action(action){
+ if(!layer15||busy)return;
+ const phase=layer15.phase;
+ const next={
+  initial:{n15MoveBlock:'gathered',n15MoveHalf:'gathered'},
+  gathered:{n15ComputeFast:'calculated',n15MakeUnit:'unit'},
+  unit:{n15ShowFactors:'factors'},
+  factors:{n15Expand:'expanded'},
+  expanded:{n15SubtractSlow:'calculated'},
+  calculated:{n15Invert:'flipped'}
+ }[phase]?.[action];
+ if(!next)return;
+ // Mod değişimi sırasında ekranda olmayan bir eylem çağrılamaz.
+ if(phase==='gathered'&&
+   ((fastMode()&&action!=='n15ComputeFast')||(!fastMode()&&action!=='n15MakeUnit')))return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  if(phase==='initial'){
+   const chosen=action==='n15MoveBlock'?'n15block':'n15half';
+   await n15RetainAndMove(['n15block','n15half','n15two'],
+    ()=>{layer15.phase=next},{selected:chosen});
+  }else if(phase==='calculated'){
+   await n15RetainAndMove(['n15leftNum','n15leftDen','n15rightNum','n15rightDen'],
+    ()=>{layer15.phase=next},{flip:true});
+  }else{
+   const ids=phase==='gathered'?['n15block','n15half','n15two']:
+    phase==='expanded'?['n15block','n15leftDen']:
+    ['n15block','n15half'];
+   await n15RetainAndMove(ids,()=>{layer15.phase=next});
+  }
+ }finally{
+  busy=false;scene.classList.remove('busy');update();
+ }
+}
+
+
+/* Aynı matematiksel nesnenin dikey koordinatını piksel olarak koru.
+   Yalnız stil dönüşümü uygulanır, DOM yerleşimi yeniden akıtılmaz. */
+/* DENEME 15.16 — Döndürme okları her iki tarafta = işaretiyle
+   aynı dikey koordinata yerleşir. Sağdaki iç içe kesrin tam kutu
+   merkezini kullanmak hatalıdır: doğru referans eşittir merkezidir.
+   DOMRect değerleri ölçeklenmiş ekran pikselidir, CSS top ise ölçek
+   öncesi yerel pikseldir. Bu yüzden delta, denklemin ölçeğine bölünür. */
+/* DENEME 15.16 — Tüm aşamaları ölçen sabit sahne planı.
+   En yüksek ters kesir DAHİL bütün durumlar önce ölçülür.
+   Eşittirin X/Y ekseni ile uygulama ölçeği çözüm boyunca değişmez.
+   Resize olursa yeni tek plan yapılır. */
+let n15FixedPlan=null;
+function n15MakeFixedPlan(){
+ if(!layer15)return null;
+ const valid=n15FixedPlan&&
+  n15FixedPlan.width===scene.clientWidth&&
+  n15FixedPlan.height===scene.clientHeight;
+ if(valid)return n15FixedPlan;
+ const savedPhase=layer15.phase,savedMode=teachingMode;
+ const phases=['initial','twoMoved','unitRight','equivalentRight','combinedRight',
+  'subtracted','signed','calculated','flipped','unitRemoved',
+  'oneTransferred','oneCalculated','oneReciprocal',
+  'rightOneRemoved','timesThreePending','threeLeftDone','threeRightDone',
+  'threeCalculated','finalOneMoved','finalRightCalculated',
+  'finalNoMinus','finalFlipped','finalSolved'];
+ const padX=18,padTop=36,padBottom=16;
+ const roomW=Math.max(1,scene.clientWidth-2*padX);
+ const roomH=Math.max(1,scene.clientHeight-padTop-padBottom);
+ let above=0,below=0,left=0,right=0;
+ const measure=document.createElement('div');
+ measure.className='measure-layer';
+ measure.style.zIndex='-1';
+ scene.append(measure);
+ try{
+  for(const mode of ['slow','fast']){
+   teachingMode=mode;
+   for(const phase of phases){
+    layer15.phase=phase;
+    const clone=document.createElement('div');
+    clone.className='equation measurement n15-scene';
+    clone.style.maxWidth='none';
+    clone.innerHTML=prepareEqualsMarkup(n15Markup());
+    measure.append(clone);
+    // Ölçülen örnek de gerçek denklemle AYNI çizgi hizalama kurallarını kullanır.
+    n15AlignEquation(clone);
+    const equal=clone.querySelector(':scope > .equals');
+    if(equal){
+     const e=equal.getBoundingClientRect();
+     const x=(e.left+e.right)/2,y=(e.top+e.bottom)/2;
+     const nodes=[clone,...clone.querySelectorAll(
+      '.eq-cabin,.side,.fraction,.fracbar,.numerator,.denominator,'+
+      '.n15-right-inner,.n15-calc,.n15-flip-target,.atom')];
+     for(const node of nodes){
+      const b=node.getBoundingClientRect();
+      if(!b.width&&!b.height)continue;
+      above=Math.max(above,y-b.top);
+      below=Math.max(below,b.bottom-y);
+      left=Math.max(left,x-b.left);
+      right=Math.max(right,b.right-x);
+     }
+    }
+    clone.remove();
+   }
+  }
+ }finally{
+  teachingMode=savedMode;
+  layer15.phase=savedPhase;
+  measure.remove();
+ }
+ // İç içe kesir dönüşümlerini ölçekleyip tüm ifadeyi tek seferde sığdır.
+ const baseW=Math.max(1,left+right);
+ const baseH=Math.max(1,above+below);
+ const scale=Math.min(1,roomW/baseW,roomH/baseH);
+ const unusedW=Math.max(0,roomW-baseW*scale);
+ const unusedH=Math.max(0,roomH-baseH*scale);
+ n15FixedPlan={
+  width:scene.clientWidth,height:scene.clientHeight,
+  scale:Math.max(.01,scale),
+  axisX:padX+left*scale+unusedW/2,
+  axisY:padTop+above*scale+unusedH/2,
+  above,below,left,right
+ };
+ return n15FixedPlan;
+}
+/* Sabit 'eşittir ekseni': her render sonunda aynı sahne koordinatı. */
+function n15ApplyFixedPlan(){
+ const plan=n15MakeFixedPlan();
+ if(!plan)return;
+ // Önce ölçek, sonra gerçek kesir çizgileri hizalanır.
+ eq.style.translate='';
+ eq.style.transform='scale('+plan.scale.toFixed(6)+')';
+ n15AlignEquation(eq);
+ const equal=eq.querySelector(':scope > .equals');
+ if(!equal)return;
+ const sr=scene.getBoundingClientRect(),er=equal.getBoundingClientRect();
+ const centerX=(er.left+er.right)/2-sr.left;
+ eq.style.transform='translateX('+
+  (plan.axisX-centerX).toFixed(3)+'px) scale('+plan.scale.toFixed(6)+')';
+ n15AnchorY=plan.axisY;
+ n15KeepEqualsY();
+}
+
+function n15PinStationaryObjects(){
+ if(!layer15)return;
+ const phase=layer15.phase;
+ const scale=Math.max(.001,eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth));
+ const area=scene.getBoundingClientRect();
+ const cy=node=>{const r=node.getBoundingClientRect();return (r.top+r.bottom)*.5-area.top};
+ const pin=(node,target)=>{
+  if(!node||!Number.isFinite(target))return;
+  const current=Number(node.dataset.n15AlignY||0);
+  const shift=(target-cy(node))/scale;
+  if(Math.abs(shift)>.01){
+   const final=current+shift;
+   node.dataset.n15AlignY=String(final);
+   node.style.transform='translateY('+final.toFixed(3)+'px)';
+  }
+ };
+ const two=byId('n15two');
+ if(two&&['initial','twoMoved','gathered'].includes(phase)){
+  if(layer15.fixedTwoY===undefined)layer15.fixedTwoY=cy(two);
+  pin(two,layer15.fixedTwoY);
+ }
+ const zero=byId('n15zero'),eqSign=eq.querySelector(':scope > .equals');
+ if(zero&&eqSign)pin(zero,cy(eqSign));
+}
+/* DENEME 15.16 — Yalnızca 2 karşı tarafa geçer; büyük kesir sabittir. */
+function n15Signed(id,sign,content,action=null,implicit=false){
+ const interactive=action?' hit simple-linked n15-choice':'';
+ const attrs=action?' data-action="'+action+'" data-hl-group="'+id+'" tabindex="0" role="button"':'';
+ return '<span class="n15-signed-term'+interactive+'" data-id="'+id+'"'+attrs+'>'+
+  '<span class="n15-term-sign'+(implicit?' n15-implicit':'')+'" data-id="'+id+
+  'Sign">'+sign+'</span>'+content+'</span>';
+}
+function n15BlockTerm(sign='−',action=null,implicit=false){
+ // Bu aşamada yalnızca eksi işaretinin kendisi tıklanabilir.
+ if(action==='n15SwitchSign')
+  return '<span class="n15-signed-term" data-id="n15termBlock">'+
+   '<span class="n15-term-sign" data-id="n15termBlockSign">'+
+   '<span class="n15-minus-choice" data-id="n15minusChoice" data-action="n15SwitchSign" data-hl-group="n15BothSigns" '+
+   'role="button" tabindex="0" aria-label="Her iki tarafın işaretini değiştir">−</span>'+
+   '</span>'+n15Outer()+'</span>';
+ return n15Signed('n15termBlock',sign,n15Outer(),action,implicit);
+}
+function n15HalfTerm(sign='+',action=null,implicit=false){
+ return n15Signed('n15termHalf',sign,n15Half(),action,implicit);
+}
+function n15RightMinusResult(){
+ return '<span class="n15-signed-term" data-id="n15ResultSigned">'+
+  '<span class="n15-term-sign" data-id="n15ResultSignedSign">'+
+  '<span class="n15-minus-choice" data-id="n15minusRight" '+
+  'data-action="n15SwitchSign" data-hl-group="n15BothSigns" '+
+  'role="button" tabindex="0" aria-label="Her iki tarafın işaretini değiştir">−</span>'+
+  '</span>'+n15LeftResult()+'</span>';
+}
+function n15TwoTerm(sign='+',action=null,implicit=false){
+ // HL, yüksek kesirle hizalanan dış terimde değil, gerçek 2 rakamında.
+ // Terim bütünlüğü (işaret + sayı) animasyon için korunur.
+ const interactive=action?' simple-linked hit n15-choice n15-two-hit':'';
+ const attrs=action?' data-action="'+action+'" data-hl-group="n15two" '+
+  'role="button" tabindex="0" aria-label="2 sayısını karşı tarafa taşı"':'';
+ return '<span class="n15-signed-term" data-id="n15termTwo">'+
+  '<span class="n15-term-sign'+(implicit?' n15-implicit':'')+
+  '" data-id="n15termTwoSign">'+sign+'</span>'+
+  '<span class="atom'+interactive+'" data-id="n15two"'+attrs+'>2</span>'+
+  '</span>';
+}
+function n15TwoSpace(){
+ // 2'nin hareketi sırasında B ile = konumunu koruyan görünmez yer.
+ return '<span class="n15-signed-term n15-reserved-two" aria-hidden="true">'+
+  '<span class="n15-term-sign n15-implicit">+</span>'+atom('n15TwoSpace','2')+'</span>';
+}
+function n15Arithmetic(){
+ const stage=layer15.phase;
+ if(stage==='gathered'){
+  const two=fastMode()?atom('n15two','2'):
+   n15Choice('n15twoChoice',atom('n15two','2'),'n15MakeUnit');
+  const expression='<span class="n15-calc">'+two+n15HalfTerm('−')+'</span>';
+  return fastMode()?n15Choice('n15calculation',expression,'n15ComputeFast'):expression;
+ }
+ const factors=stage==='factors',expanded=stage==='expanded';
+ const denPick=stage==='unit';
+ const numerator=expanded?atom('n15two','4'):atom('n15two','2');
+ const num=factors?'<span class="n15-factor-number">'+numerator+
+  n15Choice('n15FactorTop','×2','n15Expand')+'</span>':numerator;
+ const den=expanded?atom('n15unitDen','2'):
+  denPick?n15Choice('n15UnitDenPick',atom('n15unitDen','1'),'n15ShowFactors'):
+  factors?'<span class="n15-factor-number">'+atom('n15unitDen','1')+
+   n15Choice('n15FactorBottom','×2','n15Expand')+'</span>':atom('n15unitDen','1');
+ const halfDen=denPick?n15PlainChoice('n15HalfDenPick',atom('n15leftDen','2'),'n15ShowFactors'):
+  atom('n15leftDen','2');
+ const minus=expanded?n15Choice('n15Operator','−','n15SubtractSlow'):
+  '<span class="n15-minus">−</span>';
+ return '<span class="n15-calc">'+n15Frac(num,den,'n15unitFrac')+minus+
+  n15Half(halfDen)+'</span>';
+}
+
+/* Deneme 15.16: sağ tarafın tamamını seç, işle, sonra -1 ile çarp. */
+function n15RightWorking(phase){
+ const half=n15Half();
+ const minus='<span class="n15-minus">−</span>';
+ if(phase==='unitRight'){
+  return '<span class="n15-calc n15-right-operation">'+half+minus+
+   n15Frac(atom('n15two','2'),atom('n15EqDen','1'),'n15SecondFrac')+'</span>';
+ }
+ if(phase==='equivalentRight'){
+  return '<span class="n15-calc n15-right-operation">'+half+minus+
+   n15Frac(atom('n15two','4'),atom('n15EqDen','2'),'n15SecondFrac')+'</span>';
+ }
+ if(phase==='combinedRight'){
+  return n15Frac(atom('n15CombineOne','1')+'<span class="n15-minus">−</span>'+
+   atom('n15two','4'),atom('n15EqDen','2'),'n15SubtractionFrac');
+ }
+ return n15HalfTerm('+',null,true)+n15TwoTerm('−');
+}
+function n15OneAnswer(){
+ const phase=layer15.phase;
+ const right=phase==='oneReciprocal'?
+  n15Frac(atom('n15OneAnswerDen','3'),
+   n15Choice('n15RightOnePick',atom('n15OneAnswerNum','1'),'n15RemoveRightOne'),
+   'n15OneAnswerFrac'):
+  ['rightOneRemoved','timesThreePending','threeLeftDone','threeRightDone'].includes(phase)?
+   atom('n15OneAnswerDen','3'):
+   n15Frac(atom('n15OneAnswerNum','1'),atom('n15OneAnswerDen','3'),'n15OneAnswerFrac');
+ return '<span class="n15-one-answer" data-id="n15OneAnswer">'+
+  '<span class="n15-minus" data-id="n15OneAnswerMinus">−</span>'+right+'</span>';
+}
+/* Sol tarafta yalnız paydadaki 3 ile çarpan 3 ortak HL;
+   sağ tarafta -3·3 ifadesi bağımsız, tek HL alanıdır. */
+function n15LeftTimesThreePending(){
+ const den='<span class="n15-left-times-pick" data-id="n15LeftDenPick" '+
+  'data-action="n15ApplyThreeLeft" data-hl-group="n15LeftTimesPair" '+
+  'tabindex="0" role="button" aria-label="Soldaki 3 ile sadeleştir">'+
+   atom('n15middleThree','3')+'</span>';
+ return '<span class="n15-three-product" data-id="n15ThreeProductLeft">'+
+  n15Frac(n15InnerDenom(),den,'n15middleFraction')+
+  '<span class="n15-three-tail" data-id="n15LeftTimesTail">'+
+   '<span class="n15-three-dot">·</span>'+
+   '<span class="n15-left-times-pick" data-id="n15LeftFactorPick" '+
+    'data-action="n15ApplyThreeLeft" data-hl-group="n15LeftTimesPair" '+
+    'tabindex="0" role="button" aria-label="Soldaki 3 ile sadeleştir">'+
+     atom('n15TimesThreeLeft','3')+
+   '</span>'+
+  '</span>'+
+ '</span>';
+}
+function n15ThreeRightResult(){
+ return '<span class="n15-one-answer" data-id="n15ThreeAnswer">'+
+  '<span class="n15-minus">−</span>'+atom('n15Nine','9')+'</span>';
+}
+function n15RightTimesThreePending(){
+ return '<span class="n15-right-times-block" data-id="n15RightTimesBlock" '+
+  'data-action="n15ApplyThreeRight" data-hl-group="n15RightTimesBlock" '+
+  'tabindex="0" role="button" aria-label="Sağdaki çarpma işlemini uygula">'+
+  '<span class="n15-three-product" data-id="n15ThreeProductRight">'+
+   n15OneAnswer()+
+   '<span class="n15-three-tail" data-id="n15RightTimesTail">'+
+    '<span class="n15-three-dot">·</span>'+atom('n15TimesThreeRight','3')+
+   '</span>'+
+  '</span>'+
+ '</span>';
+}
+/* Deneme 15.30 — Son dört adıma ait matematik yapısı, eski
+   DOM kimlikleri korunarak hazırlanır. Son takla aynı çark motorunu kullanır. */
+function n15FinalLeftFraction(flipped=false,selectDen=false){
+ const leftOne=atom('n15unitOne','1');
+ const letter=atom('n15letter','a');
+ return n15Frac(flipped?letter:leftOne,
+  flipped?(selectDen?n15Choice('n15FinalDenOnePick',leftOne,'n15RemoveFinalDen'):leftOne):letter,
+  'n15innerFraction');
+}
+function n15FinalRightFraction(flipped=false){
+ return n15Frac(
+  flipped?atom('n15TenDen','1'):atom('n15TenNum','10'),
+  flipped?atom('n15TenNum','10'):atom('n15TenDen','1'),
+  'n15FinalTenFrac');
+}
+function n15FinalMinusTerm(side){
+ if(side==='left'){
+  return '<span class="n15-final-signed" data-id="n15FinalLeftSigned">'+
+   n15Choice('n15FinalLeftMinusPick',
+    '<span class="n15-minus" data-id="n15FinalLeftMinus">−</span>',
+    'n15SwitchFinalSigns','n15FinalMinusPair')+
+   n15FinalLeftFraction(false)+'</span>';
+ }
+ return '<span class="n15-final-signed" data-id="n15FinalRightSigned">'+
+  n15Choice('n15FinalRightMinusPick',
+   '<span class="n15-minus" data-id="n15FinalRightMinus">−</span>',
+   'n15SwitchFinalSigns','n15FinalMinusPair')+
+  atom('n15FinalTen','10')+'</span>';
+}
+function n15FinalRightCalculation(){
+ return n15Choice('n15FinalRightCalc',
+  '<span class="n15-final-right" data-id="n15FinalRightOperation">'+
+   '<span class="n15-minus">−</span>'+atom('n15Nine','9')+
+   '<span class="n15-minus">−</span>'+atom('n15minusOne','1')+
+  '</span>','n15ComputeFinalRight');
+}
+function n15Markup(){
+ const phase=layer15.phase,equals='<span class="equals">=</span>';
+ const side=html=>'<span class="side">'+html+'</span>';
+ if(phase==='initial')
+  return side(n15TwoTerm('+','n15MoveTwo',true)+n15BlockTerm('−'))+
+   equals+side(n15HalfTerm('+',null,true));
+ if(phase==='twoMoved')
+  // Önce işlemin TAMAMI vurgulanır, soldaki eksi henüz seçilemez.
+  return side(n15TwoSpace()+n15BlockTerm('−'))+equals+
+   side(n15Choice('n15RightCalculation',n15RightWorking(phase),'n15EvaluateRight'));
+ if(['unitRight','equivalentRight','combinedRight'].includes(phase))
+  // Payda eşitleme ara kareleri, tıklama yapmadan otomatik devam eder.
+  return side(n15TwoSpace()+n15BlockTerm('−'))+equals+
+   side(n15RightWorking(phase));
+ if(phase==='subtracted')
+  // -B = 1/2-2 -> -B = -3/2: iki eksi de aynı anda tıklanabilir.
+  return side(n15TwoSpace()+n15BlockTerm('−','n15SwitchSign'))+
+   equals+side(n15RightMinusResult());
+ if(phase==='signed')
+  // Her iki taraf -1 ile çarpılır: B = 3/2. Sonra kesirler ters çevrilir.
+  return side(n15TwoSpace()+n15BlockTerm('+',null,true))+
+   equals+side(n15Signed('n15ResultSigned','+',n15LeftResult(),null,true));
+ if(phase==='calculated')
+  return side(n15TwoSpace()+n15FlipTarget(n15Outer(),'left'))+
+   equals+side(n15FlipTarget(n15LeftResult(),'right'));
+ if(phase==='flipped')
+  // Kesrin TAMAMI DEĞİL; yalnız /1'in paydasındaki 1 HL olur.
+  return side(n15TwoSpace()+
+   n15Frac(
+    atom('n15rightDen',n15Inside()),
+    n15Choice('n15RemoveUnitChoice',atom('n15rightNum','1'),'n15RemoveUnit'),
+    'n15block'
+   ))+
+   equals+side(n15LeftResult());
+ if(phase==='unitRemoved')
+  // Tıklanabilir 1: 1+3/(1-1/a) = 2/3.
+  return side(n15TwoSpace()+
+   '<span class="n15-unit-result" data-id="n15UnitResult">'+
+   atom('n15rightDen',n15Inside())+'</span>')+
+   equals+side(n15LeftResult());
+ if(phase==='oneTransferred')
+  // Uçan 1 sağda negatif terim olur: 3/(1-1/a) = 2/3 - 1.
+  return side(n15TwoSpace()+
+   '<span class="n15-unit-result" data-id="n15UnitResult">'+
+   n15Remaining()+'</span>')+equals+
+   side('<span class="n15-calc n15-one-operation" data-id="n15OneRhsOperation">'+
+    n15LeftResult()+'<span class="n15-minus" data-id="n15OneRhsMinus">−</span>'+
+    atom('n15MovedOne','1')+'</span>');
+ if(phase==='oneCalculated')
+  // 3/(1−1/a) = −1/3, iki taraf ortak HL.
+  return side(n15TwoSpace()+n15FlipTarget(n15Remaining(),'left'))+
+   equals+side(n15FlipTarget(n15OneAnswer(),'right'));
+ if(phase==='oneReciprocal')
+  // Sağda yalnız /1 paydası tıklanır.
+  return side(n15TwoSpace()+n15Remaining())+equals+side(n15OneAnswer());
+ if(phase==='rightOneRemoved')
+  // (1−1/a)/3 = −3. Her iki taraf ortak HL.
+  return side(n15TwoSpace()+n15FlipTarget(n15Remaining(),'left'))+
+   equals+side(n15FlipTarget(n15OneAnswer(),'right'));
+ if(['timesThreePending','threeLeftDone','threeRightDone','threeCalculated'].includes(phase)){
+  // Bağımsız iki çarpma korunur. İkisi tamamlanınca yalnız soldaki 1 HL'dir.
+  const leftDone=phase==='threeLeftDone'||phase==='threeCalculated';
+  const rightDone=phase==='threeRightDone'||phase==='threeCalculated';
+  const left=leftDone?
+   '<span class="n15-unit-result" data-id="n15UnitResult">'+
+    n15InnerDenom()+'</span>':n15LeftTimesThreePending();
+  const right=rightDone?n15ThreeRightResult():n15RightTimesThreePending();
+  return side(n15TwoSpace()+left)+equals+side(right);
+ }
+ if(phase==='finalOneMoved')
+  // −1/a = −9−1: tüm sağ taraf HL olur, tıklayınca −10 hesaplanır.
+  return side(n15TwoSpace()+
+   '<span class="n15-final-left" data-id="n15FinalLeft">'+
+   '<span class="n15-minus">−</span>'+n15FinalLeftFraction(false)+'</span>')+
+   equals+side(n15FinalRightCalculation());
+ if(phase==='finalRightCalculated')
+  // −1/a = −10: yalnız iki eksi aynı HL grubundadır.
+  return side(n15TwoSpace()+n15FinalMinusTerm('left'))+
+   equals+side(n15FinalMinusTerm('right'));
+ if(phase==='finalNoMinus')
+  // 1/a = 10/1: iki kesir tek HL grubunda, aynı yönde takla atar.
+  return side(n15TwoSpace()+
+   n15FlipTarget(n15FinalLeftFraction(false),'left'))+
+   equals+side(n15FlipTarget(n15FinalRightFraction(false),'right'));
+ if(phase==='finalFlipped')
+  // a/1 = 1/10: yalnız soldaki paydadaki 1 seçilebilir.
+  return side(n15TwoSpace()+n15FinalLeftFraction(true,true))+
+   equals+side(n15FinalRightFraction(true));
+ if(phase==='finalSolved')
+  // a = 1/10. Kutu, hareket tamamlandıktan sonra gerçek konumuna çizilir.
+  return side(n15TwoSpace()+atom('n15letter','a'))+
+   equals+side(n15FinalRightFraction(true));
+ return side(n15TwoSpace()+n15Outer())+equals+side(n15LeftResult());
+}
+function n15AlignEquation(root=eq){
+ if(!layer15)return;
+ const scale=Math.max(.001,root.getBoundingClientRect().width/Math.max(1,root.offsetWidth));
+ const get=id=>root.querySelector('[data-id="'+id+'"]');
+ const bar=id=>get(id)?.querySelector(':scope > .fracbar');
+ const cy=node=>{const r=node.getBoundingClientRect();return(r.top+r.bottom)/2};
+ const align=(node,y)=>{
+  if(!node||!Number.isFinite(y))return;
+  const prev=Number(node.dataset.n15AlignY||0);
+  const shift=prev+(y-cy(node))/scale;
+  node.dataset.n15AlignY=String(shift);
+  node.style.transform='translateY('+shift.toFixed(3)+'px)';
+ };
+ const main=bar('n15block');
+ const inner=bar('n15innerFraction'),innerPart=get('n15innerPart');
+ if(inner&&innerPart){align(innerPart.children[0],cy(inner));align(innerPart.children[1],cy(inner))}
+ const middle=bar('n15middleFraction'),middleParent=get('n15middleFraction')?.parentElement;
+ if(middle&&middleParent?.classList.contains('n15-right-inner')){
+  align(middleParent.children[0],cy(middle));align(middleParent.children[1],cy(middle));
+ }
+ // Birim payda kaldırılınca ana kesir çizgisi artık mevcut değildir.
+ // İç içe kesirleri hizala ve iki taraftaki gerçek kesir çizgisi
+ // üzerinden aynı yatay ekseni koru.
+ if(!main){
+  if(['unitRemoved','oneTransferred','oneCalculated','oneReciprocal',
+    'rightOneRemoved','timesThreePending','threeLeftDone','threeRightDone',
+    'threeCalculated','finalOneMoved','finalRightCalculated',
+    'finalNoMinus','finalFlipped','finalSolved'].includes(layer15.phase)){
+   const rightBar=bar('n15leftFrac')||bar('n15OneAnswerFrac')||
+    bar('n15FinalTenFrac');
+   const leftBar=bar('n15middleFraction')||bar('n15innerFraction');
+   const rightValue=get('n15OneAnswerDen')||get('n15Nine')||
+    get('n15FinalRightCalc')||get('n15FinalTen');
+   const leftCabin=get('eq-cabin-l'),rightCabin=get('eq-cabin-r');
+   const equal=root.querySelector(':scope > .equals');
+   if(rightBar){
+    if(leftCabin&&leftBar)align(leftCabin,cy(leftCabin)+cy(rightBar)-cy(leftBar));
+    else if(leftCabin&&layer15.phase==='finalSolved'){
+     const letter=get('n15letter');
+     if(letter)align(leftCabin,cy(leftCabin)+cy(rightBar)-cy(letter));
+    }
+    if(equal)align(equal,cy(rightBar));
+   }else if(leftBar){
+    if(rightCabin&&rightValue)align(rightCabin,cy(rightCabin)+cy(leftBar)-cy(rightValue));
+    if(equal)align(equal,cy(leftBar));
+   }
+   // Sol taraftaki ·3: kesrin payına değil, eşitlik eksenine oturur.
+   // Ölçüm hem gerçek sahnede hem sabit-plan ölçüm kopyasında çalışır.
+   if(['timesThreePending','threeRightDone'].includes(layer15.phase)){
+    const leftTail=get('n15LeftTimesTail');
+    const axis=equal||leftBar||rightBar;
+    if(leftTail&&axis)align(leftTail,cy(axis));
+   }
+  }
+  return;
+ }
+ const half=bar('n15half'),rightFraction=bar('n15SubtractionFrac')||
+  bar('n15SecondFrac')||bar('n15leftFrac')||half;
+ const R=get('eq-cabin-r'),phase=layer15.phase;
+ // Büyük kesir SOLDA sabittir. Sağın kesir çizgisi onun eksenine oturur.
+ if(R&&rightFraction)align(R,cy(R)+cy(main)-cy(rightFraction));
+ if(['initial','twoMoved','gathered'].includes(phase)){
+  const two=get('n15two');if(two)align(two,cy(main));
+ }
+ for(const id of ['n15termBlock','n15termHalf']){
+  const term=get(id),sign=term?.querySelector(':scope > .n15-term-sign');
+  const line=term?.querySelector(':scope > .fraction > .fracbar');
+  if(sign&&line)align(sign,cy(line));
+ }
+ const equal=root.querySelector(':scope > .equals');
+ if(equal)align(equal,cy(main));
+}
+/* Final-first: tüm hedef düzen hesaplandıktan sonra hareket başlar. */
+async function n15RetainAndMove(ids,advance,motion={}){
+ // =0 yalnızca geçici bir cebirsel durumdur.
+ // İkinci terim yerleşene kadar 0'ı sahnede kendi yerinde tut.
+ // Bu kopya denklem yerleşim hesaplarına katılmaz.
+ // Gerçek 0 nesnesini denklemden ayırıp sahne düzleminde sabit tut.
+ // Böylece sıfır ikizlenmez; yeni terim karşıya girer girmez kaldırılır.
+ const zero=motion.keepZeroUntilArrival?byId('n15zero'):null;
+ const zeroRect=zero?.getBoundingClientRect()||null;
+ const zeroArea=zeroRect?scene.getBoundingClientRect():null;
+ const zeroStyle=zero?getComputedStyle(zero):null;
+ const zeroScale=zero?Math.max(.001,eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth)):1;
+ let passingZero=null;
+ const er=eq.querySelector(':scope > .equals')?.getBoundingClientRect();
+ const beforeX=er?(er.left+er.right)/2:null;
+ const entries=ids.map(id=>{
+  const node=byId(id);
+  if(!node)return null;
+  // Özellikle 2 hareket ederken TERİMİN kutusunu değil, rakamın kendisini
+  // kaynak kabul et. Yoksa görünmez + işaretinin kutusu dikey sıçrama yaratır.
+  const glyph=motion.projectile&&id===motion.selected?
+   node.querySelector('[data-id="n15two"]'):null;
+  return {id,node,from:node.getBoundingClientRect(),
+   glyphFrom:glyph?.getBoundingClientRect()||null};
+ }).filter(Boolean);
+ // Tüm kaynak konumları ölçüldükten sonra 0'ı kendi DOM düğümü olarak
+ // sabit sahne katmanına taşı. update() yalnız denklem içini yeniden çizer.
+ if(zero&&zeroRect&&zeroArea){
+  zero.classList.add('n15-passing-zero');
+  zero.style.left=((zeroRect.left+zeroRect.right)/2-zeroArea.left).toFixed(2)+'px';
+  zero.style.top=((zeroRect.top+zeroRect.bottom)/2-zeroArea.top).toFixed(2)+'px';
+  zero.style.fontSize=(parseFloat(zeroStyle.fontSize)*zeroScale).toFixed(2)+'px';
+  zero.style.fontWeight=zeroStyle.fontWeight;
+  zero.style.color=zeroStyle.color;
+  zero.style.transform='translate(-50%,-50%)';
+  scene.append(zero);
+  passingZero=zero;
+ }
+ advance();update();
+ if(beforeX!==null){
+  const next=eq.querySelector(':scope > .equals')?.getBoundingClientRect();
+  if(next){
+   const want=beforeX-(next.left+next.right)/2;
+   const box=eq.getBoundingClientRect(),outer=scene.getBoundingClientRect(),gap=12;
+   const dx=Math.min(outer.right-gap-box.right,Math.max(outer.left+gap-box.left,want));
+   if(Math.abs(dx)>.1){
+    layoutShiftX+=dx;positionScale();n15AlignEquation();n15KeepEqualsY();
+   }
+  }
+ }
+ const equality=eq.querySelector(':scope > .equals')?.getBoundingClientRect();
+ const eqX=equality?(equality.left+equality.right)/2:beforeX;
+ for(const e of entries){
+  const target=byId(e.id);if(!target)continue;
+  if(e.id!==motion.selected&&target.textContent!==e.node.textContent)continue;
+  e.finalState={
+   className:target.className,
+   action:target.getAttribute('data-action'),
+   hl:target.getAttribute('data-hl-group'),
+   role:target.getAttribute('role'),
+   tabindex:target.getAttribute('tabindex'),
+   sign:target.querySelector(':scope > .n15-term-sign')?.textContent||null,
+   implicit:!!target.querySelector(':scope > .n15-term-sign.n15-implicit')
+  };
+  target.replaceWith(e.node);
+  if(e.id==='n15two'){e.node.style.transform='';delete e.node.dataset.n15AlignY;}
+  e.node.style.translate='';
+ }
+ n15AlignEquation();n15KeepEqualsY();n15PinStationaryObjects();
+ const scale=Math.max(.001,eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth));
+ const promises=[];
+ for(const e of entries){
+  if(!e.finalState||!e.node.isConnected||byId(e.id)!==e.node)continue;
+  const r=e.node.getBoundingClientRect();
+  const transfer=e.id===motion.selected;
+  // Son konumdaki rakamın tam merkezi kullanılır. İlk karede 2'nin
+  // eski ve yeni ekran merkezleri piksel hassasiyetinde çakışır.
+  const destGlyph=transfer&&motion.projectile?
+   e.node.querySelector('[data-id="n15two"]'):null;
+  const from=destGlyph&&e.glyphFrom?e.glyphFrom:e.from;
+  const to=destGlyph?.getBoundingClientRect()||r;
+  const sx=(from.left+from.right)/2,sy=(from.top+from.bottom)/2;
+  const tx=(to.left+to.right)/2,ty=(to.top+to.bottom)/2;
+  const dx=(sx-tx)/scale,dy=(sy-ty)/scale;
+  const flipping=motion.flip?(e.id.startsWith('n15left')?'left':'right'):null;
+  const sign=e.node.querySelector(':scope > .n15-term-sign');
+  const signRect=sign?.getBoundingClientRect();
+  const destinationSignX=signRect?(signRect.left+signRect.right)/2:tx;
+  // Gizli başlangıç artısı, eşittir geçilince görünür bir eksi olur.
+  const restore=()=>{
+   const a=e.finalState;e.node.className=a.className;
+   for(const [key,val] of [['data-action',a.action],['data-hl-group',a.hl],
+    ['role',a.role],['tabindex',a.tabindex]]){
+    if(val===null)e.node.removeAttribute(key);else e.node.setAttribute(key,val);
+   }
+   if(sign){if(a.sign!==null)sign.textContent=a.sign;sign.classList.toggle('n15-implicit',a.implicit)}
+   e.node.style.translate='';
+  };
+  if(Math.abs(dx)+Math.abs(dy)<.3&&!transfer&&!flipping){restore();continue;}
+  const availableTop=Math.max(0,
+   Math.min(e.from.top,r.top)-scene.getBoundingClientRect().top-9);
+  const rise=Math.max(0,Math.min(
+   Math.max(36,Math.min(110,Math.abs(tx-sx)*.32+35)),availableTop*.94))/scale;
+  const sideBend=flipping?(flipping==='left'?-1:1)*
+   (e.id.endsWith('Num')?rise*1.25:rise*.9):0;
+  const direction=Math.sign(tx-sx);
+  const crossed=x=>direction>0?x>=eqX:direction<0?x<=eqX:true;
+  let switched=false;
+  e.node.style.translate=dx.toFixed(3)+'px '+dy.toFixed(3)+'px';
+  const retainDuration=motion.duration??(fastMode()?490:920);
+  promises.push(n12RafMotion(retainDuration,t=>{
+   const u=(1-Math.cos(Math.PI*t))/2;
+   const wave=Math.sin(Math.PI*u);
+   let x=dx*(1-u),y=dy*(1-u);
+   if(transfer&&motion.projectile){
+    // 2, tam bulunduğu pikselden daha dik bir açıyla yükselir.
+    // Büyük üst yay: ilk bölümde hızlı yükselme, sonra geniş bir
+    // parabole benzer yol ve hedefe yaklaşırken yumuşak iniş.
+    const travel=u;
+    const launch=Math.pow(u,.72);
+    const arc=Math.sin(Math.PI*launch);
+    const taper=1-.10*u;
+    y=dy*(1-travel)-rise*.78*arc*taper;
+   }else if(transfer)y-=rise*wave;
+   if(flipping)x+=sideBend*wave;
+   e.node.style.translate=x.toFixed(3)+'px '+y.toFixed(3)+'px';
+   if(transfer&&!switched&&crossed(destinationSignX+x*scale)){
+    switched=true;
+    // Eşittir geçildiği KAREDE, yeni terim 0'ın yerini alır.
+    if(sign&&e.finalState.sign!==null){
+     sign.textContent=e.finalState.sign;
+     sign.classList.toggle('n15-implicit',e.finalState.implicit);
+    }
+    passingZero?.remove();passingZero=null;
+   }
+  }).finally(()=>{
+   restore();
+   // Yeni terim varış noktasına oturduğu aynı karede 0 kaldırılır.
+   if(transfer){passingZero?.remove();passingZero=null;}
+  }));
+ }
+ await Promise.all(promises);
+ passingZero?.remove();
+ n15AlignEquation();n15KeepEqualsY();n15PinStationaryObjects();
+}
+
+
+/* DENEME 15.16 — Kesri bir çark gibi 180° döndür.
+   Dört gerçek matematik nesnesi (iki pay, iki payda) eşzamanlı olarak
+   birbirinin karşısından birer yarım elips çizer. Yazılar DAİMA dik
+   kalır; hiçbir öğe küçültülmez. Eşittir ve ana kesir çizgileri yerinde.
+   Hedef koordinatlar hareket başlamadan hesaplanır. */
+function n15HoldFlippedBars(){
+ if(!layer15||!['flipped','oneReciprocal','finalFlipped'].includes(layer15.phase)||
+  !layer15.wheelBarPins)return;
+ const scale=Math.max(.001,eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth));
+ const area=scene.getBoundingClientRect();
+ const middle=r=>({x:(r.left+r.right)/2-area.left,y:(r.top+r.bottom)/2-area.top});
+ for(const pin of layer15.wheelBarPins){
+  const block=byId(pin.id);
+  const line=block?.querySelector(':scope > .fracbar');
+  if(!block||!line)continue;
+  block.style.translate='';                 // hedefi her seferinde sıfırdan ölç
+  const now=middle(line.getBoundingClientRect());
+  block.style.translate=((pin.x-now.x)/scale).toFixed(3)+'px '+
+   ((pin.y-now.y)/scale).toFixed(3)+'px';
+ }
+}
+/* Deneme 15.18 — Ortak saat yönünde çalışan iki çark.
+   İki kesrin pay/payda nesneleri kendi kesir çizgisi etrafında aynı
+   açıyla 180° döner. Soldaki çarkın hareket yayı sola, sağdakinin
+   yayı sağa hafifçe açılır. Yazılar hep dik ve aynı boyda kalır.
+   Animasyon son hedefe ölçülerek iner: reflow ve son-kare sıçraması yok. */
+async function n15InvertWheel(){
+ if(!layer15||layer15.phase!=='calculated')return;
+ await n15SpinWheel([
+  {id:'n15block',side:'left',items:['n15rightNum','n15rightDen']},
+  {id:'n15leftFrac',side:'right',items:['n15leftNum','n15leftDen']}
+ ],'flipped');
+}
+async function n15InvertSecondWheel(){
+ if(!layer15||layer15.phase!=='oneCalculated')return;
+ await n15SpinWheel([
+  {id:'n15middleFraction',side:'left',items:['n15middleThree','n15innerPart']},
+  {id:'n15OneAnswerFrac',side:'right',items:['n15OneAnswerNum','n15OneAnswerDen']}
+ ],'oneReciprocal');
+}
+/* İki aşama da mevcut saat yönünde 180° çark motorunu paylaşır.
+   Yazılar daima dik kalır, hiçbir matematik nesnesi küçülmez. */
+async function n15SpinWheel(groups,targetPhase){
+ const sceneRect=scene.getBoundingClientRect();
+ const middle=r=>({x:(r.left+r.right)/2,y:(r.top+r.bottom)/2});
+ const captures=[],pins=[],wheelCenters={};
+ for(const group of groups){
+  const fraction=byId(group.id);
+  const line=fraction?.querySelector(':scope > .fracbar');
+  if(!fraction||!line)return;
+  const pivot=middle(line.getBoundingClientRect());
+  wheelCenters[group.id]=pivot;
+  pins.push({id:group.id,x:pivot.x-sceneRect.left,y:pivot.y-sceneRect.top});
+  for(const id of group.items){
+   const node=byId(id);
+   if(!node)return;
+   captures.push({id,node,from:node.getBoundingClientRect(),
+    side:group.side,fractionId:group.id});
+  }
+ }
+ // Kesin son geometriyi önce oluştur. Kesir çizgileri sabit kalır.
+ layer15.wheelBarPins=pins;
+ layer15.phase=targetPhase;
+ update();
+ n15HoldFlippedBars();
+ const scale=Math.max(.001,eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth));
+ for(const item of captures){
+  const placeholder=byId(item.id);
+  if(!placeholder)continue;
+  placeholder.replaceWith(item.node);
+  item.node.style.translate='';
+  item.node.style.rotate='';
+  item.node.style.filter='';
+ }
+ n15HoldFlippedBars();
+ const tracks=[];
+ for(const item of captures){
+  if(!item.node.isConnected||byId(item.id)!==item.node)continue;
+  const target=item.node.getBoundingClientRect();
+  const a=middle(item.from),b=middle(target);
+  const pivot=wheelCenters[item.fractionId];
+  // Gerçek 180° çark dönüşünün varış noktası 2*merkez - başlangıçtır.
+  // Metinlerin boyları farklı olduğundan küçük hedef düzeltmesi eklenir.
+  const finishByRotation={x:2*pivot.x-a.x,y:2*pivot.y-a.y};
+  const correction={x:b.x-finishByRotation.x,y:b.y-finishByRotation.y};
+  const offset={x:a.x-pivot.x,y:a.y-pivot.y};
+  const outerFree=item.side==='left'?
+   Math.min(item.from.left,target.left)-sceneRect.left-12:
+   sceneRect.right-Math.max(item.from.right,target.right)-12;
+  const outward=(item.side==='left'?-1:1)*
+   Math.max(0,Math.min(24,outerFree*.28));
+  tracks.push({node:item.node,a,b,pivot,offset,correction,outward});
+  // İlk karede orijinal konum ve boyut aynen korunur.
+  item.node.style.translate=((a.x-b.x)/scale).toFixed(3)+'px '+
+   ((a.y-b.y)/scale).toFixed(3)+'px';
+  item.node.style.willChange='translate, filter';
+ }
+ // Tek açısal saat: iki çark birebir eşzamanlı ve SAAT YÖNÜNDE.
+ // Yavaş -> hızlı -> yavaş; son bölümde 8-9° kısa snap/oturuş.
+ const wheelProgress=t=>{
+  const ease=(1-Math.cos(Math.PI*t))/2;
+  const snap=.052*Math.sin(Math.PI*Math.pow(t,5));
+  return ease+snap;
+ };
+ try{
+  await n12RafMotion(fastMode()?700:1060,t=>{
+   const theta=Math.PI*wheelProgress(t);
+   const cos=Math.cos(theta),sin=Math.sin(theta);
+   const correctionEase=(1-cos)/2;
+   const light=Math.pow(Math.max(0,Math.sin(Math.PI*t)),2);
+   for(const track of tracks){
+    // Ekran koordinatlarında +theta saat yönüdür.
+    const dx=track.offset.x*cos-track.offset.y*sin;
+    const dy=track.offset.x*sin+track.offset.y*cos;
+    const x=track.pivot.x+dx+track.correction.x*correctionEase+
+     track.outward*sin;
+    const y=track.pivot.y+dy+track.correction.y*correctionEase;
+    track.node.style.translate=((x-track.b.x)/scale).toFixed(3)+'px '+
+     ((y-track.b.y)/scale).toFixed(3)+'px';
+    // Yalnız kısa ışık izi; rakamlar döndürülmez ve küçülmez.
+    track.node.style.filter=light>.01?
+     'drop-shadow(0 0 '+(4*light).toFixed(2)+
+     'px rgba(225,165,24,'+(.22*light).toFixed(3)+'))':'none';
+   }
+  });
+ }finally{
+  for(const track of tracks){
+   track.node.style.translate='';
+   track.node.style.rotate='';
+   track.node.style.filter='';
+   track.node.style.willChange='';
+  }
+  n15HoldFlippedBars();
+ }
+}
+/* DENEME 15.16 — 2 -> 2/1, tek bir eşzamanlı snap animasyonu.
+   Gelecekteki sayı, çizgi ve payda yerleri ANİMASYON BAŞLAMADAN
+   ölçülür. Diğer denklem nesnelerine ve ortak hareket motoruna dokunulmaz. */
+async function n15MakeUnitSnap(){
+ if(!layer15||layer15.phase!=='gathered'||fastMode())return;
+ const origin=byId('n15two');
+ const originRect=origin?.getBoundingClientRect();
+ if(!originRect)return;
+ // Bütün öğeler için nihai yerleşimi hesapla; yeni DOM görünür kare
+ // çizilmeden ilk translate/scaleX/opacity durumlarını hazırlayacağız.
+ layer15.phase='unit';
+ update();
+ const two=byId('n15two');
+ const fraction=byId('n15unitFrac');
+ const bar=fraction?.querySelector(':scope > .fracbar');
+ const one=byId('n15unitDen');
+ if(!two||!bar||!one)return;
+ const destination=two.getBoundingClientRect();
+ const sceneRect=scene.getBoundingClientRect();
+ const factor=Math.max(.001,eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth));
+ const cx=r=>(r.left+r.right)/2,cy=r=>(r.top+r.bottom)/2;
+ const dx=(cx(originRect)-cx(destination))/factor;
+ const dy=(cy(originRect)-cy(destination))/factor;
+ const topSpace=Math.max(0,
+  Math.min(originRect.top,destination.top)-sceneRect.top-10);
+ // 2 üstte küçük bir kavis çizer; yayın tepe noktası sahne dışına çıkamaz.
+ const arc=Math.min(25,topSpace*.6)/factor;
+ const initial={
+  translation:two.style.translate,
+  barTransform:bar.style.transform,
+  barOrigin:bar.style.transformOrigin,
+  barTransition:bar.style.transition,
+  oneOpacity:one.style.opacity,
+  oneTransition:one.style.transition
+ };
+ two.style.translate=dx.toFixed(4)+'px '+dy.toFixed(4)+'px';
+ two.style.willChange='translate';
+ bar.style.transformOrigin='50% 50%';
+ bar.style.transition='none';
+ bar.style.transform='scaleX(0)';
+ one.style.transition='none';
+ one.style.opacity='0';
+ try{
+  const duration=fastMode()?330:440;
+  await n12RafMotion(duration,t=>{
+   // Çizgi tam orta noktasından sağa/sola birlikte açılır.
+   const line=t*t*(3-2*t);
+   bar.style.transform='scaleX('+line.toFixed(5)+')';
+   // Çizginin GENİŞLİĞİ %50'ye ulaşınca paydadaki 1 görünür.
+   one.style.opacity=line>=.5?'1':'0';
+   // Paydaki 2: hızlı snap (yaklaşık ilk %70'te tamamlanır).
+   // İlk ve son konumlar kesin; arada yumuşak bir yay çizilir.
+   const q=Math.min(1,t/.70);
+   const eased=1-Math.pow(1-q,4);
+   const snap=eased;
+   const x=dx*(1-snap);
+   const y=dy*(1-snap)-arc*Math.sin(Math.PI*snap);
+   two.style.translate=x.toFixed(4)+'px '+y.toFixed(4)+'px';
+  });
+ }finally{
+  // Bitiş karesinde parçalar zaten gerçek hedef yerlerindedir:
+  // kapatma anında font ve konum sıçraması oluşmaz.
+  two.style.translate=initial.translation;
+  two.style.willChange='';
+  bar.style.transform=initial.barTransform;
+  bar.style.transformOrigin=initial.barOrigin;
+  bar.style.transition=initial.barTransition;
+  one.style.opacity=initial.oneOpacity;
+  one.style.transition=initial.oneTransition;
+ }
+}
+/* 15.16: önce 2 geçer, sonra tek bir eksi tıklaması tüm işaretleri çevirir. */
+
+/* Aynı tıklamayla gerçekleştirilen öğretici 1/2 − 2 çözümü.
+   Yavaş modda sırasıyla 2/1, 4/2, (1−4)/2, −3/2 görünür.
+   Hızlı modda tek adımda sonuç çıkar. */
+async function n15RightCreateUnit(){
+ const original=byId('n15two')?.getBoundingClientRect();
+ layer15.phase='unitRight';
+ update();
+ const two=byId('n15two'),one=byId('n15EqDen');
+ const bar=byId('n15SecondFrac')?.querySelector(':scope > .fracbar');
+ if(!two||!one||!bar)return;
+ const end=two.getBoundingClientRect();
+ const factor=Math.max(.001,eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth));
+ const midX=r=>(r.left+r.right)/2,midY=r=>(r.top+r.bottom)/2;
+ const dx=original?(midX(original)-midX(end))/factor:0;
+ const dy=original?(midY(original)-midY(end))/factor:0;
+ const rise=Math.min(28,Math.max(0,end.top-scene.getBoundingClientRect().top-12)) /factor;
+ const restore={
+  two:two.style.translate,bar:bar.style.transform,barOrigin:bar.style.transformOrigin,
+  barTransition:bar.style.transition,one:one.style.opacity,
+  oneTransition:one.style.transition
+ };
+ two.style.translate=dx.toFixed(3)+'px '+dy.toFixed(3)+'px';
+ bar.style.transition='none';
+ bar.style.transformOrigin='50% 50%';
+ bar.style.transform='scaleX(0)';
+ one.style.transition='none';
+ one.style.opacity='0';
+ try{
+  await n12RafMotion(440,t=>{
+   const line=t*t*(3-2*t);
+   bar.style.transform='scaleX('+line.toFixed(5)+')';
+   one.style.opacity=line>=.5?'1':'0';
+   const p=Math.min(1,t/.72),ease=1-Math.pow(1-p,4);
+   two.style.translate=(dx*(1-ease)).toFixed(3)+'px '+
+    (dy*(1-ease)-rise*Math.sin(Math.PI*ease)).toFixed(3)+'px';
+  });
+ }finally{
+  two.style.translate=restore.two;
+  bar.style.transform=restore.bar;bar.style.transformOrigin=restore.barOrigin;
+  bar.style.transition=restore.barTransition;
+  one.style.opacity=restore.one;one.style.transition=restore.oneTransition;
+ }
+}
+async function n15RightShowPhase(phase,duration=350){
+ layer15.phase=phase;
+ update();
+ // Yeni ifadeyi ölçeklemeyiz; yalnız saydamlığı yumuşakça açarız.
+ const item=byId('eq-cabin-r');
+ if(!item)return;
+ const original=item.style.opacity;
+ item.style.opacity='.42';
+ try{
+  await n12RafMotion(duration,t=>{
+   const eased=(1-Math.cos(Math.PI*t))/2;
+   item.style.opacity=String(.42+.58*eased);
+  });
+ }finally{item.style.opacity=original;}
+}
+async function n15CalculateBeforeNegating(){
+ // Hızlı ve Yavaş: sağdaki bütün 1/2 − 2 işleminin tek tıklamayla
+ // DOĞRUDAN sonucu −3/2 yazılır. Ara kesir dönüşümü ve fade yok.
+ layer15.phase='subtracted';
+ update();
+}
+async function n15NegateBothSides(){
+ const left=byId('n15minusChoice'),right=byId('n15minusRight');
+ if(!left||!right)return;
+ const signs=[left,right];
+ // - -> + -> kaybolma: iki işaret aynı zaman çizelgesini paylaşır.
+ await n12RafMotion(fastMode()?360:480,t=>{
+  const isPlus=t>=.28;
+  const alpha=t<=.60?1:Math.max(0,1-(t-.60)/.40);
+  for(const sign of signs){
+   sign.textContent=isPlus?'+':'−';
+   sign.style.opacity=alpha.toFixed(4);
+  }
+ });
+ layer15.phase='calculated';
+ update();
+}
+/* Deneme 15.21 — soldaki (ifade)/1 -> ifade.
+   Önce 1 ve çizgi kaybolur, sonra paydaki özgün DOM nesnesi
+   (boyut değiştirmeden) yeni konumuna kayar. */
+async function n15RemoveUnitDen(){
+ if(!layer15||layer15.phase!=='flipped')return;
+ const fraction=byId('n15block');
+ const den=byId('n15rightNum');
+ const line=fraction?.querySelector(':scope > .fracbar');
+ if(!fraction||!den||!line)return;
+ const opacityBefore=den.style.opacity;
+ const transformBefore=line.style.transform;
+ const originBefore=line.style.transformOrigin;
+ const transitionBefore=line.style.transition;
+ try{
+  line.style.transition='none';
+  line.style.transformOrigin='center';
+  await n12RafMotion(fastMode()?220:350,t=>{
+   const u=t*t*(3-2*t);
+   den.style.opacity=String(1-u);
+   line.style.transform='scaleX('+Math.max(0,1-u).toFixed(5)+')';
+  });
+  // Paydaki gerçek DOM öğesi ve sağdaki kesir korunarak yeni yerlerine akar.
+  await n15RetainAndMove(['n15rightDen','n15leftFrac'],
+   ()=>{layer15.phase='unitRemoved'});
+ }finally{
+  den.style.opacity=opacityBefore;
+  line.style.transform=transformBefore;
+  line.style.transformOrigin=originBefore;
+  line.style.transition=transitionBefore;
+ }
+}
+
+/* Deneme 15.22 — Sol 1, bulunduğu pikselden sağdaki -1 konumuna
+   sabit boyutta yatay atışla geçer. Sağdaki 2/3−1 ardından -1/3 olur. */
+async function n15TransferOneAndCalculate(){
+ if(!layer15||layer15.phase!=='unitRemoved')return;
+ const number=byId('n15plusOne');
+ if(!number)return;
+ const rect=number.getBoundingClientRect(),stage=scene.getBoundingClientRect();
+ const center=r=>({x:(r.left+r.right)/2,y:(r.top+r.bottom)/2});
+ const from=center(rect),style=getComputedStyle(number);
+ const scale=Math.max(.001,eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth));
+ // Rakamı canlı DOM olarak sahne üzerine çıkar; yeniden render edilince
+ // başlangıçta yerinden kıpırdamaz ve boyutu değişmez.
+ number.classList.remove('hit','n15-choice','simple-linked','hl-linked');
+ for(const attr of ['data-action','data-id','data-hl-group','role','tabindex'])number.removeAttribute(attr);
+ number.style.position='absolute';
+ number.style.left=(from.x-stage.left).toFixed(3)+'px';
+ number.style.top=(from.y-stage.top).toFixed(3)+'px';
+ number.style.transform='translate(-50%,-50%)';
+ number.style.translate='none';
+ number.style.margin='0';
+ number.style.zIndex='35';
+ number.style.pointerEvents='none';
+ number.style.fontSize=(parseFloat(style.fontSize)*scale).toFixed(3)+'px';
+ number.style.lineHeight='1.3';
+ scene.append(number);
+ try{
+  layer15.phase='oneTransferred';
+  update();
+  const landing=byId('n15MovedOne');
+  if(!landing){layer15.phase='oneCalculated';update();return;}
+  landing.style.visibility='hidden';
+  const to=center(landing.getBoundingClientRect());
+  const gap=Math.hypot(to.x-from.x,to.y-from.y);
+  const room=Math.max(0,Math.min(from.y,to.y)-stage.top-12);
+  const height=Math.max(0,Math.min(gap*.20,62,room*.9));
+  await n12RafMotion(fastMode()?540:750,t=>{
+   const u=(1-Math.cos(Math.PI*t))/2;
+   const x=from.x+(to.x-from.x)*u;
+   const y=from.y+(to.y-from.y)*u-4*height*u*(1-u);
+   number.style.left=(x-stage.left).toFixed(3)+'px';
+   number.style.top=(y-stage.top).toFixed(3)+'px';
+  });
+  landing.style.visibility='';
+  number.remove();
+  // Aritmetik, ikinci tıklama istemeden doğrudan uygulanır.
+  const calculation=byId('n15OneRhsOperation');
+  if(calculation)await n12RafMotion(fastMode()?150:230,t=>{
+   calculation.style.opacity=String(1-.72*(t*t*(3-2*t)));
+  });
+  layer15.phase='oneCalculated';
+  update();
+  const answer=byId('n15OneAnswer');
+  if(answer){
+   answer.style.opacity='0';
+   await n12RafMotion(fastMode()?225:335,t=>{
+    answer.style.opacity=String(t*t*(3-2*t));
+   });
+   answer.style.opacity='';
+  }
+ }finally{
+  number.remove();
+  if(layer15.phase==='oneTransferred'){
+   layer15.phase='oneCalculated';
+   update();
+  }
+ }
+}
+/* Sağ paydadaki 1 kaybolur, kesir çizgisi kısalır. */
+async function n15RemoveRightOne(){
+ if(!layer15||layer15.phase!=='oneReciprocal')return;
+ const root=byId('n15OneAnswerFrac'),one=byId('n15OneAnswerNum');
+ const bar=root?.querySelector(':scope > .fracbar');
+ if(!root||!one||!bar)return;
+ const saved={opacity:one.style.opacity,transform:bar.style.transform,
+  origin:bar.style.transformOrigin,transition:bar.style.transition};
+ try{
+  bar.style.transition='none';bar.style.transformOrigin='center';
+  await n12RafMotion(fastMode()?230:340,t=>{
+   const u=t*t*(3-2*t);
+   one.style.opacity=String(1-u);
+   bar.style.transform='scaleX('+Math.max(0,1-u).toFixed(4)+')';
+  });
+  await n15RetainAndMove(['n15OneAnswerDen','n15middleFraction'],
+   ()=>{layer15.phase='rightOneRemoved'},
+   {duration:fastMode()?160:260});
+ }finally{
+  one.style.opacity=saved.opacity;bar.style.transform=saved.transform;
+  bar.style.transformOrigin=saved.origin;bar.style.transition=saved.transition;
+ }
+}
+/* Her iki tarafta ·3 göründükten sonra ayrı tıklamayla hesapla. */
+/* Deneme 15.28 — Bağımsız çarpma. Sol 3'ler sadeleşirken
+   sağ -3·3'e dokunulmaz; sağ hesaplanırken soldaki 3'ler korunur.
+   Sıralama fark etmez, ikinci işlem de tıklanabilir kalır. */
+async function n15FinishMultiplyThreeLeft(nextPhase){
+ if(!layer15||!['timesThreePending','threeRightDone'].includes(layer15.phase))return;
+ const den=byId('n15middleThree'),factor=byId('n15TimesThreeLeft');
+ const bar=byId('n15middleFraction')?.querySelector(':scope > .fracbar');
+ const originals=[den,factor,bar].filter(Boolean).map(el=>({
+  el,opacity:el.style.opacity,transform:el.style.transform,
+  origin:el.style.transformOrigin,transition:el.style.transition
+ }));
+ try{
+  if(bar){bar.style.transition='none';bar.style.transformOrigin='center';}
+  await n12RafMotion(fastMode()?340:490,t=>{
+   const u=t*t*(3-2*t);
+   if(den)den.style.opacity=String(1-u);
+   if(factor)factor.style.opacity=String(1-u);
+   if(bar)bar.style.transform='scaleX('+Math.max(0,1-u).toFixed(4)+')';
+  });
+  // Sol ifadenin kendisi hedefe kayar; sağ tarafa işlem uygulanmaz.
+  await n15RetainAndMove(['n15innerPart'],
+   ()=>{layer15.phase=nextPhase});
+ }finally{
+  for(const o of originals){
+   o.el.style.opacity=o.opacity;o.el.style.transform=o.transform;
+   o.el.style.transformOrigin=o.origin;o.el.style.transition=o.transition;
+  }
+ }
+}
+async function n15FinishMultiplyThreeRight(nextPhase){
+ if(!layer15||!['timesThreePending','threeLeftDone'].includes(layer15.phase))return;
+ const right=byId('n15ThreeProductRight');
+ const savedOpacity=right?.style.opacity||'';
+ try{
+  if(right){
+   await n12RafMotion(fastMode()?250:380,t=>{
+    const u=t*t*(3-2*t);
+    right.style.opacity=String(1-.8*u);
+   });
+  }
+  // Yalnızca sağ -3·3 -> -9; soldaki kesre veya çarpana dokunulmaz.
+  layer15.phase=nextPhase;
+  update();
+  const answer=byId('n15ThreeAnswer');
+  if(answer){
+   answer.style.opacity='0';
+   await n12RafMotion(fastMode()?180:270,t=>{
+    answer.style.opacity=String(t*t*(3-2*t));
+   });
+   answer.style.opacity='';
+  }
+ }finally{
+  if(right)right.style.opacity=savedOpacity;
+ }
+}
+/* Deneme 15.30 — Sağ taraf ayrı tıklamayla: -9-1 -> -10. */
+async function n15ComputeFinalRight(){
+ if(!layer15||layer15.phase!=='finalOneMoved')return;
+ const calculation=byId('n15FinalRightCalc');
+ if(calculation){
+  await n12RafMotion(fastMode()?200:320,t=>{
+   calculation.style.opacity=String(1-.85*t*t*(3-2*t));
+  });
+ }
+ layer15.phase='finalRightCalculated';
+ update();
+ const answer=byId('n15FinalRightSigned');
+ if(answer){
+  answer.style.opacity='0';
+  await n12RafMotion(fastMode()?160:240,t=>{
+   answer.style.opacity=String(t*t*(3-2*t));
+  });
+  answer.style.opacity='';
+ }
+}
+/* İki eksi aynı anda − -> + -> kaybolur. */
+async function n15SwitchFinalSigns(){
+ if(!layer15||layer15.phase!=='finalRightCalculated')return;
+ const left=byId('n15FinalLeftMinus'),right=byId('n15FinalRightMinus');
+ if(!left||!right)return;
+ await n12RafMotion(fastMode()?360:510,t=>{
+  const text=t>=.30?'+':'−';
+  const alpha=t<=.59?1:Math.max(0,1-(t-.59)/.41);
+  for(const sign of [left,right]){
+   sign.textContent=text;
+   sign.style.opacity=String(alpha);
+  }
+ });
+ layer15.phase='finalNoMinus';
+ update();
+}
+/* Üçüncü çark: hem sol 1/a hem sağ 10/1, saat yönünde. */
+async function n15FinalInvertWheel(){
+ if(!layer15||layer15.phase!=='finalNoMinus')return;
+ await n15SpinWheel([
+  {id:'n15innerFraction',side:'left',items:['n15unitOne','n15letter']},
+  {id:'n15FinalTenFrac',side:'right',items:['n15TenNum','n15TenDen']}
+ ],'finalFlipped');
+}
+/* a/1 altındaki 1 silinir, çizgi kapanır; a kendi yerine taşındıktan
+   SONRA bütün eşitliğin çevresinde çözüm çerçevesi çizilir. */
+async function n15RemoveFinalDenOne(){
+ if(!layer15||layer15.phase!=='finalFlipped')return;
+ const root=byId('n15innerFraction'),one=byId('n15unitOne');
+ const bar=root?.querySelector(':scope > .fracbar');
+ if(!root||!one||!bar)return;
+ const initial={opacity:one.style.opacity,transform:bar.style.transform,
+  origin:bar.style.transformOrigin,transition:bar.style.transition};
+ layer15.solutionSealReady=false;
+ try{
+  bar.style.transition='none';
+  bar.style.transformOrigin='center';
+  await n12RafMotion(fastMode()?230:350,t=>{
+   const u=t*t*(3-2*t);
+   one.style.opacity=String(1-u);
+   bar.style.transform='scaleX('+Math.max(0,1-u).toFixed(4)+')';
+  });
+  await n15RetainAndMove(['n15letter','n15FinalTenFrac'],
+   ()=>{layer15.phase='finalSolved'},
+   {duration:fastMode()?250:390});
+  layer15.solutionSealReady=true;
+  update();
+ }finally{
+  one.style.opacity=initial.opacity;
+  bar.style.transform=initial.transform;
+  bar.style.transformOrigin=initial.origin;
+  bar.style.transition=initial.transition;
+ }
+}
+/* Gerçek denklem kutularının çevresine animasyonlu dikdörtgen.
+   Sahnedeki eski çerçeve Geri/Baştan işlemlerinde kaldırılır. */
+function n15UpdateSolutionOutline(){
+ let outline=scene.querySelector(':scope > .n15-solution-outline');
+ if(!layer15||layer15.phase!=='finalSolved'||!layer15.solutionSealReady){
+  outline?.remove();
+  return;
+ }
+ const letter=byId('n15letter'),sign=eq.querySelector(':scope > .equals');
+ const fraction=byId('n15FinalTenFrac');
+ if(!letter||!sign||!fraction)return;
+ const sr=scene.getBoundingClientRect();
+ const rects=[letter,sign,fraction].map(node=>node.getBoundingClientRect());
+ const x1=Math.min(...rects.map(r=>r.left))-14;
+ const x2=Math.max(...rects.map(r=>r.right))+14;
+ const y1=Math.min(...rects.map(r=>r.top))-11;
+ const y2=Math.max(...rects.map(r=>r.bottom))+11;
+ if(!outline){
+  outline=document.createElement('div');
+  outline.className='n15-solution-outline';
+  outline.setAttribute('aria-hidden','true');
+  scene.append(outline);
+ }
+ outline.style.left=(x1-sr.left).toFixed(2)+'px';
+ outline.style.top=(y1-sr.top).toFixed(2)+'px';
+ outline.style.width=(x2-x1).toFixed(2)+'px';
+ outline.style.height=(y2-y1).toFixed(2)+'px';
+}
+async function n15Action(action){
+ if(!layer15||busy)return;
+ const phase=layer15.phase;
+ const next={
+  initial:{n15MoveTwo:'twoMoved'},
+  twoMoved:{n15EvaluateRight:'subtracted'},
+  subtracted:{n15SwitchSign:'calculated'},
+  calculated:{n15Invert:'flipped'},
+  flipped:{n15RemoveUnit:'unitRemoved'},
+  unitRemoved:{n15MoveOne:'oneCalculated'},
+  oneCalculated:{n15InvertSecond:'oneReciprocal'},
+  oneReciprocal:{n15RemoveRightOne:'rightOneRemoved'},
+  rightOneRemoved:{n15ShowTimesThree:'timesThreePending'},
+  timesThreePending:{n15ApplyThreeLeft:'threeLeftDone',
+   n15ApplyThreeRight:'threeRightDone'},
+  threeLeftDone:{n15ApplyThreeRight:'threeCalculated'},
+  threeRightDone:{n15ApplyThreeLeft:'threeCalculated'},
+  threeCalculated:{n15MoveFinalOne:'finalOneMoved'},
+  finalOneMoved:{n15ComputeFinalRight:'finalRightCalculated'},
+  finalRightCalculated:{n15SwitchFinalSigns:'finalNoMinus'},
+  finalNoMinus:{n15FinalInvert:'finalFlipped'},
+  finalFlipped:{n15RemoveFinalDen:'finalSolved'}
+ }[phase]?.[action];
+ if(!next)return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  if(phase==='initial'){
+   await n15RetainAndMove(['n15termTwo','n15termHalf'],
+    ()=>{layer15.phase=next},{selected:'n15termTwo',projectile:true});
+  }else if(phase==='twoMoved'){
+   await n15CalculateBeforeNegating();
+  }else if(phase==='subtracted'){
+   await n15NegateBothSides();
+  }else if(phase==='calculated'){
+   // Her iki kesir 180 derece takla atarken rakamlar dik kalır.
+   await n15InvertWheel();
+  }else if(phase==='flipped'){
+   await n15RemoveUnitDen();
+  }else if(phase==='unitRemoved'){
+   await n15TransferOneAndCalculate();
+  }else if(phase==='oneCalculated'){
+   await n15InvertSecondWheel();
+  }else if(phase==='oneReciprocal'){
+   await n15RemoveRightOne();
+  }else if(phase==='rightOneRemoved'){
+   layer15.phase='timesThreePending';
+   update(); // Yalnızca ·3 gösterilir, işlem yapılmaz.
+  }else if(['timesThreePending','threeRightDone'].includes(phase)&&
+   action==='n15ApplyThreeLeft'){
+   await n15FinishMultiplyThreeLeft(next);
+  }else if(['timesThreePending','threeLeftDone'].includes(phase)&&
+   action==='n15ApplyThreeRight'){
+   await n15FinishMultiplyThreeRight(next);
+  }else if(phase==='threeCalculated'&&action==='n15MoveFinalOne'){
+   await n15RetainAndMove(['n15minusOne'],
+    ()=>{layer15.phase=next},
+    {selected:'n15minusOne',projectile:true,duration:fastMode()?290:450});
+  }else if(phase==='finalOneMoved'){
+   await n15ComputeFinalRight();
+  }else if(phase==='finalRightCalculated'){
+   await n15SwitchFinalSigns();
+  }else if(phase==='finalNoMinus'){
+   await n15FinalInvertWheel();
+  }else if(phase==='finalFlipped'){
+   await n15RemoveFinalDenOne();
+  }
+ }finally{
+  scene.querySelectorAll('.n15-passing-zero').forEach(node=>node.remove());
+  busy=false;scene.classList.remove('busy');update();
+ }
+}
 function parseNestedPreview(raw){
  const clean=String(raw).replace(/\s+/g,'').replace(/[−–]/g,'-');
  const match=clean.match(/^\(\(x\/([1-9]\d*)\)([+-])([1-9]\d*)\)\/([1-9]\d*)=(-?\d+)$/i);
@@ -4367,7 +6132,7 @@ function n12ThirdHTML(){
  return left(outer(sum))+equal+right(atom('n12rhs',n(rhs)));
 }
 
-function markupCore(){if(quadEq&&quadEq.mode!=='handoff')return n14Markup();if(variableDenEq&&variableDenEq.stage!=='handoff')return n13Markup();if(nestedPreview)return nestedPreviewHTML();if(complexEq)return complexHTML();if(complexNoSolution())return `<span class="side">Çözüm yok</span>`;if(simpleEq&&simpleEq.mode!=='linear')return simpleMarkup();if(multiEq&&multiEq.mode!=='linear')return multiMarkup();if(pairEq&&pairEq.mode!=='linear')return pairHTML();if(fractionEq&&fractionEq.mode!=='linear')return fractionHTML();if(bracket&&bracket.mode!=='linear')return bracketHTML();if(ready()&&A()===0){return `<span class="side">${atom('zz','0')}</span><span class="equals">=</span><span class="side">${atom('verdict',D()===0?'0':' '+fmt(D()))}</span>`;}
+function markupCore(){if(layer15)return n15Markup();if(quadEq&&quadEq.mode!=='handoff')return n14Markup();if(variableDenEq&&variableDenEq.stage!=='handoff')return n13Markup();if(nestedPreview)return nestedPreviewHTML();if(complexEq)return complexHTML();if(complexNoSolution())return `<span class="side">Çözüm yok</span>`;if(simpleEq&&simpleEq.mode!=='linear')return simpleMarkup();if(multiEq&&multiEq.mode!=='linear')return multiMarkup();if(pairEq&&pairEq.mode!=='linear')return pairHTML();if(fractionEq&&fractionEq.mode!=='linear')return fractionHTML();if(bracket&&bracket.mode!=='linear')return bracketHTML();if(ready()&&A()===0){return `<span class="side">${atom('zz','0')}</span><span class="equals">=</span><span class="side">${atom('verdict',D()===0?'0':' '+fmt(D()))}</span>`;}
 if(!s.divided){let l=expression(leftTerms()),r=expression(rightTerms());if(s.movedC&&!s.combinedL&&m.c!==0){let pieces=leftTerms().filter(t=>t.kind==='x');if(pieces.length>1){let prefix=expression(pieces);// Sabit terimin kimliği ve işareti korunmalı ki hedef planda hareket edebilsin.
  let suffix=!s.movedB&&m.b!==0?expression([{kind:'k',n:m.b,id:'lb',action:'moveB'}],false):'';
  l=`<span class="combine hit" role="button" tabindex="0" data-action="combineL" data-id="groupL">${prefix}</span>${suffix}`;}}
@@ -4534,6 +6299,7 @@ async function pairChoiceAction(action){
 }
 
 function currentPriorityRule(){
+ if(layer15)return {type:'moduleOperation'};
  if(quadEq&&quadEq.mode!=='handoff')return {type:'moduleOperation'};
  if(variableDenEq&&variableDenEq.stage!=='handoff')return {type:'moduleOperation'};
  if(nestedPreview)return {type:'moduleOperation'};
@@ -4691,6 +6457,7 @@ if(variableDenEq){
   $('#tip').innerHTML=previous?previous+' &nbsp; '+restriction:restriction;
  }
 }
+if(layer15){$('#stepLabel').textContent=layer15.phase==='initial'?'Başlangıç':'Adım '+(step+1);$('#tip').innerHTML='';}
 if(animateBars){requestAnimationFrame(()=>requestAnimationFrame(()=>eq.querySelectorAll('.fraction.constructing').forEach(el=>{el.classList.remove('constructing');el.classList.add('constructed')})));}}
 function byId(id){return eq.querySelector(`[data-id="${id}"]`)}
 function rect(id){return byId(id)?.getBoundingClientRect()}
@@ -4730,17 +6497,21 @@ function n12ThirdVisibleBounds(){
   width:Math.max(1,right-left),height:Math.max(1,bottom-top)};
 }
 function positionScale(){
+ if(layer15){
+  n15ApplyFixedPlan();
+  return;
+ }
  const third=!!nestedPreview?.stage?.startsWith('third');
  // 'translate' applies independently of transform. Reset old Y-offset
  // before any measurements to avoid accumulating previous corrections.
  eq.style.translate='';
  const max=scene.clientWidth*.95;
  const w=Math.max(1,eq.scrollWidth),h=Math.max(1,eq.scrollHeight);
- const heightScale=third?
+ const heightScale=layer15?scene.clientHeight*.86/h:third?
   scene.clientHeight*.82/h:
   complexEq?scene.clientHeight*.9/h:1;
  const auto=Math.min(1,max/w,heightScale);
- let scale=complexEq?.scaleLock??Math.max(third?.15:.32,auto);
+ let scale=complexEq?.scaleLock??Math.max(layer15?.12:third?.15:.32,auto);
  const setTransform=()=>{
   eq.style.transform='translateX('+layoutShiftX+'px) scale('+scale+')';
   n12AlignMainBar(eq);
@@ -4786,6 +6557,7 @@ function positionScale(){
    çözülmemiş ifadeler veya yapılacak aritmetik işlem kalan
    görünümler çözüldü sanılmaz. */
 function n12SolvedEquation(){
+ if(layer15)return false;
  if(variableDenEq?.kind==='both-variable'&&(!quadEq||quadEq.mode!=='handoff'))return false;
  if(nestedPreview)return nestedPreview.stage==='solved'||nestedPreview.stage==='thirdSolved';
  if(complexNoSolution())return false;
@@ -4916,8 +6688,19 @@ function n12UpdateSolutionSeal(){
  }
 }
 function update(animateBars=false){
+ eq.classList.toggle('n15-scene',!!layer15);
+ eq.classList.toggle('n15-flip-ready',!!layer15&&
+  ['calculated','oneCalculated','rightOneRemoved','finalNoMinus'].includes(layer15.phase));
+ if(!layer15||layer15.phase!=='calculated')eq.classList.remove('n15-flip-hover');
  render(animateBars);
  positionScale();
+ if(layer15){
+  n15AlignEquation();
+  n15KeepEqualsY();
+  n15PinStationaryObjects();
+  n15HoldFlippedBars();
+ }
+ n15UpdateSolutionOutline();
  n14DrawGuides();
  n12UpdateSolutionSeal();
 }
@@ -5259,6 +7042,7 @@ async function swapEqualsAnimated(){
  }
 }
 async function act(action){
+ if(action.startsWith('n15'))return n15Action(action);
  if(action.startsWith('n14'))return n14Action(action);
  if(action.startsWith('n13'))return n13Action(action);
  if(action==='n12ThirdWrapUnit')return n12ThirdAdvance('thirdUnitFraction');
@@ -7605,8 +9389,14 @@ eq.addEventListener('pointerout',e=>{
  const target=distributionTarget(e.target);
  if(target&&!target.contains(e.relatedTarget))hideDistributionHint();
 });
-eq.addEventListener('focusin',e=>{showDistributionHint(distributionTarget(e.target));showLinkedHighlight(e.target)});
-eq.addEventListener('focusout',e=>{hideDistributionHint();showLinkedHighlight(e.relatedTarget)});
+eq.addEventListener('focusin',e=>{
+ showDistributionHint(distributionTarget(e.target));
+ showLinkedHighlight(e.target);
+});
+eq.addEventListener('focusout',e=>{
+ hideDistributionHint();
+ showLinkedHighlight(e.relatedTarget);
+});
 
 eq.addEventListener('click',e=>{
  if(nestedPreview?.stage==='initial'&&!busy){
@@ -7629,6 +9419,7 @@ eq.addEventListener('click',e=>{
 eq.addEventListener('keydown',e=>{const t=e.target.closest('[data-action]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();hideDistributionHint();clearLinkedHighlight();act(t.dataset.action)}});
 function formatModel(o){let str=coefficient(o.a)+'x';if(o.b!==0)str+=(o.b<0?'-':'+')+abs(o.b);str+='=';if(o.c!==0)str+=coefficient(o.c)+'x';if(o.d!==0)str+=(o.d<0?'-':o.c!==0?'+':'')+abs(o.d);return str}
 function parseModule(raw,module){
+ if(module===12)return n15Parse(raw);
  if(module===11)return parseBothVariableFractions(raw);
  if(module===10)return parseVariableDenominator(raw);
  if(module===9)return parseNestedPreview(raw);
@@ -7673,10 +9464,13 @@ function restart(newM=null,module=currentModule){
  if(busy)return;
  n12ClearSolutionSeal();
  layoutShiftX=0;sidesFlipped=false;
+ n15AnchorY=null;n15FixedPlan=null;
  const fresh=newM||parseModule($('#custom').value,module);
  if(!fresh)return;
- simpleEq=null;multiEq=null;pairEq=null;fractionEq=null;bracket=null;complexEq=null;nestedPreview=null;variableDenEq=null;quadEq=null;complexDomain=[];
- if(module===11){
+ simpleEq=null;multiEq=null;pairEq=null;fractionEq=null;bracket=null;complexEq=null;nestedPreview=null;variableDenEq=null;quadEq=null;layer15=null;complexDomain=[];
+ if(module===12){
+  layer15=structuredClone(fresh);m={a:1,b:0,c:0,d:0};
+ }else if(module===11){
   variableDenEq=structuredClone(fresh);
   m={a:1,b:0,c:0,d:0};
  }else if(module===10){
@@ -7736,7 +9530,7 @@ function changeModule(number){
 $('#reset').onclick=()=>restart();
 $('#back').onclick=()=>{
  if(busy||!history.length)return;
- ({s,variableDenEq,quadEq,nestedPreview,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX,sidesFlipped}=history.pop());
+ ({s,layer15,variableDenEq,quadEq,nestedPreview,bracket,fractionEq,pairEq,multiEq,simpleEq,complexEq,complexDomain,preCommon,m,layoutShiftX,sidesFlipped}=history.pop());
  step=Math.max(0,step-1);update();
 };
 $('#modeSlow').onclick=()=>setTeachingMode('slow');
@@ -7744,6 +9538,12 @@ $('#modeFast').onclick=()=>setTeachingMode('fast');
 $('#load').onclick=()=>{
  if(busy)return;
  const raw=$('#custom').value;
+ const fif=n15Parse(raw);
+ if(fif){
+  const idx=exerciseCatalog.findIndex(page=>page.module===12);
+  if(idx>=0){currentExercise=idx;currentModule=12;drawExamples();}
+  $('#feedback').textContent='';restart(fif,12);return;
+ }
  const both=parseBothVariableFractions(raw);
  if(both){
   const idx=exerciseCatalog.findIndex(page=>page.module===11);
@@ -7794,7 +9594,15 @@ $('#modules').addEventListener('click',e=>{
  const btn=e.target.closest('button[data-exercise]');
  if(btn)changeExercise(Number(btn.dataset.exercise));
 });
-window.addEventListener('resize',()=>{hideDistributionHint();if(!busy){positionScale();n14DrawGuides();n12PlaceSolutionSeal()}});
+window.addEventListener('resize',()=>{
+ hideDistributionHint();
+ if(busy)return;
+ if(layer15){
+  n15AnchorY=null;n15FixedPlan=null;delete layer15.fixedTwoY;
+  delete layer15.wheelBarPins;update();
+ }
+ else{positionScale();n14DrawGuides();n12PlaceSolutionSeal();}
+});
 changeExercise(0);
 const startup=document.getElementById("startupNotice");if(startup)startup.remove();
 })();
