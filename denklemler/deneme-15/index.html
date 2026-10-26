@@ -525,6 +525,18 @@
 .equation.n15-scene .n15-right-operation{
  display:inline-flex;align-items:center;white-space:nowrap;gap:.025em;
 }
+
+/* Deneme 15.31 — parametreli matematik alanları. */
+.equation.n15-scene .n15v-inline,.equation.n15-scene .n15v-value{
+ display:inline-flex;align-items:center;white-space:nowrap;
+}
+.equation.n15-scene .n15v-inline{gap:.035em}
+.equation.n15-scene .n15v-value{gap:.01em}
+.equation.n15-scene [data-id="vBdenPick"],
+.equation.n15-scene [data-id="vFactorBPick"]{
+ display:inline-flex;align-items:center;border-radius:8px;
+}
+
 </style></head><body>
 <header><div><h1>Denklem Atölyesi <span style="font-size:13px;color:#8390a3;font-weight:400">deneme 15.31</span></h1><div class="subtitle">Bir bilinmeyenli birinci dereceden denklemler</div></div><a class="home" href="https://sinan-ipek.github.io/projeler/" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4 1.5 11.3l2.1 2.5L5 12.6V21h6v-6.3h2V21h6v-8.4l1.4 1.2 2.1-2.5L12 2.4Z"/></svg></a></header>
 <main><div class="toolbar"><button id="reset">↺ Baştan</button><button id="back">← Geri</button><div class="mode-switch" role="group" aria-label="Çözüm yöntemi"><button type="button" id="modeSlow" class="selected" aria-pressed="true" title="Bütün öğretici işlem adımlarını göster">Yavaş</button><button type="button" id="modeFast" aria-pressed="false" title="Bariz işlemleri tek adımda tamamla">Hızlı</button></div></div>
@@ -5417,7 +5429,7 @@ async function n15RetainAndMove(ids,advance,motion={}){
    kalır; hiçbir öğe küçültülmez. Eşittir ve ana kesir çizgileri yerinde.
    Hedef koordinatlar hareket başlamadan hesaplanır. */
 function n15HoldFlippedBars(){
- if(!layer15||!['flipped','oneReciprocal','finalFlipped'].includes(layer15.phase)||
+ if(!layer15||!['flipped','oneReciprocal','finalFlipped','vFirstFlipped','vSecondFlipped','vFinalFlipped'].includes(layer15.phase)||
   !layer15.wheelBarPins)return;
  const scale=Math.max(.001,eq.getBoundingClientRect().width/Math.max(1,eq.offsetWidth));
  const area=scene.getBoundingClientRect();
@@ -5955,12 +5967,14 @@ async function n15RemoveFinalDenOne(){
    Sahnedeki eski çerçeve Geri/Baştan işlemlerinde kaldırılır. */
 function n15UpdateSolutionOutline(){
  let outline=scene.querySelector(':scope > .n15-solution-outline');
- if(!layer15||layer15.phase!=='finalSolved'||!layer15.solutionSealReady){
+ if(!layer15||!['finalSolved','vSolved'].includes(layer15.phase)||
+  !layer15.solutionSealReady){
   outline?.remove();
   return;
  }
- const letter=byId('n15letter'),sign=eq.querySelector(':scope > .equals');
- const fraction=byId('n15FinalTenFrac');
+ const letter=byId('n15letter')||byId('vVar'),
+  sign=eq.querySelector(':scope > .equals');
+ const fraction=byId('n15FinalTenFrac')||byId('vFinalRFrac');
  if(!letter||!sign||!fraction)return;
  const sr=scene.getBoundingClientRect();
  const rects=[letter,sign,fraction].map(node=>node.getBoundingClientRect());
@@ -5979,7 +5993,138 @@ function n15UpdateSolutionOutline(){
  outline.style.width=(x2-x1).toFixed(2)+'px';
  outline.style.height=(y2-y1).toFixed(2)+'px';
 }
+
+/* 15.31 — Parametreli örneklerin tıklama/animasyon motoru.
+   Orijinal 15.30 eylemleri bu yol tarafından değiştirilmez. */
+const n15vTransitions={
+ vInitial:{n15vMoveK:'vMoved'},
+ vMoved:{n15vComputeK:'vCalc'},
+ vCalc:{n15vNegate:'vNegated'},
+ vNegated:{n15vFlipFirst:'vFirstFlipped'},
+ vFirstFlipped:{n15vRemoveOuterOne:'vOuterUnitRemoved'},
+ vOuterUnitRemoved:{n15vMoveDenOne:'vInnerOneMoved'},
+ vInnerOneMoved:{n15vComputeU:'vInnerCalculated'},
+ vInnerCalculated:{n15vFlipSecond:'vSecondFlipped'},
+ vSecondFlipped:{n15vRemoveSecondOne:'vSecondUnitRemoved'},
+ vSecondUnitRemoved:{n15vShowMultiply:'vTimesPending'},
+ vTimesPending:{n15vMultiplyLeft:'vTimesLeftDone',
+  n15vMultiplyRight:'vTimesRightDone'},
+ vTimesLeftDone:{n15vMultiplyRight:'vTimesDone'},
+ vTimesRightDone:{n15vMultiplyLeft:'vTimesDone'},
+ vTimesDone:{n15vMoveLastOne:'vFinalOneMoved'},
+ vFinalOneMoved:{n15vComputeFinal:'vFinalComputed'},
+ vFinalComputed:{n15vFinalNegate:'vFinalNegated'},
+ vFinalNegated:{n15vFlipFinal:'vFinalFlipped'},
+ vFinalFlipped:{n15vLastOne:'vSolved'}
+};
+async function n15vChangeSigns(){
+ const signs=[byId('vMinusGlyphLeft'),byId('vMinusGlyphRight')].filter(Boolean);
+ await n12RafMotion(fastMode()?320:450,t=>{
+  const txt=t>=.28?'+':'−',a=t<=.60?1:Math.max(0,1-(t-.60)/.40);
+  signs.forEach(el=>{el.textContent=txt;el.style.opacity=String(a)});
+ });
+}
+async function n15vRemoveFractionOne(oneId,fractionId){
+ const one=byId(oneId),frac=byId(fractionId);
+ const bar=frac?.querySelector(':scope > .fracbar');
+ if(!one)return;
+ const opacity=one.style.opacity,transform=bar?.style.transform,
+  transition=bar?.style.transition,origin=bar?.style.transformOrigin;
+ if(bar){bar.style.transition='none';bar.style.transformOrigin='center'}
+ try{
+  await n12RafMotion(fastMode()?170:290,t=>{
+   const u=t*t*(3-2*t);
+   one.style.opacity=String(1-u);
+   if(bar)bar.style.transform='scaleX('+Math.max(0,1-u).toFixed(4)+')';
+  });
+ }finally{
+  one.style.opacity=opacity;
+  if(bar){bar.style.transform=transform;bar.style.transition=transition;
+   bar.style.transformOrigin=origin}
+ }
+}
+async function n15vAnimateCalc(targetId){
+ const el=byId(targetId);
+ if(!el)return;
+ const old=el.style.opacity;
+ await n12RafMotion(fastMode()?150:250,t=>{
+  const u=t*t*(3-2*t);el.style.opacity=String(1-.8*u);
+ });
+ el.style.opacity=old;
+}
+async function n15vCancelLeft(){
+ const bn=byId('vBN'),bf=byId('vFactorB'),bar=byId('vBfrac')?.querySelector(':scope > .fracbar');
+ const els=[bn,bf].filter(Boolean);
+ const original=els.map(e=>e.style.opacity);
+ await n12RafMotion(fastMode()?280:440,t=>{
+  const u=t*t*(3-2*t);
+  els.forEach(e=>e.style.opacity=String(1-u));
+  if(bar)bar.style.transform='scaleX('+Math.max(0,1-u).toFixed(4)+')';
+ });
+ els.forEach((e,i)=>e.style.opacity=original[i]);
+ if(bar)bar.style.transform='';
+}
+async function n15vAction(action){
+ if(!layer15?.variant||busy)return;
+ const phase=layer15.phase,next=n15vTransitions[phase]?.[action];
+ if(!next)return;
+ busy=true;scene.classList.add('busy');save();step++;
+ try{
+  if(phase==='vInitial'){
+   await n15RetainAndMove(['vOuterK'],
+    ()=>{layer15.phase=next},{selected:'vOuterK',projectile:true,duration:fastMode()?420:630});
+  }else if(phase==='vOuterUnitRemoved'){
+   await n15RetainAndMove(['vDenOne'],
+    ()=>{layer15.phase=next},{selected:'vDenOne',duration:fastMode()?350:570});
+  }else if(phase==='vTimesDone'){
+   await n15RetainAndMove(['vInnerOne'],
+    ()=>{layer15.phase=next},{selected:'vInnerOne',duration:fastMode()?350:570});
+  }else if(['vCalc','vFinalComputed'].includes(phase)){
+   await n15vChangeSigns();layer15.phase=next;update();
+  }else if(phase==='vNegated'){
+   await n15SpinWheel([
+    {id:'vOuterFrac',side:'left',items:['vOuterOne','vOuterDen']},
+    {id:'vRhsFrac',side:'right',items:['vRhsN','vRhsD']}
+   ],next);
+  }else if(phase==='vInnerCalculated'){
+   await n15SpinWheel([
+    {id:'vBfrac',side:'left',items:['vBN','vBden']},
+    {id:'vSecondRFrac',side:'right',items:['vSN','vSD']}
+   ],next);
+  }else if(phase==='vFinalNegated'){
+   await n15SpinWheel([
+    {id:'vInnerFrac',side:'left',items:['vUnit','vVar']},
+    {id:'vFinalRFrac',side:'right',items:['vFinalRN','vFinalRD']}
+   ],next);
+  }else if(phase==='vFirstFlipped'){
+   await n15vRemoveFractionOne('vOuterOne','vOuterFrac');
+   layer15.phase=next;update();
+  }else if(phase==='vSecondFlipped'){
+   await n15vRemoveFractionOne('vSN','vSecondRFrac');
+   layer15.phase=next;update();
+  }else if(phase==='vFinalFlipped'){
+   await n15vRemoveFractionOne('vUnit','vInnerFrac');
+   layer15.phase=next;layer15.solutionSealReady=true;update();
+  }else if(action==='n15vMultiplyLeft'){
+   await n15vCancelLeft();layer15.phase=next;update();
+  }else if(action==='n15vMultiplyRight'){
+   await n15vAnimateCalc('vRightTimesPick');layer15.phase=next;update();
+  }else{
+   const target={
+    vMoved:'vComputeKPick',
+    vInnerOneMoved:'vComputeUPick',
+    vFinalOneMoved:'vFinalCalcPick'
+   }[phase];
+   if(target)await n15vAnimateCalc(target);
+   layer15.phase=next;update();
+  }
+ }finally{
+  busy=false;scene.classList.remove('busy');update();
+ }
+}
+
 async function n15Action(action){
+ if(layer15?.variant)return n15vAction(action);
  if(!layer15||busy)return;
  const phase=layer15.phase;
  const next={
@@ -6916,7 +7061,8 @@ function n12UpdateSolutionSeal(){
 function update(animateBars=false){
  eq.classList.toggle('n15-scene',!!layer15);
  eq.classList.toggle('n15-flip-ready',!!layer15&&
-  ['calculated','oneCalculated','rightOneRemoved','finalNoMinus'].includes(layer15.phase));
+  ['calculated','oneCalculated','rightOneRemoved','finalNoMinus',
+   'vNegated','vInnerCalculated','vSecondUnitRemoved','vFinalNegated'].includes(layer15.phase));
  if(!layer15||layer15.phase!=='calculated')eq.classList.remove('n15-flip-hover');
  render(animateBars);
  positionScale();
