@@ -4522,7 +4522,7 @@ function n15MakeFixedPlan(){
  if(valid)return n15FixedPlan;
  const savedPhase=layer15.phase,savedMode=teachingMode;
  const phases=['initial','twoMoved','unitRight','equivalentRight','combinedRight',
-  'subtracted','signed'];
+  'subtracted','signed','calculated','flipped'];
  const padX=18,padTop=36,padBottom=16;
  const roomW=Math.max(1,scene.clientWidth-2*padX);
  const roomH=Math.max(1,scene.clientHeight-padTop-padBottom);
@@ -4724,7 +4724,7 @@ function n15Markup(){
   return side(n15TwoSpace()+n15BlockTerm('−','n15SwitchSign'))+
    equals+side(n15Signed('n15ResultSigned','−',n15LeftResult()));
  if(phase==='signed')
-  // Her iki taraf -1 ile çarpılır: B = 3/2. Burada dur.
+  // Her iki taraf -1 ile çarpılır: B = 3/2. Sonra kesirler ters çevrilir.
   return side(n15TwoSpace()+n15BlockTerm('+',null,true))+
    equals+side(n15Signed('n15ResultSigned','+',n15LeftResult(),null,true));
  if(phase==='calculated')
@@ -5129,7 +5129,9 @@ async function n15RightShowPhase(phase,duration=350){
 }
 async function n15CalculateBeforeNegating(){
  if(fastMode()){
-  await n15RightShowPhase('subtracted',390);
+  // Hızlı mod: 1/2 − 2 = −3/2 doğrudan gösterilir, ara kademe yoktur.
+  layer15.phase='subtracted';
+  update();
   return;
  }
  await n15RightCreateUnit();               // 2 → 2/1, noktasından çizgi
@@ -5166,6 +5168,8 @@ async function n15NegateBothSides(){
    item.node.style.visibility=item.visibility;
   }
  }
+ // İşaret değişiminden sonra kesirlere takla attırılabilir.
+ layer15.phase='calculated';
 }
 async function n15Action(action){
  if(!layer15||busy)return;
@@ -5173,7 +5177,8 @@ async function n15Action(action){
  const next={
   initial:{n15MoveTwo:'twoMoved'},
   twoMoved:{n15EvaluateRight:'subtracted'},
-  subtracted:{n15SwitchSign:'signed'}
+  subtracted:{n15SwitchSign:'calculated'},
+  calculated:{n15Invert:'flipped'}
  }[phase]?.[action];
  if(!next)return;
  busy=true;scene.classList.add('busy');save();step++;
@@ -5185,6 +5190,9 @@ async function n15Action(action){
    await n15CalculateBeforeNegating();
   }else if(phase==='subtracted'){
    await n15NegateBothSides();
+  }else if(phase==='calculated'){
+   // Her iki kesir 180 derece takla atarken rakamlar dik kalır.
+   await n15InvertWheel();
   }
  }finally{
   scene.querySelectorAll('.n15-passing-zero').forEach(node=>node.remove());
