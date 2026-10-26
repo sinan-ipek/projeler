@@ -220,11 +220,16 @@ function setup(){
  for(let i=1;i<bodies.length;i++)bodies[i].v.add(recoil);
  for(const body of bodies){body.history=[];updateTrail(body)}
 }
-function addVRPreset(id){
+function addVRPreset(id,replaceExisting=false){
  dismount();vectorDrag=null;endTwoHand();grabs.clear();choosePlanets([]);
  accumulator=0;running=false;
+ if(replaceExisting){
+  clearBodies();
+  hoverBodies.clear();magneticTargets.clear();
+  for(const ring of selectionRings.values())ring.visible=false;
+ }
  const countBefore=bodies.length;
- const center=new THREE.Vector3(130+countBefore*1.5,0,0);
+ const center=replaceExisting?new THREE.Vector3(0,0,0):new THREE.Vector3(130+countBefore*1.5,0,0);
  const add=(r,color,x,y,z,vx=0,vy=0,vz=0,mass=null)=>{
   const b=makeBody(r,color,x+center.x,y+center.y,z+center.z,vx,vy,vz);
   if(mass!==null)b.mass=mass;
@@ -259,7 +264,7 @@ function addVRPreset(id){
  }
  for(const b of bodies.slice(countBefore)){b.history=[];updateTrail(b)}
  syncButtons();refreshRightPanel();
- $('status').textContent='Sistem eklendi: '+id+' · Var olan gezegenler korundu';
+ $('status').textContent=(replaceExisting?'Deney başlatıldı: ':'Sistem eklendi: ')+id+(replaceExisting?' · Önceki sistem temizlendi':' · Var olan gezegenler korundu');
 }
 function accelerations(){
  if(planetMode)return bodies.map(()=>new THREE.Vector3(0,-G_PLANET,0));
@@ -315,7 +320,9 @@ function action(name){
    $('status').textContent='Koni açısı: '+THREE.MathUtils.radToDeg(next).toFixed(0)+'° · Tetik: çoklu seçim';
   }
  }
- if(name.startsWith('preset:'))addVRPreset(name.slice(7));
+ if(name.startsWith('preset:')){selectedPreset=name.slice(7);refreshTopPanel();$('status').textContent='Seçilen sistem: '+presetNames[selectedPreset]+' · EKLE veya DENE';}
+ if(name==='applyAdd'&&selectedPreset)addVRPreset(selectedPreset,false);
+ if(name==='applyTry'&&selectedPreset)addVRPreset(selectedPreset,true);
  if(name==='grow')resizeSelected(1.2);
  if(name==='shrink')resizeSelected(1/1.2);
  if(name==='copy')copySelected();
@@ -371,7 +378,9 @@ const menuWristRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector
 const labels=['play','reset','mode','trails','velocities'];
 const rightButtons=[['near','YAKINA GETIR'],['shrink','KUCULT'],['grow','BUYUT'],['copy','KOPYALA'],['delete','SIL']];
 const topButtons=[['ride','BIN'],['dismount','IN'],['micro','MIKRO'],['macro','MAKRO']];
-const presetButtons=[['new','YENI GEZEGEN'],['preset:solar','GUNES SISTEMI'],['preset:fireworks','HAVAİ FİŞEK'],['preset:horizontal','YATAY ATIS'],['preset:angled','EGIK ATIS'],['preset:vertical','DIKEY ATIS']];
+const presetNames={solar:'GUNES SISTEMI',fireworks:'HAVAİ FİŞEK',horizontal:'YATAY ATIS',angled:'EGIK ATIS',vertical:'DIKEY ATIS'};
+let selectedPreset='solar';
+const presetButtons=[['preset:solar','GUNES SISTEMI'],['preset:fireworks','HAVAİ FİŞEK'],['preset:horizontal','YATAY ATIS'],['preset:angled','EGIK ATIS'],['preset:vertical','DIKEY ATIS'],['new','YENI GEZEGEN'],['applyAdd','EKLE +'],['applyTry','DENE']];
 const utilityButtons=[['coneMinus','KONI -'],['conePlus','KONI +'],['clearSelection','SECIMI KALDIR'],['trails','YORUNGELER'],['velocities','HIZ OKLARI'],['reset','SIFIRLA']];
 function drawMenuFace(face,title,subtitle,buttons,highlight){
  const c=face.ctx;c.clearRect(0,0,FACE_CW,FACE_CH);
@@ -401,7 +410,7 @@ function refreshRightPanel(){
 }
 function refreshTopPanel(){
  drawMenuFace(rightFace,'GOZLEM',ridingBody?'Gezegende: '+(rideViewMode==='micro'?'MIKRO':'MAKRO'):'Serbest gozlem',topButtons,rideViewMode);
- drawMenuFace(ceilingFace,'EKLE','',presetButtons,null);
+ drawMenuFace(ceilingFace,'HAZIR SISTEM',presetNames[selectedPreset],presetButtons,'preset:'+selectedPreset);
  drawMenuFace(bottomFace,'ARACLAR','',utilityButtons,null);
 }
 function updateHandMenu(){
