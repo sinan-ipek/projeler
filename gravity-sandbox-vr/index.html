@@ -16,7 +16,7 @@ button:hover{background:#3678bd}#status{font-size:12px;color:#a8cde8;margin-top:
 </head>
 <body>
 <div id="top">
-<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v11.1 · VR</small></h1>
+<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v11.2 · VR</small></h1>
 <p>Sol joystick: Uç / 30° dön / Bas: Başa dön · Sol tetik: Oynat/Duraklat · Sol grip: Tut ve çek · X: Menü · Sağ tetik: Seç/Yerleştir · İki grip: Ölçek</p>
 <div><button id="play">⏸ Duraklat</button><button id="reset">↻ Sıfırla</button><button id="mode">🌌 Uzay</button><button id="trails">Yörüngeler: Açık</button></div>
 <div id="status">Hazırlanıyor…</div><p id="warning"></p>
@@ -148,6 +148,15 @@ const G=5,SOFT=1.44,DT=1/120,G_PLANET=12,BOUNCE=.72;
 const HISTORY=280;
 const DENSITY_FACTOR=8; // All bodies share the same density: mass = factor * radius^3.
 let bodies=[],running=true,planetMode=false,showTrails=true,showVelocities=false,accumulator=0;
+// Identical mode names and switching order to the desktop gravity simulator.
+const collisionModes=[
+ ['pass','SERBEST GEÇİŞ'],['merge','BİRLEŞME'],
+ ['elastic','ESNEK ÇARPIŞMA'],['fragment','PARÇALANMA'],
+ ['dynamic','DİNAMİK ÇARPIŞMA']
+];
+let collisionMode='pass';
+function collisionModeText(){return collisionModes.find(item=>item[0]===collisionMode)?.[1]||'SERBEST GEÇİŞ';}
+
 function makeBody(radius,color,x,y,z,vx,vy,vz){
  const mass=DENSITY_FACTOR*radius**3;
  const mat=new THREE.MeshStandardMaterial({color,roughness:.72});
@@ -196,6 +205,24 @@ function drawBody(b){
   b.arrow.setDirection(dir);
   b.arrow.setLength(length,Math.min(2.2,length*.24),Math.min(1.1,length*.13));
   b.velocityHandle.position.copy(b.pos).addScaledVector(dir,length);
+ }
+}
+// Holders are UI controls, not planets: target a nearly fixed 1.5-degree
+// visual diameter regardless of the observer's distance.
+const HANDLE_ANGLE_RADIUS=THREE.MathUtils.degToRad(.75);
+const HANDLE_GEOMETRY_RADIUS=.65;
+function updateVelocityHandleSizes(dt){
+ const view=renderer.xr.isPresenting?renderer.xr.getCamera():camera;
+ const eye=view.getWorldPosition(new THREE.Vector3());
+ const worldScale=Math.max(.000001,world.getWorldScale(new THREE.Vector3()).x);
+ const blend=1-Math.exp(-10*Math.max(0,Math.min(dt,.05)));
+ for(const body of bodies){
+  if(!body.velocityHandle.visible)continue;
+  const distance=body.velocityHandle.getWorldPosition(new THREE.Vector3()).distanceTo(eye);
+  const desired=THREE.MathUtils.clamp(distance*Math.tan(HANDLE_ANGLE_RADIUS)/worldScale,.12,2.7);
+  const current=body.velocityHandle.scale.x*HANDLE_GEOMETRY_RADIUS;
+  const next=current+(desired-current)*blend;
+  body.velocityHandle.scale.setScalar(next/HANDLE_GEOMETRY_RADIUS);
  }
 }
 function updateTrail(b){
@@ -410,6 +437,157 @@ function accelerations(){
  }
  return acc;
 }
+// Space-mode collisions. The ground of planet-mode remains a separate system.
+// Limit fragments and destructive operations per frame for Quest performance.
+const MAX_FRAGMENT_BODIES=160;
+function discardCollisionBody(body){
+ if(ridingBody===body)dismount();
+ if(vectorDrag?.body===body)vectorDrag=null;
+ if(twoHand?.type==='objects'&&twoHand.members.some(m=>m.body===body))endTwoHand();
+ for(const [controller,grab] of grabs){
+  if(grab.body===body||grab.members?.some(m=>m.body===body))grabs.delete(controller);
+ }
+ for(const [controller,target] of magneticTargets)if(target===body)magneticTargets.delete(controller);
+ for(const set of hoverBodies.values())if(set)set.delete(body.mesh);
+ selectedBodies.delete(body);
+ if(selectedPlanet===body)selectedPlanet=null;
+ const ring=selectionRings.get(body);
+ if(ring){world.remove(ring);ring.geometry.dispose();ring.material.dispose();selectionRings.delete(body);}
+ const index=bodies.indexOf(body);
+ if(index>=0)bodies.splice(index,1);
+ world.remove(body.mesh,body.trail);
+ body.mesh.material.dispose();body.trail.geometry.dispose();body.trail.material.dispose();
+ disposeSpecialVisual(body);
+ disposeBodyArrow(body);
+}
+function finishCollisionSelection(created,shouldSelect){
+ if(shouldSelect){
+  for(const b of created)selectedBodies.add(b);
+  selectedPlanet=created[0]||null;
+  refreshRightPanel();
+ }else if(selectedPlanet&&!bodies.includes(selectedPlanet)){
+  selectedPlanet=[...selectedBodies][0]||null;
+  refreshRightPanel();
+ }
+}
+function mergeCollisionBodies(a,b){
+ const mass=a.mass+b.mass;
+ if(mass<=0)return;
+ const pos=a.pos.clone().multiplyScalar(a.mass).addScaledVector(b.pos,b.mass).divideScalar(mass);
+ const velocity=a.v.clone().multiplyScalar(a.mass).addScaledVector(b.v,b.mass).divideScalar(mass);
+ // Add spherical volumes, even for compact unusual-density objects.
+ const radius=Math.cbrt(a.radius**3+b.radius**3);
+ const color=a.mesh.material.color.clone().multiplyScalar(a.mass/mass)
+  .add(b.mesh.material.color.clone().multiplyScalar(b.mass/mass)).getHex();
+ const wasSelected=selectedBodies.has(a)||selectedBodies.has(b);
+ discardCollisionBody(a);discardCollisionBody(b);
+ const merged=makeBody(radius,color,pos.x,pos.y,pos.z,velocity.x,velocity.y,velocity.z);
+ merged.mass=mass;updateTrail(merged);
+ finishCollisionSelection([merged],wasSelected);
+}
+function fragmentCollisionBodies(a,b,normal,approach,onlySmall=false){
+ const totalMass=a.mass+b.mass;
+ const wasSelected=selectedBodies.has(a)||selectedBodies.has(b);
+ const basis=Math.abs(normal.y)>.9?new THREE.Vector3(1,0,0):new THREE.Vector3(0,1,0);
+ const tangent=new THREE.Vector3().crossVectors(normal,basis).normalize();
+ const side=new THREE.Vector3().crossVectors(normal,tangent).normalize();
+ const dirs=[
+  tangent.clone().add(side),tangent.clone().sub(side),
+  tangent.clone().negate().add(side),tangent.clone().negate().sub(side)
+ ].map(v=>v.normalize());
+ let origin,velocity,volume,mass,color,spread;
+ if(onlySmall){
+  const big=a.mass>=b.mass?a:b,small=a.mass>=b.mass?b:a;
+  const selectedSmall=selectedBodies.has(small);
+  const outward=small.pos.clone().sub(big.pos);
+  if(outward.lengthSq()<1e-10)outward.copy(small===b?normal:normal.clone().negate());
+  outward.normalize();
+  const impactSpeed=Math.max(0,-small.v.clone().sub(big.v).dot(outward));
+  const impulse=impactSpeed*.35*small.mass;
+  const newBigVelocity=big.v.clone().addScaledVector(outward,-impulse/Math.max(big.mass,1e-9));
+  const totalMomentum=big.v.clone().multiplyScalar(big.mass).addScaledVector(small.v,small.mass);
+  velocity=totalMomentum.addScaledVector(newBigVelocity,-big.mass).divideScalar(Math.max(small.mass,1e-9));
+  volume=small.radius**3;mass=small.mass;color=small.mesh.material.color.getHex();
+  spread=Math.min(7,impactSpeed*.25);
+  const r=Math.cbrt(volume/4);
+  origin=big.pos.clone().addScaledVector(outward,big.radius+r*1.8);
+  discardCollisionBody(small);
+  big.v.copy(newBigVelocity);
+  // Every pair of fragment velocities cancels its counterpart, preserving momentum.
+  const pieces=[];
+  for(const d of dirs){
+   const dir=outward.clone().multiplyScalar(.6).addScaledVector(d,.8).normalize();
+   const p=origin.clone().addScaledVector(dir,r*1.8);
+   const v=velocity.clone().addScaledVector(d,spread);
+   const piece=makeBody(r,color,p.x,p.y,p.z,v.x,v.y,v.z);
+   piece.mass=mass/4;updateTrail(piece);pieces.push(piece);
+  }
+  finishCollisionSelection(pieces,selectedSmall);
+  return;
+ }
+ mass=totalMass;volume=a.radius**3+b.radius**3;
+ origin=a.pos.clone().multiplyScalar(a.mass).addScaledVector(b.pos,b.mass).divideScalar(mass);
+ velocity=a.v.clone().multiplyScalar(a.mass).addScaledVector(b.v,b.mass).divideScalar(mass);
+ color=a.mesh.material.color.clone().multiplyScalar(a.mass/mass)
+  .add(b.mesh.material.color.clone().multiplyScalar(b.mass/mass)).getHex();
+ spread=Math.min(9,-approach*.3);
+ discardCollisionBody(a);discardCollisionBody(b);
+ const r=Math.cbrt(volume/4),pieces=[];
+ for(const d of dirs){
+  const p=origin.clone().addScaledVector(d,r*1.8);
+  const v=velocity.clone().addScaledVector(d,spread);
+  const piece=makeBody(r,color,p.x,p.y,p.z,v.x,v.y,v.z);
+  piece.mass=mass/4;updateTrail(piece);pieces.push(piece);
+ }
+ finishCollisionSelection(pieces,wasSelected);
+}
+function resolveSpaceCollisions(){
+ if(collisionMode==='pass'||planetMode)return;
+ let merges=0;
+ collisionPairs: for(let i=0;i<bodies.length;i++){
+  const a=bodies[i];if(grabbedBody(a))continue;
+  for(let j=i+1;j<bodies.length;j++){
+   const b=bodies[j];if(grabbedBody(b))continue;
+   const dx=b.pos.x-a.pos.x,dy=b.pos.y-a.pos.y,dz=b.pos.z-a.pos.z;
+   const minDist=a.radius+b.radius;
+   const distanceSq=dx*dx+dy*dy+dz*dz;
+   if(distanceSq>=minDist*minDist)continue;
+   const distance=Math.sqrt(distanceSq);
+   const normal=distance>1e-8?new THREE.Vector3(dx/distance,dy/distance,dz/distance):new THREE.Vector3(1,0,0);
+   const approach=b.v.clone().sub(a.v).dot(normal);
+   if(collisionMode==='merge'){
+    mergeCollisionBodies(a,b);
+    if(++merges>=8)return;
+    // Body indices change on merge; restart from the beginning, bounded to 8.
+    i=-1;continue collisionPairs;
+   }
+   const highSpeed=approach< -5;
+   if(collisionMode==='dynamic'){
+    const ratio=Math.max(a.mass,b.mass)/Math.max(1e-9,Math.min(a.mass,b.mass));
+    if(highSpeed&&ratio>3&&bodies.length+3<=MAX_FRAGMENT_BODIES){
+     fragmentCollisionBodies(a,b,normal,approach,true);return;
+    }
+    if(highSpeed&&ratio<=3&&bodies.length+2<=MAX_FRAGMENT_BODIES){
+     fragmentCollisionBodies(a,b,normal,approach);return;
+    }
+    mergeCollisionBodies(a,b);return;
+   }
+   if(collisionMode==='fragment'&&highSpeed&&bodies.length+2<=MAX_FRAGMENT_BODIES){
+    fragmentCollisionBodies(a,b,normal,approach);return;
+   }
+   // Ideal elastic impulse with positional depenetration.
+   const invA=1/Math.max(a.mass,1e-9),invB=1/Math.max(b.mass,1e-9);
+   const correction=(minDist-distance+.0001)/(invA+invB);
+   a.pos.addScaledVector(normal,-correction*invA);
+   b.pos.addScaledVector(normal,correction*invB);
+   if(approach<0){
+    const impulse=-2*approach/(invA+invB);
+    a.v.addScaledVector(normal,-impulse*invA);
+    b.v.addScaledVector(normal,impulse*invB);
+   }
+  }
+ }
+}
 function step(){
  let a=accelerations();
  const rocketThrust=new Map();
@@ -436,6 +614,7 @@ function step(){
   const ground=-10+b.radius;
   if(b.pos.y<ground){b.pos.y=ground;if(b.v.y<0){b.v.y=-b.v.y*BOUNCE;if(b.v.y<.4)b.v.y=0}}
  }
+ if(!planetMode&&collisionMode!=='pass')resolveSpaceCollisions();
  for(const b of bodies)if(++b.tick%5===0)updateTrail(b);
 }
 function syncButtons(){
@@ -458,6 +637,11 @@ function action(name){
  else if(name==='mode'){planetMode=!planetMode;if(planetMode)for(const b of bodies){b.pos.y=Math.max(b.pos.y,-10+b.radius);b.history=[];updateTrail(b)}alignGroundToXRFloor();}
  else if(name==='trails')showTrails=!showTrails;
  else if(name==='velocities')showVelocities=!showVelocities;
+ else if(name==='collision'){
+  const index=collisionModes.findIndex(item=>item[0]===collisionMode);
+  collisionMode=collisionModes[(index+1)%collisionModes.length][0];
+  $('status').textContent='Çarpışma: '+collisionModeText()+(planetMode?' · Gezegen modunda zemin çarpışması kullanılır':'');
+ }
  else if(name==='newMenu'){menuPage='catalog';refreshPanel();return;}
  else if(name==='backMenu'){menuPage='home';refreshPanel();return;}
  else if(name.startsWith('catalog:')){chosenEntry=name.slice(8);refreshPanel();return;}
@@ -545,6 +729,7 @@ function refreshPanel(){
    const disabled=(id==='copy'&&!has&&!copyClipboard)||(id==='delete'&&!has)||(id==='rideToggle'&&!has&&!ridingBody);
    paintButton(id,name,30+(i%2)*430,297+Math.floor(i/2)*158,410,140,id==='copy'&&!!copyClipboard,id==='delete',disabled,34);
   });
+  paintButton('collision','ÇARPIŞMA: '+collisionModeText(),30,933,840,105,collisionMode!=='pass',false,false,36);
   c.fillStyle='#b0cbdc';c.font='24px system-ui';
   if(selectedPlanet&&bodies.includes(selectedPlanet)){
    const b=selectedPlanet,rocketInfo=b.rocket?'  ·  İTİŞ '+b.rocket.burnRemaining.toFixed(1)+'s':'';
@@ -1177,7 +1362,7 @@ for(let i=0;i<2;i++){
 renderer.xr.addEventListener('sessionstart',()=>{
  handMenuOpen=false;rightMenuOpen=false;heldGrips.clear();endTwoHand();
  initialView();snapReady=true;stickClickLast=false;
- $('status').textContent='VR v11.1 · X: tek menü · Sol grip: gezin · Sağ tetik: seç/yerleştir';
+ $('status').textContent='VR v11.2 · X: tek menü · Çarpışmalar: 5 mod · Sağ tetik: seç/yerleştir';
 });
 renderer.xr.addEventListener('sessionend',()=>{
  dismount();vectorDrag=null;endTwoHand();heldGrips.clear();grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;rightMenuOpen=false;cancelPastePlacement();cancelObjectPlacement();
@@ -1198,6 +1383,7 @@ renderer.setAnimationLoop(()=>{
  updateGrabsAndHover(dt);
  for(const b of bodies)drawBody(b);
  updateRidingView();
+ updateVelocityHandleSizes(dt);
  if(handMenuOpen&&Math.floor(performance.now()/250)!==lastMenuRedraw){lastMenuRedraw=Math.floor(performance.now()/250);refreshPanel();}
  renderer.render(scene,camera);
 });
