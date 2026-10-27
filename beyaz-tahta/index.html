@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.28</title>
+<title>Beyaz Tahta v16.29</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -998,7 +998,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.28 (pivot snap + Alt pivot koruma düzeltmesi)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.29 (kalıcı pivot + güçlendirilmiş pivot snap)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1051,7 +1051,7 @@
               <li>Ctrl + tıklama ile seçime nesne ekle / çıkar.</li>
               <li>Nesneleri taşı, boyutlandır ve döndür.</li>
               <li>Seçimde turuncu hedef işareti döndürme merkezidir; sürükleyerek pivotu değiştir ve nesneyi/grubu bu noktanın etrafında döndür.</li>
-              <li>Pivotta sağ tık varsayılan merkeze döndürür; Snap açıksa pivot kendi seçimin dahil tüm uygun köşe/uç noktalarına yapışır.</li>
+              <li>Pivotta sağ tık varsayılan merkeze döndürür; Snap açıksa pivot uygun köşe/uç noktalarına kilitlenir. Özel pivot nesne yeniden seçildiğinde korunur.</li>
               <li>Doğru parçasında A ve B uçlarına ek olarak orta noktadan çıkan döndürme tutamacını kullan.</li>
               <li>Hazır şekillerin gerçek düzenleme handle'larını tek tek taşı.</li>
               <li>Nokta Snap düğmesi açıkken gerçek düzenleme noktaları diğer nesnelerin köşe/uç/düzenleme noktalarına yapışır.</li>
@@ -4088,13 +4088,31 @@
       return {x:p.x,y:p.y,snapped:false};
     }
 
-    const threshold=12/viewZoom;
-
+    const threshold=16/viewZoom;
     let best=null;
     let bestD=Infinity;
 
     for(let i=0;i<objects.length;i++){
-      for(const q of objectCornerSnapPoints(objects[i])){
+      const o=objects[i];
+      if(!o) continue;
+
+      const candidates=[];
+      for(const q of objectCornerSnapPoints(o)){
+        if(finitePoint(q)) candidates.push({x:q.x,y:q.y});
+      }
+
+      // Include the same visible geometry handles used by normal point snap.
+      // This makes pivot snap work consistently on menu shapes and converted shapes.
+      for(const h of realEditHandles(o)){
+        if(finitePoint(h)) candidates.push({x:h.x,y:h.y});
+      }
+
+      const seen=new Set();
+      for(const q of candidates){
+        const key=`${Math.round(q.x*1000)}:${Math.round(q.y*1000)}`;
+        if(seen.has(key)) continue;
+        seen.add(key);
+
         const d=Math.hypot(q.x-p.x,q.y-p.y);
         if(d<=threshold && d<bestD){
           bestD=d;
@@ -4104,7 +4122,7 @@
     }
 
     return best
-      ? {...best,snapped:true}
+      ? {...best,snapped:true,distance:bestD}
       : {x:p.x,y:p.y,snapped:false};
   }
 
@@ -4701,10 +4719,70 @@
     return null;
   }
 
+  function storedSelectionPivot(){
+    if(selectedIndices.length===1){
+      const o=objects[selectedIndices[0]];
+      if(o && finitePoint(o.rotationPivot)){
+        return {x:o.rotationPivot.x,y:o.rotationPivot.y};
+      }
+      return null;
+    }
+
+    if(selectedIndices.length>1){
+      const pivots=selectedIndices
+        .map(i=>objects[i] && objects[i].rotationPivot)
+        .filter(finitePoint);
+
+      if(pivots.length===selectedIndices.length){
+        const first=pivots[0];
+        const same=pivots.every(p=>
+          Math.hypot(p.x-first.x,p.y-first.y)<=1e-6
+        );
+        if(same) return {x:first.x,y:first.y};
+      }
+    }
+
+    return null;
+  }
+
+  function persistSelectionPivot(p){
+    if(!p || !finitePoint(p)) return;
+
+    if(selectedIndices.length===1){
+      const o=objects[selectedIndices[0]];
+      if(o){
+        o.rotationPivot={x:p.x,y:p.y};
+      }
+      return;
+    }
+
+    if(selectedIndices.length>1){
+      // A custom pivot for the current multi-selection is written to all
+      // members so the same group can recover it after being reselected.
+      for(const i of selectedIndices){
+        const o=objects[i];
+        if(o) o.rotationPivot={x:p.x,y:p.y};
+      }
+    }
+  }
+
+  function clearStoredSelectionPivot(){
+    for(const i of selectedIndices){
+      const o=objects[i];
+      if(o && 'rotationPivot' in o){
+        delete o.rotationPivot;
+      }
+    }
+  }
+
   function currentSelectionPivot(){
     if(selectionPivot && finitePoint(selectionPivot)){
       return {x:selectionPivot.x,y:selectionPivot.y};
     }
+
+    const stored=storedSelectionPivot();
+    if(stored) return stored;
+
     return defaultSelectionPivot();
   }
 
@@ -5001,6 +5079,7 @@
     setSelection(indices);
     if(pivot && finitePoint(pivot)){
       selectionPivot={x:pivot.x,y:pivot.y};
+      persistSelectionPivot(selectionPivot);
     }
   }
 
@@ -5089,6 +5168,10 @@
         y:anchor.y+nx*sa+ny*ca
       };
     };
+
+    if(finitePoint(o.rotationPivot)){
+      o.rotationPivot=scalePt(o.rotationPivot);
+    }
 
     if(o.kind==='line'){
       o.a=scalePt(o.a);
@@ -5913,6 +5996,13 @@
   }
 
   function translateObject(o,dx,dy){
+    if(o && finitePoint(o.rotationPivot)){
+      o.rotationPivot={
+        x:o.rotationPivot.x+dx,
+        y:o.rotationPivot.y+dy
+      };
+    }
+
     if(o.kind==='line'){
       o.a.x+=dx;o.a.y+=dy;o.b.x+=dx;o.b.y+=dy;
     }else if(o.kind==='arc' || o.kind==='sector'){
@@ -8374,6 +8464,7 @@
         !e.ctrlKey &&
         hitRotationPivot(p,e.pointerType)
       ){
+        clearStoredSelectionPivot();
         selectionPivot=null;
         selectPivotSnapshot=null;
         redraw();
@@ -8896,9 +8987,12 @@
       if(selectAction==='groupPivot' || selectAction==='pivot'){
         const snapped=snapPivotToCornerPoint(p);
         selectionPivot={x:snapped.x,y:snapped.y};
+        persistSelectionPivot(selectionPivot);
+
         statusEl.textContent=snapped.snapped
-          ? 'Döndürme merkezi snap — köşe/uç noktasına yapıştı'
+          ? 'Döndürme merkezi snap — köşe/uç noktasına kilitlendi'
           : 'Döndürme merkezi taşınıyor';
+
         redraw();
         return;
       }
