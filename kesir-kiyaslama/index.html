@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kesir Kıyaslama Laboratuvarı</title>
+<title>Kesir Kıyaslama Laboratuvarı · v1.4.0</title>
 <style>
 :root{--bg:#dedede;--ink:#293241;--green:#267a58;--brown:#98604c;--yellow:#f3b71b;--good:#159b71}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',sans-serif}button{font:inherit}
@@ -39,16 +39,24 @@ main{max-width:1060px;margin:10px auto 28px;background:#f8f8f7;border-radius:21p
 .mixed-one.fading{animation:one-out .52s ease-in-out forwards}
 @keyframes one-out{to{opacity:0;transform:translateY(-6px)}}
 @media(max-width:600px){.type-tag{font-size:12px;padding:5px 7px}.mixed-middle{gap:1px}.mixed-middle .math-button{padding:2px}}
+
+/* Çapraz çarpımla kıyaslama */
+.cross-term{display:inline-flex;align-items:center;justify-content:center;border:3px solid transparent;border-radius:12px;padding:2px 7px;min-width:1.1em;line-height:1.14}
+.cross-term.cross-ready{cursor:pointer}
+.cross-term.cross-glow{background:#f9e5ae;border-color:var(--yellow)}
+.cross-result{min-height:84px;display:flex;justify-content:center;align-items:center;color:var(--brown);font-size:clamp(32px,4.5vw,54px);font-weight:650;font-variant-numeric:tabular-nums}
+@media(max-width:600px){.cross-term{padding:2px 3px;border-width:2px;border-radius:8px}.cross-result{font-size:clamp(27px,7vw,42px)}}
+.version{font-size:12px;color:#777;text-align:center;padding:0 10px 13px}
 </style>
 </head>
 <body>
 <header><button class="home" id="home" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6 2 11.2l1.4 1.7L5 11.6V21h5.1v-6.2h3.8V21H19v-9.4l1.6 1.3 1.4-1.7L12 2.6Z"/></svg></button><h1>Kesir Kıyaslama Laboratuvarı</h1></header>
 <main>
-<nav class="toolbar"><button class="tab" data-mode="denom">Payda eşitleyerek kıyaslama</button><button class="tab" data-mode="difference">Farklarla kıyaslama</button><button class="tab" data-mode="mixed">Basit ve bileşik kesir</button><button class="new" id="new">Yeni örnek ↻</button></nav>
+<nav class="toolbar"><button class="tab" data-mode="denom">Payda eşitleyerek kıyaslama</button><button class="tab" data-mode="difference">Farklarla kıyaslama</button><button class="tab" data-mode="mixed">Basit ve bileşik kesir</button><button class="tab" data-mode="cross">Çapraz çarpımla kıyaslama</button><button class="new" id="new">Yeni örnek ↻</button></nav>
 
 <div class="hint" id="hint" aria-live="polite"></div>
-<section class="stage"><div class="equation" id="equation"><div class="slot" id="left"></div><div class="operator" id="operator">?</div><div class="slot" id="right"></div></div><div class="explain" id="explain"></div><div class="answers hidden" id="answers"><button class="answer" data-answer="<">&lt;</button><button class="answer" data-answer=">">&gt;</button></div></section>
-<div class="note">Vurgulanan ifadelerin üzerine tıklayarak ilerle.</div>
+<section class="stage"><div class="equation" id="equation"><div class="slot" id="left"></div><div class="operator" id="operator">?</div><div class="slot" id="right"></div></div><div class="explain" id="explain"></div><div class="answers hidden" id="answers"><button class="answer" data-answer="<">&lt;</button><button class="answer cross-equal hidden" data-answer="=">=</button><button class="answer" data-answer=">">&gt;</button></div></section>
+<div class="note">Vurgulanan ifadelerin üzerine tıklayarak ilerle.</div><div class="version">v1.4.0</div>
 </main>
 <svg id="arrow-layer" aria-hidden="true"></svg>
 <canvas id="fireworks" aria-hidden="true"></canvas>
@@ -106,6 +114,7 @@ const frac=(n,d)=>`<span class="frac"><span class="top">${n}</span><span class="
 const btn=(html,action,side,cls='')=>`<button class="math-button ${cls}" data-action="${action}" data-side="${side}" aria-label="İşlemi yap">${html}</button>`;
 let mode='denom',q=null,steps=[0,0],products=[null,null],denSolved=new Set(),phase='initial',locked=false,stamp=0;
 let exampleKind='improper',kindRemaining=0;
+let crossDone=[false,false],crossHover=null;
 function nextExampleKind(){
  // Sorular 2-4 soruluk bloklar halinde basit / bileşik olarak değişir.
  if(kindRemaining<=0){
@@ -119,7 +128,11 @@ function generate(){
  stamp++;
  arrowLayer.replaceChildren();
  let a,b,c,d,t=0;
- if(mode==='mixed'){
+ if(mode==='cross'){
+   // Rastgele pozitif kesirler: küçük, büyük ve eşitlik örnekleri.
+   b=rnd(2,10);d=rnd(2,10);a=rnd(1,14);c=rnd(1,14);
+   if(rnd(1,5)===1){c=a*d/b;if(!Number.isInteger(c)){a=b*rnd(1,3);c=d*(a/b);}}
+ }else if(mode==='mixed'){
    // Her soruda biri basit, diğeri payı paydasından büyük bileşik kesir.
    b=rnd(3,10); d=rnd(2,9);
    a=rnd(1,b-1); c=rnd(d+1,d+7);
@@ -143,7 +156,7 @@ function generate(){
  }
  const common=b*d/gcd(b,d);
  q={a,b,c,d,common,x:common/b,y:common/d,answer:sign(a*d,c*b),deltaLeft:a-b,deltaRight:c-d};
- steps=[0,0];products=[null,null];denSolved.clear();phase='initial';locked=false;
+ steps=[0,0];products=[null,null];crossDone=[false,false];crossHover=null;denSolved.clear();phase='initial';locked=false;
  document.querySelectorAll('.answer').forEach(el=>el.classList.remove('wrong','correct'));
  render();
 }
@@ -178,6 +191,19 @@ function mixedOperator(){
     </span>`;
  }
  return '1';
+}
+function crossTerm(value, side, part){
+ const key=side+'-'+part;
+ const group=(side==='L'&&part==='num')||(side==='R'&&part==='den')?'ad':'bc';
+ const ready=!crossDone[group==='ad'?0:1]&&!locked;
+ const glow=crossHover===group&&ready;
+ return `<span class="cross-term ${ready?'cross-ready':''} ${glow?'cross-glow':''}" data-cross="${group}" data-cross-point="${key}" tabindex="${ready?0:-1}" role="button" aria-label="Çapraz çarpımı göster">${value}</span>`;
+}
+function crossSide(i){
+ const isLeft=i===0,s=isLeft?'L':'R';
+ const num=isLeft?q.a:q.c,den=isLeft?q.b:q.d;
+ const result=crossDone[i]?`<div class="cross-result">${isLeft?q.a*q.d:q.b*q.c}</div>`:'<div class="cross-result"></div>';
+ return `${result}<span class="expr">${frac(crossTerm(num,s,'num'),crossTerm(den,s,'den'))}</span>`;
 }
 function differenceSide(i){
  const n=i===0?q.a:q.c,d=i===0?q.b:q.d,s=i===0?'L':'R',st=steps[i];
@@ -294,15 +320,18 @@ function alignOperator(){
  const r=O.getBoundingClientRect();
  O.style.transform=`translateY(${centerY-(r.top+r.height/2)}px)`;
 }
-function readyToCompare(){return mode==='difference'?steps.every(v=>v>=4):mode==='mixed'?phase==='selection':phase==='answer'}
+function readyToCompare(){return mode==='cross'?crossDone.every(Boolean):mode==='difference'?steps.every(v=>v>=4):mode==='mixed'?phase==='selection':phase==='answer'}
 function render(){
  document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('active',e.dataset.mode===mode));
- L.innerHTML=mode==='difference'?differenceSide(0):mode==='mixed'?mixedSide(0):denSide(0);
- R.innerHTML=mode==='difference'?differenceSide(1):mode==='mixed'?mixedSide(1):denSide(1);
+ L.innerHTML=mode==='cross'?crossSide(0):mode==='difference'?differenceSide(0):mode==='mixed'?mixedSide(0):denSide(0);
+ R.innerHTML=mode==='cross'?crossSide(1):mode==='difference'?differenceSide(1):mode==='mixed'?mixedSide(1):denSide(1);
  if(mode==='mixed')O.innerHTML=mixedOperator();
  else O.textContent=phase==='complete'?q.answer:'?';
  O.classList.toggle('done',phase==='complete');
- if(mode==='mixed'){
+ if(mode==='cross'){
+   H.textContent=phase==='complete'?'Bravo!':crossDone.every(Boolean)?'Çarpımları karşılaştır, doğru işareti seç.':'Paylardan birinin üzerine gel; çaprazdaki paydayı da gör.';
+   E.textContent='';
+ }else if(mode==='mixed'){
    const types=steps[0]+steps[1];
    E.textContent=phase==='initial'?'':phase==='bridge'?'Basit kesirler 1’den küçüktür, bileşik kesirler 1’den büyüktür.':
       'Basit kesirler 1’den küçüktür, bileşik kesirler 1’den büyüktür.';
@@ -325,13 +354,16 @@ function render(){
    H.textContent={initial:'Paydalardan birine tıkla.',factors:'Genişletme katsayılarından birine tıkla.',multiplications:'Çarpımları tek tek hesapla.',answer:'Karşılaştırma işaretini seç.',complete:'Doğru!'}[phase];
  }
  A.classList.toggle('hidden',!readyToCompare()||phase==='complete'||locked);
+ document.querySelector('.cross-equal').classList.toggle('hidden',mode!=='cross');
  requestAnimationFrame(alignOperator);
 }
 async function action(el){
  if(locked||(phase==='complete'&&mode!=='mixed')||phase==='merged')return;
  const act=el.dataset.action,s=el.dataset.side,i=s==='L'?0:1;
- if(mode==='mixed'){
-   if(act==='classify' && steps[i]===0){steps[i]=1;render();return;}
+ if(mode==='cross'){
+   return;
+ }else if(mode==='mixed'){
+   if(act==='classify'  && steps[i]===0){steps[i]=1;render();return;}
    if(act==='middle-question' && steps.every(v=>v===1) && phase==='initial'){
      phase='selection';render();return;
    }
@@ -395,14 +427,44 @@ function transferSign(symbol){
  render();
  requestAnimationFrame(alignOperator);
 }
-$('equation').addEventListener('click',e=>{const target=e.target.closest('[data-action]');if(target)action(target)});
+async function crossClick(group){
+ if(mode!=='cross'||locked)return;
+ const i=group==='ad'?0:1;
+ if(crossDone[i])return;
+ locked=true;crossHover=null;
+ const source=document.querySelector(`[data-cross-point="${group==='ad'?'L-num':'R-num'}"]`);
+ const target=document.querySelector(`[data-cross-point="${group==='ad'?'R-den':'L-den'}"]`);
+ const currentStamp=stamp;
+ await travelArrow(source,target,'#267a58',currentStamp,'line');
+ if(stamp!==currentStamp)return;
+ crossDone[i]=true;locked=false;
+ render();
+}
+$('equation').addEventListener('pointerover',e=>{
+ if(mode!=='cross'||locked)return;
+ const el=e.target.closest('[data-cross]');
+ const g=el?.dataset.cross||null;
+ if(g!==crossHover){crossHover=g;document.querySelectorAll('[data-cross]').forEach(t=>t.classList.toggle('cross-glow',t.dataset.cross===g&&!!g&&!crossDone[g==='ad'?0:1]));}
+});
+$('equation').addEventListener('pointerleave',()=>{
+ crossHover=null;
+ document.querySelectorAll('[data-cross]').forEach(t=>t.classList.remove('cross-glow'));
+});
+$('equation').addEventListener('click',e=>{
+ const crossed=e.target.closest('[data-cross]');
+ if(crossed&&mode==='cross'){crossClick(crossed.dataset.cross);return;}
+ const target=e.target.closest('[data-action]');if(target)action(target);
+});
+$('equation').addEventListener('keydown',e=>{if(mode==='cross'&&(e.key==='Enter'||e.key===' ')){const t=e.target.closest('[data-cross]');if(t){e.preventDefault();crossClick(t.dataset.cross)}}});
 A.addEventListener('click',e=>{
  const el=e.target.closest('[data-answer]');if(!el||locked||!readyToCompare())return;
- const expected=mode==='difference'?sign(products[0],products[1]):q.answer;
+ const expected=mode==='cross'?sign(q.a*q.d,q.c*q.b):mode==='difference'?sign(products[0],products[1]):q.answer;
  if(el.dataset.answer!==expected){el.classList.remove('wrong');void el.offsetWidth;el.classList.add('wrong');H.textContent='Tekrar dene.';return}
  locked=true;el.classList.add('correct');H.textContent='Doğru!';A.classList.add('hidden');fireworkBurst();
  const snapshot=stamp;
- if(mode==='mixed'){
+ if(mode==='cross'){
+   setTimeout(()=>{if(stamp===snapshot)transferSign(expected)},450);
+ }else if(mode==='mixed'){
    setTimeout(()=>{if(stamp!==snapshot)return;phase='complete';locked=false;render();},450);
  }else if(mode==='difference'){
    // İşaret yalnızca son konumunda görünür.
