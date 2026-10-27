@@ -16,8 +16,8 @@ button:hover{background:#3678bd}#status{font-size:12px;color:#a8cde8;margin-top:
 </head>
 <body>
 <div id="top">
-<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v10.2 · VR</small></h1>
-<p>Sol joystick: Uç / 30° dön / Bas: Başa dön · Sol tetik: Oynat/Duraklat · Sol grip: Uzayı tut/çek · Sol X: Menü · Sağ tetik: Seç · İki grip: Ölçek</p>
+<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v11.0 · VR</small></h1>
+<p>Sol joystick: Uç / 30° dön / Bas: Başa dön · Sol tetik: Oynat/Duraklat · Sol grip: Tut ve çek · X: Menü · Sağ tetik: Seç/Yerleştir · İki grip: Ölçek</p>
 <div><button id="play">⏸ Duraklat</button><button id="reset">↻ Sıfırla</button><button id="mode">🌌 Uzay</button><button id="trails">Yörüngeler: Açık</button></div>
 <div id="status">Hazırlanıyor…</div><p id="warning"></p>
 </div>
@@ -379,138 +379,114 @@ function syncButtons(){
  if(labels.length)refreshPanel();
 }
 function action(name){
- if(name==='play')running=!running
- if(name==='reset'){cancelObjectPlacement();dismount();vectorDrag=null;endTwoHand();grabs.clear();hoverBodies.clear();magneticTargets.clear();choosePlanets([]);setup();for(const ring of selectionRings.values())ring.visible=false}
- if(name==='mode'){planetMode=!planetMode;if(planetMode)for(const b of bodies){b.pos.y=Math.max(b.pos.y,-10+b.radius);b.history=[];updateTrail(b)}alignGroundToXRFloor()}
- if(name==='trails')showTrails=!showTrails;
- if(name==='velocities')showVelocities=!showVelocities;
- if(name==='near')bringNear();
- if(name==='new')startObjectPlacement('planet');
- if(name==='tabObjects'){menuCategory='objects';refreshTopPanel();}
- if(name==='cancelObject')cancelObjectPlacement();
- if(name==='tabSystems'){menuCategory='systems';refreshTopPanel();}
- if(name.startsWith('object:'))startObjectPlacement(name.slice(7));
- if(name==='clearSelection')choosePlanets([]);
- if(name==='coneMinus'||name==='conePlus'){
-  const c=rightController||controllers.find(c=>c!==leftController)||controllers[0];
-  if(c){
-   const increment=THREE.MathUtils.degToRad(3);
-   const old=coneAngles.get(c)||0;
-   const next=name==='conePlus'?Math.min(MAX_CONE,old+increment):Math.max(0,old-increment);
-   coneAngles.set(c,next);
-   $('status').textContent='Koni açısı: '+THREE.MathUtils.radToDeg(next).toFixed(0)+'° · Tetik: çoklu seçim';
-  }
+ if(name==='play')running=!running;
+ else if(name==='reset'){
+  cancelObjectPlacement();cancelPastePlacement();copyClipboard=null;dismount();
+  vectorDrag=null;endTwoHand();grabs.clear();hoverBodies.clear();magneticTargets.clear();
+  choosePlanets([]);setup();for(const ring of selectionRings.values())ring.visible=false;
  }
- if(name.startsWith('preset:')){selectedPreset=name.slice(7);refreshTopPanel();$('status').textContent='Seçilen sistem: '+presetNames[selectedPreset]+' · EKLE veya DENE';}
- if(name==='applyAdd'&&selectedPreset)addVRPreset(selectedPreset,false);
- if(name==='applyTry'&&selectedPreset)addVRPreset(selectedPreset,true);
- if(name==='presetPrev'){presetPage=Math.max(0,presetPage-1);refreshTopPanel();}
- if(name==='presetNext'){presetPage=Math.min(presetPages.length-1,presetPage+1);refreshTopPanel();}
- if(name==='grow')resizeSelected(1.2);
- if(name==='shrink')resizeSelected(1/1.2);
- if(name==='copy')copySelected();
- if(name==='delete')deleteSelected();
- if(name==='ride')mountSelected();
- if(name==='dismount')dismount();
- if(name==='rideView'){rideViewMode=rideViewMode==='micro'?'macro':'micro';}
- if(name==='micro')rideViewMode='micro';
- if(name==='macro')rideViewMode='macro';
- syncButtons();refreshRightPanel();
+ else if(name==='mode'){planetMode=!planetMode;if(planetMode)for(const b of bodies){b.pos.y=Math.max(b.pos.y,-10+b.radius);b.history=[];updateTrail(b)}alignGroundToXRFloor();}
+ else if(name==='trails')showTrails=!showTrails;
+ else if(name==='velocities')showVelocities=!showVelocities;
+ else if(name==='newMenu'){menuPage='catalog';refreshPanel();return;}
+ else if(name==='backMenu'){menuPage='home';refreshPanel();return;}
+ else if(name.startsWith('catalog:')){chosenEntry=name.slice(8);refreshPanel();return;}
+ else if(name==='addEntry'||name==='tryEntry'){
+  const replaceExisting=name==='tryEntry';
+  if(chosenEntry.startsWith('object:')){cancelPastePlacement();startObjectPlacement(chosenEntry.slice(7),replaceExisting);}
+  else if(chosenEntry.startsWith('preset:')){cancelPastePlacement();addVRPreset(chosenEntry.slice(7),replaceExisting);}
+  menuPage='home';syncButtons();refreshPanel();return;
+ }
+ else if(name==='copy'){
+  if(pastePlacement){cancelPastePlacement();$('status').textContent='Yapıştırma iptal edildi';}
+  else if(copyClipboard)startPastePlacement();
+  else copySelected();
+ }
+ else if(name==='delete')deleteSelected();
+ else if(name==='rideToggle'){if(ridingBody)dismount();else mountSelected();}
+ else if(name==='viewToggle')rideViewMode=rideViewMode==='micro'?'macro':'micro';
+ syncButtons();refreshPanel();
 }
 for(const id of ['play','reset','mode','trails'])$(id).onclick=()=>action(id);
-// VR panel uses a shared canvas texture; buttons remain selectable via controller rays.
-// Five inward-facing panels arranged around an open-front concave menu.
-const FACE_CW=720,FACE_CH=505;
-function createMenuFace(width,height){
- const canvas=document.createElement('canvas');canvas.width=FACE_CW;canvas.height=FACE_CH;
- const ctx=canvas.getContext('2d'),texture=new THREE.CanvasTexture(canvas);
- texture.colorSpace=THREE.SRGBColorSpace;
- const mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,height),
-  new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,depthTest:false}));
- mesh.renderOrder=20;
- return {canvas,ctx,texture,mesh,buttons:[]};
-}
-const backFace=createMenuFace(.33,.265);
-const leftFace=createMenuFace(.205,.265);
-const rightFace=createMenuFace(.205,.265);
-const ceilingFace=createMenuFace(.33,.14);
-const bottomFace=createMenuFace(.33,.115);
-const menuFaces=[backFace,leftFace,rightFace,ceilingFace,bottomFace];
-const panel=backFace.mesh,rightPanel=rightFace.mesh,topPanel=bottomFace.mesh;
-// Five interior faces of a rectangular box, with the front face open.
-// Every adjacent pair of faces meets at exactly 90 degrees.
-const prism=new THREE.Group(),BOX_WIDTH=.33,BOX_HEIGHT=.265,BOX_DEPTH=.205;
-const halfW=BOX_WIDTH/2,halfH=BOX_HEIGHT/2,halfD=BOX_DEPTH/2;
-panel.position.set(0,0,-halfD);
-leftFace.mesh.geometry.dispose();leftFace.mesh.geometry=new THREE.PlaneGeometry(BOX_DEPTH,BOX_HEIGHT);
-leftFace.mesh.rotation.y=Math.PI/2;leftFace.mesh.position.set(-halfW,0,0);
-rightPanel.geometry.dispose();rightPanel.geometry=new THREE.PlaneGeometry(BOX_DEPTH,BOX_HEIGHT);
-rightPanel.rotation.y=-Math.PI/2;rightPanel.position.set(halfW,0,0);
-ceilingFace.mesh.geometry.dispose();ceilingFace.mesh.geometry=new THREE.PlaneGeometry(BOX_WIDTH,BOX_DEPTH);
-ceilingFace.mesh.rotation.x=Math.PI/2;ceilingFace.mesh.position.set(0,halfH,0);
-topPanel.geometry.dispose();topPanel.geometry=new THREE.PlaneGeometry(BOX_WIDTH,BOX_DEPTH);
-topPanel.rotation.x=-Math.PI/2;topPanel.position.set(0,-halfH,0);
-for(const face of menuFaces)prism.add(face.mesh);
-scene.add(prism);
+// Single flat, ungrouped menu. Only Yeni Nesne opens another view.
+const FACE_CW=900,FACE_CH=1120;
+const menuCanvas=document.createElement('canvas');menuCanvas.width=FACE_CW;menuCanvas.height=FACE_CH;
+const menuCtx=menuCanvas.getContext('2d'),menuTexture=new THREE.CanvasTexture(menuCanvas);
+menuTexture.colorSpace=THREE.SRGBColorSpace;
+const menuMesh=new THREE.Mesh(new THREE.PlaneGeometry(.47,.585),
+ new THREE.MeshBasicMaterial({map:menuTexture,side:THREE.DoubleSide,depthTest:false}));
+menuMesh.renderOrder=20;
+const singleFace={canvas:menuCanvas,ctx:menuCtx,texture:menuTexture,mesh:menuMesh,buttons:[]};
+const menuFaces=[singleFace],labels=['play','reset','mode','trails','velocities'];
+const prism=new THREE.Group();prism.add(menuMesh);scene.add(prism);
 let handMenuOpen=false,rightMenuOpen=false;
 let rightController=null,leftController=null;
 const lastMenuPress=new Map();
-function toggleHandMenu(){handMenuOpen=!handMenuOpen;updateHandMenu();$('status').textContent=handMenuOpen?'Menü açık':'Menü kapalı'}
-const menuAnchorOffset=new THREE.Vector3(.13,.035,-.19);
-const menuWristRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/3);
-const labels=['play','reset','mode','trails','velocities'];
-const rightButtons=[['near','YAKINA GETIR'],['shrink','KUCULT'],['grow','BUYUT'],['copy','KOPYALA'],['delete','SIL']];
-const topButtons=[['ride','BIN'],['dismount','IN'],['micro','MIKRO'],['macro','MAKRO']];
-const presetNames={eight:'SEKIZ YORUNGESI',lagrange:'LAGRANGE NOKTALARI',galaxy:'GALAKSI',solar:'GUNES SISTEMI',fireworks:'HAVAİ FİŞEK',horizontal:'YATAY ATIS',angled:'EGIK ATIS',vertical:'DIKEY ATIS',binary:'CIFT YILDIZ',rings:'HALKALAR',collapse:'KUTLECEKIMSEL COKUS'};
-let selectedPreset='solar';
-let menuCategory='systems';
-let presetPage=0;
-const presetPages=[
- [['preset:solar','GUNES SISTEMI'],['preset:fireworks','HAVAİ FİŞEK'],['preset:horizontal','YATAY ATIS'],['preset:angled','EGIK ATIS'],['preset:vertical','DIKEY ATIS']],
- [['preset:binary','CIFT YILDIZ'],['preset:rings','HALKALAR'],['preset:collapse','KUTLECEKIMSEL COKUS']],
- [['preset:eight','SEKIZ YORUNGESI'],['preset:lagrange','LAGRANGE'],['preset:galaxy','GALAKSI']]
+const menuAnchorOffset=new THREE.Vector3(.12,.10,-.37);
+const menuWristRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-.24);
+let menuPage='home',chosenEntry='object:planet';
+const catalogItems=[
+ ['object:planet','GEZEGEN'],['object:comet','KUYRUKLU YILDIZ'],['object:blackhole','KARA DELİK'],['object:rocket','ROKET'],
+ ['preset:solar','GÜNEŞ SİSTEMİ'],['preset:fireworks','HAVAİ FİŞEK'],['preset:horizontal','YATAY ATIŞ'],
+ ['preset:angled','EĞİK ATIŞ'],['preset:vertical','DİKEY ATIŞ'],['preset:binary','ÇİFT YILDIZ'],
+ ['preset:rings','HALKALAR'],['preset:collapse','KÜTLEÇEKİMSEL ÇÖKÜŞ'],
+ ['preset:eight','SEKİZ YÖRÜNGESİ'],['preset:lagrange','LAGRANGE NOKTALARI'],['preset:galaxy','GALAKSİ']
 ];
-function presetButtons(){
- const tabs=[['tabObjects','NESNELER'],['tabSystems','SISTEMLER']];
- if(menuCategory==='objects')return [...tabs,['object:planet','GEZEGEN'],['object:comet','KUYRUKLU YILDIZ'],['object:blackhole','KARA DELIK'],['cancelObject','IPTAL']];
- return [...tabs,...presetPages[presetPage],['presetPrev','< ONCEKI'],['presetNext','SONRAKI >'],['applyAdd','EKLE +'],['applyTry','DENE']];
-}
-const utilityButtons=[['coneMinus','KONI -'],['conePlus','KONI +'],['clearSelection','SECIMI KALDIR'],['trails','YORUNGELER'],['velocities','HIZ OKLARI'],['reset','SIFIRLA']];
-function drawMenuFace(face,title,subtitle,buttons,highlight){
- const c=face.ctx;c.clearRect(0,0,FACE_CW,FACE_CH);
- c.fillStyle='#15253a';c.fillRect(0,0,FACE_CW,FACE_CH);
- c.fillStyle='#eaf5ff';c.font='bold 36px system-ui';c.fillText(title,26,57);
- if(subtitle){c.fillStyle='#a8d7ed';c.font='22px system-ui';c.fillText(subtitle,26,103)}
- face.buttons=[];
- const rows=Math.ceil(buttons.length/2),startY=subtitle?128:100;
- const gap=12,rowH=Math.min(94,(FACE_CH-startY-20-(rows-1)*gap)/rows);
- for(let i=0;i<buttons.length;i++){
-  const [id,name]=buttons[i],x=20+(i%2)*349,y=startY+Math.floor(i/2)*(rowH+gap),w=330,h=rowH;
-  c.fillStyle=highlight===id?'#268769':'#285a8d';
-  c.beginPath();c.roundRect(x,y,w,h,13);c.fill();
-  c.font='bold 25px system-ui';c.fillStyle='#fff';c.fillText(name,x+15,y+h/2+9);
-  face.buttons.push({id,x,y,w,h});
- }
- face.texture.needsUpdate=true;
+function toggleHandMenu(){handMenuOpen=!handMenuOpen;if(handMenuOpen)refreshPanel();updateHandMenu();$('status').textContent=handMenuOpen?'Menü açık':'Menü kapalı';}
+function paintButton(id,label,x,y,w,h,active=false,destructive=false,disabled=false,font=33){
+ const c=menuCtx;
+ c.fillStyle=disabled?'#26384c':active?'#207a6a':destructive?'#743e4b':'#26537c';
+ c.beginPath();c.roundRect(x,y,w,h,15);c.fill();
+ c.strokeStyle=active?'#99ffdf':'#3d719b';c.lineWidth=2;c.stroke();
+ c.fillStyle=disabled?'#8195a7':'#eff8ff';
+ let n=font;c.font='bold '+n+'px system-ui';
+ while(c.measureText(label).width>w-22&&n>16){n--;c.font='bold '+n+'px system-ui'}
+ c.fillText(label,x+(w-c.measureText(label).width)/2,y+h/2+n*.34);
+ if(!disabled)singleFace.buttons.push({id,x,y,w,h});
 }
 function refreshPanel(){
- drawMenuFace(backFace,'SIMULASYON','',
- [['play',$('play').textContent],['reset','SIFIRLA'],['mode',$('mode').textContent],['trails','YORUNGELER'],['velocities',showVelocities?'HIZLARI GIZLE':'HIZLARI GOSTER']],null);
+ const c=menuCtx;c.clearRect(0,0,FACE_CW,FACE_CH);
+ c.fillStyle='#11243b';c.fillRect(0,0,FACE_CW,FACE_CH);
+ c.fillStyle='#eaf7ff';c.font='bold 54px system-ui';c.fillText('GRAVITY VR',30,78);
+ c.textAlign='right';c.font='bold 24px system-ui';c.fillStyle=running?'#8be6c7':'#ffbb82';
+ c.fillText(running?'● ÇALIŞIYOR':'Ⅱ DURAKLATILDI',870,77);c.textAlign='left';
+ singleFace.buttons=[];
+ if(menuPage==='catalog'){
+  paintButton('backMenu','‹ GERİ',30,110,200,65,false,false,false,27);
+  for(let i=0;i<catalogItems.length;i++){
+   const [id,name]=catalogItems[i];
+   paintButton('catalog:'+id,name,30+(i%2)*430,195+Math.floor(i/2)*97,410,84,chosenEntry===id,false,false,28);
+  }
+  c.fillStyle='#b0cbdc';c.font='24px system-ui';
+  c.fillText('Seçilen: '+(catalogItems.find(x=>x[0]===chosenEntry)?.[1]||''),30,1012);
+  paintButton('addEntry','+ EKLE',30,1030,410,76,true,false,false,35);
+  paintButton('tryEntry','▷ DENE',460,1030,410,76,false,false,false,35);
+ }else{
+  const has=selectedBodies.size>0;
+  paintButton('newMenu','＋ YENİ NESNE',30,125,840,140,true,false,false,45);
+  const buttons=[
+   ['mode',planetMode?'GEZEGEN':'UZAY'],['trails',showTrails?'YÖRÜNGELER ✓':'YÖRÜNGELER'],
+   ['velocities',showVelocities?'HIZ OKLARI ✓':'HIZ OKLARI'],
+   ['copy',copyClipboard?'YAPIŞTIR':'KOPYALA'],
+   ['rideToggle',ridingBody?'İN':'BİN'],['viewToggle',rideViewMode==='micro'?'MAKRO':'MİKRO'],
+   ['reset','SIFIRLA'],['delete','SİL']
+  ];
+  buttons.forEach(([id,name],i)=>{
+   const disabled=(id==='copy'&&!has&&!copyClipboard)||(id==='delete'&&!has)||(id==='rideToggle'&&!has&&!ridingBody);
+   paintButton(id,name,30+(i%2)*430,297+Math.floor(i/2)*158,410,140,id==='copy'&&!!copyClipboard,id==='delete',disabled,34);
+  });
+  c.fillStyle='#b0cbdc';c.font='24px system-ui';
+  if(selectedPlanet&&bodies.includes(selectedPlanet)){
+   const b=selectedPlanet,rocketInfo=b.rocket?'  ·  İTİŞ '+b.rocket.burnRemaining.toFixed(1)+'s':'';
+   c.fillText('R '+b.radius.toFixed(2)+'  M '+b.mass.toFixed(2)+'  V '+b.v.length().toFixed(2)+rocketInfo,35,1081);
+  }else c.fillText('Seçili nesne yok',35,1081);
+ }
+ menuTexture.needsUpdate=true;
 }
-function refreshRightPanel(){
- const b=selectedPlanet;
- drawMenuFace(leftFace,'NESNE',b?'R '+b.radius.toFixed(1)+'  M '+b.mass.toFixed(1)+'  V '+b.v.length().toFixed(1):'Secim yok',rightButtons,null);
- refreshTopPanel();
-}
-function refreshTopPanel(){
- drawMenuFace(rightFace,'GOZLEM',ridingBody?'Gezegende: '+(rideViewMode==='micro'?'MIKRO':'MAKRO'):'Serbest gozlem',topButtons,rideViewMode);
- drawMenuFace(ceilingFace,menuCategory==='objects'?'NESNELER':'SISTEMLER '+(presetPage+1)+'/'+presetPages.length,
- menuCategory==='objects'?'Sag isina yerlestir':'Secim: '+presetNames[selectedPreset],
- presetButtons(),menuCategory==='objects'?'tabObjects':'preset:'+selectedPreset);
- drawMenuFace(bottomFace,'ARACLAR','',utilityButtons,null);
-}
+function refreshRightPanel(){refreshPanel();}
+function refreshTopPanel(){refreshPanel();}
 function updateHandMenu(){
- if(!renderer.xr.isPresenting){prism.visible=true;prism.position.set(-.5,1.7,-1.3);prism.quaternion.identity();return}
+ if(!renderer.xr.isPresenting){prism.visible=true;prism.position.set(-.49,1.73,-1.3);prism.quaternion.identity();return}
  prism.visible=handMenuOpen&&!!leftController;
  if(prism.visible){
   leftController.updateWorldMatrix(true,false);
@@ -1078,7 +1054,7 @@ for(let i=0;i<2;i++){
 renderer.xr.addEventListener('sessionstart',()=>{
  handMenuOpen=false;rightMenuOpen=false;heldGrips.clear();endTwoHand();
  initialView();snapReady=true;stickClickLast=false;
- $('status').textContent='VR v10.2 · Sol grip: uzayı tut/çek · Joystick: uç/dön · Tetik: oynat/duraklat';
+ $('status').textContent='VR v11.0 · X: tek menü · Sol grip: gezin · Sağ tetik: seç/yerleştir';
 });
 renderer.xr.addEventListener('sessionend',()=>{
  dismount();vectorDrag=null;endTwoHand();heldGrips.clear();grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;rightMenuOpen=false;
