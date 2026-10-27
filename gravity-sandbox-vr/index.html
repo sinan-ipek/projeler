@@ -163,6 +163,15 @@ function makeBody(radius,color,x,y,z,vx,vy,vz){
 }
 function drawBody(b){
  b.mesh.position.copy(b.pos);
+ if(b.objectAccent){
+  b.objectAccent.position.copy(b.pos);
+  if(b.objectKind==='comet'){
+   const speed=b.v.length();
+   const dir=speed>.01?b.v.clone().normalize():new THREE.Vector3(1,0,0);
+   b.objectAccent.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.negate());
+   b.objectAccent.visible=true;
+  }
+ }
  b.trail.visible=showTrails;
  const speed=b.v.length();
  b.arrow.visible=showVelocities&&speed>.00001;
@@ -193,7 +202,12 @@ function disposeBodyArrow(b){
  b.arrow.cone.geometry.dispose();b.arrow.cone.material.dispose();
 }
 function clearBodies(){
- for(const b of bodies){world.remove(b.mesh,b.trail);b.mesh.material.dispose();b.trail.geometry.dispose();b.trail.material.dispose();disposeBodyArrow(b)}
+ for(const b of bodies){
+  world.remove(b.mesh,b.trail);
+  b.mesh.material.dispose();b.trail.geometry.dispose();b.trail.material.dispose();
+  if(b.objectAccent){world.remove(b.objectAccent);b.objectAccent.geometry.dispose();b.objectAccent.material.dispose()}
+  disposeBodyArrow(b)
+ }
  bodies=[];
 }
 function setup(){
@@ -670,10 +684,18 @@ function commitObjectPlacement(controller){
  if(kind==='blackhole'){
   b=makeBody(.7,0x362b6e,pos.x,pos.y,pos.z,0,0,0);
   b.mass=2600; // compact Newtonian gravity source; not general relativity
+  b.objectKind='blackhole';
+  b.objectAccent=new THREE.Mesh(new THREE.TorusGeometry(1.2,.13,8,48),
+   new THREE.MeshBasicMaterial({color:0xe8a44a,side:THREE.DoubleSide}));
+  b.objectAccent.rotation.x=Math.PI/2;world.add(b.objectAccent);
  }else if(kind==='comet'){
   b=makeBody(.4,0x9ce9ee,pos.x,pos.y,pos.z,0,0,0);
   // A highly eccentric orbit is produced by changing the velocity later.
   b.mass=.35;
+  b.objectKind='comet';
+  b.objectAccent=new THREE.Mesh(new THREE.ConeGeometry(.24,3,12,1,true),
+   new THREE.MeshBasicMaterial({color:0x9ce9ee,transparent:true,opacity:.25,side:THREE.DoubleSide,depthWrite:false}));
+  b.objectAccent.position.copy(b.pos);world.add(b.objectAccent);
  }else b=makeBody(.9,0x80cbff,pos.x,pos.y,pos.z,0,0,0);
  updateTrail(b);choosePlanet(b);
  cancelObjectPlacement();
