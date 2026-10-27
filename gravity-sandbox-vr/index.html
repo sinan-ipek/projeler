@@ -299,7 +299,8 @@ function setup(){
 function addVRPreset(id,replaceExisting=false){
  cancelObjectPlacement();
  dismount();vectorDrag=null;endTwoHand();grabs.clear();choosePlanets([]);
- accumulator=0;running=false;
+ accumulator=0;
+ if(replaceExisting)running=true;
  if(replaceExisting){
   clearBodies();
   hoverBodies.clear();magneticTargets.clear();
@@ -860,6 +861,9 @@ let objectPlacement=null;
 const placementGeometry=new THREE.SphereGeometry(1,24,16);
 const placementMaterial=new THREE.MeshBasicMaterial({color:0x78d5ff,transparent:true,opacity:.5,depthWrite:false});
 const placementPreview=new THREE.Mesh(placementGeometry,placementMaterial);
+const rocketPreview=new THREE.Mesh(new THREE.ConeGeometry(.58,2.5,10),
+ new THREE.MeshBasicMaterial({color:0xffd38e,transparent:true,opacity:.85,depthWrite:false}));
+rocketPreview.visible=false;placementPreview.add(rocketPreview);
 placementPreview.visible=false;placementPreview.renderOrder=62;scene.add(placementPreview);
 function cancelObjectPlacement(){
  objectPlacement=null;placementPreview.visible=false;
@@ -868,10 +872,10 @@ function cancelObjectPlacement(){
 function startObjectPlacement(kind,replaceExisting=false){
  cancelPastePlacement();
  objectPlacement={kind,distance:1.0,replaceExisting};
- placementPreview.visible=true;
+ placementPreview.visible=true;rocketPreview.visible=kind==='rocket';
  const colors={planet:0x80cbff,comet:0x9ce9ee,blackhole:0x5947a9,rocket:0xffbc56};
  placementMaterial.color.setHex(colors[kind]||0x80cbff);
- $('status').textContent='Nesne: Sag isina yerlestir · Sag joystick ileri/geri · Tetik: olustur';
+ $('status').textContent='Nesne: Sağ ışınla konumlandır · Sağ joystick: mesafe · Tetik: oluştur'+(replaceExisting?' · DENE: eski sistemi siler':'');
 }
 function updateObjectPlacement(controller,dt){
  if(!objectPlacement||controller!==rightController)return;
@@ -881,14 +885,16 @@ function updateObjectPlacement(controller,dt){
  if(Math.abs(axisY)>.15)objectPlacement.distance=THREE.MathUtils.clamp(objectPlacement.distance-axisY*2.2*dt,.22,15);
  const position=raycaster.ray.at(objectPlacement.distance,new THREE.Vector3());
  placementPreview.position.copy(position);
- placementPreview.scale.setScalar(objectPlacement.kind==='blackhole'?.12:.075);
+ if(objectPlacement.kind==='rocket'){
+  placementPreview.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),raycaster.ray.direction.clone().normalize());
+ }else placementPreview.quaternion.identity();
+ placementPreview.scale.setScalar(objectPlacement.kind==='blackhole'?.12:objectPlacement.kind==='rocket'?.11:.075);
  placementPreview.visible=true;
 }
 function commitObjectPlacement(controller){
  if(!objectPlacement||controller!==rightController)return false;
  rayFromController(controller);
  const pos=raycaster.ray.at(objectPlacement.distance,new THREE.Vector3());
- world.worldToLocal(pos);
  const {kind,replaceExisting}=objectPlacement;
  const worldOrientation=world.getWorldQuaternion(new THREE.Quaternion());
  const localDirection=raycaster.ray.direction.clone().applyQuaternion(worldOrientation.invert()).normalize();
@@ -897,9 +903,11 @@ function commitObjectPlacement(controller){
   clearBodies();hoverBodies.clear();magneticTargets.clear();
   for(const ring of selectionRings.values())ring.visible=false;
  }
+ if(replaceExisting){planetMode=false;syncButtons();}
+ world.worldToLocal(pos);
  const b=createSpecialBody(kind,pos,new THREE.Vector3(),localDirection);
  updateTrail(b);choosePlanet(b);
- if(kind==='rocket')running=true;
+ if(kind==='rocket'||replaceExisting)running=true;
  cancelObjectPlacement();syncButtons();refreshPanel();
  $('status').textContent=(replaceExisting?'Deneme başlatıldı: ':'Nesne eklendi: ')+kind;
  return true;
