@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.27</title>
+<title>Beyaz Tahta v16.28</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -998,7 +998,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.27 (pivot sağ tık sıfırla + köşe snap)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.28 (pivot snap + Alt pivot koruma düzeltmesi)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1051,7 +1051,7 @@
               <li>Ctrl + tıklama ile seçime nesne ekle / çıkar.</li>
               <li>Nesneleri taşı, boyutlandır ve döndür.</li>
               <li>Seçimde turuncu hedef işareti döndürme merkezidir; sürükleyerek pivotu değiştir ve nesneyi/grubu bu noktanın etrafında döndür.</li>
-              <li>Pivotta sağ tık varsayılan merkeze döndürür; Snap açıksa pivot seçili olmayan nesnelerin köşe/uç noktalarına yapışır.</li>
+              <li>Pivotta sağ tık varsayılan merkeze döndürür; Snap açıksa pivot kendi seçimin dahil tüm uygun köşe/uç noktalarına yapışır.</li>
               <li>Doğru parçasında A ve B uçlarına ek olarak orta noktadan çıkan döndürme tutamacını kullan.</li>
               <li>Hazır şekillerin gerçek düzenleme handle'larını tek tek taşı.</li>
               <li>Nokta Snap düğmesi açıkken gerçek düzenleme noktaları diğer nesnelerin köşe/uç/düzenleme noktalarına yapışır.</li>
@@ -4088,15 +4088,12 @@
       return {x:p.x,y:p.y,snapped:false};
     }
 
-    const selectedSet=new Set(selectedIndices);
     const threshold=12/viewZoom;
 
     let best=null;
     let bestD=Infinity;
 
     for(let i=0;i<objects.length;i++){
-      if(selectedSet.has(i)) continue;
-
       for(const q of objectCornerSnapPoints(objects[i])){
         const d=Math.hypot(q.x-p.x,q.y-p.y);
         if(d<=threshold && d<bestD){
@@ -5000,6 +4997,13 @@
     return Array.from({length:copies.length},(_,k)=>start+k);
   }
 
+  function setSelectionPreservePivot(indices,pivot){
+    setSelection(indices);
+    if(pivot && finitePoint(pivot)){
+      selectionPivot={x:pivot.x,y:pivot.y};
+    }
+  }
+
   function copyObjectsToInternalClipboard(indices){
     const valid=[...new Set(indices||[])]
       .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length)
@@ -5172,8 +5176,11 @@
     saveState();
 
     if(duplicateFirst){
+      const pivotBeforeDuplicate=selectionPivot
+        ? {x:selectionPivot.x,y:selectionPivot.y}
+        : null;
       const dupIndices=duplicateSelection(selectedIndices);
-      setSelection(dupIndices);
+      setSelectionPreservePivot(dupIndices,pivotBeforeDuplicate);
     }
 
     const indices=selectedIndices.slice();
@@ -8513,8 +8520,11 @@
           // Alt + rotate/resize: duplicate the whole current selection first.
           // Originals stay in place; only the copies are transformed.
           if(e.altKey && (gh==='rotate' || gh==='nw' || gh==='ne' || gh==='se' || gh==='sw')){
+            const pivotBeforeDuplicate=selectionPivot
+              ? {x:selectionPivot.x,y:selectionPivot.y}
+              : null;
             const dupIndices=duplicateSelection(selectedIndices);
-            setSelection(dupIndices);
+            setSelectionPreservePivot(dupIndices,pivotBeforeDuplicate);
           }
 
           selectStart=p;
@@ -8586,8 +8596,11 @@
             (h==='endpoint-0' || h==='endpoint-1');
 
           if(e.altKey && (h==='rotate' || !realHandle || isLineEndpoint)){
+            const pivotBeforeDuplicate=selectionPivot
+              ? {x:selectionPivot.x,y:selectionPivot.y}
+              : null;
             const dupIndices=duplicateSelection([selectedIndex]);
-            setSelection(dupIndices);
+            setSelectionPreservePivot(dupIndices,pivotBeforeDuplicate);
             selectedIndex=selectedIndices[0];
           }
 
@@ -8686,8 +8699,11 @@
 
         // Alt-drag duplicates the current selection and moves the copies.
         if(e.altKey && hitAlreadySelected){
+          const pivotBeforeDuplicate=selectionPivot
+            ? {x:selectionPivot.x,y:selectionPivot.y}
+            : null;
           const dupIndices=duplicateSelection(movingIndices);
-          setSelection(dupIndices);
+          setSelectionPreservePivot(dupIndices,pivotBeforeDuplicate);
         }
 
         selectStart=p;
