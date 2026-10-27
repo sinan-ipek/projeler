@@ -225,6 +225,7 @@ function setup(){
  for(const body of bodies){body.history=[];updateTrail(body)}
 }
 function addVRPreset(id,replaceExisting=false){
+ cancelObjectPlacement();
  dismount();vectorDrag=null;endTwoHand();grabs.clear();choosePlanets([]);
  accumulator=0;running=false;
  if(replaceExisting){
@@ -278,6 +279,30 @@ function addVRPreset(id,replaceExisting=false){
    const y=1-2*(i+.5)/count,phi=i*golden,radius=14+11*((i*13)%count)/(count-1);
    const ring=Math.sqrt(1-y*y),dx=ring*Math.cos(phi),dz=ring*Math.sin(phi);
    add(.48,colors[i%4],radius*dx,radius*y,radius*dz,0,0,0,8);
+  }
+ }else if(id==='eight'){
+  if(countBefore===0)planetMode=false;
+  const l=12,m=140,vs=Math.sqrt(G*m/l);
+  const q=[[-.97000436,.24308753],[.97000436,-.24308753],[0,0]];
+  const v=[[.466203685,.43236573],[.466203685,.43236573],[-.93240737,-.86473146]];
+  for(let i=0;i<3;i++)add(1.6,[0xe6ab44,0x508de1,0xdf6558][i],q[i][0]*l,0,q[i][1]*l,v[i][0]*vs,0,v[i][1]*vs,m);
+ }else if(id==='lagrange'){
+  if(countBefore===0)planetMode=false;
+  const m1=1000,m2=10,d=42,omega=Math.sqrt(G*(m1+m2)/(d*d*d));
+  const a=d*m2/(m1+m2),b=d*m1/(m1+m2);
+  add(5.0,0xffc857,-a,0,0,0,0,-omega*a,m1);
+  add(1.5,0x65a9fb,b,0,0,0,0,omega*b,m2);
+  const x=d*(.5-m2/(m1+m2)),z=d*Math.sqrt(3)/2;
+  for(const sign of [-1,1])add(.25,sign>0?0x8bebaa:0xf48fb6,x,0,sign*z,-omega*sign*z,0,omega*x,.001);
+ }else if(id==='galaxy'){
+  if(countBefore===0)planetMode=false;
+  const core=add(5,0xffdd88,0,0,0,0,0,0,1400);
+  const count=64;
+  for(let i=0;i<count;i++){
+   const arm=i%2,phase=i*2.399963+arm*Math.PI,r=17+68*(i+.5)/count;
+   const angle=phase+.055*r;
+   const v=Math.sqrt(G*core.mass*r*r/Math.pow(r*r+SOFT,1.5));
+   add(.23,[0xaad6ff,0xe3b3ff,0xffd2ac,0xa7dfdf][i%4],r*Math.cos(angle),0,r*Math.sin(angle),-v*Math.sin(angle),0,v*Math.cos(angle),.03);
   }
  }else if(id==='fireworks'){
   if(countBefore===0)planetMode=false;
@@ -338,12 +363,16 @@ function syncButtons(){
 }
 function action(name){
  if(name==='play')running=!running
- if(name==='reset'){dismount();vectorDrag=null;endTwoHand();grabs.clear();hoverBodies.clear();magneticTargets.clear();choosePlanets([]);setup();for(const ring of selectionRings.values())ring.visible=false}
+ if(name==='reset'){cancelObjectPlacement();dismount();vectorDrag=null;endTwoHand();grabs.clear();hoverBodies.clear();magneticTargets.clear();choosePlanets([]);setup();for(const ring of selectionRings.values())ring.visible=false}
  if(name==='mode'){planetMode=!planetMode;if(planetMode)for(const b of bodies){b.pos.y=Math.max(b.pos.y,-10+b.radius);b.history=[];updateTrail(b)}alignGroundToXRFloor()}
  if(name==='trails')showTrails=!showTrails;
  if(name==='velocities')showVelocities=!showVelocities;
  if(name==='near')bringNear();
- if(name==='new')createPlanet();
+ if(name==='new')startObjectPlacement('planet');
+ if(name==='tabObjects'){menuCategory='objects';refreshTopPanel();}
+ if(name==='cancelObject')cancelObjectPlacement();
+ if(name==='tabSystems'){menuCategory='systems';refreshTopPanel();}
+ if(name.startsWith('object:'))startObjectPlacement(name.slice(7));
  if(name==='clearSelection')choosePlanets([]);
  if(name==='coneMinus'||name==='conePlus'){
   const c=rightController||controllers.find(c=>c!==leftController)||controllers[0];
@@ -415,17 +444,19 @@ const menuWristRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector
 const labels=['play','reset','mode','trails','velocities'];
 const rightButtons=[['near','YAKINA GETIR'],['shrink','KUCULT'],['grow','BUYUT'],['copy','KOPYALA'],['delete','SIL']];
 const topButtons=[['ride','BIN'],['dismount','IN'],['micro','MIKRO'],['macro','MAKRO']];
-const presetNames={solar:'GUNES SISTEMI',fireworks:'HAVAİ FİŞEK',horizontal:'YATAY ATIS',angled:'EGIK ATIS',vertical:'DIKEY ATIS',binary:'CIFT YILDIZ',rings:'HALKALAR',collapse:'KUTLECEKIMSEL COKUS'};
+const presetNames={eight:'SEKIZ YORUNGESI',lagrange:'LAGRANGE NOKTALARI',galaxy:'GALAKSI',solar:'GUNES SISTEMI',fireworks:'HAVAİ FİŞEK',horizontal:'YATAY ATIS',angled:'EGIK ATIS',vertical:'DIKEY ATIS',binary:'CIFT YILDIZ',rings:'HALKALAR',collapse:'KUTLECEKIMSEL COKUS'};
 let selectedPreset='solar';
+let menuCategory='systems';
 let presetPage=0;
 const presetPages=[
  [['preset:solar','GUNES SISTEMI'],['preset:fireworks','HAVAİ FİŞEK'],['preset:horizontal','YATAY ATIS'],['preset:angled','EGIK ATIS'],['preset:vertical','DIKEY ATIS']],
- [['preset:binary','CIFT YILDIZ'],['preset:rings','HALKALAR'],['preset:collapse','KUTLECEKIMSEL COKUS']]
+ [['preset:binary','CIFT YILDIZ'],['preset:rings','HALKALAR'],['preset:collapse','KUTLECEKIMSEL COKUS']],
+ [['preset:eight','SEKIZ YORUNGESI'],['preset:lagrange','LAGRANGE'],['preset:galaxy','GALAKSI']]
 ];
 function presetButtons(){
- return [...presetPages[presetPage],
- ['presetPrev','< ONCEKI'],['presetNext','SONRAKI >'],
- ['applyAdd','EKLE +'],['applyTry','DENE']];
+ const tabs=[['tabObjects','NESNELER'],['tabSystems','SISTEMLER']];
+ if(menuCategory==='objects')return [...tabs,['object:planet','GEZEGEN'],['object:comet','KUYRUKLU YILDIZ'],['object:blackhole','KARA DELIK'],['cancelObject','IPTAL']];
+ return [...tabs,...presetPages[presetPage],['presetPrev','< ONCEKI'],['presetNext','SONRAKI >'],['applyAdd','EKLE +'],['applyTry','DENE']];
 }
 const utilityButtons=[['coneMinus','KONI -'],['conePlus','KONI +'],['clearSelection','SECIMI KALDIR'],['trails','YORUNGELER'],['velocities','HIZ OKLARI'],['reset','SIFIRLA']];
 function drawMenuFace(face,title,subtitle,buttons,highlight){
@@ -456,7 +487,9 @@ function refreshRightPanel(){
 }
 function refreshTopPanel(){
  drawMenuFace(rightFace,'GOZLEM',ridingBody?'Gezegende: '+(rideViewMode==='micro'?'MIKRO':'MAKRO'):'Serbest gozlem',topButtons,rideViewMode);
- drawMenuFace(ceilingFace,'HAZIR SISTEM '+(presetPage+1)+'/'+presetPages.length,presetNames[selectedPreset],presetButtons(),'preset:'+selectedPreset);
+ drawMenuFace(ceilingFace,menuCategory==='objects'?'NESNELER':'SISTEMLER '+(presetPage+1)+'/'+presetPages.length,
+ menuCategory==='objects'?'Sag isina yerlestir':'Secim: '+presetNames[selectedPreset],
+ presetButtons(),menuCategory==='objects'?'tabObjects':'preset:'+selectedPreset);
  drawMenuFace(bottomFace,'ARACLAR','',utilityButtons,null);
 }
 function updateHandMenu(){
@@ -599,6 +632,54 @@ function deleteSelected(){
  hoverBodies.clear();choosePlanets([]);
  $('status').textContent=targets.length+' gezegen silindi';
 }
+// Right-controller ray placement, with joystick depth adjustment.
+let objectPlacement=null;
+const placementGeometry=new THREE.SphereGeometry(1,24,16);
+const placementMaterial=new THREE.MeshBasicMaterial({color:0x78d5ff,transparent:true,opacity:.5,depthWrite:false});
+const placementPreview=new THREE.Mesh(placementGeometry,placementMaterial);
+placementPreview.visible=false;placementPreview.renderOrder=62;scene.add(placementPreview);
+function cancelObjectPlacement(){
+ objectPlacement=null;placementPreview.visible=false;
+ $('status').textContent='Nesne yerleştirme iptal edildi';
+}
+function startObjectPlacement(kind){
+ objectPlacement={kind,distance:1.0};
+ placementPreview.visible=true;
+ const colors={planet:0x80cbff,comet:0x9ce9ee,blackhole:0x5947a9};
+ placementMaterial.color.setHex(colors[kind]||0x80cbff);
+ $('status').textContent='Nesne: Sag isina yerlestir · Sag joystick ileri/geri · Tetik: olustur';
+}
+function updateObjectPlacement(controller,dt){
+ if(!objectPlacement||controller!==rightController)return;
+ rayFromController(controller);
+ const axes=controllerInputs.get(controller)?.gamepad?.axes||[];
+ const axisY=axes.length>=4?axes[3]:axes.length>=2?axes[1]:0;
+ if(Math.abs(axisY)>.15)objectPlacement.distance=THREE.MathUtils.clamp(objectPlacement.distance-axisY*2.2*dt,.22,15);
+ const position=raycaster.ray.at(objectPlacement.distance,new THREE.Vector3());
+ placementPreview.position.copy(position);
+ placementPreview.scale.setScalar(objectPlacement.kind==='blackhole'?.12:.075);
+ placementPreview.visible=true;
+}
+function commitObjectPlacement(controller){
+ if(!objectPlacement||controller!==rightController)return false;
+ rayFromController(controller);
+ const pos=raycaster.ray.at(objectPlacement.distance,new THREE.Vector3());
+ world.worldToLocal(pos);
+ const kind=objectPlacement.kind;
+ let b;
+ if(kind==='blackhole'){
+  b=makeBody(.7,0x362b6e,pos.x,pos.y,pos.z,0,0,0);
+  b.mass=2600; // compact Newtonian gravity source; not general relativity
+ }else if(kind==='comet'){
+  b=makeBody(.4,0x9ce9ee,pos.x,pos.y,pos.z,0,0,0);
+  // A highly eccentric orbit is produced by changing the velocity later.
+  b.mass=.35;
+ }else b=makeBody(.9,0x80cbff,pos.x,pos.y,pos.z,0,0,0);
+ updateTrail(b);choosePlanet(b);
+ cancelObjectPlacement();
+ $('status').textContent='Nesne olusturuldu: '+kind;
+ return true;
+}
 function createPlanet(){
  const view=renderer.xr.isPresenting?renderer.xr.getCamera():camera;
  const position=view.getWorldPosition(new THREE.Vector3());
@@ -707,6 +788,7 @@ function updateGrabsAndHover(dt){
  for(const controller of controllers){
   rayFromController(controller);
   const menuHit=raycaster.intersectObjects(menuFaces.map(f=>f.mesh).filter(p=>prism.visible&&p.visible),false).find(h=>h.distance<1);
+  updateObjectPlacement(controller,dt);
   const beam=controller.userData.beam;
   if(beam){
    beam.visible=!(controller===leftController&&handMenuOpen);
@@ -815,6 +897,7 @@ for(let i=0;i<2;i++){
    }
    return;
   }
+  if(commitObjectPlacement(controller))return;
   const hits=pickTargets(controller);
   choosePlanets(hits.map(h=>h.body));
   $('status').textContent=hits.length+' nesne koniyle seçildi';
