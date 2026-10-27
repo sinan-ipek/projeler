@@ -175,6 +175,14 @@ function drawBody(b){
    b.objectAccent.visible=true;
   }
  }
+ if(b.rocket){
+  const burning=b.rocket.burnRemaining>0;
+  b.rocketFlame.visible=burning;
+  if(burning){
+   b.rocketFlame.scale.y=.85+.17*Math.sin(b.rocket.burnRemaining*24);
+   b.rocketFlame.material.opacity=.72+.2*(b.rocket.burnRemaining/b.rocket.burnDuration);
+  }
+ }
  b.trail.visible=showTrails;
  const speed=b.v.length();
  b.arrow.visible=showVelocities&&speed>.00001;
@@ -197,6 +205,53 @@ function updateTrail(b){
  for(let i=0;i<b.history.length;i++)attr.setXYZ(i,b.history[i].x,b.history[i].y,b.history[i].z);
  attr.needsUpdate=true;b.trail.geometry.setDrawRange(0,b.history.length);
 }
+function disposeSpecialVisual(b){
+ if(b.objectAccent){
+  world.remove(b.objectAccent);b.objectAccent.geometry.dispose();b.objectAccent.material.dispose();b.objectAccent=null;
+ }
+ if(b.rocketVisual){
+  b.rocketVisual.traverse(child=>{
+   if(child.isMesh){child.geometry.dispose();if(Array.isArray(child.material))child.material.forEach(m=>m.dispose());else child.material.dispose();}
+  });
+  b.mesh.remove(b.rocketVisual);b.rocketVisual=null;b.rocketFlame=null;
+ }
+}
+function createSpecialBody(kind,pos,velocity=new THREE.Vector3(),direction=new THREE.Vector3(0,0,-1),opt={}){
+ const kinds={planet:[.9,0x80cbff,null],comet:[.4,0x9ce9ee,.35],blackhole:[.7,0x362b6e,2600],rocket:[1.05,0xe4eff7,4]};
+ const [defaultRadius,defaultColor,defaultMass]=kinds[kind]||kinds.planet;
+ const radius=opt.radius??defaultRadius,color=opt.color??defaultColor,v=velocity.clone();
+ const b=makeBody(radius,color,pos.x,pos.y,pos.z,v.x,v.y,v.z);
+ b.mass=opt.mass??(defaultMass??b.mass);b.objectKind=kind;
+ if(kind==='blackhole'){
+  b.objectAccent=new THREE.Mesh(new THREE.TorusGeometry(1.2,.13,8,48),
+   new THREE.MeshBasicMaterial({color:0xe8a44a,side:THREE.DoubleSide}));
+  b.objectAccent.rotation.x=Math.PI/2;world.add(b.objectAccent);
+ }else if(kind==='comet'){
+  b.objectAccent=new THREE.Mesh(new THREE.ConeGeometry(.24,3,12,1,true),
+   new THREE.MeshBasicMaterial({color:0x9ce9ee,transparent:true,opacity:.25,side:THREE.DoubleSide,depthWrite:false}));
+  world.add(b.objectAccent);
+ }else if(kind==='rocket'){
+  const dir=direction.clone().normalize();
+  if(dir.lengthSq()<.000001)dir.set(0,0,-1);
+  const duration=opt.burnDuration??5;
+  b.rocket={direction:dir,burnDuration:duration,burnRemaining:opt.burnRemaining??duration,
+   thrustAcceleration:opt.thrustAcceleration??4};
+  b.mesh.material.transparent=true;b.mesh.material.opacity=.06;
+  const model=new THREE.Group(),shell=new THREE.MeshStandardMaterial({color:0xcbdce8,metalness:.45,roughness:.32});
+  const noseMat=new THREE.MeshStandardMaterial({color:0xff6c59,roughness:.4}),finMat=new THREE.MeshStandardMaterial({color:0x63b9f8,roughness:.4});
+  model.add(new THREE.Mesh(new THREE.CylinderGeometry(.30,.36,1.15,14),shell));
+  const nose=new THREE.Mesh(new THREE.ConeGeometry(.30,.55,14),noseMat);nose.position.y=.84;model.add(nose);
+  for(const sign of [-1,1]){
+   const fin=new THREE.Mesh(new THREE.BoxGeometry(.12,.43,.48),finMat);fin.position.set(sign*.39,-.45,0);model.add(fin);
+  }
+  const flame=new THREE.Mesh(new THREE.ConeGeometry(.24,.8,12),
+   new THREE.MeshBasicMaterial({color:0xffae3f,transparent:true,opacity:.85,depthWrite:false,side:THREE.DoubleSide}));
+  flame.position.y=-1.05;flame.rotation.z=Math.PI;model.add(flame);
+  b.rocketVisual=model;b.rocketFlame=flame;b.mesh.add(model);
+  b.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+ }
+ drawBody(b);return b;
+}
 function disposeBodyArrow(b){
  if(!b.arrow)return;
  world.remove(b.arrow);
@@ -208,7 +263,7 @@ function clearBodies(){
  for(const b of bodies){
   world.remove(b.mesh,b.trail);
   b.mesh.material.dispose();b.trail.geometry.dispose();b.trail.material.dispose();
-  if(b.objectAccent){world.remove(b.objectAccent);b.objectAccent.geometry.dispose();b.objectAccent.material.dispose()}
+  disposeSpecialVisual(b);
   disposeBodyArrow(b)
  }
  bodies=[];
@@ -356,11 +411,25 @@ function accelerations(){
 }
 function step(){
  let a=accelerations();
+ const rocketThrust=new Map();
+ for(let i=0;i<bodies.length;i++){
+  const b=bodies[i];
+  if(!b.rocket||b.rocket.burnRemaining<=0||grabbedBody(b))continue;
+  const active=Math.min(DT,b.rocket.burnRemaining)/DT;
+  const acceleration=b.rocket.direction.clone().multiplyScalar(b.rocket.thrustAcceleration*active);
+  rocketThrust.set(b,acceleration);
+  a[i].add(acceleration);
+ }
  for(let i=0;i<bodies.length;i++){
   const b=bodies[i];if(grabbedBody(b))continue;b.v.addScaledVector(a[i],DT/2);b.pos.addScaledVector(b.v,DT);
  }
  a=accelerations();
- for(let i=0;i<bodies.length;i++)if(!grabbedBody(bodies[i]))bodies[i].v.addScaledVector(a[i],DT/2);
+ for(let i=0;i<bodies.length;i++){
+  const b=bodies[i];if(grabbedBody(b))continue;
+  if(rocketThrust.has(b))a[i].add(rocketThrust.get(b));
+  b.v.addScaledVector(a[i],DT/2);
+  if(rocketThrust.has(b))b.rocket.burnRemaining=Math.max(0,b.rocket.burnRemaining-DT);
+ }
  if(planetMode)for(const b of bodies){
   if(grabbedBody(b))continue;
   const ground=-10+b.radius;
@@ -714,28 +783,70 @@ function pickTargets(controller){
  magneticTargets.set(controller,best?.body||null);
  return best?[best]:[];
 }
+let copyClipboard=null,pastePlacement=null;
+const clipboardPreview=new THREE.Group();clipboardPreview.visible=false;world.add(clipboardPreview);
+function clearClipboardPreview(){
+ for(const child of [...clipboardPreview.children]){clipboardPreview.remove(child);child.geometry.dispose();child.material.dispose();}
+ clipboardPreview.visible=false;
+}
+function cancelPastePlacement(){pastePlacement=null;clearClipboardPreview();}
 function copySelected(){
- const originals=[...selectedBodies].filter(b=>bodies.includes(b));
- if(!originals.length)return;
- const shift=new THREE.Vector3(Math.max(2.5,...originals.map(b=>b.radius*2.5)),0,0);
- const copies=[];
- for(const b of originals){
-  const p=b.pos.clone().add(shift);
-  const clone=makeBody(b.radius,b.mesh.material.color.getHex(),p.x,p.y,p.z,b.v.x,b.v.y,b.v.z);
-  updateTrail(clone);copies.push(clone);
+ const chosen=[...selectedBodies].filter(b=>bodies.includes(b));
+ if(!chosen.length){$('status').textContent='Önce nesne seç';return;}
+ cancelPastePlacement();
+ const center=new THREE.Vector3();chosen.forEach(b=>center.add(b.pos));center.divideScalar(chosen.length);
+ copyClipboard=chosen.map(b=>({
+  offset:b.pos.clone().sub(center),radius:b.radius,mass:b.mass,
+  color:b.mesh.material.color.getHex(),velocity:b.v.clone(),kind:b.objectKind||'planet',
+  direction:b.rocket?.direction.clone()||new THREE.Vector3(0,0,-1),
+  burnDuration:b.rocket?.burnDuration,burnRemaining:b.rocket?.burnRemaining,
+  thrustAcceleration:b.rocket?.thrustAcceleration
+ }));
+ $('status').textContent=chosen.length+' nesne kopyalandı · YAPIŞTIR ile konumlandır';
+ refreshPanel();
+}
+function startPastePlacement(){
+ if(!copyClipboard?.length)return;
+ cancelObjectPlacement();cancelPastePlacement();pastePlacement={distance:1};
+ for(const data of copyClipboard){
+  const ghost=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),
+   new THREE.MeshBasicMaterial({color:data.color,transparent:true,opacity:.35,depthWrite:false}));
+  ghost.scale.setScalar(data.radius);ghost.position.copy(data.offset);clipboardPreview.add(ghost);
  }
- choosePlanets(copies);
- $('status').textContent=copies.length+' gezegen kopyalandı';
+ clipboardPreview.visible=true;
+ $('status').textContent='Yapıştır: Sağ ışınla yerleştir · Sağ tetik: onay';
+ refreshPanel();
+}
+function updatePastePlacement(controller,dt){
+ if(!pastePlacement||controller!==rightController)return;
+ rayFromController(controller);
+ const axes=controllerInputs.get(controller)?.gamepad?.axes||[];
+ const y=axes.length>=4?axes[3]:axes.length>=2?axes[1]:0;
+ if(Math.abs(y)>.15)pastePlacement.distance=THREE.MathUtils.clamp(pastePlacement.distance-y*2.2*dt,.22,15);
+ clipboardPreview.position.copy(world.worldToLocal(raycaster.ray.at(pastePlacement.distance,new THREE.Vector3())));
+}
+function commitPastePlacement(controller){
+ if(!pastePlacement||controller!==rightController)return false;
+ updatePastePlacement(controller,0);
+ const anchor=clipboardPreview.position.clone(),created=[];
+ for(const data of copyClipboard){
+  const p=anchor.clone().add(data.offset);
+  const b=createSpecialBody(data.kind,p,data.velocity,data.direction,data);
+  b.history=[];updateTrail(b);created.push(b);
+ }
+ cancelPastePlacement();copyClipboard=null;choosePlanets(created);
+ $('status').textContent=created.length+' nesne yapıştırıldı';refreshPanel();
+ return true;
 }
 function deleteSelected(){
  if(ridingBody&&selectedBodies.has(ridingBody))dismount();
  if(vectorDrag&&selectedBodies.has(vectorDrag.body))vectorDrag=null;
  const targets=[...selectedBodies].filter(b=>bodies.includes(b));
  if(!targets.length)return;
- if(twoHand&&targets.includes(twoHand.body))endTwoHand();
+ if(twoHand?.type==='objects'&&twoHand.members.some(m=>targets.includes(m.body)))endTwoHand();
  for(const [controller,grab] of grabs)if(targets.includes(grab.body))grabs.delete(controller);
  for(const b of targets){
-  world.remove(b.mesh,b.trail);b.mesh.material.dispose();b.trail.geometry.dispose();b.trail.material.dispose();disposeBodyArrow(b);
+  world.remove(b.mesh,b.trail);b.mesh.material.dispose();b.trail.geometry.dispose();b.trail.material.dispose();disposeSpecialVisual(b);disposeBodyArrow(b);
   const ring=selectionRings.get(b);
   if(ring){world.remove(ring);ring.geometry.dispose();ring.material.dispose();selectionRings.delete(b)}
   bodies.splice(bodies.indexOf(b),1);
@@ -754,10 +865,11 @@ function cancelObjectPlacement(){
  objectPlacement=null;placementPreview.visible=false;
  $('status').textContent='Nesne yerleştirme iptal edildi';
 }
-function startObjectPlacement(kind){
- objectPlacement={kind,distance:1.0};
+function startObjectPlacement(kind,replaceExisting=false){
+ cancelPastePlacement();
+ objectPlacement={kind,distance:1.0,replaceExisting};
  placementPreview.visible=true;
- const colors={planet:0x80cbff,comet:0x9ce9ee,blackhole:0x5947a9};
+ const colors={planet:0x80cbff,comet:0x9ce9ee,blackhole:0x5947a9,rocket:0xffbc56};
  placementMaterial.color.setHex(colors[kind]||0x80cbff);
  $('status').textContent='Nesne: Sag isina yerlestir · Sag joystick ileri/geri · Tetik: olustur';
 }
@@ -777,27 +889,19 @@ function commitObjectPlacement(controller){
  rayFromController(controller);
  const pos=raycaster.ray.at(objectPlacement.distance,new THREE.Vector3());
  world.worldToLocal(pos);
- const kind=objectPlacement.kind;
- let b;
- if(kind==='blackhole'){
-  b=makeBody(.7,0x362b6e,pos.x,pos.y,pos.z,0,0,0);
-  b.mass=2600; // compact Newtonian gravity source; not general relativity
-  b.objectKind='blackhole';
-  b.objectAccent=new THREE.Mesh(new THREE.TorusGeometry(1.2,.13,8,48),
-   new THREE.MeshBasicMaterial({color:0xe8a44a,side:THREE.DoubleSide}));
-  b.objectAccent.rotation.x=Math.PI/2;world.add(b.objectAccent);
- }else if(kind==='comet'){
-  b=makeBody(.4,0x9ce9ee,pos.x,pos.y,pos.z,0,0,0);
-  // A highly eccentric orbit is produced by changing the velocity later.
-  b.mass=.35;
-  b.objectKind='comet';
-  b.objectAccent=new THREE.Mesh(new THREE.ConeGeometry(.24,3,12,1,true),
-   new THREE.MeshBasicMaterial({color:0x9ce9ee,transparent:true,opacity:.25,side:THREE.DoubleSide,depthWrite:false}));
-  b.objectAccent.position.copy(b.pos);world.add(b.objectAccent);
- }else b=makeBody(.9,0x80cbff,pos.x,pos.y,pos.z,0,0,0);
+ const {kind,replaceExisting}=objectPlacement;
+ const worldOrientation=world.getWorldQuaternion(new THREE.Quaternion());
+ const localDirection=raycaster.ray.direction.clone().applyQuaternion(worldOrientation.invert()).normalize();
+ if(replaceExisting){
+  dismount();vectorDrag=null;endTwoHand();grabs.clear();choosePlanets([]);
+  clearBodies();hoverBodies.clear();magneticTargets.clear();
+  for(const ring of selectionRings.values())ring.visible=false;
+ }
+ const b=createSpecialBody(kind,pos,new THREE.Vector3(),localDirection);
  updateTrail(b);choosePlanet(b);
- cancelObjectPlacement();
- $('status').textContent='Nesne olusturuldu: '+kind;
+ if(kind==='rocket')running=true;
+ cancelObjectPlacement();syncButtons();refreshPanel();
+ $('status').textContent=(replaceExisting?'Deneme başlatıldı: ':'Nesne eklendi: ')+kind;
  return true;
 }
 function createPlanet(){
@@ -897,6 +1001,7 @@ function updateGrabsAndHover(dt){
   rayFromController(controller);
   const menuHit=raycaster.intersectObjects(menuFaces.map(f=>f.mesh).filter(p=>prism.visible&&p.visible),false).find(h=>h.distance<1);
   updateObjectPlacement(controller,dt);
+  updatePastePlacement(controller,dt);
   const beam=controller.userData.beam;
   if(beam){
    beam.visible=!(controller===leftController&&handMenuOpen);
@@ -906,7 +1011,7 @@ function updateGrabsAndHover(dt){
   const pad=controllerInputs.get(controller)?.gamepad;
   const axes=pad?.axes||[];
   const sideAxis=axes.length>=4?(Math.abs(axes[2])>Math.abs(axes[0]||0)?axes[2]:axes[0]):axes.length>=2?axes[0]:0;
-  if(controller===rightController&&!grabs.has(controller)&&!objectPlacement&&Math.abs(sideAxis)>.18){
+  if(controller===rightController&&!grabs.has(controller)&&!objectPlacement&&!pastePlacement&&Math.abs(sideAxis)>.18){
    const before=coneAngles.get(controller)||0;
    let next=THREE.MathUtils.clamp(before+sideAxis*dt*.6,0,MAX_CONE);
    if(next<THREE.MathUtils.degToRad(.35))next=0;
@@ -1005,6 +1110,7 @@ for(let i=0;i<2;i++){
    }
    return;
   }
+  if(commitPastePlacement(controller))return;
   if(commitObjectPlacement(controller))return;
   const hits=pickTargets(controller);
   choosePlanets(hits.map(h=>h.body));
@@ -1057,10 +1163,11 @@ renderer.xr.addEventListener('sessionstart',()=>{
  $('status').textContent='VR v11.0 · X: tek menü · Sol grip: gezin · Sağ tetik: seç/yerleştir';
 });
 renderer.xr.addEventListener('sessionend',()=>{
- dismount();vectorDrag=null;endTwoHand();heldGrips.clear();grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;rightMenuOpen=false;
+ dismount();vectorDrag=null;endTwoHand();heldGrips.clear();grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;rightMenuOpen=false;cancelPastePlacement();cancelObjectPlacement();
  initialView();snapReady=true;stickClickLast=false;
  $('status').textContent='VR kapalı · Masaüstü önizlemesi';
 });
+let lastMenuRedraw=-1;
 const clock=new THREE.Clock();
 renderer.setAnimationLoop(()=>{
  const dt=Math.min(clock.getDelta(),.05);
@@ -1074,7 +1181,7 @@ renderer.setAnimationLoop(()=>{
  updateGrabsAndHover(dt);
  for(const b of bodies)drawBody(b);
  updateRidingView();
- if(handMenuOpen)refreshRightPanel();
+ if(handMenuOpen&&Math.floor(performance.now()/250)!==lastMenuRedraw){lastMenuRedraw=Math.floor(performance.now()/250);refreshPanel();}
  renderer.render(scene,camera);
 });
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
