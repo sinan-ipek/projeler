@@ -16,7 +16,7 @@ button:hover{background:#3678bd}#status{font-size:12px;color:#a8cde8;margin-top:
 </head>
 <body>
 <div id="top">
-<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v11.2 · VR</small></h1>
+<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v11.3 · VR</small></h1>
 <p>Sol joystick: Uç / 30° dön / Bas: Başa dön · Sol tetik: Oynat/Duraklat · Sol grip: Tut ve çek · X: Menü · Sağ tetik: Seç/Yerleştir · İki grip: Ölçek</p>
 <div><button id="play">⏸ Duraklat</button><button id="reset">↻ Sıfırla</button><button id="mode">🌌 Uzay</button><button id="trails">Yörüngeler: Açık</button></div>
 <div id="status">Hazırlanıyor…</div><p id="warning"></p>
@@ -207,10 +207,13 @@ function drawBody(b){
   b.velocityHandle.position.copy(b.pos).addScaledVector(dir,length);
  }
 }
-// Holders are UI controls, not planets: target a nearly fixed 1.5-degree
-// visual diameter regardless of the observer's distance.
+// The velocity handle is a UI control. Keep its comfortable near-field size,
+// then gently reduce its apparent diameter at long viewing distances.
 const HANDLE_ANGLE_RADIUS=THREE.MathUtils.degToRad(.75);
 const HANDLE_GEOMETRY_RADIUS=.65;
+const HANDLE_FALLOFF_NEAR=1.5; // metres: unchanged at this distance and nearer
+const HANDLE_FALLOFF_FAR=5.0;  // metres: fully tapered after this distance
+const HANDLE_FAR_REDUCTION=.15; // maximum 15% smaller than v11.2
 function updateVelocityHandleSizes(dt){
  const view=renderer.xr.isPresenting?renderer.xr.getCamera():camera;
  const eye=view.getWorldPosition(new THREE.Vector3());
@@ -219,7 +222,10 @@ function updateVelocityHandleSizes(dt){
  for(const body of bodies){
   if(!body.velocityHandle.visible)continue;
   const distance=body.velocityHandle.getWorldPosition(new THREE.Vector3()).distanceTo(eye);
-  const desired=THREE.MathUtils.clamp(distance*Math.tan(HANDLE_ANGLE_RADIUS)/worldScale,.12,2.7);
+  const t=THREE.MathUtils.clamp((distance-HANDLE_FALLOFF_NEAR)/(HANDLE_FALLOFF_FAR-HANDLE_FALLOFF_NEAR),0,1);
+  const smooth=t*t*(3-2*t); // smoothstep; no sharp size transition
+  const baseline=THREE.MathUtils.clamp(distance*Math.tan(HANDLE_ANGLE_RADIUS)/worldScale,.12,2.7);
+  const desired=baseline*(1-HANDLE_FAR_REDUCTION*smooth);
   const current=body.velocityHandle.scale.x*HANDLE_GEOMETRY_RADIUS;
   const next=current+(desired-current)*blend;
   body.velocityHandle.scale.setScalar(next/HANDLE_GEOMETRY_RADIUS);
@@ -1362,7 +1368,7 @@ for(let i=0;i<2;i++){
 renderer.xr.addEventListener('sessionstart',()=>{
  handMenuOpen=false;rightMenuOpen=false;heldGrips.clear();endTwoHand();
  initialView();snapReady=true;stickClickLast=false;
- $('status').textContent='VR v11.2 · X: tek menü · Çarpışmalar: 5 mod · Sağ tetik: seç/yerleştir';
+ $('status').textContent='VR v11.3 · X: tek menü · Çarpışmalar: 5 mod · Sağ tetik: seç/yerleştir';
 });
 renderer.xr.addEventListener('sessionend',()=>{
  dismount();vectorDrag=null;endTwoHand();heldGrips.clear();grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;rightMenuOpen=false;cancelPastePlacement();cancelObjectPlacement();
