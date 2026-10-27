@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.26</title>
+<title>Beyaz Tahta v16.27</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -998,7 +998,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.26 (değiştirilebilir döndürme merkezi)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.27 (pivot sağ tık sıfırla + köşe snap)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1051,6 +1051,7 @@
               <li>Ctrl + tıklama ile seçime nesne ekle / çıkar.</li>
               <li>Nesneleri taşı, boyutlandır ve döndür.</li>
               <li>Seçimde turuncu hedef işareti döndürme merkezidir; sürükleyerek pivotu değiştir ve nesneyi/grubu bu noktanın etrafında döndür.</li>
+              <li>Pivotta sağ tık varsayılan merkeze döndürür; Snap açıksa pivot seçili olmayan nesnelerin köşe/uç noktalarına yapışır.</li>
               <li>Doğru parçasında A ve B uçlarına ek olarak orta noktadan çıkan döndürme tutamacını kullan.</li>
               <li>Hazır şekillerin gerçek düzenleme handle'larını tek tek taşı.</li>
               <li>Nokta Snap düğmesi açıkken gerçek düzenleme noktaları diğer nesnelerin köşe/uç/düzenleme noktalarına yapışır.</li>
@@ -4080,6 +4081,34 @@
     }
 
     return [];
+  }
+
+  function snapPivotToCornerPoint(p){
+    if(!pointSnapEnabled || !p){
+      return {x:p.x,y:p.y,snapped:false};
+    }
+
+    const selectedSet=new Set(selectedIndices);
+    const threshold=12/viewZoom;
+
+    let best=null;
+    let bestD=Infinity;
+
+    for(let i=0;i<objects.length;i++){
+      if(selectedSet.has(i)) continue;
+
+      for(const q of objectCornerSnapPoints(objects[i])){
+        const d=Math.hypot(q.x-p.x,q.y-p.y);
+        if(d<=threshold && d<bestD){
+          bestD=d;
+          best={x:q.x,y:q.y,objectIndex:i};
+        }
+      }
+    }
+
+    return best
+      ? {...best,snapped:true}
+      : {x:p.x,y:p.y,snapped:false};
   }
 
   function snapWholeObjectMove(snapshot,dx,dy,excludeIndex=-1){
@@ -8324,12 +8353,26 @@
     }
 
     // Right button:
+    // - right-click on the rotation pivot = reset pivot to natural center
     // - normal click = context menu
     // - normal drag = pan
     // - Ctrl + right click/drag = temporary eraser
     if(e.button===2){
       e.preventDefault();
       closeContextMenu();
+
+      if(
+        mode==='select' &&
+        selectedIndices.length &&
+        !e.ctrlKey &&
+        hitRotationPivot(p,e.pointerType)
+      ){
+        selectionPivot=null;
+        selectPivotSnapshot=null;
+        redraw();
+        statusEl.textContent='Döndürme merkezi varsayılan konumuna döndü';
+        return;
+      }
 
       const ctrlEraser=!!e.ctrlKey;
 
@@ -8835,8 +8878,11 @@
       }
 
       if(selectAction==='groupPivot' || selectAction==='pivot'){
-        selectionPivot={x:p.x,y:p.y};
-        statusEl.textContent='Döndürme merkezi taşınıyor';
+        const snapped=snapPivotToCornerPoint(p);
+        selectionPivot={x:snapped.x,y:snapped.y};
+        statusEl.textContent=snapped.snapped
+          ? 'Döndürme merkezi snap — köşe/uç noktasına yapıştı'
+          : 'Döndürme merkezi taşınıyor';
         redraw();
         return;
       }
