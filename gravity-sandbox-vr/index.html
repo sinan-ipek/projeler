@@ -16,7 +16,7 @@ button:hover{background:#3678bd}#status{font-size:12px;color:#a8cde8;margin-top:
 </head>
 <body>
 <div id="top">
-<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v11.0 · VR</small></h1>
+<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v11.1 · VR</small></h1>
 <p>Sol joystick: Uç / 30° dön / Bas: Başa dön · Sol tetik: Oynat/Duraklat · Sol grip: Tut ve çek · X: Menü · Sağ tetik: Seç/Yerleştir · İki grip: Ölçek</p>
 <div><button id="play">⏸ Duraklat</button><button id="reset">↻ Sıfırla</button><button id="mode">🌌 Uzay</button><button id="trails">Yörüngeler: Açık</button></div>
 <div id="status">Hazırlanıyor…</div><p id="warning"></p>
@@ -496,7 +496,7 @@ const menuAnchorOffset=new THREE.Vector3(.12,.10,-.37);
 const menuWristRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-.24);
 let menuPage='home',chosenEntry='object:planet';
 const catalogItems=[
- ['object:planet','GEZEGEN'],['object:comet','KUYRUKLU YILDIZ'],['object:blackhole','KARA DELİK'],['object:rocket','ROKET'],
+ ['object:planet','GEZEGEN'],['object:blackhole','KARA DELİK'],['object:rocket','ROKET'],
  ['preset:solar','GÜNEŞ SİSTEMİ'],['preset:fireworks','HAVAİ FİŞEK'],['preset:horizontal','YATAY ATIŞ'],
  ['preset:angled','EĞİK ATIŞ'],['preset:vertical','DİKEY ATIŞ'],['preset:binary','ÇİFT YILDIZ'],
  ['preset:rings','HALKALAR'],['preset:collapse','KÜTLEÇEKİMSEL ÇÖKÜŞ'],
@@ -886,7 +886,12 @@ function updateObjectPlacement(controller,dt){
  const position=raycaster.ray.at(objectPlacement.distance,new THREE.Vector3());
  placementPreview.position.copy(position);
  if(objectPlacement.kind==='rocket'){
-  placementPreview.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),raycaster.ray.direction.clone().normalize());
+  // In planet mode the nose must point against the downward gravity vector.
+  // In space mode it keeps pointing along the right-hand controller ray.
+  const launchDirection=planetMode
+   ?new THREE.Vector3(0,1,0).applyQuaternion(world.getWorldQuaternion(new THREE.Quaternion()))
+   :raycaster.ray.direction.clone().normalize();
+  placementPreview.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),launchDirection.normalize());
  }else placementPreview.quaternion.identity();
  placementPreview.scale.setScalar(objectPlacement.kind==='blackhole'?.12:objectPlacement.kind==='rocket'?.11:.075);
  placementPreview.visible=true;
@@ -896,14 +901,18 @@ function commitObjectPlacement(controller){
  rayFromController(controller);
  const pos=raycaster.ray.at(objectPlacement.distance,new THREE.Vector3());
  const {kind,replaceExisting}=objectPlacement;
- const worldOrientation=world.getWorldQuaternion(new THREE.Quaternion());
- const localDirection=raycaster.ray.direction.clone().applyQuaternion(worldOrientation.invert()).normalize();
  if(replaceExisting){
   dismount();vectorDrag=null;endTwoHand();grabs.clear();choosePlanets([]);
   clearBodies();hoverBodies.clear();magneticTargets.clear();
   for(const ring of selectionRings.values())ring.visible=false;
+  // "Dene" replaces existing objects but must preserve the selected physics mode.
+  syncButtons();
  }
- if(replaceExisting){planetMode=false;syncButtons();}
+ // World +Y is upward in planet mode; thrust and rocket nose share this direction.
+ // Resolve after a possible dismount because it may alter the world transform.
+ const localDirection=(kind==='rocket'&&planetMode)
+  ?new THREE.Vector3(0,1,0)
+  :raycaster.ray.direction.clone().applyQuaternion(world.getWorldQuaternion(new THREE.Quaternion()).invert()).normalize();
  world.worldToLocal(pos);
  const b=createSpecialBody(kind,pos,new THREE.Vector3(),localDirection);
  updateTrail(b);choosePlanet(b);
@@ -1168,7 +1177,7 @@ for(let i=0;i<2;i++){
 renderer.xr.addEventListener('sessionstart',()=>{
  handMenuOpen=false;rightMenuOpen=false;heldGrips.clear();endTwoHand();
  initialView();snapReady=true;stickClickLast=false;
- $('status').textContent='VR v11.0 · X: tek menü · Sol grip: gezin · Sağ tetik: seç/yerleştir';
+ $('status').textContent='VR v11.1 · X: tek menü · Sol grip: gezin · Sağ tetik: seç/yerleştir';
 });
 renderer.xr.addEventListener('sessionend',()=>{
  dismount();vectorDrag=null;endTwoHand();heldGrips.clear();grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;rightMenuOpen=false;cancelPastePlacement();cancelObjectPlacement();
