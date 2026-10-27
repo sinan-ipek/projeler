@@ -16,8 +16,8 @@ button:hover{background:#3678bd}#status{font-size:12px;color:#a8cde8;margin-top:
 </head>
 <body>
 <div id="top">
-<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v9.9 · VR</small></h1>
-<p>Sol X / Sağ A: Menü · Tetik: Seç · Grip: Taşı · Joystick: Koni / Mesafe</p>
+<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v10.1 · VR</small></h1>
+<p>Sol joystick: Uç / 30° dön / Bas: Başa dön · Sol tetik: Oynat/Duraklat · Sol X: Menü · Sağ tetik: Seç · İki grip: Ölçek</p>
 <div><button id="play">⏸ Duraklat</button><button id="reset">↻ Sıfırla</button><button id="mode">🌌 Uzay</button><button id="trails">Yörüngeler: Açık</button></div>
 <div id="status">Hazırlanıyor…</div><p id="warning"></p>
 </div>
@@ -42,7 +42,10 @@ scene.add(new THREE.HemisphereLight(0xb9dbff,0x243044,2.4));
 const light=new THREE.DirectionalLight(0xffffff,1.3);light.position.set(-3,7,5);scene.add(light);
 // Simülasyon birimi dünya içinde 4 santimetreye eşit. Başlangıçta gezegenler kullanıcı önünde durur.
 const SCALE=.04;
-const world=new THREE.Group();world.position.set(0,1.4,-2.25);world.scale.setScalar(SCALE);scene.add(world);
+// Navigation and universe scaling never modify the N-body positions or velocities.
+const navigationRoot=new THREE.Group();scene.add(navigationRoot);
+const universeRoot=new THREE.Group();navigationRoot.add(universeRoot);
+const world=new THREE.Group();world.position.set(0,1.4,-2.25);world.scale.setScalar(SCALE);universeRoot.add(world);
 const originalWorldPosition=world.position.clone();
 function alignGroundToXRFloor(){
  if(ridingBody)return;
@@ -520,11 +523,105 @@ const raycaster=new THREE.Raycaster(),tempMatrix=new THREE.Matrix4();
 const controllers=[];
 const grabs=new Map();
 let twoHand=null;
+const heldGrips=new Set();
 function handPosition(c){return c.getWorldPosition(new THREE.Vector3());}
 function endTwoHand(){twoHand=null;}
+const LEFT_FLY_SPEED=2.2,LEFT_TURN_ANGLE=THREE.MathUtils.degToRad(30);
+let smoothFlySpeed=0,snapReady=true,stickClickLast=false;
+function initialView(){
+ navigationRoot.position.set(0,0,0);
+ navigationRoot.quaternion.identity();
+ smoothFlySpeed=0;
+ $('status').textContent='Bakış konumu başlangıca döndü · Simülasyon aynı kaldı';
+}
+function headWorldPosition(){
+ return (renderer.xr.isPresenting?renderer.xr.getCamera():camera).getWorldPosition(new THREE.Vector3());
+}
+function updateNavigation(dt){
+ if(!renderer.xr.isPresenting||!leftController)return;
+ const pad=controllerInputs.get(leftController)?.gamepad, axes=pad?.axes||[];
+ const x=axes.length>=4?axes[2]:(axes[0]||0);
+ const y=axes.length>=4?axes[3]:(axes[1]||0);
+ // Meta Quest joystick button is exposed at WebXR Gamepad index 3.
+ const pressed=!!pad?.buttons?.[3]?.pressed;
+ if(pressed&&!stickClickLast){initialView();}
+ stickClickLast=pressed;
+ if(pressed)return;
+ // One 30-degree snap turn per lateral deflection (re-arm at centre).
+ if(Math.abs(x)<.35)snapReady=true;
+ else if(snapReady&&Math.abs(x)>.7){
+  const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),-Math.sign(x)*LEFT_TURN_ANGLE);
+  const eye=headWorldPosition();
+  navigationRoot.position.sub(eye).applyQuaternion(q).add(eye);
+  navigationRoot.quaternion.premultiply(q);
+  snapReady=false;
+ }
+ // Fly precisely in the direction of gaze, including upward/downward pitch.
+ const input=-y, desired=Math.abs(input)>.14?input*LEFT_FLY_SPEED:0;
+ smoothFlySpeed+=(desired-smoothFlySpeed)*(1-Math.exp(-9*dt));
+ if(Math.abs(smoothFlySpeed)<.001)smoothFlySpeed=0;
+ if(smoothFlySpeed){
+  const q=renderer.xr.getCamera().getWorldQuaternion(new THREE.Quaternion());
+  const forward=new THREE.Vector3(0,0,-1).applyQuaternion(q).normalize();
+  navigationRoot.position.addScaledVector(forward,-smoothFlySpeed*dt);
+ }
+}
+function beginDualScale(){
+ if(heldGrips.size<2||twoHand)return;
+ const pair=controllers.filter(c=>heldGrips.has(c));
+ if(pair.length<2)return;
+ const distance=Math.max(.035,handPosition(pair[0]).distanceTo(handPosition(pair[1])));
+ const targets=[...selectedBodies].filter(b=>bodies.includes(b));
+ if(targets.length){
+  twoHand={type:'objects',primary:pair[0],secondary:pair[1],startDistance:distance,
+   members:targets.map(body=>({body,radius:body.radius,mass:body.mass}))};
+  $('status').textContent=targets.length+' nesne iki grip ile ölçekleniyor';
+ }else{
+  twoHand={type:'universe',primary:pair[0],secondary:pair[1],startDistance:distance,
+   startScale:universeRoot.scale.x,startPos:universeRoot.position.clone(),
+   pivot:navigationRoot.worldToLocal(headWorldPosition())};
+  $('status').textContent='İki grip ile evren ölçeği';
+ }
+}
+function updateDualScale(){
+ if(!twoHand)return;
+ const distance=handPosition(twoHand.primary).distanceTo(handPosition(twoHand.secondary));
+ const factor=THREE.MathUtils.clamp(distance/twoHand.startDistance,.02,50);
+ if(twoHand.type==='universe'){
+  const scale=THREE.MathUtils.clamp(twoHand.startScale*factor,.025,30);
+  const ratio=scale/twoHand.startScale;
+  universeRoot.scale.setScalar(scale);
+  // Keep the headset as the pivot so scaling is smooth and does not jump.
+  universeRoot.position.copy(twoHand.startPos).sub(twoHand.pivot).multiplyScalar(ratio).add(twoHand.pivot);
+ }else{
+  for(const {body,radius,mass} of twoHand.members){
+   if(!bodies.includes(body))continue;
+   const r=THREE.MathUtils.clamp(radius*factor,.2,12);
+   body.radius=r;
+   body.mass=mass*Math.pow(r/radius,3); // also preserves special object densities
+   body.mesh.scale.setScalar(r);
+   if(planetMode)body.pos.y=Math.max(body.pos.y,-10+r);
+  }
+ }
+}
+function finishDualScale(controller){
+ heldGrips.delete(controller);
+ if(!twoHand)return false;
+ endTwoHand();
+ grabs.delete(controller);
+ for(const [ctrl,grab] of grabs){
+  if(!bodies.includes(grab.body))continue;
+  rayFromController(ctrl);
+  const center=grab.body.mesh.getWorldPosition(new THREE.Vector3());
+  grab.distance=Math.max(.12,center.clone().sub(raycaster.ray.origin).dot(raycaster.ray.direction));
+  grab.offset.copy(center.sub(raycaster.ray.at(grab.distance,new THREE.Vector3())));
+  grab.samples=[{p:grab.body.pos.clone(),t:performance.now()/1000}];
+ }
+ return true;
+}
 let selectedPlanet=null;
 const selectedBodies=new Set();
-const grabbedBody=b=>[...grabs.values()].some(g=>g.body===b||(g.members&&g.members.some(m=>m.body===b)));
+const grabbedBody=b=>(twoHand?.type==='objects'&&twoHand.members.some(m=>m.body===b))||[...grabs.values()].some(g=>g.body===b||(g.members&&g.members.some(m=>m.body===b)));
 const JOYSTICK_SPEED=3.5;
 function choosePlanets(items){
  selectedBodies.clear();
@@ -579,10 +676,10 @@ function pickTargets(controller){
    const dist=v.length();
    if(dist<.00001)continue;
    const longitudinal=direction.dot(v);
-   if(longitudinal<-body.radius*world.scale.x)continue;
+   if(longitudinal<-body.radius*world.getWorldScale(new THREE.Vector3()).x)continue;
    const error=Math.acos(THREE.MathUtils.clamp(longitudinal/dist,-1,1));
-   const apparentRadius=Math.asin(Math.min(1,body.radius*world.scale.x/dist));
-   if(error<=angle+apparentRadius&&longitudinal<=CONE_VISUAL_LENGTH+body.radius*world.scale.x)selected.push({body,distance:dist,angle:error});
+   const apparentRadius=Math.asin(Math.min(1,body.radius*world.getWorldScale(new THREE.Vector3()).x/dist));
+   if(error<=angle+apparentRadius&&longitudinal<=CONE_VISUAL_LENGTH+body.radius*world.getWorldScale(new THREE.Vector3()).x)selected.push({body,distance:dist,angle:error});
   }
   selected.sort((x,y)=>x.angle-y.angle);
   magneticTargets.delete(controller);
@@ -602,7 +699,7 @@ function pickTargets(controller){
   const alignment=direction.dot(offset)/dist;
   if(alignment<=0)continue;
   const error=Math.acos(THREE.MathUtils.clamp(alignment,-1,1));
-  const radius=Math.asin(Math.min(1,body.radius*world.scale.x/dist));
+  const radius=Math.asin(Math.min(1,body.radius*world.getWorldScale(new THREE.Vector3()).x/dist));
   if(error<=magneticAngle+radius&&error<bestAngle){best={body,distance:dist,angle:error};bestAngle=error}
  }
  const previous=magneticTargets.get(controller);
@@ -610,7 +707,7 @@ function pickTargets(controller){
   const offset=previous.mesh.getWorldPosition(new THREE.Vector3()).sub(origin),dist=offset.length();
   if(dist>.00001){
    const error=Math.acos(THREE.MathUtils.clamp(direction.dot(offset)/dist,-1,1));
-   if(error<magneticAngle+THREE.MathUtils.degToRad(1.2)+Math.asin(Math.min(1,previous.radius*world.scale.x/dist)))best={body:previous,distance:dist,angle:error};
+   if(error<magneticAngle+THREE.MathUtils.degToRad(1.2)+Math.asin(Math.min(1,previous.radius*world.getWorldScale(new THREE.Vector3()).x/dist)))best={body:previous,distance:dist,angle:error};
   }
  }
  magneticTargets.set(controller,best?.body||null);
@@ -780,21 +877,8 @@ function estimateThrowVelocity(samples){
  return velocity.clampLength(0,THROW_MAX);
 }
 function releaseGrab(controller){
+ if(finishDualScale(controller))return;
  if(vectorDrag&&vectorDrag.controller===controller){vectorDrag=null;return;}
- if(twoHand&&twoHand.secondary===controller){
-  endTwoHand();$('status').textContent='İki elle ölçeklendirme bitti';return;
- }
- if(twoHand&&twoHand.primary===controller){
-  // Continue holding the planet with the remaining hand without a sudden jump.
-  const other=twoHand.secondary,body=twoHand.body;
-  endTwoHand();grabs.delete(controller);
-  rayFromController(other);
-  const center=body.mesh.getWorldPosition(new THREE.Vector3());
-  const distance=Math.max(.12,center.distanceTo(raycaster.ray.origin));
-  const point=raycaster.ray.at(distance,new THREE.Vector3());
-  grabs.set(other,{body,distance,offset:center.sub(point),samples:[{p:body.pos.clone(),t:performance.now()/1000}]});
-  return;
- }
  const g=grabs.get(controller);if(!g)return;
  const launch=estimateThrowVelocity(g.samples);
  const members=g.members||[{body:g.body}];
@@ -820,7 +904,7 @@ function updateGrabsAndHover(dt){
   const pad=controllerInputs.get(controller)?.gamepad;
   const axes=pad?.axes||[];
   const sideAxis=axes.length>=4?(Math.abs(axes[2])>Math.abs(axes[0]||0)?axes[2]:axes[0]):axes.length>=2?axes[0]:0;
-  if(!grabs.has(controller)&&Math.abs(sideAxis)>.18){
+  if(controller===rightController&&!grabs.has(controller)&&!objectPlacement&&Math.abs(sideAxis)>.18){
    const before=coneAngles.get(controller)||0;
    let next=THREE.MathUtils.clamp(before+sideAxis*dt*.6,0,MAX_CONE);
    if(next<THREE.MathUtils.degToRad(.35))next=0;
@@ -835,6 +919,8 @@ function updateGrabsAndHover(dt){
    else{ /* One left-hand prism menu only. */ }
   }
   lastMenuPress.set(controller,menuPressed);
+  // Left controller has no ray, cone, selection or hover interaction.
+  if(controller===leftController)continue;
   const cone=coneVisuals[controllers.indexOf(controller)];
   if(cone){
    const thisAngle=coneAngles.get(controller)||0;
@@ -849,6 +935,7 @@ function updateGrabsAndHover(dt){
    const velocity=hit.sub(vectorDrag.body.pos).divideScalar(.48);
    vectorDrag.body.v.copy(velocity.clampLength(0,40));
   }
+  if(twoHand)continue;
   if(g){
    const axes=controllerInputs.get(controller)?.gamepad?.axes||[];
    const axisY=axes.length>=4?axes[3]:axes.length>=2?axes[1]:0;
@@ -877,15 +964,7 @@ function updateGrabsAndHover(dt){
   b.mesh.material.emissive.setHex(highlighted?0x284866:0);
   b.mesh.material.emissiveIntensity=highlighted?.6:0;
  }
- if(twoHand){
-  const distance=handPosition(twoHand.primary).distanceTo(handPosition(twoHand.secondary));
-  const desired=THREE.MathUtils.clamp(twoHand.startRadius*distance/twoHand.startDistance,.2,12);
-  const b=twoHand.body;
-  if(Math.abs(b.radius-desired)>.001){
-   b.radius=desired;b.mass=DENSITY_FACTOR*desired**3;b.mesh.scale.setScalar(desired);
-   if(planetMode)b.pos.y=Math.max(b.pos.y,-10+desired);
-  }
- }
+ updateDualScale();
  updateSelectionRing();
 }
 const controllerFactory=new XRControllerModelFactory();
@@ -904,10 +983,15 @@ for(let i=0;i<2;i++){
  controller.addEventListener('connected',e=>{
   controllerInputs.set(controller,e.data);
   if(e.data.handedness==='right')rightController=controller;
-  if(e.data.handedness==='left')leftController=controller;
+  if(e.data.handedness==='left'){
+   leftController=controller;
+   controller.remove(pointerBeam);pointerBeam.geometry.dispose();pointerBeam.material.dispose();
+   controller.userData.beam=null;coneMesh.visible=false;
+  }
  });
  controller.addEventListener('disconnected',()=>{controllerInputs.delete(controller);releaseGrab(controller)});
  controller.addEventListener('selectstart',()=>{
+  if(controller===leftController){action('play');return;}
   rayFromController(controller);
   const panelHit=raycaster.intersectObjects(menuFaces.map(f=>f.mesh).filter(p=>prism.visible&&p.visible),false).find(h=>h.distance<1);
   if(panelHit){
@@ -925,6 +1009,9 @@ for(let i=0;i<2;i++){
   $('status').textContent=hits.length+' nesne koniyle seçildi';
  });
  controller.addEventListener('squeezestart',()=>{
+  heldGrips.add(controller);
+  if(heldGrips.size>=2){beginDualScale();return;}
+  if(controller===leftController)return;
   rayFromController(controller);
   if(showVelocities&&!vectorDrag){
    const handles=bodies.filter(b=>b.velocityHandle.visible&&!grabbedBody(b));
@@ -952,15 +1039,6 @@ for(let i=0;i<2;i++){
   if(!hit)return;
   const body=hit.body;
   if(!body)return;
-  const existing=[...grabs.entries()].find(([,g])=>g.body===body);
-  if(existing){
-   if(twoHand||existing[0]===controller)return;
-   const separation=handPosition(controller).distanceTo(handPosition(existing[0]));
-   if(separation<.035)return;
-   twoHand={body,primary:existing[0],secondary:controller,startDistance:separation,startRadius:body.radius};
-   $('status').textContent='İki el: uzaklaştır büyüt · yaklaştır küçült';
-   return;
-  }
   if(!selectedBodies.has(body))choosePlanet(body);
   const members=[...selectedBodies].filter(b=>bodies.includes(b)).map(body=>({body}));
   const center=body.mesh.getWorldPosition(new THREE.Vector3());
@@ -972,11 +1050,13 @@ for(let i=0;i<2;i++){
  const grip=renderer.xr.getControllerGrip(i);grip.add(controllerFactory.createControllerModel(grip));scene.add(grip);
 }
 renderer.xr.addEventListener('sessionstart',()=>{
- handMenuOpen=false;rightMenuOpen=false;
- $('status').textContent='v9.1 · Sol X: menüyü aç/kapat';
+ handMenuOpen=false;rightMenuOpen=false;heldGrips.clear();endTwoHand();
+ initialView();snapReady=true;stickClickLast=false;
+ $('status').textContent='VR v10.1 · Sol joystick: uç/dön/bas: başlangıç · Sol tetik: oynat/duraklat';
 });
 renderer.xr.addEventListener('sessionend',()=>{
- dismount();vectorDrag=null;endTwoHand();grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;rightMenuOpen=false;
+ dismount();vectorDrag=null;endTwoHand();heldGrips.clear();grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;rightMenuOpen=false;
+ initialView();snapReady=true;stickClickLast=false;
  $('status').textContent='VR kapalı · Masaüstü önizlemesi';
 });
 const clock=new THREE.Clock();
@@ -987,6 +1067,7 @@ renderer.setAnimationLoop(()=>{
   while(accumulator>=DT&&loops<12){step();accumulator-=DT;loops++}
   if(loops>=12)accumulator=0;
  }
+ updateNavigation(dt);
  updateGrabsAndHover(dt);
  for(const b of bodies)drawBody(b);
  updateRidingView();
