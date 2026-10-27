@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.25</title>
+<title>Beyaz Tahta v16.26</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -998,7 +998,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.25 (dolgu saydamlığı sürgüsü)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.26 (değiştirilebilir döndürme merkezi)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1050,6 +1050,7 @@
               <li>Nesneye tıkla; boş alanda sürükleyerek çoklu seçim yap.</li>
               <li>Ctrl + tıklama ile seçime nesne ekle / çıkar.</li>
               <li>Nesneleri taşı, boyutlandır ve döndür.</li>
+              <li>Seçimde turuncu hedef işareti döndürme merkezidir; sürükleyerek pivotu değiştir ve nesneyi/grubu bu noktanın etrafında döndür.</li>
               <li>Doğru parçasında A ve B uçlarına ek olarak orta noktadan çıkan döndürme tutamacını kullan.</li>
               <li>Hazır şekillerin gerçek düzenleme handle'larını tek tek taşı.</li>
               <li>Nokta Snap düğmesi açıkken gerçek düzenleme noktaları diğer nesnelerin köşe/uç/düzenleme noktalarına yapışır.</li>
@@ -1371,6 +1372,8 @@
   let groupBoxSnapshot = null;
   let groupSelectionAngle = 0;
   let activeHandle = null;
+  let selectionPivot = null;
+  let selectPivotSnapshot = null;
 
   // Repeat-last-transform state.
   // Space repeats it; Shift+Space duplicates the current selection first. Line endpoint drags are repeatable too.
@@ -4514,10 +4517,19 @@
     groupSelectionAngle=0;
     normalizeSelection();
 
+    const sameSelection=
+      before.length===selectedIndices.length &&
+      before.every((v,i)=>v===selectedIndices[i]);
+
     const sameSingle=
       before.length===1 &&
       selectedIndices.length===1 &&
       before[0]===selectedIndices[0];
+
+    if(!sameSelection){
+      selectionPivot=null;
+      selectPivotSnapshot=null;
+    }
 
     if(!sameSingle) clearHandleSelection();
     syncStyleControlsFromSelection();
@@ -4635,12 +4647,88 @@
     };
   }
 
+  function defaultRotationPivotForObject(o){
+    if(!o) return null;
+
+    if(o.kind==='line'){
+      return {x:(o.a.x+o.b.x)/2,y:(o.a.y+o.b.y)/2};
+    }
+
+    if(o.kind==='arc' || o.kind==='sector'){
+      return {x:o.center.x,y:o.center.y};
+    }
+
+    const box=orientedSelectionBox(o);
+    return box ? {x:box.center.x,y:box.center.y} : null;
+  }
+
+  function defaultSelectionPivot(){
+    if(selectedIndices.length>1){
+      const box=groupOrientedBox();
+      return box ? {x:box.center.x,y:box.center.y} : null;
+    }
+
+    if(selectedIndices.length===1){
+      return defaultRotationPivotForObject(objects[selectedIndices[0]]);
+    }
+
+    return null;
+  }
+
+  function currentSelectionPivot(){
+    if(selectionPivot && finitePoint(selectionPivot)){
+      return {x:selectionPivot.x,y:selectionPivot.y};
+    }
+    return defaultSelectionPivot();
+  }
+
+  function drawRotationPivot(p){
+    if(!p) return;
+
+    const r=5/viewZoom;
+    const arm=9/viewZoom;
+
+    ctx.save();
+    ctx.strokeStyle='#d97706';
+    ctx.fillStyle='white';
+    ctx.lineWidth=1.6/viewZoom;
+    ctx.setLineDash([]);
+
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,r,0,Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(p.x-arm,p.y);
+    ctx.lineTo(p.x+arm,p.y);
+    ctx.moveTo(p.x,p.y-arm);
+    ctx.lineTo(p.x,p.y+arm);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.fillStyle='#d97706';
+    ctx.arc(p.x,p.y,1.8/viewZoom,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function hitRotationPivot(p,pointerType='mouse'){
+    const pivot=currentSelectionPivot();
+    if(!pivot) return false;
+    const hitR=(pointerType==='touch' ? 12 : 7)/viewZoom;
+    return Math.hypot(p.x-pivot.x,p.y-pivot.y)<=hitR;
+  }
+
   function hitGroupSelectionHandle(p,pointerType='mouse'){
     if(selectedIndices.length<2) return null;
     if(selectedIndices.some(i=>objects[i] && objects[i].locked)) return null;
     const box=groupOrientedBox();
     if(!box) return null;
     const oc=orientedBoxCorners(box,8/viewZoom);
+
+    if(hitRotationPivot(p,pointerType)) return 'pivot';
 
     const hitR=(pointerType==='touch' ? 22 : 11)/viewZoom;
     for(const [name,h] of [['nw',oc.nw],['ne',oc.ne],['se',oc.se],['sw',oc.sw]]){
@@ -4819,6 +4907,8 @@
       ctx.arc(oc.rotate.x,oc.rotate.y,6/viewZoom,0,Math.PI*2);
       ctx.fill();
       ctx.stroke();
+
+      drawRotationPivot(currentSelectionPivot());
     }
 
     ctx.restore();
@@ -5067,14 +5157,15 @@
 
     }else if(transform.type==='rotate'){
       const delta=Number(transform.delta)||0;
+      const pivot=currentSelectionPivot();
+      if(!pivot) return false;
+
       if(indices.length===1){
         const o=objects[indices[0]];
-        if(o) rotateObject(o,delta);
+        if(o) rotateObjectAround(o,pivot,delta);
       }else{
-        const box=groupOrientedBox(indices);
-        if(!box) return false;
         for(const i of indices){
-          if(objects[i]) rotateObjectAround(objects[i],box.center,delta);
+          if(objects[i]) rotateObjectAround(objects[i],pivot,delta);
         }
         groupSelectionAngle=(groupSelectionAngle||0)+delta;
       }
@@ -5208,6 +5299,8 @@
         ctx.stroke();
       }
 
+      drawRotationPivot(currentSelectionPivot());
+
       ctx.restore();
       return;
     }
@@ -5263,6 +5356,8 @@
         ctx.fill();
         ctx.stroke();
       }
+
+      drawRotationPivot(currentSelectionPivot());
 
       ctx.restore();
       return;
@@ -5370,6 +5465,8 @@
       ctx.stroke();
     }
 
+    drawRotationPivot(currentSelectionPivot());
+
     ctx.restore();
   }
 
@@ -5382,6 +5479,8 @@
     if(selectedIndex<0) return null;
     const selected=objects[selectedIndex];
     if(!selected || selected.locked) return null;
+
+    if(hitRotationPivot(p,pointerType)) return 'pivot';
 
     const rawSpecial=menuEditHandles(selected);
 
@@ -8353,6 +8452,19 @@
       if(selectedIndices.length>1){
         const gh=hitGroupSelectionHandle(p,e.pointerType);
         if(gh){
+          if(gh==='pivot'){
+            selectStart=p;
+            activeHandle='pivot';
+            groupBoxSnapshot=groupOrientedBox();
+            groupSnapshots=null;
+            selectSnapshot=null;
+            selectPivotSnapshot=currentSelectionPivot();
+            selectAction='groupPivot';
+            statusEl.textContent='Döndürme merkezi taşınıyor';
+            redraw();
+            return;
+          }
+
           saveState();
 
           // Alt + rotate/resize: duplicate the whole current selection first.
@@ -8365,6 +8477,7 @@
           selectStart=p;
           activeHandle=gh;
           groupBoxSnapshot=groupOrientedBox();
+          selectPivotSnapshot=currentSelectionPivot();
           groupSnapshots=selectedIndices.map(i=>({
             index:i,
             object:cloneObject(objects[i])
@@ -8382,6 +8495,18 @@
         const h=hitSelectionHandle(p,e.pointerType);
         if(h && selectedIndex>=0){
           const realHandle=isRealEditHandleName(h);
+
+          if(h==='pivot'){
+            selectStart=p;
+            activeHandle='pivot';
+            selectSnapshot=null;
+            groupSnapshots=null;
+            selectPivotSnapshot=currentSelectionPivot();
+            selectAction='pivot';
+            statusEl.textContent='Döndürme merkezi taşınıyor';
+            redraw();
+            return;
+          }
 
           if(realHandle && (e.ctrlKey || e.metaKey)){
             toggleSelectedHandle(h);
@@ -8427,6 +8552,7 @@
           selectSnapshot=JSON.parse(JSON.stringify(objects[selectedIndex]));
           groupSnapshots=null;
           activeHandle=h;
+          selectPivotSnapshot=currentSelectionPivot();
 
           if(realHandle && selectedHandleIs(h) && selectedHandles.length>1){
             selectAction='multiPoint';
@@ -8524,6 +8650,9 @@
         selectStart=p;
         activeHandle=null;
         groupBoxSnapshot=null;
+        selectPivotSnapshot=selectionPivot
+          ? {x:selectionPivot.x,y:selectionPivot.y}
+          : null;
 
         if(selectedIndices.length>1){
           groupSnapshots=selectedIndices.map(i=>({
@@ -8705,10 +8834,19 @@
         return;
       }
 
+      if(selectAction==='groupPivot' || selectAction==='pivot'){
+        selectionPivot={x:p.x,y:p.y};
+        statusEl.textContent='Döndürme merkezi taşınıyor';
+        redraw();
+        return;
+      }
+
       if(selectAction==='groupRotate'){
         if(!groupSnapshots || !groupBoxSnapshot) return;
 
-        const c=groupBoxSnapshot.center;
+        const c=(selectPivotSnapshot && finitePoint(selectPivotSnapshot))
+          ? selectPivotSnapshot
+          : groupBoxSnapshot.center;
         const a0=Math.atan2(selectStart.y-c.y,selectStart.x-c.x);
         const a1=Math.atan2(p.y-c.y,p.x-c.x);
         const delta=snapRotationDelta(a1-a0,e.shiftKey);
@@ -8872,6 +9010,14 @@
           objects[item.index]=cloneObject(item.object);
           translateObject(objects[item.index],d.dx,d.dy);
         }
+
+        if(selectPivotSnapshot){
+          selectionPivot={
+            x:selectPivotSnapshot.x+d.dx,
+            y:selectPivotSnapshot.y+d.dy
+          };
+        }
+
         redraw();
         return;
       }
@@ -8901,6 +9047,13 @@
         }
         objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
         translateObject(objects[selectedIndex],d.dx,d.dy);
+
+        if(selectPivotSnapshot){
+          selectionPivot={
+            x:selectPivotSnapshot.x+d.dx,
+            y:selectPivotSnapshot.y+d.dy
+          };
+        }
 
       }else if(selectAction==='multiPoint'){
         const rawDx=p.x-selectStart.x,rawDy=p.y-selectStart.y;
@@ -8941,10 +9094,10 @@
           selectSnapshot.kind==='arc' ||
           selectSnapshot.kind==='sector';
 
-        const box=isArcLike ? null : orientedSelectionBox(selectSnapshot);
-        const c=isArcLike
-          ? selectSnapshot.center
-          : (box ? box.center : null);
+        const naturalPivot=defaultRotationPivotForObject(selectSnapshot);
+        const c=(selectPivotSnapshot && finitePoint(selectPivotSnapshot))
+          ? selectPivotSnapshot
+          : naturalPivot;
 
         if(c){
           const a0=Math.atan2(selectStart.y-c.y,selectStart.x-c.x);
@@ -8954,7 +9107,7 @@
             pendingRepeatTransform={type:'rotate',delta};
           }
           objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
-          rotateObject(objects[selectedIndex],delta);
+          rotateObjectAround(objects[selectedIndex],c,delta);
 
           if(isArcLike){
             statusEl.textContent=e.shiftKey
@@ -9381,6 +9534,7 @@
       groupSnapshots=null;
       groupBoxSnapshot=null;
       activeHandle=null;
+      selectPivotSnapshot=null;
       marqueeStart=null;
       marqueeEnd=null;
       if(e.pointerType==='touch'){
