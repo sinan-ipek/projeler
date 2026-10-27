@@ -464,10 +464,11 @@ function finishCollisionSelection(created,shouldSelect){
  if(shouldSelect){
   for(const b of created)selectedBodies.add(b);
   selectedPlanet=created[0]||null;
+  refreshRightPanel();
  }else if(selectedPlanet&&!bodies.includes(selectedPlanet)){
   selectedPlanet=[...selectedBodies][0]||null;
+  refreshRightPanel();
  }
- refreshRightPanel();
 }
 function mergeCollisionBodies(a,b){
  const mass=a.mass+b.mass;
