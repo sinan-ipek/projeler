@@ -114,8 +114,13 @@ function updateRidingView(){
  const micro=rideViewMode==='micro';
  const scale=SCALE*(micro?MICRO_SCALE_MULTIPLIER:1);
  world.scale.setScalar(scale);
+ // Attach the observer above the ridden sphere's north pole, not its centre.
+ // At physical contact: sphere bottom = -10, and the eye stays above its top.
+ // The world stays fixed in the XR reference frame; headset tracking remains native.
  const target=new THREE.Vector3(0,1.5,0);
- world.position.copy(target).sub(ridingBody.pos.clone().multiplyScalar(scale));
+ const pole=ridingBody.pos.clone();
+ pole.y+=ridingBody.radius;
+ world.position.copy(target).sub(pole.multiplyScalar(scale));
  const location=xrEye.getWorldPosition(new THREE.Vector3());
  surface.position.set(location.x,location.y-1.55,location.z);
  surface.scale.setScalar(micro?100:1);
