@@ -16,8 +16,8 @@ button:hover{background:#3678bd}#status{font-size:12px;color:#a8cde8;margin-top:
 </head>
 <body>
 <div id="top">
-<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v10.1 · VR</small></h1>
-<p>Sol joystick: Uç / 30° dön / Bas: Başa dön · Sol tetik: Oynat/Duraklat · Sol X: Menü · Sağ tetik: Seç · İki grip: Ölçek</p>
+<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v10.2 · VR</small></h1>
+<p>Sol joystick: Uç / 30° dön / Bas: Başa dön · Sol tetik: Oynat/Duraklat · Sol grip: Uzayı tut/çek · Sol X: Menü · Sağ tetik: Seç · İki grip: Ölçek</p>
 <div><button id="play">⏸ Duraklat</button><button id="reset">↻ Sıfırla</button><button id="mode">🌌 Uzay</button><button id="trails">Yörüngeler: Açık</button></div>
 <div id="status">Hazırlanıyor…</div><p id="warning"></p>
 </div>
@@ -528,7 +528,29 @@ function handPosition(c){return c.getWorldPosition(new THREE.Vector3());}
 function endTwoHand(){twoHand=null;}
 const LEFT_FLY_SPEED=2.2,LEFT_TURN_ANGLE=THREE.MathUtils.degToRad(30);
 let smoothFlySpeed=0,snapReady=true,stickClickLast=false;
+let leftGripAnchor=null;
+// Sol grip ile "uzayı tutup çekme". Kontrolcünün dünya uzayındaki fiziksel
+// konum farkını evrene uygularız. Görünürde kamera bunun ters yönünde ilerler.
+// Fizik motorunun gezegen koordinatları değişmez.
+function startLeftGripDrag(){
+ if(!leftController||twoHand||!heldGrips.has(leftController))return;
+ leftGripAnchor=handPosition(leftController);
+ $('status').textContent='Sol grip: uzayı elinle tutup çekerek hareket et';
+}
+function updateLeftGripDrag(){
+ if(!renderer.xr.isPresenting||!leftController||!heldGrips.has(leftController)||twoHand){
+  leftGripAnchor=null;return;
+ }
+ const current=handPosition(leftController);
+ if(!leftGripAnchor){leftGripAnchor=current;return;}
+ const delta=current.clone().sub(leftGripAnchor);
+ leftGripAnchor.copy(current);
+ // Anlık takip kopmalarında gözlemciyi aniden ışınlamamak için.
+ if(delta.lengthSq()>.35*.35)return;
+ navigationRoot.position.add(delta);
+}
 function initialView(){
+ leftGripAnchor=null;
  navigationRoot.position.set(0,0,0);
  navigationRoot.quaternion.identity();
  smoothFlySpeed=0;
@@ -568,6 +590,7 @@ function updateNavigation(dt){
 }
 function beginDualScale(){
  if(heldGrips.size<2||twoHand)return;
+ leftGripAnchor=null;
  const pair=controllers.filter(c=>heldGrips.has(c));
  if(pair.length<2)return;
  const distance=Math.max(.035,handPosition(pair[0]).distanceTo(handPosition(pair[1])));
@@ -608,6 +631,8 @@ function finishDualScale(controller){
  heldGrips.delete(controller);
  if(!twoHand)return false;
  endTwoHand();
+ // Returning to solo left grip must start at the current hand pose.
+ leftGripAnchor=heldGrips.has(leftController)?handPosition(leftController):null;
  grabs.delete(controller);
  for(const [ctrl,grab] of grabs){
   if(!bodies.includes(grab.body))continue;
@@ -878,6 +903,7 @@ function estimateThrowVelocity(samples){
 }
 function releaseGrab(controller){
  if(finishDualScale(controller))return;
+ if(controller===leftController){leftGripAnchor=null;return;}
  if(vectorDrag&&vectorDrag.controller===controller){vectorDrag=null;return;}
  const g=grabs.get(controller);if(!g)return;
  const launch=estimateThrowVelocity(g.samples);
@@ -1011,7 +1037,7 @@ for(let i=0;i<2;i++){
  controller.addEventListener('squeezestart',()=>{
   heldGrips.add(controller);
   if(heldGrips.size>=2){beginDualScale();return;}
-  if(controller===leftController)return;
+  if(controller===leftController){startLeftGripDrag();return;}
   rayFromController(controller);
   if(showVelocities&&!vectorDrag){
    const handles=bodies.filter(b=>b.velocityHandle.visible&&!grabbedBody(b));
@@ -1052,7 +1078,7 @@ for(let i=0;i<2;i++){
 renderer.xr.addEventListener('sessionstart',()=>{
  handMenuOpen=false;rightMenuOpen=false;heldGrips.clear();endTwoHand();
  initialView();snapReady=true;stickClickLast=false;
- $('status').textContent='VR v10.1 · Sol joystick: uç/dön/bas: başlangıç · Sol tetik: oynat/duraklat';
+ $('status').textContent='VR v10.2 · Sol grip: uzayı tut/çek · Joystick: uç/dön · Tetik: oynat/duraklat';
 });
 renderer.xr.addEventListener('sessionend',()=>{
  dismount();vectorDrag=null;endTwoHand();heldGrips.clear();grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;rightMenuOpen=false;
@@ -1068,6 +1094,7 @@ renderer.setAnimationLoop(()=>{
   if(loops>=12)accumulator=0;
  }
  updateNavigation(dt);
+ updateLeftGripDrag();
  updateGrabsAndHover(dt);
  for(const b of bodies)drawBody(b);
  updateRidingView();
