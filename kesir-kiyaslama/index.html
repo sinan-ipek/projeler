@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kesir Kıyaslama Laboratuvarı · v1.5.1</title>
+<title>Kesir Kıyaslama Laboratuvarı · v1.6.0</title>
 <style>
 :root{--bg:#dedede;--ink:#293241;--green:#267a58;--brown:#98604c;--yellow:#f3b71b;--good:#159b71}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',sans-serif}button{font:inherit}
@@ -46,17 +46,27 @@ main{max-width:1060px;margin:10px auto 28px;background:#f8f8f7;border-radius:21p
 .cross-term.cross-glow{background:#f9e5ae;border-color:var(--yellow)}
 .cross-result{min-height:84px;display:flex;justify-content:center;align-items:center;color:var(--brown);font-size:clamp(32px,4.5vw,54px);font-weight:650;font-variant-numeric:tabular-nums}
 @media(max-width:600px){.cross-term{padding:2px 3px;border-width:2px;border-radius:8px}.cross-result{font-size:clamp(27px,7vw,42px)}}
+/* Ondalık kıyaslama: bölme ve sonucunu ayrı tıklamalarla keşfet. */
+.decimal-side{display:flex;flex-direction:column;align-items:center;gap:10px}
+.decimal-top{min-height:88px;display:flex;align-items:center;justify-content:center;font-size:clamp(23px,3.5vw,39px);font-weight:650;color:var(--brown);white-space:nowrap}
+.decimal-top .math-button{font-size:inherit;color:var(--brown)}
+.decimal-top .division{font-size:clamp(22px,3vw,35px)}
+.decimal-number{font-variant-numeric:tabular-nums;white-space:nowrap;animation:decimal-appear .48s ease-out both}
+.decimal-repeat{text-decoration:overline;text-decoration-thickness:2px;text-decoration-color:var(--green);text-decoration-skip-ink:none}
+.decimal-approx{font-size:.66em;color:#737982}
+@keyframes decimal-appear{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.decimal-top{font-size:clamp(17px,5vw,27px)}.decimal-top .division{font-size:clamp(17px,5vw,27px)}.decimal-side{gap:7px}}
 .version{font-size:12px;color:#777;text-align:center;padding:0 10px 13px}
 </style>
 </head>
 <body>
 <header><button class="home" id="home" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6 2 11.2l1.4 1.7L5 11.6V21h5.1v-6.2h3.8V21H19v-9.4l1.6 1.3 1.4-1.7L12 2.6Z"/></svg></button><h1>Kesir Kıyaslama Laboratuvarı</h1></header>
 <main>
-<nav class="toolbar"><button class="tab" data-mode="denom">Payda eşitleyerek kıyaslama</button><button class="tab" data-mode="difference">Farklarla kıyaslama</button><button class="tab" data-mode="mixed">Basit ve bileşik kesir</button><button class="tab" data-mode="cross">Çapraz çarpımla kıyaslama</button><button class="new" id="new">Yeni örnek ↻</button></nav>
+<nav class="toolbar"><button class="tab" data-mode="denom">Payda eşitleyerek kıyaslama</button><button class="tab" data-mode="difference">Farklarla kıyaslama</button><button class="tab" data-mode="mixed">Basit ve bileşik kesir</button><button class="tab" data-mode="cross">Çapraz çarpımla kıyaslama</button><button class="tab" data-mode="decimal">Ondalık sayıya çevirerek kıyaslama</button><button class="new" id="new">Yeni örnek ↻</button></nav>
 
 <div class="hint" id="hint" aria-live="polite"></div>
 <section class="stage"><div class="equation" id="equation"><div class="slot" id="left"></div><div class="operator" id="operator">?</div><div class="slot" id="right"></div></div><div class="explain" id="explain"></div><div class="answers hidden" id="answers"><button class="answer" data-answer="<">&lt;</button><button class="answer cross-equal hidden" data-answer="=">=</button><button class="answer" data-answer=">">&gt;</button></div></section>
-<div class="note">Vurgulanan ifadelerin üzerine tıklayarak ilerle.</div><div class="version">v1.5.1</div>
+<div class="note">Vurgulanan ifadelerin üzerine tıklayarak ilerle.</div><div class="version">v1.6.0</div>
 </main>
 <svg id="arrow-layer" aria-hidden="true"></svg>
 <canvas id="fireworks" aria-hidden="true"></canvas>
@@ -128,7 +138,19 @@ function generate(){
  stamp++;
  arrowLayer.replaceChildren();
  let a,b,c,d,t=0;
- if(mode==='cross'){
+ if(mode==='decimal'){
+   // Bölme görünür ve öğretici kalsın; sonlu ve devirli ondalıklar birlikte gelir.
+   // Bazen eşit değerli farklı kesirler oluşturulur.
+   if(Math.random()<.18){
+     const bases=[[1,2],[1,3],[2,3],[1,4],[3,4],[2,5],[3,5],[1,6],[5,6]];
+     const [n,den]=bases[rnd(0,bases.length-1)];
+     let m1=rnd(1,3),m2=rnd(1,3);if(m1===m2)m2=m2%3+1;
+     a=n*m1;b=den*m1;c=n*m2;d=den*m2;
+   }else{
+     do{b=rnd(2,12);d=rnd(2,12);a=rnd(1,14);c=rnd(1,14);t++;}
+     while((a*d===b*c||a===c&&b===d)&&t<200);
+   }
+ }else if(mode==='cross'){
    // Soruların %60'ı özel: %15 eşit, %45 yakın (çarpım farkı 1, 2 veya 3).
    // Kalan %40'ında fark 3'ten büyük; tüm örnekler yine rastgele seçilir.
    const probability=Math.random();
@@ -216,6 +238,31 @@ function crossSide(i){
  const num=isLeft?q.a:q.c,den=isLeft?q.b:q.d;
  const result=crossDone[i]?`<div class="cross-result">${isLeft?q.a*q.d:q.b*q.c}</div>`:'<div class="cross-result"></div>';
  return `${result}<span class="expr">${frac(crossTerm(num,s,'num'),crossTerm(den,s,'den'))}</span>`;
+}
+// Kesirden ondalığa TAM dönüşüm: kalanlar tekrar ettiğinde devirli bölüm bulunur.
+// Böylece 1/3 => 0,(3) ve 1/6 => 0,1(6); yuvarlama ile yanlış eşitlik oluşmaz.
+function exactDecimal(n,d){
+ let whole=Math.floor(n/d),rem=n%d;
+ if(!rem)return {html:String(whole),spoken:String(whole)};
+ const seen=new Map(),digits=[];
+ while(rem!==0&&!seen.has(rem)&&digits.length<48){
+   seen.set(rem,digits.length);rem*=10;
+   digits.push(String(Math.floor(rem/d)));rem%=d;
+ }
+ if(rem===0)return {html:whole+','+digits.join(''),spoken:whole+','+digits.join('')};
+ const pos=seen.get(rem);
+ if(pos===undefined)return {html:whole+','+digits.slice(0,8).join('')+'…',spoken:'Yaklaşık '+whole+','+digits.slice(0,8).join('')};
+ const prefix=digits.slice(0,pos).join(''),cycle=digits.slice(pos).join('');
+ return {html:whole+','+prefix+'<span class="decimal-repeat">'+cycle+'</span>',spoken:whole+','+prefix+' devirli '+cycle};
+}
+function decimalSide(i){
+ const n=i===0?q.a:q.c,d=i===0?q.b:q.d,side=i===0?'L':'R',st=steps[i];
+ const decimal=exactDecimal(n,d);
+ const top=st===0?'<div class="decimal-top"></div>':st===1?
+ `<div class="decimal-top">${btn(n+' : '+d+' = ?','decimal-calc',side,'division')}</div>`:
+ `<div class="decimal-top"><span class="decimal-number" aria-label="${decimal.spoken}">${decimal.html}</span></div>`;
+ const fraction=st===0?btn(frac(n,d),'decimal-start',side,'frac-button'):frac(n,d);
+ return `<div class="decimal-side">${top}<span class="expr">${fraction}</span></div>`;
 }
 function differenceSide(i){
  const n=i===0?q.a:q.c,d=i===0?q.b:q.d,s=i===0?'L':'R',st=steps[i];
@@ -332,15 +379,18 @@ function alignOperator(){
  const r=O.getBoundingClientRect();
  O.style.transform=`translateY(${centerY-(r.top+r.height/2)}px)`;
 }
-function readyToCompare(){return mode==='cross'?crossDone.every(Boolean):mode==='difference'?steps.every(v=>v>=4):mode==='mixed'?phase==='selection':phase==='answer'}
+function readyToCompare(){return mode==='decimal'?steps.every(v=>v===2):mode==='cross'?crossDone.every(Boolean):mode==='difference'?steps.every(v=>v>=4):mode==='mixed'?phase==='selection':phase==='answer'}
 function render(){
  document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('active',e.dataset.mode===mode));
- L.innerHTML=mode==='cross'?crossSide(0):mode==='difference'?differenceSide(0):mode==='mixed'?mixedSide(0):denSide(0);
- R.innerHTML=mode==='cross'?crossSide(1):mode==='difference'?differenceSide(1):mode==='mixed'?mixedSide(1):denSide(1);
+ L.innerHTML=mode==='decimal'?decimalSide(0):mode==='cross'?crossSide(0):mode==='difference'?differenceSide(0):mode==='mixed'?mixedSide(0):denSide(0);
+ R.innerHTML=mode==='decimal'?decimalSide(1):mode==='cross'?crossSide(1):mode==='difference'?differenceSide(1):mode==='mixed'?mixedSide(1):denSide(1);
  if(mode==='mixed')O.innerHTML=mixedOperator();
  else O.textContent=phase==='complete'?q.answer:'?';
  O.classList.toggle('done',phase==='complete');
- if(mode==='cross'){
+ if(mode==='decimal'){
+   H.textContent=phase==='complete'?'Bravo!':steps.every(v=>v===2)?'Ondalık sayıları karşılaştır; işareti seç.':steps.includes(1)?'Bölme işlemine tıkla; ondalık sonucu gör.':'Kesirlerden birine tıkla; bölme işlemini göster.';
+   E.textContent=steps.some(v=>v===2)?'Üst çizgi, tekrar eden (devirli) basamakları gösterir.':'';
+ }else if(mode==='cross'){
    H.textContent=phase==='complete'?'Bravo!':crossDone.every(Boolean)?'Çarpımları karşılaştır, doğru işareti seç.':'Paylardan birinin üzerine gel; çaprazdaki paydayı da gör.';
    E.textContent='';
  }else if(mode==='mixed'){
@@ -366,13 +416,17 @@ function render(){
    H.textContent={initial:'Paydalardan birine tıkla.',factors:'Genişletme katsayılarından birine tıkla.',multiplications:'Çarpımları tek tek hesapla.',answer:'Karşılaştırma işaretini seç.',complete:'Doğru!'}[phase];
  }
  A.classList.toggle('hidden',!readyToCompare()||phase==='complete'||locked);
- document.querySelector('.cross-equal').classList.toggle('hidden',mode!=='cross');
+ document.querySelector('.cross-equal').classList.toggle('hidden',mode!=='cross'&&mode!=='decimal');
  requestAnimationFrame(alignOperator);
 }
 async function action(el){
  if(locked||(phase==='complete'&&mode!=='mixed')||phase==='merged')return;
  const act=el.dataset.action,s=el.dataset.side,i=s==='L'?0:1;
- if(mode==='cross'){
+ if(mode==='decimal'){
+   if(act==='decimal-start'&&steps[i]===0){steps[i]=1;render();return;}
+   if(act==='decimal-calc'&&steps[i]===1){steps[i]=2;render();return;}
+   return;
+ }else if(mode==='cross'){
    return;
  }else if(mode==='mixed'){
    if(act==='classify'  && steps[i]===0){steps[i]=1;render();return;}
@@ -474,7 +528,7 @@ A.addEventListener('click',e=>{
  if(el.dataset.answer!==expected){el.classList.remove('wrong');void el.offsetWidth;el.classList.add('wrong');H.textContent='Tekrar dene.';return}
  locked=true;el.classList.add('correct');H.textContent='Doğru!';A.classList.add('hidden');fireworkBurst();
  const snapshot=stamp;
- if(mode==='cross'){
+ if(mode==='cross'||mode==='decimal'){
    setTimeout(()=>{if(stamp===snapshot)transferSign(expected)},450);
  }else if(mode==='mixed'){
    setTimeout(()=>{if(stamp!==snapshot)return;phase='complete';locked=false;render();},450);
