@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.29</title>
+<title>Beyaz Tahta v16.30</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -684,6 +684,16 @@
       <input id="boardFileInput" type="file" accept=".whiteboard,.json,application/json">
     </div>
 
+    <button id="fitAllBtn" class="iconBtn" title="Tümünü göster" aria-label="Tüm nesneleri göster">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"
+              fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="7.5" y="7.5" width="9" height="9" rx="1.2"
+              fill="none" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+    </button>
+
     <button id="selectBtn" class="iconBtn" title="Seç" aria-label="Seç">↖</button>
 
     <button id="pointSnapBtn" class="iconBtn" title="Nokta snap: kapalı" aria-label="Nokta snap" aria-pressed="false">
@@ -998,7 +1008,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.29 (kalıcı pivot + güçlendirilmiş pivot snap)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.30 (tüm nesneleri ekrana sığdır)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1119,6 +1129,7 @@
             <h3>Gezinme</h3>
             <ul>
               <li>Fare tekeriyle yakınlaştır / uzaklaştır.</li>
+              <li>“Tümünü göster” düğmesi tahtadaki bütün nesneleri bulur ve ekrana sığdırır.</li>
               <li>Tahtayı kaydırarak sonsuz yüzeyde gez.</li>
               <li>Tablette iki parmakla aynı anda kaydır ve zoom yap.</li>
             </ul>
@@ -1175,6 +1186,7 @@
   const ctx = canvas.getContext('2d');
   const wrap = document.getElementById('stageWrap');
   const homeBtn = document.getElementById('homeBtn');
+  const fitAllBtn = document.getElementById('fitAllBtn');
   const fileBtn = document.getElementById('fileBtn');
   const fileMenu = document.getElementById('fileMenu');
   const saveBoardBtn = document.getElementById('saveBoardBtn');
@@ -3799,6 +3811,74 @@
       return bbox(o.points||[]);
     }
     return null;
+  }
+
+  function fitAllObjectsToView(){
+    if(!objects.length){
+      statusEl.textContent='Gösterilecek nesne yok';
+      return false;
+    }
+
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    let found=false;
+
+    for(const o of objects){
+      const b=objectBounds(o);
+      if(
+        !b ||
+        !Number.isFinite(b.x) ||
+        !Number.isFinite(b.y) ||
+        !Number.isFinite(b.w) ||
+        !Number.isFinite(b.h)
+      ) continue;
+
+      minX=Math.min(minX,b.x);
+      minY=Math.min(minY,b.y);
+      maxX=Math.max(maxX,b.x+b.w);
+      maxY=Math.max(maxY,b.y+b.h);
+      found=true;
+    }
+
+    if(!found){
+      statusEl.textContent='Nesnelerin konumu hesaplanamadı';
+      return false;
+    }
+
+    const rect=wrap.getBoundingClientRect();
+    const screenW=Math.max(1,rect.width);
+    const screenH=Math.max(1,rect.height);
+    const padding=56;
+
+    const worldW=Math.max(1,maxX-minX);
+    const worldH=Math.max(1,maxY-minY);
+
+    const usableW=Math.max(1,screenW-padding*2);
+    const usableH=Math.max(1,screenH-padding*2);
+
+    const nextZoom=Math.max(
+      MIN_ZOOM,
+      Math.min(
+        MAX_ZOOM,
+        usableW/worldW,
+        usableH/worldH
+      )
+    );
+
+    const cx=(minX+maxX)/2;
+    const cy=(minY+maxY)/2;
+
+    viewZoom=nextZoom;
+    viewX=screenW/2-cx*viewZoom;
+    viewY=screenH/2-cy*viewZoom;
+
+    redraw();
+    if(textEditing) positionTextEditor();
+
+    statusEl.textContent=objects.length===1
+      ? '1 nesne ekrana sığdırıldı'
+      : `${objects.length} nesne ekrana sığdırıldı`;
+
+    return true;
   }
 
   function polygonWorldVertices(o){
@@ -10524,6 +10604,12 @@
 
   homeBtn.onclick=()=>{
     window.location.href='../index.html';
+  };
+
+  fitAllBtn.onclick=()=>{
+    closeContextMenu();
+    closeFileMenu();
+    fitAllObjectsToView();
   };
 
   function closeFillMenu(){
