@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kesir Kıyaslama Laboratuvarı · v1.4.0</title>
+<title>Kesir Kıyaslama Laboratuvarı · v1.5.1</title>
 <style>
 :root{--bg:#dedede;--ink:#293241;--green:#267a58;--brown:#98604c;--yellow:#f3b71b;--good:#159b71}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',sans-serif}button{font:inherit}
@@ -56,7 +56,7 @@ main{max-width:1060px;margin:10px auto 28px;background:#f8f8f7;border-radius:21p
 
 <div class="hint" id="hint" aria-live="polite"></div>
 <section class="stage"><div class="equation" id="equation"><div class="slot" id="left"></div><div class="operator" id="operator">?</div><div class="slot" id="right"></div></div><div class="explain" id="explain"></div><div class="answers hidden" id="answers"><button class="answer" data-answer="<">&lt;</button><button class="answer cross-equal hidden" data-answer="=">=</button><button class="answer" data-answer=">">&gt;</button></div></section>
-<div class="note">Vurgulanan ifadelerin üzerine tıklayarak ilerle.</div><div class="version">v1.4.0</div>
+<div class="note">Vurgulanan ifadelerin üzerine tıklayarak ilerle.</div><div class="version">v1.5.1</div>
 </main>
 <svg id="arrow-layer" aria-hidden="true"></svg>
 <canvas id="fireworks" aria-hidden="true"></canvas>
@@ -129,9 +129,21 @@ function generate(){
  arrowLayer.replaceChildren();
  let a,b,c,d,t=0;
  if(mode==='cross'){
-   // Rastgele pozitif kesirler: küçük, büyük ve eşitlik örnekleri.
-   b=rnd(2,10);d=rnd(2,10);a=rnd(1,14);c=rnd(1,14);
-   if(rnd(1,5)===1){c=a*d/b;if(!Number.isInteger(c)){a=b*rnd(1,3);c=d*(a/b);}}
+   // Soruların %60'ı özel: %15 eşit, %45 yakın (çarpım farkı 1, 2 veya 3).
+   // Kalan %40'ında fark 3'ten büyük; tüm örnekler yine rastgele seçilir.
+   const probability=Math.random();
+   const difficulty=probability<.15?'equal':probability<.60?'close':'normal';
+   // Önceden belirlenmiş soru listesi yok; sayıları her defasında yeniden üret.
+   // Reddetme yöntemi, seçilen zorluk koşulunu kesin olarak sağlar.
+   let valid=false;
+   for(t=0;t<20000;t++){
+     b=rnd(2,10);d=rnd(2,10);a=rnd(1,14);c=rnd(1,14);
+     const gap=Math.abs(a*d-b*c);
+     const same=(a===c && b===d);
+     if(same)continue;
+     if(difficulty==='equal'?gap===0:difficulty==='close'?gap>=1&&gap<=3:gap>3){valid=true;break;}
+   }
+   if(!valid){a=2;b=3;c=4;d=6;}
  }else if(mode==='mixed'){
    // Her soruda biri basit, diğeri payı paydasından büyük bileşik kesir.
    b=rnd(3,10); d=rnd(2,9);
