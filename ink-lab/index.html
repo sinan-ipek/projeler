@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Ink Lab — Beyaz Tahta Kalem Testi</title>
+<title>Ink Lab v2 — Beyaz Tahta Kalem Testi</title>
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%;background:#f4f6f8;color:#172036;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
@@ -60,7 +60,7 @@
 </head>
 <body>
 <div class="top">
-  <h1>Ink Lab</h1>
+  <h1>Ink Lab v2</h1>
   <span id="inkApiPill" class="pill">Ink API…</span>
   <span id="rawPill" class="pill">pointerrawupdate…</span>
   <span id="predPill" class="pill">Prediction…</span>
@@ -143,7 +143,7 @@
   widthEl.addEventListener('input',()=>widthVal.textContent=widthEl.value);
 
   function setupCanvas(canvas){
-    const ctx=canvas.getContext('2d',{alpha:true,desynchronized:true});
+    const ctx=canvas.getContext('2d',{alpha:true});
     function resize(){
       const r=canvas.parentElement.getBoundingClientRect();
       const d=DPR();
@@ -152,6 +152,11 @@
       canvas.style.width=r.width+'px';
       canvas.style.height=r.height+'px';
       ctx.setTransform(d,0,0,d,0,0);
+      ctx.save();
+      ctx.setTransform(d,0,0,d,0,0);
+      ctx.fillStyle='#ffffff';
+      ctx.fillRect(0,0,r.width,r.height);
+      ctx.restore();
     }
     resize();
     return {canvas,ctx,resize};
@@ -161,9 +166,15 @@
   const B=setupCanvas(document.getElementById('wet'));
   const C=setupCanvas(document.getElementById('delegated'));
   const CP=setupCanvas(document.getElementById('delegatedPredict'));
+  clearPredictionLayer();
+
+  function clearPredictionLayer(){
+    const r=CP.canvas.getBoundingClientRect();
+    CP.ctx.clearRect(0,0,r.width,r.height);
+  }
 
   window.addEventListener('resize',()=>{
-    A.resize();B.resize();C.resize();CP.resize();
+    A.resize();B.resize();C.resize();CP.resize();clearPredictionLayer();
   });
 
   function localPoint(canvas,e){
@@ -408,8 +419,7 @@
       presenterPromise.then(p=>{
         presenter=p;
         presenterReady=true;
-        delegatedLabel.textContent='Delegated Ink aktif'+
-          (Number.isFinite(p.expectedImprovement)?' · ~'+Math.round(p.expectedImprovement)+' ms kazanç':'');
+        delegatedLabel.textContent='Delegated Ink aktif';
       }).catch(()=>{
         delegatedLabel.textContent='Delegated Ink başlatılamadı — fallback';
       });
@@ -455,6 +465,19 @@
     if(!cDrawing||e.pointerId!==cPointerId)return;
     const style=styleNow();
 
+    // Delegated trail must receive the original trusted PointerEvent for
+    // the current frame. Do this before any synthetic/coalesced processing.
+    if(presenterReady&&presenter&&e.isTrusted){
+      try{
+        presenter.updateInkTrailStartPoint(e,{
+          color:style.color,
+          diameter:Math.max(1,style.width)
+        });
+      }catch(err){
+        delegatedLabel.textContent='Delegated Ink hata — fallback aktif';
+      }
+    }
+
     for(const ev of eventBatch(e)){
       const p=localPoint(C.canvas,ev);
       if(cLast&&Math.hypot(p.x-cLast.x,p.y-cLast.y)<.2)continue;
@@ -469,17 +492,6 @@
     }
 
     mC.textContent=cCount+' nokta';
-
-    // Delegated trail requires the original trusted PointerEvent.
-    if(presenterReady&&presenter){
-      try{
-        presenter.updateInkTrailStartPoint(e,{
-          color:style.color,
-          diameter:Math.max(1,style.width)
-        });
-      }catch(_){}
-    }
-
     drawPredicted(e);
   }
 
@@ -529,13 +541,17 @@
     'Prediction ✓','Prediction ✕'
   );
 
-  function clearCanvas(setup){
+  function clearCanvas(setup,{transparent=false}={}){
     const r=setup.canvas.getBoundingClientRect();
     setup.ctx.clearRect(0,0,r.width,r.height);
+    if(!transparent){
+      setup.ctx.fillStyle='#ffffff';
+      setup.ctx.fillRect(0,0,r.width,r.height);
+    }
   }
 
   document.getElementById('clearAll').addEventListener('click',()=>{
-    clearCanvas(A);clearCanvas(B);clearCanvas(C);clearCanvas(CP);
+    clearCanvas(A);clearCanvas(B);clearCanvas(C);clearCanvas(CP,{transparent:true});
     aCommitted.length=0;aPoints=[];aDrawing=false;
     bDrawing=false;bLast=null;bCount=0;bPointerId=null;
     cDrawing=false;cLast=null;cCount=0;cPointerId=null;
