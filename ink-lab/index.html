@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Ink Lab v5 — Beyaz Tahta Kalem Testi</title>
+<title>Ink Lab v6 — Beyaz Tahta Kalem Testi</title>
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%;background:#f4f6f8;color:#172036;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
@@ -60,7 +60,7 @@
 </head>
 <body>
 <div class="top">
-  <h1>Ink Lab v5</h1>
+  <h1>Ink Lab v6</h1>
   <span id="rawPill" class="pill">pointerrawupdate…</span>
 
   <div class="toolbar">
@@ -90,7 +90,7 @@
   <section class="card">
     <div class="head">
       <div class="title">B — Adaptive Wet Ink</div>
-      <div class="sub">Daha hafif adaptif smoothing + sakin pressure + kontrollü birleşimler.</div>
+      <div class="sub">Adaptif smoothing + sakin pressure + lokal Bézier wet ink.</div>
     </div>
     <div class="stage">
       <canvas id="wet"></canvas>
@@ -342,40 +342,63 @@
   // ------------------------------------------------------------
   // B — incremental wet ink
   // ------------------------------------------------------------
-  let bDrawing=false,bLast=null,bRawLast=null,bCount=0,bPointerId=null;
+  let bDrawing=false,bLast=null,bPrev=null,bRawLast=null,bCount=0,bPointerId=null;
 
-  function drawSegment(ctx,a,b,style){
-    if(!a||!b)return;
+  function drawRibbonQuad(ctx,p0,p1,p2,style){
+    if(!p0||!p1||!p2)return;
 
-    const w0=pointWidth(a,style.width,a.prevForWidth||null);
-    const w1=pointWidth(b,style.width,a);
-    const dx=b.x-a.x,dy=b.y-a.y;
-    const len=Math.hypot(dx,dy);
-    if(len<.01)return;
+    // Quadratic Bézier from p0 to p2, controlled by p1.
+    // Only this tiny local piece is sampled; old stroke geometry is untouched.
+    const steps=5;
+    let prev=null;
 
-    const nx=-dy/len,ny=dx/len;
-    const h0=Math.max(.34,w0/2),h1=Math.max(.34,w1/2);
+    for(let i=0;i<=steps;i++){
+      const t=i/steps;
+      const u=1-t;
+      const q={
+        x:u*u*p0.x+2*u*t*p1.x+t*t*p2.x,
+        y:u*u*p0.y+2*u*t*p1.y+t*t*p2.y,
+        t:p0.t+(p2.t-p0.t)*t,
+        pressure:
+          (Number.isFinite(p0.pressure)?p0.pressure:.5)*u*u+
+          2*u*t*(Number.isFinite(p1.pressure)?p1.pressure:.5)+
+          (Number.isFinite(p2.pressure)?p2.pressure:.5)*t*t,
+        input:p2.input
+      };
 
-    ctx.fillStyle=style.color;
+      if(prev){
+        const w0=pointWidth(prev,style.width,prev.prevForWidth||null);
+        const w1=pointWidth(q,style.width,prev);
+        const dx=q.x-prev.x,dy=q.y-prev.y;
+        const len=Math.hypot(dx,dy);
 
-    // Body of the incremental ribbon.
-    ctx.beginPath();
-    ctx.moveTo(a.x+nx*h0,a.y+ny*h0);
-    ctx.lineTo(b.x+nx*h1,b.y+ny*h1);
-    ctx.lineTo(b.x-nx*h1,b.y-ny*h1);
-    ctx.lineTo(a.x-nx*h0,a.y-ny*h0);
-    ctx.closePath();
-    ctx.fill();
+        if(len>.01){
+          const nx=-dy/len,ny=dx/len;
+          const h0=Math.max(.34,w0/2),h1=Math.max(.34,w1/2);
 
-    // Round cap at the new sample hides tiny angle gaps between segments.
-    ctx.beginPath();
-    ctx.arc(b.x,b.y,h1*.88,0,Math.PI*2);
-    ctx.fill();
+          ctx.fillStyle=style.color;
+          ctx.beginPath();
+          ctx.moveTo(prev.x+nx*h0,prev.y+ny*h0);
+          ctx.lineTo(q.x+nx*h1,q.y+ny*h1);
+          ctx.lineTo(q.x-nx*h1,q.y-ny*h1);
+          ctx.lineTo(prev.x-nx*h0,prev.y-ny*h0);
+          ctx.closePath();
+          ctx.fill();
 
-    // Small round join at the previous sample makes sharp turns less ribbon-like.
-    ctx.beginPath();
-    ctx.arc(a.x,a.y,h0*.70,0,Math.PI*2);
-    ctx.fill();
+          // Tight round caps/joins remove micro-gaps without visible blobs.
+          ctx.beginPath();
+          ctx.arc(q.x,q.y,h1*.84,0,Math.PI*2);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(prev.x,prev.y,h0*.58,0,Math.PI*2);
+          ctx.fill();
+        }
+      }
+
+      q.prevForWidth=prev?{...prev}:null;
+      prev=q;
+    }
   }
 
   function feedB(e){
@@ -391,8 +414,21 @@
       const filtered=smoothWetPoint(bLast,raw,bRawLast);
 
       if(bLast){
-        filtered.prevForWidth=bLast.prevForWidth||null;
-        drawSegment(B.ctx,bLast,filtered,style);
+        if(bPrev){
+          const m1={
+            ...bLast,
+            x:(bPrev.x+bLast.x)/2,
+            y:(bPrev.y+bLast.y)/2
+          };
+          const m2={
+            ...filtered,
+            x:(bLast.x+filtered.x)/2,
+            y:(bLast.y+filtered.y)/2
+          };
+          drawRibbonQuad(B.ctx,m1,bLast,m2,style);
+        }else{
+          drawRibbonQuad(B.ctx,bLast,bLast,filtered,style);
+        }
       }else{
         B.ctx.fillStyle=style.color;
         const r=Math.max(.45,pointWidth(filtered,style.width,null)/2);
@@ -402,6 +438,7 @@
       }
 
       filtered.prevForWidth=bLast?{...bLast}:null;
+      bPrev=bLast;
       bLast=filtered;
       bRawLast=raw;
       bCount++;
@@ -417,6 +454,7 @@
     bPointerId=e.pointerId;
     bRawLast=localPoint(B.canvas,e);
     bLast={...bRawLast,prevForWidth:null};
+    bPrev=null;
     bCount=1;
     const s=styleNow();
     B.ctx.fillStyle=s.color;
@@ -437,7 +475,7 @@
 
   function endB(e){
     if(e.pointerId!==bPointerId)return;
-    bDrawing=false;bPointerId=null;bLast=null;bRawLast=null;
+    bDrawing=false;bPointerId=null;bLast=null;bPrev=null;bRawLast=null;
   }
   B.canvas.addEventListener('pointerup',endB);
   B.canvas.addEventListener('pointercancel',endB);
@@ -468,7 +506,7 @@
   document.getElementById('clearAll').addEventListener('click',()=>{
     clearCanvas(A);clearCanvas(B);
     aCommitted.length=0;aPoints=[];aDrawing=false;
-    bDrawing=false;bLast=null;bRawLast=null;bCount=0;bPointerId=null;
+    bDrawing=false;bLast=null;bPrev=null;bRawLast=null;bCount=0;bPointerId=null;
     mA.textContent='0 nokta';mB.textContent='0 nokta';
   });
 
