@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Ink Lab v3 — Beyaz Tahta Kalem Testi</title>
+<title>Ink Lab v4 — Beyaz Tahta Kalem Testi</title>
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%;background:#f4f6f8;color:#172036;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
@@ -60,7 +60,7 @@
 </head>
 <body>
 <div class="top">
-  <h1>Ink Lab v3</h1>
+  <h1>Ink Lab v4</h1>
   <span id="rawPill" class="pill">pointerrawupdate…</span>
 
   <div class="toolbar">
@@ -89,14 +89,14 @@
 
   <section class="card">
     <div class="head">
-      <div class="title">B — Incremental Wet Ink</div>
-      <div class="sub">Sadece yeni segment çizilir; eski stroke tekrar hesaplanmaz.</div>
+      <div class="title">B — Adaptive Wet Ink</div>
+      <div class="sub">Incremental çizim + adaptif smoothing + doğal pressure eğrisi + yumuşak birleşimler.</div>
     </div>
     <div class="stage">
       <canvas id="wet"></canvas>
     </div>
     <div class="footer">
-      <span>Raw/coalesced + incremental</span>
+      <span>Adaptive incremental wet ink</span>
       <span id="mB" class="metric">0 nokta</span>
     </div>
   </section>
@@ -171,18 +171,46 @@
   }
 
   function pointWidth(p,base,prev){
+    let speed=0;
+    if(prev){
+      const dt=Math.max(1,p.t-prev.t);
+      speed=Math.hypot(p.x-prev.x,p.y-prev.y)/dt;
+    }
+
     if(p.input==='pen'){
       const pressure=clamp01(Number.isFinite(p.pressure)?p.pressure:.5);
-      const pressureCurve=Math.pow(pressure,.72);
-      let velocityFactor=1;
-      if(prev){
-        const dt=Math.max(1,p.t-prev.t);
-        const speed=Math.hypot(p.x-prev.x,p.y-prev.y)/dt;
-        velocityFactor=1.03-clamp01(speed/1.7)*.08;
-      }
-      return Math.max(.8,base*(.48+.72*pressureCurve)*velocityFactor);
+
+      // Softer S-like response: low pressure remains visible without becoming
+      // hair-thin; medium pressure has the most expressive range.
+      const shaped=Math.pow(pressure,.82);
+      const pressureFactor=.52 + shaped*.66;
+
+      // Fast motion gets only a restrained thinning. Too much speed response
+      // makes handwriting look mechanical.
+      const speedFactor=1.035-clamp01(speed/1.9)*.075;
+
+      return Math.max(.75,base*pressureFactor*speedFactor);
     }
-    return base;
+
+    // Mouse/touch keep almost constant width.
+    return Math.max(.75,base*(1.02-clamp01(speed/1.8)*.04));
+  }
+
+  function smoothWetPoint(prevFiltered,raw,prevRaw){
+    if(!prevFiltered||!prevRaw)return {...raw};
+
+    const dt=Math.max(1,raw.t-prevRaw.t);
+    const speed=Math.hypot(raw.x-prevRaw.x,raw.y-prevRaw.y)/dt;
+
+    // Slow motion: more filtering against hand jitter.
+    // Fast motion: less filtering so the stroke stays under the pen tip.
+    const follow=.38 + clamp01(speed/1.6)*.48;
+
+    return {
+      ...raw,
+      x:prevFiltered.x+(raw.x-prevFiltered.x)*follow,
+      y:prevFiltered.y+(raw.y-prevFiltered.y)*follow
+    };
   }
 
   // ------------------------------------------------------------
@@ -315,19 +343,23 @@
   // ------------------------------------------------------------
   // B — incremental wet ink
   // ------------------------------------------------------------
-  let bDrawing=false,bLast=null,bCount=0,bPointerId=null;
+  let bDrawing=false,bLast=null,bRawLast=null,bCount=0,bPointerId=null;
 
   function drawSegment(ctx,a,b,style){
     if(!a||!b)return;
-    const w0=pointWidth(a,style.width,null);
+
+    const w0=pointWidth(a,style.width,a.prevForWidth||null);
     const w1=pointWidth(b,style.width,a);
     const dx=b.x-a.x,dy=b.y-a.y;
     const len=Math.hypot(dx,dy);
     if(len<.01)return;
+
     const nx=-dy/len,ny=dx/len;
-    const h0=Math.max(.35,w0/2),h1=Math.max(.35,w1/2);
+    const h0=Math.max(.34,w0/2),h1=Math.max(.34,w1/2);
 
     ctx.fillStyle=style.color;
+
+    // Body of the incremental ribbon.
     ctx.beginPath();
     ctx.moveTo(a.x+nx*h0,a.y+ny*h0);
     ctx.lineTo(b.x+nx*h1,b.y+ny*h1);
@@ -336,37 +368,67 @@
     ctx.closePath();
     ctx.fill();
 
+    // Round cap at the new sample hides tiny angle gaps between segments.
     ctx.beginPath();
     ctx.arc(b.x,b.y,h1,0,Math.PI*2);
+    ctx.fill();
+
+    // Small round join at the previous sample makes sharp turns less ribbon-like.
+    ctx.beginPath();
+    ctx.arc(a.x,a.y,h0*.94,0,Math.PI*2);
     ctx.fill();
   }
 
   function feedB(e){
     if(!bDrawing||e.pointerId!==bPointerId)return;
+
     const style=styleNow();
+
     for(const ev of eventBatch(e)){
-      const p=localPoint(B.canvas,ev);
-      if(bLast&&Math.hypot(p.x-bLast.x,p.y-bLast.y)<.2)continue;
-      if(bLast)drawSegment(B.ctx,bLast,p,style);
-      else{
+      const raw=localPoint(B.canvas,ev);
+
+      if(bRawLast&&Math.hypot(raw.x-bRawLast.x,raw.y-bRawLast.y)<.18)continue;
+
+      const filtered=smoothWetPoint(bLast,raw,bRawLast);
+
+      if(bLast){
+        filtered.prevForWidth=bLast.prevForWidth||null;
+        drawSegment(B.ctx,bLast,filtered,style);
+      }else{
         B.ctx.fillStyle=style.color;
+        const r=Math.max(.45,pointWidth(filtered,style.width,null)/2);
         B.ctx.beginPath();
-        B.ctx.arc(p.x,p.y,style.width/2,0,Math.PI*2);
+        B.ctx.arc(filtered.x,filtered.y,r,0,Math.PI*2);
         B.ctx.fill();
       }
-      bLast=p;bCount++;
+
+      filtered.prevForWidth=bLast?{...bLast}:null;
+      bLast=filtered;
+      bRawLast=raw;
+      bCount++;
     }
+
     mB.textContent=bCount+' nokta';
   }
 
   B.canvas.addEventListener('pointerdown',e=>{
     if(e.button!==0)return;
     B.canvas.setPointerCapture(e.pointerId);
-    bDrawing=true;bPointerId=e.pointerId;bLast=localPoint(B.canvas,e);bCount=1;
+    bDrawing=true;
+    bPointerId=e.pointerId;
+    bRawLast=localPoint(B.canvas,e);
+    bLast={...bRawLast,prevForWidth:null};
+    bCount=1;
     const s=styleNow();
     B.ctx.fillStyle=s.color;
     B.ctx.beginPath();
-    B.ctx.arc(bLast.x,bLast.y,s.width/2,0,Math.PI*2);
+    B.ctx.arc(
+      bLast.x,
+      bLast.y,
+      Math.max(.45,pointWidth(bLast,s.width,null)/2),
+      0,
+      Math.PI*2
+    );
     B.ctx.fill();
     mB.textContent='1 nokta';
   });
@@ -376,7 +438,7 @@
 
   function endB(e){
     if(e.pointerId!==bPointerId)return;
-    bDrawing=false;bPointerId=null;bLast=null;
+    bDrawing=false;bPointerId=null;bLast=null;bRawLast=null;
   }
   B.canvas.addEventListener('pointerup',endB);
   B.canvas.addEventListener('pointercancel',endB);
@@ -407,7 +469,7 @@
   document.getElementById('clearAll').addEventListener('click',()=>{
     clearCanvas(A);clearCanvas(B);
     aCommitted.length=0;aPoints=[];aDrawing=false;
-    bDrawing=false;bLast=null;bCount=0;bPointerId=null;
+    bDrawing=false;bLast=null;bRawLast=null;bCount=0;bPointerId=null;
     mA.textContent='0 nokta';mB.textContent='0 nokta';
   });
 
