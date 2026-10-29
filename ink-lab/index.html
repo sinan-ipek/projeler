@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Ink Lab v6 — Beyaz Tahta Kalem Testi</title>
+<title>Ink Lab v7 — Beyaz Tahta Kalem Testi</title>
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%;background:#f4f6f8;color:#172036;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
@@ -60,7 +60,7 @@
 </head>
 <body>
 <div class="top">
-  <h1>Ink Lab v6</h1>
+  <h1>Ink Lab v7</h1>
   <span id="rawPill" class="pill">pointerrawupdate…</span>
 
   <div class="toolbar">
@@ -90,7 +90,7 @@
   <section class="card">
     <div class="head">
       <div class="title">B — Adaptive Wet Ink</div>
-      <div class="sub">Adaptif smoothing + sakin pressure + lokal Bézier wet ink.</div>
+      <div class="sub">Adaptif smoothing + sakin pressure + dönüş açısına duyarlı Bézier.</div>
     </div>
     <div class="stage">
       <canvas id="wet"></canvas>
@@ -344,11 +344,42 @@
   // ------------------------------------------------------------
   let bDrawing=false,bLast=null,bPrev=null,bRawLast=null,bCount=0,bPointerId=null;
 
+  function turnSharpness(a,b,c){
+    if(!a||!b||!c)return 0;
+    const v1x=b.x-a.x,v1y=b.y-a.y;
+    const v2x=c.x-b.x,v2y=c.y-b.y;
+    const l1=Math.hypot(v1x,v1y),l2=Math.hypot(v2x,v2y);
+    if(l1<1e-6||l2<1e-6)return 0;
+    const dot=(v1x*v2x+v1y*v2y)/(l1*l2);
+    const angle=Math.acos(Math.max(-1,Math.min(1,dot)));
+    // 0 on straight motion, approaching 1 on a hard reversal.
+    return clamp01(angle/Math.PI);
+  }
+
+  function lerpPoint(a,b,t){
+    return {
+      ...b,
+      x:a.x+(b.x-a.x)*t,
+      y:a.y+(b.y-a.y)*t
+    };
+  }
+
   function drawRibbonQuad(ctx,p0,p1,p2,style){
     if(!p0||!p1||!p2)return;
 
-    // Quadratic Bézier from p0 to p2, controlled by p1.
-    // Only this tiny local piece is sampled; old stroke geometry is untouched.
+    // Curve influence is reduced at sharp turns so handwriting corners
+    // remain faithful instead of being rounded into large arcs.
+    const sharp=turnSharpness(p0,p1,p2);
+    const curveStrength=1-clamp01((sharp-.10)/.42);
+
+    const straightMid={
+      ...p1,
+      x:(p0.x+p2.x)/2,
+      y:(p0.y+p2.y)/2
+    };
+
+    const control=lerpPoint(straightMid,p1,curveStrength);
+
     const steps=5;
     let prev=null;
 
@@ -356,12 +387,12 @@
       const t=i/steps;
       const u=1-t;
       const q={
-        x:u*u*p0.x+2*u*t*p1.x+t*t*p2.x,
-        y:u*u*p0.y+2*u*t*p1.y+t*t*p2.y,
+        x:u*u*p0.x+2*u*t*control.x+t*t*p2.x,
+        y:u*u*p0.y+2*u*t*control.y+t*t*p2.y,
         t:p0.t+(p2.t-p0.t)*t,
         pressure:
           (Number.isFinite(p0.pressure)?p0.pressure:.5)*u*u+
-          2*u*t*(Number.isFinite(p1.pressure)?p1.pressure:.5)+
+          2*u*t*(Number.isFinite(control.pressure)?control.pressure:.5)+
           (Number.isFinite(p2.pressure)?p2.pressure:.5)*t*t,
         input:p2.input
       };
@@ -385,13 +416,12 @@
           ctx.closePath();
           ctx.fill();
 
-          // Tight round caps/joins remove micro-gaps without visible blobs.
           ctx.beginPath();
-          ctx.arc(q.x,q.y,h1*.84,0,Math.PI*2);
+          ctx.arc(q.x,q.y,h1*.82,0,Math.PI*2);
           ctx.fill();
 
           ctx.beginPath();
-          ctx.arc(prev.x,prev.y,h0*.58,0,Math.PI*2);
+          ctx.arc(prev.x,prev.y,h0*.54,0,Math.PI*2);
           ctx.fill();
         }
       }
