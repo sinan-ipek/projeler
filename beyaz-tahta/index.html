@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v16.30</title>
+<title>Beyaz Tahta v17.0</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -34,6 +34,8 @@
     background:#ffffff;
   }
   canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:default}
+  #c{z-index:1}
+  #inkOverlay{z-index:2;pointer-events:none;touch-action:none;background:transparent}
   #status{margin-left:auto;font-size:12px;color:#687080}
   .boardScope{
     height:34px;
@@ -948,6 +950,7 @@
   </div>
   <div id="stageWrap">
     <canvas id="c"></canvas>
+    <canvas id="inkOverlay" aria-hidden="true"></canvas>
     <textarea id="textEditor" spellcheck="false" aria-label="Metin düzenleyici"></textarea>
 
     <div id="contextMenu" role="menu" aria-label="Nesne menüsü">
@@ -1008,7 +1011,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v16.30 (tüm nesneleri ekrana sığdır)</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v17.0 (düşük gecikmeli adaptive wet ink)</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1032,7 +1035,7 @@
           <section class="helpSection">
             <h3>Çizim</h3>
             <ul>
-              <li>Kalemle serbest çizim yap.</li>
+              <li>Kalemle düşük gecikmeli adaptif wet ink ile serbest çizim yap.</li>
               <li>Çizgi rengini ve kalınlığını değiştir.</li>
               <li>Uygun çizimler bekletildiğinde otomatik şekle dönüşebilir.</li>
               <li>Silgi ile tüm ink nesnesini veya yalnız belirli bir bölümü sil.</li>
@@ -1184,6 +1187,8 @@
 (() => {
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d');
+  const inkOverlay = document.getElementById('inkOverlay');
+  const inkOverlayCtx = inkOverlay.getContext('2d',{alpha:true});
   const wrap = document.getElementById('stageWrap');
   const homeBtn = document.getElementById('homeBtn');
   const fitAllBtn = document.getElementById('fitAllBtn');
@@ -1306,6 +1311,11 @@
 
   let drawing = false;
   let points = [];
+
+  let wetPrev=null;
+  let wetLast=null;
+  let wetRawLast=null;
+  const RAW_INK_SUPPORTED='onpointerrawupdate' in canvas;
   let holdTimer = null;
   let lastMoveTime = 0;
   let previewRecognized = null;
@@ -1429,10 +1439,18 @@
 
   function resize(){
     const r = wrap.getBoundingClientRect();
+
     canvas.width = Math.round(r.width*dpr);
     canvas.height = Math.round(r.height*dpr);
     canvas.style.width = r.width+'px';
     canvas.style.height = r.height+'px';
+
+    inkOverlay.width = Math.round(r.width*dpr);
+    inkOverlay.height = Math.round(r.height*dpr);
+    inkOverlay.style.width = r.width+'px';
+    inkOverlay.style.height = r.height+'px';
+
+    clearInkOverlay();
     redraw();
     if(textEditing) positionTextEditor();
   }
@@ -1517,6 +1535,8 @@
 
     drawing=false;
     points=[];
+    clearInkOverlay();
+    resetWetInkState();
     previewRecognized=null;
     lockedShape=null;
     lockedShapeType=null;
@@ -1988,7 +2008,8 @@
           input:points[0].input
         }],
         style:strokeStyle(),
-        inkProfile:'dynamic'
+        inkProfile:'dynamic',
+        inkEngine:'adaptive-v7'
       });
       liveInkSentIndex=1;
     }
@@ -2009,7 +2030,8 @@
         id:liveInkId,
         points:chunk,
         style:strokeStyle(),
-        inkProfile:'dynamic'
+        inkProfile:'dynamic',
+        inkEngine:'adaptive-v7'
       });
       liveInkSentIndex=points.length;
     }
@@ -2841,6 +2863,267 @@
     }
 
     ctx.restore();
+  }
+
+  function adaptiveInkWidth(p,base,prev){
+    let speed=0;
+    if(prev){
+      const dt=Math.max(1,Number(p.t)-Number(prev.t)||1);
+      speed=Math.hypot(p.x-prev.x,p.y-prev.y)/dt;
+    }
+
+    if(p && p.input==='pen' && Number.isFinite(Number(p.pressure))){
+      const pressure=clamp01(Number(p.pressure));
+      const shaped=Math.pow(pressure,.88);
+      const pressureFactor=.60+shaped*.50;
+      const speedFactor=1.02-clamp01(speed/2.1)*.045;
+      return Math.max(.78,base*pressureFactor*speedFactor);
+    }
+
+    return Math.max(.78,base*(1.01-clamp01(speed/2.0)*.025));
+  }
+
+  function adaptiveSmoothPoint(prevFiltered,raw,prevRaw){
+    if(!prevFiltered || !prevRaw) return {...raw};
+
+    const dt=Math.max(1,Number(raw.t)-Number(prevRaw.t)||1);
+    const speed=Math.hypot(raw.x-prevRaw.x,raw.y-prevRaw.y)/dt;
+    const follow=.50+clamp01(speed/1.7)*.40;
+
+    return {
+      ...raw,
+      x:prevFiltered.x+(raw.x-prevFiltered.x)*follow,
+      y:prevFiltered.y+(raw.y-prevFiltered.y)*follow
+    };
+  }
+
+  function adaptiveTurnSharpness(a,b,d){
+    if(!a||!b||!d) return 0;
+    const v1x=b.x-a.x,v1y=b.y-a.y;
+    const v2x=d.x-b.x,v2y=d.y-b.y;
+    const l1=Math.hypot(v1x,v1y),l2=Math.hypot(v2x,v2y);
+    if(l1<1e-6||l2<1e-6) return 0;
+    const dot=(v1x*v2x+v1y*v2y)/(l1*l2);
+    const angle=Math.acos(Math.max(-1,Math.min(1,dot)));
+    return clamp01(angle/Math.PI);
+  }
+
+  function adaptiveLerpPoint(a,b,t){
+    return {
+      ...b,
+      x:a.x+(b.x-a.x)*t,
+      y:a.y+(b.y-a.y)*t
+    };
+  }
+
+  function drawAdaptiveRibbonQuad(targetCtx,p0,p1,p2,style){
+    if(!p0||!p1||!p2) return;
+
+    const sharp=adaptiveTurnSharpness(p0,p1,p2);
+    const curveStrength=1-clamp01((sharp-.10)/.42);
+
+    const straightMid={
+      ...p1,
+      x:(p0.x+p2.x)/2,
+      y:(p0.y+p2.y)/2
+    };
+    const control=adaptiveLerpPoint(straightMid,p1,curveStrength);
+
+    const base=Math.max(.75,Number(style&&style.width)||1);
+    const color=(style&&style.color)||'#111111';
+    const steps=5;
+    let prev=null;
+
+    targetCtx.fillStyle=color;
+
+    for(let i=0;i<=steps;i++){
+      const t=i/steps;
+      const u=1-t;
+      const q={
+        x:u*u*p0.x+2*u*t*control.x+t*t*p2.x,
+        y:u*u*p0.y+2*u*t*control.y+t*t*p2.y,
+        t:Number(p0.t)+(Number(p2.t)-Number(p0.t))*t,
+        pressure:
+          (Number.isFinite(Number(p0.pressure))?Number(p0.pressure):.5)*u*u+
+          2*u*t*(Number.isFinite(Number(control.pressure))?Number(control.pressure):.5)+
+          (Number.isFinite(Number(p2.pressure))?Number(p2.pressure):.5)*t*t,
+        input:p2.input
+      };
+
+      if(prev){
+        const w0=adaptiveInkWidth(prev,base,prev.prevForWidth||null);
+        const w1=adaptiveInkWidth(q,base,prev);
+        const dx=q.x-prev.x,dy=q.y-prev.y;
+        const len=Math.hypot(dx,dy);
+
+        if(len>.01){
+          const nx=-dy/len,ny=dx/len;
+          const h0=Math.max(.34,w0/2),h1=Math.max(.34,w1/2);
+
+          targetCtx.beginPath();
+          targetCtx.moveTo(prev.x+nx*h0,prev.y+ny*h0);
+          targetCtx.lineTo(q.x+nx*h1,q.y+ny*h1);
+          targetCtx.lineTo(q.x-nx*h1,q.y-ny*h1);
+          targetCtx.lineTo(prev.x-nx*h0,prev.y-ny*h0);
+          targetCtx.closePath();
+          targetCtx.fill();
+
+          targetCtx.beginPath();
+          targetCtx.arc(q.x,q.y,h1*.82,0,Math.PI*2);
+          targetCtx.fill();
+
+          targetCtx.beginPath();
+          targetCtx.arc(prev.x,prev.y,h0*.54,0,Math.PI*2);
+          targetCtx.fill();
+        }
+      }
+
+      q.prevForWidth=prev?{...prev}:null;
+      prev=q;
+    }
+  }
+
+  function drawAdaptiveInkStroke(targetCtx,pts,style){
+    if(!pts || !pts.length) return;
+
+    const base=Math.max(.75,Number(style&&style.width)||1);
+    const color=(style&&style.color)||'#111111';
+    let prev=null,last=null,rawLast=null;
+
+    targetCtx.save();
+    targetCtx.fillStyle=color;
+
+    for(const raw0 of pts){
+      const raw={...raw0};
+      if(rawLast && Math.hypot(raw.x-rawLast.x,raw.y-rawLast.y)<.18/viewZoom) continue;
+
+      const filtered=adaptiveSmoothPoint(last,raw,rawLast);
+
+      if(last){
+        if(prev){
+          const m1={...last,x:(prev.x+last.x)/2,y:(prev.y+last.y)/2};
+          const m2={...filtered,x:(last.x+filtered.x)/2,y:(last.y+filtered.y)/2};
+          drawAdaptiveRibbonQuad(targetCtx,m1,last,m2,style);
+        }else{
+          drawAdaptiveRibbonQuad(targetCtx,last,last,filtered,style);
+        }
+      }else{
+        const r=Math.max(.45,adaptiveInkWidth(filtered,base,null)/2);
+        targetCtx.beginPath();
+        targetCtx.arc(filtered.x,filtered.y,r,0,Math.PI*2);
+        targetCtx.fill();
+      }
+
+      prev=last;
+      last=filtered;
+      rawLast=raw;
+    }
+
+    targetCtx.restore();
+  }
+
+  function setInkOverlayWorldTransform(){
+    inkOverlayCtx.setTransform(
+      dpr*viewZoom,0,
+      0,dpr*viewZoom,
+      dpr*viewX,dpr*viewY
+    );
+  }
+
+  function clearInkOverlay(){
+    inkOverlayCtx.setTransform(1,0,0,1,0,0);
+    inkOverlayCtx.clearRect(0,0,inkOverlay.width,inkOverlay.height);
+    setInkOverlayWorldTransform();
+  }
+
+  function resetWetInkState(){
+    wetPrev=null;
+    wetLast=null;
+    wetRawLast=null;
+  }
+
+  function beginWetInk(p){
+    clearInkOverlay();
+    resetWetInkState();
+
+    wetLast={...p};
+    wetRawLast={...p};
+
+    const style=strokeStyle();
+    const base=Math.max(.75,Number(style.width)||1);
+    const r=Math.max(.45,adaptiveInkWidth(wetLast,base,null)/2);
+
+    inkOverlayCtx.fillStyle=style.color;
+    inkOverlayCtx.beginPath();
+    inkOverlayCtx.arc(wetLast.x,wetLast.y,r,0,Math.PI*2);
+    inkOverlayCtx.fill();
+  }
+
+  function appendWetInk(raw){
+    const style=strokeStyle();
+
+    if(
+      wetRawLast &&
+      Math.hypot(raw.x-wetRawLast.x,raw.y-wetRawLast.y)<.18/viewZoom
+    ) return false;
+
+    const filtered=adaptiveSmoothPoint(wetLast,raw,wetRawLast);
+
+    if(wetLast){
+      if(wetPrev){
+        const m1={
+          ...wetLast,
+          x:(wetPrev.x+wetLast.x)/2,
+          y:(wetPrev.y+wetLast.y)/2
+        };
+        const m2={
+          ...filtered,
+          x:(wetLast.x+filtered.x)/2,
+          y:(wetLast.y+filtered.y)/2
+        };
+        drawAdaptiveRibbonQuad(inkOverlayCtx,m1,wetLast,m2,style);
+      }else{
+        drawAdaptiveRibbonQuad(inkOverlayCtx,wetLast,wetLast,filtered,style);
+      }
+    }
+
+    wetPrev=wetLast;
+    wetLast=filtered;
+    wetRawLast={...raw};
+    return true;
+  }
+
+  function processInkSamples(e){
+    if(!drawing || mode!=='ink' || lockedShape) return false;
+    if(inkPointerId!==null && e.pointerId!==inkPointerId) return false;
+
+    const rawEvents=(
+      typeof e.getCoalescedEvents==='function'
+        ? e.getCoalescedEvents()
+        : null
+    );
+    const inkEvents=(rawEvents&&rawEvents.length)?rawEvents:[e];
+
+    let moved=false;
+
+    for(const ev of inkEvents){
+      const q=pFromEvent(ev);
+      const prev=points[points.length-1];
+      if(!prev || dist(prev,q)>.18/viewZoom){
+        points.push(q);
+        appendWetInk(q);
+        moved=true;
+      }
+    }
+
+    if(moved){
+      lastMoveTime=performance.now();
+      previewRecognized=null;
+      armHold();
+      collabBroadcastLiveInk(false);
+    }
+
+    return moved;
   }
 
   function rotatePoint(p,c,a){
@@ -6654,24 +6937,32 @@
 
     for(const o of objects){
       if(o.kind==='stroke'){
-        drawSmoothStroke(
-          o.points,
-          o.style,
-          o.inkProfile==='dynamic',
-          false
-        );
+        if(o.inkEngine==='adaptive-v7'){
+          drawAdaptiveInkStroke(ctx,o.points,o.style);
+        }else{
+          drawSmoothStroke(
+            o.points,
+            o.style,
+            o.inkProfile==='dynamic',
+            false
+          );
+        }
       }else if(o.kind==='image') drawImageObject(o);
       else if(o.kind==='text') drawTextObject(o);
       else drawShape(o);
     }
     for(const item of remoteLiveInk.values()){
       if(item && item.points && item.points.length){
-        drawSmoothStroke(
-          item.points,
-          item.style,
-          item.inkProfile==='dynamic',
-          true
-        );
+        if(item.inkEngine==='adaptive-v7'){
+          drawAdaptiveInkStroke(ctx,item.points,item.style);
+        }else{
+          drawSmoothStroke(
+            item.points,
+            item.style,
+            item.inkProfile==='dynamic',
+            true
+          );
+        }
       }
     }
 
@@ -6680,7 +6971,6 @@
         // Otomatik şekil aktifleştiğinde ham ink yerine canlı geometrik öneriyi göster.
         drawShape(lockedShape,true);
       }else{
-        drawSmoothStroke(points,strokeStyle(),true,true);
         if(previewRecognized) drawShape(previewRecognized,true);
       }
     }
@@ -7787,6 +8077,8 @@
             ' algılandı — merkezden uzaklık boyutu, merkez çevresindeki hareket dönüşü değiştirir';
         }
         previewRecognized=null;
+        clearInkOverlay();
+        resetWetInkState();
       }else{
         statusEl.textContent='Şekil algılanmadı';
       }
@@ -8919,6 +9211,7 @@
     canvas.setPointerCapture(e.pointerId);
     inkPointerId=e.pointerId;
     drawing=true; points=[p];
+    beginWetInk(p);
 
     liveInkId=makeObjectId();
     liveInkSentIndex=0;
@@ -9471,6 +9764,8 @@
     if(inkPointerId!==null && e.pointerId!==inkPointerId) return;
 
     if(lockedShape){
+      clearInkOverlay();
+      resetWetInkState();
       if(lockedShape.kind==='line'){
         // Çizgi: A sabit, B fareyi takip eder.
         lockedShape.a={...lockAnchor};
@@ -9536,35 +9831,16 @@
       return;
     }
 
-    const rawEvents=(
-      typeof e.getCoalescedEvents==='function'
-        ? e.getCoalescedEvents()
-        : null
-    );
-    const inkEvents=(rawEvents && rawEvents.length) ? rawEvents : [e];
-
-    let inkMoved=false;
-
-    for(const ev of inkEvents){
-      const q=pFromEvent(ev);
-      const prev=points[points.length-1];
-      if(!prev || dist(prev,q)>1.5){
-        points.push(q);
-        inkMoved=true;
-      }
-    }
-
-    if(inkMoved){
-      lastMoveTime=performance.now();
-      previewRecognized=null;
-      armHold();
-      collabBroadcastLiveInk(false);
-
-      // Pointer samples may arrive faster than the display can present them.
-      // Collect all samples, but redraw at most once per animation frame.
-      scheduleInkRedraw();
+    if(!RAW_INK_SUPPORTED){
+      processInkSamples(e);
     }
   });
+  canvas.addEventListener('pointerrawupdate',e=>{
+    if(!RAW_INK_SUPPORTED) return;
+    if(mode!=='ink' || !drawing || lockedShape) return;
+    processInkSamples(e);
+  });
+
   canvas.addEventListener('pointerleave',()=>{
     if(mode==='eraser' && !erasing){
       eraserCursor=null;
@@ -9828,6 +10104,7 @@
         })),
         style:strokeStyle(),
         inkProfile:'dynamic',
+        inkEngine:'adaptive-v7',
         boxAngle:0
       };
       objects.push(accepted);
@@ -9840,6 +10117,8 @@
 
     drawing=false;
     points=[];
+    clearInkOverlay();
+    resetWetInkState();
     previewRecognized=null;
     lockedShape=null;
     lockedShapeType=null;
