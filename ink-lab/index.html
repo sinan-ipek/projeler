@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Ink Lab v4 — Beyaz Tahta Kalem Testi</title>
+<title>Ink Lab v5 — Beyaz Tahta Kalem Testi</title>
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%;background:#f4f6f8;color:#172036;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
@@ -60,7 +60,7 @@
 </head>
 <body>
 <div class="top">
-  <h1>Ink Lab v4</h1>
+  <h1>Ink Lab v5</h1>
   <span id="rawPill" class="pill">pointerrawupdate…</span>
 
   <div class="toolbar">
@@ -90,7 +90,7 @@
   <section class="card">
     <div class="head">
       <div class="title">B — Adaptive Wet Ink</div>
-      <div class="sub">Incremental çizim + adaptif smoothing + doğal pressure eğrisi + yumuşak birleşimler.</div>
+      <div class="sub">Daha hafif adaptif smoothing + sakin pressure + kontrollü birleşimler.</div>
     </div>
     <div class="stage">
       <canvas id="wet"></canvas>
@@ -182,18 +182,17 @@
 
       // Softer S-like response: low pressure remains visible without becoming
       // hair-thin; medium pressure has the most expressive range.
-      const shaped=Math.pow(pressure,.82);
-      const pressureFactor=.52 + shaped*.66;
+      const shaped=Math.pow(pressure,.88);
+      const pressureFactor=.60 + shaped*.50;
 
-      // Fast motion gets only a restrained thinning. Too much speed response
-      // makes handwriting look mechanical.
-      const speedFactor=1.035-clamp01(speed/1.9)*.075;
+      // Keep speed influence subtle so width changes don't advertise the algorithm.
+      const speedFactor=1.02-clamp01(speed/2.1)*.045;
 
-      return Math.max(.75,base*pressureFactor*speedFactor);
+      return Math.max(.78,base*pressureFactor*speedFactor);
     }
 
     // Mouse/touch keep almost constant width.
-    return Math.max(.75,base*(1.02-clamp01(speed/1.8)*.04));
+    return Math.max(.78,base*(1.01-clamp01(speed/2.0)*.025));
   }
 
   function smoothWetPoint(prevFiltered,raw,prevRaw){
@@ -204,7 +203,7 @@
 
     // Slow motion: more filtering against hand jitter.
     // Fast motion: less filtering so the stroke stays under the pen tip.
-    const follow=.38 + clamp01(speed/1.6)*.48;
+    const follow=.50 + clamp01(speed/1.7)*.40;
 
     return {
       ...raw,
@@ -370,12 +369,12 @@
 
     // Round cap at the new sample hides tiny angle gaps between segments.
     ctx.beginPath();
-    ctx.arc(b.x,b.y,h1,0,Math.PI*2);
+    ctx.arc(b.x,b.y,h1*.88,0,Math.PI*2);
     ctx.fill();
 
     // Small round join at the previous sample makes sharp turns less ribbon-like.
     ctx.beginPath();
-    ctx.arc(a.x,a.y,h0*.94,0,Math.PI*2);
+    ctx.arc(a.x,a.y,h0*.70,0,Math.PI*2);
     ctx.fill();
   }
 
