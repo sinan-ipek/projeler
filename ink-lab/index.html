@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Ink Lab v2 — Beyaz Tahta Kalem Testi</title>
+<title>Ink Lab v3 — Beyaz Tahta Kalem Testi</title>
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%;background:#f4f6f8;color:#172036;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
@@ -24,7 +24,7 @@
   }
   button:hover{background:#f8fafc}
   .grid{
-    max-width:1500px;margin:0 auto;display:grid;grid-template-columns:repeat(3,minmax(280px,1fr));gap:14px
+    max-width:1500px;margin:0 auto;display:grid;grid-template-columns:repeat(2,minmax(320px,1fr));gap:14px
   }
   .card{
     background:#fff;border:1px solid #d9dee5;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(15,23,42,.06)
@@ -60,10 +60,8 @@
 </head>
 <body>
 <div class="top">
-  <h1>Ink Lab v2</h1>
-  <span id="inkApiPill" class="pill">Ink API…</span>
+  <h1>Ink Lab v3</h1>
   <span id="rawPill" class="pill">pointerrawupdate…</span>
-  <span id="predPill" class="pill">Prediction…</span>
 
   <div class="toolbar">
     <div class="legend">
@@ -103,25 +101,12 @@
     </div>
   </section>
 
-  <section class="card">
-    <div class="head">
-      <div class="title">C — Delegated Ink + Prediction</div>
-      <div class="sub">Chrome/Edge destekliyorsa OS/browser compositor trail; ayrıca predicted events.</div>
-    </div>
-    <div class="stage">
-      <canvas id="delegated"></canvas>
-      <canvas id="delegatedPredict" class="predict"></canvas>
-    </div>
-    <div class="footer">
-      <span id="delegatedLabel">Hazırlanıyor…</span>
-      <span id="mC" class="metric">0 nokta</span>
-    </div>
-  </section>
+
 </div>
 
 <p class="note">
-  Aynı kelimeyi veya imzanı üç alanda da birkaç kez yaz. Özellikle hızlı kıvrımlar, küçük harfler ve ani yön değişikliklerine bak.
-  Burada amaç çizginin yalnızca görünüşünü değil, kalemin ucunu ne kadar “takip ettiğini” ve eline ne kadar direnç hissettirdiğini karşılaştırmak.
+  Aynı kelimeyi veya imzanı iki alanda da birkaç kez yaz. Özellikle hızlı kıvrımlar, küçük harfler ve ani yön değişikliklerine bak.
+  A alanı mevcut yaklaşımı referans olarak tutar. B alanı bundan sonraki geliştirmelerin ana test motorudur.
 </p>
 
 <script>
@@ -133,8 +118,6 @@
   const colorEl=document.getElementById('color');
   const mA=document.getElementById('mA');
   const mB=document.getElementById('mB');
-  const mC=document.getElementById('mC');
-  const delegatedLabel=document.getElementById('delegatedLabel');
 
   const DPR=()=>Math.max(1,window.devicePixelRatio||1);
   const clamp01=v=>Math.max(0,Math.min(1,v));
@@ -164,17 +147,9 @@
 
   const A=setupCanvas(document.getElementById('baseline'));
   const B=setupCanvas(document.getElementById('wet'));
-  const C=setupCanvas(document.getElementById('delegated'));
-  const CP=setupCanvas(document.getElementById('delegatedPredict'));
-  clearPredictionLayer();
-
-  function clearPredictionLayer(){
-    const r=CP.canvas.getBoundingClientRect();
-    CP.ctx.clearRect(0,0,r.width,r.height);
-  }
 
   window.addEventListener('resize',()=>{
-    A.resize();B.resize();C.resize();CP.resize();clearPredictionLayer();
+    A.resize();B.resize();
   });
 
   function localPoint(canvas,e){
@@ -407,119 +382,6 @@
   B.canvas.addEventListener('pointercancel',endB);
 
   // ------------------------------------------------------------
-  // C — delegated trail + predictions + incremental permanent ink
-  // ------------------------------------------------------------
-  let presenterPromise=null;
-  let presenter=null;
-  let presenterReady=false;
-
-  if(navigator.ink&&typeof navigator.ink.requestPresenter==='function'){
-    try{
-      presenterPromise=navigator.ink.requestPresenter({presentationArea:C.canvas});
-      presenterPromise.then(p=>{
-        presenter=p;
-        presenterReady=true;
-        delegatedLabel.textContent='Delegated Ink aktif';
-      }).catch(()=>{
-        delegatedLabel.textContent='Delegated Ink başlatılamadı — fallback';
-      });
-    }catch(_){
-      delegatedLabel.textContent='Delegated Ink başlatılamadı — fallback';
-    }
-  }else{
-    delegatedLabel.textContent='Ink API yok — prediction fallback';
-  }
-
-  let cDrawing=false,cLast=null,cCount=0,cPointerId=null;
-
-  function clearPrediction(){
-    const r=CP.canvas.getBoundingClientRect();
-    CP.ctx.clearRect(0,0,r.width,r.height);
-  }
-
-  function drawPredicted(e){
-    clearPrediction();
-    if(!cDrawing||typeof e.getPredictedEvents!=='function'||!cLast)return;
-    const predicted=e.getPredictedEvents();
-    if(!predicted||!predicted.length)return;
-
-    const ctx=CP.ctx;
-    const s=styleNow();
-    ctx.save();
-    ctx.strokeStyle=s.color;
-    ctx.globalAlpha=.30;
-    ctx.lineWidth=Math.max(1,s.width*.78);
-    ctx.lineCap='round';
-    ctx.lineJoin='round';
-    ctx.beginPath();
-    ctx.moveTo(cLast.x,cLast.y);
-    for(const ev of predicted){
-      const p=localPoint(C.canvas,ev);
-      ctx.lineTo(p.x,p.y);
-    }
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function feedC(e){
-    if(!cDrawing||e.pointerId!==cPointerId)return;
-    const style=styleNow();
-
-    // Delegated trail must receive the original trusted PointerEvent for
-    // the current frame. Do this before any synthetic/coalesced processing.
-    if(presenterReady&&presenter&&e.isTrusted){
-      try{
-        presenter.updateInkTrailStartPoint(e,{
-          color:style.color,
-          diameter:Math.max(1,style.width)
-        });
-      }catch(err){
-        delegatedLabel.textContent='Delegated Ink hata — fallback aktif';
-      }
-    }
-
-    for(const ev of eventBatch(e)){
-      const p=localPoint(C.canvas,ev);
-      if(cLast&&Math.hypot(p.x-cLast.x,p.y-cLast.y)<.2)continue;
-      if(cLast)drawSegment(C.ctx,cLast,p,style);
-      else{
-        C.ctx.fillStyle=style.color;
-        C.ctx.beginPath();
-        C.ctx.arc(p.x,p.y,style.width/2,0,Math.PI*2);
-        C.ctx.fill();
-      }
-      cLast=p;cCount++;
-    }
-
-    mC.textContent=cCount+' nokta';
-    drawPredicted(e);
-  }
-
-  C.canvas.addEventListener('pointerdown',e=>{
-    if(e.button!==0)return;
-    C.canvas.setPointerCapture(e.pointerId);
-    cDrawing=true;cPointerId=e.pointerId;cLast=localPoint(C.canvas,e);cCount=1;
-    const s=styleNow();
-    C.ctx.fillStyle=s.color;
-    C.ctx.beginPath();
-    C.ctx.arc(cLast.x,cLast.y,s.width/2,0,Math.PI*2);
-    C.ctx.fill();
-    mC.textContent='1 nokta';
-  });
-
-  // pointermove is used for DelegatedInkTrailPresenter because the presenter
-  // needs a trusted event and browser implementations are optimized for this path.
-  C.canvas.addEventListener('pointermove',feedC);
-
-  function endC(e){
-    if(e.pointerId!==cPointerId)return;
-    cDrawing=false;cPointerId=null;cLast=null;
-    clearPrediction();
-  }
-  C.canvas.addEventListener('pointerup',endC);
-  C.canvas.addEventListener('pointercancel',endC);
-
-  // ------------------------------------------------------------
   // capability display + clear
   // ------------------------------------------------------------
   function setPill(id,ok,yes,no){
@@ -528,17 +390,9 @@
     el.classList.add(ok?'ok':'no');
   }
 
-  setPill('inkApiPill',
-    !!(navigator.ink&&typeof navigator.ink.requestPresenter==='function'),
-    'Ink API ✓','Ink API ✕'
-  );
   setPill('rawPill',
     'onpointerrawupdate' in window,
     'pointerrawupdate ✓','pointerrawupdate ✕'
-  );
-  setPill('predPill',
-    'getPredictedEvents' in PointerEvent.prototype,
-    'Prediction ✓','Prediction ✕'
   );
 
   function clearCanvas(setup,{transparent=false}={}){
@@ -551,11 +405,10 @@
   }
 
   document.getElementById('clearAll').addEventListener('click',()=>{
-    clearCanvas(A);clearCanvas(B);clearCanvas(C);clearCanvas(CP,{transparent:true});
+    clearCanvas(A);clearCanvas(B);
     aCommitted.length=0;aPoints=[];aDrawing=false;
     bDrawing=false;bLast=null;bCount=0;bPointerId=null;
-    cDrawing=false;cLast=null;cCount=0;cPointerId=null;
-    mA.textContent='0 nokta';mB.textContent='0 nokta';mC.textContent='0 nokta';
+    mA.textContent='0 nokta';mB.textContent='0 nokta';
   });
 
 })();
