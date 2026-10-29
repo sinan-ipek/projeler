@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Ink Lab — Beyaz Tahta Kalem Testi</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:#f4f6f8;color:#172036;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+  body{padding:18px}
+  .top{
+    max-width:1500px;margin:0 auto 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap
+  }
+  h1{font-size:19px;margin:0 14px 0 0;font-weight:700}
+  .pill{
+    font-size:12px;padding:5px 8px;border-radius:999px;background:#fff;border:1px solid #d6dbe2;color:#4b5563
+  }
+  .pill.ok{background:#ecfdf3;border-color:#b7e7c8;color:#166534}
+  .pill.no{background:#fff1f2;border-color:#fecdd3;color:#9f1239}
+  .toolbar{margin-left:auto;display:flex;gap:8px;align-items:center}
+  button{
+    height:34px;border:1px solid #cfd5dc;border-radius:8px;background:#fff;padding:0 11px;
+    font:600 13px system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#263244;cursor:pointer
+  }
+  button:hover{background:#f8fafc}
+  .grid{
+    max-width:1500px;margin:0 auto;display:grid;grid-template-columns:repeat(3,minmax(280px,1fr));gap:14px
+  }
+  .card{
+    background:#fff;border:1px solid #d9dee5;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(15,23,42,.06)
+  }
+  .head{padding:11px 12px 9px;border-bottom:1px solid #e5e7eb}
+  .title{font-size:14px;font-weight:750}
+  .sub{font-size:11px;color:#6b7280;margin-top:3px;line-height:1.35}
+  .stage{
+    position:relative;height:min(62vh,650px);min-height:420px;background:#fff;overflow:hidden;touch-action:none
+  }
+  canvas{
+    position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair
+  }
+  .predict{pointer-events:none}
+  .footer{
+    padding:8px 11px;border-top:1px solid #eef0f3;display:flex;justify-content:space-between;gap:8px;
+    font-size:11px;color:#697386
+  }
+  .metric{font-variant-numeric:tabular-nums}
+  .note{
+    max-width:1500px;margin:13px auto 0;font-size:12px;line-height:1.5;color:#5f6b7a
+  }
+  .legend{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .legend label{font-size:12px;color:#4b5563;display:flex;align-items:center;gap:6px}
+  input[type="range"]{width:110px}
+  input[type="color"]{width:34px;height:30px;border:0;background:transparent;padding:0}
+  @media(max-width:980px){
+    .grid{grid-template-columns:1fr}
+    .stage{height:420px}
+    .toolbar{margin-left:0}
+  }
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>Ink Lab</h1>
+  <span id="inkApiPill" class="pill">Ink API…</span>
+  <span id="rawPill" class="pill">pointerrawupdate…</span>
+  <span id="predPill" class="pill">Prediction…</span>
+
+  <div class="toolbar">
+    <div class="legend">
+      <label>Kalınlık <input id="width" type="range" min="1" max="18" step="1" value="5"><span id="widthVal">5</span></label>
+      <label>Renk <input id="color" type="color" value="#111111"></label>
+    </div>
+    <button id="clearAll">Tümünü temizle</button>
+  </div>
+</div>
+
+<div class="grid">
+  <section class="card">
+    <div class="head">
+      <div class="title">A — Mevcut yaklaşım</div>
+      <div class="sub">Her karede stroke'un tamamı yeniden yumuşatılır ve yeniden çizilir.</div>
+    </div>
+    <div class="stage">
+      <canvas id="baseline"></canvas>
+    </div>
+    <div class="footer">
+      <span>Baseline</span>
+      <span id="mA" class="metric">0 nokta</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="head">
+      <div class="title">B — Incremental Wet Ink</div>
+      <div class="sub">Sadece yeni segment çizilir; eski stroke tekrar hesaplanmaz.</div>
+    </div>
+    <div class="stage">
+      <canvas id="wet"></canvas>
+    </div>
+    <div class="footer">
+      <span>Raw/coalesced + incremental</span>
+      <span id="mB" class="metric">0 nokta</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="head">
+      <div class="title">C — Delegated Ink + Prediction</div>
+      <div class="sub">Chrome/Edge destekliyorsa OS/browser compositor trail; ayrıca predicted events.</div>
+    </div>
+    <div class="stage">
+      <canvas id="delegated"></canvas>
+      <canvas id="delegatedPredict" class="predict"></canvas>
+    </div>
+    <div class="footer">
+      <span id="delegatedLabel">Hazırlanıyor…</span>
+      <span id="mC" class="metric">0 nokta</span>
+    </div>
+  </section>
+</div>
+
+<p class="note">
+  Aynı kelimeyi veya imzanı üç alanda da birkaç kez yaz. Özellikle hızlı kıvrımlar, küçük harfler ve ani yön değişikliklerine bak.
+  Burada amaç çizginin yalnızca görünüşünü değil, kalemin ucunu ne kadar “takip ettiğini” ve eline ne kadar direnç hissettirdiğini karşılaştırmak.
+</p>
+
+<script>
+(() => {
+  'use strict';
+
+  const widthEl=document.getElementById('width');
+  const widthVal=document.getElementById('widthVal');
+  const colorEl=document.getElementById('color');
+  const mA=document.getElementById('mA');
+  const mB=document.getElementById('mB');
+  const mC=document.getElementById('mC');
+  const delegatedLabel=document.getElementById('delegatedLabel');
+
+  const DPR=()=>Math.max(1,window.devicePixelRatio||1);
+  const clamp01=v=>Math.max(0,Math.min(1,v));
+  const styleNow=()=>({color:colorEl.value,width:Number(widthEl.value)||5});
+
+  widthEl.addEventListener('input',()=>widthVal.textContent=widthEl.value);
+
+  function setupCanvas(canvas){
+    const ctx=canvas.getContext('2d',{alpha:true,desynchronized:true});
+    function resize(){
+      const r=canvas.parentElement.getBoundingClientRect();
+      const d=DPR();
+      canvas.width=Math.max(1,Math.round(r.width*d));
+      canvas.height=Math.max(1,Math.round(r.height*d));
+      canvas.style.width=r.width+'px';
+      canvas.style.height=r.height+'px';
+      ctx.setTransform(d,0,0,d,0,0);
+    }
+    resize();
+    return {canvas,ctx,resize};
+  }
+
+  const A=setupCanvas(document.getElementById('baseline'));
+  const B=setupCanvas(document.getElementById('wet'));
+  const C=setupCanvas(document.getElementById('delegated'));
+  const CP=setupCanvas(document.getElementById('delegatedPredict'));
+
+  window.addEventListener('resize',()=>{
+    A.resize();B.resize();C.resize();CP.resize();
+  });
+
+  function localPoint(canvas,e){
+    const r=canvas.getBoundingClientRect();
+    return {
+      x:e.clientX-r.left,
+      y:e.clientY-r.top,
+      t:Number(e.timeStamp)||performance.now(),
+      pressure:Number.isFinite(e.pressure)?e.pressure:.5,
+      tiltX:Number(e.tiltX)||0,
+      tiltY:Number(e.tiltY)||0,
+      input:e.pointerType||'mouse'
+    };
+  }
+
+  function eventBatch(e){
+    const list=(typeof e.getCoalescedEvents==='function')?e.getCoalescedEvents():null;
+    return list&&list.length?list:[e];
+  }
+
+  function pointWidth(p,base,prev){
+    if(p.input==='pen'){
+      const pressure=clamp01(Number.isFinite(p.pressure)?p.pressure:.5);
+      const pressureCurve=Math.pow(pressure,.72);
+      let velocityFactor=1;
+      if(prev){
+        const dt=Math.max(1,p.t-prev.t);
+        const speed=Math.hypot(p.x-prev.x,p.y-prev.y)/dt;
+        velocityFactor=1.03-clamp01(speed/1.7)*.08;
+      }
+      return Math.max(.8,base*(.48+.72*pressureCurve)*velocityFactor);
+    }
+    return base;
+  }
+
+  // ------------------------------------------------------------
+  // A — current-like full recompute renderer
+  // ------------------------------------------------------------
+  let aDrawing=false;
+  let aPoints=[];
+  let aFrame=0;
+
+  function baselineWidthFactor(pts,i){
+    const p=pts[i];
+    const prev=pts[Math.max(0,i-1)];
+    const next=pts[Math.min(pts.length-1,i+1)];
+    const dt=Math.max(4,Number(next.t)-Number(prev.t)||16);
+    const travel=Math.hypot(next.x-prev.x,next.y-prev.y);
+    const speed=travel/dt;
+
+    if(p&&p.input==='pen'&&Number.isFinite(Number(p.pressure))){
+      const pressure=clamp01(Number(p.pressure));
+      const pressureFactor=.62+pressure*.58;
+      const speedTrim=1.04-clamp01(speed/1.5)*.09;
+      return pressureFactor*speedTrim;
+    }
+    return 1.12-clamp01(speed/1.35)*.28;
+  }
+
+  function baselineOutline(pts,style){
+    if(!pts.length)return [];
+    const baseWidth=Math.max(.75,style.width||1);
+    const raw=pts.map((p,i)=>({...p,width:baseWidth*baselineWidthFactor(pts,i)}));
+
+    const pass1=raw.map((p,i)=>{
+      if(i===0||i===raw.length-1)return {...p};
+      const a=raw[i-1],b=p,d=raw[i+1];
+      return {...p,x:a.x*.20+b.x*.60+d.x*.20,y:a.y*.20+b.y*.60+d.y*.20,width:a.width*.20+b.width*.60+d.width*.20};
+    });
+
+    const samples=pass1.map((p,i)=>{
+      if(i===0||i===pass1.length-1)return {...p};
+      const a=pass1[i-1],b=p,d=pass1[i+1];
+      return {...p,x:a.x*.12+b.x*.76+d.x*.12,y:a.y*.12+b.y*.76+d.y*.12,width:a.width*.14+b.width*.72+d.width*.14};
+    });
+
+    const smooth=[];
+    smooth.push({...samples[0]});
+    for(let i=0;i<samples.length-1;i++){
+      const a=samples[i],b=samples[i+1];
+      smooth.push({x:a.x*.75+b.x*.25,y:a.y*.75+b.y*.25,width:a.width*.75+b.width*.25});
+      smooth.push({x:a.x*.25+b.x*.75,y:a.y*.25+b.y*.75,width:a.width*.25+b.width*.75});
+    }
+    smooth.push({...samples[samples.length-1]});
+
+    const left=[],right=[];
+    for(let i=0;i<smooth.length;i++){
+      const prev=smooth[Math.max(0,i-1)],next=smooth[Math.min(smooth.length-1,i+1)];
+      let dx=next.x-prev.x,dy=next.y-prev.y;
+      const len=Math.hypot(dx,dy)||1;
+      dx/=len;dy/=len;
+      const nx=-dy,ny=dx,half=Math.max(.2,smooth[i].width/2);
+      left.push({x:smooth[i].x+nx*half,y:smooth[i].y+ny*half});
+      right.push({x:smooth[i].x-nx*half,y:smooth[i].y-ny*half});
+    }
+    return left.concat(right.reverse());
+  }
+
+  const aCommitted=[];
+
+  function drawBaseline(){
+    aFrame=0;
+    const ctx=A.ctx;
+    const r=A.canvas.getBoundingClientRect();
+    ctx.clearRect(0,0,r.width,r.height);
+
+    for(const s of aCommitted) drawBaselineStroke(s.points,s.style,false);
+    if(aDrawing&&aPoints.length) drawBaselineStroke(aPoints,styleNow(),true);
+    mA.textContent=aPoints.length+' nokta';
+  }
+
+  function drawBaselineStroke(pts,style,live){
+    const ctx=A.ctx;
+    if(pts.length===1){
+      ctx.fillStyle=style.color;
+      ctx.beginPath();
+      ctx.arc(pts[0].x,pts[0].y,Math.max(1,style.width*.45),0,Math.PI*2);
+      ctx.fill();
+      return;
+    }
+    const outline=baselineOutline(pts,style);
+    if(outline.length<3)return;
+    ctx.fillStyle=style.color;
+    ctx.beginPath();
+    ctx.moveTo(outline[0].x,outline[0].y);
+    for(let i=1;i<outline.length;i++)ctx.lineTo(outline[i].x,outline[i].y);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function scheduleA(){
+    if(aFrame)return;
+    aFrame=requestAnimationFrame(drawBaseline);
+  }
+
+  A.canvas.addEventListener('pointerdown',e=>{
+    if(e.button!==0)return;
+    A.canvas.setPointerCapture(e.pointerId);
+    aDrawing=true;
+    aPoints=[localPoint(A.canvas,e)];
+    scheduleA();
+  });
+
+  A.canvas.addEventListener('pointermove',e=>{
+    if(!aDrawing)return;
+    for(const ev of eventBatch(e)){
+      const p=localPoint(A.canvas,ev);
+      const prev=aPoints[aPoints.length-1];
+      if(!prev||Math.hypot(p.x-prev.x,p.y-prev.y)>.35)aPoints.push(p);
+    }
+    scheduleA();
+  });
+
+  function endA(){
+    if(!aDrawing)return;
+    aCommitted.push({points:aPoints.slice(),style:styleNow()});
+    aDrawing=false;aPoints=[];
+    drawBaseline();
+  }
+  A.canvas.addEventListener('pointerup',endA);
+  A.canvas.addEventListener('pointercancel',endA);
+
+  // ------------------------------------------------------------
+  // B — incremental wet ink
+  // ------------------------------------------------------------
+  let bDrawing=false,bLast=null,bCount=0,bPointerId=null;
+
+  function drawSegment(ctx,a,b,style){
+    if(!a||!b)return;
+    const w0=pointWidth(a,style.width,null);
+    const w1=pointWidth(b,style.width,a);
+    const dx=b.x-a.x,dy=b.y-a.y;
+    const len=Math.hypot(dx,dy);
+    if(len<.01)return;
+    const nx=-dy/len,ny=dx/len;
+    const h0=Math.max(.35,w0/2),h1=Math.max(.35,w1/2);
+
+    ctx.fillStyle=style.color;
+    ctx.beginPath();
+    ctx.moveTo(a.x+nx*h0,a.y+ny*h0);
+    ctx.lineTo(b.x+nx*h1,b.y+ny*h1);
+    ctx.lineTo(b.x-nx*h1,b.y-ny*h1);
+    ctx.lineTo(a.x-nx*h0,a.y-ny*h0);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(b.x,b.y,h1,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  function feedB(e){
+    if(!bDrawing||e.pointerId!==bPointerId)return;
+    const style=styleNow();
+    for(const ev of eventBatch(e)){
+      const p=localPoint(B.canvas,ev);
+      if(bLast&&Math.hypot(p.x-bLast.x,p.y-bLast.y)<.2)continue;
+      if(bLast)drawSegment(B.ctx,bLast,p,style);
+      else{
+        B.ctx.fillStyle=style.color;
+        B.ctx.beginPath();
+        B.ctx.arc(p.x,p.y,style.width/2,0,Math.PI*2);
+        B.ctx.fill();
+      }
+      bLast=p;bCount++;
+    }
+    mB.textContent=bCount+' nokta';
+  }
+
+  B.canvas.addEventListener('pointerdown',e=>{
+    if(e.button!==0)return;
+    B.canvas.setPointerCapture(e.pointerId);
+    bDrawing=true;bPointerId=e.pointerId;bLast=localPoint(B.canvas,e);bCount=1;
+    const s=styleNow();
+    B.ctx.fillStyle=s.color;
+    B.ctx.beginPath();
+    B.ctx.arc(bLast.x,bLast.y,s.width/2,0,Math.PI*2);
+    B.ctx.fill();
+    mB.textContent='1 nokta';
+  });
+
+  const bMove='onpointerrawupdate' in B.canvas?'pointerrawupdate':'pointermove';
+  B.canvas.addEventListener(bMove,feedB);
+
+  function endB(e){
+    if(e.pointerId!==bPointerId)return;
+    bDrawing=false;bPointerId=null;bLast=null;
+  }
+  B.canvas.addEventListener('pointerup',endB);
+  B.canvas.addEventListener('pointercancel',endB);
+
+  // ------------------------------------------------------------
+  // C — delegated trail + predictions + incremental permanent ink
+  // ------------------------------------------------------------
+  let presenterPromise=null;
+  let presenter=null;
+  let presenterReady=false;
+
+  if(navigator.ink&&typeof navigator.ink.requestPresenter==='function'){
+    try{
+      presenterPromise=navigator.ink.requestPresenter({presentationArea:C.canvas});
+      presenterPromise.then(p=>{
+        presenter=p;
+        presenterReady=true;
+        delegatedLabel.textContent='Delegated Ink aktif'+
+          (Number.isFinite(p.expectedImprovement)?' · ~'+Math.round(p.expectedImprovement)+' ms kazanç':'');
+      }).catch(()=>{
+        delegatedLabel.textContent='Delegated Ink başlatılamadı — fallback';
+      });
+    }catch(_){
+      delegatedLabel.textContent='Delegated Ink başlatılamadı — fallback';
+    }
+  }else{
+    delegatedLabel.textContent='Ink API yok — prediction fallback';
+  }
+
+  let cDrawing=false,cLast=null,cCount=0,cPointerId=null;
+
+  function clearPrediction(){
+    const r=CP.canvas.getBoundingClientRect();
+    CP.ctx.clearRect(0,0,r.width,r.height);
+  }
+
+  function drawPredicted(e){
+    clearPrediction();
+    if(!cDrawing||typeof e.getPredictedEvents!=='function'||!cLast)return;
+    const predicted=e.getPredictedEvents();
+    if(!predicted||!predicted.length)return;
+
+    const ctx=CP.ctx;
+    const s=styleNow();
+    ctx.save();
+    ctx.strokeStyle=s.color;
+    ctx.globalAlpha=.30;
+    ctx.lineWidth=Math.max(1,s.width*.78);
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    ctx.beginPath();
+    ctx.moveTo(cLast.x,cLast.y);
+    for(const ev of predicted){
+      const p=localPoint(C.canvas,ev);
+      ctx.lineTo(p.x,p.y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function feedC(e){
+    if(!cDrawing||e.pointerId!==cPointerId)return;
+    const style=styleNow();
+
+    for(const ev of eventBatch(e)){
+      const p=localPoint(C.canvas,ev);
+      if(cLast&&Math.hypot(p.x-cLast.x,p.y-cLast.y)<.2)continue;
+      if(cLast)drawSegment(C.ctx,cLast,p,style);
+      else{
+        C.ctx.fillStyle=style.color;
+        C.ctx.beginPath();
+        C.ctx.arc(p.x,p.y,style.width/2,0,Math.PI*2);
+        C.ctx.fill();
+      }
+      cLast=p;cCount++;
+    }
+
+    mC.textContent=cCount+' nokta';
+
+    // Delegated trail requires the original trusted PointerEvent.
+    if(presenterReady&&presenter){
+      try{
+        presenter.updateInkTrailStartPoint(e,{
+          color:style.color,
+          diameter:Math.max(1,style.width)
+        });
+      }catch(_){}
+    }
+
+    drawPredicted(e);
+  }
+
+  C.canvas.addEventListener('pointerdown',e=>{
+    if(e.button!==0)return;
+    C.canvas.setPointerCapture(e.pointerId);
+    cDrawing=true;cPointerId=e.pointerId;cLast=localPoint(C.canvas,e);cCount=1;
+    const s=styleNow();
+    C.ctx.fillStyle=s.color;
+    C.ctx.beginPath();
+    C.ctx.arc(cLast.x,cLast.y,s.width/2,0,Math.PI*2);
+    C.ctx.fill();
+    mC.textContent='1 nokta';
+  });
+
+  // pointermove is used for DelegatedInkTrailPresenter because the presenter
+  // needs a trusted event and browser implementations are optimized for this path.
+  C.canvas.addEventListener('pointermove',feedC);
+
+  function endC(e){
+    if(e.pointerId!==cPointerId)return;
+    cDrawing=false;cPointerId=null;cLast=null;
+    clearPrediction();
+  }
+  C.canvas.addEventListener('pointerup',endC);
+  C.canvas.addEventListener('pointercancel',endC);
+
+  // ------------------------------------------------------------
+  // capability display + clear
+  // ------------------------------------------------------------
+  function setPill(id,ok,yes,no){
+    const el=document.getElementById(id);
+    el.textContent=ok?yes:no;
+    el.classList.add(ok?'ok':'no');
+  }
+
+  setPill('inkApiPill',
+    !!(navigator.ink&&typeof navigator.ink.requestPresenter==='function'),
+    'Ink API ✓','Ink API ✕'
+  );
+  setPill('rawPill',
+    'onpointerrawupdate' in window,
+    'pointerrawupdate ✓','pointerrawupdate ✕'
+  );
+  setPill('predPill',
+    'getPredictedEvents' in PointerEvent.prototype,
+    'Prediction ✓','Prediction ✕'
+  );
+
+  function clearCanvas(setup){
+    const r=setup.canvas.getBoundingClientRect();
+    setup.ctx.clearRect(0,0,r.width,r.height);
+  }
+
+  document.getElementById('clearAll').addEventListener('click',()=>{
+    clearCanvas(A);clearCanvas(B);clearCanvas(C);clearCanvas(CP);
+    aCommitted.length=0;aPoints=[];aDrawing=false;
+    bDrawing=false;bLast=null;bCount=0;bPointerId=null;
+    cDrawing=false;cLast=null;cCount=0;cPointerId=null;
+    mA.textContent='0 nokta';mB.textContent='0 nokta';mC.textContent='0 nokta';
+  });
+
+})();
+</script>
+</body>
+</html>
