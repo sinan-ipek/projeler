@@ -52,7 +52,7 @@ function explain(row){
  if(row.best===played)simple.unshift(T("good"));
  else simple.unshift(T("other"));
  if(!taken&&!direct&&!m.san.includes("+")&&row.best!==played)simple.push(T("uncertain"));
- if($("teacherLevel").value==="b1")simple.push(T("best")+": "+row.best+".");
+ if(row.loss!==null){const p=Math.round(row.loss);if(p>=250)simple.push(lang==="tr"?"Bu hamle büyük avantaj kaybettiriyor.":lang==="de"?"Dieser Zug verliert viel Vorteil.":"This move loses a lot of advantage.");else if(p>=100)simple.push(lang==="tr"?"Bu hamle avantaj kaybettiriyor.":lang==="de"?"Dieser Zug verliert Vorteil.":"This move loses advantage.");}if($("teacherLevel").value==="b1")simple.push(T("best")+": "+row.best+".");
  return simple.join(" ");
 }
 function draw(fen,highlight=[]){
@@ -64,12 +64,12 @@ function showPosition(i){const row=results[i];if(!row)return;reviewIndex=i;$("te
 function render(){out.innerHTML=results.map((row,i)=>'<div class="coachItem"><span class="pill">'+escape(Math.floor(i/2)+1+(i%2?"...":".")+" "+row.move.san)+'</span> <span class="tag '+(row.best===row.move.uci?"good":"warn")+'">'+(row.best===row.move.uci?"✓":"?")+'</span><div class="coachLine">'+escape(explain(row))+'</div><div class="coachMeta">'+escape(T("best")+": "+(row.best||"—"))+'</div><button class="btn small" data-show="'+i+'">'+escape(T("step"))+'</button></div>').join("");out.querySelectorAll("[data-show]").forEach(b=>b.onclick=()=>showPosition(Number(b.dataset.show)));}
 async function review(){
  const snap=window.ChessTeacherBridge?.snapshot();if(!snap?.moves?.length){state.textContent=T("empty");return;}
- running=true;results=[];original=snap;state.textContent=T("working");
+ running=true;results=[];original=snap;state.textContent="Stockfish · "+T("working");
  for(let i=0;i<snap.moves.length;i++){
   if(!running)break;
   const before=snap.positions[i],after=snap.positions[i+1],move=snap.moves[i];
-  let analysis;try{analysis=window.ChessTeacherBridge.analyze(before,120);}catch(e){state.textContent=String(e);break;}
-  results.push({before,after,move:{...move,color:before.split(" ")[1]},best:analysis.best});
+  let analysis,afterAnalysis;try{analysis=await window.ChessStockfish.analyze(before,11);afterAnalysis=await window.ChessStockfish.analyze(after,11);}catch(e){state.textContent="Stockfish: "+String(e.message||e);running=false;return;}if(!running)break;
+  results.push({before,after,move:{...move,color:before.split(" ")[1]},best:analysis.best,cpBefore:analysis.cp,cpAfter:afterAnalysis.cp,loss:(analysis.cp!==null&&afterAnalysis.cp!==null)?Math.max(0,analysis.cp+afterAnalysis.cp):null,pv:analysis.pv});
   render();state.textContent=(i+1)+"/"+snap.moves.length;
   await new Promise(resolve=>setTimeout(resolve,20));
  }
@@ -86,5 +86,5 @@ function tick(){if(!live||running)return;const snap=window.ChessTeacherBridge?.s
 interval=setInterval(tick,1500);
 $("teacherLang")?.addEventListener("click",()=>{lang=lang==="tr"?"de":lang==="de"?"en":"tr";$("teacherLang").textContent={tr:"Türkçe",de:"Deutsch",en:"English"}[lang]+" ▾";labels();render();});
 $("teacherHelp")?.addEventListener("click",()=>alert(T("help")));
-labels();state.textContent=T("local");
+labels();state.textContent="Stockfish 19 · Beta";
 })();
