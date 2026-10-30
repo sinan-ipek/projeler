@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kesir Kıyaslama Laboratuvarı · v1.7.0</title>
+<title>Kesir Kıyaslama Laboratuvarı · v1.7.1</title>
 <style>
 :root{--bg:#dedede;--ink:#293241;--green:#267a58;--brown:#98604c;--yellow:#f3b71b;--good:#159b71}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',sans-serif}button{font:inherit}
@@ -29,15 +29,6 @@ main{max-width:1060px;margin:10px auto 28px;background:#f8f8f7;border-radius:21p
 .mixed-type{min-height:45px;display:flex;align-items:center;justify-content:center}
 .type-tag{background:#f9e5ae;border:2px solid #e7b52b;border-radius:13px;padding:6px 13px;font-size:clamp(13px,1.6vw,18px);font-weight:650;color:#34383d;white-space:nowrap}
 .mixed-frac{display:flex;flex-direction:column;gap:14px;align-items:center}
-.mixed-middle{display:flex;justify-content:center;align-items:center;gap:6px;white-space:nowrap}
-.mixed-middle .math-button{font-size:inherit}
-.mixed-sign{display:inline-block;font-weight:750;color:var(--good);line-height:1;min-width:.55em;text-align:center}
-.mixed-one{display:inline-block;font-size:.92em;line-height:1}
-.mixed-middle.final .mixed-one{display:none}
-.mixed-middle.final .mixed-sign:last-child{display:none}
-.mixed-middle.final .mixed-sign:first-child{font-size:1.13em}
-.mixed-one.fading{animation:one-out .52s ease-in-out forwards}
-@keyframes one-out{to{opacity:0;transform:translateY(-6px)}}
 @media(max-width:600px){.type-tag{font-size:12px;padding:5px 7px}.mixed-middle{gap:1px}.mixed-middle .math-button{padding:2px}}
 
 /* Çapraz çarpımla kıyaslama */
@@ -76,7 +67,7 @@ main{max-width:1060px;margin:10px auto 28px;background:#f8f8f7;border-radius:21p
 
 <div class="hint" id="hint" aria-live="polite"></div>
 <section class="stage"><div class="equation" id="equation"><div class="slot" id="left"></div><div class="operator" id="operator">?</div><div class="slot" id="right"></div></div><div class="explain" id="explain"></div><div class="answers hidden" id="answers"><button class="answer" data-answer="<">&lt;</button><button class="answer cross-equal hidden" data-answer="=">=</button><button class="answer" data-answer=">">&gt;</button></div></section>
-<div class="note">Vurgulanan ifadelerin üzerine tıklayarak ilerle.</div><div class="version">v1.7.0</div>
+<div class="note">Vurgulanan ifadelerin üzerine tıklayarak ilerle.</div><div class="version">v1.7.1</div>
 </main>
 <svg id="arrow-layer" aria-hidden="true"></svg>
 <canvas id="fireworks" aria-hidden="true"></canvas>
@@ -278,18 +269,8 @@ function mixedSide(i){
  return `<div class="mixed-frac">${label}<span class="expr">${body}</span></div>`;
 }
 function mixedOperator(){
- if(phase==='initial')return steps.every(x=>x===1)?btn('?','middle-question','M'): '?';
- const symbol=q.a/q.b<q.c/q.d?'<':'>';
- const escaped=symbol==='<'?'&lt;':'&gt;';
- if(phase==='bridge'||phase==='selection')return '<span class="mixed-one">1</span>';
- if(phase==='complete'||phase==='merged'){
-   return `<span class="mixed-middle ${phase==='merged'?'final':''}" id="mixed-middle">
-      <span class="mixed-sign" id="bridge-left">${escaped}</span>
-      ${phase==='merged'?'<span class="mixed-one" style="display:none">1</span>':btn('1','one','M','mixed-one')}
-      <span class="mixed-sign" id="bridge-right">${escaped}</span>
-    </span>`;
- }
- return '1';
+ // Türler belirlendikten sonra öğrenci doğrudan karşılaştırma yapar.
+ return phase==='complete'?q.answer:'?';
 }
 function crossTerm(value, side, part){
  const key=side+'-'+part;
@@ -483,11 +464,8 @@ function render(){
    E.textContent='';
  }else if(mode==='mixed'){
    const types=steps[0]+steps[1];
-   E.textContent=phase==='initial'?'':phase==='bridge'?'Basit kesirler 1’den küçüktür, bileşik kesirler 1’den büyüktür.':
-      'Basit kesirler 1’den küçüktür, bileşik kesirler 1’den büyüktür.';
-   H.textContent=phase==='merged'?'Bravo!':phase==='complete'?'1’e tıkla; iki işaret birleşsin.':phase==='selection'?'Doğru işareti seç.':
-     phase==='bridge'?'Ortadaki 1’i kullanarak kesirleri karşılaştır.':
-     types===2?'Soru işaretine tıkla.':'Kesirlere ayrı ayrı tıkla; türlerini belirle.';
+   E.textContent='';
+   H.textContent=phase==='complete'?'Bravo!':types===2?'Karşılaştırma işaretini seç.':'Kesirlere ayrı ayrı tıkla; türlerini belirle.';
  }else if(mode==='difference'){
    const expressions=steps.filter(n=>n>=1).length;
    const differences=steps.filter(n=>n>=2).length;
@@ -508,7 +486,7 @@ function render(){
  requestAnimationFrame(alignOperator);
 }
 async function action(el){
- if(locked||(phase==='complete'&&mode!=='mixed')||phase==='merged')return;
+ if(locked||phase==='complete')return;
  const act=el.dataset.action,s=el.dataset.side,i=s==='L'?0:1;
  if(mode==='decimal'){
    if(act==='decimal-start'&&steps[i]===0){steps[i]=1;render();return;}
@@ -517,22 +495,10 @@ async function action(el){
  }else if(mode==='cross'){
    return;
  }else if(mode==='mixed'){
-   if(act==='classify'  && steps[i]===0){steps[i]=1;render();return;}
-   if(act==='middle-question' && steps.every(v=>v===1) && phase==='initial'){
-     phase='selection';render();return;
-   }
-   if(act==='one' && phase==='bridge'){phase='selection';render();return;}
-   if(act==='one' && phase==='complete'){
-     locked=true;
-     const middle=$('mixed-middle');
-     const one=middle?.querySelector('[data-action="one"]');
-     const leftSign=$('bridge-left'),rightSign=$('bridge-right');
-     if(!one||!leftSign||!rightSign){phase='merged';locked=false;render();return;}
-     one.classList.add('fading');
-     const shift=(one.getBoundingClientRect().width+rightSign.getBoundingClientRect().width)/2;
-     const a=leftSign.animate([{transform:'translateX(0)'},{transform:`translateX(${shift}px)`}],{duration:650,easing:'ease-in-out',fill:'forwards'});
-     const b=rightSign.animate([{transform:'translateX(0)'},{transform:`translateX(${-shift}px)`}],{duration:650,easing:'ease-in-out',fill:'forwards'});
-     Promise.allSettled([a.finished,b.finished]).then(()=>{if(phase!=='complete')return;phase='merged';locked=false;render();});
+   if(act==='classify' && steps[i]===0){
+     steps[i]=1;
+     if(steps.every(v=>v===1))phase='selection';
+     render();
      return;
    }
  }else if(mode==='difference'){
@@ -619,7 +585,7 @@ A.addEventListener('click',e=>{
  if(mode==='cross'||mode==='decimal'){
    setTimeout(()=>{if(stamp===snapshot)transferSign(expected)},450);
  }else if(mode==='mixed'){
-   setTimeout(()=>{if(stamp!==snapshot)return;phase='complete';locked=false;render();},450);
+   setTimeout(()=>{if(stamp===snapshot)transferSign(expected)},450);
  }else if(mode==='difference'){
    // İşaret yalnızca son konumunda görünür.
    setTimeout(()=>{if(stamp===snapshot)transferSign(expected)},450);
