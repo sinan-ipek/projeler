@@ -176,6 +176,8 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
   </select>
   <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
   <button class="btn" id="areaBtn">Say</button>
+  <button class="btn" id="showAreaBtn" aria-pressed="false">Göster</button>
+  <div id="liveArea" aria-live="off" style="display:none;white-space:nowrap;font-weight:700;padding:7px 12px;border:1px solid #c5b990;border-radius:9px;background:#fff8df">Alan: 0 br²</div>
   <div class="counterRack">
  <div class="counterUnit"><div class="counterBox" id="counterBig">—</div></div>
  <span class="counterPlus" id="plusAB">+</span>
@@ -203,6 +205,21 @@ svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visi
 const NS="http://www.w3.org/2000/svg",CELL=32,MID=CELL/2,SMALL=CELL/4,EPS=1e-7;
 const svg=document.getElementById("svg"),stage=document.getElementById("stage"),select=document.getElementById("shapeSelect"),areaBtn=document.getElementById("areaBtn"),clearBtn=document.getElementById("clearBtn"),hint=document.getElementById("hint");const tileOpacity=document.getElementById("tileOpacity");const counterBig=document.getElementById("counterBig"),counterMid=document.getElementById("counterMid"),counterSmall=document.getElementById("counterSmall"),midUnit=document.getElementById("midUnit"),smallUnit=document.getElementById("smallUnit"),midDivisor=document.getElementById("midDivisor"),smallDivisor=document.getElementById("smallDivisor"),plusAB=document.getElementById("plusAB"),plusBC=document.getElementById("plusBC");
 let tileAlpha=1;
+const showAreaBtn=document.getElementById("showAreaBtn"),liveArea=document.getElementById("liveArea");
+let showArea=false;
+function updateLiveArea(){
+ if(!showArea)return;
+ const total=tiles.reduce((sum,t)=>sum+(t.v||0),0);
+ liveArea.textContent="Alan: "+fmt(total,4)+" br²";
+}
+showAreaBtn.onclick=()=>{
+ showArea=!showArea;
+ showAreaBtn.textContent=showArea?"Gizle":"Göster";
+ showAreaBtn.setAttribute("aria-pressed",String(showArea));
+ liveArea.style.display=showArea?"block":"none";
+ areaBtn.disabled=showArea;
+ if(showArea){if(animating){activeCountVersion++;animating=false;}resetCounters();updateLiveArea();}
+};
 function applyTileOpacity(){
  tileAlpha=Math.max(0,Math.min(1,(+tileOpacity.value||0)/100));
  document.documentElement.style.setProperty("--tile-alpha",tileAlpha);
@@ -240,6 +257,7 @@ function clearSVG(){while(svg.firstChild)svg.removeChild(svg.firstChild)}
 let activeCountVersion=0;
 function reset(){
  activeCountVersion++;
+ if(showArea){liveArea.textContent="Alan: 0 br²";}
  keepEmptyAfterCount=false;if(imageObjectURL){URL.revokeObjectURL(imageObjectURL);imageObjectURL=null}imageMask=null;shape=null;freePoints=[];freeClosed=false;penDrawing=false;penPoints=[];polygonPoints=[];polygonClosed=false;dragging=null;tiles=[];animating=false;resetCounters();clearSVG();hint.style.opacity="1";hint.textContent="Çalışma alanına tıklayın.";document.querySelectorAll(".flyTile,.mergeBox").forEach(x=>x.remove())}
 clearBtn.onclick=reset;select.onchange=()=>{reset();if(select.value==="image")imageInput.click()};
 
@@ -559,6 +577,7 @@ function refreshTiles(){
  keepEmptyAfterCount=false;
  if(shape&&(shape.type!=="free"||freeClosed))tiles=calculateTiles();
  else tiles=[];
+ updateLiveArea();
 }
 
 function render(){
@@ -774,7 +793,7 @@ function finishPen(){
 }
 stage.addEventListener("pointerup",finishPen);
 stage.addEventListener("pointercancel",finishPen);
-areaBtn.onclick=()=>{if(shape&&!animating&&(shape.type!=="free"||freeClosed)&&(shape.type!=="polygon"||polygonClosed)&&!(shape.type==="pen"&&penDrawing))animateSum()};
+areaBtn.onclick=()=>{if(!showArea&&shape&&!animating&&(shape.type!=="free"||freeClosed)&&(shape.type!=="polygon"||polygonClosed)&&!(shape.type==="pen"&&penDrawing))animateSum()};
 
 function counterText(v){return fmt(v,3)}
 function setCounterHTML(el,v){
@@ -857,6 +876,7 @@ async function convertCounter(level){
 }
 midUnit.onclick=()=>convertCounter("mid");smallUnit.onclick=()=>convertCounter("small");
 async function animateSum(){
+ if(showArea)return;
  if(!shape||!tiles.length||animating)return;
  animating=true;const currentVersion=++activeCountVersion;resetCounters();
  setCounterHTML(counterBig,0);setCounterHTML(counterMid,0);setCounterHTML(counterSmall,0);
