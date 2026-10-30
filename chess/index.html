@@ -431,7 +431,15 @@
       font-size: 12px;
     }
   </style>
-</head>
+<style>
+.homeBar,.boardToolbar,.boardColumn>.row,.coachBox,.wrap>.card:nth-of-type(2){display:none!important}
+.wrap{max-width:1000px}.simpleNav{display:flex;flex-wrap:wrap;gap:8px;margin:10px auto;max-width:1000px}
+.simpleNav button,.simpleNav select{padding:9px;border:1px solid #aaa;border-radius:8px;cursor:pointer}
+.simpleNav .home{background:#ffdc37;color:#111;font-size:21px}
+.simpleExtra{display:none;margin:8px auto;padding:12px;max-width:1000px;border:1px solid #aaa;border-radius:9px}
+.simpleExtra.open{display:block}
+.versionNote{position:fixed;bottom:5px;right:8px;color:#999;font-size:10px;pointer-events:none}
+</style></head>
 
 <body>
 
@@ -440,7 +448,7 @@
   <a class="homeLink" href="../index.html">← Home</a>
 </div>
 
-<div class="wrap">
+<div class="simpleNav"><button class="home" onclick="location.href='../index.html'">⌂</button><select id="simpleLang"><option value="tr">Türkçe</option><option value="de">Deutsch</option><option value="en">English</option></select><button id="simpleHelp">?</button><button id="simpleBoard">Tahta</button><button id="simpleAnalysis">Analiz</button><button id="simpleSave">Kaydet</button><button id="simpleLoad">Yükle</button><button id="simplePower">Rakip Motor Gücü</button><button id="simpleTaken">Alınan Taşlar</button></div><div id="simpleExtra" class="simpleExtra"></div><div class="wrap">
   <!-- BOARD + STATUS / CAPTURED / COACH -->
   <div class="card">
     <div class="body">
@@ -629,7 +637,7 @@
 <script>
 (function(){
   // ===================== UTIL =====================
-  const VERSION = "v0.9.0";
+  const VERSION = "v1.0.0";
 
   const FILES = "abcdefgh";
   const RANKS = "12345678";
@@ -2635,5 +2643,5 @@
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-</body>
+<div class="versionNote">v1.0.0 · Sade tahta ve yumuşak hamleler</div></body>
 </html>
