@@ -2635,6 +2635,7 @@
 
   // Satranç Öğretmeni köprüsü: mevcut oyun kuralları değiştirilmez.
   window.ChessTeacherBridge = {
+    analyze(fen,ms=150){const g=new ChessGame();g.loadFEN(fen);const e=new Engine(g);const best=e.search(ms,20);return {best:best?moveToUCI(best):null,score:e.evalWhiteCP(),moves:g.generateLegalMoves().map(moveToUCI)};},
     snapshot(){
       const replay = new ChessGame();
       const positions=[replay.getFEN()];
