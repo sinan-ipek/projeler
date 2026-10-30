@@ -1,0 +1,33 @@
+name: Install Cburnett chess piece SVGs
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/install-chess-pieces.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Fetch 12 Cburnett SVG pieces
+        run: |
+          set -euo pipefail
+          mkdir -p chess/pieces/cburnett
+          for side in w b; do
+            for piece in K Q R B N P; do
+              name="${side}${piece}.svg"
+              curl -fL --retry 4 "https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/cburnett/${name}" -o "chess/pieces/cburnett/${name}"
+              test -s "chess/pieces/cburnett/${name}"
+            done
+          done
+          printf 'Cburnett chess pieces by Colin M. L. Burnett. Source: https://github.com/lichess-org/lila/tree/master/public/piece/cburnett . See https://github.com/lichess-org/lila/blob/master/COPYING.md (GPLv2+).\n' > chess/pieces/cburnett/ATTRIBUTION.txt
+      - name: Commit piece assets
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add chess/pieces/cburnett
+          git diff --cached --quiet || (git commit -m 'Bundle professional Cburnett SVG chess pieces' && git push)
