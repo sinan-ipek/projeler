@@ -468,6 +468,21 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 /* Unicode chess glyphs have transparent backgrounds; white pieces have white interiors and black contours. */
 .sq .piece.w{color:#fff!important;-webkit-text-fill-color:#fff!important;-webkit-text-stroke:1.35px #111!important;text-shadow:none!important;filter:drop-shadow(0 1px 0 rgba(0,0,0,.13))}
 .sq .piece.b{color:#111!important;-webkit-text-fill-color:#111!important;-webkit-text-stroke:.35px #111!important;text-shadow:none!important}
+</style><style id="chessLandscapeV112">
+/* Desktop: play board left, compact analysis right. Mobile: stacked. */
+.wrap,.simpleNav{max-width:1360px!important}
+.playArea{grid-template-columns:minmax(400px,560px) minmax(330px,1fr)!important;gap:22px!important}
+.boardColumn{width:100%}
+.sideInfo{min-width:0;gap:10px}
+#simpleExtra{display:none;margin:0!important;padding:14px!important;max-width:none!important;width:auto;min-width:0;box-sizing:border-box;background:#f7f7f7!important;border:1px solid #ddd!important;box-shadow:none!important}
+#simpleExtra.open{display:block}
+#simpleExtra #reviewBoard{width:min(300px,100%)!important;margin:10px auto!important}
+#simpleExtra #reviewBoard [data-square]{font-size:clamp(15px,2vw,27px)!important}
+#simpleExtra #reviewResults{max-height:410px;overflow:auto;scrollbar-width:thin}
+#simpleExtra #reviewResults>div{background:#fff!important;border-color:#ddd!important;font-size:13px}
+#simpleExtra #reviewResults p{line-height:1.4}
+#simpleExtra #reviewProgress{font-size:13px;color:#666}
+@media(max-width:900px){.playArea{grid-template-columns:1fr!important}.boardColumn{max-width:560px}.sideInfo{width:100%}#simpleExtra #reviewBoard{width:min(290px,100%)!important}}
 </style></head>
 
 <body>
@@ -2717,5 +2732,5 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.1.1"></script><script src="simple-ui.js?v=1.1.1"></script><div class="versionNote">v1.1.1 · Stockfish CDN yedek yükleme</div></body>
+<script src="stockfish-adapter.js?v=1.1.1"></script><script src="simple-ui.js?v=1.1.1"></script><div class="versionNote">v1.1.2 · Yatay çift tahta düzeni</div></body>
 </html>
