@@ -2706,6 +2706,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 
   // Post-game analysis: evaluate each recorded move without modifying the live board.
   window.ChessReview = {
+    nextFen(fen,uci){const g=new ChessGame();g.loadFEN(fen);const m=g.legalMoves().find(x=>moveToUCI(x)===uci);if(!m)return null;g.makeMove(m,true);return g.getFEN();},
     positions(){const replay=new ChessGame(),out=[replay.getFEN()];for(const u of game.history){replay.makeMove(u.m,true);out.push(replay.getFEN());}return out;},
     moves(){return game.history.map((u,i)=>({san:u.san||moveToUCI(u.m),uci:moveToUCI(u.m),number:Math.floor(i/2)+1,color:u.turn}));},
     analyze(i){
@@ -2732,5 +2733,5 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.1.1"></script><script src="simple-ui.js?v=1.1.1"></script><div class="versionNote">v1.1.2 · Yatay çift tahta düzeni</div></body>
+<script src="stockfish-adapter.js?v=1.1.1"></script><script src="simple-ui.js?v=1.1.1"></script><script src="live-analysis.js?v=1.2.0"></script><div class="versionNote">v1.2.0 · Canlı son hamle analizi</div></body>
 </html>
