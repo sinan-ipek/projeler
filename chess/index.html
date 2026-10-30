@@ -681,7 +681,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 <script>
 (function(){
   // ===================== UTIL =====================
-  const VERSION = "v1.2.1";
+  const VERSION = "v1.2.2";
 
   const FILES = "abcdefgh";
   const RANKS = "12345678";
@@ -701,7 +701,22 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
     return '<svg class="chess-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="width:82%;height:82%;display:block;overflow:visible"><g fill="'+fill+'" stroke="'+stroke+'" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">'+svgShapes[p.toLowerCase()]+'</g></svg>';
   }
   const PIECE_UNI={P:"♙",N:"♘",B:"♗",R:"♖",Q:"♕",K:"♔",p:"♟",n:"♞",b:"♝",r:"♜",q:"♛",k:"♚"};
-  window.ChessPieceSVG=pieceSVG;
+  // Cburnett (Colin M. L. Burnett), professional Staunton-style set used by Lichess.
+  // The existing inline drawings remain as offline fallbacks.
+  const localPieceBase="pieces/cburnett/";
+  const upstreamPieceBase="https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/cburnett/";
+  function professionalPiece(p){
+    if(!p)return "";
+    const filename=(p===p.toUpperCase()?"w":"b")+p.toUpperCase()+".svg";
+    const fallback=pieceSVG(p);
+    return '<img class="chess-piece-img" draggable="false" alt="" src="'+localPieceBase+filename+'" data-upstream="'+upstreamPieceBase+filename+'" style="width:86%;height:86%;object-fit:contain;display:block;pointer-events:none" onerror="if(!this.dataset.retry){this.dataset.retry=\'1\';this.src=this.dataset.upstream;}else{this.outerHTML=this.dataset.fallback;}">';
+  }
+  // Escaped markup fallback is assigned after constructing each image element.
+  function chessPieceHTML(p){
+    const html=professionalPiece(p);
+    return html.replace('data-upstream=', 'data-fallback="'+pieceSVG(p).replace(/&/g,"&amp;").replace(/"/g,"&quot;")+'" data-upstream=');
+  }
+  window.ChessPieceSVG=chessPieceHTML;
 
   const PIECE_VAL = { p:100, n:320, b:330, r:500, q:900, k:20000 };
 
@@ -1840,8 +1855,8 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
     capByWhite.sort((a,b)=>order(a)-order(b));
     capByBlack.sort((a,b)=>order(a)-order(b));
 
-    capByWhiteEl.innerHTML = capByWhite.map(p => `<span class="piece b">${pieceSVG(p)}</span>`).join("");
-    capByBlackEl.innerHTML = capByBlack.map(p => `<span class="piece w">${pieceSVG(p)}</span>`).join("");
+    capByWhiteEl.innerHTML = capByWhite.map(p => `<span class="piece b">${chessPieceHTML(p)}</span>`).join("");
+    capByBlackEl.innerHTML = capByBlack.map(p => `<span class="piece w">${chessPieceHTML(p)}</span>`).join("");
     if (!capByWhite.length) capByWhiteEl.textContent = "—";
     if (!capByBlack.length) capByBlackEl.textContent = "—";
   }
@@ -1891,7 +1906,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
     if(!a.width||!b.width)return;
     const ghost=document.createElement("span");
     ghost.className="piece "+colorOf(u.fromP);
-    ghost.innerHTML=pieceSVG(u.fromP);
+    ghost.innerHTML=chessPieceHTML(u.fromP);
     ghost.style.cssText=`position:fixed;z-index:10000;pointer-events:none;display:flex;align-items:center;justify-content:center;left:${a.left}px;top:${a.top}px;width:${a.width}px;height:${a.height}px;transition:transform 850ms cubic-bezier(.42,0,.58,1);`;
     const target=to.querySelector(".piece");if(target)target.style.visibility="hidden";
     document.body.appendChild(ghost);
@@ -1933,7 +1948,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
         el.dataset.sq = sq;
 
         const p = game.board[r][f];
-        el.innerHTML = p ? `<span class="piece ${colorOf(p)}">${pieceSVG(p)}</span>` : "";
+        el.innerHTML = p ? `<span class="piece ${colorOf(p)}">${chessPieceHTML(p)}</span>` : "";
       }
     }
 
@@ -2745,5 +2760,5 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.1.1"></script><script src="simple-ui.js?v=1.1.1"></script><script src="live-analysis.js?v=1.2.1"></script><div class="versionNote">v1.2.1 · Şeffaf SVG taşlar</div></body>
+<script src="stockfish-adapter.js?v=1.1.1"></script><script src="simple-ui.js?v=1.1.1"></script><script src="live-analysis.js?v=1.2.1"></script><div class="versionNote">v1.2.2 · Cburnett profesyonel taş seti</div></body>
 </html>
