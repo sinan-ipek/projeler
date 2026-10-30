@@ -1823,6 +1823,25 @@
   }
 
   // ===================== RENDER =====================
+  let lastAnimatedMove = null;
+  function animateLastMove(){
+    const u=game.history[game.history.length-1];
+    if(!u||u===lastAnimatedMove)return;
+    lastAnimatedMove=u;
+    const from=elBoard.querySelector(`.sq[data-sq="${u.m.from}"]`);
+    const to=elBoard.querySelector(`.sq[data-sq="${u.m.to}"]`);
+    if(!from||!to)return;
+    const a=from.getBoundingClientRect(),b=to.getBoundingClientRect();
+    if(!a.width||!b.width)return;
+    const ghost=document.createElement("span");
+    ghost.className="piece "+colorOf(u.fromP);
+    ghost.textContent=PIECE_UNI[u.fromP];
+    ghost.style.cssText=`position:fixed;z-index:10000;pointer-events:none;display:flex;align-items:center;justify-content:center;left:${a.left}px;top:${a.top}px;width:${a.width}px;height:${a.height}px;transition:transform 850ms cubic-bezier(.42,0,.58,1);`;
+    const target=to.querySelector(".piece");if(target)target.style.visibility="hidden";
+    document.body.appendChild(ghost);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ghost.style.transform=`translate(${b.left-a.left}px,${b.top-a.top}px)`;}));
+    setTimeout(()=>{ghost.remove();if(target)target.style.visibility="";},900);
+  }
   function render(){
     if (!elBoard.dataset.built){
       elBoard.innerHTML = "";
@@ -1867,6 +1886,7 @@
     updateStatus();
     applyControlOverlays();
     renderCoachFeed();
+    animateLastMove();
   }
 
   // ===================== ENGINE MOVE =====================
@@ -2158,7 +2178,7 @@
     // run coach
     runCoachOnPlayerMove(beforeFEN, mv, playedSAN, idx);
 
-    setTimeout(()=>maybeEngineMove(), 30);
+    setTimeout(()=>maybeEngineMove(), 930);
   }
 
   // ===================== PROMOTION MODAL =====================
@@ -2212,7 +2232,7 @@
     clearHighlights();
     render();
 
-    setTimeout(()=>maybeEngineMove(), 50);
+    setTimeout(()=>maybeEngineMove(), 930);
   }
 
   document.getElementById("btnFlip").addEventListener("click", ()=>{
@@ -2643,5 +2663,5 @@
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<div class="versionNote">v1.0.0 · Sade tahta ve yumuşak hamleler</div></body>
+<script src="simple-ui.js?v=1.0.0"></script><div class="versionNote">v1.0.0 · Sade tahta ve yumuşak hamleler</div></body>
 </html>
