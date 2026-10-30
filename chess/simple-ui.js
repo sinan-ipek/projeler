@@ -1,5 +1,7 @@
 (()=>{"use strict";
 const $=id=>document.getElementById(id),extra=$("simpleExtra");
+// Keep all controls and their event handlers; relocate the shared detail panel to the right column.
+const side=document.querySelector(".playArea .sideInfo");if(side)side.insertBefore(extra,side.firstChild);
 const tr={tr:["Tahta","Analiz","Kaydet","Yükle","Rakip Motor Gücü","Alınan Taşlar","Yeni Oyun","Geri Al","Tahtayı Döndür","Hamleler","Kopyala","İndir","Yenile","Beyazın aldıkları","Siyahın aldıkları","Bu sayfada satranç oynarsın. Analiz hamleleri gösterir. Kaydet ve Yükle oyunları saklar ve açar."],de:["Brett","Analyse","Speichern","Laden","Gegnerstärke","Geschlagene Figuren","Neues Spiel","Zurück","Brett drehen","Züge","Kopieren","Download","Aktualisieren","Weiß schlägt","Schwarz schlägt","Hier spielst du Schach. Analyse zeigt die Züge. Speichern und Laden verwalten Partien."],en:["Board","Analysis","Save","Load","Opponent strength","Captured pieces","New game","Undo","Flip board","Moves","Copy","Download","Refresh","White captured","Black captured","Play chess here. Analysis shows moves. Save and Load store and open games."]};
 let lang=localStorage.getItem("projeler_lang")||"tr";if(!tr[lang])lang="tr";
 const names=["simpleBoard","simpleAnalysis","simpleSave","simpleLoad","simplePower","simpleTaken"];
@@ -20,7 +22,7 @@ $("simpleAnalysis").onclick=async()=>{
   let html="<div style='display:grid;grid-template-columns:repeat(8,1fr);border:1px solid #aaa'>";
   rows.forEach((row,r)=>{let c=0;for(const ch of row){if(/[1-8]/.test(ch)){for(let z=0;z<Number(ch);z++){html+=square(r,c++,"",highlight);}}else{html+=square(r,c++,ch,highlight);}}});
   board.innerHTML=html+"</div>";
-  function square(r,c,p,hl){const id="abcdefgh"[c]+(8-r),white=p&&p===p.toUpperCase(),dark=(r+c)%2===1;return "<div data-square='"+id+"' style='aspect-ratio:1;display:grid;place-items:center;font-size:clamp(18px,5vw,34px);background:"+(hl.includes(id)?"#f4d66d":dark?"#a7a7a7":"#eee")+";color:"+(white?"#fff":"#111")+";"+(white?"-webkit-text-stroke:1px #111;":"")+"'>"+(map[p]||"")+"</div>";}
+  function square(r,c,p,hl){const id="abcdefgh"[c]+(8-r),white=p&&p===p.toUpperCase(),dark=(r+c)%2===1;return "<div data-square='"+id+"' style='aspect-ratio:1;display:grid;place-items:center;font-size:clamp(18px,5vw,34px);background:"+(hl.includes(id)?"#d8d8d8":dark?"#c4c4c4":"#f5f5f5")+";color:"+(white?"#fff":"#111")+";"+(white?"-webkit-text-stroke:1px #111;":"")+"'>"+(map[p]||"")+"</div>";}
  }
  draw(positions[0]);
  let data=[];
