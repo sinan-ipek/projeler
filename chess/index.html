@@ -662,7 +662,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 <script>
 (function(){
   // ===================== UTIL =====================
-  const VERSION = "v1.0.1";
+  const VERSION = "v1.0.2";
 
   const FILES = "abcdefgh";
   const RANKS = "12345678";
@@ -2684,9 +2684,33 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
     refreshGamesList().catch(()=>{});
   }
 
+
+  // Post-game analysis: evaluate each recorded move without modifying the live board.
+  window.ChessReview = {
+    moves(){return game.history.map((u,i)=>({san:u.san||moveToUCI(u.m),uci:moveToUCI(u.m),number:Math.floor(i/2)+1,color:u.turn}));},
+    analyze(i){
+      const history=game.history;
+      if(i<0||i>=history.length)return null;
+      const replay=new ChessGame();
+      for(let j=0;j<i;j++)replay.makeMove(history[j].m,true);
+      const move=history[i].m;
+      const side=replay.turn;
+      const engineCopy=new Engine(replay);
+      const best=engineCopy.search(180,20);
+      if(!best)return null;
+      const bestUci=moveToUCI(best),playedUci=moveToUCI(move);
+      const bestUndo=replay.makeMove(best,true);
+      const bestScore=evalWhiteCP_ofGame(replay)*(side==="w"?1:-1);
+      replay.undoMove(bestUndo,true);
+      replay.makeMove(move,true);
+      const playedScore=evalWhiteCP_ofGame(replay)*(side==="w"?1:-1);
+      return {best:bestUci,played:playedUci,san:history[i].san||playedUci,loss:Math.max(0,Math.round(bestScore-playedScore)),approximate:true};
+    }
+  };
+
   boot();
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="simple-ui.js?v=1.0.0"></script><div class="versionNote">v1.0.1 · Beyaz tema ve yüksek kontrast</div></body>
+<script src="simple-ui.js?v=1.0.0"></script><div class="versionNote">v1.0.2 · Hamle analizi onarıldı</div></body>
 </html>
