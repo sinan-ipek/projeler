@@ -2,14 +2,26 @@
 window.ChessStockfish=(()=>{
  let worker=null,ready=null,task=null,failed=false;
  const path="stockfish/stockfish-19-lite-single.js";
+ const cdn="https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/";
+ async function makeWorker(){
+  try{const res=await fetch(path,{method:"HEAD",cache:"no-store"});if(res.ok)return new Worker(path);}catch(e){}
+  // Fallback: load official Stockfish JS/WASM from the npm CDN.
+  const res=await fetch(cdn+"stockfish-19-lite-single.js");if(!res.ok)throw Error("Stockfish CDN: "+res.status);
+  let js=await res.text();
+  const name="stockfish-19-lite-single.wasm";
+  if(!js.includes(name))throw Error("Stockfish WASM yolu bulunamadı.");
+  js=js.split(name).join(cdn+name);
+  const url=URL.createObjectURL(new Blob([js],{type:"text/javascript"}));
+  try{return new Worker(url);}finally{setTimeout(()=>URL.revokeObjectURL(url),30000);}
+ }
  function init(){
   if(ready)return ready;
   if(failed)return Promise.reject(Error("Motor yüklenemedi."));
-  ready=new Promise((resolve,reject)=>{
+  ready=new Promise(async(resolve,reject)=>{
    let ok=false;
    const timeout=setTimeout(()=>{if(!ok){failed=true;worker?.terminate();worker=null;reject(Error("Stockfish zaman aşımı."));}},25000);
    try{
-    worker=new Worker(path);
+    worker=await makeWorker();
     worker.onerror=()=>{if(!ok){clearTimeout(timeout);failed=true;reject(Error("Stockfish dosyaları bulunamadı veya açılamadı."));}};
     worker.onmessage=e=>{
      const lines=String(e.data).split(/\r?\n/);
