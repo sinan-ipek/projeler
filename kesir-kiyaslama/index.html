@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kesir Kıyaslama Laboratuvarı · v1.6.0</title>
+<title>Kesir Kıyaslama Laboratuvarı · v1.7.0</title>
 <style>
 :root{--bg:#dedede;--ink:#293241;--green:#267a58;--brown:#98604c;--yellow:#f3b71b;--good:#159b71}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',sans-serif}button{font:inherit}
@@ -56,17 +56,27 @@ main{max-width:1060px;margin:10px auto 28px;background:#f8f8f7;border-radius:21p
 .decimal-approx{font-size:.66em;color:#737982}
 @keyframes decimal-appear{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:600px){.decimal-top{font-size:clamp(17px,5vw,27px)}.decimal-top .division{font-size:clamp(17px,5vw,27px)}.decimal-side{gap:7px}}
-.version{font-size:12px;color:#777;text-align:center;padding:0 10px 13px}
+.version{font-size:11px;color:#929292;text-align:left;padding:0 0 12px 18px;letter-spacing:.02em}
+
+.workmodes{display:flex;justify-content:center;gap:8px;padding:18px 12px 3px}
+.workmode{background:#ecece9;border:1px solid #bfc3c8;border-radius:11px;padding:12px 20px;cursor:pointer;font-weight:650;color:var(--ink)}
+.workmode.active{background:#293241;color:#fff;border-color:#293241}
+.method-notice{font-size:14px;text-align:center;color:#71592d;padding:10px 14px;min-height:28px}
+.tab:disabled{cursor:not-allowed;opacity:.36;filter:grayscale(1)}
+.tab:disabled:hover{background:#e6e6e4;border-color:#c8c8c8}
+@media(max-width:600px){.workmodes{gap:5px;padding:12px 7px 3px}.workmode{padding:10px 12px;font-size:13px}}
 </style>
 </head>
 <body>
 <header><button class="home" id="home" aria-label="Ana sayfa" title="Ana sayfa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6 2 11.2l1.4 1.7L5 11.6V21h5.1v-6.2h3.8V21H19v-9.4l1.6 1.3 1.4-1.7L12 2.6Z"/></svg></button><h1>Kesir Kıyaslama Laboratuvarı</h1></header>
 <main>
+<div class="workmodes" role="group" aria-label="Çalışma modu"><button type="button" class="workmode active" data-workmode="learn">Öğrenme Modu</button><button type="button" class="workmode" data-workmode="free">Serbest Çözüm Modu</button></div>
 <nav class="toolbar"><button class="tab" data-mode="denom">Payda eşitleyerek kıyaslama</button><button class="tab" data-mode="difference">Farklarla kıyaslama</button><button class="tab" data-mode="mixed">Basit ve bileşik kesir</button><button class="tab" data-mode="cross">Çapraz çarpımla kıyaslama</button><button class="tab" data-mode="decimal">Ondalık sayıya çevirerek kıyaslama</button><button class="new" id="new">Yeni örnek ↻</button></nav>
+<div class="method-notice hidden" id="method-notice" aria-live="polite"></div>
 
 <div class="hint" id="hint" aria-live="polite"></div>
 <section class="stage"><div class="equation" id="equation"><div class="slot" id="left"></div><div class="operator" id="operator">?</div><div class="slot" id="right"></div></div><div class="explain" id="explain"></div><div class="answers hidden" id="answers"><button class="answer" data-answer="<">&lt;</button><button class="answer cross-equal hidden" data-answer="=">=</button><button class="answer" data-answer=">">&gt;</button></div></section>
-<div class="note">Vurgulanan ifadelerin üzerine tıklayarak ilerle.</div><div class="version">v1.6.0</div>
+<div class="note">Vurgulanan ifadelerin üzerine tıklayarak ilerle.</div><div class="version">v1.7.0</div>
 </main>
 <svg id="arrow-layer" aria-hidden="true"></svg>
 <canvas id="fireworks" aria-hidden="true"></canvas>
@@ -122,7 +132,7 @@ const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const sign=(a,b)=>a<b?'<':a>b?'>':'=';
 const frac=(n,d)=>`<span class="frac"><span class="top">${n}</span><span class="bar"></span><span class="bottom">${d}</span></span>`;
 const btn=(html,action,side,cls='')=>`<button class="math-button ${cls}" data-action="${action}" data-side="${side}" aria-label="İşlemi yap">${html}</button>`;
-let mode='denom',q=null,steps=[0,0],products=[null,null],denSolved=new Set(),phase='initial',locked=false,stamp=0;
+let mode='denom',workmode='learn',q=null,steps=[0,0],products=[null,null],denSolved=new Set(),phase='initial',locked=false,stamp=0;
 let exampleKind='improper',kindRemaining=0;
 let crossDone=[false,false],crossHover=null;
 function nextExampleKind(){
@@ -134,7 +144,62 @@ function nextExampleKind(){
  kindRemaining--;
  return exampleKind;
 }
+function methodAvailability(pair){
+ const {a,b,c,d}=pair;
+ const oneSimple=a<b,otherSimple=c<d;
+ return {
+   denom:oneSimple&&otherSimple&&b!==d&&(b*d/gcd(b,d)<=72)&&a*d!==b*c,
+   difference:Math.abs(a-b)===Math.abs(c-d)&&a!==b&&c!==d&&oneSimple===otherSimple&&b!==d&&a*d!==b*c,
+   mixed:(a<b&&c>d)||(a>b&&c<d),
+   cross:true,
+   decimal:true
+ };
+}
+function makeFreePair(){
+ // Açılıştaki kesir çiftleri farklı yöntemlere de uygun olabilir; her çift
+ // çapraz çarpma ve ondalık dönüşümle çözülebilir.
+ const family=rnd(0,4);
+ let a,b,c,d;
+ if(family===0){
+   // Paydaları farklı iki basit kesir.
+   b=rnd(3,10);d=rnd(3,10);a=rnd(1,b-1);c=rnd(1,d-1);
+ }else if(family===1){
+   // İki tür birlikte.
+   b=rnd(3,10);d=rnd(2,10);a=rnd(1,b-1);c=rnd(d+1,d+7);
+   if(rnd(0,1)){[a,c]=[c,a];[b,d]=[d,b];}
+ }else if(family===2){
+   // Farklar aynı: fark yöntemi de seçilebilir.
+   const k=rnd(1,3),sgn=rnd(0,1)?1:-1;
+   b=rnd(k+2,12);d=rnd(k+2,12);a=b+sgn*k;c=d+sgn*k;
+ }else if(family===3){
+   // Eşdeğer kesirler: eşittir seçeneği de anlamlı olsun.
+   const v=rnd(1,5),base=rnd(v+1,9),m=rnd(2,3);
+   a=v;b=base;c=v*m;d=base*m;
+ }else{
+   b=rnd(2,11);d=rnd(2,11);a=rnd(1,15);c=rnd(1,15);
+ }
+ if(a===c&&b===d)return makeFreePair();
+ return {a,b,c,d};
+}
+function resetSolution(){
+ stamp++;
+ arrowLayer.replaceChildren();
+ steps=[0,0];products=[null,null];crossDone=[false,false];crossHover=null;
+ denSolved.clear();phase='initial';locked=false;
+ document.querySelectorAll('.answer').forEach(el=>el.classList.remove('wrong','correct'));
+}
+function installPair({a,b,c,d}){
+ const common=b*d/gcd(b,d);
+ q={a,b,c,d,common,x:common/b,y:common/d,answer:sign(a*d,c*b),deltaLeft:a-b,deltaRight:c-d};
+ resetSolution();render();
+}
 function generate(){
+ if(workmode==='free'){
+   mode=null;
+   installPair(makeFreePair());
+   return;
+ }
+
  stamp++;
  arrowLayer.replaceChildren();
  let a,b,c,d,t=0;
@@ -381,7 +446,30 @@ function alignOperator(){
 }
 function readyToCompare(){return mode==='decimal'?steps.every(v=>v===2):mode==='cross'?crossDone.every(Boolean):mode==='difference'?steps.every(v=>v>=4):mode==='mixed'?phase==='selection':phase==='answer'}
 function render(){
- document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('active',e.dataset.mode===mode));
+ document.querySelectorAll('.workmode').forEach(e=>e.classList.toggle('active',e.dataset.workmode===workmode));
+ const free=workmode==='free';
+ const available=free&&q?methodAvailability(q):null;
+ document.querySelectorAll('.tab').forEach(e=>{
+   const key=e.dataset.mode;
+   e.classList.toggle('active',key===mode);
+   e.disabled=!!(free&&available&&!available[key]);
+   if(free&&available&&!available[key]){
+     e.title=key==='difference'?'Bu yöntem için pay−payda farklarının mutlak değerleri eşit ve kesirler aynı türde olmalı.':key==='mixed'?'Bu yöntem bir basit ve bir bileşik kesir gerektirir.':'Bu yöntem bu kesir çifti için uygun değil.';
+   }else e.title='';
+ });
+ $('method-notice').classList.toggle('hidden',!free||mode!==null);
+ if(free&&mode===null){
+   L.innerHTML=`<span class="expr">${frac(q.a,q.b)}</span>`;
+   R.innerHTML=`<span class="expr">${frac(q.c,q.d)}</span>`;
+   O.textContent='?';O.classList.remove('done');
+   H.textContent='Bu iki kesri hangi yöntemle karşılaştırmak istersin?';
+   E.textContent='';A.classList.add('hidden');
+   document.querySelector('.cross-equal').classList.add('hidden');
+   $('method-notice').textContent='Yukarıdan uygun bir kıyaslama yöntemi seç.';
+   requestAnimationFrame(alignOperator);
+   return;
+ }
+
  L.innerHTML=mode==='decimal'?decimalSide(0):mode==='cross'?crossSide(0):mode==='difference'?differenceSide(0):mode==='mixed'?mixedSide(0):denSide(0);
  R.innerHTML=mode==='decimal'?decimalSide(1):mode==='cross'?crossSide(1):mode==='difference'?differenceSide(1):mode==='mixed'?mixedSide(1):denSide(1);
  if(mode==='mixed')O.innerHTML=mixedOperator();
@@ -541,7 +629,25 @@ A.addEventListener('click',e=>{
  }
 });
 $('new').addEventListener('click',generate);
-document.querySelectorAll('.tab').forEach(el=>el.addEventListener('click',()=>{mode=el.dataset.mode;generate()}));
+document.querySelectorAll('.workmode').forEach(el=>el.addEventListener('click',()=>{
+ const next=el.dataset.workmode;
+ if(next===workmode)return;
+ workmode=next;
+ mode=next==='learn'?'denom':null;
+ generate();
+}));
+document.querySelectorAll('.tab').forEach(el=>el.addEventListener('click',()=>{
+ if(el.disabled)return;
+ const next=el.dataset.mode;
+ if(workmode==='free'){
+   if(mode===next)return;
+   mode=next;
+   resetSolution();
+   render();
+ }else{
+   mode=next;generate();
+ }
+}));
 window.addEventListener('resize',()=>requestAnimationFrame(alignOperator));
 $('home').addEventListener('click',()=>location.href='https://sinan-ipek.github.io/projeler/');
 generate();
