@@ -19,7 +19,7 @@ function draw(fen,highlight=""){
  const map={K:"♔",Q:"♕",R:"♖",B:"♗",N:"♘",P:"♙",k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
  let out="<div style='display:grid;grid-template-columns:repeat(8,1fr);border:1px solid #bbb'>";
  fen.split(" ")[0].split("/").forEach((row,r)=>{let c=0;for(const ch of row){const n=Number(ch);if(n){for(let j=0;j<n;j++)sq("",r,c++);}else sq(ch,r,c++);}});
- function sq(p,r,c){const id="abcdefgh"[c]+(8-r),light=(r+c)%2===0,white=p&&p===p.toUpperCase();out+="<div style='aspect-ratio:1;display:grid;place-items:center;font-size:clamp(16px,2.1vw,28px);background:"+(highlight.includes(id)?"#d7d7d7":light?"#f5f5f5":"#c5c5c5")+";color:"+(white?"#fff":"#161616")+";"+(white?"-webkit-text-stroke:1px #222;":"")+"'>"+(map[p]||"")+"</div>";}
+ function sq(p,r,c){const id="abcdefgh"[c]+(8-r),light=(r+c)%2===0;out+="<div style='aspect-ratio:1;display:grid;place-items:center;background:"+(highlight.includes(id)?"#d7d7d7":light?"#f5f5f5":"#c5c5c5")+"'>"+(p&&window.ChessPieceSVG?window.ChessPieceSVG(p):(map[p]||""))+"</div>";}
  el.innerHTML=out+"</div>";
 }
 function el(tag,text){const e=document.createElement(tag);e.textContent=text;return e;}
