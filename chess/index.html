@@ -681,15 +681,27 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 <script>
 (function(){
   // ===================== UTIL =====================
-  const VERSION = "v1.1.0";
+  const VERSION = "v1.2.1";
 
   const FILES = "abcdefgh";
   const RANKS = "12345678";
 
-  const PIECE_UNI = {
-    P:"♙", N:"♘", B:"♗", R:"♖", Q:"♕", K:"♔",
-    p:"♟", n:"♞", b:"♝", r:"♜", q:"♛", k:"♚"
+  // Embedded SVG images: transparent outside the silhouettes, consistent in all fonts.
+  const svgShapes={
+    p:'<circle cx="32" cy="17" r="8"/><path d="M24 27 Q19 33 23 41 L19 49 H45 L41 41 Q45 33 40 27 Z"/><path d="M17 52 H47 V57 H17 Z"/>',
+    r:'<path d="M15 12 H23 V19 H28 V12 H36 V19 H41 V12 H49 V26 H44 L42 49 H22 L20 26 H15 Z"/><path d="M17 51 H47 V57 H17 Z"/>',
+    n:'<path d="M19 49 L21 37 L15 31 L22 17 L37 10 L48 22 L44 30 L36 27 L40 49 Z"/><circle cx="33" cy="21" r="2" fill="#222" stroke="none"/><path d="M16 52 H48 V57 H16 Z"/>',
+    b:'<path d="M32 9 C20 16 21 29 26 36 L22 49 H42 L38 36 C43 29 44 16 32 9 Z"/><path d="M30 16 L37 31" fill="none"/><path d="M18 52 H46 V57 H18 Z"/>',
+    q:'<circle cx="12" cy="17" r="4"/><circle cx="24" cy="11" r="4"/><circle cx="40" cy="11" r="4"/><circle cx="52" cy="17" r="4"/><path d="M13 23 L19 47 H45 L51 23 L40 33 L32 20 L24 33 Z"/><path d="M17 51 H47 V57 H17 Z"/>',
+    k:'<path d="M32 7 V25 M23 16 H41" fill="none"/><path d="M23 28 Q16 34 23 41 L20 49 H44 L41 41 Q48 34 41 28 Q37 23 32 28 Q27 23 23 28 Z"/><path d="M17 52 H47 V57 H17 Z"/>'
   };
+  function pieceSVG(p){
+    if(!p)return "";
+    const white=p===p.toUpperCase(),fill=white?"#ffffff":"#252525",stroke=white?"#151515":"#101010";
+    return '<svg class="chess-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="width:82%;height:82%;display:block;overflow:visible"><g fill="'+fill+'" stroke="'+stroke+'" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">'+svgShapes[p.toLowerCase()]+'</g></svg>';
+  }
+  const PIECE_UNI={P:"♙",N:"♘",B:"♗",R:"♖",Q:"♕",K:"♔",p:"♟",n:"♞",b:"♝",r:"♜",q:"♛",k:"♚"};
+  window.ChessPieceSVG=pieceSVG;
 
   const PIECE_VAL = { p:100, n:320, b:330, r:500, q:900, k:20000 };
 
@@ -1828,8 +1840,8 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
     capByWhite.sort((a,b)=>order(a)-order(b));
     capByBlack.sort((a,b)=>order(a)-order(b));
 
-    capByWhiteEl.innerHTML = capByWhite.map(p => `<span class="piece b">${PIECE_UNI[p]}</span>`).join("");
-    capByBlackEl.innerHTML = capByBlack.map(p => `<span class="piece w">${PIECE_UNI[p]}</span>`).join("");
+    capByWhiteEl.innerHTML = capByWhite.map(p => `<span class="piece b">${pieceSVG(p)}</span>`).join("");
+    capByBlackEl.innerHTML = capByBlack.map(p => `<span class="piece w">${pieceSVG(p)}</span>`).join("");
     if (!capByWhite.length) capByWhiteEl.textContent = "—";
     if (!capByBlack.length) capByBlackEl.textContent = "—";
   }
@@ -1879,7 +1891,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
     if(!a.width||!b.width)return;
     const ghost=document.createElement("span");
     ghost.className="piece "+colorOf(u.fromP);
-    ghost.textContent=PIECE_UNI[u.fromP];
+    ghost.innerHTML=pieceSVG(u.fromP);
     ghost.style.cssText=`position:fixed;z-index:10000;pointer-events:none;display:flex;align-items:center;justify-content:center;left:${a.left}px;top:${a.top}px;width:${a.width}px;height:${a.height}px;transition:transform 850ms cubic-bezier(.42,0,.58,1);`;
     const target=to.querySelector(".piece");if(target)target.style.visibility="hidden";
     document.body.appendChild(ghost);
@@ -1921,7 +1933,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
         el.dataset.sq = sq;
 
         const p = game.board[r][f];
-        el.innerHTML = p ? `<span class="piece ${colorOf(p)}">${PIECE_UNI[p]}</span>` : "";
+        el.innerHTML = p ? `<span class="piece ${colorOf(p)}">${pieceSVG(p)}</span>` : "";
       }
     }
 
@@ -2733,5 +2745,5 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.1.1"></script><script src="simple-ui.js?v=1.1.1"></script><script src="live-analysis.js?v=1.2.0"></script><div class="versionNote">v1.2.0 · Canlı son hamle analizi</div></body>
+<script src="stockfish-adapter.js?v=1.1.1"></script><script src="simple-ui.js?v=1.1.1"></script><script src="live-analysis.js?v=1.2.0"></script><div class="versionNote">v1.2.1 · Şeffaf SVG taşlar</div></body>
 </html>
