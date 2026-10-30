@@ -64,7 +64,7 @@ async function analyzeLatest(){
   b2.onclick=()=>playLine(positions[i],before.pv||[]);
   detail.append(b1,b2,el("small",T().note));lastShown=key;
  }catch(e){if(ticket===serial){document.getElementById("liveStatus").textContent=T().error+": "+e.message;lastShown=key;}}
- finally{busy=false;if(api.moves().map(m=>m.uci).join(",")!==key)setTimeout(analyzeLatest,50);}
+ finally{busy=false;if(active&&(ticket!==serial||api.moves().map(m=>m.uci).join(",")!==key))setTimeout(analyzeLatest,50);}
 }
 document.getElementById("simpleAnalysis").addEventListener("click",()=>{active=true;serial++;lastShown="";setTimeout(analyzeLatest,0);});
 const observer=new MutationObserver(()=>{if(!active)return;const key=api.moves().map(m=>m.uci).join(",");if(key!==latestKey){serial++;if(!busy)setTimeout(analyzeLatest,0);}});
