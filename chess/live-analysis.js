@@ -11,7 +11,7 @@ en:{title:"Live Stockfish analysis",wait:"Waiting for a move.",thinking:"Analyzi
 const T=()=>labels[L()]||labels.tr;
 function showPanel(){
  extra.classList.add("open");
- extra.innerHTML="<div style='font-weight:700;font-size:16px;margin-bottom:8px' id='liveTitle'></div><div id='liveStatus' style='font-size:13px;color:#666;margin-bottom:10px'></div><div id='reviewBoard' style='width:min(300px,100%);margin:8px auto'></div><div id='liveDetail' style='font-size:13px;line-height:1.5'></div>";
+ extra.innerHTML="<div id='liveTitle' style='font-weight:700;font-size:16px;margin-bottom:8px'></div><div id='liveStatus' style='font-size:13px;color:#666;margin-bottom:10px'></div><div class='live-review-layout'><div id='reviewBoard'></div><div id='liveDetail' style='font-size:13px;line-height:1.5;min-width:0'></div></div>";
  document.getElementById("liveTitle").textContent=T().title;
 }
 function draw(fen,highlight=""){
@@ -24,7 +24,7 @@ function draw(fen,highlight=""){
 }
 function el(tag,text){const e=document.createElement(tag);e.textContent=text;return e;}
 function uciText(uci){return uci?uci.slice(0,2)+" → "+uci.slice(2,4)+(uci.length>4?" ="+uci[4].toUpperCase():""):"—";}
-function lineText(pv){return pv?.length?pv.slice(0,6).map(uciText).join("  ·  "):"—";}
+function notation(fen,uci){if(!uci)return "—";const from=uci.slice(0,2),to=uci.slice(2,4),rows=fen.split(" ")[0].split("/");let p="";let col=0;const r=8-Number(from[1]);for(const ch of rows[r]){if(/[1-8]/.test(ch))col+=Number(ch);else{if(col===from.charCodeAt(0)-97)p=ch;col++;}}const names={tr:{k:"Ş",q:"V",r:"K",b:"F",n:"A",p:""},de:{k:"K",q:"D",r:"T",b:"L",n:"S",p:""},en:{k:"K",q:"Q",r:"R",b:"B",n:"N",p:""}};const symbol=(names[L()]||names.tr)[p.toLowerCase()]??"";if(p.toLowerCase()==="k"&&from==="e1"&&to==="g1"||p.toLowerCase()==="k"&&from==="e8"&&to==="g8")return "O-O";if(p.toLowerCase()==="k"&&from==="e1"&&to==="c1"||p.toLowerCase()==="k"&&from==="e8"&&to==="c8")return "O-O-O";return symbol+to+(uci[4]?"="+uci[4].toUpperCase():"");}\nfunction lineText(pv){return pv?.length?pv.slice(0,6).map(uciText).join("  ·  "):"—";}
 function playLine(fen,line){
  const steps=[fen];for(const m of line){const next=api.nextFen(steps[steps.length-1],m);if(!next)break;steps.push(next);}
  let n=0;draw(steps[0],line[0]||"");const run=++playLine.id;
@@ -52,8 +52,8 @@ async function analyzeLatest(){
   const cls=equal?T().good:loss===null?"—":loss<45?T().fine:loss<110?T().inacc:loss<250?T().mistake:T().blunder;
   status.textContent=moves[i].number+(moves[i].color==="w"?". ":"... ")+moves[i].san+" — "+cls+(loss!==null?" (≈"+Math.round(loss)+" cp)":"");
   const detail=document.getElementById("liveDetail");detail.innerHTML="";
-  makeRow(detail,T().played,uciText(moves[i].uci));
-  makeRow(detail,T().best,before.best?uciText(before.best):T().none);
+  makeRow(detail,T().played,notation(positions[i],moves[i].uci)+" ("+uciText(moves[i].uci)+")");
+  makeRow(detail,T().best,before.best?notation(positions[i],before.best)+" ("+uciText(before.best)+")":T().none);
   const explanation=el("p",equal?(L()==="tr"?"Bu hamle motorun ilk tercihidir.":L()==="de"?"Dieser Zug ist die erste Wahl der Engine.":"This is the engine's first choice."):(loss!==null&&loss<45?(L()==="tr"?"Aradaki fark küçük; hamlen oynanabilir.":L()==="de"?"Der Unterschied ist gering.":"The difference is small."):(L()==="tr"?"Motor, önerilen hamleden sonra daha iyi bir konum hesaplıyor. Aşağıdaki devamları karşılaştır.":L()==="de"?"Die Engine sieht eine bessere Stellung nach der Alternative. Vergleiche die Folgen.":"The engine sees a better position after the alternative. Compare the continuations.")));
   detail.appendChild(el("strong",T().why));detail.appendChild(explanation);
   makeRow(detail,T().actual,lineText(after.pv));
