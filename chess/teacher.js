@@ -12,7 +12,7 @@ function refresh(){ $("teacherLive").textContent=t(0)+(active?" ✓":" ○");$("
 function ensure(){
  if(worker)return true;
  try{
-   worker=new Worker("stockfish/stockfish.js");
+   worker=new Worker("stockfish/stockfish-19-lite-single.js");
    worker.onmessage=e=>onMessage(String(e.data));
    worker.onerror=()=>{ready=false;status(t(3));worker?.terminate();worker=null;};
    worker.postMessage("uci");return true;
@@ -43,7 +43,7 @@ function runNext(){
  worker.postMessage("position fen "+current.fen);
  worker.postMessage("go depth "+$("teacherDepth").value);
 }
-function enqueue(items){session++;queue=items.map(x=>({...x,id:session}));current=null;if(worker&&ready)worker.postMessage("stop");if(!ensure())return;status(t(4));runNext();}
+function enqueue(items){session++;queue=items.map(x=>({...x,id:session}));current=null;if(worker){worker.terminate();worker=null;ready=false;}if(!ensure())return;status(t(4));runNext();}
 function explain(info,played){
  const pv=info.pv||[];
  const intro=played?t(8):t(7);
