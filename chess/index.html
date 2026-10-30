@@ -464,6 +464,10 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 .modal header{background:#f5f5f5!important;border-bottom:1px solid #ddd!important}
 .pill,.tag{background:#f6f6f6!important;color:#222!important;border-color:#ccc!important}
 .versionNote{color:#888!important}
+</style><style id="chessPieceOutlineV110">
+/* Unicode chess glyphs have transparent backgrounds; white pieces have white interiors and black contours. */
+.sq .piece.w{color:#fff!important;-webkit-text-fill-color:#fff!important;-webkit-text-stroke:1.35px #111!important;text-shadow:none!important;filter:drop-shadow(0 1px 0 rgba(0,0,0,.13))}
+.sq .piece.b{color:#111!important;-webkit-text-fill-color:#111!important;-webkit-text-stroke:.35px #111!important;text-shadow:none!important}
 </style></head>
 
 <body>
@@ -662,7 +666,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 <script>
 (function(){
   // ===================== UTIL =====================
-  const VERSION = "v1.0.2";
+  const VERSION = "v1.1.0";
 
   const FILES = "abcdefgh";
   const RANKS = "12345678";
@@ -2687,6 +2691,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 
   // Post-game analysis: evaluate each recorded move without modifying the live board.
   window.ChessReview = {
+    positions(){const replay=new ChessGame(),out=[replay.getFEN()];for(const u of game.history){replay.makeMove(u.m,true);out.push(replay.getFEN());}return out;},
     moves(){return game.history.map((u,i)=>({san:u.san||moveToUCI(u.m),uci:moveToUCI(u.m),number:Math.floor(i/2)+1,color:u.turn}));},
     analyze(i){
       const history=game.history;
@@ -2712,5 +2717,5 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="simple-ui.js?v=1.0.0"></script><div class="versionNote">v1.0.2 · Hamle analizi onarıldı</div></body>
+<script src="stockfish-adapter.js?v=1.1.0"></script><script src="simple-ui.js?v=1.1.0"></script><div class="versionNote">v1.1.0 · Stockfish öğretici analiz ve kontürlü taşlar</div></body>
 </html>
