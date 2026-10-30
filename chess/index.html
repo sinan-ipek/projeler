@@ -437,7 +437,7 @@
 
 <!-- HOME BUTTON: normal document flow, never overlaps content -->
 <div class="homeBar">
-  <a class="homeLink" href="../index.html">← Home</a>
+  <a class="homeLink" href="../index.html" style="background:#ffd83d;color:#111;font-size:21px;padding:6px 12px" aria-label="Home">⌂</a><button class="btn small" id="teacherLang" style="margin-left:8px">Türkçe ▾</button><button class="btn small" id="teacherHelp" style="margin-left:8px">?</button>
 </div>
 
 <div class="wrap">
@@ -2632,8 +2632,24 @@
   }
 
   boot();
+
+  // Satranç Öğretmeni köprüsü: mevcut oyun kuralları değiştirilmez.
+  window.ChessTeacherBridge = {
+    snapshot(){
+      const replay = new ChessGame();
+      const positions=[replay.getFEN()];
+      const moves=[];
+      for(const u of game.history){
+        moves.push({uci:moveToUCI(u.m),san:u.san||moveToUCI(u.m)});
+        replay.makeMove(u.m,true);
+        positions.push(replay.getFEN());
+      }
+      return {fen:game.getFEN(),positions,moves,orientation};
+    }
+  };
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-</body>
+<script src="teacher.js?v=1.0.0-beta"></script>
+<div style="position:fixed;right:10px;bottom:5px;color:#999;font-size:10px;pointer-events:none">v1.0.0-beta · Satranç Öğretmeni</div></body>
 </html>
