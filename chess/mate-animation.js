@@ -1,6 +1,8 @@
 (()=>{"use strict";
 const board=document.getElementById("board"),status=document.getElementById("statusBox");
 if(!board||!status)return;
+// Map dark strokes to deep red and light fills to pale red, preserving the piece drawing.
+const ns="http://www.w3.org/2000/svg";const defsSvg=document.createElementNS(ns,"svg");defsSvg.setAttribute("width","0");defsSvg.setAttribute("height","0");defsSvg.setAttribute("aria-hidden","true");defsSvg.style.cssText="position:absolute;width:0;height:0;overflow:hidden";defsSvg.innerHTML='<defs><filter id="chessKingRedFilter" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.55 0 0 0 0.45  0 0.68 0 0 0.04  0 0 0.68 0 0.04  0 0 0 1 0"/></filter></defs>';document.body.appendChild(defsSvg);
 let active=false,kingSquare=null,bubble=null,run=0;
 function clear(){run++;active=false;kingSquare?.classList.remove("chess-mated-square");kingSquare=null;bubble?.remove();bubble=null;}
 function isMate(){return /ŞAH MAT|CHECKMATE|SCHACHMATT/i.test(status.textContent||"");}
