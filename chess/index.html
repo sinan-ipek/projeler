@@ -505,6 +505,16 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 @keyframes chess-king-red{0%{filter:none}100%{filter:url(#chessKingRedFilter)}}
 @keyframes chess-mat-bubble-in{0%{opacity:0;transform:translate(-50%,-85%)}100%{opacity:1;transform:translate(-50%,-100%)}}
 @media(prefers-reduced-motion:reduce){.sq.chess-mated-square .piece{animation:none;transform:scale(.78) rotate(90deg)}.sq.chess-mated-square .piece img,.sq.chess-mated-square .piece svg{animation:none;filter:url(#chessKingRedFilter)}.chess-mate-bubble{animation:none;opacity:1}}
+</style><style id="chessPlaybackV160">
+.chess-playback-controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;margin:12px 0 3px}
+.chess-playback-controls button{min-width:38px;min-height:36px;padding:5px 10px;border:1px solid #bbb;background:#f8f8f8;color:#222;border-radius:7px;cursor:pointer;font-size:17px}
+.chess-playback-controls button:disabled{opacity:.38;cursor:default}
+.chess-playback-controls button.playback-live{background:#ffe05b;border-color:#d3b633;font-size:13px;font-weight:600}
+.chess-playback-controls .playback-count{font-size:12px;color:#666;min-width:65px;text-align:center;font-variant-numeric:tabular-nums}
+.chess-playback-layer{position:absolute;inset:0;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);z-index:15;overflow:hidden;border-radius:inherit}
+.chess-playback-layer .playback-square{display:grid;place-items:center;min-width:0;min-height:0}
+.chess-playback-layer .playback-square svg,.chess-playback-layer .playback-square img{width:82%!important;height:82%!important}
+.chess-playback-controls button:focus-visible{outline:2px solid #245cb5;outline-offset:2px}
 </style></head>
 
 <body>
@@ -2782,5 +2792,5 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.1.1"></script><script src="simple-ui.js?v=1.3.1"></script><script src="board-colors.js?v=1.3.0"></script><script src="mate-animation.js?v=1.5.2"></script><script src="live-analysis.js?v=1.3.1"></script><div class="versionNote">v1.5.2 · Kare içinde tak diye düşen şah</div></body>
+<script src="stockfish-adapter.js?v=1.1.1"></script><script src="simple-ui.js?v=1.3.1"></script><script src="board-colors.js?v=1.3.0"></script><script src="mate-animation.js?v=1.5.2"></script><script src="chess-playback.js?v=1.6.0"></script><script src="live-analysis.js?v=1.3.1"></script><div class="versionNote">v1.6.0 · Hamle gezgini ve otomatik oynatma</div></body>
 </html>
