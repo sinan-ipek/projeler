@@ -85,6 +85,6 @@ const observer=new MutationObserver(()=>{if(!open)return;const key=api.moves().m
 document.getElementById("simpleAnalysis")?.addEventListener("click",()=>{open=true;lastKey=null;analyze();});
 document.getElementById("playerSide")?.addEventListener("change",()=>{lastKey=null;analyze();});
 document.getElementById("simpleLang")?.addEventListener("change",()=>{if(open){lastKey=null;analyze();}});
-for(const id of ["simpleBoard","simpleSave","simpleLoad","simplePower","simpleTaken"])document.getElementById(id)?.addEventListener("click",()=>{open=false;request++;});
+for(const id of ["simpleBoard","simpleSave","simpleLoad","simplePower"])document.getElementById(id)?.addEventListener("click",()=>{open=false;request++;});
 analyze();
 })();
