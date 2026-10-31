@@ -42,6 +42,7 @@ function refresh(){
  buttons.next.disabled=last===0||(index>=last);
  buttons.last.disabled=last===0||(index>=last);
  buttons.live.disabled=live;
+ buttons.live.hidden=live;
  buttons.play.disabled=last===0;
  buttons.play.textContent=isPlaying?"⏸":"▶";
  const names=lang();
@@ -50,23 +51,23 @@ function refresh(){
  buttons.play.setAttribute("aria-label",buttons.play.title);
  buttons.live.textContent=names.live;
 }
-function seek(n){const last=positions().length-1;index=Math.max(0,Math.min(last,n));refresh();}
+function seek(n){const last=positions().length-1;if(n>=last){goLive();return;}index=Math.max(0,n);refresh();}
 function goLive(){stop();index=-1;refresh();}
-function tick(){const last=positions().length-1;if(index>=last){stop();refresh();return;}seek(index+1);}
+function tick(){const last=positions().length-1;if(index>=last-1){goLive();return;}seek(index+1);}
 controls.addEventListener("click",e=>{
  const act=e.target.closest("button")?.dataset.act;if(!act)return;
  if(act==="live"){goLive();return;}
  if(act==="play"){
   if(isPlaying){stop();refresh();return;}
   const last=positions().length-1;if(last===0)return;
-  if(index<0||index>=last)seek(0);
+  if(index<0||index>=last){index=0;refresh();}
   isPlaying=true;timer=setInterval(tick,900);refresh();return;
  }
  stop();const last=positions().length-1;
  if(act==="first")seek(0);
  if(act==="prev")seek((index<0?last:index)-1);
  if(act==="next")seek((index<0?last:index)+1);
- if(act==="last")seek(last);
+ if(act==="last")goLive();
 });
 let pending=false;
 const observer=new MutationObserver(()=>{if(pending)return;pending=true;queueMicrotask(()=>{pending=false;const key=api.moves().map(m=>m.uci).join(",");if(key!==known){known=key;const last=positions().length-1;if(index>last)index=last;refresh();}});});
