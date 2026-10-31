@@ -15,7 +15,7 @@ function apply(){
  document.documentElement.style.setProperty("--review-light",p.light);
  document.documentElement.style.setProperty("--review-dark",p.dark);
  const prefix=lang==="de"?"Brettfarbe":lang==="en"?"Board color":"Tahta Rengi";
- btn.textContent="🎨 "+prefix+": "+(p.name[lang]||p.name.tr);
+ btn.textContent=p.name[lang]||p.name.tr;
  btn.title=lang==="de"?"Klicken, um die Brettfarbe zu wechseln":lang==="en"?"Click to change board colors":"Tahta rengini değiştirmek için tıkla";
  localStorage.setItem("chess_board_palette",String(index));
 }
