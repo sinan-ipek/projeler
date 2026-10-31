@@ -2003,8 +2003,9 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
     updateStatus();
   }
 
+  let loadedReviewMode=false;
   function maybeEngineMove(){
-    if (engineThinking) return;
+    if (loadedReviewMode || engineThinking) return;
     const st = game.gameStatus();
     if (st.over) return;
     if (isPlayersTurn()) return;
@@ -2350,6 +2351,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 
   // ===================== BUTTONS =====================
   document.getElementById("btnNew").addEventListener("click", ()=>{
+    loadedReviewMode=false;
     ensureAudio();
     stopEngine();
     game.reset();
@@ -2769,6 +2771,18 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 
   // Post-game analysis: evaluate each recorded move without modifying the live board.
   window.ChessReview = {
+    exportPGN(){return game.getPGN();},
+    importPGN(pgn){
+      stopEngine();
+      const candidate=new ChessGame();
+      if(!candidate.loadPGN(pgn))return false;
+      if(!game.loadPGN(pgn))return false;
+      loadedReviewMode=true;
+      coachReset();
+      selectedSq=null;legalFromSelected=[];clearHighlights();
+      render();
+      return true;
+    },
     nextFen(fen,uci){const g=new ChessGame();g.loadFEN(fen);const m=g.generateLegalMoves().find(x=>moveToUCI(x)===uci);if(!m)return null;g.makeMove(m,true);return g.getFEN();},
     positions(){const replay=new ChessGame(),out=[replay.getFEN()];for(const u of game.history){replay.makeMove(u.m,true);out.push(replay.getFEN());}return out;},
     moves(){return game.history.map((u,i)=>({san:u.san||moveToUCI(u.m),uci:moveToUCI(u.m),number:Math.floor(i/2)+1,color:u.turn}));},
@@ -2796,5 +2810,5 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="simple-ui.js?v=1.7.4"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.5.2"></script><script src="chess-playback.js?v=1.7.2"></script><script src="live-analysis.js?v=1.7.4"></script><div class="versionNote">v1.7.4 · Alınan Taşlar düğmesi kaldırıldı</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.5.2"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.8.0"></script><script src="chess-file-io.js?v=1.8.0"></script><div class="versionNote">v1.8.0 · PGN dosyası kaydetme ve yükleme</div></body>
 </html>
