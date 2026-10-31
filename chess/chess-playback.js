@@ -8,9 +8,9 @@ tr:{start:"İlk konum",back:"Önceki hamle",play:"Oynat",pause:"Duraklat",next:"
 de:{start:"Anfang",back:"Zurück",play:"Abspielen",pause:"Pause",next:"Weiter",end:"Ende",live:"Live",moves:"Züge"},
 en:{start:"First position",back:"Previous move",play:"Play",pause:"Pause",next:"Next move",end:"Last position",live:"Go Live",moves:"moves"}};
 const lang=()=>tr[document.getElementById("simpleLang")?.value]||tr.tr;
-const controls=document.createElement("div");controls.className="chess-playback-controls";
+const controls=document.getElementById("chessPlaybackControls")||document.createElement("div");controls.className="chess-playback-controls";
 controls.innerHTML='<button type="button" data-act="first" aria-label="İlk konum" title="İlk konum">⏮</button><button type="button" data-act="prev" aria-label="Önceki hamle" title="Önceki hamle">◀</button><button type="button" data-act="play" aria-label="Oynat" title="Oynat">▶</button><button type="button" data-act="next" aria-label="Sonraki hamle" title="Sonraki hamle">▶|</button><button type="button" data-act="last" aria-label="Son konum" title="Son konum">⏭</button><span class="playback-count" aria-live="polite"></span><button type="button" class="playback-live" data-act="live">Canlıya Dön</button>';
-wrap.insertAdjacentElement("afterend",controls);
+if(!controls.isConnected)wrap.insertAdjacentElement("afterend",controls);
 const buttons=Object.fromEntries([...controls.querySelectorAll("button")].map(b=>[b.dataset.act,b]));
 const count=controls.querySelector(".playback-count");
 let index=-1,layer=null,timer=null,known="",isPlaying=false;
@@ -26,7 +26,8 @@ function renderPosition(fen){
  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
   const f=whiteBottom?c:7-c,rank=whiteBottom?7-r:r,id="abcdefgh"[f]+(rank+1);
   const light=(f+rank)%2===1,p=pieces[id];
-  html+='<div class="playback-square" style="background:'+(light?"var(--sq-light,#eee)":"var(--sq-dark,#aaa)")+'">'+(p&&window.ChessPieceSVG?'<span class="piece "+(p===p.toUpperCase()?"w":"b")+'">'+window.ChessPieceSVG(p)+"</span>":"")+"</div>";
+    const pieceHTML=p&&window.ChessPieceSVG?'<span class="piece '+(p===p.toUpperCase()?"w":"b")+'">'+window.ChessPieceSVG(p)+'</span>':"";
+  html+='<div class="playback-square" style="background:'+(light?"var(--sq-light,#eee)":"var(--sq-dark,#aaa)")+'">'+pieceHTML+"</div>";
  }
  layer.innerHTML=html;
 }
