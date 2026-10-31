@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v17.6</title>
+<title>Beyaz Tahta v17.7</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1071,7 +1071,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v17.6 · Çizgi birleşimleri ve sadeleştirme düzeltmesi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v17.7 · Performans öncelikli çizim motoru</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -3130,6 +3130,42 @@
     }
   }
 
+  function drawFastCommittedStroke(targetCtx,pts,style){
+    if(!pts || !pts.length) return;
+
+    const color=(style&&style.color)||'#111111';
+    const width=Math.max(.75,Number(style&&style.width)||1);
+
+    targetCtx.save();
+    targetCtx.strokeStyle=color;
+    targetCtx.fillStyle=color;
+    targetCtx.lineWidth=width;
+    targetCtx.lineCap='round';
+    targetCtx.lineJoin='round';
+
+    if(pts.length===1){
+      targetCtx.beginPath();
+      targetCtx.arc(pts[0].x,pts[0].y,width/2,0,Math.PI*2);
+      targetCtx.fill();
+      targetCtx.restore();
+      return;
+    }
+
+    targetCtx.beginPath();
+    targetCtx.moveTo(pts[0].x,pts[0].y);
+
+    for(let i=1;i<pts.length-1;i++){
+      const mx=(pts[i].x+pts[i+1].x)/2;
+      const my=(pts[i].y+pts[i+1].y)/2;
+      targetCtx.quadraticCurveTo(pts[i].x,pts[i].y,mx,my);
+    }
+
+    const last=pts[pts.length-1];
+    targetCtx.lineTo(last.x,last.y);
+    targetCtx.stroke();
+    targetCtx.restore();
+  }
+
   function drawAdaptiveInkStroke(targetCtx,pts,style){
     if(!pts || !pts.length) return;
 
@@ -3249,7 +3285,9 @@
         ? e.getCoalescedEvents()
         : null
     );
-    const inkEvents=(rawEvents&&rawEvents.length)?rawEvents:[e];
+    const inkEvents=(
+      e.pointerType==='pen' && rawEvents && rawEvents.length
+    ) ? rawEvents : [e];
 
     let moved=false;
 
@@ -7085,7 +7123,7 @@
     for(const o of objects){
       if(o.kind==='stroke'){
         if(o.inkEngine==='adaptive-v7'){
-          drawAdaptiveInkStroke(ctx,o.points,o.style);
+          drawFastCommittedStroke(ctx,o.points,o.style);
         }else{
           drawSmoothStroke(
             o.points,
@@ -7172,7 +7210,10 @@
   function simplifyCommittedInk(pts){
     if(!Array.isArray(pts) || pts.length<4) return Array.isArray(pts)?pts.slice():[];
 
-    const minDistance=Math.max(.18,.26/Math.max(.35,viewZoom));
+    const inputType=String((pts[0]&&pts[0].input)||'mouse');
+    const minDistance=(inputType==='pen')
+      ? Math.max(.55,.80/Math.max(.35,viewZoom))
+      : Math.max(1.10,1.55/Math.max(.35,viewZoom));
     const filtered=[pts[0]];
     let last=pts[0];
 
@@ -7195,7 +7236,9 @@
     // objects, so pressure/time/input metadata remains intact.
     if(filtered.length<8) return filtered;
 
-    const epsilon=Math.max(.08,.12/Math.max(.4,viewZoom));
+    const epsilon=(inputType==='pen')
+      ? Math.max(.22,.32/Math.max(.4,viewZoom))
+      : Math.max(.38,.55/Math.max(.4,viewZoom));
     const reduced=simplifyRDP(filtered,epsilon);
 
     // RDP can remove a point whose main information is pressure rather than
@@ -10024,12 +10067,15 @@
       return;
     }
 
-    if(!RAW_INK_SUPPORTED){
+    // Mouse/touch use normal pointermove to avoid excessive raw sampling.
+    // Pen keeps raw updates for responsive handwriting.
+    if(!RAW_INK_SUPPORTED || e.pointerType!=='pen'){
       processInkSamples(e);
     }
   });
   canvas.addEventListener('pointerrawupdate',e=>{
     if(!RAW_INK_SUPPORTED) return;
+    if(e.pointerType!=='pen') return;
     if(mode!=='ink' || !drawing || lockedShape) return;
     processInkSamples(e);
   });
