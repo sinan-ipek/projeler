@@ -513,7 +513,10 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 .chess-playback-controls .playback-count{font-size:12px;color:#666;min-width:65px;text-align:center;font-variant-numeric:tabular-nums}
 .board{position:relative}.chess-playback-layer{position:absolute;inset:0;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);z-index:15;overflow:hidden;border-radius:inherit}
 .chess-playback-layer .playback-square{display:grid;place-items:center;min-width:0;min-height:0}
-.chess-playback-layer .playback-square svg,.chess-playback-layer .playback-square img{width:82%!important;height:82%!important}
+/* Live and replay share one piece box and one image scale. */
+#board .sq>.piece,#board .chess-playback-layer .playback-square>.piece{width:100%;height:100%;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+#board .sq>.piece img,#board .sq>.piece svg,#board .chess-playback-layer .playback-square>.piece img,#board .chess-playback-layer .playback-square>.piece svg{width:82%!important;height:82%!important;max-width:82%!important;max-height:82%!important;object-fit:contain}
+#board .chess-playback-layer .playback-square{min-width:0;min-height:0;overflow:hidden}
 .chess-playback-controls button:focus-visible{outline:2px solid #245cb5;outline-offset:2px}
 </style></head>
 
@@ -2792,5 +2795,5 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.1.1"></script><script src="simple-ui.js?v=1.3.1"></script><script src="board-colors.js?v=1.3.0"></script><script src="mate-animation.js?v=1.5.2"></script><script src="chess-playback.js?v=1.6.0"></script><script src="live-analysis.js?v=1.3.1"></script><div class="versionNote">v1.6.0 · Hamle gezgini ve otomatik oynatma</div></body>
+<script src="stockfish-adapter.js?v=1.1.1"></script><script src="simple-ui.js?v=1.3.1"></script><script src="board-colors.js?v=1.3.0"></script><script src="mate-animation.js?v=1.5.2"></script><script src="chess-playback.js?v=1.6.0"></script><script src="live-analysis.js?v=1.3.1"></script><div class="versionNote">v1.6.1 · Canlı ve playback taş boyutları eşitlendi</div></body>
 </html>
