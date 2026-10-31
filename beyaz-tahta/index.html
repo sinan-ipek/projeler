@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v17.3</title>
+<title>Beyaz Tahta v17.4</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1071,7 +1071,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v17.3 · Wacom ve Undo performans iyileştirmesi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v17.4 · El yazısı render cache ve viewport optimizasyonu</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1365,6 +1365,7 @@
   let temporaryEraserPreviousTool=null;
   let pendingBoardLoad = null;
   const imageCache = new Map();
+  const adaptiveStrokePathCache = new WeakMap();
   const imageAssetCache = new Map();      // assetId -> data URL
   const imageAssetLoading = new Map();    // assetId -> Promise
   const IMAGE_ASSET_PREFIX = 'asset:';
@@ -3121,6 +3122,162 @@
       q.prevForWidth=prev?{...prev}:null;
       prev=q;
     }
+  }
+
+  function addAdaptiveRibbonQuadToPath(path,p0,p1,p2,style){
+    if(!path || !p0 || !p1 || !p2) return;
+
+    const sharp=adaptiveTurnSharpness(p0,p1,p2);
+    const curveStrength=1-clamp01((sharp-.10)/.42);
+
+    const straightMid={
+      ...p1,
+      x:(p0.x+p2.x)/2,
+      y:(p0.y+p2.y)/2
+    };
+    const control=adaptiveLerpPoint(straightMid,p1,curveStrength);
+
+    const base=Math.max(.75,Number(style&&style.width)||1);
+    const steps=5;
+    let prev=null;
+
+    for(let i=0;i<=steps;i++){
+      const t=i/steps;
+      const u=1-t;
+      const q={
+        x:u*u*p0.x+2*u*t*control.x+t*t*p2.x,
+        y:u*u*p0.y+2*u*t*control.y+t*t*p2.y,
+        t:Number(p0.t)+(Number(p2.t)-Number(p0.t))*t,
+        pressure:
+          (Number.isFinite(Number(p0.pressure))?Number(p0.pressure):.5)*u*u+
+          2*u*t*(Number.isFinite(Number(control.pressure))?Number(control.pressure):.5)+
+          (Number.isFinite(Number(p2.pressure))?Number(p2.pressure):.5)*t*t,
+        input:p2.input
+      };
+
+      if(prev){
+        const w0=adaptiveInkWidth(prev,base,prev.prevForWidth||null);
+        const w1=adaptiveInkWidth(q,base,prev);
+        const dx=q.x-prev.x,dy=q.y-prev.y;
+        const len=Math.hypot(dx,dy);
+
+        if(len>.01){
+          const nx=-dy/len,ny=dx/len;
+          const h0=Math.max(.34,w0/2),h1=Math.max(.34,w1/2);
+
+          path.moveTo(prev.x+nx*h0,prev.y+ny*h0);
+          path.lineTo(q.x+nx*h1,q.y+ny*h1);
+          path.lineTo(q.x-nx*h1,q.y-ny*h1);
+          path.lineTo(prev.x-nx*h0,prev.y-ny*h0);
+          path.closePath();
+
+          path.moveTo(q.x+h1*.82,q.y);
+          path.arc(q.x,q.y,h1*.82,0,Math.PI*2);
+          path.closePath();
+
+          path.moveTo(prev.x+h0*.54,prev.y);
+          path.arc(prev.x,prev.y,h0*.54,0,Math.PI*2);
+          path.closePath();
+        }
+      }
+
+      q.prevForWidth=prev?{...prev}:null;
+      prev=q;
+    }
+  }
+
+  function buildAdaptiveInkPath(pts,style){
+    const path=new Path2D();
+    if(!pts || !pts.length) return path;
+
+    const base=Math.max(.75,Number(style&&style.width)||1);
+    let prev=null,last=null,rawLast=null;
+
+    for(const raw0 of pts){
+      const raw={...raw0};
+      // Fixed world-space threshold: cached geometry must not depend on zoom.
+      if(rawLast && Math.hypot(raw.x-rawLast.x,raw.y-rawLast.y)<.12) continue;
+
+      const filtered=adaptiveSmoothPoint(last,raw,rawLast);
+
+      if(last){
+        if(prev){
+          const m1={...last,x:(prev.x+last.x)/2,y:(prev.y+last.y)/2};
+          const m2={...filtered,x:(last.x+filtered.x)/2,y:(last.y+filtered.y)/2};
+          addAdaptiveRibbonQuadToPath(path,m1,last,m2,style);
+        }else{
+          addAdaptiveRibbonQuadToPath(path,last,last,filtered,style);
+        }
+      }else{
+        const r=Math.max(.45,adaptiveInkWidth(filtered,base,null)/2);
+        path.moveTo(filtered.x+r,filtered.y);
+        path.arc(filtered.x,filtered.y,r,0,Math.PI*2);
+        path.closePath();
+      }
+
+      prev=last;
+      last=filtered;
+      rawLast=raw;
+    }
+
+    return path;
+  }
+
+  function adaptiveStrokeCachedData(o){
+    if(!o || !Array.isArray(o.points)) return null;
+
+    const width=Math.max(.75,Number(o.style&&o.style.width)||1);
+    const cached=adaptiveStrokePathCache.get(o);
+
+    if(cached && cached.pointsRef===o.points && cached.width===width){
+      return cached;
+    }
+
+    const path=buildAdaptiveInkPath(o.points,o.style);
+    const b=o.points.length ? bbox(o.points) : null;
+    const pad=Math.max(2,width*1.5);
+    const bounds=b ? {
+      x:b.x-pad,
+      y:b.y-pad,
+      w:b.w+pad*2,
+      h:b.h+pad*2
+    } : null;
+
+    const next={path,pointsRef:o.points,width,bounds};
+    adaptiveStrokePathCache.set(o,next);
+    return next;
+  }
+
+  function currentViewportWorldRect(padPx=40){
+    const r=canvas.getBoundingClientRect();
+    const pad=padPx/Math.max(.05,viewZoom);
+    return {
+      x:(-viewX)/viewZoom-pad,
+      y:(-viewY)/viewZoom-pad,
+      w:r.width/viewZoom+pad*2,
+      h:r.height/viewZoom+pad*2
+    };
+  }
+
+  function rectsIntersect(a,b){
+    return !!(
+      a && b &&
+      a.x<=b.x+b.w &&
+      a.x+a.w>=b.x &&
+      a.y<=b.y+b.h &&
+      a.y+a.h>=b.y
+    );
+  }
+
+  function drawCachedAdaptiveInkObject(o,viewport){
+    const data=adaptiveStrokeCachedData(o);
+    if(!data) return;
+    if(data.bounds && viewport && !rectsIntersect(data.bounds,viewport)) return;
+
+    ctx.save();
+    ctx.fillStyle=(o.style&&o.style.color)||'#111111';
+    ctx.fill(data.path);
+    ctx.restore();
   }
 
   function drawAdaptiveInkStroke(targetCtx,pts,style){
@@ -7075,10 +7232,12 @@
 
     drawAdaptiveGrid();
 
+    const viewport=currentViewportWorldRect();
+
     for(const o of objects){
       if(o.kind==='stroke'){
         if(o.inkEngine==='adaptive-v7'){
-          drawAdaptiveInkStroke(ctx,o.points,o.style);
+          drawCachedAdaptiveInkObject(o,viewport);
         }else{
           drawSmoothStroke(
             o.points,
