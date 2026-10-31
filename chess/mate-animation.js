@@ -2,9 +2,9 @@
 const board=document.getElementById("board"),status=document.getElementById("statusBox");
 if(!board||!status)return;
 // Map dark strokes to deep red and light fills to pale red, preserving the piece drawing.
-const ns="http://www.w3.org/2000/svg";const defsSvg=document.createElementNS(ns,"svg");defsSvg.setAttribute("width","0");defsSvg.setAttribute("height","0");defsSvg.setAttribute("aria-hidden","true");defsSvg.style.cssText="position:absolute;width:0;height:0;overflow:hidden";defsSvg.innerHTML='<defs><filter id="chessKingRedFilter" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.55 0 0 0 0.45  0 0.68 0 0 0.04  0 0 0.68 0 0.04  0 0 0 1 0"/></filter></defs>';document.body.appendChild(defsSvg);
-let active=false,kingSquare=null,bubble=null,run=0;
-function clear(){run++;active=false;kingSquare?.classList.remove("chess-mated-square");kingSquare=null;bubble?.remove();bubble=null;}
+const ns="http://www.w3.org/2000/svg";const defsSvg=document.createElementNS(ns,"svg");defsSvg.setAttribute("width","0");defsSvg.setAttribute("height","0");defsSvg.setAttribute("aria-hidden","true");defsSvg.style.cssText="position:absolute;width:0;height:0;overflow:hidden";defsSvg.innerHTML='<defs><filter id="chessKingRedFilter" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.72 0 0 0 0.24  0 0.91 0 0 0.025  0 0 0.91 0 0.025  0 0 0 1 0"/></filter></defs>';document.body.appendChild(defsSvg);
+let active=false,kingSquare=null,bubble=null,run=0,originalImage=null;
+function clear(){run++;if(originalImage){originalImage.img.src=originalImage.src;originalImage=null;}active=false;kingSquare?.classList.remove("chess-mated-square");kingSquare=null;bubble?.remove();bubble=null;}
 function isMate(){return /ŞAH MAT|CHECKMATE|SCHACHMATT/i.test(status.textContent||"");}
 function findKing(side){
  return [...board.querySelectorAll(".sq")].find(sq=>{
@@ -30,7 +30,7 @@ function check(){
   const winnerWhite=/Beyaz kazandı|White won|Weiß gewinnt/i.test(status.textContent||"");
   kingSquare=findKing(winnerWhite?"b":"w");
   if(!kingSquare)return;
-  kingSquare.classList.add("chess-mated-square");
+  // Use the light-filled king artwork while fallen: dark outlines become red, interiors stay pale.\n  const img=kingSquare.querySelector(".piece img");\n  if(img&&/bK\\.svg/i.test(img.getAttribute("src")||"")){const src=img.getAttribute("src");originalImage={img,src};img.src=src.replace(/bK\\.svg/i,"wK.svg");}\n  kingSquare.classList.add("chess-mated-square");
   bubble=document.createElement("div");bubble.className="chess-mate-bubble";bubble.textContent="Mat!";
   bubble.setAttribute("role","status");bubble.setAttribute("aria-label","Mat!");
   board.appendChild(bubble);placeBubble();
