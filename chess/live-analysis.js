@@ -46,24 +46,44 @@ if(attackers(b,from,player==="w"?"b":"w").length&&a&&!attackers(a,to,player==="w
 return null;}
 let lastKey=null,busy=false,pending=false,request=0,shown=null,open=true;
 function linePlayback(fen,pv){const seq=[fen];for(const uci of pv.slice(0,6)){const next=api.nextFen(seq.at(-1),uci);if(!next)break;seq.push(next);}if(seq.length<2)return;const token=++request;let i=0;const tick=()=>{if(token!==request)return;renderBoard(seq[i],i? [{sq:pv[i-1].slice(0,2),type:"hint"},{sq:pv[i-1].slice(2,4),type:"hint"}]:[]);if(++i<seq.length)setTimeout(tick,800);};tick();}
-async function analyze(){if(busy){pending=true;return;}const moves=api.moves(),positions=api.positions(),i=moves.length-1,key=moves.map(x=>x.uci).join(",");if(key===lastKey&&shown===lang())return;lastKey=key;shown=lang();const token=++request;panel();const status=document.getElementById("teacherStatus"),detail=document.getElementById("liveDetail");if(i<0){status.textContent=T().wait;renderBoard(positions[0]);return;}
-const player=document.getElementById("playerSide")?.value||"w",turn=positions[i+1].split(" ")[1],lastMove=moves[i],found=facts(positions[i],positions[i+1],lastMove,player);
-renderBoard(positions[i+1],found.marks);status.textContent=T().thinking;
-if(found.out.length)para(detail,T().threat,found.out.join(" "));else para(detail,T().threat,T().unknown);
-busy=true;try{await engine.init();const before=await engine.analyze(positions[i],12),after=await engine.analyze(positions[i+1],12);if(token!==request||api.moves().map(x=>x.uci).join(",")!==key)return;
-const same=before.best===lastMove.uci;const loss=before.cp!==null&&after.cp!==null?Math.max(0,before.cp+after.cp):null;
-const classification=same?T().bestMove:loss===null?T().uncertain:loss<45?T().good:loss<110?T().inacc:loss<250?T().mistake:T().blunder;
-status.textContent=lastMove.number+(lastMove.color==="w"?". ":"... ")+lastMove.san+" · "+classification;
-para(detail,T().score,scoreText(after,positions[i+1]));
-const suggestion=before.best&&before.best!=="(none)"?before.best:null;
-if(suggestion){const text=label(positions[i],suggestion)+" ("+suggestion.slice(0,2)+" → "+suggestion.slice(2,4)+")";para(detail,T().best,text);
-para(detail,T().reason,explainBest(positions[i],suggestion,lastMove.color)||(same?T().equal:T().noReason));
-const button=document.createElement("button");button.textContent=T().line;button.style.cssText="padding:7px 12px;border:1px solid #aaa;background:#fff;border-radius:7px;cursor:pointer;margin-top:4px";button.onclick=()=>linePlayback(positions[i],before.pv?.length?before.pv:[suggestion]);detail.append(button);
-}else para(detail,T().best,T().noReason);
-}catch(e){if(token===request){status.textContent=T().error+": "+e.message;const btn=document.createElement("button");btn.textContent=T().retry;btn.onclick=()=>{lastKey=null;analyze();};detail.append(btn);lastKey=null;}}
-finally{busy=false;if(pending){pending=false;setTimeout(analyze,20);}}}
-const observer=new MutationObserver(()=>{if(!open)return;const key=api.moves().map(x=>x.uci).join(",");if(key!==lastKey)analyze();});observer.observe(movesEl,{childList:true,characterData:true,subtree:true});
+async function analyze(){
+ if(busy){pending=true;return;}
+ const moves=api.moves(),positions=api.positions(),i=moves.length-1,key=moves.map(x=>x.uci).join(","),player=document.getElementById("playerSide")?.value||"w";
+ const fen=positions[i+1],turn=fen.split(" ")[1],cacheKey=key+"|"+player+"|"+lang();
+ if(cacheKey===lastKey)return;
+ lastKey=cacheKey;const token=++request;panel();
+ const status=document.getElementById("teacherStatus"),detail=document.getElementById("liveDetail");
+ const lastMove=i>=0?moves[i]:null;
+ const found=i>=0?facts(positions[i],fen,lastMove,player):{out:[],marks:[]};
+ renderBoard(fen,found.marks);
+ if(i<0){status.textContent=T().wait;return;}
+ if(found.out.length)para(detail,T().threat,found.out.join(" "));
+ else if(turn===player)para(detail,T().threat,T().unknown);
+ if(turn!==player){status.textContent=lang()==="tr"?"Rakibin hamlesi bekleniyor.":lang()==="de"?"Warte auf den gegnerischen Zug.":"Waiting for the opponent.";return;}
+ status.textContent=T().thinking;busy=true;
+ try{
+  await engine.init();
+  const current=await engine.analyze(fen,12);
+  if(token!==request||api.moves().map(x=>x.uci).join(",")!==key)return;
+  status.textContent=lang()==="tr"?"Sıra sende · "+T().title:lang()==="de"?"Du bist am Zug":"Your turn";
+  para(detail,T().score,scoreText(current,fen));
+  const suggestion=current.best&&current.best!=="(none)"?current.best:null;
+  if(suggestion){
+   para(detail,T().best,label(fen,suggestion)+" ("+suggestion.slice(0,2)+" → "+suggestion.slice(2,4)+")");
+   para(detail,T().reason,explainBest(fen,suggestion,player)||T().noReason);
+   const btn=document.createElement("button");btn.textContent=T().line;
+   btn.style.cssText="padding:7px 12px;border:1px solid #aaa;background:#fff;border-radius:7px;cursor:pointer;margin-top:4px";
+   btn.onclick=()=>linePlayback(fen,current.pv?.length?current.pv:[suggestion]);
+   detail.append(btn);
+   renderBoard(fen,[...found.marks,{sq:suggestion.slice(0,2),type:"hint"},{sq:suggestion.slice(2,4),type:"hint"}]);
+  }else para(detail,T().best,T().noReason);
+ }catch(e){
+  if(token===request){status.textContent=T().error+": "+e.message;const btn=document.createElement("button");btn.textContent=T().retry;btn.onclick=()=>{lastKey=null;analyze();};detail.append(btn);lastKey=null;}
+ }finally{busy=false;if(pending){pending=false;setTimeout(analyze,20);}}
+}
+const observer=new MutationObserver(()=>{if(!open)return;const key=api.moves().map(x=>x.uci).join(",");if(key+"|"+(document.getElementById("playerSide")?.value||"w")+"|"+lang()!==lastKey)analyze();});observer.observe(movesEl,{childList:true,characterData:true,subtree:true});
 document.getElementById("simpleAnalysis")?.addEventListener("click",()=>{open=true;lastKey=null;analyze();});
+document.getElementById("playerSide")?.addEventListener("change",()=>{lastKey=null;analyze();});
 document.getElementById("simpleLang")?.addEventListener("change",()=>{if(open){lastKey=null;analyze();}});
 for(const id of ["simpleBoard","simpleSave","simpleLoad","simplePower","simpleTaken"])document.getElementById(id)?.addEventListener("click",()=>{open=false;request++;});
 analyze();
