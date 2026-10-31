@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kesir Kıyaslama Laboratuvarı · v1.7.1</title>
+<title>Kesir Kıyaslama Laboratuvarı · v1.7.2</title>
 <style>
 :root{--bg:#dedede;--ink:#293241;--green:#267a58;--brown:#98604c;--yellow:#f3b71b;--good:#159b71}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',sans-serif}button{font:inherit}
@@ -67,7 +67,7 @@ main{max-width:1060px;margin:10px auto 28px;background:#f8f8f7;border-radius:21p
 
 <div class="hint" id="hint" aria-live="polite"></div>
 <section class="stage"><div class="equation" id="equation"><div class="slot" id="left"></div><div class="operator" id="operator">?</div><div class="slot" id="right"></div></div><div class="explain" id="explain"></div><div class="answers hidden" id="answers"><button class="answer" data-answer="<">&lt;</button><button class="answer cross-equal hidden" data-answer="=">=</button><button class="answer" data-answer=">">&gt;</button></div></section>
-<div class="note">Vurgulanan ifadelerin üzerine tıklayarak ilerle.</div><div class="version">v1.7.1</div>
+<div class="note">Vurgulanan ifadelerin üzerine tıklayarak ilerle.</div><div class="version">v1.7.2 · Eşit kesirlerde payda eşitleme etkin</div>
 </main>
 <svg id="arrow-layer" aria-hidden="true"></svg>
 <canvas id="fireworks" aria-hidden="true"></canvas>
@@ -139,7 +139,7 @@ function methodAvailability(pair){
  const {a,b,c,d}=pair;
  const oneSimple=a<b,otherSimple=c<d;
  return {
-   denom:oneSimple&&otherSimple&&b!==d&&(b*d/gcd(b,d)<=72)&&a*d!==b*c,
+   denom:oneSimple&&otherSimple&&b!==d&&(b*d/gcd(b,d)<=72),
    difference:Math.abs(a-b)===Math.abs(c-d)&&a!==b&&c!==d&&oneSimple===otherSimple&&b!==d&&a*d!==b*c,
    mixed:(a<b&&c>d)||(a>b&&c<d),
    cross:true,
@@ -482,7 +482,7 @@ function render(){
    H.textContent={initial:'Paydalardan birine tıkla.',factors:'Genişletme katsayılarından birine tıkla.',multiplications:'Çarpımları tek tek hesapla.',answer:'Karşılaştırma işaretini seç.',complete:'Doğru!'}[phase];
  }
  A.classList.toggle('hidden',!readyToCompare()||phase==='complete'||locked);
- document.querySelector('.cross-equal').classList.toggle('hidden',mode!=='cross'&&mode!=='decimal');
+ document.querySelector('.cross-equal').classList.toggle('hidden',mode!=='cross'&&mode!=='decimal'&&!(mode==='denom'&&q.answer==='='));
  requestAnimationFrame(alignOperator);
 }
 async function action(el){
