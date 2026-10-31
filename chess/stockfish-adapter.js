@@ -47,7 +47,7 @@ window.ChessStockfish=(()=>{
   await init();
   if(task)throw Error("Motor meşgul.");
   return new Promise((resolve,reject)=>{
-   const timeout=setTimeout(()=>{const t=task;task=null;worker?.postMessage("stop");reject(Error("Analiz süresi aşıldı."));},22000);
+   const timeout=setTimeout(()=>{if(task){task=null;worker?.terminate();worker=null;ready=null;reject(Error("Analiz süresi aşıldı."));}},22000);
    task={resolve,reject,timeout,info:{cp:null,mate:null,pv:[]}};
    worker.postMessage("position fen "+fen);
    worker.postMessage("go depth "+depth);
