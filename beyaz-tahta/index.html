@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v17.2</title>
+<title>Beyaz Tahta v17.3</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1071,7 +1071,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v17.2 · Ben/Herkes sağ üstte</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v17.3 · Wacom ve Undo performans iyileştirmesi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1391,6 +1391,7 @@
   let objects = [];
   let undoStack = [];
   let redoStack = [];
+  let localBoardDirty = false;
 
   // ============================================================
   // v16 — Realtime Collaborative Whiteboard
@@ -2263,10 +2264,12 @@
     scopeEveryoneBtn.disabled=boardModeSwitching;
   }
 
-  function saveLocalBoard(){
+  function saveLocalBoard({force=false}={}){
     if(boardMode!=='me') return;
+    if(!force && !localBoardDirty) return;
     try{
       localStorage.setItem(LOCAL_BOARD_KEY,JSON.stringify(objects));
+      localBoardDirty=false;
     }catch(err){
       console.warn('Yerel tahta kaydedilemedi:',err);
     }
@@ -2293,6 +2296,7 @@
     if(textEditing) closeTextEditor(false);
     remoteLiveInk.clear();
     collabRebuildLiveSnapshot();
+    localBoardDirty=false;
     redraw();
   }
 
@@ -2484,10 +2488,86 @@
     }
   }
 
-  function saveState(){
-    undoStack.push(JSON.stringify(objects));
+  // v17.3 — Hibrit Undo:
+  // Sık yapılan basit eklemelerde tüm tahtayı kopyalamak yerine yalnız değişikliği sakla.
+  // Karmaşık eski işlemler snapshot fallback kullanmaya devam eder.
+  function pushUndoEntry(entry){
+    undoStack.push(entry);
     if(undoStack.length>60) undoStack.shift();
-    redoStack = [];
+    redoStack=[];
+  }
+
+  function markBoardDirty(){
+    if(boardMode==='me') localBoardDirty=true;
+  }
+
+  function saveState(){
+    pushUndoEntry({type:'snapshot',state:JSON.stringify(objects)});
+    markBoardDirty();
+  }
+
+  function recordAddedObjectUndo(object,index){
+    if(!object) return;
+    pushUndoEntry({
+      type:'add-object',
+      object:cloneObject(object),
+      index:Number.isInteger(index)?index:objects.length-1
+    });
+  }
+
+  function applyUndoEntry(entry, direction){
+    if(!entry) return null;
+
+    if(typeof entry==='string'){
+      // Eski oturum/uyumluluk biçimi.
+      const current=JSON.stringify(objects);
+      objects=JSON.parse(entry);
+      return {type:'snapshot',state:current};
+    }
+
+    if(entry.type==='snapshot'){
+      const current=JSON.stringify(objects);
+      objects=JSON.parse(entry.state||'[]');
+      return {type:'snapshot',state:current};
+    }
+
+    if(entry.type==='add-object'){
+      const id=entry.object && entry.object.id;
+      let idx=-1;
+      if(id) idx=objects.findIndex(o=>o && o.id===id);
+      if(idx<0 && Number.isInteger(entry.index) && objects[entry.index]) idx=entry.index;
+
+      if(direction==='undo'){
+        if(idx>=0) objects.splice(idx,1);
+        return {
+          type:'restore-object',
+          object:cloneObject(entry.object),
+          index:entry.index
+        };
+      }
+
+      // Güvenlik için beklenmeyen yönde de geri yükle.
+      const at=Math.max(0,Math.min(objects.length,Number(entry.index)||objects.length));
+      objects.splice(at,0,cloneObject(entry.object));
+      return {
+        type:'add-object',
+        object:cloneObject(entry.object),
+        index:at
+      };
+    }
+
+    if(entry.type==='restore-object'){
+      const at=Math.max(0,Math.min(objects.length,Number(entry.index)||objects.length));
+      const restored=cloneObject(entry.object);
+      objects.splice(at,0,restored);
+      return {
+        type:'add-object',
+        object:cloneObject(restored),
+        index:at
+      };
+    }
+
+    return null;
   }
 
   function selectedStyleSource(){
@@ -7079,6 +7159,52 @@
     return [a,b];
   }
 
+  // Wacom/high-frequency pen input may generate hundreds of almost identical
+  // samples for one short stroke. Keep visual shape + meaningful pressure changes,
+  // but discard redundant sub-pixel samples once the stroke is committed.
+  function simplifyCommittedInk(pts){
+    if(!Array.isArray(pts) || pts.length<4) return Array.isArray(pts)?pts.slice():[];
+
+    const minDistance=Math.max(.30,.42/Math.max(.35,viewZoom));
+    const filtered=[pts[0]];
+    let last=pts[0];
+
+    for(let i=1;i<pts.length-1;i++){
+      const p=pts[i];
+      const d=Math.hypot(p.x-last.x,p.y-last.y);
+      const p0=Number.isFinite(Number(last.pressure)) ? Number(last.pressure) : .5;
+      const p1=Number.isFinite(Number(p.pressure)) ? Number(p.pressure) : .5;
+      const pressureChanged=Math.abs(p1-p0)>=.035;
+
+      if(d>=minDistance || pressureChanged){
+        filtered.push(p);
+        last=p;
+      }
+    }
+
+    filtered.push(pts[pts.length-1]);
+
+    // Conservative geometry simplification. simplifyRDP returns original point
+    // objects, so pressure/time/input metadata remains intact.
+    if(filtered.length<8) return filtered;
+
+    const epsilon=Math.max(.16,.24/Math.max(.4,viewZoom));
+    const reduced=simplifyRDP(filtered,epsilon);
+
+    // RDP can remove a point whose main information is pressure rather than
+    // geometry. Merge back strong pressure transitions.
+    const keep=new Set(reduced);
+    for(let i=1;i<filtered.length-1;i++){
+      const a=filtered[i-1],p=filtered[i],b=filtered[i+1];
+      const pa=Number.isFinite(Number(a.pressure))?Number(a.pressure):.5;
+      const pp=Number.isFinite(Number(p.pressure))?Number(p.pressure):.5;
+      const pb=Number.isFinite(Number(b.pressure))?Number(b.pressure):.5;
+      if(Math.abs(pp-pa)>=.055 || Math.abs(pb-pp)>=.055) keep.add(p);
+    }
+
+    return filtered.filter(p=>keep.has(p));
+  }
+
   function lineCandidate(pts, style){
     const a=pts[0], b=pts[pts.length-1];
     const chord=dist(a,b);
@@ -10130,9 +10256,9 @@
     }
     if(inkPointerId!==null && e.pointerId!==inkPointerId) return;
     clearTimeout(holdTimer);
-    saveState();
 
     let committedObject=null;
+    let committedObjectIndex=-1;
 
     if(lockedShape){
       // Sol tuşun bırakılması otomatik şeklin kabulüdür.
@@ -10141,6 +10267,7 @@
       accepted.id=liveInkId || makeObjectId();
       objects.push(accepted);
       committedObject=accepted;
+      committedObjectIndex=objects.length-1;
       statusEl.textContent = lockedShape.kind==='line'
         ? 'Doğru kabul edildi — B son konumunda sabitlendi'
         : 'Şekil kabul edildi';
@@ -10155,7 +10282,7 @@
       const accepted={
         id:liveInkId || makeObjectId(),
         kind:'stroke',
-        points:points.map(p=>({
+        points:simplifyCommittedInk(points).map(p=>({
           x:p.x,
           y:p.y,
           t:p.t,
@@ -10169,8 +10296,12 @@
       };
       objects.push(accepted);
       committedObject=accepted;
+      committedObjectIndex=objects.length-1;
       statusEl.textContent='Ink olarak bırakıldı';
     }
+
+    recordAddedObjectUndo(committedObject,committedObjectIndex);
+    markBoardDirty();
 
     collabBroadcastLiveInk(true);
     collabCommitLiveObject(committedObject);
@@ -11918,18 +12049,27 @@
   undoBtn.onclick=()=>{
     if(textEditing) closeTextEditor(true);
     if(!undoStack.length) return;
-    redoStack.push(JSON.stringify(objects));
-    objects=JSON.parse(undoStack.pop());
+
+    const entry=undoStack.pop();
+    const inverse=applyUndoEntry(entry,'undo');
+    if(inverse) redoStack.push(inverse);
+
     ensureUniqueObjectIds();
+    markBoardDirty();
     setSelection([]);
     redraw();
   };
+
   redoBtn.onclick=()=>{
     if(textEditing) closeTextEditor(true);
     if(!redoStack.length) return;
-    undoStack.push(JSON.stringify(objects));
-    objects=JSON.parse(redoStack.pop());
+
+    const entry=redoStack.pop();
+    const inverse=applyUndoEntry(entry,'redo');
+    if(inverse) undoStack.push(inverse);
+
     ensureUniqueObjectIds();
+    markBoardDirty();
     setSelection([]);
     redraw();
   };
