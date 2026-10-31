@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v17.5</title>
+<title>Beyaz Tahta v17.6</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1071,7 +1071,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v17.5 · Wacom sadeleştirme + güvenli Undo</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v17.6 · Çizgi birleşimleri ve sadeleştirme düzeltmesi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -3100,20 +3100,27 @@
           const nx=-dy/len,ny=dx/len;
           const h0=Math.max(.34,w0/2),h1=Math.max(.34,w1/2);
 
+          // Tiny forward/back overlap prevents antialiasing hairline cracks
+          // between consecutive ribbon quads, especially after point reduction.
+          const overlap=Math.min(.55,Math.max(.12,Math.min(h0,h1)*.18));
+          const ux=dx/len,uy=dy/len;
+          const p0x=prev.x-ux*overlap,p0y=prev.y-uy*overlap;
+          const p1x=q.x+ux*overlap,p1y=q.y+uy*overlap;
+
           targetCtx.beginPath();
-          targetCtx.moveTo(prev.x+nx*h0,prev.y+ny*h0);
-          targetCtx.lineTo(q.x+nx*h1,q.y+ny*h1);
-          targetCtx.lineTo(q.x-nx*h1,q.y-ny*h1);
-          targetCtx.lineTo(prev.x-nx*h0,prev.y-ny*h0);
+          targetCtx.moveTo(p0x+nx*h0,p0y+ny*h0);
+          targetCtx.lineTo(p1x+nx*h1,p1y+ny*h1);
+          targetCtx.lineTo(p1x-nx*h1,p1y-ny*h1);
+          targetCtx.lineTo(p0x-nx*h0,p0y-ny*h0);
           targetCtx.closePath();
           targetCtx.fill();
 
           targetCtx.beginPath();
-          targetCtx.arc(q.x,q.y,h1*.82,0,Math.PI*2);
+          targetCtx.arc(q.x,q.y,h1*.96,0,Math.PI*2);
           targetCtx.fill();
 
           targetCtx.beginPath();
-          targetCtx.arc(prev.x,prev.y,h0*.54,0,Math.PI*2);
+          targetCtx.arc(prev.x,prev.y,h0*.72,0,Math.PI*2);
           targetCtx.fill();
         }
       }
@@ -7165,7 +7172,7 @@
   function simplifyCommittedInk(pts){
     if(!Array.isArray(pts) || pts.length<4) return Array.isArray(pts)?pts.slice():[];
 
-    const minDistance=Math.max(.30,.42/Math.max(.35,viewZoom));
+    const minDistance=Math.max(.18,.26/Math.max(.35,viewZoom));
     const filtered=[pts[0]];
     let last=pts[0];
 
@@ -7174,7 +7181,7 @@
       const d=Math.hypot(p.x-last.x,p.y-last.y);
       const p0=Number.isFinite(Number(last.pressure)) ? Number(last.pressure) : .5;
       const p1=Number.isFinite(Number(p.pressure)) ? Number(p.pressure) : .5;
-      const pressureChanged=Math.abs(p1-p0)>=.035;
+      const pressureChanged=Math.abs(p1-p0)>=.025;
 
       if(d>=minDistance || pressureChanged){
         filtered.push(p);
@@ -7188,7 +7195,7 @@
     // objects, so pressure/time/input metadata remains intact.
     if(filtered.length<8) return filtered;
 
-    const epsilon=Math.max(.16,.24/Math.max(.4,viewZoom));
+    const epsilon=Math.max(.08,.12/Math.max(.4,viewZoom));
     const reduced=simplifyRDP(filtered,epsilon);
 
     // RDP can remove a point whose main information is pressure rather than
@@ -7199,7 +7206,7 @@
       const pa=Number.isFinite(Number(a.pressure))?Number(a.pressure):.5;
       const pp=Number.isFinite(Number(p.pressure))?Number(p.pressure):.5;
       const pb=Number.isFinite(Number(b.pressure))?Number(b.pressure):.5;
-      if(Math.abs(pp-pa)>=.055 || Math.abs(pb-pp)>=.055) keep.add(p);
+      if(Math.abs(pp-pa)>=.035 || Math.abs(pb-pp)>=.035) keep.add(p);
     }
 
     return filtered.filter(p=>keep.has(p));
