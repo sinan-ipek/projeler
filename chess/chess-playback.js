@@ -39,17 +39,14 @@ function refresh(){
  count.textContent=(live?last:index)+" / "+last;
  buttons.first.disabled=last===0||index===0;
  buttons.prev.disabled=last===0||index===0;
- buttons.next.disabled=last===0||(index>=last);
- buttons.last.disabled=last===0||(index>=last);
- buttons.live.disabled=true;
- buttons.live.hidden=true;
+ buttons.next.disabled=last===0||index<0||index>=last;
+ buttons.last.disabled=last===0||index<0||index>=last;
  buttons.play.disabled=last===0;
  buttons.play.textContent=isPlaying?"⏸":"▶";
  const names=lang();
- for(const [act,key] of [["first","start"],["prev","back"],["next","next"],["last","end"],["live","live"]]){buttons[act].title=names[key];buttons[act].setAttribute("aria-label",names[key]);}
+ for(const [act,key] of [["first","start"],["prev","back"],["next","next"],["last","end"]]){buttons[act].title=names[key];buttons[act].setAttribute("aria-label",names[key]);}
  buttons.play.title=isPlaying?names.pause:names.play;
  buttons.play.setAttribute("aria-label",buttons.play.title);
- buttons.live.textContent=names.live;
 }
 function seek(n){const last=positions().length-1;if(n>=last){goLive();return;}index=Math.max(0,n);refresh();}
 function goLive(){stop();index=-1;refresh();}
