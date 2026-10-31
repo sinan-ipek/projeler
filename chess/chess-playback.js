@@ -26,7 +26,7 @@ function renderPosition(fen){
  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
   const f=whiteBottom?c:7-c,rank=whiteBottom?7-r:r,id="abcdefgh"[f]+(rank+1);
   const light=(f+rank)%2===1,p=pieces[id];
-  html+='<div class="playback-square" style="background:'+(light?"var(--sq-light,#eee)":"var(--sq-dark,#aaa)")+'">'+(p&&window.ChessPieceSVG?window.ChessPieceSVG(p):"")+"</div>";
+  html+='<div class="playback-square" style="background:'+(light?"var(--sq-light,#eee)":"var(--sq-dark,#aaa)")+'">'+(p&&window.ChessPieceSVG?'<span class="piece "+(p===p.toUpperCase()?"w":"b")+'">'+window.ChessPieceSVG(p)+"</span>":"")+"</div>";
  }
  layer.innerHTML=html;
 }
