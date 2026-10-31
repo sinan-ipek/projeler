@@ -1,36 +1,41 @@
 (()=>{"use strict";
 const board=document.getElementById("board"),status=document.getElementById("statusBox");
 if(!board||!status)return;
-const wrap=board.closest(".boardWrap");if(!wrap)return;
-let shown=false,overlay=null,marked=null;
-function clear(){shown=false;if(overlay){overlay.remove();overlay=null;}if(marked){marked.classList.remove("chess-mated-square");marked=null;}}
-function lang(){return document.getElementById("simpleLang")?.value||"tr";}
+let active=false,kingSquare=null,bubble=null,run=0;
+function clear(){run++;active=false;kingSquare?.classList.remove("chess-mated-square");kingSquare=null;bubble?.remove();bubble=null;}
+function isMate(){return /ŞAH MAT|CHECKMATE|SCHACHMATT/i.test(status.textContent||"");}
+function findKing(side){
+ return [...board.querySelectorAll(".sq")].find(sq=>{
+  const piece=sq.querySelector(".piece."+side);if(!piece)return false;
+  const img=piece.querySelector("img");if(img&&/[\\/]([wb])K\.svg(?:[?#]|$)/i.test(img.getAttribute("src")||""))return true;
+  return piece.textContent?.trim()===(side==="w"?"♔":"♚");
+ })||null;
+}
+function placeBubble(){
+ if(!kingSquare||!bubble)return;
+ const a=kingSquare.getBoundingClientRect(),b=board.getBoundingClientRect();
+ const x=a.left-b.left+a.width/2,y=a.top-b.top;
+ bubble.style.left=Math.max(35,Math.min(b.width-35,x))+"px";
+ bubble.style.top=Math.max(4,y-9)+"px";
+}
 function check(){
- const text=status.textContent||"";
- const mate=/ŞAH MAT|CHECKMATE|SCHACHMATT/i.test(text);
- if(!mate){if(shown)clear();return;}
- if(shown)return;
- shown=true;
- // Wait until the final moving-piece animation has finished.
+ if(!isMate()){if(active)clear();return;}
+ if(active)return;
+ active=true;const ticket=++run;
+ // Allow the final move animation to settle before the king falls.
  setTimeout(()=>{
-  if(!shown||!/ŞAH MAT|CHECKMATE|SCHACHMATT/i.test(status.textContent||""))return;
-  const winnerWhite=/Beyaz kazandı|White won|Weiß gewinnt/i.test(text);
-  const loser=winnerWhite?"b":"w";
-  // Identify the mated king by its accessible SVG artwork image.
-  const squares=[...board.querySelectorAll(".sq")];
-  marked=squares.find(sq=>{const img=sq.querySelector(".piece."+loser+" img");return img&&/\/([wb])K\.svg(?:$|\?)/i.test(img.getAttribute("src")||"");})||null;
-  if(!marked){const pieces=[...board.querySelectorAll(".sq .piece."+loser)];const king=pieces.find(p=>p.querySelector("svg")&&p.parentElement?.dataset.sq);if(king)marked=king.closest(".sq");}
-  marked?.classList.add("chess-mated-square");
-  overlay=document.createElement("div");overlay.className="chess-mate-overlay";overlay.setAttribute("aria-live","polite");
-  const title=document.createElement("div");title.className="chess-mate-title";
-  const t=lang();const name=t==="de"?"SCHACHMATT":t==="en"?"CHECKMATE":"ŞAH MAT!";
-  const winner=t==="de"?(winnerWhite?"Weiß gewinnt":"Schwarz gewinnt"):t==="en"?(winnerWhite?"White wins":"Black wins"):(winnerWhite?"Beyaz kazandı":"Siyah kazandı");
-  title.append(document.createTextNode(name));const sub=document.createElement("small");sub.textContent=winner;title.append(sub);overlay.append(title);wrap.append(overlay);
-  // Leave the board fully visible after the announcement.
-  setTimeout(()=>{if(overlay){overlay.style.transition="opacity 1.2s ease";overlay.style.opacity="0";setTimeout(()=>{overlay?.remove();overlay=null;},1250);}},3400);
- },900);
+  if(ticket!==run||!isMate())return;
+  const winnerWhite=/Beyaz kazandı|White won|Weiß gewinnt/i.test(status.textContent||"");
+  kingSquare=findKing(winnerWhite?"b":"w");
+  if(!kingSquare)return;
+  kingSquare.classList.add("chess-mated-square");
+  bubble=document.createElement("div");bubble.className="chess-mate-bubble";bubble.textContent="Mat!";
+  bubble.setAttribute("role","status");bubble.setAttribute("aria-label","Mat!");
+  board.appendChild(bubble);placeBubble();
+ },950);
 }
 new MutationObserver(check).observe(status,{childList:true,characterData:true,subtree:true});
-new MutationObserver(()=>{if(shown&&!/ŞAH MAT|CHECKMATE|SCHACHMATT/i.test(status.textContent||""))clear();}).observe(board,{childList:true,subtree:true});
+new MutationObserver(()=>{if(active&&!isMate())clear();}).observe(board,{childList:true,subtree:true});
+window.addEventListener("resize",placeBubble);
 check();
 })();
