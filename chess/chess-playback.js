@@ -9,7 +9,7 @@ de:{start:"Anfang",back:"Zurück",play:"Abspielen",pause:"Pause",next:"Weiter",e
 en:{start:"First position",back:"Previous move",play:"Play",pause:"Pause",next:"Next move",end:"Last position",live:"Go Live",moves:"moves"}};
 const lang=()=>tr[document.getElementById("simpleLang")?.value]||tr.tr;
 const controls=document.getElementById("chessPlaybackControls")||document.createElement("div");controls.className="chess-playback-controls";
-controls.innerHTML='<button type="button" data-act="first" aria-label="İlk konum" title="İlk konum">⏮</button><button type="button" data-act="prev" aria-label="Önceki hamle" title="Önceki hamle">◀</button><button type="button" data-act="play" aria-label="Oynat" title="Oynat">▶</button><button type="button" data-act="next" aria-label="Sonraki hamle" title="Sonraki hamle">▶|</button><button type="button" data-act="last" aria-label="Son konum" title="Son konum">⏭</button><span class="playback-count" aria-live="polite"></span><button type="button" class="playback-live" data-act="live">Canlıya Dön</button>';
+controls.innerHTML='<button type="button" data-act="first" aria-label="İlk konum" title="İlk konum">⏮</button><button type="button" data-act="prev" aria-label="Önceki hamle" title="Önceki hamle">◀</button><button type="button" data-act="play" aria-label="Oynat" title="Oynat">▶</button><button type="button" data-act="next" aria-label="Sonraki hamle" title="Sonraki hamle">▶|</button><button type="button" data-act="last" aria-label="Son konum" title="Son konum">⏭</button><span class="playback-count" aria-live="polite"></span>';
 if(!controls.isConnected)wrap.insertAdjacentElement("afterend",controls);
 const buttons=Object.fromEntries([...controls.querySelectorAll("button")].map(b=>[b.dataset.act,b]));
 const count=controls.querySelector(".playback-count");
@@ -72,5 +72,6 @@ observer.observe(moves,{childList:true,subtree:true,characterData:true});
 document.getElementById("btnFlip")?.addEventListener("click",()=>setTimeout(refresh,30));
 document.getElementById("simpleLang")?.addEventListener("change",refresh);
 window.addEventListener("keydown",e=>{if(e.target instanceof HTMLElement&&/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(e.key==="ArrowLeft"){stop();seek((index<0?positions().length-1:index)-1);}if(e.key==="ArrowRight"){stop();seek((index<0?positions().length-1:index)+1);}});
+window.ChessPlayback={openStart(){stop();index=0;known=api.moves().map(m=>m.uci).join(",");refresh();},goEnd(){goLive();}};
 known=api.moves().map(m=>m.uci).join(",");refresh();
 })();
