@@ -41,8 +41,8 @@ function refresh(){
  buttons.prev.disabled=last===0||index===0;
  buttons.next.disabled=last===0||(index>=last);
  buttons.last.disabled=last===0||(index>=last);
- buttons.live.disabled=live;
- buttons.live.hidden=live;
+ buttons.live.disabled=true;
+ buttons.live.hidden=true;
  buttons.play.disabled=last===0;
  buttons.play.textContent=isPlaying?"⏸":"▶";
  const names=lang();
