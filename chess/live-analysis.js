@@ -7,7 +7,7 @@ const F="abcdefgh",VAL={p:1,n:3,b:3,r:5,q:9,k:99};
 const side=p=>p===p.toUpperCase()?"w":"b",opp=s=>s==="w"?"b":"w",kd=p=>p.toLowerCase(),val=p=>VAL[kd(p)];
 let nextFenFn=(fen,uci)=>root.ChessReview?root.ChessReview.nextFen(fen,uci):null;
 const cap=(s,l)=>s.charAt(0).toLocaleUpperCase(l)+s.slice(1);
-const trPiece=(x,form)=>{const n={piyon:["piyonu","piyonuna","piyonun"],at:["atı","atına","atın"],fil:["fili","filine","filin"],kale:["kalesi","kalesine","kalen"],vezir:["veziri","vezirine","vezirin"],şah:["şahı","şahına","şahın"]};return (n[String(x).toLocaleLowerCase("tr")]||[])[form]||x;};
+const trPiece=(x,form)=>{const n={piyon:["piyonu","piyonuna","piyonun"],at:["atı","atına","atın"],fil:["fili","filine","filin"],kale:["kalesini","kalesine","kalen"],vezir:["veziri","vezirine","vezirin"],şah:["şahı","şahına","şahın"]};return (n[String(x).toLocaleLowerCase("tr")]||[])[form]||x;};
 
 const L={
 tr:{names:{p:"piyon",n:"at",b:"fil",r:"kale",q:"vezir",k:"şah"},
