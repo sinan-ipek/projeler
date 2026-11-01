@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.0</title>
+<title>Beyaz Tahta v18.1</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1078,7 +1078,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.0 · Bézier dolma kalem</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.1 · Bézier dolma kalem düzenleme</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -4372,14 +4372,7 @@
       return bbox(pts);
     }
 
-    if(o.kind==='bezier'){
-      for(const a of (o.anchors||[])){
-        a.x+=dx;a.y+=dy;
-        if(finitePoint(a.in)){a.in.x+=dx;a.in.y+=dy;}
-        if(finitePoint(a.out)){a.out.x+=dx;a.out.y+=dy;}
-      }
-      normalizeBezierCenter(o);
-    }else if(o.kind==='line'){
+    if(o.kind==='line'){
       const minX=Math.min(o.a.x,o.b.x), maxX=Math.max(o.a.x,o.b.x);
       const minY=Math.min(o.a.y,o.b.y), maxY=Math.max(o.a.y,o.b.y);
       return {x:minX,y:minY,w:maxX-minX,h:maxY-minY,cx:(minX+maxX)/2,cy:(minY+maxY)/2};
@@ -5952,6 +5945,17 @@
       o.rotationPivot=scalePt(o.rotationPivot);
     }
 
+    if(o.kind==='bezier'){
+      for(const a of (o.anchors||[])){
+        const ap=scalePt(a);
+        a.x=ap.x;a.y=ap.y;
+        if(finitePoint(a.in)) a.in=scalePt(a.in);
+        if(finitePoint(a.out)) a.out=scalePt(a.out);
+      }
+      normalizeBezierCenter(o);
+      return;
+    }
+
     if(o.kind==='line'){
       o.a=scalePt(o.a);
       o.b=scalePt(o.b);
@@ -6299,16 +6303,38 @@
     }
 
     if(special.length){
+      if(selected.kind==='bezier'){
+        ctx.save();
+        ctx.strokeStyle='rgba(37,99,235,.55)';
+        ctx.lineWidth=1/viewZoom;
+        ctx.setLineDash([]);
+        (selected.anchors||[]).forEach((a,i)=>{
+          const hin=bezierHandlePoint(a,'in');
+          const hout=bezierHandlePoint(a,'out');
+          if(Math.hypot(hin.x-a.x,hin.y-a.y)>.01){
+            ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(hin.x,hin.y);ctx.stroke();
+          }
+          if(Math.hypot(hout.x-a.x,hout.y-a.y)>.01){
+            ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(hout.x,hout.y);ctx.stroke();
+          }
+        });
+        ctx.restore();
+      }
+
       for(const hnd of special){
         ctx.beginPath();
         ctx.fillStyle=selectedHandleIs(hnd.name) ? '#2563eb' : 'white';
         ctx.strokeStyle='#2563eb';
-        const rr=hnd.name.startsWith('sqrt-') ? 7/viewZoom : 6/viewZoom;
-        ctx.arc(hnd.x,hnd.y,rr,0,Math.PI*2);
+
+        if(hnd.name.startsWith('bezier-anchor-')){
+          const s=6/viewZoom;
+          ctx.rect(hnd.x-s,hnd.y-s,s*2,s*2);
+        }else{
+          const rr=hnd.name.startsWith('sqrt-') ? 7/viewZoom : 5/viewZoom;
+          ctx.arc(hnd.x,hnd.y,rr,0,Math.PI*2);
+        }
         ctx.fill();
         ctx.stroke();
-
-
       }
     }else{
       const isTriangle=
@@ -6333,7 +6359,7 @@
     // Bounding-box resize handles
     const showBBoxHandles = (selected.kind==='arc' || selected.kind==='sector')
       ? false
-      : (selected.source==='menu' || !special.length);
+      : (selected.kind==='bezier' || selected.source==='menu' || !special.length);
     if(showBBoxHandles){
       for(const p of [oc.nw,oc.ne,oc.se,oc.sw]){
         ctx.beginPath();
@@ -6443,7 +6469,7 @@
     if(
       selected.kind!=='arc' &&
       selected.kind!=='sector' &&
-      (selected.source==='menu' || (!special.length && !isTriangle))
+      (selected.kind==='bezier' || selected.source==='menu' || (!special.length && !isTriangle))
     ){
       const entries=[
         ['nw',oc.nw],['ne',oc.ne],['se',oc.se],['sw',oc.sw]
@@ -6796,7 +6822,14 @@
       };
     }
 
-    if(o.kind==='line'){
+    if(o.kind==='bezier'){
+      for(const a of (o.anchors||[])){
+        a.x+=dx;a.y+=dy;
+        if(finitePoint(a.in)){a.in.x+=dx;a.in.y+=dy;}
+        if(finitePoint(a.out)){a.out.x+=dx;a.out.y+=dy;}
+      }
+      normalizeBezierCenter(o);
+    }else if(o.kind==='line'){
       o.a.x+=dx;o.a.y+=dy;o.b.x+=dx;o.b.y+=dy;
     }else if(o.kind==='arc' || o.kind==='sector'){
       o.center.x+=dx;o.center.y+=dy;
@@ -6866,7 +6899,7 @@
     if(shapeName!==undefined) o.shapeName=shapeName;
   }
 
-  function moveMenuHandleFromSnapshot(o,snap,handle,p,lockArcRadius=false){
+  function moveMenuHandleFromSnapshot(o,snap,handle,p,lockArcRadius=false,breakBezierHandle=false){
     if(!o || !snap) return false;
 
     if(snap.kind==='bezier' && handle.startsWith('bezier-')){
@@ -6884,6 +6917,7 @@
         if(finitePoint(a.out)){a.out.x+=dx;a.out.y+=dy;}
       }else if(type==='in' || type==='out'){
         a[type]={x:p.x,y:p.y};
+        if(breakBezierHandle) a.broken=true;
         if(!a.broken){
           const other=type==='in'?'out':'in';
           const dx=p.x-a.x,dy=p.y-a.y;
@@ -9303,9 +9337,22 @@
         : bezierDraftIndex;
       let o=(idx>=0)?objects[idx]:null;
 
-      // Existing selected Bézier: anchor click deletes it.
       if(o && o.kind==='bezier'){
         const ah=bezierAnchorHit(o,p,hitR);
+
+        // Photoshop behavior: first anchor closes an open path.
+        if(!o.closed && o.anchors.length>=3 && ah===0){
+          saveState();
+          o.closed=true;
+          normalizeBezierCenter(o);
+          markBoardDirty();
+          setSelection([idx]);
+          redraw();
+          statusEl.textContent='Bézier kapatıldı — dolgu uygulanabilir';
+          return;
+        }
+
+        // Other existing anchors are removed.
         if(ah>=0){
           if(o.anchors.length>2){
             saveState();
@@ -9316,18 +9363,6 @@
             redraw();
             statusEl.textContent='Bézier noktası silindi';
           }
-          return;
-        }
-
-        // Clicking first point closes an open path.
-        if(!o.closed && o.anchors.length>=3 && Math.hypot(p.x-o.anchors[0].x,p.y-o.anchors[0].y)<=hitR*1.25){
-          saveState();
-          o.closed=true;
-          normalizeBezierCenter(o);
-          markBoardDirty();
-          setSelection([idx]);
-          redraw();
-          statusEl.textContent='Bézier kapatıldı — dolgu uygulanabilir';
           return;
         }
 
@@ -10334,7 +10369,8 @@
           selectSnapshot,
           String(activeHandle),
           pointTarget,
-          isArcEndpoint && e.shiftKey
+          isArcEndpoint && e.shiftKey,
+          !!e.altKey
         );
 
         // Backward compatibility: auto-recognized triangle still uses vertex editing.
@@ -12129,7 +12165,8 @@
       eraserKind,
       eraserRadius,
       fillActive:fillBtn.classList.contains('active'),
-      textActive:textBtn.classList.contains('active')
+      textActive:textBtn.classList.contains('active'),
+      penActive:penBtn.classList.contains('active')
     };
   }
 
@@ -12141,6 +12178,7 @@
     eraserRadius=snapshot.eraserRadius;
 
     inkBtn.classList.toggle('active',mode==='ink');
+    penBtn.classList.toggle('active',mode==='pen');
     selectBtn.classList.toggle('active',mode==='select');
     eraserBtn.classList.toggle('active',mode==='eraser');
     fillBtn.classList.toggle('active',mode==='fill');
