@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.5</title>
+<title>Beyaz Tahta v18.6</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1078,7 +1078,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.5 · Ok aracıyla tam Bézier düzenleme</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.6 · Bézier lokal scale düzeltmesi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -5193,33 +5193,6 @@
       return true;
     }
 
-    if(snap.kind==='bezier'){
-      const oldBox=orientedSelectionBox(snap);
-      if(!oldBox) return false;
-      const mapPt=pt=>{
-        const lv=worldToLocal(oldBox,pt);
-        const nx=(lv.x-oldBox.minX)*sx+usedMinX;
-        const ny=(lv.y-oldBox.minY)*sy+usedMinY;
-        return localToWorld(oldBox,{x:nx,y:ny});
-      };
-      o.anchors=(snap.anchors||[]).map(a=>{
-        const ap=mapPt(a);
-        return {
-          ...JSON.parse(JSON.stringify(a)),
-          x:ap.x,y:ap.y,
-          in:finitePoint(a.in)?mapPt(a.in):{x:ap.x,y:ap.y},
-          out:finitePoint(a.out)?mapPt(a.out):{x:ap.x,y:ap.y}
-        };
-      });
-      o.closed=!!snap.closed;
-      o.style=JSON.parse(JSON.stringify(snap.style||{}));
-      o.fillColor=snap.fillColor;
-      o.fillOpacity=snap.fillOpacity;
-      o.source='pen';
-      normalizeBezierCenter(o);
-      return true;
-    }
-
     if(snap.kind==='rect'){
       const verts=rectWorldVertices(snap);
       let changed=false;
@@ -7406,6 +7379,42 @@
       y:(usedMinY+usedMaxY)/2
     };
     const newCenter=localToWorld(box,localCenter);
+
+    if(snap.kind==='bezier'){
+      const oldBox=box;
+
+      const mapPt=pt=>{
+        const lv=worldToLocal(oldBox,pt);
+        const nx=(lv.x-oldBox.minX)*sx + usedMinX;
+        const ny=(lv.y-oldBox.minY)*sy + usedMinY;
+        return localToWorld(oldBox,{x:nx,y:ny});
+      };
+
+      o.anchors=(snap.anchors||[]).map(a=>{
+        const ap=mapPt(a);
+        return {
+          ...cloneObject(a),
+          x:ap.x,
+          y:ap.y,
+          in:finitePoint(a.in) ? mapPt(a.in) : {x:ap.x,y:ap.y},
+          out:finitePoint(a.out) ? mapPt(a.out) : {x:ap.x,y:ap.y}
+        };
+      });
+
+      o.closed=!!snap.closed;
+      o.style=cloneObject(snap.style||{});
+      o.fillColor=snap.fillColor;
+      o.fillOpacity=snap.fillOpacity;
+      o.source='pen';
+      o.boxAngle=Number.isFinite(snap.boxAngle) ? snap.boxAngle : 0;
+
+      if(finitePoint(snap.rotationPivot)){
+        o.rotationPivot=mapPt(snap.rotationPivot);
+      }
+
+      normalizeBezierCenter(o);
+      return true;
+    }
 
     if(snap.kind==='rect'){
       o.center=newCenter;
