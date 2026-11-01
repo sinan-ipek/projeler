@@ -14,22 +14,39 @@ function dateName(d){return pad(d.getDate())+"."+pad(d.getMonth()+1)+"."+d.getFu
 function clean(s){return s.replace(/[\\/:*?"<>|\x00-\x1f]/g,"-").trim().slice(0,90).replace(/\.+$/,"")||"Oyun";}
 function headerValue(s){return String(s).replace(/[\\"]/g," ").replace(/[\r\n]/g," ").slice(0,150);}
 function makePGN(name,body,d){const date=d.getFullYear()+"."+pad(d.getMonth()+1)+"."+pad(d.getDate());const headers={Event:name,Site:"Chess Teacher",Date:date,Round:"?",White:"White",Black:"Black",Result:"*"};return Object.entries(headers).map(([k,v])=>"["+k+" \""+headerValue(v)+"\"]").join("\n")+"\n\n"+body.trim()+" *\n";}
-async function savePGN(){
+function savePGN(){
  const body=api.exportPGN();
  if(!body.trim()){notice(T().empty);return;}
  const d=new Date(),defaultName=dateName(d)+".01";
- const entered=prompt(T().name,defaultName);if(entered===null)return;
- const name=clean(entered.trim()||defaultName),filename=name+".pgn",text=makePGN(name,body,d);
- try{
-  if(typeof window.showSaveFilePicker==="function"){
-   const handle=await window.showSaveFilePicker({suggestedName:filename,types:[{description:"PGN Chess Game",accept:{"application/x-chess-pgn":[".pgn"]}}]});
-   const writable=await handle.createWritable();await writable.write(text);await writable.close();
-  }else{
-   const blob=new Blob([text],{type:"application/x-chess-pgn;charset=utf-8"}),url=URL.createObjectURL(blob);
-   const a=document.createElement("a");a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
-  }
-  notice(T().saved+" "+filename);
- }catch(e){if(e?.name!=="AbortError")notice(T().error+e.message);}
+ const extra=$("simpleExtra");if(!extra)return;
+ extra.classList.add("open");extra.replaceChildren();
+ const label=document.createElement("label");label.textContent=T().name;
+ label.style.cssText="display:block;font-size:14px;margin-bottom:7px";
+ const nameInput=document.createElement("input");nameInput.type="text";nameInput.value=defaultName;
+ nameInput.style.cssText="display:block;width:100%;max-width:450px;box-sizing:border-box;padding:10px;margin-bottom:12px;border:1px solid #aaa;border-radius:6px;font:inherit";
+ const submit=document.createElement("button");submit.type="button";submit.textContent=lang()==="tr"?"Dosyayı kaydet":lang()==="de"?"Datei speichern":"Save file";
+ submit.style.cssText="padding:9px 16px;border:1px solid #888;border-radius:7px;cursor:pointer";
+ const cancel=document.createElement("button");cancel.type="button";cancel.textContent=lang()==="tr"?"İptal":lang()==="de"?"Abbrechen":"Cancel";
+ cancel.style.cssText="padding:9px 16px;margin-left:8px;border:1px solid #bbb;border-radius:7px;cursor:pointer";
+ cancel.onclick=()=>extra.classList.remove("open");
+ extra.append(label,nameInput,submit,cancel);
+ const doSave=async()=>{
+  const name=clean(nameInput.value.trim()||defaultName),filename=name+".pgn",content=makePGN(name,body,d);
+  try{
+   if(typeof window.showSaveFilePicker==="function"){
+    // This call MUST happen synchronously in the button click handler.
+    const handle=await window.showSaveFilePicker({suggestedName:filename,types:[{description:"PGN Chess Game",accept:{"application/x-chess-pgn":[".pgn"]}}]});
+    const writable=await handle.createWritable();await writable.write(content);await writable.close();
+   }else{
+    const blob=new Blob([content],{type:"application/x-chess-pgn;charset=utf-8"}),url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
+   }
+   notice(T().saved+" "+filename);
+  }catch(e){if(e?.name!=="AbortError")notice(T().error+e.message);}
+ };
+ submit.onclick=doSave;
+ nameInput.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submit.click();}});
+ nameInput.focus();nameInput.select();
 }
 const input=document.createElement("input");input.type="file";input.accept=".pgn,application/x-chess-pgn,text/plain";input.style.display="none";document.body.append(input);
 async function openFile(file){
