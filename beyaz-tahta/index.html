@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.9</title>
+<title>Beyaz Tahta v18.10</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -794,7 +794,16 @@
     </button>
 
     <div class="selectToolWrap">
-      <button id="selectBtn" class="iconBtn" title="Seç" aria-label="Seç">↖</button>
+      <button id="selectBtn" class="iconBtn" title="Seç" aria-label="Seç">
+        <svg id="selectBtnIcon" viewBox="0 0 24 24" aria-hidden="true">
+          <path id="selectBtnIconShaft" d="M5 19 18 6"
+                fill="none" stroke="currentColor" stroke-width="2.1"
+                stroke-linecap="round"/>
+          <path id="selectBtnIconHead" d="M12 6h6v6"
+                fill="none" stroke="currentColor" stroke-width="2.1"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
       <div id="selectModeMenu" role="menu" aria-label="Seçim dikdörtgeni modu">
         <button id="selectContainBtn" type="button" title="Tam seçim" aria-label="Tam seçim">
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1133,7 +1142,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.9 · Seçim alt menüsü ve Bézier +/− imleci</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.10 · Seçim oku moda göre solid/dotted</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1338,6 +1347,8 @@
   const inkBtn = document.getElementById('inkBtn');
   const penBtn = document.getElementById('penBtn');
   const selectBtn = document.getElementById('selectBtn');
+  const selectBtnIconShaft = document.getElementById('selectBtnIconShaft');
+  const selectBtnIconHead = document.getElementById('selectBtnIconHead');
   const selectModeMenu = document.getElementById('selectModeMenu');
   const selectContainBtn = document.getElementById('selectContainBtn');
   const selectIntersectBtn = document.getElementById('selectIntersectBtn');
@@ -12690,9 +12701,18 @@
     const partial=marqueeSelectionMode==='intersect';
     selectContainBtn.classList.toggle('active',!partial);
     selectIntersectBtn.classList.toggle('active',partial);
+
+    const dash=partial ? '2.2 2.2' : '';
+    selectBtnIconShaft.setAttribute('stroke-dasharray',dash);
+    selectBtnIconHead.setAttribute('stroke-dasharray',dash);
+
     selectBtn.title=partial
       ? 'Seç — kısmi seçim modu'
       : 'Seç — tam seçim modu';
+    selectBtn.setAttribute(
+      'aria-label',
+      partial ? 'Seç — kısmi seçim' : 'Seç — tam seçim'
+    );
   }
 
   function closeSelectModeMenu(){
