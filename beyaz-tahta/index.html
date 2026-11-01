@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.14</title>
+<title>Beyaz Tahta v18.15</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1142,7 +1142,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.14 · Fonksiyonlar 3 anchor Bézier ile sadeleştirildi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.15 · sin x 5 anchor Bézier</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -13409,16 +13409,53 @@
     if(type==='sinx'){
       const halfW=150*scale;
       const amp=65*scale;
-      return threeAnchorFunctionBezier({
-        u0:-Math.PI,
-        u1:Math.PI,
-        valueAt:u=>Math.sin(u),
-        derivativeAt:u=>Math.cos(u),
-        worldXAt:u=>cx+(u/Math.PI)*halfW,
-        worldYAt:v=>cy-v*amp,
+      const us=[
+        -Math.PI,
+        -Math.PI/2,
+        0,
+        Math.PI/2,
+        Math.PI
+      ];
+
+      const worldX=u=>cx+(u/Math.PI)*halfW;
+      const worldY=u=>cy-Math.sin(u)*amp;
+      const slope=u=>{
+        const dxdu=halfW/Math.PI;
+        const dydu=-Math.cos(u)*amp;
+        return dydu/dxdu;
+      };
+
+      const anchors=us.map(u=>({
+        x:worldX(u),
+        y:worldY(u),
+        in:{x:worldX(u),y:worldY(u)},
+        out:{x:worldX(u),y:worldY(u)},
+        broken:false
+      }));
+
+      for(let i=0;i<anchors.length-1;i++){
+        const a=anchors[i];
+        const b=anchors[i+1];
+        const dx=(b.x-a.x)/3;
+        const m0=slope(us[i]);
+        const m1=slope(us[i+1]);
+
+        a.out={
+          x:a.x+dx,
+          y:a.y+m0*dx
+        };
+        b.in={
+          x:b.x-dx,
+          y:b.y-m1*dx
+        };
+      }
+
+      return makeBezierShape(anchors,{
+        closed:false,
         style,
         shapeType:'sin x',
-        source:'menu'
+        source:'menu',
+        boxAngle:0
       });
     }
 
