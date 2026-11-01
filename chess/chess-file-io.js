@@ -33,14 +33,12 @@ function savePGN(){
  const doSave=async()=>{
   const name=clean(nameInput.value.trim()||defaultName),filename=name+".pgn",content=makePGN(name,body,d);
   try{
-   if(typeof window.showSaveFilePicker==="function"){
-    // This call MUST happen synchronously in the button click handler.
-    const handle=await window.showSaveFilePicker({suggestedName:filename,types:[{description:"PGN Chess Game",accept:{"application/x-chess-pgn":[".pgn"]}}]});
-    const writable=await handle.createWritable();await writable.write(content);await writable.close();
-   }else{
-    const blob=new Blob([content],{type:"application/x-chess-pgn;charset=utf-8"}),url=URL.createObjectURL(blob);
-    const a=document.createElement("a");a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
-   }
+   const blob=new Blob([content],{type:"application/x-chess-pgn;charset=utf-8"});
+   const url=URL.createObjectURL(blob);
+   const a=document.createElement("a");
+   a.href=url;a.download=filename;
+   document.body.append(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),10000);
    notice(T().saved+" "+filename);
   }catch(e){if(e?.name!=="AbortError")notice(T().error+e.message);}
  };
