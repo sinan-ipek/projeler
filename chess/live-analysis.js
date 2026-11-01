@@ -7,25 +7,26 @@ const F="abcdefgh",VAL={p:1,n:3,b:3,r:5,q:9,k:99};
 const side=p=>p===p.toUpperCase()?"w":"b",opp=s=>s==="w"?"b":"w",kd=p=>p.toLowerCase(),val=p=>VAL[kd(p)];
 let nextFenFn=(fen,uci)=>root.ChessReview?root.ChessReview.nextFen(fen,uci):null;
 const cap=(s,l)=>s.charAt(0).toLocaleUpperCase(l)+s.slice(1);
+const trPiece=(x,form)=>{const n={piyon:["piyonu","piyonuna","piyonun"],at:["atı","atına","atın"],fil:["fili","filine","filin"],kale:["kalesi","kalesine","kalen"],vezir:["veziri","vezirine","vezirin"],şah:["şahı","şahına","şahın"]};return (n[String(x).toLocaleLowerCase("tr")]||[])[form]||x;};
 
 const L={
 tr:{names:{p:"piyon",n:"at",b:"fil",r:"kale",q:"vezir",k:"şah"},
  mate:n=>`Zorunlu mat var: ${n} hamlede mat verebilirsin.`,
  mateDef:n=>`Rakibin ${n} hamlede mat tehdidi var; bu hamle en iyi savunma.`,
  check:"Şah çekiyor ve rakibi cevap vermeye zorluyor.",
- capFree:x=>`Rakibin korumasız ${x} taşını bedavaya alıyor.`,
- capWin:(x,n)=>`Rakibin ${x} taşını alıyor; rakip geri alsa bile net +${n} puan kazanırsın.`,
+ capFree:x=>`Rakibin korumasız ${trPiece(x,0)} bedavaya alıyor.`,
+ capWin:(x,n)=>`Rakibin ${trPiece(x,0)} alıyor; rakip geri alsa bile net +${n} puan kazanırsın.`,
  capTrade:x=>`Rakibin ${x} taşıyla eşit takas yapıyor.`,
- save:x=>`Tehdit altındaki ${x} taşını kurtarıyor.`,
- fork:(a,b)=>`Çatal: aynı anda rakibin ${a} ve ${b} taşına saldırıyor.`,
- threat:x=>`Rakibin ${x} taşına saldırı tehdidi oluşturuyor.`,
+ save:x=>`Tehdit altındaki ${trPiece(x,0)} kurtarıyor.`,
+ fork:(a,b)=>`Çatal: aynı anda rakibin ${trPiece(a,1)} ve ${trPiece(b,1)} saldırıyor.`,
+ threat:x=>`Rakibin ${trPiece(x,1)} saldırı tehdidi oluşturuyor.`,
  pvWin:(d,n)=>`Önerilen devam, ${Math.ceil(n/2)} hamle içinde yaklaşık ${d} puanlık materyal kazandırıyor.`,
  promo:"Piyonu terfi ettiriyor.",
  castle:"Şahı güvene alıyor ve kaleyi oyuna sokuyor.",
- develop:x=>`${cap(x,"tr")} taşını oyuna sokuyor (gelişim).`,
+ develop:x=>`${cap(trPiece(x,0),"tr")} oyuna sokuyor (gelişim).`,
  center:"Merkezi kontrol ediyor.",
- hang:(x,sq)=>`${x} (${sq}) saldırı altında ve korunmuyor.`,
- hangShort:(x,sq,n)=>`${x} (${sq}) saldırı altında ve korumalar yetmiyor (takasta yaklaşık ${n} puan kaybedersin).`},
+ hang:(x,sq)=>`${cap(x,"tr")} (${sq}) saldırı altında ve korunmuyor.`,
+ hangShort:(x,sq,n)=>`${cap(x,"tr")} (${sq}) saldırı altında ve korumalar yetmiyor (takasta yaklaşık ${n} puan kaybedersin).`},
 en:{names:{p:"pawn",n:"knight",b:"bishop",r:"rook",q:"queen",k:"king"},
  mate:n=>`Forced mate: you can checkmate in ${n}.`,
  mateDef:n=>`The opponent threatens mate in ${n}; this is the best defence.`,
@@ -157,7 +158,7 @@ function threats(fen,player,lang){
  }catch(e){return [];}
 }
 
-const api={bestMoveReasons,threats,see,loss,parseFen,setNextFen(fn){nextFenFn=fn;}};
+const api={bestMoveReasons,threats,see,loss,parseFen,trPiece,setNextFen(fn){nextFenFn=fn;}};
 root.ChessExplain=api;
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 })();
@@ -166,7 +167,7 @@ const api=window.ChessReview,engine=window.ChessStockfish,extra=document.getElem
 if(!api||!engine||!extra||!movesEl)return;
 const lang=()=>document.getElementById("simpleLang")?.value||"tr";
 const words={
-tr:{title:"Satranç Öğretmeni",wait:"İlk hamleyi bekliyorum.",thinking:"Konumu inceliyorum…",error:"Stockfish başlatılamadı",retry:"Yeniden dene",score:"Stockfish puanı",best:"Stockfish önerisi",threat:"Dikkat",reason:"Neden?",line:"Olası devamı göster",noReason:"Bu önerinin basit ve doğrulanabilir bir gerekçesini bulamadım.",check:"Şahın tehdit altında. Önce şahı kurtarmalısın.",checkOther:"Rakibin şahı tehdit altında.",capture:"Rakibin son hamlesi bir taş aldı.",attack:"Rakibin son hamlesi {piece} taşına saldırıyor.",loose:"{piece} taşın saldırı altında ve korunmuyor.",bestCapture:"Önerilen hamleyle {piece} taşını alabilirsin.",bestCheck:"Önerilen hamle şah çekiyor.",bestSafe:"Önerilen hamle tehdit altındaki {piece} taşını kurtarıyor.",better:"Motorun önerisi oynanan hamleden daha güçlü.",equal:"Bu hamle motorun ilk tercihidir.",good:"İyi hamle",inacc:"Küçük hata",mistake:"Hata",blunder:"Büyük hata",bestMove:"En iyi hamle",uncertain:"Motor değerlendirmesi",advWhite:"Beyaz avantajlı",advBlack:"Siyah avantajlı",balanced:"Konum dengeli",mate:"Zorunlu mat hesabı",pawn:"piyon",knight:"at",bishop:"fil",rook:"kale",queen:"vezir",king:"şah",you:"senin",opponent:"rakibin",move:"Hamle",unknown:"Bu konumda kesin bir basit tehdit tespit edemedim."},
+tr:{title:"Satranç Öğretmeni",wait:"İlk hamleyi bekliyorum.",thinking:"Konumu inceliyorum…",error:"Stockfish başlatılamadı",retry:"Yeniden dene",score:"Stockfish puanı",best:"Stockfish önerisi",threat:"Dikkat",reason:"Neden?",line:"Olası devamı göster",noReason:"Bu önerinin basit ve doğrulanabilir bir gerekçesini bulamadım.",check:"Şahın tehdit altında. Önce şahı kurtarmalısın.",checkOther:"Rakibin şahı tehdit altında.",capture:"Rakibin son hamlesi bir taş aldı.",attack:"Rakibin son hamlesi {piece} saldırıyor.",loose:"{piece} saldırı altında ve korunmuyor.",bestCapture:"Önerilen hamleyle {piece} alabilirsin.",bestCheck:"Önerilen hamle şah çekiyor.",bestSafe:"Önerilen hamle tehdit altındaki {piece} kurtarıyor.",better:"Motorun önerisi oynanan hamleden daha güçlü.",equal:"Bu hamle motorun ilk tercihidir.",good:"İyi hamle",inacc:"Küçük hata",mistake:"Hata",blunder:"Büyük hata",bestMove:"En iyi hamle",uncertain:"Motor değerlendirmesi",advWhite:"Beyaz avantajlı",advBlack:"Siyah avantajlı",balanced:"Konum dengeli",mate:"Zorunlu mat hesabı",pawn:"piyon",knight:"at",bishop:"fil",rook:"kale",queen:"vezir",king:"şah",you:"senin",opponent:"rakibin",move:"Hamle",unknown:"Bu konumda kesin bir basit tehdit tespit edemedim."},
 de:{title:"Schachlehrer",wait:"Ich warte auf den ersten Zug.",thinking:"Ich untersuche die Stellung…",error:"Stockfish konnte nicht starten",retry:"Erneut versuchen",score:"Stockfish-Wertung",best:"Stockfish empfiehlt",threat:"Achtung",reason:"Warum?",line:"Variante zeigen",noReason:"Ich finde keine einfache, überprüfbare Erklärung für diesen Zug.",check:"Dein König steht im Schach.",checkOther:"Der gegnerische König steht im Schach.",capture:"Der Gegner hat eine Figur geschlagen.",attack:"Der letzte Zug greift deinen {piece} an.",loose:"Dein {piece} ist angegriffen und ungedeckt.",bestCapture:"Dieser Zug schlägt den gegnerischen {piece}.",bestCheck:"Dieser Zug gibt Schach.",bestSafe:"Dieser Zug rettet deinen {piece}.",better:"Die Engine bewertet die Alternative besser.",equal:"Das ist die erste Wahl der Engine.",good:"Guter Zug",inacc:"Ungenauigkeit",mistake:"Fehler",blunder:"Grober Fehler",bestMove:"Bester Zug",uncertain:"Engine-Bewertung",advWhite:"Weiß steht besser",advBlack:"Schwarz steht besser",balanced:"Ausgeglichene Stellung",mate:"Mattberechnung",pawn:"Bauer",knight:"Springer",bishop:"Läufer",rook:"Turm",queen:"Dame",king:"König",move:"Zug",unknown:"Keine unmittelbare einfache Drohung erkannt."},
 en:{title:"Chess Teacher",wait:"Waiting for the first move.",thinking:"Checking the position…",error:"Stockfish could not start",retry:"Retry",score:"Stockfish score",best:"Stockfish suggests",threat:"Watch out",reason:"Why?",line:"Show continuation",noReason:"I cannot verify a simple reason for this recommendation.",check:"Your king is in check. You must respond.",checkOther:"The opponent's king is in check.",capture:"The opponent just captured a piece.",attack:"The last move attacks your {piece}.",loose:"Your {piece} is attacked and undefended.",bestCapture:"This move captures the opponent's {piece}.",bestCheck:"This move gives check.",bestSafe:"This move saves your {piece}.",better:"The engine prefers the alternative.",equal:"This is the engine's top choice.",good:"Good move",inacc:"Inaccuracy",mistake:"Mistake",blunder:"Blunder",bestMove:"Best move",uncertain:"Engine evaluation",advWhite:"White is better",advBlack:"Black is better",balanced:"Balanced position",mate:"Forced mate calculation",pawn:"pawn",knight:"knight",bishop:"bishop",rook:"rook",queen:"queen",king:"king",move:"Move",unknown:"No simple immediate threat found."}};
 const T=()=>words[lang()]||words.tr;
@@ -184,7 +185,7 @@ const sx=Math.sign(dx),sy=Math.sign(dy);let x=files.indexOf(from[0])+sx,y=+from[
 while(files[x]+y!==to){if(b[files[x]+y])return false;x+=sx;y+=sy;if(x<0||x>7||y<1||y>8)return false;}return true;}
 function attackers(b,sq,team){return Object.keys(b).filter(from=>side(b[from])===team&&attacks(b,from,sq));}
 function findKing(b,team){return Object.keys(b).find(sq=>b[sq]===(team==="w"?"K":"k"));}
-function safeText(k,p){return T()[k].replace("{piece}",T()[kind(p)]||"");}
+function safeText(k,p){const word=T()[kind(p)]||"";const forms={attack:1,loose:2,bestCapture:0,bestSafe:0};return T()[k].replace("{piece}",lang()==="tr"&&forms[k]!==undefined?window.ChessExplain?.trPiece?.(word,forms[k])||word:word);}
 function renderBoard(fen,marks=[]){const root=document.getElementById("reviewBoard");if(!root)return;const b=parse(fen),map={K:"♔",Q:"♕",R:"♖",B:"♗",N:"♘",P:"♙",k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};let html="<div style='display:grid;grid-template-columns:repeat(8,minmax(0,1fr));border:1px solid #aaa;border-radius:3px;overflow:hidden'>";
 for(let r=8;r>=1;r--)for(let c=0;c<8;c++){const sq=files[c]+r,p=b[sq],mark=marks.find(m=>m.sq===sq),light=(c+r)%2===0;html+="<div title='"+sq+"' style='aspect-ratio:1;position:relative;display:grid;place-items:center;background:"+(mark?(mark.type==="danger"?"#e9a29a":"#e9cf73"):light?"var(--review-light,#eee)":"var(--review-dark,#aaa)")+"'>"+(p?(window.ChessPieceSVG?window.ChessPieceSVG(p):map[p]):"")+(mark?"<span style='position:absolute;inset:2px;border:2px solid "+(mark.type==="danger"?"#b53a30":"#28824b")+";border-radius:50%;pointer-events:none'></span>":"")+"</div>";}
 root.innerHTML=html+"</div>";}
