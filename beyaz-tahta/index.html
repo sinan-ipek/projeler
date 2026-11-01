@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.7</title>
+<title>Beyaz Tahta v18.8</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -757,6 +757,7 @@
     </button>
 
     <button id="selectBtn" class="iconBtn" title="Seç" aria-label="Seç">↖</button>
+    <button id="marqueeModeBtn" class="iconBtn" title="Seçim: tamamen içinde" aria-label="Seçim dikdörtgeni modu" aria-pressed="false">□</button>
 
     <button id="pointSnapBtn" class="iconBtn" title="Nokta snap: kapalı" aria-label="Nokta snap" aria-pressed="false">
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1078,7 +1079,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.7 · Bézier cache ve viewport optimizasyonu</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.8 · Bézier kapanış, seçim, nokta tipi ve silgi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1283,6 +1284,7 @@
   const inkBtn = document.getElementById('inkBtn');
   const penBtn = document.getElementById('penBtn');
   const selectBtn = document.getElementById('selectBtn');
+  const marqueeModeBtn = document.getElementById('marqueeModeBtn');
   const pointSnapBtn = document.getElementById('pointSnapBtn');
   const eraserBtn = document.getElementById('eraserBtn');
   const eraserMenu = document.getElementById('eraserMenu');
@@ -1486,6 +1488,7 @@
 
   let marqueeStart = null;
   let marqueeEnd = null;
+  let marqueeSelectionMode = 'contain'; // 'contain' | 'intersect'
   let internalClipboard = [];
   let pasteOffsetStep = 24;
 
@@ -4047,33 +4050,6 @@
     bezierHover={type:'new',point:{x:p.x,y:p.y},index:-1};
   }
 
-  function drawBezierHoverCue(){
-    if(mode!=='pen' || !bezierHover || !bezierHover.point) return;
-    const p=bezierHover.point;
-    let symbol='•';
-    if(bezierHover.type==='add') symbol='+';
-    if(bezierHover.type==='delete') symbol='−';
-    if(bezierHover.type==='close') symbol='○';
-    if(bezierHover.type==='continue') symbol='→';
-
-    ctx.save();
-    ctx.setTransform(
-      dpr*viewZoom,0,
-      0,dpr*viewZoom,
-      dpr*viewX,dpr*viewY
-    );
-
-    ctx.font=`bold ${18/viewZoom}px Arial, sans-serif`;
-    ctx.textAlign='left';
-    ctx.textBaseline='middle';
-    ctx.fillStyle='#2563eb';
-    ctx.strokeStyle='white';
-    ctx.lineWidth=4/viewZoom;
-    ctx.strokeText(symbol,p.x+7/viewZoom,p.y-9/viewZoom);
-    ctx.fillText(symbol,p.x+7/viewZoom,p.y-9/viewZoom);
-    ctx.restore();
-  }
-
   function drawShape(o, ghost=false){
     if(!o || !o.kind || !o.style) return;
 
@@ -6051,47 +6027,12 @@
 
   function objectIntersectsMarquee(o,r){
     if(!o || !r) return false;
+    const b=objectBounds(o);
+    if(!b) return false;
 
-    if(o.kind==='bezier'){
-      const bb=bezierCachedBounds(o);
-      if(bb && !boundsIntersect(bb,r)) return false;
-
-      const pts=bezierSamplePoints(o,32);
-      if(!pts.length) return false;
-
-      // Any sampled curve point inside marquee.
-      for(const p of pts){
-        if(
-          p.x>=r.x && p.x<=r.x+r.w &&
-          p.y>=r.y && p.y<=r.y+r.h
-        ) return true;
-      }
-
-      // Or any curve segment crossing one of the marquee edges.
-      const edges=[
-        [{x:r.x,y:r.y},{x:r.x+r.w,y:r.y}],
-        [{x:r.x+r.w,y:r.y},{x:r.x+r.w,y:r.y+r.h}],
-        [{x:r.x+r.w,y:r.y+r.h},{x:r.x,y:r.y+r.h}],
-        [{x:r.x,y:r.y+r.h},{x:r.x,y:r.y}]
-      ];
-
-      function ccw(a,b,c){
-        return (c.y-a.y)*(b.x-a.x)>(b.y-a.y)*(c.x-a.x);
-      }
-      function intersects(a,b,c,d){
-        return ccw(a,c,d)!==ccw(b,c,d) && ccw(a,b,c)!==ccw(a,b,d);
-      }
-
-      for(let i=1;i<pts.length;i++){
-        for(const [a,b] of edges){
-          if(intersects(pts[i-1],pts[i],a,b)) return true;
-        }
-      }
-
-      return false;
-    }
-
-    return boundsInsideRect(objectBounds(o),r);
+    return marqueeSelectionMode==='intersect'
+      ? boundsIntersect(b,r)
+      : boundsInsideRect(b,r);
   }
 
   function objectPointInsideSelection(i,p){
@@ -7846,7 +7787,6 @@
       if(active && active.kind==='bezier'){
         drawBezierEditingOverlay(active,{showBox:false});
       }
-      drawBezierHoverCue();
     }
 
     if(mode==='eraser' && eraserCursor){
@@ -9037,7 +8977,7 @@
     return !!o &&
       !o.locked &&
       (
-        ['stroke','line','arc','sector','ellipse','rect','polygon','parabola','axes','symbol'].includes(o.kind) ||
+        ['stroke','line','arc','sector','ellipse','rect','polygon','parabola','axes','symbol','bezier'].includes(o.kind) ||
         (o.kind==='text' && o.source==='math-keyboard')
       );
   }
@@ -9048,6 +8988,16 @@
     if(o.kind==='stroke'){
       const pts=o.points||[];
       if(pts.length===1) return Math.hypot(pts[0].x-p.x,pts[0].y-p.y)<=r;
+      for(let i=1;i<pts.length;i++){
+        if(eraserPointSegDistance(p,pts[i-1],pts[i])<=r) return true;
+      }
+      return false;
+    }
+
+    if(o.kind==='bezier'){
+      const bb=bezierCachedBounds(o);
+      if(bb && !pointInBounds(p,bb,r)) return false;
+      const pts=bezierSamplePoints(o,36);
       for(let i=1;i<pts.length;i++){
         if(eraserPointSegDistance(p,pts[i-1],pts[i])<=r) return true;
       }
@@ -9226,6 +9176,10 @@
       return pts;
     }
 
+    if(o.kind==='bezier'){
+      return bezierSamplePoints(o,48).map(q=>({x:q.x,y:q.y}));
+    }
+
     if(o.kind==='line'){
       return eraserSampleSegment(o.a,o.b,3);
     }
@@ -9330,6 +9284,83 @@
     return [];
   }
 
+  function simplifyPolylineForBezier(points,minDistance=5){
+    if(!Array.isArray(points) || points.length<2) return [];
+    const out=[points[0]];
+    let last=points[0];
+
+    for(let i=1;i<points.length-1;i++){
+      const q=points[i];
+      if(Math.hypot(q.x-last.x,q.y-last.y)>=minDistance){
+        out.push(q);
+        last=q;
+      }
+    }
+
+    const end=points[points.length-1];
+    if(Math.hypot(end.x-out[out.length-1].x,end.y-out[out.length-1].y)>.5){
+      out.push(end);
+    }
+    return out;
+  }
+
+  function sampledChunkToBezier(chunk,source){
+    const pts=simplifyPolylineForBezier(chunk,Math.max(3,5/viewZoom));
+    if(pts.length<2) return null;
+
+    const anchors=pts.map((q,i)=>{
+      const prev=pts[Math.max(0,i-1)];
+      const next=pts[Math.min(pts.length-1,i+1)];
+      const dx=next.x-prev.x;
+      const dy=next.y-prev.y;
+      return {
+        x:q.x,
+        y:q.y,
+        in:{x:q.x-dx/6,y:q.y-dy/6},
+        out:{x:q.x+dx/6,y:q.y+dy/6},
+        broken:false
+      };
+    });
+
+    const out={
+      id:makeObjectId(),
+      kind:'bezier',
+      anchors,
+      closed:false,
+      style:cloneObject(source.style||{}),
+      source:'pen',
+      boxAngle:Number.isFinite(source.boxAngle)?source.boxAngle:0
+    };
+    normalizeBezierCenter(out);
+    return out;
+  }
+
+  function splitBezierByEraser(o,p,r){
+    const sampled=bezierSamplePoints(o,56);
+    if(sampled.length<2) return null;
+
+    let removed=false;
+    const chunks=[];
+    let cur=[];
+
+    for(const q of sampled){
+      if(Math.hypot(q.x-p.x,q.y-p.y)<=r){
+        removed=true;
+        if(cur.length>=2) chunks.push(cur);
+        cur=[];
+      }else{
+        cur.push({x:q.x,y:q.y});
+      }
+    }
+    if(cur.length>=2) chunks.push(cur);
+
+    if(!removed) return null;
+
+    return chunks
+      .map(chunk=>sampledChunkToBezier(chunk,o))
+      .filter(Boolean);
+  }
+
   function erasePointInkAt(p){
     let changed=false;
     const next=[];
@@ -9337,6 +9368,17 @@
     for(const o of objects){
       if(!isErasableInk(o) || !inkObjectHit(o,p,eraserRadius/viewZoom)){
         next.push(o);
+        continue;
+      }
+
+      if(o.kind==='bezier'){
+        const parts=splitBezierByEraser(o,p,eraserRadius/viewZoom);
+        if(parts===null){
+          next.push(o);
+        }else{
+          next.push(...parts);
+          changed=true;
+        }
         continue;
       }
 
@@ -9736,9 +9778,20 @@
           normalizeBezierCenter(o);
           markBoardDirty();
           setSelection([idx]);
-          updateBezierHover(p);
+
+          // Closing is also an editable anchor gesture:
+          // click = close, click+drag = close and create tangent handles.
+          bezierPointerId=e.pointerId;
+          bezierDragInfo={
+            index:idx,
+            anchorIndex:0,
+            start:{x:o.anchors[0].x,y:o.anchors[0].y},
+            altBroken:!!e.altKey
+          };
+          try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+
           redraw();
-          statusEl.textContent='Bézier kapatıldı — dolgu uygulanabilir';
+          statusEl.textContent='Bézier kapatıldı — sürüklersen kapanış teğeti oluşur';
           return;
         }
 
@@ -10044,6 +10097,44 @@
         const h=hitSelectionHandle(p,e.pointerType);
         if(h && selectedIndex>=0){
           const realHandle=isRealEditHandleName(h);
+
+          if(
+            e.altKey &&
+            objects[selectedIndex] &&
+            objects[selectedIndex].kind==='bezier' &&
+            String(h).startsWith('bezier-anchor-')
+          ){
+            const ai=Number(String(h).split('-')[2]);
+            const o=objects[selectedIndex];
+            const a=o.anchors && o.anchors[ai];
+            if(a){
+              saveState();
+              a.broken=!a.broken;
+
+              if(!a.broken){
+                const hin=bezierHandlePoint(a,'in');
+                const hout=bezierHandlePoint(a,'out');
+                const outLen=Math.hypot(hout.x-a.x,hout.y-a.y);
+                const inLen=Math.hypot(hin.x-a.x,hin.y-a.y);
+
+                if(outLen>.01){
+                  const dx=hout.x-a.x,dy=hout.y-a.y;
+                  a.in={x:a.x-dx,y:a.y-dy};
+                }else if(inLen>.01){
+                  const dx=hin.x-a.x,dy=hin.y-a.y;
+                  a.out={x:a.x-dx,y:a.y-dy};
+                }
+              }
+
+              bezierActiveAnchorIndex=ai;
+              markBoardDirty();
+              redraw();
+              statusEl.textContent=a.broken
+                ? 'Bézier noktası: kırık/köşe'
+                : 'Bézier noktası: yumuşak/bağlı';
+            }
+            return;
+          }
 
           if(h==='pivot'){
             selectStart=p;
@@ -12509,6 +12600,29 @@
     armFormatPainter();
   });
 
+  function updateMarqueeModeUI(){
+    const partial=marqueeSelectionMode==='intersect';
+    marqueeModeBtn.classList.toggle('active',partial);
+    marqueeModeBtn.setAttribute('aria-pressed',String(partial));
+    marqueeModeBtn.textContent=partial ? '◩' : '□';
+    marqueeModeBtn.title=partial
+      ? 'Seçim: kısmen değen nesneler'
+      : 'Seçim: tamamen dikdörtgen içinde';
+  }
+
+  marqueeModeBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    marqueeSelectionMode=marqueeSelectionMode==='contain'
+      ? 'intersect'
+      : 'contain';
+    updateMarqueeModeUI();
+    statusEl.textContent=marqueeSelectionMode==='contain'
+      ? 'Seçim dikdörtgeni — yalnız tamamen içinde kalan nesneler'
+      : 'Seçim dikdörtgeni — kısmen değen nesneler de seçilir';
+  });
+
+  updateMarqueeModeUI();
+
   pointSnapBtn.addEventListener('click',e=>{
     e.stopPropagation();
     pointSnapEnabled=!pointSnapEnabled;
@@ -12555,7 +12669,7 @@
     }
     canvas.style.cursor='crosshair';
     bezierHover=null;
-    statusEl.textContent='Dolma kalem — + nokta ekler, − nokta siler, ○ yolu kapatır';
+    statusEl.textContent='Dolma kalem — tıkla: nokta, sürükle: teğet, ilk noktaya tıkla: kapat';
     redraw();
   };
 
