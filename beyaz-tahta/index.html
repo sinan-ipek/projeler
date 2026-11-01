@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.10</title>
+<title>Beyaz Tahta v18.11</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1142,7 +1142,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.10 · Seçim oku moda göre solid/dotted</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.11 · Yay/dilim 0–360° ve açı snap</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -3693,20 +3693,33 @@
     ) return null;
 
     const r=Math.max(1,Math.hypot(o.a.x-o.center.x,o.a.y-o.center.y));
-    let start=Math.atan2(o.a.y-o.center.y,o.a.x-o.center.x);
-    let end=Math.atan2(o.b.y-o.center.y,o.b.x-o.center.x);
-    let sweep=normalizeSignedAngle(end-start);
+    const start=Math.atan2(o.a.y-o.center.y,o.a.x-o.center.x);
+    const sign=Number(o.sweepSign)<0 ? -1 : 1;
 
-    const sign=Number(o.sweepSign)||Math.sign(sweep)||1;
-    if(sign>0 && sweep<0) sweep+=Math.PI*2;
-    if(sign<0 && sweep>0) sweep-=Math.PI*2;
-
-    // Arc objects intentionally use the minor/semicircle family.
-    if(Math.abs(sweep)>Math.PI){
-      sweep += sweep>0 ? -Math.PI*2 : Math.PI*2;
+    let sweep;
+    if(Number.isFinite(Number(o.sweepAngle))){
+      const mag=Math.max(0,Math.min(Math.PI*2,Math.abs(Number(o.sweepAngle))));
+      sweep=sign*mag;
+    }else{
+      const end=Math.atan2(o.b.y-o.center.y,o.b.x-o.center.x);
+      let mag;
+      if(sign>0){
+        mag=end-start;
+        while(mag<0) mag+=Math.PI*2;
+      }else{
+        mag=start-end;
+        while(mag<0) mag+=Math.PI*2;
+      }
+      sweep=sign*Math.max(0,Math.min(Math.PI*2,mag));
     }
 
-    return {r,start,sweep,end:start+sweep};
+    return {
+      r,
+      start,
+      sweep,
+      end:start+sweep,
+      fullCircle:Math.abs(Math.abs(sweep)-Math.PI*2)<1e-6
+    };
   }
 
   function arcSamplePoints(o,count=72){
@@ -3725,7 +3738,29 @@
     return pts;
   }
 
-  function setArcRadiusFromHandle(o,which,target,snapshot=o,lockRadius=false){
+  function snapArcSweepRadians(rawSweep){
+    const twoPi=Math.PI*2;
+    const clamped=Math.max(0,Math.min(twoPi,rawSweep));
+    const deg=clamped*180/Math.PI;
+
+    const candidates=new Set([0,360]);
+    for(let d=30;d<360;d+=30) candidates.add(d);
+    for(let d=45;d<360;d+=45) candidates.add(d);
+
+    let best=deg;
+    let bestDiff=Infinity;
+    for(const d of candidates){
+      const diff=Math.abs(d-deg);
+      if(diff<bestDiff){
+        bestDiff=diff;
+        best=d;
+      }
+    }
+
+    return best*Math.PI/180;
+  }
+
+  function setArcRadiusFromHandle(o,which,target,snapshot=o,lockRadius=false,snapArcAngle=false){
     if(
       !o ||
       !snapshot ||
@@ -3749,15 +3784,28 @@
 
     const oldA=Math.atan2(snapshot.a.y-m.y,snapshot.a.x-m.x);
     const oldB=Math.atan2(snapshot.b.y-m.y,snapshot.b.x-m.x);
+    const sign=Number(snapshot.sweepSign)<0 ? -1 : 1;
 
     if(which==='arc-a'){
       const r=lockRadius
         ? fixedRadius
         : Math.max(8,Math.hypot(target.x-m.x,target.y-m.y));
-      const a=Math.atan2(target.y-m.y,target.x-m.x);
+      let a=Math.atan2(target.y-m.y,target.x-m.x);
+
+      let sweepMag=sign>0 ? (oldB-a) : (a-oldB);
+      while(sweepMag<0) sweepMag+=Math.PI*2;
+      while(sweepMag>Math.PI*2) sweepMag-=Math.PI*2;
+
+      if(snapArcAngle) sweepMag=snapArcSweepRadians(sweepMag);
+
+      // Reconstruct A from fixed B + snapped sweep so 360° remains representable.
+      a=sign>0 ? oldB-sweepMag : oldB+sweepMag;
+
       o.center=m;
       o.a={x:m.x+Math.cos(a)*r,y:m.y+Math.sin(a)*r};
       o.b={x:m.x+Math.cos(oldB)*r,y:m.y+Math.sin(oldB)*r};
+      o.sweepSign=sign;
+      o.sweepAngle=sweepMag;
       return true;
     }
 
@@ -3765,10 +3813,21 @@
       const r=lockRadius
         ? fixedRadius
         : Math.max(8,Math.hypot(target.x-m.x,target.y-m.y));
-      const b=Math.atan2(target.y-m.y,target.x-m.x);
+      let b=Math.atan2(target.y-m.y,target.x-m.x);
+
+      let sweepMag=sign>0 ? (b-oldA) : (oldA-b);
+      while(sweepMag<0) sweepMag+=Math.PI*2;
+      while(sweepMag>Math.PI*2) sweepMag-=Math.PI*2;
+
+      if(snapArcAngle) sweepMag=snapArcSweepRadians(sweepMag);
+
+      b=sign>0 ? oldA+sweepMag : oldA-sweepMag;
+
       o.center=m;
       o.a={x:m.x+Math.cos(oldA)*r,y:m.y+Math.sin(oldA)*r};
       o.b={x:m.x+Math.cos(b)*r,y:m.y+Math.sin(b)*r};
+      o.sweepSign=sign;
+      o.sweepAngle=sweepMag;
       return true;
     }
 
@@ -4199,18 +4258,31 @@
       }else if(o.kind==='sector'){
         const g=arcGeometry(o);
         if(!g) return;
-        ctx.moveTo(o.center.x,o.center.y);
-        ctx.lineTo(o.a.x,o.a.y);
-        ctx.arc(
-          o.center.x,
-          o.center.y,
-          g.r,
-          g.start,
-          g.end,
-          g.sweep<0
-        );
-        ctx.lineTo(o.center.x,o.center.y);
-        ctx.closePath();
+
+        if(g.fullCircle){
+          ctx.arc(
+            o.center.x,
+            o.center.y,
+            g.r,
+            0,
+            Math.PI*2,
+            false
+          );
+          ctx.closePath();
+        }else{
+          ctx.moveTo(o.center.x,o.center.y);
+          ctx.lineTo(o.a.x,o.a.y);
+          ctx.arc(
+            o.center.x,
+            o.center.y,
+            g.r,
+            g.start,
+            g.end,
+            g.sweep<0
+          );
+          ctx.lineTo(o.center.x,o.center.y);
+          ctx.closePath();
+        }
 
       }else if(o.kind==='ellipse'){
         if(!finitePoint(o.center)) return;
@@ -7297,7 +7369,8 @@
         handle,
         p,
         snap,
-        lockArcRadius && (handle==='arc-a' || handle==='arc-b')
+        lockArcRadius && (handle==='arc-a' || handle==='arc-b'),
+        pointSnapEnabled && (handle==='arc-a' || handle==='arc-b')
       );
     }
 
@@ -8854,6 +8927,7 @@
         y:fit.center.y+Math.sin(a1)*r
       },
       sweepSign:total>=0 ? 1 : -1,
+      sweepAngle:Math.min(Math.PI*2,Math.abs(total)),
       style,
       shapeName:'arc',
       source:'auto',
@@ -10968,9 +11042,11 @@
 
         // Backward compatibility: auto-recognized triangle still uses vertex editing.
         if(isArcEndpoint){
-          statusEl.textContent=e.shiftKey
-            ? 'Yarıçap kilitli — yalnız açı değişiyor'
-            : 'Yay ucu hareket ediyor — yarıçap değişebilir';
+          const ag=arcGeometry(objects[selectedIndex]);
+          const deg=ag ? Math.round(Math.abs(ag.sweep)*180/Math.PI) : 0;
+          statusEl.textContent=pointSnapEnabled
+            ? `Yay açısı: ${deg}° — 30°/45° katlarına snap`
+            : `Yay açısı: ${deg}°`;
         }
 
         if(!handled && String(activeHandle).startsWith('vertex-')){
@@ -13148,6 +13224,7 @@
         a:{x:cx+Math.cos(a0)*radius,y:cy+30*insertionScale+Math.sin(a0)*radius},
         b:{x:cx+Math.cos(a1)*radius,y:cy+30*insertionScale+Math.sin(a1)*radius},
         sweepSign:1,
+        sweepAngle:2*Math.PI/3,
         style,
         shapeName:'arc',
         source:'menu',
@@ -13171,6 +13248,7 @@
           y:center.y+Math.sin(a1)*radius
         },
         sweepSign:1,
+        sweepAngle:2*Math.PI/3,
         style,
         shapeName:'sector',
         source:'menu',
