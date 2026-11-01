@@ -1997,39 +1997,40 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
   }
 
   // ===================== ENGINE MOVE =====================
+  let opponentRequest=0;
   function stopEngine(){
+    opponentRequest++;
+    window.ChessOpponent?.cancel();
     engine.stop();
-    engineThinking = false;
+    engineThinking=false;
     updateStatus();
   }
 
   let loadedReviewMode=false;
-  function maybeEngineMove(){
-    if (loadedReviewMode || engineThinking) return;
-    const st = game.gameStatus();
-    if (st.over) return;
-    if (isPlayersTurn()) return;
-
-    engineThinking = true;
-    engine.stopFlag = false;
-
-    const ms = currentThinkMs();
-    const sk = currentSkill();
-    setStatus("Motor düşünüyor...", `Süre=${ms}ms | Güç=${sk}`);
-
-    setTimeout(()=>{
-      const best = engine.search(ms, sk);
-      engineThinking = false;
-      if (!best) { updateStatus(); return; }
-
-      game.makeMove(best, false);
+  async function maybeEngineMove(){
+    if(loadedReviewMode||engineThinking||!window.ChessOpponent)return;
+    if(game.gameStatus().over||isPlayersTurn())return;
+    const id=++opponentRequest;
+    const fen=game.getFEN();
+    engineThinking=true;
+    const ms=currentThinkMs(),skill=currentSkill();
+    setStatus("Stockfish düşünüyor...", "Güç="+skill+"/20");
+    try{
+      const uci=await window.ChessOpponent.move(fen,skill,ms);
+      if(id!==opponentRequest||loadedReviewMode||game.getFEN()!==fen)return;
+      const move=game.generateLegalMoves().find(m=>moveToUCI(m)===uci);
+      if(!move){setStatus("Stockfish geçersiz hamle döndürdü.",String(uci));return;}
+      game.makeMove(move,false);
       playEngineTick();
-
-      selectedSq = null;
-      legalFromSelected = [];
-      clearHighlights();
+      selectedSq=null;legalFromSelected=[];clearHighlights();
       render();
-    }, 20);
+    }catch(e){
+      if(id===opponentRequest){
+        setStatus("Stockfish rakip başlatılamadı.",e.message+" · Oyun menüsünden Yeni Oyun ile tekrar deneyebilirsin.");
+      }
+    }finally{
+      if(id===opponentRequest){engineThinking=false;if(game.getFEN()===fen&&isPlayersTurn())updateStatus();}
+    }
   }
 
   // ===================== MOVE UI =====================
@@ -2810,5 +2811,5 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.5.2"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.8.0"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v1.8.2 · PGN tarayıcı indirmesi</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.5.2"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.8.0"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v1.9.0 · Stockfish rakip motoru (1–20)</div></body>
 </html>
