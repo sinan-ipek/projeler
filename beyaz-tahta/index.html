@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.4</title>
+<title>Beyaz Tahta v18.5</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1078,7 +1078,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.4 · Bézier seçim ve aktif handle düzenlemesi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.5 · Ok aracıyla tam Bézier düzenleme</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -5301,6 +5301,11 @@
     if(!o) return [];
 
     if(o.kind==='line') return [{...o.a},{...o.b}];
+    if(o.kind==='bezier'){
+      const pts=bezierSamplePoints(o,32);
+      if(pts.length) return pts;
+      return (o.anchors||[]).map(a=>({x:a.x,y:a.y}));
+    }
     if(o.kind==='arc') return arcSamplePoints(o,48);
     if(o.kind==='sector') return [o.center,...arcSamplePoints(o,48)];
     if(o.kind==='stroke') return (o.points||[]).map(p=>({x:p.x,y:p.y}));
@@ -5519,6 +5524,10 @@
     if(!o) return [];
 
     if(o.kind==='stroke') return (o.points||[]).map(p=>({x:p.x,y:p.y}));
+    if(o.kind==='bezier'){
+      const pts=bezierSamplePoints(o,32);
+      return pts.length ? pts : (o.anchors||[]).map(a=>({x:a.x,y:a.y}));
+    }
     if(o.kind==='line') return [{...o.a},{...o.b}];
 
     if(o.kind==='image'){
@@ -6539,7 +6548,13 @@
 
       for(const hnd of special){
         ctx.beginPath();
-        ctx.fillStyle=selectedHandleIs(hnd.name) ? '#2563eb' : 'white';
+        ctx.fillStyle=(
+          selectedHandleIs(hnd.name) ||
+          (
+            hnd.name.startsWith('bezier-anchor-') &&
+            Number(hnd.name.split('-')[2])===bezierActiveAnchorIndex
+          )
+        ) ? '#2563eb' : 'white';
         ctx.strokeStyle='#2563eb';
 
         if(hnd.name.startsWith('bezier-anchor-')){
@@ -10109,6 +10124,9 @@
           selectAction='move';
         }
 
+        if(selectedIndices.length===1 && objects[selectedIndices[0]] && objects[selectedIndices[0]].kind==='bezier'){
+          statusEl.textContent='Bézier seçili — noktaları/teğetleri düzenle, kutudan ölçekle veya döndür';
+        }
         redraw();
         return;
       }
