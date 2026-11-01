@@ -1935,59 +1935,80 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
   function animateLastMove(){
     const u=game.history[game.history.length-1];
     if(!u||u===lastAnimatedMove)return;
-    lastAnimatedMove=u;
     if(activeMoveAnimation)activeMoveAnimation();
-    const pieces=[{from:u.m.from,to:u.m.to,piece:u.fromP}];
-    if(u.castleRook)pieces.push({from:u.castleRook.from,to:u.castleRook.to,piece:u.castleRook.piece});
-    const ghosts=[],hidden=[];
+    lastAnimatedMove=u;
+
+    const duration=850, ghosts=[], hidden=[], timers=[];
     let cancelled=false;
+    const later=(fn,ms)=>timers.push(setTimeout(()=>{if(!cancelled)fn();},ms));
+    const hide=(el)=>{if(el){el.style.visibility="hidden";hidden.push(el);}};
+    const reveal=(el)=>{if(el)el.style.visibility="";};
+    const square=sq=>elBoard.querySelector(`.sq[data-sq="${sq}"]`);
     const cleanup=()=>{
       if(cancelled)return;
       cancelled=true;
-      ghosts.forEach(g=>g.remove());
-      hidden.forEach(el=>{el.style.visibility="";});
+      timers.forEach(clearTimeout);
+      ghosts.forEach(el=>el.remove());
+      hidden.forEach(reveal);
       if(activeMoveAnimation===cleanup)activeMoveAnimation=null;
     };
     activeMoveAnimation=cleanup;
-    const duration=850;
-    function slide({from,to,piece},delay){
-      const fromEl=elBoard.querySelector(`.sq[data-sq="${from}"]`);
-      const toEl=elBoard.querySelector(`.sq[data-sq="${to}"]`);
-      if(!fromEl||!toEl)return;
-      const a=fromEl.getBoundingClientRect(),b=toEl.getBoundingClientRect();
-      if(!a.width||!b.width)return;
+
+    // Oyun mantığı hamleyi önceden tamamladı. Son karedeki taşı
+    // animasyon bitene kadar saklayarak erken görünmesini engelle.
+    function createGhost(from,piece){
+      const el=square(from);
+      if(!el||!piece)return null;
+      const rect=el.getBoundingClientRect();
+      if(!rect.width||!rect.height)return null;
       const ghost=document.createElement("span");
       ghost.className="piece "+colorOf(piece);
       ghost.innerHTML=chessPieceHTML(piece);
-      ghost.style.cssText=`position:fixed;z-index:10000;pointer-events:none;display:flex;align-items:center;justify-content:center;left:${a.left}px;top:${a.top}px;width:${a.width}px;height:${a.height}px;transition:transform ${duration}ms cubic-bezier(.42,0,.58,1);`;
-      const target=toEl.querySelector(".piece");
-      if(target){target.style.visibility="hidden";hidden.push(target);}
-      document.body.appendChild(ghost);ghosts.push(ghost);
-      setTimeout(()=>{
-        if(cancelled)return;
-        requestAnimationFrame(()=>requestAnimationFrame(()=>{
-          if(!cancelled)ghost.style.transform=`translate(${b.left-a.left}px,${b.top-a.top}px)`;
-        }));
-      },delay);
+      ghost.style.cssText=`position:fixed;z-index:10000;pointer-events:none;display:flex;align-items:center;justify-content:center;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px;transition:none;`;
+      document.body.appendChild(ghost);
+      ghosts.push(ghost);
+      return ghost;
     }
-    // Rok: kale ilk aşamada bekler; şah yerine oturduktan sonra kale hareket eder.
+    function moveGhost(ghost,from,to,done){
+      const a=square(from)?.getBoundingClientRect(),b=square(to)?.getBoundingClientRect();
+      if(!ghost||!a||!b){done();return;}
+      ghost.style.transition=`transform ${duration}ms cubic-bezier(.42,0,.58,1)`;
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        if(!cancelled)ghost.style.transform=`translate(${b.left-a.left}px,${b.top-a.top}px)`;
+      }));
+      later(done,duration+35);
+    }
+
+    const kingOrPawnTarget=square(u.m.to)?.querySelector(".piece");
+    hide(kingOrPawnTarget);
+    const moving=createGhost(u.m.from,u.fromP);
+    if(!moving){cleanup();return;}
+
     if(u.castleRook){
-      const rookFrom=elBoard.querySelector(`.sq[data-sq="${u.castleRook.from}"]`);
-      if(rookFrom){
-        const a=rookFrom.getBoundingClientRect();
-        const rook=document.createElement("span");
-        rook.className="piece "+colorOf(u.castleRook.piece);
-        rook.innerHTML=chessPieceHTML(u.castleRook.piece);
-        rook.style.cssText=`position:fixed;z-index:9999;pointer-events:none;display:flex;align-items:center;justify-content:center;left:${a.left}px;top:${a.top}px;width:${a.width}px;height:${a.height}px;`;
-        document.body.appendChild(rook);ghosts.push(rook);
-        setTimeout(()=>rook.remove(),duration+50);
-      }
-      slide(pieces[0],0);
-      setTimeout(()=>{if(!cancelled)slide(pieces[1],0);},duration+50);
-      setTimeout(cleanup,duration*2+180);
+      const rook=u.castleRook;
+      const rookTarget=square(rook.to)?.querySelector(".piece");
+      hide(rookTarget);
+      // Başlangıç karesinde sadece tek kale görünür; şah yürürken bekler.
+      const waitingRook=createGhost(rook.from,rook.piece);
+      moveGhost(moving,u.m.from,u.m.to,()=>{
+        moving.remove();
+        reveal(kingOrPawnTarget);
+        // Şah tamamen yerine oturduktan sonra kale hareketine başlar.
+        if(!waitingRook){reveal(rookTarget);cleanup();return;}
+        moveGhost(waitingRook,rook.from,rook.to,()=>{
+          waitingRook.remove();
+          reveal(rookTarget);
+          cleanup();
+        });
+      });
     }else{
-      slide(pieces[0],0);
-      setTimeout(cleanup,duration+90);
+      // Terfide hedef karedeki vezir/kale/fil/at başlangıçta gizlidir.
+      // Piyon yerine vardığı anda kaybolur ve terfi taşı görünür.
+      moveGhost(moving,u.m.from,u.m.to,()=>{
+        moving.remove();
+        reveal(kingOrPawnTarget);
+        cleanup();
+      });
     }
   }
   function render(){
@@ -2852,5 +2873,5 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.5.2"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v1.9.1 · Rokta önce şah, sonra kale animasyonu</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.5.2"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v1.9.2 · Sıralı rok ve doğru piyon terfisi animasyonu</div></body>
 </html>
