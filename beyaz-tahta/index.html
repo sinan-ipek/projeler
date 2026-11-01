@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.15</title>
+<title>Beyaz Tahta v18.16</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1142,7 +1142,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.15 · sin x 5 anchor Bézier</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.16 · integral 3 anchor Bézier</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -4296,15 +4296,55 @@
       const segs=integralBezierLocal(o);
       const a=o.angle||0;
       const wp=p=>rotatePoint({x:o.center.x+p.x,y:o.center.y+p.y},o.center,a);
+
       if(segs.length===3){
+        const top=wp(segs[0].p0);
+        const midLocal={
+          x:(segs[0].p3.x+segs[1].p3.x)/2,
+          y:(segs[0].p3.y+segs[1].p3.y)/2
+        };
+        const mid=wp(midLocal);
+        const bottom=wp(segs[2].p3);
+
+        const topOut=wp(segs[0].c1);
+        const bottomIn=wp(segs[2].c2);
+
+        const midIn=wp({
+          x:(segs[0].c2.x+segs[1].c1.x)/2,
+          y:(segs[0].c2.y+segs[1].c1.y)/2
+        });
+        const midOut=wp({
+          x:(segs[1].c2.x+segs[2].c1.x)/2,
+          y:(segs[1].c2.y+segs[2].c1.y)/2
+        });
+
         const anchors=[
-          {x:wp(segs[0].p0).x,y:wp(segs[0].p0).y,in:wp(segs[0].p0),out:wp(segs[0].c1),broken:false},
-          {x:wp(segs[0].p3).x,y:wp(segs[0].p3).y,in:wp(segs[0].c2),out:wp(segs[1].c1),broken:false},
-          {x:wp(segs[1].p3).x,y:wp(segs[1].p3).y,in:wp(segs[1].c2),out:wp(segs[2].c1),broken:false},
-          {x:wp(segs[2].p3).x,y:wp(segs[2].p3).y,in:wp(segs[2].c2),out:wp(segs[2].p3),broken:false}
+          {
+            x:top.x,y:top.y,
+            in:{x:top.x,y:top.y},
+            out:topOut,
+            broken:false
+          },
+          {
+            x:mid.x,y:mid.y,
+            in:midIn,
+            out:midOut,
+            broken:false
+          },
+          {
+            x:bottom.x,y:bottom.y,
+            in:bottomIn,
+            out:{x:bottom.x,y:bottom.y},
+            broken:false
+          }
         ];
+
         return makeBezierShape(anchors,{
-          closed:false,style,shapeType:'integral',source:'menu',boxAngle:a
+          closed:false,
+          style,
+          shapeType:'integral',
+          source:'menu',
+          boxAngle:a
         });
       }
     }
