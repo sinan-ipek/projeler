@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v17.7</title>
+<title>Beyaz Tahta v18.0</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -766,6 +766,13 @@
     </button>
 
     <button id="inkBtn" class="active iconBtn" title="Ink" aria-label="Ink">✎</button>
+    <button id="penBtn" class="iconBtn" title="Bézier dolma kalem" aria-label="Bézier dolma kalem">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3 6.2 9.2 9 17l3 2 3-2 2.8-7.8L12 3Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        <circle cx="12" cy="10" r="1.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M12 11.6V19" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+    </button>
 
     <div class="colorWrap">
       <button id="colorBtn" class="iconBtn" title="Renk" aria-label="Renk">
@@ -1071,7 +1078,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v17.7 · Performans öncelikli çizim motoru</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.0 · Bézier dolma kalem</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1273,6 +1280,7 @@
   const cancelFeedbackBtn = document.getElementById('cancelFeedbackBtn');
   const sendFeedbackBtn = document.getElementById('sendFeedbackBtn');
   const inkBtn = document.getElementById('inkBtn');
+  const penBtn = document.getElementById('penBtn');
   const selectBtn = document.getElementById('selectBtn');
   const pointSnapBtn = document.getElementById('pointSnapBtn');
   const eraserBtn = document.getElementById('eraserBtn');
@@ -1371,6 +1379,11 @@
 
   let drawing = false;
   let points = [];
+
+  // v18 — Photoshop/Illustrator style Bézier Pen Tool.
+  let bezierDraftIndex = -1;
+  let bezierPointerId = null;
+  let bezierDragInfo = null; // {index, anchorIndex, start, altBroken}
 
   let wetPrev=null;
   let wetLast=null;
@@ -2770,6 +2783,7 @@
     formatPainterStyle=payload;
     mode='select';
     selectBtn.classList.add('active');
+    penBtn.classList.remove('active');
     inkBtn.classList.remove('active');
     eraserBtn.classList.remove('active');
     fillBtn.classList.remove('active');
@@ -3680,6 +3694,140 @@
     return false;
   }
 
+  function bezierAnchorPoint(a){
+    return a && finitePoint(a) ? {x:a.x,y:a.y} : null;
+  }
+
+  function bezierHandlePoint(a,key){
+    const h=a && a[key];
+    return finitePoint(h) ? h : {x:a.x,y:a.y};
+  }
+
+  function cubicPoint(p0,p1,p2,p3,t){
+    const u=1-t;
+    return {
+      x:u*u*u*p0.x+3*u*u*t*p1.x+3*u*t*t*p2.x+t*t*t*p3.x,
+      y:u*u*u*p0.y+3*u*u*t*p1.y+3*u*t*t*p2.y+t*t*t*p3.y
+    };
+  }
+
+  function bezierSegments(o){
+    const a=(o&&Array.isArray(o.anchors))?o.anchors:[];
+    const segs=[];
+    if(a.length<2) return segs;
+    const count=o.closed?a.length:a.length-1;
+    for(let i=0;i<count;i++){
+      const j=(i+1)%a.length;
+      segs.push({
+        i,j,
+        p0:{x:a[i].x,y:a[i].y},
+        p1:bezierHandlePoint(a[i],'out'),
+        p2:bezierHandlePoint(a[j],'in'),
+        p3:{x:a[j].x,y:a[j].y}
+      });
+    }
+    return segs;
+  }
+
+  function bezierSamplePoints(o,perSegment=24){
+    const pts=[];
+    for(const s of bezierSegments(o)){
+      for(let k=0;k<=perSegment;k++){
+        if(pts.length && k===0) continue;
+        pts.push(cubicPoint(s.p0,s.p1,s.p2,s.p3,k/perSegment));
+      }
+    }
+    return pts;
+  }
+
+  function drawBezierPath(targetCtx,o){
+    const anchors=(o&&Array.isArray(o.anchors))?o.anchors:[];
+    if(!anchors.length) return false;
+    targetCtx.beginPath();
+    targetCtx.moveTo(anchors[0].x,anchors[0].y);
+    const count=o.closed?anchors.length:anchors.length-1;
+    for(let i=0;i<count;i++){
+      const j=(i+1)%anchors.length;
+      const a=anchors[i], b=anchors[j];
+      const c1=bezierHandlePoint(a,'out');
+      const c2=bezierHandlePoint(b,'in');
+      targetCtx.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,b.x,b.y);
+    }
+    if(o.closed) targetCtx.closePath();
+    return true;
+  }
+
+  function nearestBezierLocation(o,p){
+    let best=null;
+    for(const s of bezierSegments(o)){
+      let prev=s.p0;
+      const steps=36;
+      for(let k=1;k<=steps;k++){
+        const t=k/steps;
+        const q=cubicPoint(s.p0,s.p1,s.p2,s.p3,t);
+        const d=eraserPointSegDistance(p,prev,q);
+        if(!best || d<best.distance){
+          best={distance:d,segmentIndex:s.i,t:(k-.5)/steps,seg:s};
+        }
+        prev=q;
+      }
+    }
+    return best;
+  }
+
+  function splitBezierSegment(o,segmentIndex,t){
+    if(!o || !Array.isArray(o.anchors) || o.anchors.length<2) return -1;
+    const i=segmentIndex;
+    const j=(i+1)%o.anchors.length;
+    if(i<0 || i>=o.anchors.length || (!o.closed && j===0)) return -1;
+
+    t=Math.max(.02,Math.min(.98,Number(t)||.5));
+    const a=o.anchors[i], b=o.anchors[j];
+    const p0={x:a.x,y:a.y};
+    const p1=bezierHandlePoint(a,'out');
+    const p2=bezierHandlePoint(b,'in');
+    const p3={x:b.x,y:b.y};
+    const lerp=(x,y)=>({x:x.x+(y.x-x.x)*t,y:x.y+(y.y-x.y)*t});
+    const q0=lerp(p0,p1), q1=lerp(p1,p2), q2=lerp(p2,p3);
+    const r0=lerp(q0,q1), r1=lerp(q1,q2);
+    const s=lerp(r0,r1);
+
+    a.out=q0;
+    b.in=q2;
+    const anchor={
+      x:s.x,y:s.y,
+      in:r0,
+      out:r1,
+      broken:false
+    };
+
+    const insertAt=i+1;
+    o.anchors.splice(insertAt,0,anchor);
+    return insertAt;
+  }
+
+  function bezierAnchorHit(o,p,r=(11/viewZoom)){
+    if(!o || !Array.isArray(o.anchors)) return -1;
+    for(let i=0;i<o.anchors.length;i++){
+      const a=o.anchors[i];
+      if(Math.hypot(p.x-a.x,p.y-a.y)<=r) return i;
+    }
+    return -1;
+  }
+
+  function bezierCenter(o){
+    const pts=(o&&Array.isArray(o.anchors))?o.anchors:[];
+    if(!pts.length) return {x:0,y:0};
+    return {
+      x:pts.reduce((s,p)=>s+p.x,0)/pts.length,
+      y:pts.reduce((s,p)=>s+p.y,0)/pts.length
+    };
+  }
+
+  function normalizeBezierCenter(o){
+    if(o&&o.kind==='bezier') o.center=bezierCenter(o);
+  }
+
   function drawShape(o, ghost=false){
     if(!o || !o.kind || !o.style) return;
 
@@ -3712,6 +3860,9 @@
           if(!pts.length || !pts.every(finitePoint)) return;
           pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
         }
+
+      }else if(o.kind==='bezier'){
+        if(!drawBezierPath(ctx,o)) return;
 
       }else if(o.kind==='line'){
         if(!finitePoint(o.a) || !finitePoint(o.b)) return;
@@ -3841,7 +3992,7 @@
       if(
         !ghost &&
         o.fillColor &&
-        (o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='sector')
+        (o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='sector' || (o.kind==='bezier' && o.closed))
       ){
         ctx.save();
         ctx.fillStyle=o.fillColor;
@@ -4139,6 +4290,7 @@
     inkBtn.classList.remove('active');
     eraserBtn.classList.remove('active');
     selectBtn.classList.add('active');
+    penBtn.classList.remove('active');
     setSelection([index]);
     restoreToolCursor();
     redraw();
@@ -4186,6 +4338,11 @@
   function objectBounds(o){
     if(!o) return null;
 
+    if(o.kind==='bezier'){
+      const pts=bezierSamplePoints(o,18);
+      return pts.length ? bbox(pts) : (o.anchors&&o.anchors.length?bbox(o.anchors):null);
+    }
+
     if(o.kind==='text'){
       const hw=Math.max(6,(Number(o.w)||12)/2);
       const hh=Math.max(6,(Number(o.h)||12)/2);
@@ -4215,7 +4372,14 @@
       return bbox(pts);
     }
 
-    if(o.kind==='line'){
+    if(o.kind==='bezier'){
+      for(const a of (o.anchors||[])){
+        a.x+=dx;a.y+=dy;
+        if(finitePoint(a.in)){a.in.x+=dx;a.in.y+=dy;}
+        if(finitePoint(a.out)){a.out.x+=dx;a.out.y+=dy;}
+      }
+      normalizeBezierCenter(o);
+    }else if(o.kind==='line'){
       const minX=Math.min(o.a.x,o.b.x), maxX=Math.max(o.a.x,o.b.x);
       const minY=Math.min(o.a.y,o.b.y), maxY=Math.max(o.a.y,o.b.y);
       return {x:minX,y:minY,w:maxX-minX,h:maxY-minY,cx:(minX+maxX)/2,cy:(minY+maxY)/2};
@@ -4394,6 +4558,22 @@
       ];
     }
 
+    if(o.kind==='bezier'){
+      const out=[];
+      (o.anchors||[]).forEach((a,i)=>{
+        out.push({name:'bezier-anchor-'+i,x:a.x,y:a.y});
+        const hin=bezierHandlePoint(a,'in');
+        const hout=bezierHandlePoint(a,'out');
+        if(Math.hypot(hin.x-a.x,hin.y-a.y)>.01){
+          out.push({name:'bezier-in-'+i,x:hin.x,y:hin.y,anchorIndex:i});
+        }
+        if(Math.hypot(hout.x-a.x,hout.y-a.y)>.01){
+          out.push({name:'bezier-out-'+i,x:hout.x,y:hout.y,anchorIndex:i});
+        }
+      });
+      return out;
+    }
+
     if(o.source!=='menu') return [];
 
     if(o.kind==='line'){
@@ -4435,7 +4615,10 @@
       s.startsWith('rectvertex-') ||
       s.startsWith('ellipse-') ||
       s.startsWith('arc-') ||
-      s.startsWith('sqrt-')
+      s.startsWith('sqrt-') ||
+      s.startsWith('bezier-anchor-') ||
+      s.startsWith('bezier-in-') ||
+      s.startsWith('bezier-out-')
     );
   }
 
@@ -4847,6 +5030,33 @@
       setPolygonWorldVerticesPreserveAngle(
         o,verts,snap.angle||0,snap.source,snap.shapeName
       );
+      return true;
+    }
+
+    if(snap.kind==='bezier'){
+      const oldBox=orientedSelectionBox(snap);
+      if(!oldBox) return false;
+      const mapPt=pt=>{
+        const lv=worldToLocal(oldBox,pt);
+        const nx=(lv.x-oldBox.minX)*sx+usedMinX;
+        const ny=(lv.y-oldBox.minY)*sy+usedMinY;
+        return localToWorld(oldBox,{x:nx,y:ny});
+      };
+      o.anchors=(snap.anchors||[]).map(a=>{
+        const ap=mapPt(a);
+        return {
+          ...JSON.parse(JSON.stringify(a)),
+          x:ap.x,y:ap.y,
+          in:finitePoint(a.in)?mapPt(a.in):{x:ap.x,y:ap.y},
+          out:finitePoint(a.out)?mapPt(a.out):{x:ap.x,y:ap.y}
+        };
+      });
+      o.closed=!!snap.closed;
+      o.style=JSON.parse(JSON.stringify(snap.style||{}));
+      o.fillColor=snap.fillColor;
+      o.fillOpacity=snap.fillOpacity;
+      o.source='pen';
+      normalizeBezierCenter(o);
       return true;
     }
 
@@ -5391,6 +5601,17 @@
   }
 
   function rotateObjectAround(o,c,delta){
+    if(o.kind==='bezier'){
+      for(const a of (o.anchors||[])){
+        const ap=rotatePoint(a,c,delta); a.x=ap.x;a.y=ap.y;
+        if(finitePoint(a.in)) a.in=rotatePoint(a.in,c,delta);
+        if(finitePoint(a.out)) a.out=rotatePoint(a.out,c,delta);
+      }
+      normalizeBezierCenter(o);
+      o.boxAngle=(Number.isFinite(o.boxAngle)?o.boxAngle:0)+delta;
+      return;
+    }
+
     if(o.kind==='line'){
       o.a=rotatePoint(o.a,c,delta);
       o.b=rotatePoint(o.b,c,delta);
@@ -5435,6 +5656,16 @@
       x:anchor.x+(p.x-anchor.x)*s,
       y:anchor.y+(p.y-anchor.y)*s
     });
+
+    if(o.kind==='bezier'){
+      for(const a of (o.anchors||[])){
+        const ap=scalePt(a); a.x=ap.x;a.y=ap.y;
+        if(finitePoint(a.in)) a.in=scalePt(a.in);
+        if(finitePoint(a.out)) a.out=scalePt(a.out);
+      }
+      normalizeBezierCenter(o);
+      return;
+    }
 
     if(o.kind==='line'){
       o.a=scalePt(o.a); o.b=scalePt(o.b);
@@ -6249,7 +6480,7 @@
 
   function isFillableKind(o){
     return !!o &&
-      (o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon' || o.kind==='sector');
+      (o.kind==='rect' || o.kind==='ellipse' || o.kind==='polygon' || o.kind==='sector' || (o.kind==='bezier' && o.closed));
   }
 
   function isFillableObject(o){
@@ -6288,6 +6519,11 @@
 
     if(o.kind==='sector'){
       const verts=[o.center,...arcSamplePoints(o,96)];
+      return verts.length>=3 && pointInPolygon(p,verts);
+    }
+
+    if(o.kind==='bezier' && o.closed){
+      const verts=bezierSamplePoints(o,28);
       return verts.length>=3 && pointInPolygon(p,verts);
     }
 
@@ -6346,6 +6582,15 @@
       if(verts.length>=3 && pointInPolygon(p,verts)) return true;
       for(let i=0;i<verts.length;i++){
         if(eraserPointSegDistance(p,verts[i],verts[(i+1)%verts.length])<=tol) return true;
+      }
+      return false;
+    }
+
+    if(o.kind==='bezier'){
+      const pts=bezierSamplePoints(o,28);
+      if(o.closed && pts.length>=3 && pointInPolygon(p,pts)) return true;
+      for(let i=1;i<pts.length;i++){
+        if(eraserPointSegDistance(p,pts[i-1],pts[i])<=tol) return true;
       }
       return false;
     }
@@ -6623,6 +6868,38 @@
 
   function moveMenuHandleFromSnapshot(o,snap,handle,p,lockArcRadius=false){
     if(!o || !snap) return false;
+
+    if(snap.kind==='bezier' && handle.startsWith('bezier-')){
+      Object.assign(o,JSON.parse(JSON.stringify(snap)));
+      const parts=handle.split('-');
+      const type=parts[1];
+      const i=Number(parts[2]);
+      const a=o.anchors&&o.anchors[i];
+      if(!a) return false;
+
+      if(type==='anchor'){
+        const dx=p.x-a.x,dy=p.y-a.y;
+        a.x=p.x;a.y=p.y;
+        if(finitePoint(a.in)){a.in.x+=dx;a.in.y+=dy;}
+        if(finitePoint(a.out)){a.out.x+=dx;a.out.y+=dy;}
+      }else if(type==='in' || type==='out'){
+        a[type]={x:p.x,y:p.y};
+        if(!a.broken){
+          const other=type==='in'?'out':'in';
+          const dx=p.x-a.x,dy=p.y-a.y;
+          const old=bezierHandlePoint(a,other);
+          const oldLen=Math.hypot(old.x-a.x,old.y-a.y);
+          const len=Math.hypot(dx,dy)||1;
+          a[other]={
+            x:a.x-dx/len*oldLen,
+            y:a.y-dy/len*oldLen
+          };
+        }
+      }else return false;
+
+      normalizeBezierCenter(o);
+      return true;
+    }
 
     // ARC M/A/B handles work for both menu and auto-recognized arcs.
     if((snap.kind==='arc' || snap.kind==='sector') && handle.startsWith('arc-')){
@@ -9016,6 +9293,97 @@
     const p=pFromEvent(e);
     lastCanvasPointerWorld={x:p.x,y:p.y};
 
+    if(mode==='pen' && e.button===0){
+      e.preventDefault();
+      closeContextMenu();
+      const hitR=(e.pointerType==='touch'?20:10)/viewZoom;
+
+      let idx=(selectedIndices.length===1 && objects[selectedIndices[0]] && objects[selectedIndices[0]].kind==='bezier')
+        ? selectedIndices[0]
+        : bezierDraftIndex;
+      let o=(idx>=0)?objects[idx]:null;
+
+      // Existing selected Bézier: anchor click deletes it.
+      if(o && o.kind==='bezier'){
+        const ah=bezierAnchorHit(o,p,hitR);
+        if(ah>=0){
+          if(o.anchors.length>2){
+            saveState();
+            o.anchors.splice(ah,1);
+            if(o.closed && o.anchors.length<3) o.closed=false;
+            normalizeBezierCenter(o);
+            markBoardDirty();
+            redraw();
+            statusEl.textContent='Bézier noktası silindi';
+          }
+          return;
+        }
+
+        // Clicking first point closes an open path.
+        if(!o.closed && o.anchors.length>=3 && Math.hypot(p.x-o.anchors[0].x,p.y-o.anchors[0].y)<=hitR*1.25){
+          saveState();
+          o.closed=true;
+          normalizeBezierCenter(o);
+          markBoardDirty();
+          setSelection([idx]);
+          redraw();
+          statusEl.textContent='Bézier kapatıldı — dolgu uygulanabilir';
+          return;
+        }
+
+        // Clicking a segment inserts a real split point without changing curve shape.
+        const near=nearestBezierLocation(o,p);
+        if(near && near.distance<=hitR){
+          saveState();
+          const ai=splitBezierSegment(o,near.segmentIndex,near.t);
+          normalizeBezierCenter(o);
+          bezierPointerId=e.pointerId;
+          bezierDragInfo={index:idx,anchorIndex:ai,start:{...p},altBroken:!!e.altKey};
+          try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+          markBoardDirty();
+          redraw();
+          statusEl.textContent='Bézier noktası eklendi';
+          return;
+        }
+      }
+
+      // Start a new path or append to current open path.
+      if(!o || o.kind!=='bezier' || o.closed){
+        saveState();
+        o={
+          id:makeObjectId(),
+          kind:'bezier',
+          anchors:[],
+          closed:false,
+          style:strokeStyle(),
+          source:'pen',
+          boxAngle:0
+        };
+        objects.push(o);
+        idx=objects.length-1;
+        bezierDraftIndex=idx;
+        setSelection([idx]);
+      }else{
+        saveState();
+      }
+
+      const anchor={
+        x:p.x,y:p.y,
+        in:{x:p.x,y:p.y},
+        out:{x:p.x,y:p.y},
+        broken:!!e.altKey
+      };
+      o.anchors.push(anchor);
+      normalizeBezierCenter(o);
+      bezierPointerId=e.pointerId;
+      bezierDragInfo={index:idx,anchorIndex:o.anchors.length-1,start:{...p},altBroken:!!e.altKey};
+      try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+      markBoardDirty();
+      redraw();
+      statusEl.textContent='Bézier noktası eklendi';
+      return;
+    }
+
     if(e.pointerType==='touch'){
       e.preventDefault();
 
@@ -9472,6 +9840,35 @@
     const screenP=screenPointFromEvent(e);
     const p=pFromEvent(e);
     lastCanvasPointerWorld={x:p.x,y:p.y};
+    if(mode==='pen' && bezierDragInfo && e.pointerId===bezierPointerId){
+      const o=objects[bezierDragInfo.index];
+      const a=o && o.anchors && o.anchors[bezierDragInfo.anchorIndex];
+      if(a){
+        let q={x:p.x,y:p.y};
+        if(e.shiftKey){
+          const dx=q.x-a.x,dy=q.y-a.y;
+          const len=Math.hypot(dx,dy);
+          if(len>0){
+            const step=Math.PI/12;
+            const ang=Math.round(Math.atan2(dy,dx)/step)*step;
+            q={x:a.x+Math.cos(ang)*len,y:a.y+Math.sin(ang)*len};
+          }
+        }
+        a.out={x:q.x,y:q.y};
+        const dx=q.x-a.x,dy=q.y-a.y;
+        a.broken=!!(e.altKey||bezierDragInfo.altBroken);
+        if(a.broken){
+          if(!finitePoint(a.in)) a.in={x:a.x,y:a.y};
+        }else{
+          a.in={x:a.x-dx,y:a.y-dy};
+        }
+        normalizeBezierCenter(o);
+        markBoardDirty();
+        redraw();
+      }
+      return;
+    }
+
 
     if(e.pointerType==='touch'){
       e.preventDefault();
@@ -10088,6 +10485,14 @@
   });
 
   function finishPointer(e){
+    if(mode==='pen' && bezierDragInfo && e.pointerId===bezierPointerId){
+      bezierPointerId=null;
+      bezierDragInfo=null;
+      markBoardDirty();
+      redraw();
+      return;
+    }
+
     if(e.pointerType==='pen'){
       const wasPenLongPress=
         touchLongPressTriggered &&
@@ -10204,6 +10609,7 @@
         }else{
           mode='select';
           selectBtn.classList.add('active');
+    penBtn.classList.remove('active');
           inkBtn.classList.remove('active');
           eraserBtn.classList.remove('active');
           eraserCursor=null;
@@ -11420,6 +11826,7 @@
     setSelection([objects.length-1]);
     mode='select';
     selectBtn.classList.add('active');
+    penBtn.classList.remove('active');
     inkBtn.classList.remove('active');
     textBtn.classList.remove('active');
     eraserBtn.classList.remove('active');
@@ -11477,6 +11884,7 @@
 
     mode='select';
     selectBtn.classList.add('active');
+    penBtn.classList.remove('active');
     inkBtn.classList.remove('active');
     textBtn.classList.remove('active');
     eraserBtn.classList.remove('active');
@@ -11645,7 +12053,36 @@
       : 'Nokta snap kapalı — düzenleme noktaları serbest';
   });
 
-  inkBtn.onclick=()=>{
+  penBtn.onclick=()=>{
+    cancelFormatPainter();
+    clearHandleSelection();
+    if(textEditing) closeTextEditor(true);
+    textBtn.classList.remove('active');
+    fillBtn.classList.remove('active');
+    closeFillMenu();
+    closeContextMenu();
+    eraserMenu.classList.remove('open');
+    colorMenu.classList.remove('open');
+    mode='pen';
+    eraserCursor=null;
+    penBtn.classList.add('active');
+    inkBtn.classList.remove('active');
+    selectBtn.classList.remove('active');
+    eraserBtn.classList.remove('active');
+
+    // Keep a selected Bézier for point editing; otherwise clear selection.
+    if(!(selectedIndices.length===1 && objects[selectedIndices[0]] && objects[selectedIndices[0]].kind==='bezier')){
+      setSelection([]);
+      bezierDraftIndex=-1;
+    }else{
+      bezierDraftIndex=selectedIndices[0];
+    }
+    canvas.style.cursor='crosshair';
+    statusEl.textContent='Dolma kalem — tıkla: köşe, sürükle: teğet, Alt+sürükle: kırık teğet';
+    redraw();
+  };
+
+    inkBtn.onclick=()=>{
     cancelFormatPainter();
     if(textEditing) closeTextEditor(true);
     textBtn.classList.remove('active');
@@ -11658,6 +12095,7 @@
     setSelection([]);
     eraserCursor=null;
     inkBtn.classList.add('active');
+    penBtn.classList.remove('active');
     selectBtn.classList.remove('active');
     eraserBtn.classList.remove('active');
     canvas.style.cursor='default';
@@ -11677,6 +12115,7 @@
     mode='select';
     eraserCursor=null;
     selectBtn.classList.add('active');
+    penBtn.classList.remove('active');
     inkBtn.classList.remove('active');
     eraserBtn.classList.remove('active');
     canvas.style.cursor='default';
@@ -11733,6 +12172,7 @@
     inkBtn.classList.remove('active');
     selectBtn.classList.remove('active');
     eraserBtn.classList.add('active');
+    penBtn.classList.remove('active');
 
     closeFillMenu();
     closeContextMenu();
@@ -11781,6 +12221,7 @@
     eraserCursor=null;
 
     eraserBtn.classList.add('active');
+    penBtn.classList.remove('active');
     inkBtn.classList.remove('active');
     selectBtn.classList.remove('active');
 
