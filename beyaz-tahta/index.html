@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.6</title>
+<title>Beyaz Tahta v18.7</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1078,7 +1078,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.6 · Bézier lokal scale düzeltmesi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.7 · Bézier cache ve viewport optimizasyonu</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1387,6 +1387,10 @@
   let bezierDragInfo = null; // {index, anchorIndex, start, altBroken}
   let bezierHover = null; // {type:'add'|'delete'|'close'|'continue'|'new', point, index}
   let bezierActiveAnchorIndex = -1;
+
+  // v18.7 — Bézier performance cache.
+  // WeakMap lets removed objects be garbage-collected automatically.
+  const bezierGeometryCache = new WeakMap();
 
   let wetPrev=null;
   let wetLast=null;
@@ -3734,15 +3738,92 @@
     return segs;
   }
 
+  function bezierGeometrySignature(o){
+    if(!o || !Array.isArray(o.anchors)) return '0';
+    let s=o.closed ? '1|' : '0|';
+    for(const a of o.anchors){
+      const hin=bezierHandlePoint(a,'in');
+      const hout=bezierHandlePoint(a,'out');
+      s+=
+        a.x.toFixed(3)+','+a.y.toFixed(3)+','+
+        hin.x.toFixed(3)+','+hin.y.toFixed(3)+','+
+        hout.x.toFixed(3)+','+hout.y.toFixed(3)+','+
+        (a.broken?'1':'0')+';';
+    }
+    return s;
+  }
+
+  function bezierCacheEntry(o){
+    const sig=bezierGeometrySignature(o);
+    let entry=bezierGeometryCache.get(o);
+    if(!entry || entry.signature!==sig){
+      entry={
+        signature:sig,
+        samples:new Map(),
+        bounds:null
+      };
+      bezierGeometryCache.set(o,entry);
+    }
+    return entry;
+  }
+
   function bezierSamplePoints(o,perSegment=24){
+    if(!o || !Array.isArray(o.anchors)) return [];
+
+    const steps=Math.max(4,Math.round(Number(perSegment)||24));
+    const entry=bezierCacheEntry(o);
+    const cached=entry.samples.get(steps);
+    if(cached) return cached;
+
     const pts=[];
     for(const s of bezierSegments(o)){
-      for(let k=0;k<=perSegment;k++){
+      for(let k=0;k<=steps;k++){
         if(pts.length && k===0) continue;
-        pts.push(cubicPoint(s.p0,s.p1,s.p2,s.p3,k/perSegment));
+        pts.push(cubicPoint(s.p0,s.p1,s.p2,s.p3,k/steps));
       }
     }
+
+    entry.samples.set(steps,pts);
     return pts;
+  }
+
+  function bezierCachedBounds(o){
+    if(!o || !Array.isArray(o.anchors) || !o.anchors.length) return null;
+    const entry=bezierCacheEntry(o);
+    if(entry.bounds) return entry.bounds;
+
+    const pts=bezierSamplePoints(o,18);
+    entry.bounds=pts.length
+      ? bbox(pts)
+      : bbox(o.anchors.map(a=>({x:a.x,y:a.y})));
+
+    return entry.bounds;
+  }
+
+  function currentViewportWorldBounds(paddingPx=80){
+    const rect=canvas.getBoundingClientRect();
+    const pad=Math.max(0,Number(paddingPx)||0)/Math.max(.01,viewZoom);
+    return {
+      x:(-viewX)/viewZoom-pad,
+      y:(-viewY)/viewZoom-pad,
+      w:rect.width/viewZoom+pad*2,
+      h:rect.height/viewZoom+pad*2
+    };
+  }
+
+  function boundsIntersect(a,b){
+    return !!(
+      a && b &&
+      a.x<=b.x+b.w &&
+      a.x+a.w>=b.x &&
+      a.y<=b.y+b.h &&
+      a.y+a.h>=b.y
+    );
+  }
+
+  function bezierVisibleInViewport(o,viewport){
+    const b=bezierCachedBounds(o);
+    return !b || boundsIntersect(b,viewport);
   }
 
   function drawBezierPath(targetCtx,o){
@@ -4504,8 +4585,7 @@
     if(!o) return null;
 
     if(o.kind==='bezier'){
-      const pts=bezierSamplePoints(o,18);
-      return pts.length ? bbox(pts) : (o.anchors&&o.anchors.length?bbox(o.anchors):null);
+      return bezierCachedBounds(o);
     }
 
     if(o.kind==='text'){
@@ -5973,6 +6053,9 @@
     if(!o || !r) return false;
 
     if(o.kind==='bezier'){
+      const bb=bezierCachedBounds(o);
+      if(bb && !boundsIntersect(bb,r)) return false;
+
       const pts=bezierSamplePoints(o,32);
       if(!pts.length) return false;
 
@@ -6834,6 +6917,8 @@
     }
 
     if(o.kind==='bezier'){
+      const bb=bezierCachedBounds(o);
+      if(bb && !pointInBounds(p,bb,baseTol+strokeW)) return false;
       const pts=bezierSamplePoints(o,28);
       if(o.closed && pts.length>=3 && pointInPolygon(p,pts)) return true;
       for(let i=1;i<pts.length;i++){
@@ -7703,7 +7788,15 @@
 
     drawAdaptiveGrid();
 
+    const viewportWorld=currentViewportWorldBounds(96);
+
     for(const o of objects){
+      // Bézier paths can be relatively expensive to evaluate and draw.
+      // Skip them entirely when they are well outside the visible viewport.
+      if(o.kind==='bezier' && !bezierVisibleInViewport(o,viewportWorld)){
+        continue;
+      }
+
       if(o.kind==='stroke'){
         if(o.inkEngine==='adaptive-v7'){
           drawFastCommittedStroke(ctx,o.points,o.style);
