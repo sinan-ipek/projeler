@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.8</title>
+<title>Beyaz Tahta v18.9</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -144,6 +144,43 @@
   #color{width:38px;height:36px;padding:3px;cursor:pointer}
   #width{width:54px}
   #shapeType{max-width:112px}
+
+  .selectToolWrap{
+    position:relative;
+    display:inline-flex;
+  }
+  #selectModeMenu{
+    position:absolute;
+    top:42px;
+    left:0;
+    display:none;
+    gap:6px;
+    padding:6px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,.14);
+    z-index:58;
+  }
+  #selectModeMenu.open{display:flex}
+  #selectModeMenu button{
+    width:38px;
+    min-width:38px;
+    max-width:38px;
+    height:36px;
+    padding:0;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:#fff;
+  }
+  #selectModeMenu button.active{
+    background:#eef4ff;
+    border-color:#2563eb;
+  }
+  #selectModeMenu svg{width:22px;height:22px;display:block}
 
   #contextMenu{
     position:absolute;
@@ -756,8 +793,25 @@
       </svg>
     </button>
 
-    <button id="selectBtn" class="iconBtn" title="Seç" aria-label="Seç">↖</button>
-    <button id="marqueeModeBtn" class="iconBtn" title="Seçim: tamamen içinde" aria-label="Seçim dikdörtgeni modu" aria-pressed="false">□</button>
+    <div class="selectToolWrap">
+      <button id="selectBtn" class="iconBtn" title="Seç" aria-label="Seç">↖</button>
+      <div id="selectModeMenu" role="menu" aria-label="Seçim dikdörtgeni modu">
+        <button id="selectContainBtn" type="button" title="Tam seçim" aria-label="Tam seçim">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 19 18 6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
+            <path d="M12 6h6v6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="3.5" y="3.5" width="17" height="17" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          </svg>
+        </button>
+        <button id="selectIntersectBtn" type="button" title="Kısmi seçim" aria-label="Kısmi seçim">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 19 18 6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-dasharray="2.2 2.2"/>
+            <path d="M12 6h6v6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 2.2"/>
+            <rect x="3.5" y="3.5" width="17" height="17" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.2 2.2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
 
     <button id="pointSnapBtn" class="iconBtn" title="Nokta snap: kapalı" aria-label="Nokta snap" aria-pressed="false">
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1079,7 +1133,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.8 · Bézier kapanış, seçim, nokta tipi ve silgi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.9 · Seçim alt menüsü ve Bézier +/− imleci</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1284,7 +1338,9 @@
   const inkBtn = document.getElementById('inkBtn');
   const penBtn = document.getElementById('penBtn');
   const selectBtn = document.getElementById('selectBtn');
-  const marqueeModeBtn = document.getElementById('marqueeModeBtn');
+  const selectModeMenu = document.getElementById('selectModeMenu');
+  const selectContainBtn = document.getElementById('selectContainBtn');
+  const selectIntersectBtn = document.getElementById('selectIntersectBtn');
   const pointSnapBtn = document.getElementById('pointSnapBtn');
   const eraserBtn = document.getElementById('eraserBtn');
   const eraserMenu = document.getElementById('eraserMenu');
@@ -1333,6 +1389,8 @@
   let fillLongPressTriggered = false;
   let eraserPressTimer = null;
   let eraserLongPressTriggered = false;
+  let selectPressTimer = null;
+  let selectLongPressTriggered = false;
   const widthEl = document.getElementById('width');
   const formatPainterBtn = document.getElementById('formatPainterBtn');
   const statusEl = document.getElementById('status');
@@ -4048,6 +4106,30 @@
     }
 
     bezierHover={type:'new',point:{x:p.x,y:p.y},index:-1};
+  }
+
+  function drawBezierHoverCue(){
+    if(mode!=='pen' || !bezierHover || !bezierHover.point) return;
+    if(bezierHover.type!=='add' && bezierHover.type!=='delete') return;
+
+    const p=bezierHover.point;
+    const symbol=bezierHover.type==='add' ? '+' : '−';
+
+    ctx.save();
+    ctx.setTransform(
+      dpr*viewZoom,0,
+      0,dpr*viewZoom,
+      dpr*viewX,dpr*viewY
+    );
+    ctx.font=`bold ${17/viewZoom}px Arial, sans-serif`;
+    ctx.textAlign='left';
+    ctx.textBaseline='middle';
+    ctx.fillStyle='#2563eb';
+    ctx.strokeStyle='white';
+    ctx.lineWidth=4/viewZoom;
+    ctx.strokeText(symbol,p.x+7/viewZoom,p.y-9/viewZoom);
+    ctx.fillText(symbol,p.x+7/viewZoom,p.y-9/viewZoom);
+    ctx.restore();
   }
 
   function drawShape(o, ghost=false){
@@ -7787,6 +7869,7 @@
       if(active && active.kind==='bezier'){
         drawBezierEditingOverlay(active,{showBox:false});
       }
+      drawBezierHoverCue();
     }
 
     if(mode==='eraser' && eraserCursor){
@@ -9440,6 +9523,9 @@
   }
 
   function updateContextMenuState(){
+    const deleteLabel=deleteContextBtn && deleteContextBtn.querySelector('span:last-child');
+    if(deleteLabel) deleteLabel.textContent='Sil';
+
     const targets=contextTargetIndices
       .map(i=>objects[i])
       .filter(Boolean);
@@ -12602,23 +12688,54 @@
 
   function updateMarqueeModeUI(){
     const partial=marqueeSelectionMode==='intersect';
-    marqueeModeBtn.classList.toggle('active',partial);
-    marqueeModeBtn.setAttribute('aria-pressed',String(partial));
-    marqueeModeBtn.textContent=partial ? '◩' : '□';
-    marqueeModeBtn.title=partial
-      ? 'Seçim: kısmen değen nesneler'
-      : 'Seçim: tamamen dikdörtgen içinde';
+    selectContainBtn.classList.toggle('active',!partial);
+    selectIntersectBtn.classList.toggle('active',partial);
+    selectBtn.title=partial
+      ? 'Seç — kısmi seçim modu'
+      : 'Seç — tam seçim modu';
   }
 
-  marqueeModeBtn.addEventListener('click',e=>{
+  function closeSelectModeMenu(){
+    selectModeMenu.classList.remove('open');
+  }
+
+  selectContainBtn.addEventListener('click',e=>{
     e.stopPropagation();
-    marqueeSelectionMode=marqueeSelectionMode==='contain'
-      ? 'intersect'
-      : 'contain';
+    marqueeSelectionMode='contain';
     updateMarqueeModeUI();
-    statusEl.textContent=marqueeSelectionMode==='contain'
-      ? 'Seçim dikdörtgeni — yalnız tamamen içinde kalan nesneler'
-      : 'Seçim dikdörtgeni — kısmen değen nesneler de seçilir';
+    closeSelectModeMenu();
+    statusEl.textContent='Tam seçim — yalnız tamamen çerçeve içinde kalan nesneler';
+  });
+
+  selectIntersectBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    marqueeSelectionMode='intersect';
+    updateMarqueeModeUI();
+    closeSelectModeMenu();
+    statusEl.textContent='Kısmi seçim — çerçeveye değen nesneler de seçilir';
+  });
+
+  selectBtn.addEventListener('pointerdown',e=>{
+    if(e.button!==0) return;
+    selectLongPressTriggered=false;
+    clearTimeout(selectPressTimer);
+    selectPressTimer=setTimeout(()=>{
+      selectLongPressTriggered=true;
+      closeContextMenu();
+      eraserMenu.classList.remove('open');
+      colorMenu.classList.remove('open');
+      selectModeMenu.classList.add('open');
+    },520);
+  });
+
+  selectBtn.addEventListener('pointerup',e=>{
+    if(e.button!==0) return;
+    clearTimeout(selectPressTimer);
+  });
+
+  selectBtn.addEventListener('pointercancel',()=>{
+    clearTimeout(selectPressTimer);
+    selectLongPressTriggered=false;
   });
 
   updateMarqueeModeUI();
@@ -12636,6 +12753,7 @@
   });
 
   penBtn.onclick=()=>{
+    closeSelectModeMenu();
     cancelFormatPainter();
     clearHandleSelection();
     if(textEditing) closeTextEditor(true);
@@ -12674,6 +12792,7 @@
   };
 
     inkBtn.onclick=()=>{
+    closeSelectModeMenu();
     cancelFormatPainter();
     if(textEditing) closeTextEditor(true);
     textBtn.classList.remove('active');
@@ -12694,6 +12813,11 @@
   };
 
   selectBtn.onclick=()=>{
+    if(selectLongPressTriggered){
+      selectLongPressTriggered=false;
+      return;
+    }
+    closeSelectModeMenu();
     cancelFormatPainter();
     clearHandleSelection();
     if(textEditing) closeTextEditor(true);
@@ -12787,6 +12911,7 @@
   }
 
   function activateEraserTool(kind='stroke',radius=eraserRadius){
+    closeSelectModeMenu();
     cancelFormatPainter();
     if(textEditing) closeTextEditor(true);
 
