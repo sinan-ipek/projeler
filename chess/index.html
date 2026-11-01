@@ -1931,23 +1931,64 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 
   // ===================== RENDER =====================
   let lastAnimatedMove = null;
+  let activeMoveAnimation = null;
   function animateLastMove(){
     const u=game.history[game.history.length-1];
     if(!u||u===lastAnimatedMove)return;
     lastAnimatedMove=u;
-    const from=elBoard.querySelector(`.sq[data-sq="${u.m.from}"]`);
-    const to=elBoard.querySelector(`.sq[data-sq="${u.m.to}"]`);
-    if(!from||!to)return;
-    const a=from.getBoundingClientRect(),b=to.getBoundingClientRect();
-    if(!a.width||!b.width)return;
-    const ghost=document.createElement("span");
-    ghost.className="piece "+colorOf(u.fromP);
-    ghost.innerHTML=chessPieceHTML(u.fromP);
-    ghost.style.cssText=`position:fixed;z-index:10000;pointer-events:none;display:flex;align-items:center;justify-content:center;left:${a.left}px;top:${a.top}px;width:${a.width}px;height:${a.height}px;transition:transform 850ms cubic-bezier(.42,0,.58,1);`;
-    const target=to.querySelector(".piece");if(target)target.style.visibility="hidden";
-    document.body.appendChild(ghost);
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{ghost.style.transform=`translate(${b.left-a.left}px,${b.top-a.top}px)`;}));
-    setTimeout(()=>{ghost.remove();if(target)target.style.visibility="";},900);
+    if(activeMoveAnimation)activeMoveAnimation();
+    const pieces=[{from:u.m.from,to:u.m.to,piece:u.fromP}];
+    if(u.castleRook)pieces.push({from:u.castleRook.from,to:u.castleRook.to,piece:u.castleRook.piece});
+    const ghosts=[],hidden=[];
+    let cancelled=false;
+    const cleanup=()=>{
+      if(cancelled)return;
+      cancelled=true;
+      ghosts.forEach(g=>g.remove());
+      hidden.forEach(el=>{el.style.visibility="";});
+      if(activeMoveAnimation===cleanup)activeMoveAnimation=null;
+    };
+    activeMoveAnimation=cleanup;
+    const duration=850;
+    function slide({from,to,piece},delay){
+      const fromEl=elBoard.querySelector(`.sq[data-sq="${from}"]`);
+      const toEl=elBoard.querySelector(`.sq[data-sq="${to}"]`);
+      if(!fromEl||!toEl)return;
+      const a=fromEl.getBoundingClientRect(),b=toEl.getBoundingClientRect();
+      if(!a.width||!b.width)return;
+      const ghost=document.createElement("span");
+      ghost.className="piece "+colorOf(piece);
+      ghost.innerHTML=chessPieceHTML(piece);
+      ghost.style.cssText=`position:fixed;z-index:10000;pointer-events:none;display:flex;align-items:center;justify-content:center;left:${a.left}px;top:${a.top}px;width:${a.width}px;height:${a.height}px;transition:transform ${duration}ms cubic-bezier(.42,0,.58,1);`;
+      const target=toEl.querySelector(".piece");
+      if(target){target.style.visibility="hidden";hidden.push(target);}
+      document.body.appendChild(ghost);ghosts.push(ghost);
+      setTimeout(()=>{
+        if(cancelled)return;
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          if(!cancelled)ghost.style.transform=`translate(${b.left-a.left}px,${b.top-a.top}px)`;
+        }));
+      },delay);
+    }
+    // Rok: kale ilk aşamada bekler; şah yerine oturduktan sonra kale hareket eder.
+    if(u.castleRook){
+      const rookFrom=elBoard.querySelector(`.sq[data-sq="${u.castleRook.from}"]`);
+      if(rookFrom){
+        const a=rookFrom.getBoundingClientRect();
+        const rook=document.createElement("span");
+        rook.className="piece "+colorOf(u.castleRook.piece);
+        rook.innerHTML=chessPieceHTML(u.castleRook.piece);
+        rook.style.cssText=`position:fixed;z-index:9999;pointer-events:none;display:flex;align-items:center;justify-content:center;left:${a.left}px;top:${a.top}px;width:${a.width}px;height:${a.height}px;`;
+        document.body.appendChild(rook);ghosts.push(rook);
+        setTimeout(()=>rook.remove(),duration+50);
+      }
+      slide(pieces[0],0);
+      setTimeout(()=>{if(!cancelled)slide(pieces[1],0);},duration+50);
+      setTimeout(cleanup,duration*2+180);
+    }else{
+      slide(pieces[0],0);
+      setTimeout(cleanup,duration+90);
+    }
   }
   function render(){
     if (!elBoard.dataset.built){
@@ -2811,5 +2852,5 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.5.2"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.8.0"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v1.9.0 · Stockfish rakip motoru (1–20)</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.5.2"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v1.9.1 · Rokta önce şah, sonra kale animasyonu</div></body>
 </html>
