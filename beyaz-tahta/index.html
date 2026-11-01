@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.12</title>
+<title>Beyaz Tahta v18.13</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1142,7 +1142,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.12 · Uygun geometriler ortak Bézier altyapısında</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.13 · Bézier nesne dönüşümü tamamlandı ve çizgi davranışı korundu</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -4133,7 +4133,13 @@
       const hout=rotatePoint({x:center.x+a.out.x,y:center.y+a.out.y},center,angle||0);
       return {x:p.x,y:p.y,in:hin,out:hout,broken:false};
     });
-    return makeBezierShape(world,{closed:true,style,shapeType,source,boxAngle:angle||0});
+    return makeBezierShape(world,{
+      closed:true,
+      style,
+      shapeType,
+      source,
+      boxAngle:angle||0
+    });
   }
 
   function drawableToBezier(o){
@@ -9257,10 +9263,24 @@
         lockedShapeType=lockedShape.kind;
         lockPointer={x:points[points.length-1].x,y:points[points.length-1].y};
 
-        if(lockedShape.kind==='line'){
+        if(
+          lockedShape.kind==='bezier' &&
+          lockedShape.shapeType==='line' &&
+          Array.isArray(lockedShape.anchors) &&
+          lockedShape.anchors.length>=2
+        ){
           lockAnchor={x:points[0].x,y:points[0].y};
-          lockedShape.a={...lockAnchor};
-          lockedShape.b={...lockPointer};
+          const first=lockedShape.anchors[0];
+          const last=lockedShape.anchors[lockedShape.anchors.length-1];
+
+          first.x=lockAnchor.x; first.y=lockAnchor.y;
+          first.in={...lockAnchor}; first.out={...lockAnchor};
+
+          last.x=lockPointer.x; last.y=lockPointer.y;
+          last.in={...lockPointer}; last.out={...lockPointer};
+
+          normalizeBezierCenter(lockedShape);
+          lockedShapeSnapshot=JSON.parse(JSON.stringify(lockedShape));
           statusEl.textContent='Doğru aktif — A sabit, B’yi sürükleyebilirsin';
         }else if(lockedShape.kind==='arc'){
           lockedShapeSnapshot=JSON.parse(JSON.stringify(lockedShape));
@@ -11284,10 +11304,23 @@
     if(lockedShape){
       clearInkOverlay();
       resetWetInkState();
-      if(lockedShape.kind==='line'){
-        // Çizgi: A sabit, B fareyi takip eder.
-        lockedShape.a={...lockAnchor};
-        lockedShape.b={x:p.x,y:p.y};
+      if(
+        lockedShape.kind==='bezier' &&
+        lockedShape.shapeType==='line' &&
+        Array.isArray(lockedShape.anchors) &&
+        lockedShape.anchors.length>=2
+      ){
+        const first=lockedShape.anchors[0];
+        const last=lockedShape.anchors[lockedShape.anchors.length-1];
+
+        first.x=lockAnchor.x; first.y=lockAnchor.y;
+        first.in={...lockAnchor}; first.out={...lockAnchor};
+
+        last.x=p.x; last.y=p.y;
+        last.in={x:p.x,y:p.y};
+        last.out={x:p.x,y:p.y};
+
+        normalizeBezierCenter(lockedShape);
         statusEl.textContent='Doğru aktif — B noktası hareket ediyor';
 
       }else if(lockedShape.kind==='arc'){
@@ -11615,11 +11648,15 @@
       objects.push(accepted);
       committedObject=accepted;
       committedObjectIndex=objects.length-1;
-      statusEl.textContent = lockedShape.kind==='line'
+      statusEl.textContent = (
+        lockedShape.kind==='bezier' &&
+        lockedShape.shapeType==='line'
+      )
         ? 'Doğru kabul edildi — B son konumunda sabitlendi'
         : 'Şekil kabul edildi';
     }else if(previewRecognized){
-      const accepted=JSON.parse(JSON.stringify(previewRecognized));
+      const normalizedPreview=drawableToBezier(previewRecognized);
+      const accepted=JSON.parse(JSON.stringify(normalizedPreview));
       accepted.boxAngle=0;
       accepted.id=liveInkId || makeObjectId();
       objects.push(accepted);
@@ -13409,7 +13446,7 @@
         shapeName:'arc',
         source:'menu',
         boxAngle:0
-      }));
+      });
     }
     if(t==='sector'){
       const radius=100*insertionScale;
@@ -13433,7 +13470,7 @@
         shapeName:'sector',
         source:'menu',
         boxAngle:0
-      }));
+      });
     }
     if(t==='rect') objects.push(drawableToBezier({kind:'rect',center:{x:cx,y:cy},w:180*insertionScale,h:110*insertionScale,angle:0,style,shapeName:'rectangle',source:'menu'}));
     if(t==='ellipse') objects.push(drawableToBezier({kind:'ellipse',center:{x:cx,y:cy},rx:95*insertionScale,ry:60*insertionScale,angle:0,style,shapeName:'ellipse',source:'menu'}));
@@ -13508,7 +13545,7 @@
         shapeName:'x-y axes',
         source:'menu',
         boxAngle:0
-      }));
+      });
     }
 
     if(t==='hexagon') {
