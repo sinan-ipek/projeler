@@ -499,8 +499,11 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 .sq.chess-mated-square{position:relative;z-index:3}
 .sq.chess-mated-square .piece{display:flex;align-items:center;justify-content:center;transform-origin:50% 50%;animation:chess-king-fall .34s cubic-bezier(.2,.8,.25,1) .06s both}
 .sq.chess-mated-square .piece img,.sq.chess-mated-square .piece svg{animation:chess-king-red .18s ease-out .06s both}
-.chess-mate-bubble{position:absolute;z-index:8;pointer-events:none;transform:translate(-50%,-100%);background:#fff;border:2px solid #222;border-radius:18px;padding:9px 17px;font-size:clamp(15px,2vw,24px);font-weight:700;color:#191919;white-space:nowrap;box-shadow:0 5px 14px rgba(0,0,0,.14);opacity:0;animation:chess-mat-bubble-in .35s ease-out .4s forwards}
+.chess-mate-bubble{position:fixed;z-index:10020;pointer-events:none;transform:translate(-50%,-100%);background:#fff;border:2px solid #222;border-radius:18px;padding:9px 17px;font-size:clamp(15px,2vw,24px);font-weight:700;color:#191919;white-space:nowrap;box-shadow:0 5px 14px rgba(0,0,0,.14);opacity:0;animation:chess-mat-bubble-in .35s ease-out .4s forwards}
 .chess-mate-bubble:after{content:"";position:absolute;bottom:-10px;left:calc(50% - 7px);width:13px;height:13px;background:#fff;border-right:2px solid #222;border-bottom:2px solid #222;transform:rotate(45deg)}
+.chess-mate-bubble.chess-mate-below{transform:translate(-50%,0);animation:chess-mat-bubble-below-in .35s ease-out .4s forwards}
+.chess-mate-bubble.chess-mate-below:after{top:-10px;bottom:auto;border-right:0;border-bottom:0;border-left:2px solid #222;border-top:2px solid #222}
+@keyframes chess-mat-bubble-below-in{0%{opacity:0;transform:translate(-50%,12px)}100%{opacity:1;transform:translate(-50%,0)}}
 @keyframes chess-king-fall{0%{transform:scale(.78) rotate(0deg)}72%{transform:scale(.78) rotate(99deg)}86%{transform:scale(.78) rotate(83deg)}100%{transform:scale(.78) rotate(90deg)}}
 @keyframes chess-king-red{0%{filter:none}100%{filter:url(#chessKingRedFilter)}}
 @keyframes chess-mat-bubble-in{0%{opacity:0;transform:translate(-50%,-85%)}100%{opacity:1;transform:translate(-50%,-100%)}}
@@ -2873,5 +2876,5 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.5.2"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v1.9.2 · Sıralı rok ve doğru piyon terfisi animasyonu</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.9.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v1.9.3 · Mat balonu tahta dışına taşınca görünür</div></body>
 </html>
