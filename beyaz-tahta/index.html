@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.13</title>
+<title>Beyaz Tahta v18.14</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1142,7 +1142,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.13 · Bézier nesne dönüşümü tamamlandı ve çizgi davranışı korundu</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.14 · Fonksiyonlar 3 anchor Bézier ile sadeleştirildi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -4119,6 +4119,75 @@
     return makeBezierShape(anchors,opts);
   }
 
+  function threeAnchorFunctionBezier({
+    u0,
+    u1,
+    valueAt,
+    derivativeAt,
+    worldXAt,
+    worldYAt,
+    style,
+    shapeType,
+    source='menu',
+    boxAngle=0
+  }){
+    const um=(u0+u1)/2;
+    const us=[u0,um,u1];
+
+    const pts=us.map(u=>({
+      u,
+      x:worldXAt(u),
+      y:worldYAt(valueAt(u))
+    }));
+
+    function slopeAt(u){
+      const du=Math.max(1e-6,(u1-u0)*1e-5);
+      const ux0=u-du;
+      const ux1=u+du;
+      const wx0=worldXAt(ux0);
+      const wx1=worldXAt(ux1);
+      const dxdu=(wx1-wx0)/(2*du);
+      const dydU=derivativeAt(u);
+      const wy0=worldYAt(valueAt(u));
+      const wy1=worldYAt(valueAt(u)+dydU*du);
+      const dydu=(wy1-wy0)/du;
+      return Math.abs(dxdu)>1e-9 ? dydu/dxdu : 0;
+    }
+
+    const anchors=pts.map((p,i)=>({
+      x:p.x,
+      y:p.y,
+      in:{x:p.x,y:p.y},
+      out:{x:p.x,y:p.y},
+      broken:false
+    }));
+
+    for(let i=0;i<2;i++){
+      const a=pts[i];
+      const b=pts[i+1];
+      const dx=(b.x-a.x)/3;
+      const ma=slopeAt(a.u);
+      const mb=slopeAt(b.u);
+
+      anchors[i].out={
+        x:a.x+dx,
+        y:a.y+ma*dx
+      };
+      anchors[i+1].in={
+        x:b.x-dx,
+        y:b.y-mb*dx
+      };
+    }
+
+    return makeBezierShape(anchors,{
+      closed:false,
+      style,
+      shapeType,
+      source,
+      boxAngle
+    });
+  }
+
   function ellipseBezier(center,rx,ry,angle,style,shapeType='ellipse',source='menu'){
     const k=.5522847498307936;
     const local=[
@@ -4182,19 +4251,32 @@
     }
 
     if(o.kind==='parabola'){
-      const pts=[];
-      const n=80,a=o.angle||0;
-      for(let i=0;i<=n;i++){
-        const u=-1+2*i/n;
-        const q={
-          x:o.center.x+u*(o.w/2),
-          y:o.center.y+(o.mirrorY?-1:1)*(o.h/2-(u*u)*o.h)
-        };
-        pts.push(rotatePoint(q,o.center,a));
-      }
-      return smoothBezierFromPoints(pts,{
-        closed:false,style,shapeType:'parabola',source,boxAngle:a,maxAnchors:9
+      const a=o.angle||0;
+      const sy=o.mirrorY ? -1 : 1;
+      const local=threeAnchorFunctionBezier({
+        u0:-1,
+        u1:1,
+        valueAt:u=>u*u,
+        derivativeAt:u=>2*u,
+        worldXAt:u=>o.center.x+u*(o.w/2),
+        worldYAt:v=>o.center.y+sy*(o.h/2-v*o.h),
+        style,
+        shapeType:'parabola',
+        source,
+        boxAngle:a
       });
+
+      if(Math.abs(a)<1e-9) return local;
+
+      for(const an of local.anchors){
+        const p=rotatePoint(an,o.center,a);
+        const hin=rotatePoint(an.in,o.center,a);
+        const hout=rotatePoint(an.out,o.center,a);
+        an.x=p.x; an.y=p.y;
+        an.in=hin; an.out=hout;
+      }
+      normalizeBezierCenter(local);
+      return local;
     }
 
     if(o.kind==='stroke' && o.source==='menu'){
@@ -13324,100 +13406,80 @@
 
 
   function makeFunctionStroke(type,cx,cy,scale,style){
-    const pts=[];
-
     if(type==='sinx'){
-      // x in [-pi, pi], finite two-period-width style segment.
-      const n=180;
       const halfW=150*scale;
       const amp=65*scale;
-      for(let i=0;i<=n;i++){
-        const t=-Math.PI + (2*Math.PI*i/n);
-        pts.push({
-          x:cx + (t/Math.PI)*halfW,
-          y:cy - Math.sin(t)*amp
-        });
-      }
-      return {
-        kind:'stroke',
-        points:pts,
+      return threeAnchorFunctionBezier({
+        u0:-Math.PI,
+        u1:Math.PI,
+        valueAt:u=>Math.sin(u),
+        derivativeAt:u=>Math.cos(u),
+        worldXAt:u=>cx+(u/Math.PI)*halfW,
+        worldYAt:v=>cy-v*amp,
         style,
-        source:'menu',
-        shapeName:'sin x',
-        boxAngle:0
-      };
+        shapeType:'sin x',
+        source:'menu'
+      });
     }
 
     if(type==='tanx'){
-      // Keep away from +/- pi/2 asymptotes so this is a clean finite curve.
-      const n=160;
       const limit=1.18;
       const halfW=145*scale;
-      const ampScale=42*scale;
-      for(let i=0;i<=n;i++){
-        const t=-limit + (2*limit*i/n);
-        pts.push({
-          x:cx + (t/limit)*halfW,
-          y:cy - Math.tan(t)*ampScale
-        });
-      }
-      return {
-        kind:'stroke',
-        points:pts,
+      const amp=42*scale;
+      return threeAnchorFunctionBezier({
+        u0:-limit,
+        u1:limit,
+        valueAt:u=>Math.tan(u),
+        derivativeAt:u=>{
+          const c=Math.cos(u);
+          return 1/(c*c);
+        },
+        worldXAt:u=>cx+(u/limit)*halfW,
+        worldYAt:v=>cy-v*amp,
         style,
-        source:'menu',
-        shapeName:'tan x',
-        boxAngle:0
-      };
+        shapeType:'tan x',
+        source:'menu'
+      });
     }
 
     if(type==='ex'){
-      // x in [-2.2, 2.0], vertically centered finite exponential segment.
-      const n=170;
-      const xmin=-2.2, xmax=2.0;
+      const xmin=-2.2;
+      const xmax=2.0;
       const halfW=145*scale;
       const yScale=22*scale;
-      const baseY=cy + 48*scale;
-      for(let i=0;i<=n;i++){
-        const x=xmin+(xmax-xmin)*i/n;
-        const xn=(x-(xmin+xmax)/2)/((xmax-xmin)/2);
-        pts.push({
-          x:cx + xn*halfW,
-          y:baseY - Math.exp(x)*yScale
-        });
-      }
-      return {
-        kind:'stroke',
-        points:pts,
+      const baseY=cy+48*scale;
+      const mid=(xmin+xmax)/2;
+      const half=(xmax-xmin)/2;
+
+      return threeAnchorFunctionBezier({
+        u0:xmin,
+        u1:xmax,
+        valueAt:u=>Math.exp(u),
+        derivativeAt:u=>Math.exp(u),
+        worldXAt:u=>cx+((u-mid)/half)*halfW,
+        worldYAt:v=>baseY-v*yScale,
         style,
-        source:'menu',
-        shapeName:'eˣ',
-        boxAngle:0
-      };
+        shapeType:'eˣ',
+        source:'menu'
+      });
     }
+
     if(type==='x3'){
-      // Finite cubic curve y = x³.
-      const n=180;
       const limit=1.75;
       const halfW=145*scale;
       const yScale=22*scale;
 
-      for(let i=0;i<=n;i++){
-        const x=-limit + (2*limit*i/n);
-        pts.push({
-          x:cx + (x/limit)*halfW,
-          y:cy - (x*x*x)*yScale
-        });
-      }
-
-      return {
-        kind:'stroke',
-        points:pts,
+      return threeAnchorFunctionBezier({
+        u0:-limit,
+        u1:limit,
+        valueAt:u=>u*u*u,
+        derivativeAt:u=>3*u*u,
+        worldXAt:u=>cx+(u/limit)*halfW,
+        worldYAt:v=>cy-v*yScale,
         style,
-        source:'menu',
-        shapeName:'x³',
-        boxAngle:0
-      };
+        shapeType:'x³',
+        source:'menu'
+      });
     }
 
     return null;
@@ -13490,7 +13552,7 @@
 
     if(t==='sinx' || t==='tanx' || t==='ex' || t==='x3'){
       const fn=makeFunctionStroke(t,cx,cy,insertionScale,style);
-      if(fn) objects.push(drawableToBezier(fn));
+      if(fn) objects.push(fn);
     }
 
     if(t==='triangle') {
