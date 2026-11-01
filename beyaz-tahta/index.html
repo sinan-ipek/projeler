@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.3</title>
+<title>Beyaz Tahta v18.4</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1078,7 +1078,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.3 · Bézier düzenleme geri bildirimi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.4 · Bézier seçim ve aktif handle düzenlemesi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1386,6 +1386,7 @@
   let bezierPointerId = null;
   let bezierDragInfo = null; // {index, anchorIndex, start, altBroken}
   let bezierHover = null; // {type:'add'|'delete'|'close'|'continue'|'new', point, index}
+  let bezierActiveAnchorIndex = -1;
 
   let wetPrev=null;
   let wetLast=null;
@@ -3840,38 +3841,41 @@
     ctx.strokeStyle='#2563eb';
     ctx.fillStyle='white';
 
-    // Tangent helper lines.
-    ctx.save();
-    ctx.strokeStyle='rgba(37,99,235,.58)';
-    ctx.lineWidth=1/viewZoom;
-    for(const a of o.anchors){
-      const hin=bezierHandlePoint(a,'in');
-      const hout=bezierHandlePoint(a,'out');
+    // Only the active anchor shows tangent helper lines/handles.
+    const activeAnchor=(
+      bezierActiveAnchorIndex>=0 &&
+      bezierActiveAnchorIndex<o.anchors.length
+    ) ? o.anchors[bezierActiveAnchorIndex] : null;
 
-      if(Math.hypot(hin.x-a.x,hin.y-a.y)>.01){
+    if(activeAnchor){
+      const hin=bezierHandlePoint(activeAnchor,'in');
+      const hout=bezierHandlePoint(activeAnchor,'out');
+
+      ctx.save();
+      ctx.strokeStyle='rgba(37,99,235,.62)';
+      ctx.lineWidth=1/viewZoom;
+
+      if(Math.hypot(hin.x-activeAnchor.x,hin.y-activeAnchor.y)>.01){
         ctx.beginPath();
-        ctx.moveTo(a.x,a.y);
+        ctx.moveTo(activeAnchor.x,activeAnchor.y);
         ctx.lineTo(hin.x,hin.y);
         ctx.stroke();
       }
-      if(Math.hypot(hout.x-a.x,hout.y-a.y)>.01){
+      if(Math.hypot(hout.x-activeAnchor.x,hout.y-activeAnchor.y)>.01){
         ctx.beginPath();
-        ctx.moveTo(a.x,a.y);
+        ctx.moveTo(activeAnchor.x,activeAnchor.y);
         ctx.lineTo(hout.x,hout.y);
         ctx.stroke();
       }
-    }
-    ctx.restore();
+      ctx.restore();
 
-    // Tangent handles first.
-    for(const a of o.anchors){
       for(const key of ['in','out']){
-        const h=bezierHandlePoint(a,key);
-        if(Math.hypot(h.x-a.x,h.y-a.y)<=.01) continue;
+        const h=bezierHandlePoint(activeAnchor,key);
+        if(Math.hypot(h.x-activeAnchor.x,h.y-activeAnchor.y)<=.01) continue;
         ctx.beginPath();
         ctx.fillStyle='white';
         ctx.strokeStyle='#2563eb';
-        ctx.arc(h.x,h.y,4.5/viewZoom,0,Math.PI*2);
+        ctx.arc(h.x,h.y,5.25/viewZoom,0,Math.PI*2);
         ctx.fill();
         ctx.stroke();
       }
@@ -3881,7 +3885,9 @@
     o.anchors.forEach((a,i)=>{
       const s=5.5/viewZoom;
       ctx.beginPath();
-      ctx.fillStyle=(i===0 && !o.closed) ? '#dbeafe' : 'white';
+      ctx.fillStyle=(i===bezierActiveAnchorIndex)
+        ? '#2563eb'
+        : ((i===0 && !o.closed) ? '#dbeafe' : 'white');
       ctx.strokeStyle='#2563eb';
 
       if(a.broken){
@@ -3932,6 +3938,8 @@
     if(o && o.kind==='bezier'){
       const ah=bezierAnchorHit(o,p,hitR);
 
+      if(ah>=0) bezierActiveAnchorIndex=ah;
+
       if(!o.closed && o.anchors.length>=3 && ah===0){
         bezierHover={type:'close',point:{x:o.anchors[0].x,y:o.anchors[0].y},index:idx};
         return;
@@ -3974,14 +3982,14 @@
       dpr*viewX,dpr*viewY
     );
 
-    ctx.font=`${14/viewZoom}px Arial, sans-serif`;
+    ctx.font=`bold ${18/viewZoom}px Arial, sans-serif`;
     ctx.textAlign='left';
     ctx.textBaseline='middle';
     ctx.fillStyle='#2563eb';
     ctx.strokeStyle='white';
-    ctx.lineWidth=3/viewZoom;
-    ctx.strokeText(symbol,p.x+10/viewZoom,p.y-10/viewZoom);
-    ctx.fillText(symbol,p.x+10/viewZoom,p.y-10/viewZoom);
+    ctx.lineWidth=4/viewZoom;
+    ctx.strokeText(symbol,p.x+7/viewZoom,p.y-9/viewZoom);
+    ctx.fillText(symbol,p.x+7/viewZoom,p.y-9/viewZoom);
     ctx.restore();
   }
 
@@ -4712,6 +4720,8 @@
       const out=[];
       (o.anchors||[]).forEach((a,i)=>{
         out.push({name:'bezier-anchor-'+i,x:a.x,y:a.y});
+        if(i!==bezierActiveAnchorIndex) return;
+
         const hin=bezierHandlePoint(a,'in');
         const hout=bezierHandlePoint(a,'out');
         if(Math.hypot(hin.x-a.x,hin.y-a.y)>.01){
@@ -5977,6 +5987,48 @@
       b.y+b.h<=r.y+r.h;
   }
 
+  function objectIntersectsMarquee(o,r){
+    if(!o || !r) return false;
+
+    if(o.kind==='bezier'){
+      const pts=bezierSamplePoints(o,32);
+      if(!pts.length) return false;
+
+      // Any sampled curve point inside marquee.
+      for(const p of pts){
+        if(
+          p.x>=r.x && p.x<=r.x+r.w &&
+          p.y>=r.y && p.y<=r.y+r.h
+        ) return true;
+      }
+
+      // Or any curve segment crossing one of the marquee edges.
+      const edges=[
+        [{x:r.x,y:r.y},{x:r.x+r.w,y:r.y}],
+        [{x:r.x+r.w,y:r.y},{x:r.x+r.w,y:r.y+r.h}],
+        [{x:r.x+r.w,y:r.y+r.h},{x:r.x,y:r.y+r.h}],
+        [{x:r.x,y:r.y+r.h},{x:r.x,y:r.y}]
+      ];
+
+      function ccw(a,b,c){
+        return (c.y-a.y)*(b.x-a.x)>(b.y-a.y)*(c.x-a.x);
+      }
+      function intersects(a,b,c,d){
+        return ccw(a,c,d)!==ccw(b,c,d) && ccw(a,b,c)!==ccw(a,b,d);
+      }
+
+      for(let i=1;i<pts.length;i++){
+        for(const [a,b] of edges){
+          if(intersects(pts[i-1],pts[i],a,b)) return true;
+        }
+      }
+
+      return false;
+    }
+
+    return boundsInsideRect(objectBounds(o),r);
+  }
+
   function objectPointInsideSelection(i,p){
     const b=objectBounds(objects[i]);
     return !!(b && pointInBounds(p,b,6));
@@ -6339,7 +6391,13 @@
 
       for(const hnd of lineHandles){
         ctx.beginPath();
-        ctx.fillStyle=selectedHandleIs(hnd.name) ? '#2563eb' : 'white';
+        ctx.fillStyle=(
+          selectedHandleIs(hnd.name) ||
+          (
+            hnd.name.startsWith('bezier-anchor-') &&
+            Number(hnd.name.split('-')[2])===bezierActiveAnchorIndex
+          )
+        ) ? '#2563eb' : 'white';
         ctx.arc(hnd.x,hnd.y,6/viewZoom,0,Math.PI*2);
         ctx.fill();
         ctx.stroke();
@@ -6461,21 +6519,22 @@
 
     if(special.length){
       if(selected.kind==='bezier'){
-        ctx.save();
-        ctx.strokeStyle='rgba(37,99,235,.55)';
-        ctx.lineWidth=1/viewZoom;
-        ctx.setLineDash([]);
-        (selected.anchors||[]).forEach((a,i)=>{
+        const a=selected.anchors && selected.anchors[bezierActiveAnchorIndex];
+        if(a){
           const hin=bezierHandlePoint(a,'in');
           const hout=bezierHandlePoint(a,'out');
+          ctx.save();
+          ctx.strokeStyle='rgba(37,99,235,.62)';
+          ctx.lineWidth=1/viewZoom;
+          ctx.setLineDash([]);
           if(Math.hypot(hin.x-a.x,hin.y-a.y)>.01){
             ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(hin.x,hin.y);ctx.stroke();
           }
           if(Math.hypot(hout.x-a.x,hout.y-a.y)>.01){
             ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(hout.x,hout.y);ctx.stroke();
           }
-        });
-        ctx.restore();
+          ctx.restore();
+        }
       }
 
       for(const hnd of special){
@@ -6615,7 +6674,14 @@
     for(const h of special){
       const base=h.name.startsWith('sqrt-') ? 15 : 11;
       const radius=(pointerType==='touch' ? Math.max(22,base) : base)/viewZoom;
-      if(Math.hypot(p.x-h.x,p.y-h.y)<=radius) return h.name;
+      if(Math.hypot(p.x-h.x,p.y-h.y)<=radius){
+        if(h.name.startsWith('bezier-')){
+          const parts=h.name.split('-');
+          const idx=Number(parts[2]);
+          if(Number.isInteger(idx)) bezierActiveAnchorIndex=idx;
+        }
+        return h.name;
+      }
     }
 
     const isTriangle=
@@ -9533,6 +9599,8 @@
       ){
         setSelection([anyHit]);
         bezierDraftIndex=anyHit;
+        const hitBezier=objects[anyHit];
+        bezierActiveAnchorIndex=Math.max(0,(hitBezier.anchors||[]).length-1);
       }
 
       let idx=(selectedIndices.length===1 && objects[selectedIndices[0]] && objects[selectedIndices[0]].kind==='bezier')
@@ -9547,6 +9615,7 @@
         if(!o.closed && o.anchors.length>=3 && ah===0){
           saveState();
           o.closed=true;
+          bezierActiveAnchorIndex=0;
           normalizeBezierCenter(o);
           markBoardDirty();
           setSelection([idx]);
@@ -9561,6 +9630,7 @@
           if(o.anchors.length>2){
             saveState();
             o.anchors.splice(ah,1);
+            bezierActiveAnchorIndex=Math.min(ah,Math.max(0,o.anchors.length-1));
             if(o.closed && o.anchors.length<3) o.closed=false;
             normalizeBezierCenter(o);
             markBoardDirty();
@@ -9576,6 +9646,7 @@
         if(near && near.distance<=hitR){
           saveState();
           const ai=splitBezierSegment(o,near.segmentIndex,near.t);
+          bezierActiveAnchorIndex=ai;
           normalizeBezierCenter(o);
           bezierPointerId=e.pointerId;
           bezierDragInfo={index:idx,anchorIndex:ai,start:{...p},altBroken:!!e.altKey};
@@ -9614,6 +9685,7 @@
         broken:!!e.altKey
       };
       o.anchors.push(anchor);
+      bezierActiveAnchorIndex=o.anchors.length-1;
       normalizeBezierCenter(o);
       bezierPointerId=e.pointerId;
       bezierDragInfo={index:idx,anchorIndex:o.anchors.length-1,start:{...p},altBroken:!!e.altKey};
@@ -9978,6 +10050,9 @@
         // Clicking a new object collapses to a single selection.
         if(!hitAlreadySelected){
           setSelection([hit]);
+          if(objects[hit] && objects[hit].kind==='bezier'){
+            bezierActiveAnchorIndex=Math.max(0,(objects[hit].anchors||[]).length-1);
+          }
         }
 
         // Locked objects are selectable so their bounding box is visible,
@@ -10920,10 +10995,12 @@
         if(r && r.w>3 && r.h>3){
           const hits=[];
           for(let i=0;i<objects.length;i++){
-            const b=objectBounds(objects[i]);
-            if(boundsInsideRect(b,r)) hits.push(i);
+            if(objectIntersectsMarquee(objects[i],r)) hits.push(i);
           }
           setSelection(hits);
+          if(hits.length===1 && objects[hits[0]] && objects[hits[0]].kind==='bezier'){
+            bezierActiveAnchorIndex=Math.max(0,(objects[hits[0]].anchors||[]).length-1);
+          }
           statusEl.textContent = hits.length
             ? `${hits.length} nesne seçildi`
             : 'Seçim yok';
@@ -12347,6 +12424,14 @@
       bezierDraftIndex=-1;
     }else{
       bezierDraftIndex=selectedIndices[0];
+      const selectedBezier=objects[bezierDraftIndex];
+      bezierActiveAnchorIndex=Math.max(
+        0,
+        Math.min(
+          (selectedBezier.anchors||[]).length-1,
+          bezierActiveAnchorIndex>=0 ? bezierActiveAnchorIndex : (selectedBezier.anchors||[]).length-1
+        )
+      );
     }
     canvas.style.cursor='crosshair';
     bezierHover=null;
