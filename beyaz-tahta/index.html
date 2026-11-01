@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.17</title>
+<title>Beyaz Tahta v18.18</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -830,7 +830,6 @@
     </button>
 
     <button id="divideBezierBtn" title="İki kapalı Bézier'i kesişim bölgelerine parçala" disabled>Parçala</button>
-    <button id="unionBezierBtn" title="İki kapalı Bézier'i tek dış sınıra bütünleştir" disabled>Bütünleştir</button>
 
     <button id="inkBtn" class="active iconBtn" title="Ink" aria-label="Ink">✎</button>
     <button id="penBtn" class="iconBtn" title="Bézier dolma kalem" aria-label="Bézier dolma kalem">
@@ -1145,7 +1144,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.17 · Bézier Parçala / Bütünleştir denemesi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.18 · Bézier Parçala aracı</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1357,7 +1356,6 @@
   const selectIntersectBtn = document.getElementById('selectIntersectBtn');
   const pointSnapBtn = document.getElementById('pointSnapBtn');
   const divideBezierBtn = document.getElementById('divideBezierBtn');
-  const unionBezierBtn = document.getElementById('unionBezierBtn');
   const eraserBtn = document.getElementById('eraserBtn');
   const eraserMenu = document.getElementById('eraserMenu');
   const eraserOptions = Array.from(document.querySelectorAll('.eraserOption'));
@@ -4100,10 +4098,9 @@
   }
 
   function updateBooleanButtons(){
-    if(!divideBezierBtn || !unionBezierBtn) return;
+    if(!divideBezierBtn) return;
     const ready=booleanReadyIndices().length===2;
     divideBezierBtn.disabled=!ready;
-    unionBezierBtn.disabled=!ready;
   }
 
   function booleanCross(a,b){
@@ -4489,112 +4486,7 @@
     });
   }
 
-  function booleanBoundaryLoops(arrangement){
-    const {half,faces}=arrangement;
-    const boundary=[];
 
-    for(let i=0;i<half.length;i++){
-      const h=half[i];
-      if(h.face<0) continue;
-      const lf=faces[h.face];
-      const twin=half[h.twin];
-      const rf=(twin && twin.face>=0)?faces[twin.face]:null;
-
-      if(lf && lf.insideUnion && !(rf && rf.insideUnion)){
-        boundary.push(i);
-      }
-    }
-
-    const byFrom=new Map();
-    for(const hi of boundary){
-      const from=half[hi].from;
-      if(!byFrom.has(from)) byFrom.set(from,[]);
-      byFrom.get(from).push(hi);
-    }
-
-    const unused=new Set(boundary);
-    const loops=[];
-
-    while(unused.size){
-      const start=unused.values().next().value;
-      const loop=[];
-      let cur=start;
-      let guard=0;
-
-      while(cur!==undefined && unused.has(cur) && guard<boundary.length+8){
-        unused.delete(cur);
-        loop.push(cur);
-        const node=half[cur].to;
-        const choices=(byFrom.get(node)||[]).filter(x=>unused.has(x));
-
-        if(!choices.length){
-          cur=(half[start].from===node)?start:undefined;
-          break;
-        }
-
-        if(choices.length===1){
-          cur=choices[0];
-        }else{
-          const incoming=half[cur];
-          const a1=Math.atan2(
-            incoming.p3.y-incoming.p2.y,
-            incoming.p3.x-incoming.p2.x
-          );
-
-          let best=choices[0],bestTurn=Infinity;
-          for(const ci of choices){
-            const ch=half[ci];
-            const a2=Math.atan2(ch.p1.y-ch.p0.y,ch.p1.x-ch.p0.x);
-            let turn=a2-a1;
-            while(turn<=-Math.PI) turn+=Math.PI*2;
-            while(turn>Math.PI) turn-=Math.PI*2;
-            const score=Math.abs(turn);
-            if(score<bestTurn){
-              bestTurn=score;
-              best=ci;
-            }
-          }
-          cur=best;
-        }
-
-        guard++;
-        if(cur===start) break;
-      }
-
-      if(loop.length>=2 && half[loop[loop.length-1]].to===half[start].from){
-        loops.push(loop);
-      }
-    }
-
-    return loops;
-  }
-
-  function booleanLoopToBezier(arrangement,loop,styleSource){
-    const faceLike={halfIndices:loop,inA:true,inB:false};
-    const hs=loop.map(i=>arrangement.half[i]);
-    if(hs.length<2) return null;
-
-    const anchors=hs.map((h,i)=>{
-      const prev=hs[(i-1+hs.length)%hs.length];
-      return {
-        x:h.p0.x,
-        y:h.p0.y,
-        in:{...prev.p2},
-        out:{...h.p1},
-        broken:prev.source!==h.source
-      };
-    });
-
-    return makeBezierShape(anchors,{
-      closed:true,
-      style:cloneObject(styleSource.style||{}),
-      shapeType:'boolean-union',
-      source:'boolean',
-      boxAngle:0,
-      fillColor:styleSource.fillColor||null,
-      fillOpacity:fillTransparencyValue(styleSource)
-    });
-  }
 
   function replaceBooleanSelection(indices,replacements,label){
     const sorted=indices.slice().sort((a,b)=>a-b);
@@ -4648,43 +4540,6 @@
     );
   }
 
-  function unionSelectedBeziers(){
-    const indices=booleanReadyIndices();
-    if(indices.length!==2) return;
-
-    const oA=objects[indices[0]];
-    const oB=objects[indices[1]];
-    const arrangement=booleanBuildArrangement(oA,oB);
-
-    if(arrangement.intersectionCount<2){
-      statusEl.textContent='Bütünleştir: kesişen iki kapalı Bézier gerekli';
-      return;
-    }
-
-    const loops=booleanBoundaryLoops(arrangement);
-    if(!loops.length){
-      statusEl.textContent='Bütünleştir: dış sınır oluşturulamadı';
-      return;
-    }
-
-    const topSource=indices[1]>indices[0]?oB:oA;
-    const results=loops
-      .map(loop=>booleanLoopToBezier(arrangement,loop,topSource))
-      .filter(Boolean);
-
-    if(!results.length){
-      statusEl.textContent='Bütünleştir: sonuç oluşturulamadı';
-      return;
-    }
-
-    replaceBooleanSelection(
-      indices,
-      results,
-      results.length===1
-        ? 'Bütünleştir — tek Bézier bölgesi oluşturuldu'
-        : `Bütünleştir — ${results.length} ayrı dış bölge oluştu`
-    );
-  }
 
   function straightBezierFromPoints(points,opts={}){
     const pts=(points||[]).filter(finitePoint);
@@ -13788,10 +13643,6 @@
     divideSelectedBeziers();
   });
 
-  unionBezierBtn.addEventListener('click',e=>{
-    e.stopPropagation();
-    unionSelectedBeziers();
-  });
 
   updateBooleanButtons();
 
