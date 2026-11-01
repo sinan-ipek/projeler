@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.11</title>
+<title>Beyaz Tahta v18.12</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1142,7 +1142,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.11 · Yay/dilim 0–360° ve açı snap</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.12 · Uygun geometriler ortak Bézier altyapısında</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -3560,7 +3560,7 @@
   }
 
   function makeSqrtSymbol(cx,cy,scale,style){
-    return {
+    const legacy={
       kind:'symbol',
       symbolType:'sqrt',
       center:{x:cx,y:cy},
@@ -3576,10 +3576,11 @@
       shapeName:'sqrt',
       boxAngle:0
     };
+    return drawableToBezier(legacy);
   }
 
   function makeIntegralSymbol(cx,cy,scale,style){
-    return {
+    const legacy={
       kind:'symbol',
       symbolType:'integral',
       center:{x:cx,y:cy},
@@ -3592,6 +3593,7 @@
       shapeName:'integral',
       boxAngle:0
     };
+    return drawableToBezier(legacy);
   }
 
   function textFontFamily(){
@@ -4043,6 +4045,183 @@
 
   function normalizeBezierCenter(o){
     if(o&&o.kind==='bezier') o.center=bezierCenter(o);
+  }
+
+  function makeBezierShape(anchors,{
+    closed=false,
+    style=null,
+    shapeType='path',
+    source='menu',
+    boxAngle=0,
+    fillColor=null,
+    fillOpacity=0
+  }={}){
+    const o={
+      id:makeObjectId(),
+      kind:'bezier',
+      anchors:(anchors||[]).map(a=>({
+        x:a.x,
+        y:a.y,
+        in:finitePoint(a.in)?{x:a.in.x,y:a.in.y}:{x:a.x,y:a.y},
+        out:finitePoint(a.out)?{x:a.out.x,y:a.out.y}:{x:a.x,y:a.y},
+        broken:!!a.broken
+      })),
+      closed:!!closed,
+      style:cloneObject(style||strokeStyle()),
+      source,
+      shapeType,
+      shapeName:shapeType,
+      boxAngle:Number.isFinite(boxAngle)?boxAngle:0
+    };
+    if(fillColor) o.fillColor=fillColor;
+    if(Number.isFinite(fillOpacity)) o.fillOpacity=fillOpacity;
+    normalizeBezierCenter(o);
+    return o;
+  }
+
+  function straightBezierFromPoints(points,opts={}){
+    const pts=(points||[]).filter(finitePoint);
+    return makeBezierShape(
+      pts.map(p=>({
+        x:p.x,y:p.y,
+        in:{x:p.x,y:p.y},
+        out:{x:p.x,y:p.y},
+        broken:true
+      })),
+      opts
+    );
+  }
+
+  function smoothBezierFromPoints(points,opts={}){
+    const pts=(points||[]).filter(finitePoint);
+    if(pts.length<2) return straightBezierFromPoints(pts,opts);
+
+    const desired=Math.max(2,Math.min(18,Number(opts.maxAnchors)||12));
+    const step=Math.max(1,Math.floor((pts.length-1)/(desired-1)));
+    const sampled=[];
+    for(let i=0;i<pts.length;i+=step) sampled.push(pts[i]);
+    const last=pts[pts.length-1];
+    if(sampled[sampled.length-1]!==last) sampled.push(last);
+
+    const anchors=sampled.map((p,i)=>{
+      const prev=sampled[Math.max(0,i-1)];
+      const next=sampled[Math.min(sampled.length-1,i+1)];
+      const dx=next.x-prev.x;
+      const dy=next.y-prev.y;
+      return {
+        x:p.x,y:p.y,
+        in:i===0 ? {x:p.x,y:p.y} : {x:p.x-dx/6,y:p.y-dy/6},
+        out:i===sampled.length-1 ? {x:p.x,y:p.y} : {x:p.x+dx/6,y:p.y+dy/6},
+        broken:false
+      };
+    });
+
+    return makeBezierShape(anchors,opts);
+  }
+
+  function ellipseBezier(center,rx,ry,angle,style,shapeType='ellipse',source='menu'){
+    const k=.5522847498307936;
+    const local=[
+      {x: rx,y:0, in:{x:rx,y:-k*ry}, out:{x:rx,y:k*ry}},
+      {x:0,y: ry, in:{x:k*rx,y:ry}, out:{x:-k*rx,y:ry}},
+      {x:-rx,y:0, in:{x:-rx,y:k*ry}, out:{x:-rx,y:-k*ry}},
+      {x:0,y:-ry, in:{x:-k*rx,y:-ry}, out:{x:k*rx,y:-ry}}
+    ];
+    const world=local.map(a=>{
+      const p=rotatePoint({x:center.x+a.x,y:center.y+a.y},center,angle||0);
+      const hin=rotatePoint({x:center.x+a.in.x,y:center.y+a.in.y},center,angle||0);
+      const hout=rotatePoint({x:center.x+a.out.x,y:center.y+a.out.y},center,angle||0);
+      return {x:p.x,y:p.y,in:hin,out:hout,broken:false};
+    });
+    return makeBezierShape(world,{closed:true,style,shapeType,source,boxAngle:angle||0});
+  }
+
+  function drawableToBezier(o){
+    if(!o || o.kind==='bezier' || o.kind==='arc' || o.kind==='sector' ||
+       o.kind==='axes' || o.kind==='text' || o.kind==='image'){
+      return o;
+    }
+
+    const style=cloneObject(o.style||strokeStyle());
+    const source=o.source||'auto';
+    const shapeType=o.shapeType||o.shapeName||o.kind;
+
+    if(o.kind==='line'){
+      return straightBezierFromPoints([o.a,o.b],{
+        closed:false,style,shapeType:'line',source,boxAngle:o.boxAngle||0
+      });
+    }
+
+    if(o.kind==='rect'){
+      const pts=rectWorldVertices(o);
+      return straightBezierFromPoints(pts,{
+        closed:true,style,shapeType:o.shapeName||'rectangle',source,boxAngle:o.angle||0,
+        fillColor:o.fillColor,fillOpacity:o.fillOpacity
+      });
+    }
+
+    if(o.kind==='polygon'){
+      const pts=polygonWorldVertices(o);
+      return straightBezierFromPoints(pts,{
+        closed:true,style,shapeType:o.shapeName||'polygon',source,boxAngle:o.angle||0,
+        fillColor:o.fillColor,fillOpacity:o.fillOpacity
+      });
+    }
+
+    if(o.kind==='ellipse'){
+      return ellipseBezier(
+        o.center,o.rx,o.ry,o.angle||0,style,
+        o.shapeName||'ellipse',source
+      );
+    }
+
+    if(o.kind==='parabola'){
+      const pts=[];
+      const n=80,a=o.angle||0;
+      for(let i=0;i<=n;i++){
+        const u=-1+2*i/n;
+        const q={
+          x:o.center.x+u*(o.w/2),
+          y:o.center.y+(o.mirrorY?-1:1)*(o.h/2-(u*u)*o.h)
+        };
+        pts.push(rotatePoint(q,o.center,a));
+      }
+      return smoothBezierFromPoints(pts,{
+        closed:false,style,shapeType:'parabola',source,boxAngle:a,maxAnchors:9
+      });
+    }
+
+    if(o.kind==='stroke' && o.source==='menu'){
+      return smoothBezierFromPoints(o.points||[],{
+        closed:false,style,shapeType:o.shapeName||'curve',source:'menu',
+        boxAngle:o.boxAngle||0,maxAnchors:14
+      });
+    }
+
+    if(o.kind==='symbol' && o.symbolType==='sqrt'){
+      return straightBezierFromPoints(symbolWorldPoints(o),{
+        closed:false,style,shapeType:'sqrt',source:'menu',boxAngle:o.angle||0
+      });
+    }
+
+    if(o.kind==='symbol' && o.symbolType==='integral'){
+      const segs=integralBezierLocal(o);
+      const a=o.angle||0;
+      const wp=p=>rotatePoint({x:o.center.x+p.x,y:o.center.y+p.y},o.center,a);
+      if(segs.length===3){
+        const anchors=[
+          {x:wp(segs[0].p0).x,y:wp(segs[0].p0).y,in:wp(segs[0].p0),out:wp(segs[0].c1),broken:false},
+          {x:wp(segs[0].p3).x,y:wp(segs[0].p3).y,in:wp(segs[0].c2),out:wp(segs[1].c1),broken:false},
+          {x:wp(segs[1].p3).x,y:wp(segs[1].p3).y,in:wp(segs[1].c2),out:wp(segs[2].c1),broken:false},
+          {x:wp(segs[2].p3).x,y:wp(segs[2].p3).y,in:wp(segs[2].c2),out:wp(segs[2].p3),broken:false}
+        ];
+        return makeBezierShape(anchors,{
+          closed:false,style,shapeType:'integral',source:'menu',boxAngle:a
+        });
+      }
+    }
+
+    return o;
   }
 
   function drawBezierEditingOverlay(o,{showBox=false}={}){
@@ -9071,7 +9250,8 @@
       const idle=performance.now()-lastMoveTime;
       if(idle<480) return;
 
-      const recognized=recognize(points);
+      const recognizedRaw=recognize(points);
+      const recognized=recognizedRaw ? drawableToBezier(recognizedRaw) : null;
       if(recognized){
         lockedShape=JSON.parse(JSON.stringify(recognized));
         lockedShapeType=lockedShape.kind;
@@ -13213,7 +13393,7 @@
     const cx=centerWorld.x, cy=centerWorld.y;
     const insertionScale=1/viewZoom;
     const style=strokeStyle(), t=shapeType.value;
-    if(t==='line') objects.push({kind:'line',a:{x:cx-100*insertionScale,y:cy},b:{x:cx+100*insertionScale,y:cy},style,source:'menu',boxAngle:0});
+    if(t==='line') objects.push(drawableToBezier({kind:'line',a:{x:cx-100*insertionScale,y:cy},b:{x:cx+100*insertionScale,y:cy},style,source:'menu',shapeName:'line',boxAngle:0}));
     if(t==='arc'){
       const radius=100*insertionScale;
       const a0=-5*Math.PI/6;
@@ -13229,7 +13409,7 @@
         shapeName:'arc',
         source:'menu',
         boxAngle:0
-      });
+      }));
     }
     if(t==='sector'){
       const radius=100*insertionScale;
@@ -13253,12 +13433,12 @@
         shapeName:'sector',
         source:'menu',
         boxAngle:0
-      });
+      }));
     }
-    if(t==='rect') objects.push({kind:'rect',center:{x:cx,y:cy},w:180*insertionScale,h:110*insertionScale,angle:0,style,shapeName:'rectangle',source:'menu'});
-    if(t==='ellipse') objects.push({kind:'ellipse',center:{x:cx,y:cy},rx:95*insertionScale,ry:60*insertionScale,angle:0,style,shapeName:'ellipse',source:'menu'});
+    if(t==='rect') objects.push(drawableToBezier({kind:'rect',center:{x:cx,y:cy},w:180*insertionScale,h:110*insertionScale,angle:0,style,shapeName:'rectangle',source:'menu'}));
+    if(t==='ellipse') objects.push(drawableToBezier({kind:'ellipse',center:{x:cx,y:cy},rx:95*insertionScale,ry:60*insertionScale,angle:0,style,shapeName:'ellipse',source:'menu'}));
     if(t==='parabola') {
-      objects.push({
+      objects.push(drawableToBezier({
         kind:'parabola',
         center:{x:cx,y:cy},
         w:220*insertionScale,
@@ -13268,12 +13448,12 @@
         shapeName:'parabola',
         source:'menu',
         boxAngle:0
-      });
+      }));
     }
 
     if(t==='sinx' || t==='tanx' || t==='ex' || t==='x3'){
       const fn=makeFunctionStroke(t,cx,cy,insertionScale,style);
-      if(fn) objects.push(fn);
+      if(fn) objects.push(drawableToBezier(fn));
     }
 
     if(t==='triangle') {
@@ -13283,7 +13463,7 @@
         {x:cx+95*insertionScale,   y:cy+65*insertionScale},
         {x:cx-95*insertionScale,   y:cy+65*insertionScale}
       ];
-      objects.push({
+      objects.push(drawableToBezier({
         kind:'polygon',
         center:{x:cx,y:cy},
         baseVertices:base,
@@ -13292,7 +13472,7 @@
         shapeName:'triangle',
         source:'menu',
         boxAngle:0
-      });
+      }));
     }
     if(t==='pentagon') {
       // Menu pentagon: mathematically regular pentagon.
@@ -13305,7 +13485,7 @@
           y:cy+Math.sin(a)*radius
         });
       }
-      objects.push({
+      objects.push(drawableToBezier({
         kind:'polygon',
         center:{x:cx,y:cy},
         baseVertices:base,
@@ -13314,7 +13494,7 @@
         shapeName:'regular pentagon',
         source:'menu',
         boxAngle:0
-      });
+      }));
     }
 
     if(t==='axes') {
@@ -13328,7 +13508,7 @@
         shapeName:'x-y axes',
         source:'menu',
         boxAngle:0
-      });
+      }));
     }
 
     if(t==='hexagon') {
@@ -13343,7 +13523,7 @@
           y:cy+Math.sin(a)*radius
         });
       }
-      objects.push({
+      objects.push(drawableToBezier({
         kind:'polygon',
         center:{x:cx,y:cy},
         baseVertices:base,
@@ -13352,7 +13532,7 @@
         shapeName:'regular hexagon',
         source:'menu',
         boxAngle:0
-      });
+      }));
     }
     redraw();statusEl.textContent='Şekil eklendi';
   };
