@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.2</title>
+<title>Beyaz Tahta v18.3</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1078,7 +1078,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.2 · Bézier dolma kalem</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.3 · Bézier düzenleme geri bildirimi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1385,6 +1385,7 @@
   let bezierDraftIndex = -1;
   let bezierPointerId = null;
   let bezierDragInfo = null; // {index, anchorIndex, start, altBroken}
+  let bezierHover = null; // {type:'add'|'delete'|'close'|'continue'|'new', point, index}
 
   let wetPrev=null;
   let wetLast=null;
@@ -3829,6 +3830,159 @@
 
   function normalizeBezierCenter(o){
     if(o&&o.kind==='bezier') o.center=bezierCenter(o);
+  }
+
+  function drawBezierEditingOverlay(o,{showBox=false}={}){
+    if(!o || o.kind!=='bezier' || !Array.isArray(o.anchors)) return;
+
+    ctx.save();
+    ctx.lineWidth=1.2/viewZoom;
+    ctx.strokeStyle='#2563eb';
+    ctx.fillStyle='white';
+
+    // Tangent helper lines.
+    ctx.save();
+    ctx.strokeStyle='rgba(37,99,235,.58)';
+    ctx.lineWidth=1/viewZoom;
+    for(const a of o.anchors){
+      const hin=bezierHandlePoint(a,'in');
+      const hout=bezierHandlePoint(a,'out');
+
+      if(Math.hypot(hin.x-a.x,hin.y-a.y)>.01){
+        ctx.beginPath();
+        ctx.moveTo(a.x,a.y);
+        ctx.lineTo(hin.x,hin.y);
+        ctx.stroke();
+      }
+      if(Math.hypot(hout.x-a.x,hout.y-a.y)>.01){
+        ctx.beginPath();
+        ctx.moveTo(a.x,a.y);
+        ctx.lineTo(hout.x,hout.y);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+
+    // Tangent handles first.
+    for(const a of o.anchors){
+      for(const key of ['in','out']){
+        const h=bezierHandlePoint(a,key);
+        if(Math.hypot(h.x-a.x,h.y-a.y)<=.01) continue;
+        ctx.beginPath();
+        ctx.fillStyle='white';
+        ctx.strokeStyle='#2563eb';
+        ctx.arc(h.x,h.y,4.5/viewZoom,0,Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+
+    // Anchors: smooth = square, broken = diamond.
+    o.anchors.forEach((a,i)=>{
+      const s=5.5/viewZoom;
+      ctx.beginPath();
+      ctx.fillStyle=(i===0 && !o.closed) ? '#dbeafe' : 'white';
+      ctx.strokeStyle='#2563eb';
+
+      if(a.broken){
+        ctx.moveTo(a.x,a.y-s);
+        ctx.lineTo(a.x+s,a.y);
+        ctx.lineTo(a.x,a.y+s);
+        ctx.lineTo(a.x-s,a.y);
+        ctx.closePath();
+      }else{
+        ctx.rect(a.x-s,a.y-s,s*2,s*2);
+      }
+      ctx.fill();
+      ctx.stroke();
+    });
+
+    if(showBox){
+      const box=orientedSelectionBox(o);
+      const oc=box && orientedBoxCorners(box,8/viewZoom);
+      if(oc){
+        ctx.save();
+        ctx.setLineDash([5/viewZoom,4/viewZoom]);
+        ctx.strokeStyle='rgba(37,99,235,.7)';
+        ctx.beginPath();
+        ctx.moveTo(oc.nw.x,oc.nw.y);
+        ctx.lineTo(oc.ne.x,oc.ne.y);
+        ctx.lineTo(oc.se.x,oc.se.y);
+        ctx.lineTo(oc.sw.x,oc.sw.y);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    ctx.restore();
+  }
+
+  function updateBezierHover(p){
+    bezierHover=null;
+    if(mode!=='pen' || !p) return;
+
+    let idx=(selectedIndices.length===1 && objects[selectedIndices[0]] && objects[selectedIndices[0]].kind==='bezier')
+      ? selectedIndices[0]
+      : bezierDraftIndex;
+    let o=(idx>=0)?objects[idx]:null;
+
+    const hitR=10/viewZoom;
+
+    if(o && o.kind==='bezier'){
+      const ah=bezierAnchorHit(o,p,hitR);
+
+      if(!o.closed && o.anchors.length>=3 && ah===0){
+        bezierHover={type:'close',point:{x:o.anchors[0].x,y:o.anchors[0].y},index:idx};
+        return;
+      }
+
+      if(ah>=0){
+        bezierHover={type:'delete',point:{x:o.anchors[ah].x,y:o.anchors[ah].y},index:idx,anchorIndex:ah};
+        return;
+      }
+
+      const near=nearestBezierLocation(o,p);
+      if(near && near.distance<=hitR){
+        bezierHover={type:'add',point:{x:p.x,y:p.y},index:idx};
+        return;
+      }
+
+      if(!o.closed && o.anchors.length){
+        const last=o.anchors[o.anchors.length-1];
+        bezierHover={type:'continue',point:{x:last.x,y:last.y},index:idx};
+        return;
+      }
+    }
+
+    bezierHover={type:'new',point:{x:p.x,y:p.y},index:-1};
+  }
+
+  function drawBezierHoverCue(){
+    if(mode!=='pen' || !bezierHover || !bezierHover.point) return;
+    const p=bezierHover.point;
+    let symbol='•';
+    if(bezierHover.type==='add') symbol='+';
+    if(bezierHover.type==='delete') symbol='−';
+    if(bezierHover.type==='close') symbol='○';
+    if(bezierHover.type==='continue') symbol='→';
+
+    ctx.save();
+    ctx.setTransform(
+      dpr*viewZoom,0,
+      0,dpr*viewZoom,
+      dpr*viewX,dpr*viewY
+    );
+
+    ctx.font=`${14/viewZoom}px Arial, sans-serif`;
+    ctx.textAlign='left';
+    ctx.textBaseline='middle';
+    ctx.fillStyle='#2563eb';
+    ctx.strokeStyle='white';
+    ctx.lineWidth=3/viewZoom;
+    ctx.strokeText(symbol,p.x+10/viewZoom,p.y-10/viewZoom);
+    ctx.fillText(symbol,p.x+10/viewZoom,p.y-10/viewZoom);
+    ctx.restore();
   }
 
   function drawShape(o, ghost=false){
@@ -6330,8 +6484,18 @@
         ctx.strokeStyle='#2563eb';
 
         if(hnd.name.startsWith('bezier-anchor-')){
+          const i=Number(hnd.name.split('-')[2]);
+          const a=selected.anchors && selected.anchors[i];
           const s=6/viewZoom;
-          ctx.rect(hnd.x-s,hnd.y-s,s*2,s*2);
+          if(a && a.broken){
+            ctx.moveTo(hnd.x,hnd.y-s);
+            ctx.lineTo(hnd.x+s,hnd.y);
+            ctx.lineTo(hnd.x,hnd.y+s);
+            ctx.lineTo(hnd.x-s,hnd.y);
+            ctx.closePath();
+          }else{
+            ctx.rect(hnd.x-s,hnd.y-s,s*2,s*2);
+          }
         }else{
           const rr=hnd.name.startsWith('sqrt-') ? 7/viewZoom : 5/viewZoom;
           ctx.arc(hnd.x,hnd.y,rr,0,Math.PI*2);
@@ -7491,6 +7655,15 @@
     if(mode==='select'){
       drawSelection();
       if(selectAction==='marquee') drawMarquee();
+    }else if(mode==='pen'){
+      const idx=(selectedIndices.length===1 && objects[selectedIndices[0]] && objects[selectedIndices[0]].kind==='bezier')
+        ? selectedIndices[0]
+        : bezierDraftIndex;
+      const active=(idx>=0)?objects[idx]:null;
+      if(active && active.kind==='bezier'){
+        drawBezierEditingOverlay(active,{showBox:false});
+      }
+      drawBezierHoverCue();
     }
 
     if(mode==='eraser' && eraserCursor){
@@ -9350,6 +9523,18 @@
       closeContextMenu();
       const hitR=(e.pointerType==='touch'?20:10)/viewZoom;
 
+      // In Pen mode, clicking another Bézier selects it for point editing.
+      const anyHit=hitTestObjectAny(p);
+      if(
+        anyHit>=0 &&
+        objects[anyHit] &&
+        objects[anyHit].kind==='bezier' &&
+        !(selectedIndices.length===1 && selectedIndices[0]===anyHit)
+      ){
+        setSelection([anyHit]);
+        bezierDraftIndex=anyHit;
+      }
+
       let idx=(selectedIndices.length===1 && objects[selectedIndices[0]] && objects[selectedIndices[0]].kind==='bezier')
         ? selectedIndices[0]
         : bezierDraftIndex;
@@ -9365,6 +9550,7 @@
           normalizeBezierCenter(o);
           markBoardDirty();
           setSelection([idx]);
+          updateBezierHover(p);
           redraw();
           statusEl.textContent='Bézier kapatıldı — dolgu uygulanabilir';
           return;
@@ -9378,6 +9564,7 @@
             if(o.closed && o.anchors.length<3) o.closed=false;
             normalizeBezierCenter(o);
             markBoardDirty();
+            updateBezierHover(p);
             redraw();
             statusEl.textContent='Bézier noktası silindi';
           }
@@ -9893,6 +10080,11 @@
     const screenP=screenPointFromEvent(e);
     const p=pFromEvent(e);
     lastCanvasPointerWorld={x:p.x,y:p.y};
+    if(mode==='pen' && !bezierDragInfo){
+      updateBezierHover(p);
+      redraw();
+    }
+
     if(mode==='pen' && bezierDragInfo && e.pointerId===bezierPointerId){
       const o=objects[bezierDragInfo.index];
       const a=o && o.anchors && o.anchors[bezierDragInfo.anchorIndex];
@@ -10543,6 +10735,7 @@
       bezierPointerId=null;
       bezierDragInfo=null;
       markBoardDirty();
+      updateBezierHover(pFromEvent(e));
       redraw();
       return;
     }
@@ -12156,7 +12349,8 @@
       bezierDraftIndex=selectedIndices[0];
     }
     canvas.style.cursor='crosshair';
-    statusEl.textContent='Dolma kalem — tıkla: köşe, sürükle: teğet, Alt+sürükle: kırık teğet';
+    bezierHover=null;
+    statusEl.textContent='Dolma kalem — + nokta ekler, − nokta siler, ○ yolu kapatır';
     redraw();
   };
 
