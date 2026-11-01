@@ -1,3 +1,166 @@
+/* explain.js v1.0 – Satranç Öğretmeni için açıklama üretici (tr/en/de).
+   Bağımlılık: window.ChessReview.nextFen(fen, uci) (index.html içinde zaten var).
+   Not: Takas hesabı (SEE) çivileme ve yasal hamle ayrıntılarını yok sayar; ifadeler bu yüzden temkinli tutuldu. */
+(()=>{"use strict";
+const root=typeof window!=="undefined"?window:globalThis;
+const F="abcdefgh",VAL={p:1,n:3,b:3,r:5,q:9,k:99};
+const side=p=>p===p.toUpperCase()?"w":"b",opp=s=>s==="w"?"b":"w",kd=p=>p.toLowerCase(),val=p=>VAL[kd(p)];
+let nextFenFn=(fen,uci)=>root.ChessReview?root.ChessReview.nextFen(fen,uci):null;
+const cap=(s,l)=>s.charAt(0).toLocaleUpperCase(l)+s.slice(1);
+
+const L={
+tr:{names:{p:"piyon",n:"at",b:"fil",r:"kale",q:"vezir",k:"şah"},
+ mate:n=>`Zorunlu mat var: ${n} hamlede mat verebilirsin.`,
+ mateDef:n=>`Rakibin ${n} hamlede mat tehdidi var; bu hamle en iyi savunma.`,
+ check:"Şah çekiyor ve rakibi cevap vermeye zorluyor.",
+ capFree:x=>`Rakibin korumasız ${x} taşını bedavaya alıyor.`,
+ capWin:(x,n)=>`Rakibin ${x} taşını alıyor; rakip geri alsa bile net +${n} puan kazanırsın.`,
+ capTrade:x=>`Rakibin ${x} taşıyla eşit takas yapıyor.`,
+ save:x=>`Tehdit altındaki ${x} taşını kurtarıyor.`,
+ fork:(a,b)=>`Çatal: aynı anda rakibin ${a} ve ${b} taşına saldırıyor.`,
+ threat:x=>`Rakibin ${x} taşına saldırı tehdidi oluşturuyor.`,
+ pvWin:(d,n)=>`Önerilen devam, ${Math.ceil(n/2)} hamle içinde yaklaşık ${d} puanlık materyal kazandırıyor.`,
+ promo:"Piyonu terfi ettiriyor.",
+ castle:"Şahı güvene alıyor ve kaleyi oyuna sokuyor.",
+ develop:x=>`${cap(x,"tr")} taşını oyuna sokuyor (gelişim).`,
+ center:"Merkezi kontrol ediyor.",
+ hang:(x,sq)=>`${x} (${sq}) saldırı altında ve korunmuyor.`,
+ hangShort:(x,sq,n)=>`${x} (${sq}) saldırı altında ve korumalar yetmiyor (takasta yaklaşık ${n} puan kaybedersin).`},
+en:{names:{p:"pawn",n:"knight",b:"bishop",r:"rook",q:"queen",k:"king"},
+ mate:n=>`Forced mate: you can checkmate in ${n}.`,
+ mateDef:n=>`The opponent threatens mate in ${n}; this is the best defence.`,
+ check:"Gives check and forces a reply.",
+ capFree:x=>`Wins the undefended ${x} for free.`,
+ capWin:(x,n)=>`Captures the ${x}; even after a recapture you come out ${n} points ahead.`,
+ capTrade:x=>`Trades evenly for the ${x}.`,
+ save:x=>`Saves your attacked ${x}.`,
+ fork:(a,b)=>`Fork: attacks the ${a} and the ${b} at once.`,
+ threat:x=>`Creates a threat against the ${x}.`,
+ pvWin:(d,n)=>`The main line wins about ${d} points of material within ${Math.ceil(n/2)} moves.`,
+ promo:"Promotes the pawn.",
+ castle:"Gets the king safe and activates the rook.",
+ develop:x=>`Develops the ${x}.`,
+ center:"Fights for the centre.",
+ hang:(x,sq)=>`${x} (${sq}) is attacked and undefended.`,
+ hangShort:(x,sq,n)=>`${x} (${sq}) is attacked and the defence is not enough (you lose about ${n} points in the exchange).`},
+de:{names:{p:"Bauer",n:"Springer",b:"Läufer",r:"Turm",q:"Dame",k:"König"},
+ mate:n=>`Erzwungenes Matt in ${n}.`,
+ mateDef:n=>`Der Gegner droht Matt in ${n}; das ist die beste Verteidigung.`,
+ check:"Gibt Schach und zwingt den Gegner zu antworten.",
+ capFree:x=>`Schlägt kostenlos: ungedeckter ${x} des Gegners.`,
+ capWin:(x,n)=>`Schlägt ${x} des Gegners; auch nach dem Rückschlag stehst du ${n} Punkte besser.`,
+ capTrade:x=>`Tauscht gleichwertig gegen ${x} des Gegners.`,
+ save:x=>`Rettet die bedrohte Figur: ${x}.`,
+ fork:(a,b)=>`Gabel: greift ${a} und ${b} gleichzeitig an.`,
+ threat:x=>`Droht, ${x} des Gegners zu gewinnen.`,
+ pvWin:(d,n)=>`Die Hauptvariante gewinnt in ${Math.ceil(n/2)} Zügen etwa ${d} Punkte Material.`,
+ promo:"Wandelt den Bauern um.",
+ castle:"Bringt den König in Sicherheit und aktiviert den Turm.",
+ develop:x=>`Entwickelt eine Figur: ${x}.`,
+ center:"Kontrolliert das Zentrum.",
+ hang:(x,sq)=>`${x} (${sq}) ist angegriffen und ungedeckt.`,
+ hangShort:(x,sq,n)=>`${x} (${sq}) ist angegriffen und die Deckung reicht nicht (Verlust etwa ${n} Punkte).`}
+};
+
+function parseFen(fen){const [pp,turn]=fen.split(" "),b={};pp.split("/").forEach((row,r)=>{let f=0;for(const ch of row){if(/[1-8]/.test(ch))f+=+ch;else b[F[f++]+(8-r)]=ch;}});return {b,turn};}
+function attacks(b,from,to){const p=b[from];if(!p||from===to)return false;
+ const dx=F.indexOf(to[0])-F.indexOf(from[0]),dy=+to[1]-+from[1],ax=Math.abs(dx),ay=Math.abs(dy),k=kd(p);
+ if(k==="p")return ax===1&&dy===(side(p)==="w"?1:-1);
+ if(k==="n")return (ax===1&&ay===2)||(ax===2&&ay===1);
+ if(k==="k")return Math.max(ax,ay)===1;
+ const diag=ax===ay,line=dx===0||dy===0;
+ if((k==="b"&&!diag)||(k==="r"&&!line)||(k==="q"&&!(diag||line)))return false;
+ const sx=Math.sign(dx),sy=Math.sign(dy);let x=F.indexOf(from[0])+sx,y=+from[1]+sy;
+ while(x>=0&&x<8&&y>=1&&y<=8){const sq=F[x]+y;if(sq===to)return true;if(b[sq])return false;x+=sx;y+=sy;}
+ return false;}
+const attackers=(b,sq,team)=>Object.keys(b).filter(s=>side(b[s])===team&&attacks(b,s,sq));
+
+// Static Exchange Evaluation: 'from' karesindeki taş 'to' karesinde takas başlatırsa net kazanç (piyon=1, at/fil=3, kale=5, vezir=9)
+function see(b0,from,to){
+ const b={...b0},gain=[b[to]?val(b[to]):0];let turn=opp(side(b[from])),d=0;
+ b[to]=b[from];delete b[from];
+ for(;;){
+  const atk=attackers(b,to,turn).sort((x,y)=>val(b[x])-val(b[y]));
+  if(!atk.length)break;
+  const a=atk[0];
+  if(kd(b[a])==="k"&&attackers(b,to,opp(turn)).length)break;
+  d++;gain[d]=val(b[to])-gain[d-1];
+  b[to]=b[a];delete b[a];turn=opp(turn);
+ }
+ for(let i=d;i>=1;i--)gain[i-1]=-Math.max(-gain[i-1],gain[i]);
+ return gain[0]||0;}
+// 'sq' karesindeki taşı rakip takasla kazanabilir mi? Kazanç puanını döndürür (0 = tehlike yok).
+function loss(b,sq){const p=b[sq];if(!p||kd(p)==="k")return 0;let best=0;
+ for(const a of attackers(b,sq,opp(side(p))))best=Math.max(best,see(b,a,sq));return best;}
+const material=(b,t)=>Object.values(b).reduce((s,p)=>side(p)===t&&kd(p)!=="k"?s+val(p):s,0);
+
+function bestMoveReasons(fen,info,lang){
+ try{
+  const uci=info&&info.best;if(!uci)return [];
+  const {b,turn:me}=parseFen(fen),enemy=opp(me),t=L[lang]||L.tr,nm=p=>t.names[kd(p)],R=[];
+  const nf=nextFenFn(fen,uci);if(!nf)return [];
+  const A=parseFen(nf).b,from=uci.slice(0,2),to=uci.slice(2,4),piece=b[from];if(!piece)return [];
+  if(info.mate>0)R.push([100,t.mate(info.mate)]);else if(info.mate<0)R.push([95,t.mateDef(-info.mate)]);
+  if(uci[4])R.push([90,t.promo]);
+  // taş alma
+  let target=b[to],capReason=false;
+  if(!target&&kd(piece)==="p"&&from[0]!==to[0])target=me==="w"?"p":"P"; // en passant
+  if(target&&side(target)===enemy){
+   const net=val(target)-loss(A,to);
+   if(!attackers(A,to,enemy).length){R.push([80,t.capFree(nm(target))]);capReason=true;}
+   else if(net>0){R.push([78,t.capWin(nm(target),net)]);capReason=true;}
+   else if(net===0){R.push([60,t.capTrade(nm(target))]);capReason=true;}
+  }
+  // şah
+  const ek=Object.keys(A).find(s=>A[s]===(enemy==="w"?"K":"k"));
+  if(ek&&attackers(A,ek,me).length)R.push([70,t.check]);
+  // tehdit altındaki kendi taşını kurtarma
+  let save=null;
+  for(const sq of Object.keys(b)){if(side(b[sq])!==me||kd(b[sq])==="k")continue;
+   const l0=loss(b,sq);if(l0<=0)continue;
+   const now=sq===from?loss(A,to):loss(A,sq);
+   if(now<l0&&(!save||l0>save.l))save={l:l0,p:b[sq]};}
+  if(save)R.push([75,t.save(nm(save.p))]);
+  // yeni tehdit / çatal
+  const gain=(B,sq)=>{let g=0;for(const a of attackers(B,sq,me))g=Math.max(g,see(B,a,sq));return g;};
+  const foes=B=>Object.keys(B).filter(s=>side(B[s])===enemy&&kd(B[s])!=="k");
+  const before={};for(const s of foes(b))before[s]=gain(b,s);
+  const fresh=foes(A).map(s=>({s,g:gain(A,s)})).filter(x=>x.g>0&&!(before[x.s]>0)).sort((x,y)=>y.g-x.g);
+  const byMoved=fresh.filter(x=>attacks(A,to,x.s));
+  if(byMoved.length>=2)R.push([85,t.fork(nm(A[byMoved[0].s]),nm(A[byMoved[1].s]))]);
+  else if(fresh.length)R.push([65,t.threat(nm(A[fresh[0].s]))]);
+  // varyant boyunca materyal kazancı (çift yarım hamlede; takas ortasında kalmamak için)
+  if(!capReason){
+   const pv=info.pv&&info.pv.length?info.pv:[uci],mat=fx=>{const B=parseFen(fx).b;return material(B,me)-material(B,enemy);};
+   const base=mat(fen);let f=fen,ply=0,last=null;
+   for(let i=0;i<Math.min(pv.length,6);i++){const n2=nextFenFn(f,pv[i]);if(!n2)break;f=n2;ply++;if(ply%2===0)last={ply,d:mat(f)-base};}
+   if(last&&last.d>=1)R.push([50,t.pvWin(last.d,last.ply)]);
+  }
+  // pozisyonel nedenler
+  const full=+fen.split(" ")[5]||1;
+  if(kd(piece)==="k"&&Math.abs(F.indexOf(to[0])-F.indexOf(from[0]))===2)R.push([40,t.castle]);
+  else if((kd(piece)==="n"||kd(piece)==="b")&&from[1]===(me==="w"?"1":"8")&&to[1]!==from[1]&&full<=12)R.push([30,t.develop(nm(piece))]);
+  else if(kd(piece)==="p"&&["d4","e4","d5","e5"].includes(to)&&full<=10)R.push([25,t.center]);
+  R.sort((x,y)=>y[0]-x[0]);
+  return [...new Set(R.map(x=>x[1]))].slice(0,2);
+ }catch(e){return [];}
+}
+
+// Oyuncunun tehdit altındaki taşları: [{sq,text}]
+function threats(fen,player,lang){
+ try{
+  const {b}=parseFen(fen),t=L[lang]||L.tr,out=[];
+  for(const sq of Object.keys(b)){const p=b[sq];if(side(p)!==player||kd(p)==="k")continue;const l=loss(b,sq);if(l>0)out.push({sq,l,p});}
+  out.sort((x,y)=>y.l-x.l||val(y.p)-val(x.p));
+  return out.slice(0,2).map(o=>{const n=cap(t.names[kd(o.p)],lang);
+   return {sq:o.sq,text:attackers(b,o.sq,player).length?t.hangShort(n,o.sq,o.l):t.hang(n,o.sq)};});
+ }catch(e){return [];}
+}
+
+const api={bestMoveReasons,threats,see,loss,parseFen,setNextFen(fn){nextFenFn=fn;}};
+root.ChessExplain=api;
+if(typeof module!=="undefined"&&module.exports)module.exports=api;
+})();
 (()=>{"use strict";
 const api=window.ChessReview,engine=window.ChessStockfish,extra=document.getElementById("simpleExtra"),movesEl=document.getElementById("moves");
 if(!api||!engine||!extra||!movesEl)return;
@@ -34,10 +197,14 @@ const king=findKing(b,player),other=findKing(b,opp);
 if(king&&attackers(b,king,opp).length){out.push(T().check);marks.push({sq:king,type:"danger"});}
 else if(other&&attackers(b,other,player).length){out.push(T().checkOther);marks.push({sq:other,type:"danger"});}
 if(last&&old[last.slice(2,4)]&&side(old[last.slice(2,4)])===player){out.push(T().capture);marks.push({sq:last.slice(2,4),type:"danger"});}
+// v1.9: takas hesabına (SEE) dayalı tehdit tespiti
+if(window.ChessExplain){for(const th of window.ChessExplain.threats(after,player,lang())){out.push(th.text);marks.push({sq:th.sq,type:"danger"});}}
+else{
 const targets=Object.keys(b).filter(sq=>side(b[sq])===player&&kind(b[sq])!=="king"&&attackers(b,sq,opp).length);
 targets.sort((a,z)=>({q:9,r:5,b:3,n:3,p:1})[b[z].toLowerCase()]-({q:9,r:5,b:3,n:3,p:1})[b[a].toLowerCase()]);
 for(const sq of targets.slice(0,2)){const defended=attackers(b,sq,player).length>0;if(!defended){out.push(safeText("loose",b[sq]));marks.push({sq,type:"danger"});}else if(last&&attacks(b,last.slice(2,4),sq)&&side(b[last.slice(2,4)])===opp){out.push(safeText("attack",b[sq]));marks.push({sq,type:"danger"});}}
-return {out:[...new Set(out)].slice(0,2),marks};}
+}
+return {out:[...new Set(out)].slice(0,3),marks};}
 function explainBest(fen,uci,player){if(!uci)return null;const b=parse(fen),from=uci.slice(0,2),to=uci.slice(2,4),piece=b[from];if(!piece)return null;
 const target=b[to],afterFen=api.nextFen(fen,uci),a=afterFen?parse(afterFen):null;
 if(target&&side(target)!==player)return safeText("bestCapture",target);
@@ -70,7 +237,9 @@ async function analyze(){
   const suggestion=current.best&&current.best!=="(none)"?current.best:null;
   if(suggestion){
    para(detail,T().best,label(fen,suggestion)+" ("+suggestion.slice(0,2)+" → "+suggestion.slice(2,4)+")");
-   para(detail,T().reason,explainBest(fen,suggestion,player)||T().noReason);
+   // v1.9: SEE tabanlı açıklama; hiçbir şey bulunamazsa eski kurallara, o da olmazsa dürüst mesaja düşer
+   const why=window.ChessExplain?window.ChessExplain.bestMoveReasons(fen,{best:suggestion,pv:current.pv,mate:current.mate},lang()):[];
+   para(detail,T().reason,why.join(" ")||explainBest(fen,suggestion,player)||T().noReason);
    const btn=document.createElement("button");btn.textContent=T().line;
    btn.style.cssText="padding:7px 12px;border:1px solid #aaa;background:#fff;border-radius:7px;cursor:pointer;margin-top:4px";
    btn.onclick=()=>linePlayback(fen,current.pv?.length?current.pv:[suggestion]);
