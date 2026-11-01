@@ -15,10 +15,13 @@ function findKing(side){
 }
 function placeBubble(){
  if(!kingSquare||!bubble)return;
- const a=kingSquare.getBoundingClientRect(),b=board.getBoundingClientRect();
- const x=a.left-b.left+a.width/2,y=a.top-b.top;
- bubble.style.left=Math.max(35,Math.min(b.width-35,x))+"px";
- bubble.style.top=Math.max(4,y-9)+"px";
+ const a=kingSquare.getBoundingClientRect();
+ const width=bubble.offsetWidth||100,height=bubble.offsetHeight||50;
+ const x=Math.max(width/2+8,Math.min(window.innerWidth-width/2-8,a.left+a.width/2));
+ const above=a.top-height-16>=8;
+ bubble.classList.toggle("chess-mate-below",!above);
+ bubble.style.left=x+"px";
+ bubble.style.top=(above?a.top-9:Math.min(window.innerHeight-height-8,a.bottom+12))+"px";
 }
 function check(){
  if(!isMate()){if(active)clear();return;}
@@ -33,7 +36,7 @@ function check(){
   // Use the light-filled king artwork while fallen: dark outlines become red, interiors stay pale.\n  const img=kingSquare.querySelector(".piece img");\n  if(img&&/bK\\.svg/i.test(img.getAttribute("src")||"")){const src=img.getAttribute("src");originalImage={img,src};img.src=src.replace(/bK\\.svg/i,"wK.svg");}\n  kingSquare.classList.add("chess-mated-square");
   bubble=document.createElement("div");bubble.className="chess-mate-bubble";bubble.textContent="Mat!";
   bubble.setAttribute("role","status");bubble.setAttribute("aria-label","Mat!");
-  board.appendChild(bubble);placeBubble();
+  document.body.appendChild(bubble);placeBubble();
  },950);
 }
 new MutationObserver(check).observe(status,{childList:true,characterData:true,subtree:true});
