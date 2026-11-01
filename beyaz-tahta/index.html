@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.1</title>
+<title>Beyaz Tahta v18.2</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1078,7 +1078,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.1 · Bézier dolma kalem düzenleme</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.2 · Bézier dolma kalem</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1102,7 +1102,8 @@
           <section class="helpSection">
             <h3>Çizim</h3>
             <ul>
-              <li>Kalemle düşük gecikmeli adaptif wet ink ile serbest çizim yap.</li>
+              <li>Kalemle düşük gecikmeli serbest çizim yap.</li>
+              <li>Dolma Kalem: tıkla köşe ekle; sürükle Bézier teğeti oluştur; Alt+sürükle teğet kollarını ayır; ilk noktaya tıklayarak kapat.</li>
               <li>Çizgi rengini ve kalınlığını değiştir.</li>
               <li>Uygun çizimler bekletildiğinde otomatik şekle dönüşebilir.</li>
               <li>Silgi ile tüm ink nesnesini veya yalnız belirli bir bölümü sil.</li>
@@ -1761,6 +1762,8 @@
       canvas.style.cursor='grabbing';
     }else if(mode==='ink'){
       canvas.style.cursor='default';
+    }else if(mode==='pen'){
+      canvas.style.cursor='crosshair';
     }else if(mode==='eraser'){
       canvas.style.cursor='none';
     }else if(mode==='text'){
@@ -6728,6 +6731,21 @@
   function reflectObject(o,pivot,axis){
     if(!o || !pivot) return;
 
+    if(o.kind==='bezier'){
+      for(const a of (o.anchors||[])){
+        const ap=reflectPointAcross(a,pivot,axis);
+        a.x=ap.x;a.y=ap.y;
+        if(finitePoint(a.in)) a.in=reflectPointAcross(a.in,pivot,axis);
+        if(finitePoint(a.out)) a.out=reflectPointAcross(a.out,pivot,axis);
+      }
+      normalizeBezierCenter(o);
+      o.boxAngle=reflectedAngle(
+        Number.isFinite(o.boxAngle)?o.boxAngle:0,
+        axis
+      );
+      return;
+    }
+
     if(o.kind==='line'){
       o.a=reflectPointAcross(o.a,pivot,axis);
       o.b=reflectPointAcross(o.b,pivot,axis);
@@ -11007,6 +11025,27 @@
       return d ? `<path d="${d}" ${style}/>` : '';
     }
 
+    if(o.kind==='bezier'){
+      const anchors=Array.isArray(o.anchors)?o.anchors:[];
+      if(!anchors.length) return '';
+      let d=`M ${svgNum(anchors[0].x)} ${svgNum(anchors[0].y)}`;
+      const count=o.closed?anchors.length:anchors.length-1;
+      for(let i=0;i<count;i++){
+        const j=(i+1)%anchors.length;
+        const a=anchors[i],b=anchors[j];
+        const c1=bezierHandlePoint(a,'out');
+        const c2=bezierHandlePoint(b,'in');
+        d+=` C ${svgNum(c1.x)} ${svgNum(c1.y)} ${svgNum(c2.x)} ${svgNum(c2.y)} ${svgNum(b.x)} ${svgNum(b.y)}`;
+      }
+      if(o.closed) d+=' Z';
+
+      const stroke=(o.style&&o.style.color)||'#111111';
+      const width=Math.max(.1,Number(o.style&&o.style.width)||2);
+      const fill=(o.closed&&o.fillColor)?o.fillColor:'none';
+      const fillOpacity=(fill==='none')?'':` fill-opacity="${svgNum(1-fillTransparencyValue(o)/100)}"`;
+      return `<path d="${d}" stroke="${svgEscapeAttr(stroke)}" stroke-width="${svgNum(width)}" stroke-linecap="round" stroke-linejoin="round" fill="${svgEscapeAttr(fill)}"${fillOpacity}/>`;
+    }
+
     if(o.kind==='line'){
       return `<line x1="${svgNum(o.a.x)}" y1="${svgNum(o.a.y)}" x2="${svgNum(o.b.x)}" y2="${svgNum(o.b.y)}" ${style}/>`;
     }
@@ -11590,6 +11629,7 @@
     setSelection([]);
     eraserCursor=null;
     inkBtn.classList.remove('active');
+    penBtn.classList.remove('active');
     selectBtn.classList.remove('active');
     eraserBtn.classList.remove('active');
     fillBtn.classList.add('active');
@@ -11835,6 +11875,7 @@
     eraserCursor=null;
     textBtn.classList.add('active');
     inkBtn.classList.remove('active');
+    penBtn.classList.remove('active');
     selectBtn.classList.remove('active');
     eraserBtn.classList.remove('active');
     fillBtn.classList.remove('active');
@@ -11993,6 +12034,7 @@
   imageBtn.onclick=()=>{
     if(textEditing) closeTextEditor(true);
     textBtn.classList.remove('active');
+    penBtn.classList.remove('active');
     closeContextMenu();
     imageInput.value='';
     imageInput.click();
