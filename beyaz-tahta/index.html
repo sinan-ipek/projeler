@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.22</title>
+<title>Beyaz Tahta v18.23</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1144,7 +1144,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.22 · Undo/Redo tamamen nesne-delta tabanlı</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.23 · Çoklu anchor taşıma ve 4 tip anchor</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -4072,6 +4072,142 @@
     return finitePoint(h) ? h : {x:a.x,y:a.y};
   }
 
+  function inferBezierAnchorType(a){
+    if(!a) return 'corner';
+    if(a.anchorType) return a.anchorType;
+
+    const hin=bezierHandlePoint(a,'in');
+    const hout=bezierHandlePoint(a,'out');
+    const inLen=Math.hypot(hin.x-a.x,hin.y-a.y);
+    const outLen=Math.hypot(hout.x-a.x,hout.y-a.y);
+
+    if(inLen<.01 && outLen<.01) return 'corner';
+    if(a.broken) return 'broken';
+
+    return Math.abs(inLen-outLen)<=Math.max(.25,(inLen+outLen)*.04)
+      ? 'symmetric'
+      : 'smooth';
+  }
+
+  function setBezierAnchorType(o,index,type){
+    if(!o || o.kind!=='bezier' || !Array.isArray(o.anchors)) return false;
+    const a=o.anchors[index];
+    if(!a) return false;
+
+    const prev=o.anchors[(index-1+o.anchors.length)%o.anchors.length];
+    const next=o.anchors[(index+1)%o.anchors.length];
+    const hasPrev=o.closed || index>0;
+    const hasNext=o.closed || index<o.anchors.length-1;
+
+    const prevPt=hasPrev && prev ? {x:prev.x,y:prev.y} : null;
+    const nextPt=hasNext && next ? {x:next.x,y:next.y} : null;
+
+    const oldIn=bezierHandlePoint(a,'in');
+    const oldOut=bezierHandlePoint(a,'out');
+    const oldInLen=Math.hypot(oldIn.x-a.x,oldIn.y-a.y);
+    const oldOutLen=Math.hypot(oldOut.x-a.x,oldOut.y-a.y);
+
+    const fallbackLen=Math.max(
+      12/viewZoom,
+      Math.min(
+        48/viewZoom,
+        Math.max(
+          prevPt ? Math.hypot(a.x-prevPt.x,a.y-prevPt.y)/3 : 0,
+          nextPt ? Math.hypot(nextPt.x-a.x,nextPt.y-a.y)/3 : 0,
+          18/viewZoom
+        )
+      )
+    );
+
+    if(type==='corner'){
+      a.in={x:a.x,y:a.y};
+      a.out={x:a.x,y:a.y};
+      a.broken=true;
+      a.anchorType='corner';
+      return true;
+    }
+
+    if(type==='broken'){
+      let inVec=prevPt
+        ? {x:prevPt.x-a.x,y:prevPt.y-a.y}
+        : {x:-1,y:0};
+      let outVec=nextPt
+        ? {x:nextPt.x-a.x,y:nextPt.y-a.y}
+        : {x:1,y:0};
+
+      const il=Math.hypot(inVec.x,inVec.y)||1;
+      const ol=Math.hypot(outVec.x,outVec.y)||1;
+      const inLen=oldInLen>.01 ? oldInLen : fallbackLen;
+      const outLen=oldOutLen>.01 ? oldOutLen : fallbackLen;
+
+      a.in={
+        x:a.x+inVec.x/il*inLen,
+        y:a.y+inVec.y/il*inLen
+      };
+      a.out={
+        x:a.x+outVec.x/ol*outLen,
+        y:a.y+outVec.y/ol*outLen
+      };
+      a.broken=true;
+      a.anchorType='broken';
+      return true;
+    }
+
+    let tx=1,ty=0;
+    if(prevPt && nextPt){
+      tx=nextPt.x-prevPt.x;
+      ty=nextPt.y-prevPt.y;
+    }else if(nextPt){
+      tx=nextPt.x-a.x;
+      ty=nextPt.y-a.y;
+    }else if(prevPt){
+      tx=a.x-prevPt.x;
+      ty=a.y-prevPt.y;
+    }else if(oldOutLen>.01){
+      tx=oldOut.x-a.x;
+      ty=oldOut.y-a.y;
+    }
+    const tl=Math.hypot(tx,ty)||1;
+    tx/=tl;ty/=tl;
+
+    if(type==='symmetric'){
+      const len=(oldInLen>.01 || oldOutLen>.01)
+        ? Math.max(6/viewZoom,(oldInLen+oldOutLen)/2)
+        : fallbackLen;
+      a.in={x:a.x-tx*len,y:a.y-ty*len};
+      a.out={x:a.x+tx*len,y:a.y+ty*len};
+      a.broken=false;
+      a.anchorType='symmetric';
+      return true;
+    }
+
+    if(type==='smooth'){
+      const base=(oldInLen>.01 || oldOutLen>.01)
+        ? Math.max(6/viewZoom,(oldInLen+oldOutLen)/2)
+        : fallbackLen;
+      const inLen=Math.max(5/viewZoom,base*.72);
+      const outLen=Math.max(5/viewZoom,base*1.28);
+      a.in={x:a.x-tx*inLen,y:a.y-ty*inLen};
+      a.out={x:a.x+tx*outLen,y:a.y+ty*outLen};
+      a.broken=false;
+      a.anchorType='smooth';
+      return true;
+    }
+
+    return false;
+  }
+
+  function cycleBezierAnchorType(o,index){
+    const a=o && o.anchors && o.anchors[index];
+    if(!a) return null;
+
+    const current=inferBezierAnchorType(a);
+    const order=['corner','broken','symmetric','smooth'];
+    const next=order[(order.indexOf(current)+1)%order.length];
+    if(!setBezierAnchorType(o,index,next)) return null;
+    return next;
+  }
+
   function cubicPoint(p0,p1,p2,p3,t){
     const u=1-t;
     return {
@@ -4291,7 +4427,8 @@
         y:a.y,
         in:finitePoint(a.in)?{x:a.in.x,y:a.in.y}:{x:a.x,y:a.y},
         out:finitePoint(a.out)?{x:a.out.x,y:a.out.y}:{x:a.x,y:a.y},
-        broken:!!a.broken
+        broken:!!a.broken,
+        anchorType:a.anchorType || null
       })),
       closed:!!closed,
       style:cloneObject(style||strokeStyle()),
@@ -6347,6 +6484,31 @@
     if(!o || !snap || !Array.isArray(handles) || !handles.length) return false;
     const names=handles.map(String);
 
+    if(snap.kind==='bezier'){
+      Object.assign(o,cloneObject(snap));
+      let changed=false;
+
+      for(const name of names){
+        if(!name.startsWith('bezier-anchor-')) continue;
+        const i=Number(name.split('-')[2]);
+        const src=snap.anchors && snap.anchors[i];
+        const dst=o.anchors && o.anchors[i];
+        if(!src || !dst) continue;
+
+        dst.x=src.x+dx;
+        dst.y=src.y+dy;
+
+        const sin=bezierHandlePoint(src,'in');
+        const sout=bezierHandlePoint(src,'out');
+        dst.in={x:sin.x+dx,y:sin.y+dy};
+        dst.out={x:sout.x+dx,y:sout.y+dy};
+        changed=true;
+      }
+
+      if(changed) normalizeBezierCenter(o);
+      return changed;
+    }
+
     if(snap.kind==='line'){
       Object.assign(o,cloneObject(snap));
       if(names.includes('endpoint-0')){
@@ -8352,8 +8514,19 @@
         if(finitePoint(a.out)){a.out.x+=dx;a.out.y+=dy;}
       }else if(type==='in' || type==='out'){
         a[type]={x:p.x,y:p.y};
-        if(breakBezierHandle) a.broken=true;
-        if(!a.broken){
+        if(breakBezierHandle){
+          a.broken=true;
+          a.anchorType='broken';
+        }
+
+        const anchorType=inferBezierAnchorType(a);
+        if(anchorType==='symmetric'){
+          const other=type==='in'?'out':'in';
+          const dx=p.x-a.x,dy=p.y-a.y;
+          a[other]={x:a.x-dx,y:a.y-dy};
+          a.broken=false;
+          a.anchorType='symmetric';
+        }else if(anchorType==='smooth' || (!a.broken && anchorType!=='corner')){
           const other=type==='in'?'out':'in';
           const dx=p.x-a.x,dy=p.y-a.y;
           const old=bezierHandlePoint(a,other);
@@ -8363,6 +8536,11 @@
             x:a.x-dx/len*oldLen,
             y:a.y-dy/len*oldLen
           };
+          a.broken=false;
+          a.anchorType='smooth';
+        }else if(anchorType==='broken'){
+          a.broken=true;
+          a.anchorType='broken';
         }
       }else return false;
 
@@ -11057,7 +11235,8 @@
         x:p.x,y:p.y,
         in:{x:p.x,y:p.y},
         out:{x:p.x,y:p.y},
-        broken:!!e.altKey
+        broken:!!e.altKey,
+        anchorType:e.altKey ? 'broken' : 'corner'
       };
       o.anchors.push(anchor);
       bezierActiveAnchorIndex=o.anchors.length-1;
@@ -11317,29 +11496,19 @@
             const a=o.anchors && o.anchors[ai];
             if(a){
               recordObjectStates([selectedIndex]);
-              a.broken=!a.broken;
-
-              if(!a.broken){
-                const hin=bezierHandlePoint(a,'in');
-                const hout=bezierHandlePoint(a,'out');
-                const outLen=Math.hypot(hout.x-a.x,hout.y-a.y);
-                const inLen=Math.hypot(hin.x-a.x,hin.y-a.y);
-
-                if(outLen>.01){
-                  const dx=hout.x-a.x,dy=hout.y-a.y;
-                  a.in={x:a.x-dx,y:a.y-dy};
-                }else if(inLen>.01){
-                  const dx=hin.x-a.x,dy=hin.y-a.y;
-                  a.out={x:a.x-dx,y:a.y-dy};
-                }
-              }
+              const nextType=cycleBezierAnchorType(o,ai);
 
               bezierActiveAnchorIndex=ai;
               markBoardDirty();
               redraw();
-              statusEl.textContent=a.broken
-                ? 'Bézier noktası: kırık/köşe'
-                : 'Bézier noktası: yumuşak/bağlı';
+
+              const labels={
+                corner:'Köşe — handles yok',
+                broken:'Kırılmış handles',
+                symmetric:'Simetrik handles — eşit',
+                smooth:'Simetrik handles — eşit olmayan'
+              };
+              statusEl.textContent='Bézier noktası: '+(labels[nextType]||nextType);
             }
             return;
           }
