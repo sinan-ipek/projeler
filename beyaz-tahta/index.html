@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.18</title>
+<title>Beyaz Tahta v18.19</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1144,7 +1144,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.18 · Bézier Parçala aracı</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.19 · Nesne tabanlı Undo altyapısı</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -2612,6 +2612,67 @@
     });
   }
 
+  function ensureObjectId(o){
+    if(o && !o.id) o.id=makeObjectId();
+    return o && o.id;
+  }
+
+  function recordObjectStates(indices){
+    const items=[];
+    const seen=new Set();
+    for(const i of (indices||[])){
+      if(!Number.isInteger(i) || i<0 || i>=objects.length) continue;
+      const o=objects[i];
+      if(!o) continue;
+      const id=ensureObjectId(o);
+      if(seen.has(id)) continue;
+      seen.add(id);
+      items.push({id,index:i,object:cloneObject(o)});
+    }
+    if(!items.length) return false;
+    pushUndoEntry({type:'object-states',items});
+    markBoardDirty();
+    return true;
+  }
+
+  function recordRemovedObjects(items){
+    const clean=(items||[])
+      .filter(x=>x && x.object)
+      .map(x=>{
+        ensureObjectId(x.object);
+        return {
+          id:x.object.id,
+          index:Number.isInteger(x.index)?x.index:objects.length,
+          object:cloneObject(x.object)
+        };
+      });
+    if(!clean.length) return false;
+    pushUndoEntry({type:'removed-objects',items:clean});
+    markBoardDirty();
+    return true;
+  }
+
+  function recordObjectOrder(){
+    for(const o of objects) ensureObjectId(o);
+    pushUndoEntry({type:'object-order',ids:objects.map(o=>o.id)});
+    markBoardDirty();
+  }
+
+  function recordReplacedObjects(removed,added){
+    const rem=(removed||[]).map(x=>({
+      id:ensureObjectId(x.object),
+      index:x.index,
+      object:cloneObject(x.object)
+    }));
+    const add=(added||[]).map(x=>({
+      id:ensureObjectId(x.object),
+      index:x.index,
+      object:cloneObject(x.object)
+    }));
+    pushUndoEntry({type:'replace-objects',removed:rem,added:add});
+    markBoardDirty();
+  }
+
   function applyUndoEntry(entry, direction){
     if(!entry) return null;
 
@@ -2654,13 +2715,94 @@
     }
 
     if(entry.type==='restore-object'){
-      const at=Math.max(0,Math.min(objects.length,Number(entry.index)||objects.length));
+      const at=Math.max(0,Math.min(objects.length,Number.isInteger(entry.index)?entry.index:objects.length));
       const restored=cloneObject(entry.object);
       objects.splice(at,0,restored);
       return {
         type:'add-object',
         object:cloneObject(restored),
         index:at
+      };
+    }
+
+    if(entry.type==='object-states'){
+      const inverse=[];
+      for(const item of entry.items||[]){
+        let idx=objects.findIndex(o=>o && o.id===item.id);
+        if(idx<0 && Number.isInteger(item.index) && objects[item.index]) idx=item.index;
+        if(idx<0) continue;
+        inverse.push({
+          id:item.id,
+          index:idx,
+          object:cloneObject(objects[idx])
+        });
+        objects[idx]=cloneObject(item.object);
+      }
+      return {type:'object-states',items:inverse};
+    }
+
+    if(entry.type==='removed-objects'){
+      if(direction==='undo'){
+        const inserted=[];
+        const sorted=(entry.items||[]).slice().sort((a,b)=>a.index-b.index);
+        for(const item of sorted){
+          const at=Math.max(0,Math.min(objects.length,Number.isInteger(item.index)?item.index:objects.length));
+          const restored=cloneObject(item.object);
+          objects.splice(at,0,restored);
+          inserted.push({id:restored.id,index:at,object:cloneObject(restored)});
+        }
+        return {type:'added-objects',items:inserted};
+      }
+    }
+
+    if(entry.type==='added-objects'){
+      const removed=[];
+      const ids=new Set((entry.items||[]).map(x=>x.id));
+      for(let i=objects.length-1;i>=0;i--){
+        if(objects[i] && ids.has(objects[i].id)){
+          removed.push({id:objects[i].id,index:i,object:cloneObject(objects[i])});
+          objects.splice(i,1);
+        }
+      }
+      removed.sort((a,b)=>a.index-b.index);
+      return {type:'removed-objects',items:removed};
+    }
+
+    if(entry.type==='object-order'){
+      const currentIds=objects.map(o=>ensureObjectId(o));
+      const rank=new Map((entry.ids||[]).map((id,i)=>[id,i]));
+      const known=[],extra=[];
+      for(const o of objects){
+        (rank.has(o.id)?known:extra).push(o);
+      }
+      known.sort((a,b)=>rank.get(a.id)-rank.get(b.id));
+      objects=known.concat(extra);
+      return {type:'object-order',ids:currentIds};
+    }
+
+    if(entry.type==='replace-objects'){
+      const currentAdded=[];
+      const addedIds=new Set((entry.added||[]).map(x=>x.id));
+      for(let i=objects.length-1;i>=0;i--){
+        const o=objects[i];
+        if(o && addedIds.has(o.id)){
+          currentAdded.push({id:o.id,index:i,object:cloneObject(o)});
+          objects.splice(i,1);
+        }
+      }
+
+      const restored=[];
+      for(const item of (entry.removed||[]).slice().sort((a,b)=>a.index-b.index)){
+        const at=Math.max(0,Math.min(objects.length,Number.isInteger(item.index)?item.index:objects.length));
+        const o=cloneObject(item.object);
+        objects.splice(at,0,o);
+        restored.push({id:o.id,index:at,object:cloneObject(o)});
+      }
+
+      return {
+        type:'replace-objects',
+        removed:currentAdded.length ? currentAdded : (entry.added||[]).map(x=>({...x,object:cloneObject(x.object)})),
+        added:restored
       };
     }
 
@@ -2737,7 +2879,7 @@
     const targets=styleEditableIndices();
     if(!targets.length) return 0;
 
-    saveState();
+    recordObjectStates(targets);
     for(const i of targets){
       const o=objects[i];
       o.style={...(o.style||{}),color};
@@ -2753,7 +2895,7 @@
     const targets=styleEditableIndices();
     if(!targets.length) return 0;
 
-    saveState();
+    recordObjectStates(targets);
     for(const i of targets){
       const o=objects[i];
       o.style={...(o.style||{}),width:value};
@@ -2826,7 +2968,7 @@
   function beginFillOpacityChange(){
     if(fillOpacityUndoArmed) return;
     if(fillOpacityEditableIndices().length){
-      saveState();
+      recordObjectStates(fillOpacityEditableIndices());
       fillOpacityUndoArmed=true;
     }
   }
@@ -4492,7 +4634,7 @@
     const sorted=indices.slice().sort((a,b)=>a-b);
     const insertion=sorted[0];
 
-    saveState();
+    const removed=sorted.map(i=>({index:i,object:cloneObject(objects[i])}));
 
     for(let i=sorted.length-1;i>=0;i--){
       objects.splice(sorted[i],1);
@@ -4500,6 +4642,8 @@
 
     const clean=replacements.filter(Boolean);
     objects.splice(insertion,0,...clean);
+    const added=clean.map((object,i)=>({index:insertion+i,object}));
+    recordReplacedObjects(removed,added);
 
     const newIndices=clean.map((_,i)=>insertion+i);
     setSelection(newIndices);
@@ -5424,7 +5568,6 @@
     const screenW=nw*fit;
     const screenH=nh*fit;
 
-    saveState();
     const index=objects.length;
     const imageObject={
       kind:'image',
@@ -5438,7 +5581,9 @@
       boxAngle:0
     };
     if(assetId) imageObject.assetId=assetId;
+    ensureObjectId(imageObject);
     objects.push(imageObject);
+    recordAddedObjectUndo(imageObject,index);
 
     mode='select';
     fillBtn.classList.remove('active');
@@ -10467,7 +10612,7 @@
       return;
     }
 
-    saveState();
+    recordObjectOrder();
 
     const chosenSet=new Set(valid);
     const chosen=valid.map(i=>objects[i]);
@@ -10545,7 +10690,7 @@
       return;
     }
 
-    saveState();
+    recordObjectStates(valid);
     const pivot={x:b.cx,y:b.cy};
     for(const i of valid){
       reflectObject(objects[i],pivot,axis);
@@ -10578,7 +10723,7 @@
       indicesForGroupId(gids[0]).length===valid.length;
 
     if(oneWholeGroup){
-      saveState();
+      recordObjectStates(valid);
       for(const i of valid){
         if(objects[i]) delete objects[i].groupId;
       }
@@ -10594,7 +10739,7 @@
       return;
     }
 
-    saveState();
+    recordObjectStates(valid);
     const gid=makeGroupId();
     for(const i of valid){
       if(objects[i]) objects[i].groupId=gid;
@@ -10634,7 +10779,7 @@
     const allLocked=valid.every(i=>objects[i] && objects[i].locked);
     const newLocked=!allLocked;
 
-    saveState();
+    recordObjectStates(valid);
     for(const i of valid){
       if(objects[i]) objects[i].locked=newLocked;
     }
@@ -10728,7 +10873,7 @@
 
         // Photoshop behavior: first anchor closes an open path.
         if(!o.closed && o.anchors.length>=3 && ah===0){
-          saveState();
+          recordObjectStates([idx]);
           o.closed=true;
           bezierActiveAnchorIndex=0;
           normalizeBezierCenter(o);
@@ -10754,7 +10899,7 @@
         // Other existing anchors are removed.
         if(ah>=0){
           if(o.anchors.length>2){
-            saveState();
+            recordObjectStates([idx]);
             o.anchors.splice(ah,1);
             bezierActiveAnchorIndex=Math.min(ah,Math.max(0,o.anchors.length-1));
             if(o.closed && o.anchors.length<3) o.closed=false;
@@ -13346,7 +13491,6 @@
     closeFillMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
-    saveState();
     const r=canvas.getBoundingClientRect();
     const centerWorld=screenToWorld({x:r.width/2,y:r.height/2});
     const scale=1/viewZoom;
@@ -13356,6 +13500,7 @@
     if(symbolType==='integral') obj=makeIntegralSymbol(centerWorld.x,centerWorld.y,scale,style);
     if(!obj) return;
     objects.push(obj);
+    recordAddedObjectUndo(obj,objects.length-1);
     setSelection([objects.length-1]);
     mode='select';
     selectBtn.classList.add('active');
@@ -13384,8 +13529,6 @@
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
 
-    saveState();
-
     const r=canvas.getBoundingClientRect();
     const center=screenToWorld({x:r.width/2,y:r.height/2});
     const scale=1/viewZoom;
@@ -13413,6 +13556,7 @@
     };
 
     objects.push(obj);
+    recordAddedObjectUndo(obj,objects.length-1);
     setSelection([objects.length-1]);
 
     mode='select';
@@ -14034,7 +14178,7 @@
   }
 
   addShapeBtn.onclick=()=>{
-    saveState();
+    const beforeCount=objects.length;
     const r=canvas.getBoundingClientRect();
     const centerWorld=screenToWorld({x:r.width/2,y:r.height/2});
     const cx=centerWorld.x, cy=centerWorld.y;
@@ -14181,6 +14325,14 @@
         boxAngle:0
       }));
     }
+    if(objects.length>beforeCount){
+      const added=objects.slice(beforeCount);
+      pushUndoEntry({
+        type:'added-objects',
+        items:added.map((object,k)=>({id:ensureObjectId(object),index:beforeCount+k,object:cloneObject(object)}))
+      });
+      markBoardDirty();
+    }
     redraw();statusEl.textContent='Şekil eklendi';
   };
 
@@ -14216,7 +14368,7 @@
     if(!objects.length) return;
 
     const count=objects.length;
-    saveState();
+    recordRemovedObjects(objects.map((object,index)=>({index,object})));
     objects=[];
     setSelection([]);
     redraw();
@@ -14287,7 +14439,7 @@
         return;
       }
 
-      saveState();
+      recordRemovedObjects(deletable.map(i=>({index:i,object:objects[i]})));
 
       for(const i of deletable){
         objects.splice(i,1);
