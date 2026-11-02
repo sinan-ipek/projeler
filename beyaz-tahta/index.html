@@ -1150,7 +1150,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.30 · Bézier cycle sadeleştirildi: köşe → smooth → simetrik</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.31 · İki anchor ile doğrudan Bézier eğrisi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1469,6 +1469,7 @@
   let bezierDraftIndex = -1;
   let bezierPointerId = null;
   let bezierDragInfo = null; // {index, anchorIndex, start, altBroken}
+  let bezierSegmentDragInfo = null; // bend a 2-anchor segment without adding a third anchor
   let bezierHover = null; // {type:'add'|'delete'|'close'|'continue'|'new', point, index}
   let bezierActiveAnchorIndex = -1;
 
@@ -11203,9 +11204,31 @@
           return;
         }
 
-        // Clicking a segment inserts a real split point without changing curve shape.
+        // A 2-anchor open segment can be bent directly, Photoshop-style,
+        // without creating a third anchor. More complex paths keep the
+        // existing click-to-split behavior.
         const near=nearestBezierLocation(o,p);
         if(near && near.distance<=hitR){
+          if(!o.closed && o.anchors.length===2){
+            recordObjectStates([idx]);
+            bezierPointerId=e.pointerId;
+            bezierSegmentDragInfo={
+              index:idx,
+              t:Math.max(.08,Math.min(.92,near.t)),
+              start:{x:p.x,y:p.y},
+              anchors:o.anchors.map(a=>({
+                x:a.x,y:a.y,
+                in:{...bezierHandlePoint(a,'in')},
+                out:{...bezierHandlePoint(a,'out')},
+                broken:!!a.broken,
+                anchorType:a.anchorType||null
+              }))
+            };
+            try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+            statusEl.textContent='İki noktalı Bézier eğrisi — segmenti sürükle';
+            return;
+          }
+
           recordObjectStates([idx]);
           const ai=splitBezierSegment(o,near.segmentIndex,near.t);
           bezierActiveAnchorIndex=ai;
@@ -11757,9 +11780,42 @@
     const screenP=screenPointFromEvent(e);
     const p=pFromEvent(e);
     lastCanvasPointerWorld={x:p.x,y:p.y};
-    if(mode==='pen' && !bezierDragInfo){
+    if(mode==='pen' && !bezierDragInfo && !bezierSegmentDragInfo){
       updateBezierHover(p);
       redraw();
+    }
+
+    if(mode==='pen' && bezierSegmentDragInfo && e.pointerId===bezierPointerId){
+      const info=bezierSegmentDragInfo;
+      const o=objects[info.index];
+      if(o && o.kind==='bezier' && Array.isArray(o.anchors) && o.anchors.length===2){
+        const a0=o.anchors[0], a1=o.anchors[1];
+        const b0=info.anchors[0], b1=info.anchors[1];
+        const dx=p.x-info.start.x;
+        const dy=p.y-info.start.y;
+        const t=info.t;
+        const u=1-t;
+        const weight=Math.max(.12,3*u*t);
+        const ox=dx/weight;
+        const oy=dy/weight;
+
+        // Move only the two control points that define this segment.
+        // Mirror the unused endpoint handles so both endpoints remain
+        // editable as ordinary symmetric Bézier points afterwards.
+        a0.out={x:b0.out.x+ox,y:b0.out.y+oy};
+        a0.in={x:2*a0.x-a0.out.x,y:2*a0.y-a0.out.y};
+        a1.in={x:b1.in.x+ox,y:b1.in.y+oy};
+        a1.out={x:2*a1.x-a1.in.x,y:2*a1.y-a1.in.y};
+        a0.broken=false;
+        a1.broken=false;
+        a0.anchorType='symmetric';
+        a1.anchorType='symmetric';
+
+        normalizeBezierCenter(o);
+        markBoardDirty();
+        redraw();
+      }
+      return;
     }
 
     if(mode==='pen' && bezierDragInfo && e.pointerId===bezierPointerId){
@@ -12425,6 +12481,16 @@
   });
 
   function finishPointer(e){
+    if(mode==='pen' && bezierSegmentDragInfo && e.pointerId===bezierPointerId){
+      bezierPointerId=null;
+      bezierSegmentDragInfo=null;
+      markBoardDirty();
+      updateBezierHover(pFromEvent(e));
+      redraw();
+      statusEl.textContent='İki noktalı Bézier eğrisi oluşturuldu';
+      return;
+    }
+
     if(mode==='pen' && bezierDragInfo && e.pointerId===bezierPointerId){
       bezierPointerId=null;
       bezierDragInfo=null;
