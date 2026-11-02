@@ -1150,7 +1150,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.29 · Bézier cycle: köşe → smooth → simetrik → kırık</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.30 · Bézier cycle sadeleştirildi: köşe → smooth → simetrik</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -4211,15 +4211,7 @@
     const next=
       current==='corner' ? 'smooth' :
       current==='smooth' ? 'symmetric' :
-      current==='symmetric' ? 'broken' :
       'corner';
-
-    if(next==='broken'){
-      // Keep the current handle positions, but break their linkage.
-      a.broken=true;
-      a.anchorType='broken';
-      return next;
-    }
 
     if(!setBezierAnchorType(o,index,next)) return null;
     return next;
@@ -11522,8 +11514,7 @@
               const labels={
                 corner:'Köşe — handles yok',
                 smooth:'Smooth handles — aynı doğrultu, farklı uzunluk',
-                symmetric:'Simetrik handles',
-                broken:'Kırık handles — bağımsız'
+                symmetric:'Simetrik handles'
               };
               statusEl.textContent='Bézier noktası: '+(labels[nextType]||nextType);
             }
