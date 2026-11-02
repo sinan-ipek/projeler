@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.25</title>
+<title>Beyaz Tahta v18.26</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1150,7 +1150,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.25 · Parçala düğmesi ikonlaştırıldı</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.26 · Drag ile oluşan Bézier handles simetrik</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -11776,8 +11776,10 @@
         a.broken=!!(e.altKey||bezierDragInfo.altBroken);
         if(a.broken){
           if(!finitePoint(a.in)) a.in={x:a.x,y:a.y};
+          a.anchorType='broken';
         }else{
           a.in={x:a.x-dx,y:a.y-dy};
+          a.anchorType='symmetric';
         }
         normalizeBezierCenter(o);
         markBoardDirty();
