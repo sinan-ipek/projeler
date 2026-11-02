@@ -11133,7 +11133,7 @@
             return;
           }
 
-          saveState();
+          recordObjectStates(targets);
           const count=applyFormatToIndices(formatPainterStyle,targets);
 
           if(count){
@@ -11172,7 +11172,11 @@
             return;
           }
 
-          saveState();
+          if(e.altKey){
+            saveState();
+          }else{
+            recordObjectStates(selectedIndices);
+          }
 
           // Alt + rotate/resize: duplicate the whole current selection first.
           // Originals stay in place; only the copies are transformed.
@@ -11216,7 +11220,7 @@
             const o=objects[selectedIndex];
             const a=o.anchors && o.anchors[ai];
             if(a){
-              saveState();
+              recordObjectStates([selectedIndex]);
               a.broken=!a.broken;
 
               if(!a.broken){
@@ -11280,7 +11284,11 @@
             // Touching an already-selected point starts moving the whole point set.
           }
 
-          saveState();
+          if(e.altKey){
+            saveState();
+          }else{
+            recordObjectStates([selectedIndex]);
+          }
 
           // Alt + rotate/resize or Alt + line endpoint drag:
           // create a copy before the transform begins.
@@ -11393,7 +11401,11 @@
 
         const movingIndices=selectedIndices.length ? selectedIndices.slice() : [hit];
 
-        saveState();
+        if(e.altKey && hitAlreadySelected){
+          saveState();
+        }else{
+          recordObjectStates(movingIndices);
+        }
 
         // Alt-drag duplicates the current selection and moves the copies.
         if(e.altKey && hitAlreadySelected){
