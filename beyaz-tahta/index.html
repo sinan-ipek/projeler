@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.19</title>
+<title>Beyaz Tahta v18.20</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1144,7 +1144,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.19 · Nesne tabanlı Undo altyapısı</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.20 · Undo sıcak işlemlerde nesne bazlı</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -13347,8 +13347,8 @@
 
       if(state.isNew){
         if(clean.trim()!==''){
-          saveState();
-          objects.push({
+          const newTextObject={
+            id:makeObjectId(),
             kind:'text',
             center:{...state.center},
             w,h,
@@ -13359,7 +13359,9 @@
             source:'text',
             shapeName:'text',
             boxAngle:0
-          });
+          };
+          objects.push(newTextObject);
+          recordAddedObjectUndo(newTextObject,objects.length-1);
           setSelection([objects.length-1]);
         }
       }else if(state.index>=0 && objects[state.index]){
@@ -13404,7 +13406,7 @@
     let state;
     if(existingIndex>=0 && objects[existingIndex] && objects[existingIndex].kind==='text'){
       const o=objects[existingIndex];
-      saveState();
+      recordObjectStates([existingIndex]);
       state={
         index:existingIndex,
         isNew:false,
