@@ -7165,8 +7165,6 @@
   function pasteInternalClipboard(targetPoint=lastCanvasPointerWorld){
     if(!internalClipboard.length) return 0;
 
-    saveState();
-
     const rawCopies=internalClipboard.map(original=>{
       const copy=cloneObject(original);
       copy.id=makeObjectId();
@@ -7205,6 +7203,15 @@
     const start=objects.length;
 
     for(const copy of pastedCopies) objects.push(copy);
+    pushUndoEntry({
+      type:'added-objects',
+      items:pastedCopies.map((object,k)=>({
+        id:ensureObjectId(object),
+        index:start+k,
+        object:cloneObject(object)
+      }))
+    });
+    markBoardDirty();
 
     const pastedIndices=Array.from(
       {length:pastedCopies.length},
@@ -10816,7 +10823,7 @@
       return;
     }
 
-    saveState();
+    recordRemovedObjects(deletable.map(i=>({index:i,object:objects[i]})));
 
     for(const i of deletable){
       objects.splice(i,1);
@@ -10915,7 +10922,7 @@
         // Clicking a segment inserts a real split point without changing curve shape.
         const near=nearestBezierLocation(o,p);
         if(near && near.distance<=hitR){
-          saveState();
+          recordObjectStates([idx]);
           const ai=splitBezierSegment(o,near.segmentIndex,near.t);
           bezierActiveAnchorIndex=ai;
           normalizeBezierCenter(o);
@@ -10931,7 +10938,6 @@
 
       // Start a new path or append to current open path.
       if(!o || o.kind!=='bezier' || o.closed){
-        saveState();
         o={
           id:makeObjectId(),
           kind:'bezier',
@@ -10943,10 +10949,11 @@
         };
         objects.push(o);
         idx=objects.length-1;
+        recordAddedObjectUndo(o,idx);
         bezierDraftIndex=idx;
         setSelection([idx]);
       }else{
-        saveState();
+        recordObjectStates([idx]);
       }
 
       const anchor={
