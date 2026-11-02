@@ -1150,7 +1150,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.26 · Drag ile oluşan Bézier handles simetrik</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.27 · Bézier köşe döngüsüne kırılmış handles eklendi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -4208,7 +4208,20 @@
     if(!a) return null;
 
     const current=inferBezierAnchorType(a);
-    const next=current==='corner' ? 'symmetric' : 'corner';
+    const next=
+      current==='corner' ? 'symmetric' :
+      current==='symmetric' ? 'broken' :
+      'corner';
+
+    if(next==='broken'){
+      // The handles are already symmetric at this point.
+      // Keep their current geometry, but break the linkage so each one
+      // can be moved independently afterwards.
+      a.broken=true;
+      a.anchorType='broken';
+      return next;
+    }
+
     if(!setBezierAnchorType(o,index,next)) return null;
     return next;
   }
@@ -11509,7 +11522,8 @@
 
               const labels={
                 corner:'Köşe — handles yok',
-                symmetric:'Simetrik handles'
+                symmetric:'Simetrik handles',
+                broken:'Simetrik ama kırılmış handles'
               };
               statusEl.textContent='Bézier noktası: '+(labels[nextType]||nextType);
             }
