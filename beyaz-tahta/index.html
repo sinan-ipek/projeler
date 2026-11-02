@@ -1403,6 +1403,10 @@
   let fillLongPressTriggered = false;
   let eraserPressTimer = null;
   let eraserLongPressTriggered = false;
+
+  // Object-delta undo transactions for eraser + Alt-duplicate transforms.
+  let eraserUndoTxn=null;
+  let pendingAddedUndoIds=null;
   let selectPressTimer = null;
   let selectLongPressTriggered = false;
   const widthEl = document.getElementById('width');
@@ -2673,6 +2677,95 @@
     markBoardDirty();
   }
 
+  function armAddedObjectsUndo(indices){
+    pendingAddedUndoIds=(indices||[])
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length && objects[i])
+      .map(i=>ensureObjectId(objects[i]));
+  }
+
+  function commitAddedObjectsUndo(){
+    if(!pendingAddedUndoIds || !pendingAddedUndoIds.length){
+      pendingAddedUndoIds=null;
+      return false;
+    }
+
+    const ids=new Set(pendingAddedUndoIds);
+    const items=[];
+    for(let i=0;i<objects.length;i++){
+      const o=objects[i];
+      if(o && ids.has(o.id)){
+        items.push({id:o.id,index:i,object:cloneObject(o)});
+      }
+    }
+    pendingAddedUndoIds=null;
+    if(!items.length) return false;
+
+    pushUndoEntry({type:'added-objects',items});
+    markBoardDirty();
+    return true;
+  }
+
+  function beginEraserUndoTxn(){
+    eraserUndoTxn={
+      originals:new Map(),
+      generatedIds:new Set()
+    };
+  }
+
+  function captureEraserOriginal(o,index){
+    if(!eraserUndoTxn || !o) return;
+    const id=ensureObjectId(o);
+
+    if(eraserUndoTxn.generatedIds.has(id)){
+      eraserUndoTxn.generatedIds.delete(id);
+      return;
+    }
+
+    if(!eraserUndoTxn.originals.has(id)){
+      eraserUndoTxn.originals.set(id,{
+        id,
+        index:Number.isInteger(index)?index:0,
+        object:cloneObject(o)
+      });
+    }
+  }
+
+  function registerEraserGenerated(list){
+    if(!eraserUndoTxn) return;
+    for(const o of (list||[])){
+      if(!o) continue;
+      eraserUndoTxn.generatedIds.add(ensureObjectId(o));
+    }
+  }
+
+  function commitEraserUndoTxn(){
+    if(!eraserUndoTxn){
+      return false;
+    }
+
+    const removed=[...eraserUndoTxn.originals.values()]
+      .sort((a,b)=>a.index-b.index);
+    const wanted=new Set(eraserUndoTxn.generatedIds);
+    const added=[];
+
+    for(let i=0;i<objects.length;i++){
+      const o=objects[i];
+      if(o && wanted.has(o.id)){
+        added.push({id:o.id,index:i,object:cloneObject(o)});
+      }
+    }
+
+    eraserUndoTxn=null;
+
+    if(!removed.length && !added.length) return false;
+    recordReplacedObjects(removed,added);
+    return true;
+  }
+
+  function cancelEraserUndoTxn(){
+    eraserUndoTxn=null;
+  }
+
   function applyUndoEntry(entry, direction){
     if(!entry) return null;
 
@@ -2778,6 +2871,12 @@
       known.sort((a,b)=>rank.get(a.id)-rank.get(b.id));
       objects=known.concat(extra);
       return {type:'object-order',ids:currentIds};
+    }
+
+    if(entry.type==='board-replace'){
+      const current=objects.map(cloneObject);
+      objects=(entry.objects||[]).map(cloneObject);
+      return {type:'board-replace',objects:current};
     }
 
     if(entry.type==='replace-objects'){
@@ -11085,7 +11184,7 @@
       closeContextMenu();
       const hit=hitFillableObject(p);
       if(hit>=0){
-        saveState();
+        recordObjectStates([hit]);
         objects[hit].fillColor=currentFillColor;
         objects[hit].fillOpacity=currentFillOpacity;
         redraw();
