@@ -3601,7 +3601,7 @@ function bracketDistributingHTML(){
    'data-action="bracketMultiply_'+index+'" tabindex="0" role="button" '+
    'aria-label="'+(index===0?'x terimini':'sabit terimi')+' çarp">'+label+'</span>';
  };
- const products=b.productsDone.map(index=>
+ const products=b.productsDone.slice().sort((a,b)=>a-b).map(index=>
   '<span class="brk-drop-result" data-id="brkresult'+index+'">'+
    bracketMultiplyLabel(index)+'</span>').join('');
  return '<span class="side brk-dist-side">'+
@@ -3623,6 +3623,22 @@ function bracketLowerResultRects(){
   if(el)map.set(index,el.getBoundingClientRect());
  }
  return map;
+}
+async function bracketShiftLowerResults(before,newIndex){
+ const scale=n14Scale(),tasks=[];
+ for(const [index,old] of before){
+  if(index===newIndex)continue;
+  const el=byId('brkresult'+index);if(!el)continue;
+  const now=el.getBoundingClientRect();
+  const dx=(old.left-now.left)/scale,dy=(old.top-now.top)/scale;
+  if(Math.abs(dx)+Math.abs(dy)<.35)continue;
+  const anim=el.animate([
+   {transform:'translate3d('+dx+'px,'+dy+'px,0)'},
+   {transform:'translate3d(0,0,0)'}
+  ],{duration:fastMode()?250:410,easing:'cubic-bezier(.42,0,.17,1)',fill:'both'});
+  tasks.push(anim.finished.catch(()=>{}).then(()=>anim.cancel()));
+ }
+ await Promise.all(tasks);
 }
 async function bracketLiftResults(rects){
  const scale=n14Scale();
@@ -3824,7 +3840,7 @@ async function bracketAction(action){
   bracket.mode!=='distributing'||
   bracket.productsDone.includes(Number(multiply[1]))))return;
  if(action==='bracketMoveOut'&&!(bracket.out!==0&&
-     ['start','expanded','expandedCalculated'].includes(bracket.mode)))return;
+     ['start','distributing','expanded','expandedCalculated'].includes(bracket.mode)))return;
  if(action==='bracketCombineRight'&&!bracket.pendingOut)return;
  if(action==='finishExpand'&&bracket.mode!=='expanded')return;
  if(action==='combineExpandedConstants'&&bracket.mode!=='expandedCalculated')return;
@@ -3846,10 +3862,14 @@ async function bracketAction(action){
   if(multiply){
    const index=Number(multiply[1]);
    const source=byId('brkTarget'+index)?.getBoundingClientRect();
+   const oldProducts=bracketLowerResultRects();
    bracket.productsDone.push(index);
    update();
    const result=byId('brkresult'+index);
-   await n14FlyProduct('brkresult'+index,source,result?.getBoundingClientRect());
+   await Promise.all([
+    n14FlyProduct('brkresult'+index,source,result?.getBoundingClientRect()),
+    bracketShiftLowerResults(oldProducts,index)
+   ]);
    if(bracket.productsDone.length===2){
     // ALT SATIR tamamen bitmeden hiçbir terim yukarı çıkmaz.
     const positions=bracketLowerResultRects();
