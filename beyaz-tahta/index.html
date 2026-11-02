@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.20</title>
+<title>Beyaz Tahta v18.21</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1144,7 +1144,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.20 · Undo sıcak işlemlerde nesne bazlı</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.21 · Undo tamamen nesne/delta tabanlı</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -7443,7 +7443,9 @@
       return false;
     }
 
-    saveState();
+    if(!duplicateFirst){
+      recordObjectStates(selectedIndices);
+    }
 
     if(duplicateFirst){
       const pivotBeforeDuplicate=selectionPivot
@@ -7451,6 +7453,7 @@
         : null;
       const dupIndices=duplicateSelection(selectedIndices);
       setSelectionPreservePivot(dupIndices,pivotBeforeDuplicate);
+      armAddedObjectsUndo(dupIndices);
     }
 
     const indices=selectedIndices.slice();
@@ -7520,6 +7523,7 @@
       return false;
     }
 
+    if(duplicateFirst) commitAddedObjectsUndo();
     redraw();
     statusEl.textContent=duplicateFirst
       ? 'Kopya oluşturuldu ve son transformasyon tekrarlandı'
@@ -11173,7 +11177,7 @@
         eraserCursor=p;
         eraserLastPoint=p;
         eraserChanged=false;
-        saveState();
+        beginEraserUndoTxn();
 
         const changed=eraseWholeInkAt(p);
         eraserChanged=changed;
@@ -11285,9 +11289,7 @@
             return;
           }
 
-          if(e.altKey){
-            saveState();
-          }else{
+          if(!e.altKey){
             recordObjectStates(selectedIndices);
           }
 
@@ -11299,6 +11301,7 @@
               : null;
             const dupIndices=duplicateSelection(selectedIndices);
             setSelectionPreservePivot(dupIndices,pivotBeforeDuplicate);
+            armAddedObjectsUndo(dupIndices);
           }
 
           selectStart=p;
@@ -11397,9 +11400,7 @@
             // Touching an already-selected point starts moving the whole point set.
           }
 
-          if(e.altKey){
-            saveState();
-          }else{
+          if(!e.altKey){
             recordObjectStates([selectedIndex]);
           }
 
@@ -11417,6 +11418,7 @@
               : null;
             const dupIndices=duplicateSelection([selectedIndex]);
             setSelectionPreservePivot(dupIndices,pivotBeforeDuplicate);
+            armAddedObjectsUndo(dupIndices);
             selectedIndex=selectedIndices[0];
           }
 
@@ -11514,9 +11516,7 @@
 
         const movingIndices=selectedIndices.length ? selectedIndices.slice() : [hit];
 
-        if(e.altKey && hitAlreadySelected){
-          saveState();
-        }else{
+        if(!(e.altKey && hitAlreadySelected)){
           recordObjectStates(movingIndices);
         }
 
@@ -11527,6 +11527,7 @@
             : null;
           const dupIndices=duplicateSelection(movingIndices);
           setSelectionPreservePivot(dupIndices,pivotBeforeDuplicate);
+          armAddedObjectsUndo(dupIndices);
         }
 
         selectStart=p;
@@ -12445,6 +12446,7 @@
     }
 
     if(mode==='select'){
+      commitAddedObjectsUndo();
       if(
         e.type==='pointerup' &&
         pendingRepeatTransform &&
@@ -13215,9 +13217,10 @@
       }
     }
 
-    // Undo, yalnızca yüklemeyi yapan bu tarayıcıda eski tahtayı geri alma
-    // imkânı sağlar. Ortak odadaki diğer cihazlar yeni state'i görür.
-    saveState();
+    // Tüm tahta değiştiği için Undo kaydı da nesne listesi düzeyindedir.
+    // JSON.stringify snapshot yok; mevcut nesneler doğrudan klonlanır.
+    pushUndoEntry({type:'board-replace',objects:objects.map(cloneObject)});
+    markBoardDirty();
 
     objects=incoming;
     ensureUniqueObjectIds();
