@@ -11,16 +11,17 @@
 h1{font-size:18px;margin:0 0 6px}p{font-size:12px;color:#b7cbe2;line-height:1.4;margin:5px 0 10px}
 button{cursor:pointer;color:#fff;background:#2864a2;border:1px solid #5a91c8;border-radius:8px;padding:8px 13px;font-size:14px;margin:2px}
 button:hover{background:#3678bd}#status{font-size:12px;color:#a8cde8;margin-top:9px}
-#VRButton{z-index:10!important}#warning{color:#f7c68e}
+#VRButton{z-index:10!important}#warning{color:#f7c68e}#version-footer{position:fixed;left:10px;bottom:8px;font:10px system-ui;color:#87919d;pointer-events:none;z-index:3}
 </style>
 </head>
 <body>
 <div id="top">
-<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v11.3 · VR</small></h1>
+<h1>Gravity Sandbox · VR <small style="font-size:11px;color:#83e4bb">v11.4 · VR</small></h1>
 <p>Sol joystick: Uç / 30° dön / Bas: Başa dön · Sol tetik: Oynat/Duraklat · Sol grip: Tut ve çek · X: Menü · Sağ tetik: Seç/Yerleştir · İki grip: Ölçek</p>
 <div><button id="play">⏸ Duraklat</button><button id="reset">↻ Sıfırla</button><button id="mode">🌌 Uzay</button><button id="trails">Yörüngeler: Açık</button></div>
 <div id="status">Hazırlanıyor…</div><p id="warning"></p>
 </div>
+<div id="version-footer">v11.4 · Sağ kontrolcü etkileşimi</div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
@@ -155,6 +156,74 @@ const collisionModes=[
  ['dynamic','DİNAMİK ÇARPIŞMA']
 ];
 let collisionMode='pass';
+const controllerPhysics={
+ enabled:false,active:false,radius:1.1,
+ mass:DENSITY_FACTOR*1.1**3,
+ pos:new THREE.Vector3(),velocity:new THREE.Vector3(),orientation:new THREE.Quaternion(),attachments:new Map(),initialized:false
+};
+const controllerField=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),
+ new THREE.MeshStandardMaterial({color:0x67dbff,emissive:0x115b7d,transparent:true,opacity:.30,roughness:.35,depthWrite:false,side:THREE.DoubleSide}));
+controllerField.scale.setScalar(controllerPhysics.radius);
+controllerField.visible=false;controllerField.renderOrder=14;world.add(controllerField);
+function releaseControllerAttachments(){
+ for(const b of controllerPhysics.attachments.keys()){
+  if(bodies.includes(b)){b.controllerAttached=false;b.v.copy(controllerPhysics.velocity);}
+ }
+ controllerPhysics.attachments.clear();
+}
+function updateControllerPhysics(dt){
+ const cp=controllerPhysics;
+ const controllerReady=cp.enabled&&renderer.xr.isPresenting&&rightController;
+ if(!controllerReady){
+  if(cp.active)releaseControllerAttachments();
+  cp.active=false;cp.initialized=false;cp.velocity.set(0,0,0);
+  controllerField.visible=false;
+  return;
+ }
+ rightController.updateWorldMatrix(true,false);
+ const p=rightController.getWorldPosition(new THREE.Vector3());
+ world.worldToLocal(p);
+ if(cp.initialized){
+  const delta=p.clone().sub(cp.pos);
+  cp.velocity.copy(delta.divideScalar(Math.max(dt,1/240))).clampLength(0,100);
+ }else{cp.velocity.set(0,0,0);cp.initialized=true;}
+ cp.pos.copy(p);cp.active=true;
+ const worldQ=world.getWorldQuaternion(new THREE.Quaternion());
+ const handQ=rightController.getWorldQuaternion(new THREE.Quaternion());
+ cp.orientation.copy(worldQ.invert()).multiply(handQ);
+ controllerField.position.copy(cp.pos);controllerField.visible=true;
+ for(const [b,attachment] of cp.attachments){
+  if(!bodies.includes(b)){cp.attachments.delete(b);continue;}
+  b.controllerAttached=true;
+  b.pos.copy(cp.pos).add(attachment.offset.clone().applyQuaternion(cp.orientation));
+  b.v.copy(cp.velocity);
+  b.mesh.quaternion.copy(cp.orientation).multiply(attachment.rotation);
+  if(b.rocket&&attachment.rocketDir){
+   b.rocket.direction.copy(attachment.rocketDir).applyQuaternion(cp.orientation);
+  }
+ }
+}
+function attachBodyToController(body){
+ if(!controllerPhysics.active||controllerPhysics.attachments.has(body))return;
+ const reverse=controllerPhysics.orientation.clone().invert();
+ controllerPhysics.attachments.set(body,{
+  offset:body.pos.clone().sub(controllerPhysics.pos).applyQuaternion(reverse),
+  rotation:reverse.clone().multiply(body.mesh.quaternion),
+  rocketDir:body.rocket?.direction.clone().applyQuaternion(reverse)||null
+ });
+ body.controllerAttached=true;body.v.copy(controllerPhysics.velocity);
+ if(vectorDrag?.body===body)vectorDrag=null;
+ for(const [controller,grab] of grabs){
+  if(grab.body===body||grab.members?.some(m=>m.body===body))grabs.delete(controller);
+ }
+ if(twoHand?.type==='objects'&&twoHand.members.some(m=>m.body===body))endTwoHand();
+ $('status').textContent='Nesne sağ kontrolcüye yapıştı';
+}
+function releaseBodyFromController(body){
+ if(!controllerPhysics.attachments.has(body))return;
+ controllerPhysics.attachments.delete(body);
+ body.controllerAttached=false;body.v.copy(controllerPhysics.velocity);
+}
 function collisionModeText(){return collisionModes.find(item=>item[0]===collisionMode)?.[1]||'SERBEST GEÇİŞ';}
 
 function makeBody(radius,color,x,y,z,vx,vy,vz){
@@ -293,6 +362,7 @@ function disposeBodyArrow(b){
  b.arrow.cone.geometry.dispose();b.arrow.cone.material.dispose();
 }
 function clearBodies(){
+ controllerPhysics.attachments.clear();
  for(const b of bodies){
   world.remove(b.mesh,b.trail);
   b.mesh.material.dispose();b.trail.geometry.dispose();b.trail.material.dispose();
@@ -433,13 +503,18 @@ function addVRPreset(id,replaceExisting=false){
  $('status').textContent=(replaceExisting?'Deney başlatıldı: ':'Sistem eklendi: ')+id+(replaceExisting?' · Önceki sistem temizlendi':' · Var olan gezegenler korundu');
 }
 function accelerations(){
- if(planetMode)return bodies.map(()=>new THREE.Vector3(0,-G_PLANET,0));
- const acc=bodies.map(()=>new THREE.Vector3());
- for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
+ const acc=bodies.map(()=>new THREE.Vector3(0,planetMode?-G_PLANET:0,0));
+ if(!planetMode)for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
   const d=new THREE.Vector3().subVectors(bodies[j].pos,bodies[i].pos);
   const rr=d.lengthSq()+SOFT,k=G/(rr*Math.sqrt(rr));
   acc[i].addScaledVector(d,k*bodies[j].mass);
   acc[j].addScaledVector(d,-k*bodies[i].mass);
+ }
+ // Kinematic controller attracts bodies without undergoing acceleration.
+ if(controllerPhysics.active)for(let i=0;i<bodies.length;i++){
+  const b=bodies[i];if(b.controllerAttached)continue;
+  const d=controllerPhysics.pos.clone().sub(b.pos),rr=d.lengthSq()+SOFT;
+  acc[i].addScaledVector(d,G*controllerPhysics.mass/(rr*Math.sqrt(rr)));
  }
  return acc;
 }
@@ -447,6 +522,7 @@ function accelerations(){
 // Limit fragments and destructive operations per frame for Quest performance.
 const MAX_FRAGMENT_BODIES=160;
 function discardCollisionBody(body){
+ controllerPhysics.attachments.delete(body);
  if(ridingBody===body)dismount();
  if(vectorDrag?.body===body)vectorDrag=null;
  if(twoHand?.type==='objects'&&twoHand.members.some(m=>m.body===body))endTwoHand();
@@ -551,9 +627,9 @@ function resolveSpaceCollisions(){
  if(collisionMode==='pass'||planetMode)return;
  let merges=0;
  collisionPairs: for(let i=0;i<bodies.length;i++){
-  const a=bodies[i];if(grabbedBody(a))continue;
+  const a=bodies[i];if(grabbedBody(a)||a.controllerAttached)continue;
   for(let j=i+1;j<bodies.length;j++){
-   const b=bodies[j];if(grabbedBody(b))continue;
+   const b=bodies[j];if(grabbedBody(b)||b.controllerAttached)continue;
    const dx=b.pos.x-a.pos.x,dy=b.pos.y-a.pos.y,dz=b.pos.z-a.pos.z;
    const minDist=a.radius+b.radius;
    const distanceSq=dx*dx+dy*dy+dz*dz;
@@ -594,33 +670,81 @@ function resolveSpaceCollisions(){
   }
  }
 }
+// Collision with immovable controller, in all physics modes.
+function resolveControllerCollisions(){
+ const cp=controllerPhysics;
+ if(!cp.active||collisionMode==='pass')return;
+ for(const b of bodies){
+  if(b.controllerAttached||grabbedBody(b))continue;
+  const d=b.pos.clone().sub(cp.pos);
+  const minimum=cp.radius+b.radius;
+  if(d.lengthSq()>=minimum*minimum)continue;
+  const normal=d.lengthSq()>1e-10?d.normalize():new THREE.Vector3(0,1,0);
+  const relative=b.v.clone().sub(cp.velocity);
+  const approach=relative.dot(normal);
+  if(collisionMode==='merge'||(collisionMode==='dynamic'&&approach>=-5)){
+   attachBodyToController(b);continue;
+  }
+  // Fast collisions fragment in fragment/dynamic mode.
+  // A massive body (>3x the controller) instead bounces: the hand is indestructible.
+  const canBreak=approach< -5&&(collisionMode==='fragment'||
+   collisionMode==='dynamic'&&b.mass<=cp.mass*3);
+  if(canBreak&&bodies.length+3<=MAX_FRAGMENT_BODIES){
+   const mass=b.mass/4,partRadius=Math.cbrt(b.radius**3/4);
+   const axis=Math.abs(normal.y)>.9?new THREE.Vector3(1,0,0):new THREE.Vector3(0,1,0);
+   const tangent=new THREE.Vector3().crossVectors(normal,axis).normalize();
+   const side=new THREE.Vector3().crossVectors(normal,tangent).normalize();
+   const dirs=[tangent.clone().add(side),tangent.clone().sub(side),
+    tangent.clone().negate().add(side),tangent.clone().negate().sub(side)].map(d=>d.normalize());
+   const wasSelected=selectedBodies.has(b),oldVelocity=b.v.clone();
+   const color=b.mesh.material.color.getHex(),spread=Math.min(9,-approach*.3);
+   discardCollisionBody(b);
+   const pieces=[];
+   for(const dir of dirs){
+    const p=cp.pos.clone().addScaledVector(normal,cp.radius+partRadius*2.2)
+      .addScaledVector(dir,partRadius*1.5);
+    const v=oldVelocity.clone().addScaledVector(normal,Math.max(0,-approach))
+      .addScaledVector(dir,spread);
+    const part=makeBody(partRadius,color,p.x,p.y,p.z,v.x,v.y,v.z);
+    part.mass=mass;updateTrail(part);pieces.push(part);
+   }
+   finishCollisionSelection(pieces,wasSelected);
+   $('status').textContent='Kontrolcü çarpışması: nesne parçalandı';
+   return; // at most one split per physics tick
+  }
+  // Ideal elastic response to a moving, infinite-inertia obstacle.
+  b.pos.copy(cp.pos).addScaledVector(normal,minimum+.01);
+  if(approach<0)b.v.addScaledVector(normal,-2*approach);
+ }
+}
 function step(){
  let a=accelerations();
  const rocketThrust=new Map();
  for(let i=0;i<bodies.length;i++){
   const b=bodies[i];
-  if(!b.rocket||b.rocket.burnRemaining<=0||grabbedBody(b))continue;
+  if(!b.rocket||b.rocket.burnRemaining<=0||grabbedBody(b)||b.controllerAttached)continue;
   const active=Math.min(DT,b.rocket.burnRemaining)/DT;
   const acceleration=b.rocket.direction.clone().multiplyScalar(b.rocket.thrustAcceleration*active);
   rocketThrust.set(b,acceleration);
   a[i].add(acceleration);
  }
  for(let i=0;i<bodies.length;i++){
-  const b=bodies[i];if(grabbedBody(b))continue;b.v.addScaledVector(a[i],DT/2);b.pos.addScaledVector(b.v,DT);
+  const b=bodies[i];if(grabbedBody(b)||b.controllerAttached)continue;b.v.addScaledVector(a[i],DT/2);b.pos.addScaledVector(b.v,DT);
  }
  a=accelerations();
  for(let i=0;i<bodies.length;i++){
-  const b=bodies[i];if(grabbedBody(b))continue;
+  const b=bodies[i];if(grabbedBody(b)||b.controllerAttached)continue;
   if(rocketThrust.has(b))a[i].add(rocketThrust.get(b));
   b.v.addScaledVector(a[i],DT/2);
   if(rocketThrust.has(b))b.rocket.burnRemaining=Math.max(0,b.rocket.burnRemaining-DT);
  }
  if(planetMode)for(const b of bodies){
-  if(grabbedBody(b))continue;
+  if(grabbedBody(b)||b.controllerAttached)continue;
   const ground=-10+b.radius;
   if(b.pos.y<ground){b.pos.y=ground;if(b.v.y<0){b.v.y=-b.v.y*BOUNCE;if(b.v.y<.4)b.v.y=0}}
  }
  if(!planetMode&&collisionMode!=='pass')resolveSpaceCollisions();
+ resolveControllerCollisions();
  for(const b of bodies)if(++b.tick%5===0)updateTrail(b);
 }
 function syncButtons(){
@@ -643,6 +767,14 @@ function action(name){
  else if(name==='mode'){planetMode=!planetMode;if(planetMode)for(const b of bodies){b.pos.y=Math.max(b.pos.y,-10+b.radius);b.history=[];updateTrail(b)}alignGroundToXRFloor();}
  else if(name==='trails')showTrails=!showTrails;
  else if(name==='velocities')showVelocities=!showVelocities;
+ else if(name==='interaction'){
+  controllerPhysics.enabled=!controllerPhysics.enabled;
+  if(!controllerPhysics.enabled){
+   releaseControllerAttachments();controllerPhysics.active=false;
+   controllerPhysics.initialized=false;controllerField.visible=false;
+  }
+  $('status').textContent='Etkileşim: '+(controllerPhysics.enabled?'Açık':'Kapalı');
+ }
  else if(name==='collision'){
   const index=collisionModes.findIndex(item=>item[0]===collisionMode);
   collisionMode=collisionModes[(index+1)%collisionModes.length][0];
@@ -735,7 +867,13 @@ function refreshPanel(){
    const disabled=(id==='copy'&&!has&&!copyClipboard)||(id==='delete'&&!has)||(id==='rideToggle'&&!has&&!ridingBody);
    paintButton(id,name,30+(i%2)*430,297+Math.floor(i/2)*158,410,140,id==='copy'&&!!copyClipboard,id==='delete',disabled,34);
   });
-  paintButton('collision','ÇARPIŞMA: '+collisionModeText(),30,933,840,105,collisionMode!=='pass',false,false,36);
+  paintButton('interaction','ETKİLEŞİM: '+(controllerPhysics.enabled?'AÇIK':'KAPALI'),30,933,410,105,
+   controllerPhysics.enabled,false,false,31);
+  paintButton('collision','ÇARPIŞMA: '+({
+   pass:'GEÇİŞ',merge:'BİRLEŞME',elastic:'ESNEK',
+   fragment:'PARÇALANMA',dynamic:'DİNAMİK'
+  }[collisionMode]),460,933,410,105,
+   collisionMode!=='pass',false,false,29);
   c.fillStyle='#b0cbdc';c.font='24px system-ui';
   if(selectedPlanet&&bodies.includes(selectedPlanet)){
    const b=selectedPlanet,rocketInfo=b.rocket?'  ·  İTİŞ '+b.rocket.burnRemaining.toFixed(1)+'s':'';
@@ -1038,6 +1176,7 @@ function deleteSelected(){
  if(twoHand?.type==='objects'&&twoHand.members.some(m=>targets.includes(m.body)))endTwoHand();
  for(const [controller,grab] of grabs)if(targets.includes(grab.body))grabs.delete(controller);
  for(const b of targets){
+  controllerPhysics.attachments.delete(b);
   world.remove(b.mesh,b.trail);b.mesh.material.dispose();b.trail.geometry.dispose();b.trail.material.dispose();disposeSpecialVisual(b);disposeBodyArrow(b);
   const ring=selectionRings.get(b);
   if(ring){world.remove(ring);ring.geometry.dispose();ring.material.dispose();selectionRings.delete(b)}
@@ -1304,7 +1443,13 @@ for(let i=0;i<2;i++){
    controller.userData.beam=null;coneMesh.visible=false;
   }
  });
- controller.addEventListener('disconnected',()=>{controllerInputs.delete(controller);releaseGrab(controller)});
+ controller.addEventListener('disconnected',()=>{
+  controllerInputs.delete(controller);releaseGrab(controller);
+  if(controller===rightController){
+   releaseControllerAttachments();controllerPhysics.active=false;
+   controllerPhysics.initialized=false;controllerField.visible=false;rightController=null;
+  }
+ });
  controller.addEventListener('selectstart',()=>{
   if(controller===leftController){action('play');return;}
   rayFromController(controller);
@@ -1354,6 +1499,7 @@ for(let i=0;i<2;i++){
   const hit=pickTargets(controller)[0];
   if(!hit)return;
   const body=hit.body;
+  if(body?.controllerAttached)releaseBodyFromController(body);
   if(!body)return;
   if(!selectedBodies.has(body))choosePlanet(body);
   const members=[...selectedBodies].filter(b=>bodies.includes(b)).map(body=>({body}));
@@ -1368,9 +1514,10 @@ for(let i=0;i<2;i++){
 renderer.xr.addEventListener('sessionstart',()=>{
  handMenuOpen=false;rightMenuOpen=false;heldGrips.clear();endTwoHand();
  initialView();snapReady=true;stickClickLast=false;
- $('status').textContent='VR v11.3 · X: tek menü · Çarpışmalar: 5 mod · Sağ tetik: seç/yerleştir';
+ $('status').textContent='VR v11.4 · X: tek menü · Etkileşim: sağ kontrolcü · Sağ tetik: seç/yerleştir';
 });
 renderer.xr.addEventListener('sessionend',()=>{
+ releaseControllerAttachments();controllerPhysics.active=false;controllerPhysics.initialized=false;controllerField.visible=false;
  dismount();vectorDrag=null;endTwoHand();heldGrips.clear();grabs.clear();hoverBodies.clear();magneticTargets.clear();handMenuOpen=false;rightMenuOpen=false;cancelPastePlacement();cancelObjectPlacement();
  initialView();snapReady=true;stickClickLast=false;
  $('status').textContent='VR kapalı · Masaüstü önizlemesi';
@@ -1379,14 +1526,15 @@ let lastMenuRedraw=-1;
 const clock=new THREE.Clock();
 renderer.setAnimationLoop(()=>{
  const dt=Math.min(clock.getDelta(),.05);
+ updateNavigation(dt);
+ updateLeftGripDrag();
+ updateGrabsAndHover(dt);
+ updateControllerPhysics(dt);
  if(running){
   accumulator+=dt;let loops=0;
   while(accumulator>=DT&&loops<12){step();accumulator-=DT;loops++}
   if(loops>=12)accumulator=0;
  }
- updateNavigation(dt);
- updateLeftGripDrag();
- updateGrabsAndHover(dt);
  for(const b of bodies)drawBody(b);
  updateRidingView();
  updateVelocityHandleSizes(dt);
