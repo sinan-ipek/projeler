@@ -159,7 +159,7 @@ let collisionMode='pass';
 const controllerPhysics={
  enabled:false,active:false,radius:1.1,
  mass:DENSITY_FACTOR*1.1**3,
- pos:new THREE.Vector3(),velocity:new THREE.Vector3(),attachments:new Map(),initialized:false
+ pos:new THREE.Vector3(),velocity:new THREE.Vector3(),orientation:new THREE.Quaternion(),attachments:new Map(),initialized:false
 };
 const controllerField=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),
  new THREE.MeshStandardMaterial({color:0x67dbff,emissive:0x115b7d,transparent:true,opacity:.30,roughness:.35,depthWrite:false,side:THREE.DoubleSide}));
@@ -188,15 +188,29 @@ function updateControllerPhysics(dt){
   cp.velocity.copy(delta.divideScalar(Math.max(dt,1/240))).clampLength(0,100);
  }else{cp.velocity.set(0,0,0);cp.initialized=true;}
  cp.pos.copy(p);cp.active=true;
+ const worldQ=world.getWorldQuaternion(new THREE.Quaternion());
+ const handQ=rightController.getWorldQuaternion(new THREE.Quaternion());
+ cp.orientation.copy(worldQ.invert()).multiply(handQ);
  controllerField.position.copy(cp.pos);controllerField.visible=true;
- for(const [b,offset] of cp.attachments){
+ for(const [b,attachment] of cp.attachments){
   if(!bodies.includes(b)){cp.attachments.delete(b);continue;}
-  b.controllerAttached=true;b.pos.copy(cp.pos).add(offset);b.v.copy(cp.velocity);
+  b.controllerAttached=true;
+  b.pos.copy(cp.pos).add(attachment.offset.clone().applyQuaternion(cp.orientation));
+  b.v.copy(cp.velocity);
+  b.mesh.quaternion.copy(cp.orientation).multiply(attachment.rotation);
+  if(b.rocket&&attachment.rocketDir){
+   b.rocket.direction.copy(attachment.rocketDir).applyQuaternion(cp.orientation);
+  }
  }
 }
 function attachBodyToController(body){
  if(!controllerPhysics.active||controllerPhysics.attachments.has(body))return;
- controllerPhysics.attachments.set(body,body.pos.clone().sub(controllerPhysics.pos));
+ const reverse=controllerPhysics.orientation.clone().invert();
+ controllerPhysics.attachments.set(body,{
+  offset:body.pos.clone().sub(controllerPhysics.pos).applyQuaternion(reverse),
+  rotation:reverse.clone().multiply(body.mesh.quaternion),
+  rocketDir:body.rocket?.direction.clone().applyQuaternion(reverse)||null
+ });
  body.controllerAttached=true;body.v.copy(controllerPhysics.velocity);
  if(vectorDrag?.body===body)vectorDrag=null;
  for(const [controller,grab] of grabs){
@@ -855,7 +869,10 @@ function refreshPanel(){
   });
   paintButton('interaction','ETKİLEŞİM: '+(controllerPhysics.enabled?'AÇIK':'KAPALI'),30,933,410,105,
    controllerPhysics.enabled,false,false,31);
-  paintButton('collision','ÇARPIŞMA: '+collisionModeText(),460,933,410,105,
+  paintButton('collision','ÇARPIŞMA: '+({
+   pass:'GEÇİŞ',merge:'BİRLEŞME',elastic:'ESNEK',
+   fragment:'PARÇALANMA',dynamic:'DİNAMİK'
+  }[collisionMode]),460,933,410,105,
    collisionMode!=='pass',false,false,29);
   c.fillStyle='#b0cbdc';c.font='24px system-ui';
   if(selectedPlanet&&bodies.includes(selectedPlanet)){
