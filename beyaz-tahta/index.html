@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.21</title>
+<title>Beyaz Tahta v18.22</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1144,7 +1144,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.21 · Undo tamamen nesne/delta tabanlı</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.22 · Undo/Redo tamamen nesne-delta tabanlı</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -2602,11 +2602,6 @@
     if(boardMode==='me') localBoardDirty=true;
   }
 
-  function saveState(){
-    pushUndoEntry({type:'snapshot',state:JSON.stringify(objects)});
-    markBoardDirty();
-  }
-
   function recordAddedObjectUndo(object,index){
     if(!object) return;
     pushUndoEntry({
@@ -2772,19 +2767,6 @@
   function applyUndoEntry(entry, direction){
     if(!entry) return null;
 
-    if(typeof entry==='string'){
-      // Eski oturum/uyumluluk biçimi.
-      const current=JSON.stringify(objects);
-      objects=JSON.parse(entry);
-      return {type:'snapshot',state:current};
-    }
-
-    if(entry.type==='snapshot'){
-      const current=JSON.stringify(objects);
-      objects=JSON.parse(entry.state||'[]');
-      return {type:'snapshot',state:current};
-    }
-
     if(entry.type==='add-object'){
       const id=entry.object && entry.object.id;
       let idx=-1;
@@ -2801,7 +2783,7 @@
       }
 
       // Güvenlik için beklenmeyen yönde de geri yükle.
-      const at=Math.max(0,Math.min(objects.length,Number(entry.index)||objects.length));
+      const at=Math.max(0,Math.min(objects.length,Number.isInteger(entry.index)?entry.index:objects.length));
       objects.splice(at,0,cloneObject(entry.object));
       return {
         type:'add-object',
@@ -2838,17 +2820,15 @@
     }
 
     if(entry.type==='removed-objects'){
-      if(direction==='undo'){
-        const inserted=[];
-        const sorted=(entry.items||[]).slice().sort((a,b)=>a.index-b.index);
-        for(const item of sorted){
-          const at=Math.max(0,Math.min(objects.length,Number.isInteger(item.index)?item.index:objects.length));
-          const restored=cloneObject(item.object);
-          objects.splice(at,0,restored);
-          inserted.push({id:restored.id,index:at,object:cloneObject(restored)});
-        }
-        return {type:'added-objects',items:inserted};
+      const inserted=[];
+      const sorted=(entry.items||[]).slice().sort((a,b)=>a.index-b.index);
+      for(const item of sorted){
+        const at=Math.max(0,Math.min(objects.length,Number.isInteger(item.index)?item.index:objects.length));
+        const restored=cloneObject(item.object);
+        objects.splice(at,0,restored);
+        inserted.push({id:ensureObjectId(restored),index:at,object:cloneObject(restored)});
       }
+      return {type:'added-objects',items:inserted};
     }
 
     if(entry.type==='added-objects'){
