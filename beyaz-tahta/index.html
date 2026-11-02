@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.23</title>
+<title>Beyaz Tahta v18.24</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1144,7 +1144,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.23 · Çoklu anchor taşıma ve 4 tip anchor</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.24 · Alt-tık: köşe ↔ simetrik handles</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -4202,8 +4202,7 @@
     if(!a) return null;
 
     const current=inferBezierAnchorType(a);
-    const order=['corner','broken','symmetric','smooth'];
-    const next=order[(order.indexOf(current)+1)%order.length];
+    const next=current==='corner' ? 'symmetric' : 'corner';
     if(!setBezierAnchorType(o,index,next)) return null;
     return next;
   }
@@ -11504,9 +11503,7 @@
 
               const labels={
                 corner:'Köşe — handles yok',
-                broken:'Kırılmış handles',
-                symmetric:'Simetrik handles — eşit',
-                smooth:'Simetrik handles — eşit olmayan'
+                symmetric:'Simetrik handles'
               };
               statusEl.textContent='Bézier noktası: '+(labels[nextType]||nextType);
             }
