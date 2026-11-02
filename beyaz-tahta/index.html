@@ -2706,9 +2706,14 @@
   }
 
   function beginEraserUndoTxn(){
+    const startIds=new Set();
+    for(const o of objects){
+      if(o) startIds.add(ensureObjectId(o));
+    }
     eraserUndoTxn={
       originals:new Map(),
-      generatedIds:new Set()
+      generatedIds:new Set(),
+      startIds
     };
   }
 
@@ -2716,10 +2721,7 @@
     if(!eraserUndoTxn || !o) return;
     const id=ensureObjectId(o);
 
-    if(eraserUndoTxn.generatedIds.has(id)){
-      eraserUndoTxn.generatedIds.delete(id);
-      return;
-    }
+    if(!eraserUndoTxn.startIds.has(id)) return;
 
     if(!eraserUndoTxn.originals.has(id)){
       eraserUndoTxn.originals.set(id,{
@@ -2745,13 +2747,14 @@
 
     const removed=[...eraserUndoTxn.originals.values()]
       .sort((a,b)=>a.index-b.index);
-    const wanted=new Set(eraserUndoTxn.generatedIds);
     const added=[];
 
     for(let i=0;i<objects.length;i++){
       const o=objects[i];
-      if(o && wanted.has(o.id)){
-        added.push({id:o.id,index:i,object:cloneObject(o)});
+      if(!o) continue;
+      const id=ensureObjectId(o);
+      if(!eraserUndoTxn.startIds.has(id)){
+        added.push({id,index:i,object:cloneObject(o)});
       }
     }
 
@@ -10325,6 +10328,7 @@
     let changed=false;
     for(let i=objects.length-1;i>=0;i--){
       if(inkObjectHit(objects[i],p,eraserRadius/viewZoom)){
+        captureEraserOriginal(objects[i],i);
         objects.splice(i,1);
         changed=true;
       }
@@ -10569,7 +10573,8 @@
     let changed=false;
     const next=[];
 
-    for(const o of objects){
+    for(let oi=0;oi<objects.length;oi++){
+      const o=objects[oi];
       if(!isErasableInk(o) || !inkObjectHit(o,p,eraserRadius/viewZoom)){
         next.push(o);
         continue;
@@ -10580,6 +10585,8 @@
         if(parts===null){
           next.push(o);
         }else{
+          captureEraserOriginal(o,oi);
+          registerEraserGenerated(parts);
           next.push(...parts);
           changed=true;
         }
@@ -10590,6 +10597,7 @@
       // meaningfully split their glyph contours. In point-eraser mode,
       // touching the symbol removes that symbol as one object.
       if(o.kind==='text' && o.source==='math-keyboard'){
+        captureEraserOriginal(o,oi);
         changed=true;
         continue;
       }
@@ -10603,6 +10611,7 @@
         if(xParts===null && yParts===null){
           next.push(o);
         }else{
+          captureEraserOriginal(o,oi);
           if(xParts===null){
             next.push({kind:'stroke',points:sampled.xPts,style:JSON.parse(JSON.stringify(o.style||{}))});
           }else{
@@ -10629,13 +10638,18 @@
         if(parts===null){
           next.push(o);
         }else{
+          captureEraserOriginal(o,oi);
+          registerEraserGenerated(parts);
           next.push(...parts);
           changed=true;
         }
       }
     }
 
-    if(changed) objects=next;
+    if(changed){
+      for(const o of next) ensureObjectId(o);
+      objects=next;
+    }
     return changed;
   }
 
@@ -11203,7 +11217,7 @@
       eraserChanged=false;
       selectedIndex=-1;
 
-      saveState();
+      beginEraserUndoTxn();
       const changed=(eraserKind==='stroke')
         ? eraseWholeInkAt(p)
         : erasePointInkAt(p);
@@ -12347,8 +12361,10 @@
         eraserLastPoint=null;
         eraserCursor=null;
 
-        if(!rp.eraserChanged && undoStack.length){
-          undoStack.pop();
+        if(rp.eraserChanged){
+          commitEraserUndoTxn();
+        }else{
+          cancelEraserUndoTxn();
         }
 
         eraserChanged=false;
@@ -12412,8 +12428,11 @@
       erasing=false;
       eraserLastPoint=null;
 
-      // If the eraser touched nothing, remove the unnecessary undo snapshot.
-      if(!eraserChanged && undoStack.length) undoStack.pop();
+      if(eraserChanged){
+        commitEraserUndoTxn();
+      }else{
+        cancelEraserUndoTxn();
+      }
       eraserChanged=false;
       if(e.pointerType==='touch'){
         touchToolPointerId=null;
