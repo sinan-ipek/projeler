@@ -228,8 +228,10 @@
     top:42px;
     right:0;
     display:none;
-    width:304px;
+    width:420px;
+    max-height:520px;
     padding:10px;
+    overflow:auto;
     background:#fff;
     border:1px solid var(--border);
     border-radius:12px;
@@ -237,30 +239,36 @@
     z-index:55;
   }
   #mathKeyboardMenu.open{display:block}
-  .mathKeyboardSection{
-    margin-bottom:9px;
+  .mathKeyboardTabs{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-bottom:10px;
   }
-  .mathKeyboardSection:last-child{margin-bottom:0}
-  .mathKeyboardLabel{
-    margin:0 0 5px 2px;
-    color:#7a818c;
-    font-size:10px;
-    font-weight:650;
-    letter-spacing:.35px;
-    text-transform:uppercase;
+  .mathKeyboardTab{
+    height:40px;
+    border-radius:8px;
+    font-size:13px;
   }
+  .mathKeyboardTab.active{
+    background:#168cf4;
+    color:#fff;
+    border-color:#168cf4;
+  }
+  .mathKeyboardPage{display:none}
+  .mathKeyboardPage.active{display:block}
   .mathKeyboardGrid{
     display:grid;
-    grid-template-columns:repeat(8,1fr);
-    gap:5px;
+    grid-template-columns:repeat(6,1fr);
+    gap:7px;
   }
   .mathCharBtn{
     width:100%;
     min-width:0;
-    height:32px;
+    height:48px;
     padding:0;
-    border-radius:7px;
-    font:500 18px/1 "Cambria Math","STIX Two Math","Times New Roman",serif;
+    border-radius:8px;
+    font:500 21px/1 "Cambria Math","STIX Two Math","Times New Roman",serif;
   }
   .mathCharBtn:hover{
     background:#f1f4f8;
@@ -989,21 +997,57 @@
     <div class="mathKeyboardWrap">
       <button id="mathKeyboardBtn" class="iconBtn" title="Matematik klavyesi" aria-label="Matematik klavyesi">α</button>
       <div id="mathKeyboardMenu" role="menu" aria-label="Matematik klavyesi">
-        <div class="mathKeyboardSection">
-          <div class="mathKeyboardLabel">Harfler</div>
+        <div class="mathKeyboardTabs">
+          <button type="button" class="mathKeyboardTab active" data-math-page="1">Sayfa 1 (Yaygın &amp; Mantık)</button>
+          <button type="button" class="mathKeyboardTab" data-math-page="2">Sayfa 2 (Gelişmiş)</button>
+        </div>
+        <div class="mathKeyboardPage active" data-math-page-panel="1">
           <div class="mathKeyboardGrid">
-            <button class="mathCharBtn" data-math-char="x">x</button>
-            <button class="mathCharBtn" data-math-char="y">y</button>
-            <button class="mathCharBtn" data-math-char="z">z</button>
-            <button class="mathCharBtn" data-math-char="a">a</button>
-            <button class="mathCharBtn" data-math-char="b">b</button>
-            <button class="mathCharBtn" data-math-char="c">c</button>
-            <button class="mathCharBtn" data-math-char="n">n</button>
-            <button class="mathCharBtn" data-math-char="m">m</button>
+            <button class="mathCharBtn" data-math-char="=">=</button>
+            <button class="mathCharBtn" data-math-char="≠">≠</button>
+            <button class="mathCharBtn" data-math-char="≡">≡</button>
+            <button class="mathCharBtn" data-math-char="≢">≢</button>
+            <button class="mathCharBtn" data-math-char="≈">≈</button>
+            <button class="mathCharBtn" data-math-char="&lt;">&lt;</button>
+            <button class="mathCharBtn" data-math-char="&gt;">&gt;</button>
+            <button class="mathCharBtn" data-math-char="≤">≤</button>
+            <button class="mathCharBtn" data-math-char="≥">≥</button>
+            <button class="mathCharBtn" data-math-char="∈">∈</button>
+            <button class="mathCharBtn" data-math-char="∉">∉</button>
+            <button class="mathCharBtn" data-math-char="⊂">⊂</button>
+            <button class="mathCharBtn" data-math-char="⊄">⊄</button>
+            <button class="mathCharBtn" data-math-char="⊆">⊆</button>
+            <button class="mathCharBtn" data-math-char="⊈">⊈</button>
+            <button class="mathCharBtn" data-math-char="⊃">⊃</button>
+            <button class="mathCharBtn" data-math-char="⊅">⊅</button>
+            <button class="mathCharBtn" data-math-char="∀">∀</button>
+            <button class="mathCharBtn" data-math-char="∃">∃</button>
+            <button class="mathCharBtn" data-math-char="∄">∄</button>
+            <button class="mathCharBtn" data-math-char="¬">¬</button>
+            <button class="mathCharBtn" data-math-char="∧">∧</button>
+            <button class="mathCharBtn" data-math-char="∨">∨</button>
+            <button class="mathCharBtn" data-math-char="⇒">⇒</button>
+            <button class="mathCharBtn" data-math-char="⇔">⇔</button>
+            <button class="mathCharBtn" data-math-char="⊥">⊥</button>
+            <button class="mathCharBtn" data-math-char="⊤">⊤</button>
+            <button class="mathCharBtn" data-math-char="■">■</button>
+            <button class="mathCharBtn" data-math-char="√">√</button>
+            <button class="mathCharBtn" data-math-char="∛">∛</button>
+            <button class="mathCharBtn" data-math-char="²">²</button>
+            <button class="mathCharBtn" data-math-char="³">³</button>
+            <button class="mathCharBtn" data-math-char="½">½</button>
+            <button class="mathCharBtn" data-math-char="⅓">⅓</button>
+            <button class="mathCharBtn" data-math-char="⅔">⅔</button>
+            <button class="mathCharBtn" data-math-char="¼">¼</button>
+            <button class="mathCharBtn" data-math-char="¾">¾</button>
+            <button class="mathCharBtn" data-math-char="⅕">⅕</button>
+            <button class="mathCharBtn" data-math-char="⅜">⅜</button>
+            <button class="mathCharBtn" data-math-char="±">±</button>
+            <button class="mathCharBtn" data-math-char="∞">∞</button>
+            <button class="mathCharBtn" data-math-char="π">π</button>
           </div>
         </div>
-        <div class="mathKeyboardSection">
-          <div class="mathKeyboardLabel">Yunan</div>
+        <div class="mathKeyboardPage" data-math-page-panel="2">
           <div class="mathKeyboardGrid">
             <button class="mathCharBtn" data-math-char="α">α</button>
             <button class="mathCharBtn" data-math-char="β">β</button>
@@ -1012,43 +1056,39 @@
             <button class="mathCharBtn" data-math-char="θ">θ</button>
             <button class="mathCharBtn" data-math-char="λ">λ</button>
             <button class="mathCharBtn" data-math-char="μ">μ</button>
-            <button class="mathCharBtn" data-math-char="π">π</button>
             <button class="mathCharBtn" data-math-char="σ">σ</button>
             <button class="mathCharBtn" data-math-char="φ">φ</button>
-            <button class="mathCharBtn" data-math-char="ω">ω</button>
-          </div>
-        </div>
-        <div class="mathKeyboardSection">
-          <div class="mathKeyboardLabel">Rakamlar</div>
-          <div class="mathKeyboardGrid">
-            <button class="mathCharBtn" data-math-char="0">0</button>
-            <button class="mathCharBtn" data-math-char="1">1</button>
-            <button class="mathCharBtn" data-math-char="2">2</button>
-            <button class="mathCharBtn" data-math-char="3">3</button>
-            <button class="mathCharBtn" data-math-char="4">4</button>
-            <button class="mathCharBtn" data-math-char="5">5</button>
-            <button class="mathCharBtn" data-math-char="6">6</button>
-            <button class="mathCharBtn" data-math-char="7">7</button>
-            <button class="mathCharBtn" data-math-char="8">8</button>
-            <button class="mathCharBtn" data-math-char="9">9</button>
-          </div>
-        </div>
-        <div class="mathKeyboardSection">
-          <div class="mathKeyboardLabel">İşlemler</div>
-          <div class="mathKeyboardGrid">
-            <button class="mathCharBtn" data-math-char="+">+</button>
-            <button class="mathCharBtn" data-math-char="−">−</button>
-            <button class="mathCharBtn" data-math-char="×">×</button>
-            <button class="mathCharBtn" data-math-char="÷">÷</button>
-            <button class="mathCharBtn" data-math-char="=">=</button>
-            <button class="mathCharBtn" data-math-char="≠">≠</button>
-            <button class="mathCharBtn" data-math-char="<">&lt;</button>
-            <button class="mathCharBtn" data-math-char=">">&gt;</button>
-            <button class="mathCharBtn" data-math-char="≤">≤</button>
-            <button class="mathCharBtn" data-math-char="≥">≥</button>
-            <button class="mathCharBtn" data-math-char="±">±</button>
-            <button class="mathCharBtn" data-math-char="∞">∞</button>
-            <button class="mathCharBtn" data-math-char="°">°</button>
+            <button class="mathCharBtn" data-math-char="Ω">Ω</button>
+            <button class="mathCharBtn" data-math-char="∫">∫</button>
+            <button class="mathCharBtn" data-math-char="∬">∬</button>
+            <button class="mathCharBtn" data-math-char="∭">∭</button>
+            <button class="mathCharBtn" data-math-char="∮">∮</button>
+            <button class="mathCharBtn" data-math-char="Σ">Σ</button>
+            <button class="mathCharBtn" data-math-char="Π">Π</button>
+            <button class="mathCharBtn" data-math-char="∂">∂</button>
+            <button class="mathCharBtn" data-math-char="∇">∇</button>
+            <button class="mathCharBtn" data-math-char="Δ">Δ</button>
+            <button class="mathCharBtn" data-math-char="lim">lim</button>
+            <button class="mathCharBtn" data-math-char="ℕ">ℕ</button>
+            <button class="mathCharBtn" data-math-char="ℤ">ℤ</button>
+            <button class="mathCharBtn" data-math-char="ℚ">ℚ</button>
+            <button class="mathCharBtn" data-math-char="ℝ">ℝ</button>
+            <button class="mathCharBtn" data-math-char="ℂ">ℂ</button>
+            <button class="mathCharBtn" data-math-char="∅">∅</button>
+            <button class="mathCharBtn" data-math-char="∩">∩</button>
+            <button class="mathCharBtn" data-math-char="∪">∪</button>
+            <button class="mathCharBtn" data-math-char="\">\</button>
+            <button class="mathCharBtn" data-math-char="△">△</button>
+            <button class="mathCharBtn" data-math-char="∝">∝</button>
+            <button class="mathCharBtn" data-math-char="∟">∟</button>
+            <button class="mathCharBtn" data-math-char="∠">∠</button>
+            <button class="mathCharBtn" data-math-char="∥">∥</button>
+            <button class="mathCharBtn" data-math-char="∦">∦</button>
+            <button class="mathCharBtn" data-math-char="⊥">⊥</button>
+            <button class="mathCharBtn" data-math-char="∧">∧</button>
+            <button class="mathCharBtn" data-math-char="∨">∨</button>
+            <button class="mathCharBtn" data-math-char="⊕">⊕</button>
+            <button class="mathCharBtn" data-math-char="⊗">⊗</button>
           </div>
         </div>
       </div>
@@ -1150,7 +1190,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.32 · İki anchor’lı Bézier path kapatılabiliyor</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.33 · Matematik klavyesi 2 sayfa + çoklu Bézier scale düzeltmesi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1379,6 +1419,8 @@
   const mathKeyboardBtn = document.getElementById('mathKeyboardBtn');
   const mathKeyboardMenu = document.getElementById('mathKeyboardMenu');
   const mathCharButtons = Array.from(document.querySelectorAll('.mathCharBtn'));
+  const mathKeyboardTabs = Array.from(document.querySelectorAll('.mathKeyboardTab'));
+  const mathKeyboardPages = Array.from(document.querySelectorAll('.mathKeyboardPage'));
   const textEditor = document.getElementById('textEditor');
   const imageBtn = document.getElementById('imageBtn');
   const imageInput = document.getElementById('imageInput');
@@ -11996,6 +12038,18 @@
             o.a=scalePointLocal(o.a);
             o.b=scalePointLocal(o.b);
 
+          }else if(o.kind==='bezier'){
+            for(const a of (o.anchors||[])){
+              const p0=scalePointLocal({x:a.x,y:a.y});
+              const pin=scalePointLocal(bezierHandlePoint(a,'in'));
+              const pout=scalePointLocal(bezierHandlePoint(a,'out'));
+              a.x=p0.x;
+              a.y=p0.y;
+              a.in=pin;
+              a.out=pout;
+            }
+            normalizeBezierCenter(o);
+
           }else if(o.kind==='arc' || o.kind==='sector'){
             const newCenter=scalePointLocal(o.center);
             const oldR=Math.max(8,Math.hypot(o.a.x-o.center.x,o.a.y-o.center.y));
@@ -13887,10 +13941,30 @@
     if(opening){
       mathKeyboardMenu.classList.add('open');
       mathKeyboardBtn.classList.add('active');
+      setMathKeyboardPage('1');
       statusEl.textContent='Matematik klavyesi — bir sembol seç';
     }else{
       closeMathKeyboard();
     }
+  });
+
+  function setMathKeyboardPage(page){
+    const key=String(page);
+    mathKeyboardTabs.forEach(tab=>{
+      const active=tab.dataset.mathPage===key;
+      tab.classList.toggle('active',active);
+      tab.setAttribute('aria-selected',String(active));
+    });
+    mathKeyboardPages.forEach(panel=>{
+      panel.classList.toggle('active',panel.dataset.mathPagePanel===key);
+    });
+  }
+
+  mathKeyboardTabs.forEach(tab=>{
+    tab.addEventListener('click',e=>{
+      e.stopPropagation();
+      setMathKeyboardPage(tab.dataset.mathPage||'1');
+    });
   });
 
   mathCharButtons.forEach(btn=>{
