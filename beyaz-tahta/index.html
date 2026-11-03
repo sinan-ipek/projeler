@@ -1190,7 +1190,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.33 · Matematik klavyesi 2 sayfa + çoklu Bézier scale düzeltmesi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.34 · Metin kutusu sıkı + ayrı alan/metin ölçek handle’ları</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -3873,6 +3873,34 @@
 
   function textFontFamily(){
     return '"Comic Neue","Trebuchet MS","Segoe UI","Arial Rounded MT Bold","Arial","Comic Sans MS",sans-serif';
+  }
+
+  function intrinsicTextSize(text,fontSize){
+    const fs=Math.max(4,Number(fontSize)||24);
+    const pad=Math.max(2,fs*.18);
+    const lineHeight=fs*1.25;
+    const lines=String(text??'').replace(/\r/g,'').split('\n');
+
+    ctx.save();
+    ctx.font=`${fs}px ${textFontFamily()}`;
+    let maxWidth=0;
+    for(const line of lines){
+      maxWidth=Math.max(maxWidth,ctx.measureText(line || ' ').width);
+    }
+    ctx.restore();
+
+    return {
+      w:Math.max(18,maxWidth+pad*2),
+      h:Math.max(lineHeight+pad*2,lines.length*lineHeight+pad*2)
+    };
+  }
+
+  function fitTextObjectToContent(o){
+    if(!o || o.kind!=='text') return false;
+    const size=intrinsicTextSize(o.text||'',o.fontSize||24);
+    o.w=size.w;
+    o.h=size.h;
+    return true;
   }
 
   function layoutTextLines(text,maxWidth,fontSize){
@@ -7980,18 +8008,46 @@
       }
     }
 
-    // Bounding-box resize handles
+    // Bounding-box resize handles.
+    // Text intentionally has two different bottom handles:
+    // SW = text area, SE = text scale.
     const showBBoxHandles = (selected.kind==='arc' || selected.kind==='sector')
       ? false
       : (selected.kind==='bezier' || selected.source==='menu' || !special.length);
     if(showBBoxHandles){
-      for(const p of [oc.nw,oc.ne,oc.se,oc.sw]){
+      if(selected.kind==='text'){
+        // SW: hollow square = resize text area only.
         ctx.beginPath();
         ctx.fillStyle='white';
         ctx.strokeStyle='#2563eb';
-        ctx.rect(p.x-5/viewZoom,p.y-5/viewZoom,10/viewZoom,10/viewZoom);
+        ctx.rect(oc.sw.x-6/viewZoom,oc.sw.y-6/viewZoom,12/viewZoom,12/viewZoom);
         ctx.fill();
         ctx.stroke();
+
+        // SE: blue circle + A = scale text and its box uniformly.
+        ctx.beginPath();
+        ctx.fillStyle='#2563eb';
+        ctx.strokeStyle='#2563eb';
+        ctx.arc(oc.se.x,oc.se.y,8/viewZoom,0,Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.save();
+        ctx.fillStyle='white';
+        ctx.font=`bold ${9/viewZoom}px Arial,sans-serif`;
+        ctx.textAlign='center';
+        ctx.textBaseline='middle';
+        ctx.fillText('A',oc.se.x,oc.se.y+.3/viewZoom);
+        ctx.restore();
+      }else{
+        for(const p of [oc.nw,oc.ne,oc.se,oc.sw]){
+          ctx.beginPath();
+          ctx.fillStyle='white';
+          ctx.strokeStyle='#2563eb';
+          ctx.rect(p.x-5/viewZoom,p.y-5/viewZoom,10/viewZoom,10/viewZoom);
+          ctx.fill();
+          ctx.stroke();
+        }
       }
     }
 
@@ -8102,9 +8158,9 @@
       selected.kind!=='sector' &&
       (selected.kind==='bezier' || selected.source==='menu' || (!special.length && !isTriangle))
     ){
-      const entries=[
-        ['nw',oc.nw],['ne',oc.ne],['se',oc.se],['sw',oc.sw]
-      ];
+      const entries=selected.kind==='text'
+        ? [['se',oc.se],['sw',oc.sw]]
+        : [['nw',oc.nw],['ne',oc.ne],['se',oc.se],['sw',oc.sw]];
       const hitR=(pointerType==='touch' ? 22 : 11)/viewZoom;
       for(const [name,h] of entries){
         if(Math.hypot(p.x-h.x,p.y-h.y)<=hitR) return name;
@@ -8884,10 +8940,41 @@
     }
 
     if(snap.kind==='text'){
-      o.center=newCenter;
-      o.w=Math.max(24,snap.w*sx);
-      o.h=Math.max(20,snap.h*sy);
-      o.fontSize=Math.max(6,(snap.fontSize||24)*sy);
+      if(handle==='sw'){
+        // Area handle: the opposite corner (NE) stays fixed.
+        // Font size does not change; only the available text box changes.
+        o.center=newCenter;
+        o.w=Math.max(24,newW);
+        o.h=Math.max(20,newH);
+        o.fontSize=snap.fontSize||24;
+        o.textBoxManual=true;
+      }else if(handle==='se'){
+        // Text-scale handle: NW stays fixed and the entire text object
+        // scales uniformly, including font size and bounding box.
+        const rawScale=Math.max(
+          .2,
+          Math.min(
+            12,
+            Math.max(
+              Math.abs(lp.x-box.minX)/Math.max(1,box.w),
+              Math.abs(lp.y-box.minY)/Math.max(1,box.h)
+            )
+          )
+        );
+        const targetW=Math.max(18,box.w*rawScale);
+        const targetH=Math.max(18,box.h*rawScale);
+        const localCenter={
+          x:box.minX+targetW/2,
+          y:box.minY+targetH/2
+        };
+        o.center=localToWorld(box,localCenter);
+        o.w=Math.max(18,snap.w*rawScale);
+        o.h=Math.max(18,snap.h*rawScale);
+        o.fontSize=Math.max(6,(snap.fontSize||24)*rawScale);
+        o.textBoxManual=!!snap.textBoxManual;
+      }else{
+        return false;
+      }
       o.angle=snap.angle||0;
       o.boxAngle=Number.isFinite(snap.boxAngle) ? snap.boxAngle : (snap.angle||0);
       return true;
@@ -11628,6 +11715,11 @@
           activeHandle=h;
           selectPivotSnapshot=currentSelectionPivot();
 
+          if(objects[selectedIndex] && objects[selectedIndex].kind==='text'){
+            if(h==='sw') statusEl.textContent='Metin alanını genişlet / daralt';
+            if(h==='se') statusEl.textContent='Metni büyüt / küçült';
+          }
+
           if(realHandle && selectedHandleIs(h) && selectedHandles.length>1){
             selectAction='multiPoint';
             multiHandleMoved=false;
@@ -13693,16 +13785,22 @@
             style:{...state.style},
             source:'text',
             shapeName:'text',
+            textBoxManual:false,
             boxAngle:0
           };
+          fitTextObjectToContent(newTextObject);
           objects.push(newTextObject);
           recordAddedObjectUndo(newTextObject,objects.length-1);
           setSelection([objects.length-1]);
         }
       }else if(state.index>=0 && objects[state.index]){
         objects[state.index].text=clean;
-        objects[state.index].w=w;
-        objects[state.index].h=h;
+        if(objects[state.index].textBoxManual){
+          objects[state.index].w=w;
+          objects[state.index].h=h;
+        }else{
+          fitTextObjectToContent(objects[state.index]);
+        }
         if(clean.trim()===''){
           objects.splice(state.index,1);
           setSelection([]);
@@ -13758,8 +13856,8 @@
         index:-1,
         isNew:true,
         center:{...center},
-        w:260/viewZoom,
-        h:90/viewZoom,
+        w:90/viewZoom,
+        h:44/viewZoom,
         angle:0,
         fontSize:24/viewZoom,
         style:{color:currentColor,width:currentWidth}
