@@ -129,11 +129,31 @@
 .eq.advancedMath .factorExpression + .advTailChoice{
   margin-left:-.10ch;
 }
+.eq.advancedMath [data-role="advMorphShift"]{
+  display:inline-flex;
+  align-items:center;
+  min-height:var(--adv-line-box);
+  line-height:1;
+}
+.eq.advancedMath [data-role="advMorphSign"]{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:var(--adv-line-box);
+  line-height:1;
+  vertical-align:middle;
+  transform:translateY(.01em);
+}
+.eq.advancedMath [data-role="advMorphFrac"]{
+  display:inline-flex;
+  align-items:center;
+  min-height:var(--adv-line-box);
+}
 @media(max-width:700px){body{padding:12px}.card{padding:24px 14px}.formulaStage{font-size:38px}}@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
-<div class="app"><div class="toolbar"><a class="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 2.8 10.7a1 1 0 0 0 .63 1.78h1.02v7.02a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-4.35h2.74v4.35a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-7.02h1.02a1 1 0 0 0 .63-1.78L12 3.2Z"/></svg></a><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.10.4</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
+<div class="app"><div class="toolbar"><a class="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 2.8 10.7a1 1 0 0 0 .63 1.78h1.02v7.02a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-4.35h2.74v4.35a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-7.02h1.02a1 1 0 0 0 .63-1.78L12 3.2Z"/></svg></a><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.10.5</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
 <script>
 (()=>{
 const easyBtn=document.getElementById("easyBtn"),advancedBtn=document.getElementById("advancedBtn"),formulaBtn=document.getElementById("formulaBtn"),legacyView=document.getElementById("legacyView"),formulaView=document.getElementById("formulaView");function setActiveMode(mode){easyBtn.classList.toggle("active",mode==="easy");advancedBtn.classList.toggle("active",mode==="advanced");formulaBtn.classList.toggle("active",mode==="formula");legacyView.style.display=mode==="formula"?"none":"block";formulaView.style.display=mode==="formula"?"block":"none"}
@@ -433,7 +453,7 @@ function advRecenterBubble(bubble,html){
 }
 
 let advAudioCtx=null;
-function advSound(kind="kick"){
+function advSound(kind="tap"){
   try{
     const AC=window.AudioContext||window.webkitAudioContext;
     if(!AC)return;
@@ -444,26 +464,34 @@ function advSound(kind="kick"){
     const now=ctx.currentTime;
     const osc=ctx.createOscillator();
     const gain=ctx.createGain();
-    osc.type="sine";
 
-    if(kind==="land"){
-      osc.frequency.setValueAtTime(170,now);
-      osc.frequency.exponentialRampToValueAtTime(82,now+.09);
-      gain.gain.setValueAtTime(.0001,now);
-      gain.gain.exponentialRampToValueAtTime(.18,now+.006);
-      gain.gain.exponentialRampToValueAtTime(.0001,now+.11);
-    }else{
-      osc.frequency.setValueAtTime(125,now);
-      osc.frequency.exponentialRampToValueAtTime(52,now+.13);
-      gain.gain.setValueAtTime(.0001,now);
-      gain.gain.exponentialRampToValueAtTime(.24,now+.008);
-      gain.gain.exponentialRampToValueAtTime(.0001,now+.15);
-    }
+    const presets={
+      tap:{f1:420,f2:300,vol:.075,dur:.075,type:"sine"},
+      lift:{f1:250,f2:520,vol:.09,dur:.14,type:"sine"},
+      divide:{f1:520,f2:350,vol:.08,dur:.11,type:"triangle"},
+      square:{f1:330,f2:690,vol:.11,dur:.15,type:"triangle"},
+      split:{f1:480,f2:260,vol:.09,dur:.11,type:"sine"},
+      kick:{f1:125,f2:52,vol:.24,dur:.15,type:"sine"},
+      impact:{f1:210,f2:72,vol:.19,dur:.12,type:"square"},
+      land:{f1:170,f2:82,vol:.18,dur:.11,type:"sine"},
+      snap:{f1:610,f2:250,vol:.11,dur:.095,type:"triangle"},
+      merge:{f1:260,f2:120,vol:.16,dur:.13,type:"sine"},
+      reveal:{f1:390,f2:610,vol:.085,dur:.14,type:"sine"},
+      firework:{f1:160,f2:58,vol:.14,dur:.12,type:"square"}
+    };
+    const p=presets[kind]||presets.tap;
+
+    osc.type=p.type;
+    osc.frequency.setValueAtTime(p.f1,now);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(20,p.f2),now+p.dur*.82);
+    gain.gain.setValueAtTime(.0001,now);
+    gain.gain.exponentialRampToValueAtTime(p.vol,now+.006);
+    gain.gain.exponentialRampToValueAtTime(.0001,now+p.dur);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
-    osc.stop(now+.16);
+    osc.stop(now+p.dur+.02);
   }catch(e){}
 }
 
@@ -504,6 +532,7 @@ function advFireworks(){
       );
 
       rise.finished.catch(()=>{}).then(()=>{
+        advSound("firework");
         rocket.remove();
 
         const sparks=[];
@@ -648,6 +677,7 @@ async function advancedClickC(){
 async function advancedFactorNew(){
   if(legacyLocked||advancedStage!==1)return;
   legacyLocked=true;
+  advSound("tap");
 
   const old=lq("advLead");
   const aOnly=lq("advA");
@@ -697,6 +727,7 @@ async function advancedFactorNew(){
 async function advancedCoefficientLiftNew(){
   if(legacyLocked||advancedStage!==2)return;
   legacyLocked=true;
+  advSound("lift");
 
   const qv=rat(b,a);
   const coeff=lq("advCoeffOnly");
@@ -745,6 +776,7 @@ async function advancedBubbleNew(){
 
   if(advancedStage===3){
     legacyLocked=true;
+    advSound("divide");
     bubble.onclick=null;
     advRecenterBubble(bubble,rationalHTML(h));
     await advSettleMath();
@@ -757,6 +789,7 @@ async function advancedBubbleNew(){
 
   if(advancedStage===4){
     legacyLocked=true;
+    advSound("square");
     bubble.onclick=null;
     advRecenterBubble(bubble,fractionHTML(s));
     await advSettleMath();
@@ -880,6 +913,7 @@ function advancedPrepareDualChoices(){
 
 async function advancedCompleteSquareChoice(){
   if(legacyLocked)return;
+  advSound("snap");
   const group=lq("advSquareChoice");
   if(!group||group.dataset.done==="1")return;
 
@@ -1062,6 +1096,7 @@ async function advancedCompleteSquareChoice(){
     morphFrac.style.opacity="1";
     newParenR.style.opacity="1";
     pow.style.opacity="1";
+    advSound("reveal");
   }
 
   const tail=lq("advTailChoice");
@@ -1076,6 +1111,7 @@ async function advancedCompleteSquareChoice(){
 }
 async function advancedCombineTailChoice(){
   if(legacyLocked)return;
+  advSound("merge");
   const group=lq("advTailChoice");
   if(!group||group.dataset.done==="1")return;
 
@@ -1137,26 +1173,75 @@ async function advancedCombineTailChoice(){
     cAnim.finished.catch(()=>{})
   ]);
 
-  // Temas anında eski terimler kaybolur ve kısa bir patlama oluşur.
-  outside.style.opacity="0";
-  cMove.style.opacity="0";
-  await advBurstAt(meetX,meetY);
+  // Temas anında eski terimler ve sonuç arasında boş kare yok:
+  // eski terimler sönmeye başlarken sonuç AYNI ANDA görünmeye başlar.
+  advSound("impact");
 
+  const erNow=eq.getBoundingClientRect();
+  const orNow=outside.getBoundingClientRect();
+  const crNow=cMove.getBoundingClientRect();
+
+  const oldOutside=document.createElement("div");
+  oldOutside.className="advArcFly";
+  oldOutside.innerHTML=outside.innerHTML;
+  oldOutside.style.left=`${orNow.left-erNow.left+orNow.width/2}px`;
+  oldOutside.style.top=`${orNow.top-erNow.top+orNow.height/2}px`;
+  oldOutside.style.transform="translate(-50%,-50%)";
+  oldOutside.style.zIndex="74";
+
+  const oldC=document.createElement("div");
+  oldC.className="advArcFly";
+  oldC.innerHTML=cMove.innerHTML;
+  oldC.style.left=`${crNow.left-erNow.left+crNow.width/2}px`;
+  oldC.style.top=`${crNow.top-erNow.top+crNow.height/2}px`;
+  oldC.style.transform="translate(-50%,-50%)";
+  oldC.style.zIndex="74";
+
+  eq.append(oldOutside,oldC);
   outAnim.cancel();
   cAnim.cancel();
 
-  // Patlamadan hemen sonra toplam belirir.
   if(rIsZero(final)){
     group.innerHTML="";
     group.dataset.done="1";
     group.style.opacity="1";
+
+    const fadeOld1=oldOutside.animate([{opacity:1},{opacity:0}],{duration:180,easing:"ease-out",fill:"forwards"});
+    const fadeOld2=oldC.animate([{opacity:1},{opacity:0}],{duration:180,easing:"ease-out",fill:"forwards"});
+    advBurstAt(meetX,meetY);
+    await Promise.all([fadeOld1.finished.catch(()=>{}),fadeOld2.finished.catch(()=>{})]);
   }else{
     group.innerHTML=signedRationalHTML(final);
     group.dataset.done="1";
     group.style.opacity="0";
     await advSettleMath();
-    await animateOpacity(group,0,1,220);
+
+    const resultIn=group.animate(
+      [{opacity:0},{opacity:1}],
+      {duration:190,easing:"ease-out",fill:"forwards"}
+    );
+    const fadeOld1=oldOutside.animate(
+      [{opacity:1},{opacity:0}],
+      {duration:190,easing:"ease-out",fill:"forwards"}
+    );
+    const fadeOld2=oldC.animate(
+      [{opacity:1},{opacity:0}],
+      {duration:190,easing:"ease-out",fill:"forwards"}
+    );
+
+    advBurstAt(meetX,meetY);
+    advSound("reveal");
+
+    await Promise.all([
+      resultIn.finished.catch(()=>{}),
+      fadeOld1.finished.catch(()=>{}),
+      fadeOld2.finished.catch(()=>{})
+    ]);
+    group.style.opacity="1";
   }
+
+  oldOutside.remove();
+  oldC.remove();
 
   // Parantez tarafı yapılmadıysa aktif kalır.
   const square=lq("advSquareChoice");
@@ -1173,6 +1258,7 @@ async function advancedCombineTailChoice(){
 async function advancedMoveNegativeOutside(){
   if(legacyLocked||advancedStage!==6)return;
   legacyLocked=true;
+  advSound("kick");
 
   const factorA=lq("factorA");
   const minusTarget=lq("advMinusS");
@@ -1233,10 +1319,12 @@ async function advancedMoveNegativeOutside(){
   await advProjectileMove(aShot,aStart,impactPoint,firstApex,1500);
   aShot.remove();
 
-  // Çarpışma anı: a × (-s) sonucu oluşur.
-  await advImpact(impactPoint.x,impactPoint.y);
+  // Çarpışma anı: parlamanın bitmesini BEKLEME.
+  // Çarpışma efekti sürerken terim aynı karede dışarı tekmelenmeye hazırlanır.
+  advSound("impact");
+  advImpact(impactPoint.x,impactPoint.y);
 
-  // İç negatif terim artık parantezden çıkacağı için görünmez olur.
+  // İç negatif terim aynı anda parantezden çıkar.
   minusTarget.style.visibility="hidden";
 
   // Final yerleşim için negatif terimi DOM'dan çıkar ve rezervi kapat.
@@ -1286,6 +1374,7 @@ async function advancedMoveNegativeOutside(){
 
   fly.remove();
   outside.style.visibility="visible";
+  advSound("land");
 
   // İnişte çok kısa bir oturma hissi: ölçek yok, yalnız 3 px'lik düşey settle.
   const settle=outside.animate(
@@ -1383,6 +1472,7 @@ async function advancedSplitNew(){
     advGravityDrop(plusFly,{x:sx,y:sy},plusEnd,2100),
     advGravityDrop(minusFly,{x:sx,y:sy},minusEnd,2100)
   ]);
+  advSound("split");
 
   plusFly.remove();
   minusFly.remove();
