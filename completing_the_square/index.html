@@ -133,7 +133,7 @@
 </style>
 </head>
 <body>
-<div class="app"><div class="toolbar"><a class="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 2.8 10.7a1 1 0 0 0 .63 1.78h1.02v7.02a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-4.35h2.74v4.35a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-7.02h1.02a1 1 0 0 0 .63-1.78L12 3.2Z"/></svg></a><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.10.1</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
+<div class="app"><div class="toolbar"><a class="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 2.8 10.7a1 1 0 0 0 .63 1.78h1.02v7.02a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-4.35h2.74v4.35a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-7.02h1.02a1 1 0 0 0 .63-1.78L12 3.2Z"/></svg></a><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.10.2</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
 <script>
 (()=>{
 const easyBtn=document.getElementById("easyBtn"),advancedBtn=document.getElementById("advancedBtn"),formulaBtn=document.getElementById("formulaBtn"),legacyView=document.getElementById("legacyView"),formulaView=document.getElementById("formulaView");function setActiveMode(mode){easyBtn.classList.toggle("active",mode==="easy");advancedBtn.classList.toggle("active",mode==="advanced");formulaBtn.classList.toggle("active",mode==="formula");legacyView.style.display=mode==="formula"?"none":"block";formulaView.style.display=mode==="formula"?"block":"none"}
@@ -887,16 +887,163 @@ async function advancedCompleteSquareChoice(){
   group.onclick=null;
   group.classList.remove("advHL");
 
+  const eqRect=eq.getBoundingClientRect();
   const before=group.getBoundingClientRect();
+  const mid=lq("advCoeffWrap");
+  const plusTerm=lq("advPlusS");
+  const parenR=lq("advParenR");
   const h=rat(b,2*a);
+  const absH=rAbs(h);
+  const s=rSquare(h);
+  const sign=rSign(h)<0?"−":"+";
 
-  group.innerHTML=`<span class="advSquareDone">${squareBinomialHTML(h)}</span>`;
-  group.dataset.done="1";
+  if(!mid||!plusTerm||!parenR){
+    group.innerHTML=`<span class="advSquareDone">${squareBinomialHTML(h)}</span>`;
+    group.dataset.done="1";
+    await advSettleMath();
+    await moveWithFLIP(group,before,620);
+  }else{
+    const midRect=mid.getBoundingClientRect();
+    const plusRect=plusTerm.getBoundingClientRect();
+    const parenRect=parenR.getBoundingClientRect();
 
-  await advSettleMath();
-  await moveWithFLIP(group,before,620);
+    // Eski orta terimi görünür bir kopya olarak bırakıp fade-out ettir.
+    const midGhost=document.createElement("div");
+    midGhost.className="advArcFly";
+    midGhost.innerHTML=mid.innerHTML;
+    midGhost.style.left=`${midRect.left-eqRect.left+midRect.width/2}px`;
+    midGhost.style.top=`${midRect.top-eqRect.top+midRect.height/2}px`;
+    midGhost.style.transform="translate(-50%,-50%)";
+    midGhost.style.zIndex="65";
+    eq.append(midGhost);
 
-  // Diğer seçim yapılmadıysa aktif kalır.
+    // +b²/4a² teriminin yalnızca büyüklüğü uçacak; başındaki + kaybolur.
+    const termGhost=document.createElement("div");
+    termGhost.className="advArcFly";
+    termGhost.innerHTML=fractionHTML(s);
+    termGhost.style.left=`${plusRect.left-eqRect.left+plusRect.width/2}px`;
+    termGhost.style.top=`${plusRect.top-eqRect.top+plusRect.height/2}px`;
+    termGhost.style.transform="translate(-50%,-50%)";
+    termGhost.style.zIndex="66";
+    eq.append(termGhost);
+
+    const parenGhost=document.createElement("div");
+    parenGhost.className="advArcFly";
+    parenGhost.textContent=")";
+    parenGhost.style.left=`${parenRect.left-eqRect.left+parenRect.width/2}px`;
+    parenGhost.style.top=`${parenRect.top-eqRect.top+parenRect.height/2}px`;
+    parenGhost.style.transform="translate(-50%,-50%)";
+    parenGhost.style.zIndex="66";
+    eq.append(parenGhost);
+
+    // Nihai parantez yapısını kur; hareket edecek parçaları başta gizle.
+    group.innerHTML=`
+      <span class="legacySquareBlock" data-role="advMorphBlock">
+        <span class="parenAppear" data-role="advMorphParenL">(</span>
+        <span data-role="advMorphX">x</span>
+        <span data-role="advMorphShift">${THIN}${sign}${THIN}${fractionHTML(absH)}</span>
+        <span class="parenAppear" data-role="advMorphParenR">)</span>
+        <span class="legacySquareExponent" data-role="advMorphPow">2</span>
+      </span>
+    `;
+    group.dataset.done="1";
+
+    const shift=group.querySelector(`[data-role="advMorphShift"]`);
+    const newParenR=group.querySelector(`[data-role="advMorphParenR"]`);
+    const pow=group.querySelector(`[data-role="advMorphPow"]`);
+    shift.style.opacity="0";
+    newParenR.style.opacity="0";
+    pow.style.opacity="0";
+
+    await advSettleMath();
+
+    const shiftRect=shift.getBoundingClientRect();
+    const newParenRect=newParenR.getBoundingClientRect();
+
+    const termStart={
+      x:plusRect.left-eqRect.left+plusRect.width/2,
+      y:plusRect.top-eqRect.top+plusRect.height/2
+    };
+    const termEnd={
+      x:shiftRect.left-eqRect.left+shiftRect.width/2,
+      y:shiftRect.top-eqRect.top+shiftRect.height/2
+    };
+    const parenStart={
+      x:parenRect.left-eqRect.left+parenRect.width/2,
+      y:parenRect.top-eqRect.top+parenRect.height/2
+    };
+    const parenEnd={
+      x:newParenRect.left-eqRect.left+newParenRect.width/2,
+      y:newParenRect.top-eqRect.top+newParenRect.height/2
+    };
+
+    // Orta terim fade out.
+    const midFade=midGhost.animate(
+      [
+        {opacity:1,transform:"translate(-50%,-50%) translateY(0)"},
+        {opacity:.45,transform:"translate(-50%,-50%) translateY(-2px)",offset:.48},
+        {opacity:0,transform:"translate(-50%,-50%) translateY(-5px)"}
+      ],
+      {duration:300,easing:"ease-out",fill:"forwards"}
+    );
+
+    // Kopan lastik hissi: kısa bir gerilim, sonra sola sert snap ve minik geri sekme.
+    const termSnap=termGhost.animate(
+      [
+        {left:`${termStart.x}px`,top:`${termStart.y}px`,transform:"translate(-50%,-50%) scale(1)"},
+        {left:`${termStart.x+3}px`,top:`${termStart.y}px`,transform:"translate(-50%,-50%) scale(1.02)",offset:.16},
+        {left:`${termEnd.x-10}px`,top:`${termEnd.y}px`,transform:"translate(-50%,-50%) scale(1.03)",offset:.76},
+        {left:`${termEnd.x+3}px`,top:`${termEnd.y}px`,transform:"translate(-50%,-50%) scale(.99)",offset:.90},
+        {left:`${termEnd.x}px`,top:`${termEnd.y}px`,transform:"translate(-50%,-50%) scale(1)"}
+      ],
+      {duration:460,easing:"cubic-bezier(.12,.88,.18,1.12)",fill:"forwards"}
+    );
+
+    // Uçuş sırasında b²/4a² görünümü b/2a görünümüne dönüşür.
+    setTimeout(()=>{
+      if(termGhost.isConnected)termGhost.innerHTML=fractionHTML(absH);
+    },170);
+
+    // Sağ parantez de onu takip ederek sola snap yapar.
+    const parenSnap=parenGhost.animate(
+      [
+        {left:`${parenStart.x}px`,top:`${parenStart.y}px`,transform:"translate(-50%,-50%)"},
+        {left:`${parenStart.x+2}px`,top:`${parenStart.y}px`,transform:"translate(-50%,-50%)",offset:.14},
+        {left:`${parenEnd.x-9}px`,top:`${parenEnd.y}px`,transform:"translate(-50%,-50%)",offset:.74},
+        {left:`${parenEnd.x+2}px`,top:`${parenEnd.y}px`,transform:"translate(-50%,-50%)",offset:.90},
+        {left:`${parenEnd.x}px`,top:`${parenEnd.y}px`,transform:"translate(-50%,-50%)"}
+      ],
+      {duration:430,easing:"cubic-bezier(.12,.88,.18,1.12)",fill:"forwards"}
+    );
+
+    // Parantezin üstündeki ² fade-in ile belirir.
+    const powFade=pow.animate(
+      [
+        {opacity:0,transform:"translateY(6px) scale(.78)"},
+        {opacity:0,transform:"translateY(6px) scale(.78)",offset:.28},
+        {opacity:1,transform:"translateY(0) scale(1)"}
+      ],
+      {duration:440,easing:"cubic-bezier(.2,.85,.25,1)",fill:"forwards"}
+    );
+
+    const layoutMove=moveWithFLIP(group,before,560);
+
+    await Promise.all([
+      midFade.finished.catch(()=>{}),
+      termSnap.finished.catch(()=>{}),
+      parenSnap.finished.catch(()=>{}),
+      powFade.finished.catch(()=>{}),
+      layoutMove
+    ]);
+
+    midGhost.remove();
+    termGhost.remove();
+    parenGhost.remove();
+    shift.style.opacity="1";
+    newParenR.style.opacity="1";
+    pow.style.opacity="1";
+  }
+
   const tail=lq("advTailChoice");
   if(tail&&tail.dataset.done!=="1"){
     tail.classList.add("advHL");
@@ -907,7 +1054,6 @@ async function advancedCompleteSquareChoice(){
   legacyLocked=false;
   advMaybeFireworks();
 }
-
 async function advancedCombineTailChoice(){
   if(legacyLocked)return;
   const group=lq("advTailChoice");
