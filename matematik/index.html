@@ -1,57 +1,156 @@
-<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Matematik Atölyesi</title>
-<style>*{box-sizing:border-box}body{margin:0;background:#e9eef4;color:#25334a;font-family:system-ui,sans-serif}button,input,select{font:inherit}button{cursor:pointer}header{background:white;display:flex;align-items:center;gap:12px;padding:12px 20px}h1{font-size:21px;flex:1;margin:0}.home{width:43px;height:43px;border-radius:8px;background:#ffd530;display:grid;place-items:center;border:2px solid #c69c0b;color:black}.home svg{width:25px}.wrap{max-width:1150px;margin:24px auto;padding:0 14px}.panel{background:white;padding:22px;margin:15px 0;border-radius:17px;box-shadow:0 3px 15px #24304b12}.toolbar,.modes,.examples{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.toolbar input{flex:1;min-width:200px;border:1px solid #bdc7d7;border-radius:9px;padding:12px}.btn,select{background:white;border:1px solid #bac6d5;padding:10px 12px;border-radius:9px}.primary{background:#275ac8;color:white}.modes,.examples{margin-top:13px}.active{background:#fff0ab;border-color:#d3a223}.examples button{background:#f1f5fa;border-radius:20px;border:1px solid #cdd6e4;padding:6px 11px}.stage{position:relative;min-height:215px;padding:38px 12px 55px;display:flex;justify-content:center;align-items:flex-start;overflow:auto}.line{display:inline-flex;align-items:center;white-space:nowrap;gap:.06em;position:relative;z-index:2;font:clamp(28px,5vw,48px)/1.15 Cambria,"Times New Roman",serif;transition:opacity .4s,transform .5s;padding:19px}.node{display:inline-flex;align-items:center;border-radius:5px;position:relative}.hover{background:#ffe99b;box-shadow:0 0 0 2px #e4a423}.frac{display:inline-flex;flex-direction:column;align-items:center;font-size:.82em;margin:0 .13em}.num,.den{display:flex;align-items:center;justify-content:center;padding:0 .15em}.bar{height:1.7px;background:currentColor;width:100%;margin:.08em 0}.op{margin:0 .12em}.preview{font:30px Cambria,serif;color:#2765bd;text-align:center;height:64px;opacity:0;transform:translateY(-18px);transition:.5s}.preview.show{opacity:1;transform:translateY(0)}svg.overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}#status,.tip{color:#657386;font-size:14px}#history{font:16px Cambria,serif;word-break:break-word}.help{display:none;background:#f4f6fa;border-radius:8px;padding:12px;margin-top:12px}.help.show{display:block}.version{position:fixed;bottom:3px;left:8px;color:#888;font:10px system-ui}button:disabled{opacity:.5}@media(max-width:600px){header{padding:8px;gap:6px}h1{font-size:15px}.panel{padding:12px}.line{font-size:28px}.stage{min-height:170px}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}</style></head>
-<body><header><a class="home" href="../index.html" aria-label="Home" title="Home"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 2 11h3v10h6v-7h3v7h6V11h2z"/></svg></a><h1 id="title">Matematik Atölyesi</h1><select id="lang" aria-label="Dil"><option value="tr">Türkçe</option><option value="de">Deutsch</option><option value="en">English</option></select><button class="btn" id="helpbtn" aria-label="Help">?</button></header>
-<main class="wrap"><section class="panel"><div class="toolbar"><input id="entry" value="2/3+5/6" aria-label="İfade" spellcheck="false"><button id="load" class="btn primary">Uygula</button><button id="back" class="btn">↶</button><button id="reset" class="btn">↻</button></div><div class="modes"><button id="detail" class="btn active">Ayrıntılı çözüm</button><button id="quick" class="btn">Hızlı çözüm</button><button id="sound" class="btn">♪</button></div><div class="examples"><button data-ex="12+3*4">12+3×4</button><button data-ex="2*(3+5)">2(3+5)</button><button data-ex="6/8+3/4">6/8+3/4</button><button data-ex="(1/2)/(3/4)">İç içe kesir</button><button data-ex="0.25+1/2">0,25+1/2</button></div><div id="helptext" class="help"></div></section><section class="panel"><div id="tip" class="tip"></div><div class="stage" id="stage"><div class="line" id="line"></div><svg class="overlay" id="overlay"></svg></div><div id="preview" class="preview"></div><div id="status" role="status"></div></section><section class="panel"><div id="history"></div></section></main><small class="version">v0.1.1 · Etkileşim ve hata yakalama düzeltmesi</small>
-<script>
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Matematik Atölyesi</title><style>
+*{box-sizing:border-box}body{margin:0;background:#e9edf3;color:#263244;font-family:system-ui,sans-serif}button,input,select{font:inherit}button{cursor:pointer}
+header{display:flex;align-items:center;gap:12px;background:#fff;padding:13px 20px;border-bottom:1px solid #d2dbe7}h1{margin:0;font-size:21px;flex:1}
+.home{background:#ffd52a;border:2px solid #bd9400;color:#111;border-radius:8px;width:44px;height:44px;display:grid;place-items:center}.home svg{width:25px}
+main{max-width:1100px;padding:16px;margin:0 auto}.card{background:#fff;border:1px solid #d7e0ec;border-radius:18px;padding:18px;margin:15px 0;box-shadow:0 5px 18px #2431430b}
+.controls,.modes,.examples{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.controls input{min-width:200px;flex:1;padding:12px;border:1px solid #bdc8d9;border-radius:9px}button,select{border:1px solid #bfccda;border-radius:9px;padding:10px;background:white}
+button.primary{background:#275cbe;color:#fff;border-color:#275cbe}.modes,.examples{margin-top:12px}.selected{background:#ffedac;border-color:#c8a025}.examples button{font-family:Cambria,serif;padding:6px 12px;border-radius:20px;background:#f5f8fb}
+.stage{position:relative;min-height:270px;padding:42px 15px 25px;overflow:auto;background:#f9fbff;border:1px solid #e0e8f1;border-radius:15px;margin-top:14px;text-align:center}
+.equation{font-family:"Cambria Math",Cambria,"Times New Roman",serif;display:inline-flex;align-items:center;white-space:nowrap;font-size:clamp(30px,4.5vw,49px);line-height:1.15;padding:13px;position:relative;z-index:2}
+.node{display:inline-flex;align-items:center;border-radius:4px;position:relative}.group{display:inline-flex;align-items:center}.operator{padding:0 .13em}
+.frac{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;vertical-align:middle;font-size:.85em;margin:0 .11em}
+.frac>.numerator,.frac>.denominator{display:flex;align-items:center;justify-content:center;padding:0 .17em;min-width:100%}.frac>.fractionbar{width:100%;min-width:19px;height:2px;background:currentColor;margin:3px 0}
+.node.hover{background:#ffebb0;box-shadow:0 0 0 2px #e9ac15}.overlay{position:absolute;inset:0;pointer-events:none;width:100%;height:100%;z-index:5}
+.workspace{min-height:60px;margin-top:16px;font:30px Cambria,serif;color:#245ac1;opacity:0;transform:translateY(-19px);transition:opacity .4s,transform .55s}.workspace.visible{opacity:1;transform:translateY(0)}
+.notice{color:#596c83;font-size:14px;min-height:24px;margin-top:12px}.history{color:#596879;font:17px Cambria,serif;overflow-wrap:anywhere}.help{display:none;margin-top:13px;padding:12px;background:#f2f5f9;border-radius:10px;font-size:14px}.help.visible{display:block}
+.version{position:fixed;bottom:5px;left:8px;color:#888;font:10px system-ui;pointer-events:none;background:#ffffffa8;padding:2px 5px}
+@media(max-width:620px){header{gap:6px;padding:8px}h1{font-size:15px}main{padding:7px}.card{padding:12px}.stage{min-height:220px;padding:24px 3px}.equation{font-size:29px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style></head><body><header><a class="home" href="../index.html" aria-label="Home"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 2 11h3v10h6v-7h3v7h6V11h2z"/></svg></a><h1 id="title">Matematik Atölyesi</h1><select id="lang" aria-label="Dil"><option value="tr">Türkçe</option><option value="de">Deutsch</option><option value="en">English</option></select><button id="help" aria-label="Help">?</button></header><main><section class="card"><div class="controls"><input id="entry" value="3(2+4)+6/8" spellcheck="false" aria-label="İfade"><button class="primary" id="apply">Uygula</button><button id="undo" title="Geri al">↶</button><button id="reset" title="Sıfırla">↻</button></div><div class="modes"><button id="detailed" class="selected">Ayrıntılı çözüm</button><button id="fast">Hızlı çözüm</button><button id="sound">♪</button></div><div class="examples"><button data-example="12+3*4">12+3×4</button><button data-example="3*(2+4)+6/8">3(2+4)+6/8</button><button data-example="2/3+5/6">2/3+5/6</button><button data-example="(1/2)/(3/4)">İç içe kesir</button><button data-example="0.25+1/2">Ondalık</button></div><div class="help" id="helptext"></div></section><section class="card"><div class="stage" id="stage"><svg class="overlay" id="overlay"></svg><div class="equation" id="equation"></div><div class="workspace" id="workspace"></div></div><div class="notice" id="notice"></div></section><section class="card"><div class="history" id="history"></div></section></main><small class="version">v0.2.1 · Ayrık seçim, doğrulama, FLIP ve geri alma altyapısı</small><script>
 "use strict";
-(function(){
-const el=x=>document.getElementById(x),dic={
-tr:["Matematik Atölyesi","Uygula","Ayrıntılı çözüm","Hızlı çözüm","İmleci bir işlemin üzerine getir, vurgulanınca tıkla.","Bir işlem yaz. Sarı vurguya tıkla. İşlem yapılır. Geri alabilirsin.","Bir işlem seç.","Bu sürümde başka desteklenen işlem yok.","İfade okunamadı: "],
-de:["Mathematik-Werkstatt","Anwenden","Ausführliche Lösung","Schnelle Lösung","Zeiger auf einen Schritt bewegen und klicken.","Gib eine Rechnung ein. Klicke auf die gelbe Stelle. Du kannst zurückgehen.","Schritt auswählen.","Kein weiterer unterstützter Schritt.","Ausdruck nicht erkannt: "],
-en:["Math Workshop","Apply","Detailed solution","Quick solution","Hover over an operation, then click the highlight.","Enter a calculation. Click yellow to calculate. You can undo.","Choose an operation.","No further supported step.","Could not parse: "]};
-let language="tr";try{language=localStorage.getItem("si-math-lang")||"tr"}catch(_){}if(!dic[language])language="tr";let mode="detail",audio=false,root=null,initial=null,history=[],ops=[],chosen=null,locked=false,seq=0;
-const node=(type,fields)=>Object.assign({id:"n"+(++seq),type},fields||{});
+(() => {
+const $=id=>document.getElementById(id);
+const translations={
+tr:{title:"Matematik Atölyesi",apply:"Uygula",detailed:"Ayrıntılı çözüm",fast:"Hızlı çözüm",help:"Bir işlem yaz. Fareyi sayılara götür. Sarı vurgu görünce tıkla. İşlemi geri alabilirsin.",start:"İşlemin üzerine gel ve tıkla.",end:"Bu sürümde başka desteklenen dönüşüm yok.",invalid:"Bu ifade okunamadı veya tanımsız.",done:"Dönüşüm tamamlandı.",choose:"Seçilen işlem: "},
+de:{title:"Mathematik-Werkstatt",apply:"Anwenden",detailed:"Ausführliche Lösung",fast:"Schnelle Lösung",help:"Gib eine Rechnung ein. Bewege die Maus über die Zahlen. Klicke auf die gelbe Markierung. Du kannst zurückgehen.",start:"Zeige auf eine Rechenoperation und klicke.",end:"Kein weiterer unterstützter Schritt.",invalid:"Dieser Ausdruck ist ungültig oder nicht definiert.",done:"Schritt abgeschlossen.",choose:"Ausgewählt: "},
+en:{title:"Math Workshop",apply:"Apply",detailed:"Detailed solution",fast:"Quick solution",help:"Enter an expression. Move the pointer over the numbers. Click the yellow highlight. You can undo.",start:"Hover over an operation and click.",end:"No further supported transformation.",invalid:"Expression is invalid or undefined.",done:"Step completed.",choose:"Selected: "}
+};
+let lang="tr";try{lang=localStorage.getItem("si-math-lang")||"tr"}catch{}if(!translations[lang])lang="tr";
+let root=null,initial=null,history=[],ops=[],active=null,mode="detailed",sound=false,busy=false,nid=0;
+const phrase=k=>translations[lang][k];
+const make=(type,fields={})=>({id:"node"+(++nid),type,...fields}),clone=x=>structuredClone(x);
 const abs=x=>x<0n?-x:x;
-function gcd(a,b){a=abs(a);b=abs(b);while(b){let r=a%b;a=b;b=r}return a||1n}
-const rat=(a,b=1n)=>{a=BigInt(a);b=BigInt(b);if(b===0n)throw Error("zero denominator");if(b<0n){a=-a;b=-b}let g=gcd(a,b);return {a:a/g,b:b/g}};
-const add=(x,y)=>rat(x.a*y.b+y.a*x.b,x.b*y.b),neg=x=>rat(-x.a,x.b),mul=(x,y)=>rat(x.a*y.a,x.b*y.b),divide=(x,y)=>rat(x.a*y.b,x.b*y.a);
-function dec(s){let a=s.split("."),p=a[1]||"";return rat(BigInt((a[0]||"0")+p),10n**BigInt(p.length))}
-function tokenize(s){s=s.replace(/,/g,".").replace(/×/g,"*").replace(/÷/g,"/").replace(/−/g,"-").replace(/\s+/g,"");let a=s.match(/(?:\d+(?:\.\d*)?|\.\d+)|[()+\-*/]/g)||[];if(a.join("")!==s||a.length>500)throw Error("syntax");return a}
-function parse(s){let t=tokenize(s),i=0,depth=0;const peek=()=>t[i],take=()=>t[i++];
-function atom(){if(++depth>75)throw Error("depth");let x;if(peek()==="+"){take();x=atom()}else if(peek()==="-"){take();x=node("neg",{child:atom()})}else if(peek()==="("){take();x=node("group",{child:expr()});if(take()!==")")throw Error("parenthesis")}else if(/^(?:\d|\.)/.test(peek()||"")){let s=take();x=node("num",{v:dec(s),display:s})}else throw Error("token");depth--;return x}
-function term(){let x=atom();while(peek()==="*"||peek()==="/"||peek()==="("||/^(?:\d|\.)/.test(peek()||"")){let op=peek()==="*"||peek()==="/"?take():"*";x=node(op==="*"?"mul":"div",{left:x,right:atom()})}return x}
-function expr(){let x=term();while(peek()==="+"||peek()==="-"){let op=take();x=node(op==="+"?"add":"sub",{left:x,right:term()})}return x}
-let x=expr();if(i!==t.length)throw Error("trailing");return x}
-const copy=x=>structuredClone(x);
-function value(x){if(x.type==="num")return x.v;if(x.type==="group")return value(x.child);if(x.type==="neg"){let a=value(x.child);return a?neg(a):null}let a=value(x.left),b=value(x.right);if(!a||!b)return null;if(x.type==="add")return add(a,b);if(x.type==="sub")return add(a,neg(b));if(x.type==="mul")return mul(a,b);if(x.type==="div")return b.a===0n?null:divide(a,b);return null}
-function replacement(x,path,y){if(!path.length)return y;let z=copy(x),c=z;for(let j=0;j<path.length-1;j++)c=c[path[j]];c[path[path.length-1]]=y;return z}
-function walk(x,path,cb){cb(x,path);if(x.child)walk(x.child,path.concat("child"),cb);if(x.left)walk(x.left,path.concat("left"),cb);if(x.right)walk(x.right,path.concat("right"),cb)}
-function discover(){let out=[];const put=(kind,path,targets,build,priority)=>out.push({kind,path,targets,build,priority});
-walk(root,[],(x,p)=>{
-if(x.type==="group")put("parenthesis",p,[x.id],()=>copy(x.child),3);
-if(x.type==="neg"&&value(x.child))put("negative",p,[x.id],()=>node("num",{v:neg(value(x.child))}),4);
-if(["add","sub","mul","div"].includes(x.type)&&value(x.left)&&value(x.right)&&value(x)){put("calculate",p,[x.left.id,x.right.id],()=>node("num",{v:value(x)}),6)}
-if(x.type==="div"&&x.left.type==="num"&&x.right.type==="num"&&x.left.v.b===1n&&x.right.v.b===1n){let g=gcd(x.left.v.a,x.right.v.a);if(g>1n)put("reduce",p,[x.left.id,x.right.id],()=>node("div",{left:node("num",{v:rat(x.left.v.a/g)}),right:node("num",{v:rat(x.right.v.a/g)})}),9)}
-if(x.type==="div"&&x.right.type==="div"&&value(x.right.right)?.a!==0n)put("invert",p,[x.right.id],()=>node("mul",{left:copy(x.left),right:node("div",{left:copy(x.right.right),right:copy(x.right.left)})}),10);
-if(["add","sub"].includes(x.type)&&x.left.type==="div"&&x.right.type==="div"){let a=value(x.left.right),b=value(x.right.right);if(a&&b&&a.b===1n&&b.b===1n&&a.a>0n&&b.a>0n&&a.a!==b.a){let d=abs(a.a/gcd(a.a,b.a)*b.a);if(d<100000000n)put("lcm",p,[x.left.id,x.right.id],()=>node(x.type,{left:node("div",{left:node("mul",{left:copy(x.left.left),right:node("num",{v:rat(d/a.a)})}),right:node("num",{v:rat(d)})}),right:node("div",{left:node("mul",{left:copy(x.right.left),right:node("num",{v:rat(d/b.a)})}),right:node("num",{v:rat(d)})})}),12)}}
-if(x.type==="mul"){for(let side of ["left","right"]){let q=x[side];if(q.type==="group")q=q.child;if(["add","sub"].includes(q.type)){let other=x[side==="left"?"right":"left"];put("distribute",p,[other.id,q.id],()=>node(q.type,{left:node("mul",{left:copy(other),right:copy(q.left)}),right:node("mul",{left:copy(other),right:copy(q.right)})}),8)}}}
-if(x.type==="num"&&x.display&&x.display.includes(".")&&x.v.b!==1n)put("decimal",p,[x.id],()=>node("num",{v:x.v}),7)
-});return out}
-function span(cls,id){let e=document.createElement("span");e.className=cls||"";if(id)e.dataset.nid=id;return e}
-function render(x){let e=span("node",x.id);if(x.type==="num"){let v=x.v;if(x.display){e.textContent=x.display.replace(".",language==="en"?".":",");return e}if(v.b===1n){e.textContent=String(v.a);return e}let f=span("frac"),n=span("num"),b=span("bar"),d=span("den");n.textContent=String(v.a);d.textContent=String(v.b);f.append(n,b,d);e.append(f);return e}if(x.type==="group"){e.append("(",render(x.child),")");return e}if(x.type==="neg"){e.append("−",render(x.child));return e}let a=render(x.left),b=render(x.right);if(x.type==="div"){let f=span("frac"),n=span("num"),bar=span("bar"),d=span("den");n.append(a);d.append(b);f.append(n,bar,d);e.append(f)}else{let op=span("op");op.textContent={add:"+",sub:"−",mul:"·"}[x.type];e.append(a,op,b)}return e}
-function show(){if(!root)return;el("line").replaceChildren(render(root));el("overlay").replaceChildren();ops=discover();chosen=null;el("status").textContent=ops.length?dic[language][6]:dic[language][7];el("history").textContent=history.length?history.length+" ↶ "+history.map(x=>x.desc).slice(-4).join("  →  "):""}
-function rects(op){return op.targets.map(id=>el("line").querySelector('[data-nid="'+id+'"]')).filter(Boolean).map(e=>e.getBoundingClientRect())}
-function distance(px,py,r){return Math.hypot(Math.max(r.left-px,0,px-r.right),Math.max(r.top-py,0,py-r.bottom))}
-function voronoi(e){let r=el("line").getBoundingClientRect(),x=e.clientX,y=e.clientY;if(x<r.left-25||x>r.right+25||y<r.top-20||y>r.bottom+20)return null;let best=null,d=Infinity;for(let o of ops){let rr=rects(o);if(!rr.length)continue;let v=Math.min(...rr.map(q=>distance(x,y,q)));if(v<d-.01||Math.abs(v-d)<.01&&o.priority>(best?.priority||0)){d=v;best=o}}return best}
-function highlight(op){el("line").querySelectorAll(".hover").forEach(e=>e.classList.remove("hover"));el("overlay").replaceChildren();if(!op)return;for(let id of op.targets){let e=el("line").querySelector('[data-nid="'+id+'"]');e?.classList.add("hover")}let a=rects(op),s=el("stage").getBoundingClientRect();if(a.length>=2){let x=(a[0].left+a[0].right)/2-s.left,y=a[0].top-s.top-7,X=(a[1].left+a[1].right)/2-s.left,Y=a[1].top-s.top-7,p=document.createElementNS("http://www.w3.org/2000/svg","path");p.setAttribute("d","M "+x+" "+y+" Q "+((x+X)/2)+" "+(Math.min(y,Y)-28)+" "+X+" "+Y);p.setAttribute("fill","none");p.setAttribute("stroke",op.kind==="reduce"?"#da3446":"#dfaa16");p.setAttribute("stroke-width","3");el("overlay").append(p)}}
-function move(e){if(locked)return;let o=voronoi(e);if(o!==chosen){chosen=o;highlight(o);el("status").textContent=o?o.kind:dic[language][6]}}
-function soundEffect(){if(!audio)return;try{let c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=330;g.gain.setValueAtTime(.05,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.12);o.start();o.stop(c.currentTime+.12);o.onended=()=>c.close()}catch{}}
-function click(event){if(locked)return;let op=voronoi(event)||chosen;if(!op)return;let next;try{next=replacement(root,op.path,op.build());let a=value(root),b=value(next);if(a&&b&&(a.a!==b.a||a.b!==b.b))throw Error("unsafe transformation")}catch(e){el("status").textContent="İşlem doğrulanamadı: "+e.message;return}locked=true;history.push({tree:copy(root),desc:op.kind});root=next;chosen=null;highlight(null);soundEffect();let line=el("line"),p=el("preview");line.style.opacity=".2";line.style.transform="translateY(-14px)";if(mode==="detail"){p.replaceChildren(render(next));p.classList.add("show")}setTimeout(()=>{p.classList.remove("show");p.replaceChildren();line.style.opacity="1";line.style.transform="";show();locked=false},mode==="detail"?630:290)}
-function load(s){if(locked)return;try{let r=parse(s);if(value(r)===null)throw Error("division by zero");root=r;initial=copy(r);history=[];el("entry").value=s;show()}catch(e){el("status").textContent=dic[language][8]+e.message}}
-function localize(){let z=dic[language]||dic.tr;el("title").textContent=z[0];el("load").textContent=z[1];el("detail").textContent=z[2];el("quick").textContent=z[3];el("tip").textContent=z[4];el("helptext").textContent=z[5];el("lang").value=language;document.documentElement.lang=language;if(root)show()}
-el("load").onclick=()=>load(el("entry").value);el("entry").onkeydown=e=>{if(e.key==="Enter")load(e.target.value)};el("stage").onpointermove=move;el("stage").onpointerleave=()=>{chosen=null;highlight(null)};el("stage").onclick=click;
-el("back").onclick=()=>{if(locked||!history.length)return;root=history.pop().tree;show()};el("reset").onclick=()=>{if(locked||!initial)return;root=copy(initial);history=[];show()};
-el("detail").onclick=()=>{mode="detail";el("detail").classList.add("active");el("quick").classList.remove("active")};el("quick").onclick=()=>{mode="quick";el("quick").classList.add("active");el("detail").classList.remove("active")};el("sound").onclick=()=>{audio=!audio;el("sound").classList.toggle("active",audio)};
-el("lang").onchange=e=>{language=e.target.value;try{localStorage.setItem("si-math-lang",language)}catch(_){}localize()};el("helpbtn").onclick=()=>el("helptext").classList.toggle("show");document.querySelectorAll("[data-ex]").forEach(e=>e.onclick=()=>load(e.dataset.ex));window.addEventListener("resize",()=>highlight(chosen));window.addEventListener("error",event=>{el("status").textContent="Uygulama hatası: "+event.message});load(el("entry").value);localize();
+function gcd(a,b){a=abs(a);b=abs(b);while(b){const r=a%b;a=b;b=r}return a||1n}
+function frac(a,b=1n){a=BigInt(a);b=BigInt(b);if(!b)throw Error("Zero denominator");if(b<0n){a=-a;b=-b}const g=gcd(a,b);return {a:a/g,b:b/g}}
+const add=(x,y)=>frac(x.a*y.b+y.a*x.b,x.b*y.b),neg=x=>frac(-x.a,x.b),sub=(x,y)=>add(x,neg(y)),mul=(x,y)=>frac(x.a*y.a,x.b*y.b),div=(x,y)=>frac(x.a*y.b,x.b*y.a),same=(x,y)=>x.a===y.a&&x.b===y.b;
+function decimal(s){let p=s.split("."),after=p[1]||"";return frac(BigInt((p[0]||"0")+after),10n**BigInt(after.length))}
+function tokenize(raw){let s=raw.replace(/,/g,".").replace(/[×·]/g,"*").replace(/÷/g,"/").replace(/−/g,"-").replace(/\s+/g,"");if(s.length>450)throw Error("Input too long");let t=s.match(/(?:\d+(?:\.\d*)?|\.\d+)|[+\-*/()]/g)||[];if(t.join("")!==s||!t.length)throw Error("Unsupported syntax");return t}
+function parse(src){let t=tokenize(src),i=0,depth=0;const next=()=>t[i],take=()=>t[i++];
+function primary(){if(++depth>65)throw Error("Too deep");let r,z=next();
+if(z==="+"){take();r=primary()}else if(z==="-"){take();r=make("neg",{child:primary()})}
+else if(z==="("){take();let child=expression();if(take()!==")")throw Error("Missing )");r=make("group",{child})}
+else if(/^(?:\d|\.)/.test(z||"")){take();r=make("num",{v:decimal(z),text:z})}else throw Error("Unexpected token");
+depth--;return r}
+function product(){let x=primary();while(true){let z=next();if(z==="*"||z==="/"){take();x=make(z==="*"?"mul":"div",{left:x,right:primary()})}
+else if(z==="("||/^(?:\d|\.)/.test(z||"")){x=make("mul",{left:x,right:primary()})}
+else break}return x}
+function expression(){let x=product();while(next()==="+"||next()==="-"){let z=take();x=make(z==="+"?"add":"sub",{left:x,right:product()})}return x}
+let r=expression();if(i!==t.length)throw Error("Trailing input");return r}
+function value(n){if(n.type==="num")return n.v;if(n.type==="group")return value(n.child);
+if(n.type==="neg"){let x=value(n.child);return x?neg(x):null}
+if(!["add","sub","mul","div"].includes(n.type))return null;
+let a=value(n.left),b=value(n.right);if(!a||!b)return null;
+try{return n.type==="add"?add(a,b):n.type==="sub"?sub(a,b):n.type==="mul"?mul(a,b):div(a,b)}catch{return null}}
+function walk(n,fn,path=[]){fn(n,path);if(n.child)walk(n.child,fn,path.concat("child"));if(n.left)walk(n.left,fn,path.concat("left"));if(n.right)walk(n.right,fn,path.concat("right"))}
+function substitute(n,path,r){if(!path.length)return r;let c=clone(n),q=c;for(let k of path.slice(0,-1))q=q[k];q[path[path.length-1]]=r;return c}
+const number=(v,text=null)=>make("num",{v,text});
+function score(kind){return ({common:15,reduce:14,invert:13,distribute:12,combine:11,calc:8,decimal:7,ungroup:4,negative:5})[kind]||1}
+function discover(tree){let result=[];const offer=(kind,path,targets,build,note)=>result.push({id:"op"+result.length,kind,path,targets,build,note:note||kind,score:score(kind)});
+walk(tree,(n,path)=>{
+if(n.type==="num"&&n.text?.includes(".")&&n.v.b!==1n)offer("decimal",path,[n.id],()=>number(n.v),"decimal → fraction");
+if(n.type==="group"&&n.child.type==="num")offer("ungroup",path,[n.id],()=>clone(n.child),"parentheses");
+if(n.type==="neg"&&n.child.type==="num")offer("negative",path,[n.id],()=>number(neg(n.child.v)),"negative");
+if(["add","sub","mul","div"].includes(n.type)&&n.left.type==="num"&&n.right.type==="num"&&value(n))
+offer("calc",path,[n.left.id,n.right.id],()=>number(value(n)),"calculate");
+if(n.type==="div"&&n.left.type==="num"&&n.right.type==="num"&&n.left.v.b===1n&&n.right.v.b===1n&&n.right.v.a!==0n){
+let a=n.left.v.a,b=n.right.v.a,g=gcd(a,b);
+if(g>1n)offer("reduce",path,[n.left.id,n.right.id],()=>make("div",{left:number(frac(a/g)),right:number(frac(b/g))}),"cancel common factors");
+}
+if(n.type==="div"&&n.right.type==="div"&&value(n.right.left)?.a!==0n&&value(n.right.right)?.a!==0n){
+offer("invert",path,[n.right.id],()=>make("mul",{left:clone(n.left),right:make("div",{left:clone(n.right.right),right:clone(n.right.left)})}),"invert second fraction");
+}
+if((n.type==="add"||n.type==="sub")&&n.left.type==="div"&&n.right.type==="div"){
+let d1=value(n.left.right),d2=value(n.right.right);if(d1&&d2&&d1.b===1n&&d2.b===1n&&d1.a>0n&&d2.a>0n&&d1.a!==d2.a){
+let d=abs(d1.a/gcd(d1.a,d2.a)*d2.a);
+if(d<1000000000000000n)offer("common",path,[n.left.id,n.right.id],()=>make(n.type,{
+left:make("div",{left:make("mul",{left:clone(n.left.left),right:number(frac(d/d1.a))}),right:number(frac(d))}),
+right:make("div",{left:make("mul",{left:clone(n.right.left),right:number(frac(d/d2.a))}),right:number(frac(d))})}),"LCM "+String(d));
+}}
+if((n.type==="add"||n.type==="sub")&&n.left.type==="div"&&n.right.type==="div"&&
+value(n.left.right)&&value(n.right.right)&&same(value(n.left.right),value(n.right.right))){
+offer("combine",path,[n.left.id,n.right.id],()=>make("div",{
+left:make(n.type,{left:clone(n.left.left),right:clone(n.right.left)}),right:clone(n.left.right)}),"combine numerators");
+}
+if(n.type==="mul"){for(let side of ["left","right"]){
+let term=n[side],group=term.type==="group"?term.child:term;
+if(group.type==="add"||group.type==="sub"){
+let factor=n[side==="left"?"right":"left"];
+offer("distribute",path,[factor.id,group.id],()=>make(group.type,{
+left:make("mul",{left:clone(factor),right:clone(group.left)}),
+right:make("mul",{left:clone(factor),right:clone(group.right)})}),"distribute");
+}}}
+});return result}
+function span(className="",id=null){let e=document.createElement("span");e.className=className;if(id)e.dataset.nodeId=id;return e}
+function render(n){let e=span("node",n.id);if(n.type==="num"){
+let v=n.v;if(n.text){e.textContent=n.text.replace(".",lang==="en"?".":",");return e}
+if(v.b===1n){e.textContent=String(v.a);return e}
+let f=span("frac"),top=span("numerator"),bar=span("fractionbar"),bot=span("denominator");
+top.textContent=String(v.a);bot.textContent=String(v.b);f.append(top,bar,bot);e.append(f);return e}
+if(n.type==="group"){e.append("(",render(n.child),")");return e}
+if(n.type==="neg"){e.append("−",render(n.child));return e}
+if(n.type==="div"){let f=span("frac"),top=span("numerator"),bar=span("fractionbar"),bot=span("denominator");top.append(render(n.left));bot.append(render(n.right));f.append(top,bar,bot);e.append(f);return e}
+let op=span("operator");op.textContent={add:"+",sub:"−",mul:"·"}[n.type]||"?";e.append(render(n.left),op,render(n.right));return e}
+function label(n){if(n.type==="num")return n.text||String(n.v.a)+(n.v.b===1n?"":"/"+String(n.v.b));
+if(n.type==="group")return "("+label(n.child)+")";if(n.type==="neg")return "−"+label(n.child);
+return "("+label(n.left)+{add:"+",sub:"−",mul:"×",div:"÷"}[n.type]+label(n.right)+")"}
+function getRects(op){return op.targets.map(id=>$("equation").querySelector('[data-node-id="'+id+'"]')).filter(Boolean).map(e=>e.getBoundingClientRect())}
+function dRect(x,y,r){return Math.hypot(Math.max(r.left-x,0,x-r.right),Math.max(r.top-y,0,y-r.bottom))}
+function seed(op,index){let rects=getRects(op);if(!rects.length)return null;const r=rects[0],s=rects[rects.length-1];let cx=(r.left+r.right+s.left+s.right)/4,cy=(r.top+r.bottom+s.top+s.bottom)/4;
+// offset colocated seeds by operation type, preserving stable Voronoi ownership
+let offset=({common:-18,reduce:15,invert:-9,distribute:-16,combine:16,calc:0,decimal:0,ungroup:8,negative:10})[op.kind]||0;
+return {x:cx,y:cy+offset};
+}
+function choose(x,y){const area=$("equation").getBoundingClientRect();if(x<area.left-30||x>area.right+30||y<area.top-30||y>area.bottom+30)return null;
+let best=null,d=Infinity;for(let i=0;i<ops.length;i++){let o=ops[i],s=seed(o,i);if(!s)continue;let ds=Math.hypot(x-s.x,y-s.y);if(ds<d-.001||Math.abs(ds-d)<.001&&o.score>(best?.score||0)){best=o;d=ds}}return best}
+function highlight(op){$("equation").querySelectorAll(".hover").forEach(e=>e.classList.remove("hover"));$("overlay").replaceChildren();if(!op)return;
+for(let id of op.targets)$("equation").querySelector('[data-node-id="'+id+'"]')?.classList.add("hover");
+const r=getRects(op),s=$("stage").getBoundingClientRect();if(r.length>=2){
+let x=(r[0].left+r[0].right)/2-s.left,y=r[0].top-s.top-10,X=(r[1].left+r[1].right)/2-s.left,Y=r[1].top-s.top-10;
+const p=document.createElementNS("http://www.w3.org/2000/svg","path");
+p.setAttribute("d","M "+x+" "+y+" Q "+((x+X)/2)+" "+(Math.min(y,Y)-Math.max(24,Math.abs(x-X)*.23))+" "+X+" "+Y);
+p.setAttribute("fill","none");p.setAttribute("stroke",op.kind==="reduce"?"#d53e4f":"#e4a51c");p.setAttribute("stroke-width","3");p.setAttribute("stroke-linecap","round");$("overlay").append(p);
+}}
+function refresh(){if(!root)return;$("equation").replaceChildren(render(root));$("overlay").replaceChildren();ops=discover(root);active=null;$("notice").textContent=ops.length?phrase("start"):phrase("end");$("history").textContent=history.length?history.length+" × "+history.map(h=>h.name).slice(-5).join("  →  "):label(root)}
+function beep(){if(!sound)return;try{let c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.setValueAtTime(390,c.currentTime);o.frequency.exponentialRampToValueAtTime(190,c.currentTime+.18);g.gain.setValueAtTime(.06,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.18);o.start();o.stop(c.currentTime+.18);o.onended=()=>c.close()}catch{}}
+function layoutSnapshot(){let m=new Map();$("equation").querySelectorAll("[data-node-id]").forEach(e=>m.set(e.dataset.nodeId,e.getBoundingClientRect()));return m}
+function animateFLIP(old,duration){let actions=[];$("equation").querySelectorAll("[data-node-id]").forEach(e=>{let from=old.get(e.dataset.nodeId),to=e.getBoundingClientRect();let dx=from?from.left-to.left:0,dy=from?from.top-to.top:17;if(Math.abs(dx)<1&&Math.abs(dy)<1&&from)return;
+let frames=[{transform:"translate("+dx+"px,"+dy+"px)",opacity:from?1:0},{transform:"translate(0,0)",opacity:1}];if(e.animate)actions.push(e.animate(frames,{duration,easing:"cubic-bezier(.22,.7,.18,1)",fill:"none"}))});
+return Promise.all(actions.map(a=>a.finished.catch(()=>{})))}
+async function execute(op){if(busy||!op)return;let next;try{
+next=substitute(root,op.path,op.build());
+let a=value(root),b=value(next);if(!a||!b||!same(a,b))throw Error("Mathematical equivalence failed");
+}catch(e){$("notice").textContent="Transformation rejected: "+e.message;return}
+busy=true;let before=clone(root),old=layoutSnapshot();active=null;highlight(null);
+let target=render(next),workspace=$("workspace");workspace.replaceChildren(target);
+if(mode==="detailed"){workspace.classList.add("visible");await new Promise(r=>setTimeout(r,270))}
+root=next;history.push({tree:before,name:op.note});
+$("equation").replaceChildren(render(root));beep();await animateFLIP(old,mode==="detailed"?670:400);
+workspace.classList.remove("visible");await new Promise(r=>setTimeout(r,100));workspace.replaceChildren();refresh();busy=false;$("notice").textContent=phrase("done")}
+function load(s){if(busy)return;try{let p=parse(s);if(!value(p))throw Error("Zero denominator");root=p;initial=clone(p);history=[];$("entry").value=s;refresh()}catch(e){$("notice").textContent=phrase("invalid")+" "+e.message}}
+function locale(){document.documentElement.lang=lang;$("title").textContent=phrase("title");$("apply").textContent=phrase("apply");$("detailed").textContent=phrase("detailed");$("fast").textContent=phrase("fast");$("helptext").textContent=phrase("help");$("lang").value=lang;refresh()}
+$("apply").onclick=()=>load($("entry").value);$("entry").onkeydown=e=>{if(e.key==="Enter")load(e.target.value)};
+$("stage").onpointermove=e=>{if(busy)return;let op=choose(e.clientX,e.clientY);if(op!==active){active=op;highlight(op);$("notice").textContent=op?phrase("choose")+op.note:phrase("start")}};
+$("stage").onpointerleave=()=>{if(!busy){active=null;highlight(null)}};
+$("stage").onclick=e=>execute(choose(e.clientX,e.clientY));
+$("undo").onclick=()=>{if(busy||!history.length)return;root=history.pop().tree;refresh()};
+$("reset").onclick=()=>{if(busy||!initial)return;root=clone(initial);history=[];refresh()};
+$("detailed").onclick=()=>{mode="detailed";$("detailed").classList.add("selected");$("fast").classList.remove("selected")};
+$("fast").onclick=()=>{mode="fast";$("fast").classList.add("selected");$("detailed").classList.remove("selected")};
+$("sound").onclick=()=>{sound=!sound;$("sound").classList.toggle("selected",sound)};
+$("lang").onchange=e=>{lang=e.target.value;try{localStorage.setItem("si-math-lang",lang)}catch{}locale()};
+$("help").onclick=()=>$("helptext").classList.toggle("visible");
+document.querySelectorAll("[data-example]").forEach(b=>b.onclick=()=>load(b.dataset.example));
+window.onerror=(message)=>{$("notice").textContent="Error: "+message};
+load($("entry").value);locale();
 })();
 </script></body></html>
