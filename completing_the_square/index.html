@@ -133,7 +133,7 @@
 </style>
 </head>
 <body>
-<div class="app"><div class="toolbar"><a class="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 2.8 10.7a1 1 0 0 0 .63 1.78h1.02v7.02a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-4.35h2.74v4.35a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-7.02h1.02a1 1 0 0 0 .63-1.78L12 3.2Z"/></svg></a><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.9.7</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
+<div class="app"><div class="toolbar"><a class="homeBtn" href="../index.html" aria-label="Ana Sayfa" title="Ana Sayfa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 2.8 10.7a1 1 0 0 0 .63 1.78h1.02v7.02a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-4.35h2.74v4.35a1 1 0 0 0 1 1h4.18a1 1 0 0 0 1-1v-7.02h1.02a1 1 0 0 0 .63-1.78L12 3.2Z"/></svg></a><button id="easyBtn" class="modeBtn active">Basit</button><button id="advancedBtn" class="modeBtn">Gelişmiş</button><button id="formulaBtn" class="modeBtn">Formül</button></div><div class="card"><div class="versionBadge" id="versionBadge">v0.10.0</div><div id="legacyView" class="legacyView"><div id="eq" class="eq"></div></div><div id="formulaView" class="formulaView"><div id="formulaStage" class="formulaStage"></div></div></div></div>
 <script>
 (()=>{
 const easyBtn=document.getElementById("easyBtn"),advancedBtn=document.getElementById("advancedBtn"),formulaBtn=document.getElementById("formulaBtn"),legacyView=document.getElementById("legacyView"),formulaView=document.getElementById("formulaView");function setActiveMode(mode){easyBtn.classList.toggle("active",mode==="easy");advancedBtn.classList.toggle("active",mode==="advanced");formulaBtn.classList.toggle("active",mode==="formula");legacyView.style.display=mode==="formula"?"none":"block";formulaView.style.display=mode==="formula"?"block":"none"}
@@ -432,6 +432,41 @@ function advRecenterBubble(bubble,html){
   bubble.style.left=`${cx-line.left}px`;
 }
 
+let advAudioCtx=null;
+function advSound(kind="kick"){
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
+    if(!advAudioCtx)advAudioCtx=new AC();
+    const ctx=advAudioCtx;
+    if(ctx.state==="suspended")ctx.resume();
+
+    const now=ctx.currentTime;
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.type="sine";
+
+    if(kind==="land"){
+      osc.frequency.setValueAtTime(170,now);
+      osc.frequency.exponentialRampToValueAtTime(82,now+.09);
+      gain.gain.setValueAtTime(.0001,now);
+      gain.gain.exponentialRampToValueAtTime(.18,now+.006);
+      gain.gain.exponentialRampToValueAtTime(.0001,now+.11);
+    }else{
+      osc.frequency.setValueAtTime(125,now);
+      osc.frequency.exponentialRampToValueAtTime(52,now+.13);
+      gain.gain.setValueAtTime(.0001,now);
+      gain.gain.exponentialRampToValueAtTime(.24,now+.008);
+      gain.gain.exponentialRampToValueAtTime(.0001,now+.15);
+    }
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now+.16);
+  }catch(e){}
+}
+
 function startAdvanced(){
   setActiveMode("advanced");
   eq.classList.add("advancedMath");
@@ -473,12 +508,52 @@ async function advancedClickC(){
   cMove.onclick=null;
   cMove.classList.remove("advHL");
 
+  const eqRect=eq.getBoundingClientRect();
   const before=cMove.getBoundingClientRect();
+  const start={
+    x:before.left-eqRect.left+before.width/2,
+    y:before.top-eqRect.top+before.height/2
+  };
+
+  // Tıklama anında tekme hissi: patlama + kısa tok ses.
+  advSound("kick");
+  advBurstAt(start.x,start.y);
+
+  // Gerçek +c hedef yerini alır ama uçuş boyunca görünmez kalır.
+  cMove.style.visibility="hidden";
+
   const fs=parseFloat(getComputedStyle(eq).fontSize);
   const targetGap=fs*4.65;
-
   reserve.style.width=`${targetGap}px`;
-  await moveWithFLIP(cMove,before,760);
+
+  await advSettleMath();
+
+  const after=cMove.getBoundingClientRect();
+  const end={
+    x:after.left-eqRect.left+after.width/2,
+    y:after.top-eqRect.top+after.height/2
+  };
+
+  // Ekranda uçan kopya.
+  const fly=document.createElement("div");
+  fly.className="advArcFly";
+  fly.innerHTML=cMove.innerHTML;
+  fly.style.left=`${start.x}px`;
+  fly.style.top=`${start.y}px`;
+  fly.style.transform="translate(-50%,-50%)";
+  fly.style.zIndex="60";
+  eq.append(fly);
+
+  // Futbol topu gibi belirgin ama kısa bir parabol.
+  const apexY=Math.max(18,Math.min(start.y,end.y)-74);
+  await advProjectileMove(fly,start,end,apexY,1500);
+
+  // Hedefe oturuş: ikinci patlama + daha kısa temas sesi.
+  advSound("land");
+  await advBurstAt(end.x,end.y);
+
+  fly.remove();
+  cMove.style.visibility="visible";
 
   aOnly.classList.add("advHL");
   aOnly.onclick=advancedFactorNew;
