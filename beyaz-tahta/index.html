@@ -1190,7 +1190,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.34 · Metin kutusu sıkı + ayrı alan/metin ölçek handle’ları</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.35 · Aktif Bézier draft kilidi + açık path bitirme</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1509,10 +1509,37 @@
 
   // v18 — Photoshop/Illustrator style Bézier Pen Tool.
   let bezierDraftIndex = -1;
+  let bezierDraftActive = false;
   let bezierPointerId = null;
   let bezierDragInfo = null; // {index, anchorIndex, start, altBroken}
   let bezierHover = null; // {type:'add'|'delete'|'close'|'continue'|'new', point, index}
   let bezierActiveAnchorIndex = -1;
+
+  function finishBezierDraft(message='Açık Bézier tamamlandı'){
+    if(!bezierDraftActive) return false;
+
+    const idx=bezierDraftIndex;
+    const o=(idx>=0 && objects[idx] && objects[idx].kind==='bezier')
+      ? objects[idx]
+      : null;
+
+    bezierDraftActive=false;
+    bezierDraftIndex=-1;
+    bezierPointerId=null;
+    bezierDragInfo=null;
+    bezierHover=null;
+    bezierActiveAnchorIndex=-1;
+
+    if(o){
+      normalizeBezierCenter(o);
+      markBoardDirty();
+    }
+
+    setSelection([]);
+    statusEl.textContent=message;
+    redraw();
+    return true;
+  }
 
   // v18.7 — Bézier performance cache.
   // WeakMap lets removed objects be garbage-collected automatically.
@@ -5351,9 +5378,14 @@
     bezierHover=null;
     if(mode!=='pen' || !p) return;
 
-    let idx=(selectedIndices.length===1 && objects[selectedIndices[0]] && objects[selectedIndices[0]].kind==='bezier')
-      ? selectedIndices[0]
-      : bezierDraftIndex;
+    let idx;
+    if(bezierDraftActive){
+      idx=bezierDraftIndex;
+    }else{
+      idx=(selectedIndices.length===1 && objects[selectedIndices[0]] && objects[selectedIndices[0]].kind==='bezier')
+        ? selectedIndices[0]
+        : -1;
+    }
     let o=(idx>=0)?objects[idx]:null;
 
     const hitR=10/viewZoom;
@@ -11269,58 +11301,110 @@
       closeContextMenu();
       const hitR=(e.pointerType==='touch'?20:10)/viewZoom;
 
-      // In Pen mode, clicking another Bézier selects it for point editing.
+      // While a path is actively being drawn, it has absolute priority.
+      // Existing Béziers under the pointer are ignored until the draft ends.
+      if(bezierDraftActive){
+        const idx=bezierDraftIndex;
+        const o=(idx>=0)?objects[idx]:null;
+
+        if(o && o.kind==='bezier'){
+          const ah=bezierAnchorHit(o,p,hitR);
+
+          // First anchor closes AND finishes the active path.
+          if(!o.closed && o.anchors.length>=2 && ah===0){
+            recordObjectStates([idx]);
+            o.closed=true;
+            bezierActiveAnchorIndex=0;
+            normalizeBezierCenter(o);
+            markBoardDirty();
+
+            // Closing may still create a tangent by dragging.
+            bezierPointerId=e.pointerId;
+            bezierDragInfo={
+              index:idx,
+              anchorIndex:0,
+              start:{x:o.anchors[0].x,y:o.anchors[0].y},
+              altBroken:!!e.altKey,
+              finishDraftOnUp:true
+            };
+            try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+
+            redraw();
+            statusEl.textContent='Bézier kapatıldı — bırakınca çizim biter';
+            return;
+          }
+
+          // Any other click belongs to the active draft, even when another
+          // old Bézier lies directly underneath it.
+          recordObjectStates([idx]);
+          const anchor={
+            x:p.x,y:p.y,
+            in:{x:p.x,y:p.y},
+            out:{x:p.x,y:p.y},
+            broken:!!e.altKey,
+            anchorType:e.altKey ? 'broken' : 'corner'
+          };
+          o.anchors.push(anchor);
+          bezierActiveAnchorIndex=o.anchors.length-1;
+          normalizeBezierCenter(o);
+          bezierPointerId=e.pointerId;
+          bezierDragInfo={
+            index:idx,
+            anchorIndex:o.anchors.length-1,
+            start:{...p},
+            altBroken:!!e.altKey
+          };
+          try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+          markBoardDirty();
+          redraw();
+          statusEl.textContent='Bézier noktası eklendi — Enter/Esc: açık bırak ve bitir';
+          return;
+        }
+
+        // Defensive recovery if the draft object no longer exists.
+        bezierDraftActive=false;
+        bezierDraftIndex=-1;
+      }
+
+      // No active draft: existing Béziers can be selected and edited normally.
       const anyHit=hitTestObjectAny(p);
       if(
         anyHit>=0 &&
         objects[anyHit] &&
-        objects[anyHit].kind==='bezier' &&
-        !(selectedIndices.length===1 && selectedIndices[0]===anyHit)
+        objects[anyHit].kind==='bezier'
       ){
         setSelection([anyHit]);
         bezierDraftIndex=anyHit;
         const hitBezier=objects[anyHit];
         bezierActiveAnchorIndex=Math.max(0,(hitBezier.anchors||[]).length-1);
-      }
 
-      let idx=(selectedIndices.length===1 && objects[selectedIndices[0]] && objects[selectedIndices[0]].kind==='bezier')
-        ? selectedIndices[0]
-        : bezierDraftIndex;
-      let o=(idx>=0)?objects[idx]:null;
-
-      if(o && o.kind==='bezier'){
+        const o=hitBezier;
         const ah=bezierAnchorHit(o,p,hitR);
 
-        // Photoshop behavior: first anchor closes an open path.
-        // Two anchors are enough; a closed Bézier may consist of two cubic segments.
+        // Existing path edit behavior.
         if(!o.closed && o.anchors.length>=2 && ah===0){
-          recordObjectStates([idx]);
+          recordObjectStates([anyHit]);
           o.closed=true;
           bezierActiveAnchorIndex=0;
           normalizeBezierCenter(o);
           markBoardDirty();
-          setSelection([idx]);
 
-          // Closing is also an editable anchor gesture:
-          // click = close, click+drag = close and create tangent handles.
           bezierPointerId=e.pointerId;
           bezierDragInfo={
-            index:idx,
+            index:anyHit,
             anchorIndex:0,
             start:{x:o.anchors[0].x,y:o.anchors[0].y},
             altBroken:!!e.altKey
           };
           try{canvas.setPointerCapture(e.pointerId);}catch(_){}
-
           redraw();
-          statusEl.textContent='Bézier kapatıldı — sürüklersen kapanış teğeti oluşur';
+          statusEl.textContent='Bézier kapatıldı';
           return;
         }
 
-        // Other existing anchors are removed.
         if(ah>=0){
           if(o.anchors.length>2){
-            recordObjectStates([idx]);
+            recordObjectStates([anyHit]);
             o.anchors.splice(ah,1);
             bezierActiveAnchorIndex=Math.min(ah,Math.max(0,o.anchors.length-1));
             if(o.closed && o.anchors.length<3) o.closed=false;
@@ -11333,15 +11417,14 @@
           return;
         }
 
-        // Clicking a segment inserts a real split point without changing curve shape.
         const near=nearestBezierLocation(o,p);
         if(near && near.distance<=hitR){
-          recordObjectStates([idx]);
+          recordObjectStates([anyHit]);
           const ai=splitBezierSegment(o,near.segmentIndex,near.t);
           bezierActiveAnchorIndex=ai;
           normalizeBezierCenter(o);
           bezierPointerId=e.pointerId;
-          bezierDragInfo={index:idx,anchorIndex:ai,start:{...p},altBroken:!!e.altKey};
+          bezierDragInfo={index:anyHit,anchorIndex:ai,start:{...p},altBroken:!!e.altKey};
           try{canvas.setPointerCapture(e.pointerId);}catch(_){}
           markBoardDirty();
           redraw();
@@ -11350,25 +11433,22 @@
         }
       }
 
-      // Start a new path or append to current open path.
-      if(!o || o.kind!=='bezier' || o.closed){
-        o={
-          id:makeObjectId(),
-          kind:'bezier',
-          anchors:[],
-          closed:false,
-          style:strokeStyle(),
-          source:'pen',
-          boxAngle:0
-        };
-        objects.push(o);
-        idx=objects.length-1;
-        recordAddedObjectUndo(o,idx);
-        bezierDraftIndex=idx;
-        setSelection([idx]);
-      }else{
-        recordObjectStates([idx]);
-      }
+      // Empty canvas starts a NEW active path.
+      const o={
+        id:makeObjectId(),
+        kind:'bezier',
+        anchors:[],
+        closed:false,
+        style:strokeStyle(),
+        source:'pen',
+        boxAngle:0
+      };
+      objects.push(o);
+      const idx=objects.length-1;
+      recordAddedObjectUndo(o,idx);
+      bezierDraftIndex=idx;
+      bezierDraftActive=true;
+      setSelection([idx]);
 
       const anchor={
         x:p.x,y:p.y,
@@ -11378,17 +11458,16 @@
         anchorType:e.altKey ? 'broken' : 'corner'
       };
       o.anchors.push(anchor);
-      bezierActiveAnchorIndex=o.anchors.length-1;
+      bezierActiveAnchorIndex=0;
       normalizeBezierCenter(o);
       bezierPointerId=e.pointerId;
-      bezierDragInfo={index:idx,anchorIndex:o.anchors.length-1,start:{...p},altBroken:!!e.altKey};
+      bezierDragInfo={index:idx,anchorIndex:0,start:{...p},altBroken:!!e.altKey};
       try{canvas.setPointerCapture(e.pointerId);}catch(_){}
       markBoardDirty();
       redraw();
-      statusEl.textContent='Bézier noktası eklendi';
+      statusEl.textContent='Yeni Bézier başladı — Enter/Esc: açık bırak ve bitir';
       return;
     }
-
     if(e.pointerType==='touch'){
       e.preventDefault();
 
@@ -12573,9 +12652,22 @@
 
   function finishPointer(e){
     if(mode==='pen' && bezierDragInfo && e.pointerId===bezierPointerId){
+      const finishAfterUp=!!bezierDragInfo.finishDraftOnUp;
       bezierPointerId=null;
       bezierDragInfo=null;
       markBoardDirty();
+
+      if(finishAfterUp){
+        bezierDraftActive=false;
+        bezierDraftIndex=-1;
+        bezierHover=null;
+        bezierActiveAnchorIndex=-1;
+        setSelection([]);
+        statusEl.textContent='Kapalı Bézier tamamlandı';
+        redraw();
+        return;
+      }
+
       updateBezierHover(pFromEvent(e));
       redraw();
       return;
@@ -13920,6 +14012,7 @@
   });
 
   textBtn.onclick=()=>{
+    if(bezierDraftActive) finishBezierDraft('Açık Bézier tamamlandı');
     cancelFormatPainter();
     closeContextMenu();
     closeFillMenu();
@@ -14294,13 +14387,16 @@
     selectBtn.classList.remove('active');
     eraserBtn.classList.remove('active');
 
-    // Keep a selected Bézier for point editing; otherwise clear selection.
+    // Entering Pen mode does not automatically continue an old open path.
+    // A selected Bézier may still be edited, but only a newly started path
+    // becomes an active draft.
+    bezierDraftActive=false;
+    bezierDraftIndex=-1;
     if(!(selectedIndices.length===1 && objects[selectedIndices[0]] && objects[selectedIndices[0]].kind==='bezier')){
       setSelection([]);
-      bezierDraftIndex=-1;
+      bezierActiveAnchorIndex=-1;
     }else{
-      bezierDraftIndex=selectedIndices[0];
-      const selectedBezier=objects[bezierDraftIndex];
+      const selectedBezier=objects[selectedIndices[0]];
       bezierActiveAnchorIndex=Math.max(
         0,
         Math.min(
@@ -14311,11 +14407,12 @@
     }
     canvas.style.cursor='crosshair';
     bezierHover=null;
-    statusEl.textContent='Dolma kalem — tıkla: nokta, sürükle: teğet, ilk noktaya tıkla: kapat';
+    statusEl.textContent='Dolma kalem — tıkla: nokta, sürükle: teğet, ilk noktaya tıkla: kapat, Enter/Esc: açık bitir';
     redraw();
   };
 
     inkBtn.onclick=()=>{
+    if(bezierDraftActive) finishBezierDraft('Açık Bézier tamamlandı');
     closeSelectModeMenu();
     cancelFormatPainter();
     if(textEditing) closeTextEditor(true);
@@ -14337,6 +14434,7 @@
   };
 
   selectBtn.onclick=()=>{
+    if(bezierDraftActive) finishBezierDraft('Açık Bézier tamamlandı');
     if(selectLongPressTriggered){
       selectLongPressTriggered=false;
       return;
@@ -14435,6 +14533,7 @@
   }
 
   function activateEraserTool(kind='stroke',radius=eraserRadius){
+    if(bezierDraftActive) finishBezierDraft('Açık Bézier tamamlandı');
     closeSelectModeMenu();
     cancelFormatPainter();
     if(textEditing) closeTextEditor(true);
@@ -14876,6 +14975,12 @@
       !!textEditing;
 
     if(e.altKey && e.code==='Space'){
+      return;
+    }
+
+    if(!typingTarget && mode==='pen' && bezierDraftActive && (e.key==='Enter' || e.key==='Escape')){
+      e.preventDefault();
+      finishBezierDraft('Açık Bézier tamamlandı');
       return;
     }
 
