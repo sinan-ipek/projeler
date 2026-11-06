@@ -1195,7 +1195,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.44 · Perspektif kamera +Z → −Z, küp/prizma dik başlangıç</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.45 · Kamera yukarıda ve YZ düzlemi dışında</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6149,27 +6149,85 @@
     return g.points.map(p=>rotatePointByQuat(p,q));
   }
 
-  function shape3DProjectedPoints(o){
-    const viewPts=shape3DViewPoints(o);
-    const distance=Math.max(220,Number(o.cameraDistance)||Number(o.perspective)||520);
+  function shape3DCamera(o){
+    const d=Math.max(220,Number(o.cameraDistance)||Number(o.perspective)||520);
 
-    // Perspective camera:
-    // camera position = (0,0,+distance)
-    // viewing direction = -Z, looking at the object's origin.
-    return viewPts.map(r=>{
-      const denom=Math.max(60,distance-r.z);
-      const k=distance/denom;
+    // Camera is above the solid, off the YZ plane, and in front on +Z.
+    // It looks toward the object's local origin.
+    const position={
+      x:d*.55,
+      y:-d*.32,
+      z:d
+    };
+    const target={x:0,y:0,z:0};
+
+    const fx=target.x-position.x;
+    const fy=target.y-position.y;
+    const fz=target.z-position.z;
+    const fl=Math.hypot(fx,fy,fz)||1;
+    const forward={x:fx/fl,y:fy/fl,z:fz/fl};
+
+    // World "up" is -Y because canvas Y grows downward.
+    const worldUp={x:0,y:-1,z:0};
+    let right={
+      x:forward.y*worldUp.z-forward.z*worldUp.y,
+      y:forward.z*worldUp.x-forward.x*worldUp.z,
+      z:forward.x*worldUp.y-forward.y*worldUp.x
+    };
+    const rl=Math.hypot(right.x,right.y,right.z)||1;
+    right={x:right.x/rl,y:right.y/rl,z:right.z/rl};
+
+    const up={
+      x:right.y*forward.z-right.z*forward.y,
+      y:right.z*forward.x-right.x*forward.z,
+      z:right.x*forward.y-right.y*forward.x
+    };
+
+    return {
+      position,
+      target,
+      forward,
+      right,
+      up,
+      focalLength:d
+    };
+  }
+
+  function shape3DCameraSpacePoints(o){
+    const viewPts=shape3DViewPoints(o);
+    const cam=shape3DCamera(o);
+
+    return viewPts.map(p=>{
+      const rel={
+        x:p.x-cam.position.x,
+        y:p.y-cam.position.y,
+        z:p.z-cam.position.z
+      };
+      return {
+        x:rel.x*cam.right.x+rel.y*cam.right.y+rel.z*cam.right.z,
+        y:rel.x*cam.up.x+rel.y*cam.up.y+rel.z*cam.up.z,
+        z:rel.x*cam.forward.x+rel.y*cam.forward.y+rel.z*cam.forward.z
+      };
+    });
+  }
+
+  function shape3DProjectedPoints(o){
+    const camPts=shape3DCameraSpacePoints(o);
+    const cam=shape3DCamera(o);
+
+    return camPts.map(r=>{
+      const depth=Math.max(60,r.z);
+      const k=cam.focalLength/depth;
       return {
         x:o.center.x+r.x*k,
-        y:o.center.y+r.y*k,
+        y:o.center.y-r.y*k,
         z:r.z
       };
     });
   }
 
   function shape3DFaceVisibility(o,g,viewPts){
-    const distance=Math.max(220,Number(o.cameraDistance)||Number(o.perspective)||520);
-    const camera={x:0,y:0,z:distance};
+    const camera=shape3DCamera(o).position;
 
     return (g.faces||[]).map(face=>{
       if(!face || face.length<3) return false;
@@ -6192,7 +6250,6 @@
       centroid.y/=face.length;
       centroid.z/=face.length;
 
-      // Keep normals outward from the object's center.
       if(n.x*centroid.x+n.y*centroid.y+n.z*centroid.z<0){
         n={x:-n.x,y:-n.y,z:-n.z};
       }
@@ -6258,35 +6315,26 @@
   }
 
   function default3DPose(type){
-    // Camera is on +Z, looking toward -Z.
-    // Cube and box remain upright: no X/Z tilt, only a 45° Y yaw.
-    if(type==='cube3d'){
+    // Camera determines the initial view; cube/box stay on world axes.
+    if(type==='cube3d' || type==='box3d'){
       return {
         rotationX:0,
-        rotationY:-Math.PI/4,
-        rotationZ:0
-      };
-    }
-
-    if(type==='box3d'){
-      return {
-        rotationX:0,
-        rotationY:-Math.PI/4,
+        rotationY:0,
         rotationZ:0
       };
     }
 
     if(type==='pyramid3d'){
       return {
-        rotationX:-0.10,
-        rotationY:0.92,
+        rotationX:0,
+        rotationY:0,
         rotationZ:0
       };
     }
 
     return {
       rotationX:0,
-      rotationY:-Math.PI/4,
+      rotationY:0,
       rotationZ:0
     };
   }
