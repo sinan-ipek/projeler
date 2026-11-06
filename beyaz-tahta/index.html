@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.56</title>
+<title>Beyaz Tahta v18.57</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.56 · Manyetik 3D yüz snap: hizalan, yapış, kay, kop</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.57 · 3D snap artık birbirine bakan yüzleri seçiyor</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -9858,35 +9858,75 @@
     const movingFaces=shape3DLocalFaceDescriptors(moving);
     if(!movingFaces.length) return null;
 
+    const movingObjectCenter={
+      x:Number(moving.center&&moving.center.x)||0,
+      y:Number(moving.center&&moving.center.y)||0,
+      z:Number(moving.centerZ)||0
+    };
+
     let best=null;
 
     for(let j=0;j<objects.length;j++){
       if(j===movingIndex) continue;
+
       const target=objects[j];
       if(!target || target.kind!=='shape3d' || target.shape3dType==='sphere') continue;
 
       const targetFaces=shape3DLocalFaceDescriptors(target);
       if(!targetFaces.length) continue;
 
+      const targetObjectCenter={
+        x:Number(target.center&&target.center.x)||0,
+        y:Number(target.center&&target.center.y)||0,
+        z:Number(target.centerZ)||0
+      };
+
+      const towardTarget=vec3Normalize(
+        vec3Sub(targetObjectCenter,movingObjectCenter)
+      );
+      const towardMoving=vec3Scale(towardTarget,-1);
+
       for(const mf of movingFaces){
+        const mw=shape3DFaceWorldDescriptor(moving,mf);
+        const movingFacing=vec3Dot(mw.normal,towardTarget);
+
+        // Only the face that actually points toward the other object
+        // may become the magnetic contact face.
+        if(movingFacing<0.20) continue;
+
         const ms=shape3DFaceScreenCenter(moving,mf);
 
         for(const tf of targetFaces){
+          const tw=shape3DFaceWorldDescriptor(target,tf);
+          const targetFacing=vec3Dot(tw.normal,towardMoving);
+
+          // Likewise, choose a target face whose outward normal points
+          // back toward the approaching object.
+          if(targetFacing<0.20) continue;
+
           const ts=shape3DFaceScreenCenter(target,tf);
           const screenDist=Math.hypot(ms.x-ts.x,ms.y-ts.y);
           if(screenDist>maxDistance) continue;
 
-          const mw=shape3DFaceWorldDescriptor(moving,mf);
-          const tw=shape3DFaceWorldDescriptor(target,tf);
-          const opposition=vec3Dot(mw.normal,vec3Scale(tw.normal,-1));
+          const opposition=vec3Dot(
+            mw.normal,
+            vec3Scale(tw.normal,-1)
+          );
 
-          // Distance dominates. Normal compatibility only breaks close ties.
-          const score=screenDist+(1-Math.max(-1,Math.min(1,opposition)))*6;
+          // Facing direction is now the primary rule. Distance decides
+          // between valid "looking at each other" faces.
+          const score=
+            screenDist+
+            (1-movingFacing)*22+
+            (1-targetFacing)*22+
+            (1-Math.max(-1,Math.min(1,opposition)))*4;
 
           if(!best || score<best.score){
             best={
               score,
               screenDist,
+              movingFacing,
+              targetFacing,
               movingFace:mf,
               targetFace:tf,
               targetObject:target,
