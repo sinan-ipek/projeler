@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.51</title>
+<title>Beyaz Tahta v18.52</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.51 · Küre ekvatoru görünür/gizli + dönen yarıçap</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.52 · Belirgin gizli yaylar + silindir taban görünürlüğü ve yarıçap</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6568,6 +6568,156 @@
       .slice(0,2);
   }
 
+  function transformedLocalVector(o,v){
+    return rotatePointByQuat(v,shape3DQuaternion(o));
+  }
+
+  function drawLoopByVisibility(projected,visibility,dashPattern=[14/viewZoom,10/viewZoom]){
+    const n=projected.length;
+    if(n<2 || visibility.length!==n) return;
+
+    let transition=-1;
+    for(let i=0;i<n;i++){
+      const prev=visibility[(i-1+n)%n];
+      if(visibility[i]!==prev){
+        transition=i;
+        break;
+      }
+    }
+
+    if(transition<0){
+      ctx.beginPath();
+      ctx.globalAlpha=visibility[0] ? 1 : .48;
+      ctx.setLineDash(visibility[0] ? [] : dashPattern);
+      ctx.moveTo(projected[0].x,projected[0].y);
+      for(let i=1;i<n;i++) ctx.lineTo(projected[i].x,projected[i].y);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.globalAlpha=1;
+      ctx.setLineDash([]);
+      return;
+    }
+
+    let runVisible=visibility[transition];
+    let run=[projected[transition]];
+
+    for(let step=0;step<n;step++){
+      const i=(transition+step)%n;
+      const j=(i+1)%n;
+      const v=visibility[i];
+      const nextPoint=projected[j];
+
+      if(v!==runVisible){
+        if(run.length>1){
+          ctx.beginPath();
+          ctx.globalAlpha=runVisible ? 1 : .48;
+          ctx.setLineDash(runVisible ? [] : dashPattern);
+          ctx.moveTo(run[0].x,run[0].y);
+          for(let k=1;k<run.length;k++) ctx.lineTo(run[k].x,run[k].y);
+          ctx.stroke();
+        }
+        runVisible=v;
+        run=[projected[i]];
+      }
+
+      run.push(nextPoint);
+
+      const nextVisibility=visibility[j];
+      if(nextVisibility!==runVisible && run.length>1){
+        ctx.beginPath();
+        ctx.globalAlpha=runVisible ? 1 : .48;
+        ctx.setLineDash(runVisible ? [] : dashPattern);
+        ctx.moveTo(run[0].x,run[0].y);
+        for(let k=1;k<run.length;k++) ctx.lineTo(run[k].x,run[k].y);
+        ctx.stroke();
+        runVisible=nextVisibility;
+        run=[nextPoint];
+      }
+    }
+
+    if(run.length>1){
+      ctx.beginPath();
+      ctx.globalAlpha=runVisible ? 1 : .48;
+      ctx.setLineDash(runVisible ? [] : dashPattern);
+      ctx.moveTo(run[0].x,run[0].y);
+      for(let k=1;k<run.length;k++) ctx.lineTo(run[k].x,run[k].y);
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha=1;
+    ctx.setLineDash([]);
+  }
+
+  function cylinderRingVisibility(o,localRing,ringY){
+    const cam=shape3DCamera(o).position;
+    const centerView=shape3DLocalToViewPoint(o,{x:0,y:ringY,z:0});
+    const capNormalLocal={x:0,y:ringY<0?-1:1,z:0};
+    const capNormal=transformedLocalVector(o,capNormalLocal);
+    const toCameraCenter={
+      x:cam.x-centerView.x,
+      y:cam.y-centerView.y,
+      z:cam.z-centerView.z
+    };
+    const capFacing=
+      capNormal.x*toCameraCenter.x+
+      capNormal.y*toCameraCenter.y+
+      capNormal.z*toCameraCenter.z > 0;
+
+    return localRing.map((p,i)=>{
+      if(capFacing) return true;
+
+      const q=localRing[(i+1)%localRing.length];
+      const midLocal={
+        x:(p.x+q.x)/2,
+        y:ringY,
+        z:(p.z+q.z)/2
+      };
+      const pointView=shape3DLocalToViewPoint(o,midLocal);
+      const radialLocal={x:midLocal.x,y:0,z:midLocal.z};
+      const radialView=transformedLocalVector(o,radialLocal);
+      const toCamera={
+        x:cam.x-pointView.x,
+        y:cam.y-pointView.y,
+        z:cam.z-pointView.z
+      };
+
+      return radialView.x*toCamera.x+
+             radialView.y*toCamera.y+
+             radialView.z*toCamera.z >= 0;
+    });
+  }
+
+  function cylinderVisibleCapY(o,sy){
+    const cam=shape3DCamera(o).position;
+    const candidates=[
+      {y:-sy,n:{x:0,y:-1,z:0}},
+      {y: sy,n:{x:0,y: 1,z:0}}
+    ];
+
+    let best=candidates[0];
+    let bestDot=-Infinity;
+
+    for(const c of candidates){
+      const center=shape3DLocalToViewPoint(o,{x:0,y:c.y,z:0});
+      const normal=transformedLocalVector(o,c.n);
+      const toCamera={
+        x:cam.x-center.x,
+        y:cam.y-center.y,
+        z:cam.z-center.z
+      };
+      const dot=
+        normal.x*toCamera.x+
+        normal.y*toCamera.y+
+        normal.z*toCamera.z;
+      if(dot>bestDot){
+        bestDot=dot;
+        best=c;
+      }
+    }
+
+    return best.y;
+  }
+
   function drawShape3D(o){
     const g=shape3DGeometry(o);
     const viewPts=shape3DViewPoints(o);
@@ -6586,21 +6736,46 @@
       const topCurve=curves.find(c=>c.id==='topEllipse')||curves[0];
       const bottomCurve=curves.find(c=>c.id==='bottomEllipse')||curves[1];
 
-      const top=(topCurve&&topCurve.points||[]).map(p=>shape3DProjectLocalPoint(o,p));
-      const bottom=(bottomCurve&&bottomCurve.points||[]).map(p=>shape3DProjectLocalPoint(o,p));
+      const topLocal=(topCurve&&topCurve.points)||[];
+      const bottomLocal=(bottomCurve&&bottomCurve.points)||[];
+      const top=topLocal.map(p=>shape3DProjectLocalPoint(o,p));
+      const bottom=bottomLocal.map(p=>shape3DProjectLocalPoint(o,p));
 
       if(top.length>1 && bottom.length>1){
-        drawClosedProjectedLoop(top);
-        drawClosedProjectedLoop(bottom);
+        const sy=Math.max(8,Number(o.sizeY)||120)/2;
+
+        const topVisibility=cylinderRingVisibility(o,topLocal,-sy);
+        const bottomVisibility=cylinderRingVisibility(o,bottomLocal,sy);
+
+        drawLoopByVisibility(top,topVisibility,[14/viewZoom,10/viewZoom]);
+        drawLoopByVisibility(bottom,bottomVisibility,[14/viewZoom,10/viewZoom]);
 
         const tangents=cylinderOuterTangentSegments(top,bottom);
-
         for(const seg of tangents){
           ctx.beginPath();
+          ctx.globalAlpha=1;
+          ctx.setLineDash([]);
           ctx.moveTo(seg.a.x,seg.a.y);
           ctx.lineTo(seg.b.x,seg.b.y);
           ctx.stroke();
         }
+
+        // Radius belongs to the currently camera-facing base and is defined
+        // in the cylinder's local base plane, so every 3D rotation moves it.
+        const r=Math.max(8,Math.min(
+          Number(o.sizeX)||120,
+          Number(o.sizeZ)||120
+        )/2);
+        const radiusY=cylinderVisibleCapY(o,sy);
+        const center2D=shape3DProjectLocalPoint(o,{x:0,y:radiusY,z:0});
+        const radiusEnd2D=shape3DProjectLocalPoint(o,{x:r,y:radiusY,z:0});
+
+        ctx.beginPath();
+        ctx.globalAlpha=1;
+        ctx.setLineDash([]);
+        ctx.moveTo(center2D.x,center2D.y);
+        ctx.lineTo(radiusEnd2D.x,radiusEnd2D.y);
+        ctx.stroke();
       }
 
       ctx.restore();
@@ -6614,8 +6789,8 @@
 
       if(equator.length>2){
         const cam=shape3DCamera(o).position;
+        const visibility=[];
 
-        // Equator: front half solid, hidden half dashed.
         for(let i=0;i<localEquator.length;i++){
           const aLocal=localEquator[i];
           const bLocal=localEquator[(i+1)%localEquator.length];
@@ -6633,35 +6808,29 @@
             z:cam.z-midView.z
           };
 
-          const visible=
+          visibility.push(
             normal.x*toCamera.x+
             normal.y*toCamera.y+
-            normal.z*toCamera.z >= 0;
-
-          const a=equator[i];
-          const b=equator[(i+1)%equator.length];
-
-          ctx.beginPath();
-          ctx.globalAlpha=visible ? 1 : .5;
-          ctx.setLineDash(visible ? [] : [5/viewZoom,4/viewZoom]);
-          ctx.moveTo(a.x,a.y);
-          ctx.lineTo(b.x,b.y);
-          ctx.stroke();
+            normal.z*toCamera.z >= 0
+          );
         }
 
-        ctx.globalAlpha=1;
-        ctx.setLineDash([]);
+        // Longer dash/gap and one continuous dashed path per hidden arc.
+        drawLoopByVisibility(
+          equator,
+          visibility,
+          [14/viewZoom,10/viewZoom]
+        );
 
-        // Smallest circle enclosing the projected equator.
         const circle=smallestEnclosingCircle2D(equator);
         if(circle){
           ctx.beginPath();
+          ctx.globalAlpha=1;
+          ctx.setLineDash([]);
           ctx.arc(circle.x,circle.y,circle.r,0,Math.PI*2);
           ctx.stroke();
         }
 
-        // Radius in the equator plane. Because both endpoints are local 3D
-        // points, it rotates together with the sphere around Y/X/Z.
         const radius3D=Math.max(8,Math.min(
           Number(o.sizeX)||120,
           Number(o.sizeY)||120,
@@ -6672,6 +6841,8 @@
         const radiusEnd2D=shape3DProjectLocalPoint(o,{x:radius3D,y:0,z:0});
 
         ctx.beginPath();
+        ctx.globalAlpha=1;
+        ctx.setLineDash([]);
         ctx.moveTo(center2D.x,center2D.y);
         ctx.lineTo(radiusEnd2D.x,radiusEnd2D.y);
         ctx.stroke();
