@@ -1195,7 +1195,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.38 · 3D görünür/gizli kenar hesabı düzeltildi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.39 · 3D arcball döndürme + Alt Z ekseni</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -5987,6 +5987,116 @@
     return {x:x1,y:y1,z};
   }
 
+  function quatNormalize(q){
+    const n=Math.hypot(q.x,q.y,q.z,q.w)||1;
+    return {x:q.x/n,y:q.y/n,z:q.z/n,w:q.w/n};
+  }
+
+  function quatMultiply(a,b){
+    return quatNormalize({
+      w:a.w*b.w-a.x*b.x-a.y*b.y-a.z*b.z,
+      x:a.w*b.x+a.x*b.w+a.y*b.z-a.z*b.y,
+      y:a.w*b.y-a.x*b.z+a.y*b.w+a.z*b.x,
+      z:a.w*b.z+a.x*b.y-a.y*b.x+a.z*b.w
+    });
+  }
+
+  function quatFromAxisAngle(axis,angle){
+    const len=Math.hypot(axis.x,axis.y,axis.z)||1;
+    const h=angle/2, s=Math.sin(h)/len;
+    return quatNormalize({
+      x:axis.x*s,
+      y:axis.y*s,
+      z:axis.z*s,
+      w:Math.cos(h)
+    });
+  }
+
+  function quatFromEuler(rx,ry,rz){
+    const qx=quatFromAxisAngle({x:1,y:0,z:0},rx||0);
+    const qy=quatFromAxisAngle({x:0,y:1,z:0},ry||0);
+    const qz=quatFromAxisAngle({x:0,y:0,z:1},rz||0);
+    return quatMultiply(qz,quatMultiply(qy,qx));
+  }
+
+  function shape3DQuaternion(o){
+    if(o && o.rotationQuat && Number.isFinite(o.rotationQuat.w)){
+      return quatNormalize(o.rotationQuat);
+    }
+    return quatFromEuler(
+      Number(o&&o.rotationX)||0,
+      Number(o&&o.rotationY)||0,
+      Number(o&&o.rotationZ)||0
+    );
+  }
+
+  function rotatePointByQuat(p,q){
+    q=quatNormalize(q);
+    const vx=p.x,vy=p.y,vz=p.z;
+    const tx=2*(q.y*vz-q.z*vy);
+    const ty=2*(q.z*vx-q.x*vz);
+    const tz=2*(q.x*vy-q.y*vx);
+    return {
+      x:vx+q.w*tx+(q.y*tz-q.z*ty),
+      y:vy+q.w*ty+(q.z*tx-q.x*tz),
+      z:vz+q.w*tz+(q.x*ty-q.y*tx)
+    };
+  }
+
+  function arcballVector(point,center,radius){
+    const r=Math.max(20,radius);
+    let x=(point.x-center.x)/r;
+    let y=(point.y-center.y)/r;
+    const d=x*x+y*y;
+    if(d>1){
+      const k=1/Math.sqrt(d);
+      x*=k; y*=k;
+      return {x,y,z:0};
+    }
+    return {x,y,z:Math.sqrt(Math.max(0,1-d))};
+  }
+
+  function quatBetweenVectors(a,b){
+    const dot=Math.max(-1,Math.min(1,a.x*b.x+a.y*b.y+a.z*b.z));
+    const cross={
+      x:a.y*b.z-a.z*b.y,
+      y:a.z*b.x-a.x*b.z,
+      z:a.x*b.y-a.y*b.x
+    };
+
+    if(dot<-0.999999){
+      const axis=Math.abs(a.x)<.8
+        ? {x:0,y:-a.z,z:a.y}
+        : {x:-a.y,y:a.x,z:0};
+      return quatFromAxisAngle(axis,Math.PI);
+    }
+
+    return quatNormalize({
+      x:cross.x,
+      y:cross.y,
+      z:cross.z,
+      w:1+dot
+    });
+  }
+
+  function snapQuaternionAngle(q,enabled){
+    if(!enabled) return quatNormalize(q);
+    const nq=quatNormalize(q);
+    let angle=2*Math.acos(Math.max(-1,Math.min(1,nq.w)));
+    const s=Math.sqrt(Math.max(0,1-nq.w*nq.w));
+    const axis=s<1e-6
+      ? {x:0,y:0,z:1}
+      : {x:nq.x/s,y:nq.y/s,z:nq.z/s};
+    const step=Math.PI/12;
+    angle=Math.round(angle/step)*step;
+    return quatFromAxisAngle(axis,angle);
+  }
+
+  function arcballRadiusForObject(o){
+    const b=orientedSelectionBox(o);
+    return b ? Math.max(36,Math.max(b.w,b.h)/2+12/viewZoom) : 80/viewZoom;
+  }
+
   function shape3DGeometry(o){
     if(!o || o.kind!=='shape3d') return {points:[],edges:[],faces:[]};
     const sx=Math.max(8,Number(o.sizeX)||120)/2;
@@ -6035,10 +6145,8 @@
 
   function shape3DViewPoints(o){
     const g=shape3DGeometry(o);
-    const rx=Number(o.rotationX)||0;
-    const ry=Number(o.rotationY)||0;
-    const rz=Number(o.rotationZ)||0;
-    return g.points.map(p=>rotatePoint3D(p,rx,ry,rz));
+    const q=shape3DQuaternion(o);
+    return g.points.map(p=>rotatePointByQuat(p,q));
   }
 
   function shape3DProjectedPoints(o){
@@ -6156,6 +6264,7 @@
       rotationX:-0.45,
       rotationY:0.65,
       rotationZ:0,
+      rotationQuat:quatFromEuler(-0.45,0.65,0),
       perspective:520*scale,
       style:{...style},
       source:'menu',
@@ -7541,6 +7650,10 @@
 
     if(o.kind==='shape3d'){
       o.center=rotatePoint(o.center,c,delta);
+      o.rotationQuat=quatMultiply(
+        quatFromAxisAngle({x:0,y:0,z:1},delta),
+        shape3DQuaternion(o)
+      );
       o.rotationZ=(Number(o.rotationZ)||0)+delta;
       o.boxAngle=0;
       return;
@@ -7699,9 +7812,19 @@
 
       ctx.beginPath();
       ctx.fillStyle='white';
-      ctx.arc(oc.rotate.x,oc.rotate.y,6/viewZoom,0,Math.PI*2);
+      ctx.arc(oc.rotate.x,oc.rotate.y,(selected.kind==='shape3d'?8:6)/viewZoom,0,Math.PI*2);
       ctx.fill();
       ctx.stroke();
+
+      if(selected.kind==='shape3d'){
+        ctx.save();
+        ctx.fillStyle='#2563eb';
+        ctx.font=`bold ${10/viewZoom}px Arial,sans-serif`;
+        ctx.textAlign='center';
+        ctx.textBaseline='middle';
+        ctx.fillText('↻',oc.rotate.x,oc.rotate.y+.2/viewZoom);
+        ctx.restore();
+      }
 
       drawRotationPivot(currentSelectionPivot());
     }
@@ -8238,6 +8361,27 @@
     ctx.closePath();
     ctx.stroke();
     ctx.setLineDash([]);
+
+    if(selected.kind==='shape3d' && selectAction==='rotate'){
+      const r=arcballRadiusForObject(selected);
+      ctx.save();
+      ctx.strokeStyle='rgba(37,99,235,.42)';
+      ctx.lineWidth=1/viewZoom;
+      ctx.setLineDash([4/viewZoom,4/viewZoom]);
+
+      ctx.beginPath();
+      ctx.arc(selected.center.x,selected.center.y,r,0,Math.PI*2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.ellipse(selected.center.x,selected.center.y,r,r*.34,0,0,Math.PI*2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.ellipse(selected.center.x,selected.center.y,r*.34,r,0,0,Math.PI*2);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     // Shape's own editable points
     if((selected.kind==='arc' || selected.kind==='sector') && special.length){
@@ -9321,6 +9465,7 @@
       o.rotationX=Number(snap.rotationX)||0;
       o.rotationY=Number(snap.rotationY)||0;
       o.rotationZ=Number(snap.rotationZ)||0;
+      o.rotationQuat=shape3DQuaternion(snap);
       o.perspective=Number(snap.perspective)||520;
       o.boxAngle=0;
       return true;
@@ -12764,23 +12909,42 @@
 
       }else if(selectAction==='rotate'){
         if(selectSnapshot.kind==='shape3d'){
-          const dx=p.x-selectStart.x;
-          const dy=p.y-selectStart.y;
           objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
           const target=objects[selectedIndex];
-          const step=e.shiftKey ? Math.PI/12 : 0;
-          let ry=(Number(selectSnapshot.rotationY)||0)+dx*.012;
-          let rx=(Number(selectSnapshot.rotationX)||0)-dy*.012;
-          if(step){
-            ry=Math.round(ry/step)*step;
-            rx=Math.round(rx/step)*step;
+          const baseQ=shape3DQuaternion(selectSnapshot);
+
+          let deltaQ;
+          if(e.altKey){
+            const c=selectSnapshot.center;
+            const a0=Math.atan2(selectStart.y-c.y,selectStart.x-c.x);
+            const a1=Math.atan2(p.y-c.y,p.x-c.x);
+            let delta=a1-a0;
+            while(delta>Math.PI) delta-=Math.PI*2;
+            while(delta<-Math.PI) delta+=Math.PI*2;
+            if(e.shiftKey){
+              const step=Math.PI/12;
+              delta=Math.round(delta/step)*step;
+            }
+            deltaQ=quatFromAxisAngle({x:0,y:0,z:1},delta);
+          }else{
+            const c=selectSnapshot.center;
+            const r=arcballRadiusForObject(selectSnapshot);
+            const v0=arcballVector(selectStart,c,r);
+            const v1=arcballVector(p,c,r);
+            deltaQ=snapQuaternionAngle(
+              quatBetweenVectors(v0,v1),
+              e.shiftKey
+            );
           }
-          target.rotationY=ry;
-          target.rotationX=rx;
+
+          target.rotationQuat=quatMultiply(deltaQ,baseQ);
+          target.rotationX=Number(selectSnapshot.rotationX)||0;
+          target.rotationY=Number(selectSnapshot.rotationY)||0;
           target.rotationZ=Number(selectSnapshot.rotationZ)||0;
-          statusEl.textContent=e.shiftKey
-            ? '3D döndürme — 15° adımlı'
-            : '3D döndürme — yatay: Y ekseni, dikey: X ekseni';
+
+          statusEl.textContent=e.altKey
+            ? (e.shiftKey ? 'Z ekseni — 15° adımlı' : 'Z ekseni etrafında döndürülüyor')
+            : (e.shiftKey ? 'Arcball — 15° adımlı' : 'Arcball 3D döndürme');
           redraw();
           return;
         }
