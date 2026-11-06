@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.58</title>
+<title>Beyaz Tahta v18.59</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.58 · 3D snap yüz sınırı yakınlığına göre seçiliyor</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.59 · 3D snap denemeleri kaldırıldı; v18.54 temeline dönüldü</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1639,11 +1639,6 @@
   let activeHandle = null;
   let selectionPivot = null;
   let selectPivotSnapshot = null;
-
-  // Temporary magnetic attachment while a 3D object is being dragged.
-  // It remembers which two faces are touching so the moving object can
-  // slide on that same target plane until the user pulls it away.
-  let active3DFaceAttachment = null;
 
   // Repeat-last-transform state.
   // Space repeats it; Shift+Space duplicates the current selection first. Line endpoint drags are repeatable too.
@@ -6323,7 +6318,7 @@
     const rel={
       x:p.x-cam.position.x,
       y:p.y-cam.position.y,
-      z:(p.z+(Number(o.centerZ)||0))-cam.position.z
+      z:p.z-cam.position.z
     };
     return {
       x:rel.x*cam.right.x+rel.y*cam.right.y+rel.z*cam.right.z,
@@ -6935,7 +6930,6 @@
     const base={
       kind:'shape3d',
       center:{x:cx,y:cy},
-      centerZ:0,
       sizeX:150*scale,
       sizeY:150*scale,
       sizeZ:150*scale,
@@ -9718,492 +9712,6 @@
     }
   }
 
-  function vec3Sub(a,b){
-    return {x:a.x-b.x,y:a.y-b.y,z:a.z-b.z};
-  }
-
-  function vec3Add(a,b){
-    return {x:a.x+b.x,y:a.y+b.y,z:a.z+b.z};
-  }
-
-  function vec3Scale(a,k){
-    return {x:a.x*k,y:a.y*k,z:a.z*k};
-  }
-
-  function vec3Length(a){
-    return Math.hypot(a.x,a.y,a.z);
-  }
-
-  function vec3Normalize(a){
-    const n=vec3Length(a)||1;
-    return {x:a.x/n,y:a.y/n,z:a.z/n};
-  }
-
-  function vec3Cross(a,b){
-    return {
-      x:a.y*b.z-a.z*b.y,
-      y:a.z*b.x-a.x*b.z,
-      z:a.x*b.y-a.y*b.x
-    };
-  }
-
-  function vec3Dot(a,b){
-    return a.x*b.x+a.y*b.y+a.z*b.z;
-  }
-
-  function shape3DWorldPoint(o,localPoint,q=shape3DQuaternion(o)){
-    const r=rotatePointByQuat(localPoint,q);
-    return {
-      x:(o.center&&Number(o.center.x)||0)+r.x,
-      y:(o.center&&Number(o.center.y)||0)+r.y,
-      z:(Number(o.centerZ)||0)+r.z
-    };
-  }
-
-  function shape3DLocalFaceDescriptors(o){
-    if(!o || o.kind!=='shape3d' || o.shape3dType==='sphere') return [];
-
-    const g=shape3DGeometry(o);
-    const out=[];
-
-    (g.faces||[]).forEach((face,faceIndex)=>{
-      if(!face || face.length<3) return;
-      const vertices=face.map(i=>g.points[i]).filter(Boolean);
-      if(vertices.length<3) return;
-
-      const center=vertices.reduce(
-        (a,p)=>({x:a.x+p.x,y:a.y+p.y,z:a.z+p.z}),
-        {x:0,y:0,z:0}
-      );
-      center.x/=vertices.length;
-      center.y/=vertices.length;
-      center.z/=vertices.length;
-
-      const ab=vec3Sub(vertices[1],vertices[0]);
-      const ac=vec3Sub(vertices[2],vertices[0]);
-      let normal=vec3Normalize(vec3Cross(ab,ac));
-
-      if(vec3Dot(normal,center)<0) normal=vec3Scale(normal,-1);
-
-      out.push({
-        key:'face-'+faceIndex,
-        center,
-        normal,
-        vertices
-      });
-    });
-
-    if(o.shape3dType==='cylinder'){
-      const sy=Math.max(8,Number(o.sizeY)||120)/2;
-      out.push(
-        {
-          key:'cap-top',
-          center:{x:0,y:-sy,z:0},
-          normal:{x:0,y:-1,z:0},
-          vertices:circle3DPoints(
-            Math.min(
-              Math.max(8,Number(o.sizeX)||120)/2,
-              Math.max(8,Number(o.sizeZ)||120)/2
-            ),
-            -sy,
-            32
-          )
-        },
-        {
-          key:'cap-bottom',
-          center:{x:0,y:sy,z:0},
-          normal:{x:0,y:1,z:0},
-          vertices:circle3DPoints(
-            Math.min(
-              Math.max(8,Number(o.sizeX)||120)/2,
-              Math.max(8,Number(o.sizeZ)||120)/2
-            ),
-            sy,
-            32
-          )
-        }
-      );
-    }
-
-    return out;
-  }
-
-  function shape3DFaceWorldDescriptor(o,face,q=shape3DQuaternion(o)){
-    const center=shape3DWorldPoint(o,face.center,q);
-    const normal=vec3Normalize(rotatePointByQuat(face.normal,q));
-    return {center,normal,local:face};
-  }
-
-  function shape3DFaceScreenCenter(o,face){
-    return shape3DProjectLocalPoint(o,face.center);
-  }
-
-  function faceByKey(o,key){
-    return shape3DLocalFaceDescriptors(o).find(f=>f.key===key)||null;
-  }
-
-  function projectedFaceNormalDirection(o,face){
-    const q=shape3DQuaternion(o);
-    const center=shape3DWorldPoint(o,face.center,q);
-    const normal=vec3Normalize(rotatePointByQuat(face.normal,q));
-
-    const localCenter2D=shape3DProjectLocalPoint(o,face.center);
-
-    // Convert a small world-normal step back into this object's local frame
-    // approximately by projecting a rotated local normal endpoint.
-    const localTip={
-      x:face.center.x+face.normal.x*30,
-      y:face.center.y+face.normal.y*30,
-      z:face.center.z+face.normal.z*30
-    };
-    const tip2D=shape3DProjectLocalPoint(o,localTip);
-    const dx=tip2D.x-localCenter2D.x;
-    const dy=tip2D.y-localCenter2D.y;
-    const len=Math.hypot(dx,dy);
-
-    if(len<1e-6) return null;
-    return {x:dx/len,y:dy/len,worldCenter:center,worldNormal:normal};
-  }
-
-  function shape3DFaceScreenPolygon(o,face){
-    if(face && face.vertices && face.vertices.length>=3){
-      return face.vertices.map(p=>shape3DProjectLocalPoint(o,p));
-    }
-
-    // Fallback for any future planar face that has no explicit boundary.
-    const c=shape3DFaceScreenCenter(o,face);
-    return [c];
-  }
-
-  function pointSegmentDistance2D(p,a,b){
-    const vx=b.x-a.x;
-    const vy=b.y-a.y;
-    const len2=vx*vx+vy*vy;
-    if(len2<1e-12) return Math.hypot(p.x-a.x,p.y-a.y);
-    let t=((p.x-a.x)*vx+(p.y-a.y)*vy)/len2;
-    t=Math.max(0,Math.min(1,t));
-    const x=a.x+t*vx;
-    const y=a.y+t*vy;
-    return Math.hypot(p.x-x,p.y-y);
-  }
-
-  function pointInPolygon2D(p,poly){
-    if(!poly || poly.length<3) return false;
-    let inside=false;
-    for(let i=0,j=poly.length-1;i<poly.length;j=i++){
-      const a=poly[i], b=poly[j];
-      const hit=
-        ((a.y>p.y)!==(b.y>p.y)) &&
-        (p.x < (b.x-a.x)*(p.y-a.y)/((b.y-a.y)||1e-12)+a.x);
-      if(hit) inside=!inside;
-    }
-    return inside;
-  }
-
-  function segmentIntersection2D(a,b,c,d){
-    const orient=(p,q,r)=>
-      (q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x);
-
-    const o1=orient(a,b,c);
-    const o2=orient(a,b,d);
-    const o3=orient(c,d,a);
-    const o4=orient(c,d,b);
-
-    return (
-      ((o1>0&&o2<0)||(o1<0&&o2>0)) &&
-      ((o3>0&&o4<0)||(o3<0&&o4>0))
-    );
-  }
-
-  function polygonDistance2D(a,b){
-    if(!a.length || !b.length) return Infinity;
-
-    if(a.length>=3 && b.length>=3){
-      if(pointInPolygon2D(a[0],b) || pointInPolygon2D(b[0],a)){
-        return 0;
-      }
-
-      for(let i=0;i<a.length;i++){
-        const a1=a[i], a2=a[(i+1)%a.length];
-        for(let j=0;j<b.length;j++){
-          const b1=b[j], b2=b[(j+1)%b.length];
-          if(segmentIntersection2D(a1,a2,b1,b2)) return 0;
-        }
-      }
-    }
-
-    let best=Infinity;
-
-    for(const p of a){
-      if(b.length===1){
-        best=Math.min(best,Math.hypot(p.x-b[0].x,p.y-b[0].y));
-      }else{
-        for(let j=0;j<b.length;j++){
-          best=Math.min(
-            best,
-            pointSegmentDistance2D(p,b[j],b[(j+1)%b.length])
-          );
-        }
-      }
-    }
-
-    for(const p of b){
-      if(a.length===1){
-        best=Math.min(best,Math.hypot(p.x-a[0].x,p.y-a[0].y));
-      }else{
-        for(let i=0;i<a.length;i++){
-          best=Math.min(
-            best,
-            pointSegmentDistance2D(p,a[i],a[(i+1)%a.length])
-          );
-        }
-      }
-    }
-
-    return best;
-  }
-
-  function polygonCentroid2D(poly){
-    if(!poly || !poly.length) return {x:0,y:0};
-    return {
-      x:poly.reduce((sum,p)=>sum+p.x,0)/poly.length,
-      y:poly.reduce((sum,p)=>sum+p.y,0)/poly.length
-    };
-  }
-
-  function best3DFaceMagnetCandidate(moving,movingIndex,maxDistance){
-    if(!pointSnapEnabled || !moving || moving.kind!=='shape3d') return null;
-    if(moving.shape3dType==='sphere') return null;
-
-    const movingFaces=shape3DLocalFaceDescriptors(moving);
-    if(!movingFaces.length) return null;
-
-    let best=null;
-
-    for(let j=0;j<objects.length;j++){
-      if(j===movingIndex) continue;
-
-      const target=objects[j];
-      if(!target || target.kind!=='shape3d' || target.shape3dType==='sphere') continue;
-
-      const targetFaces=shape3DLocalFaceDescriptors(target);
-      if(!targetFaces.length) continue;
-
-      for(const mf of movingFaces){
-        const movingPoly=shape3DFaceScreenPolygon(moving,mf);
-        const movingCenter=polygonCentroid2D(movingPoly);
-        const mw=shape3DFaceWorldDescriptor(moving,mf);
-
-        for(const tf of targetFaces){
-          const targetPoly=shape3DFaceScreenPolygon(target,tf);
-          const targetCenter=polygonCentroid2D(targetPoly);
-
-          // Primary criterion: the actual projected boundaries of the two
-          // faces, not object centers and not merely face centers.
-          const boundaryDistance=polygonDistance2D(
-            movingPoly,
-            targetPoly
-          );
-
-          if(boundaryDistance>maxDistance) continue;
-
-          const tw=shape3DFaceWorldDescriptor(target,tf);
-          const opposition=vec3Dot(
-            mw.normal,
-            vec3Scale(tw.normal,-1)
-          );
-
-          const centerDistance=Math.hypot(
-            movingCenter.x-targetCenter.x,
-            movingCenter.y-targetCenter.y
-          );
-
-          // Boundary proximity dominates. Center distance only stabilizes
-          // ties between overlapping candidate faces. Existing normal
-          // opposition has a very small weight because the moving face will
-          // be rotated into alignment after selection.
-          const score=
-            boundaryDistance*8+
-            centerDistance*.08+
-            (1-Math.max(-1,Math.min(1,opposition)))*2;
-
-          if(!best || score<best.score){
-            best={
-              score,
-              screenDist:boundaryDistance,
-              centerDistance,
-              movingFace:mf,
-              targetFace:tf,
-              targetObject:target,
-              targetIndex:j
-            };
-          }
-        }
-      }
-    }
-
-    return best;
-  }
-
-  function alignMovingFaceParallel(moving,movingFace,target,targetFace){
-    const baseQ=shape3DQuaternion(moving);
-    const movingNormal=vec3Normalize(
-      rotatePointByQuat(movingFace.normal,baseQ)
-    );
-
-    const targetQ=shape3DQuaternion(target);
-    const targetNormal=vec3Normalize(
-      rotatePointByQuat(targetFace.normal,targetQ)
-    );
-    const desired=vec3Scale(targetNormal,-1);
-
-    const alignQ=quatBetweenVectors(movingNormal,desired);
-    const alignedQ=quatMultiply(alignQ,baseQ);
-    moving.rotationQuat=alignedQ;
-    return alignedQ;
-  }
-
-  function attachMovingFaceToTarget(moving,movingFace,target,targetFace,alignedQ){
-    const targetQ=shape3DQuaternion(target);
-    const movingCenter=shape3DWorldPoint(moving,movingFace.center,alignedQ);
-    const targetCenter=shape3DWorldPoint(target,targetFace.center,targetQ);
-    const delta=vec3Sub(targetCenter,movingCenter);
-
-    moving.center.x+=delta.x;
-    moving.center.y+=delta.y;
-    moving.centerZ=(Number(moving.centerZ)||0)+delta.z;
-  }
-
-  function slideAttached3DObject(moving,movingIndex,p){
-    const a=active3DFaceAttachment;
-    if(!a || a.movingIndex!==movingIndex) return {handled:false,detached:false};
-
-    const target=objects[a.targetIndex];
-    if(!target || target.kind!=='shape3d'){
-      active3DFaceAttachment=null;
-      return {handled:false,detached:true};
-    }
-
-    const mf=faceByKey(moving,a.movingFaceKey);
-    const tf=faceByKey(target,a.targetFaceKey);
-    if(!mf || !tf){
-      active3DFaceAttachment=null;
-      return {handled:false,detached:true};
-    }
-
-    moving.rotationQuat=quatNormalize(a.rotationQuat);
-
-    const targetQ=shape3DQuaternion(target);
-    const targetFaceWorld=shape3DFaceWorldDescriptor(target,tf,targetQ);
-    const movingFaceWorld=shape3DFaceWorldDescriptor(
-      moving,
-      mf,
-      moving.rotationQuat
-    );
-
-    // Pull-away test in the screen direction corresponding to the target
-    // face normal. Sideways mouse motion therefore keeps the object attached.
-    const normalDir=projectedFaceNormalDirection(target,tf);
-    if(normalDir && a.attachPointer){
-      const pdx=p.x-a.attachPointer.x;
-      const pdy=p.y-a.attachPointer.y;
-      const pull=Math.abs(pdx*normalDir.x+pdy*normalDir.y);
-      const breakDistance=46/viewZoom;
-
-      if(pull>breakDistance){
-        active3DFaceAttachment=null;
-        return {handled:false,detached:true};
-      }
-    }
-
-    // Project the moving face center back onto the fixed target face plane.
-    // Tangential motion is kept, so the object slides over the face.
-    const planeDelta=vec3Sub(
-      movingFaceWorld.center,
-      targetFaceWorld.center
-    );
-    const signedDistance=vec3Dot(
-      planeDelta,
-      targetFaceWorld.normal
-    );
-    const correction=vec3Scale(
-      targetFaceWorld.normal,
-      -signedDistance
-    );
-
-    moving.center.x+=correction.x;
-    moving.center.y+=correction.y;
-    moving.centerZ=(Number(moving.centerZ)||0)+correction.z;
-
-    return {handled:true,detached:false};
-  }
-
-  function update3DFaceMagnet(moving,movingIndex,p){
-    if(!pointSnapEnabled || !moving || moving.kind!=='shape3d'){
-      active3DFaceAttachment=null;
-      return 'free';
-    }
-
-    if(active3DFaceAttachment){
-      const slide=slideAttached3DObject(moving,movingIndex,p);
-      if(slide.handled) return 'sliding';
-      if(slide.detached) return 'detached';
-    }
-
-    const alignDistance=42/viewZoom;
-    const attachDistance=10/viewZoom;
-    const candidate=best3DFaceMagnetCandidate(
-      moving,
-      movingIndex,
-      alignDistance
-    );
-
-    if(!candidate) return 'free';
-
-    const alignedQ=alignMovingFaceParallel(
-      moving,
-      candidate.movingFace,
-      candidate.targetObject,
-      candidate.targetFace
-    );
-
-    // Re-evaluate the real projected face-boundary distance after alignment.
-    const movingPoly=shape3DFaceScreenPolygon(
-      moving,
-      candidate.movingFace
-    );
-    const targetPoly=shape3DFaceScreenPolygon(
-      candidate.targetObject,
-      candidate.targetFace
-    );
-    const alignedDistance=polygonDistance2D(
-      movingPoly,
-      targetPoly
-    );
-
-    if(alignedDistance<=attachDistance){
-      attachMovingFaceToTarget(
-        moving,
-        candidate.movingFace,
-        candidate.targetObject,
-        candidate.targetFace,
-        alignedQ
-      );
-
-      active3DFaceAttachment={
-        movingIndex,
-        targetIndex:candidate.targetIndex,
-        movingFaceKey:candidate.movingFace.key,
-        targetFaceKey:candidate.targetFace.key,
-        rotationQuat:cloneObject(alignedQ),
-        attachPointer:{x:p.x,y:p.y}
-      };
-      return 'attached';
-    }
-
-    return 'aligning';
-  }
-
   function translateObject(o,dx,dy){
     if(o && finitePoint(o.rotationPivot)){
       o.rotationPivot={
@@ -10661,7 +10169,6 @@
       o.rotationY=Number(snap.rotationY)||0;
       o.rotationZ=Number(snap.rotationZ)||0;
       o.rotationQuat=shape3DQuaternion(snap);
-      o.centerZ=Number(snap.centerZ)||0;
       o.perspective=Number(snap.perspective)||520;
       o.cameraDistance=Number(snap.cameraDistance)||Number(snap.perspective)||520;
       o.boxAngle=0;
@@ -14045,18 +13552,16 @@
         const rawDx=p.x-selectStart.x,rawDy=p.y-selectStart.y;
         let d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
 
-        if(selectSnapshot.kind!=='shape3d'){
-          const snappedMove=snapWholeObjectMove(
-            selectSnapshot,
-            d.dx,
-            d.dy,
-            selectedIndex
-          );
+        const snappedMove=snapWholeObjectMove(
+          selectSnapshot,
+          d.dx,
+          d.dy,
+          selectedIndex
+        );
 
-          if(snappedMove.snapped){
-            d={dx:snappedMove.dx,dy:snappedMove.dy};
-            statusEl.textContent='Nesne snap — köşe/uç noktaları hizalandı';
-          }
+        if(snappedMove.snapped){
+          d={dx:snappedMove.dx,dy:snappedMove.dy};
+          statusEl.textContent='Nesne snap — köşe/uç noktaları hizalandı';
         }
 
         if(Math.hypot(d.dx,d.dy)>1e-5){
@@ -14064,24 +13569,6 @@
         }
         objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
         translateObject(objects[selectedIndex],d.dx,d.dy);
-
-        if(selectSnapshot.kind==='shape3d' && pointSnapEnabled){
-          const magnetState=update3DFaceMagnet(
-            objects[selectedIndex],
-            selectedIndex,
-            p
-          );
-
-          if(magnetState==='aligning'){
-            statusEl.textContent='3D yüz mıknatısı — yüzler paralel hizalanıyor';
-          }else if(magnetState==='attached'){
-            statusEl.textContent='3D yüz snap — yüzler yapıştı';
-          }else if(magnetState==='sliding'){
-            statusEl.textContent='3D yüz snap — yüzey üzerinde kayıyor';
-          }else if(magnetState==='detached'){
-            statusEl.textContent='3D yüz snap — bağlantı koptu';
-          }
-        }
 
         if(selectPivotSnapshot){
           selectionPivot={
@@ -14631,11 +14118,9 @@
         }
       }
 
-      active3DFaceAttachment=null;
-    active3DFaceAttachment=null;
-    selectAction=null;
-    selectStart=null;
-    selectSnapshot=null;
+      selectAction=null;
+      selectStart=null;
+      selectSnapshot=null;
       groupSnapshots=null;
       groupBoxSnapshot=null;
       activeHandle=null;
