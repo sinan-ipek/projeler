@@ -969,6 +969,11 @@
       <option value="pentagon">Beşgen</option>
       <option value="hexagon">Altıgen</option>
       <option value="axes">x-y</option>
+      <optgroup label="3D">
+        <option value="cube3d">Küp 3D</option>
+        <option value="box3d">Dikdörtgenler prizması 3D</option>
+        <option value="pyramid3d">Piramit 3D</option>
+      </optgroup>
     </select>
 
     <button id="addShape" class="iconBtn" title="Ekle" aria-label="Ekle">＋</button>
@@ -1190,7 +1195,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.35 · Aktif Bézier draft kilidi + açık path bitirme</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.36 · 3D prototip: küp, prizma, piramit + 3D döndürme</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -5966,11 +5971,150 @@
     }
   }
 
+  function rotatePoint3D(p,rx,ry,rz){
+    let x=p.x,y=p.y,z=p.z;
+
+    let c=Math.cos(rx),d=Math.sin(rx);
+    let y1=y*c-z*d, z1=y*d+z*c;
+    y=y1; z=z1;
+
+    c=Math.cos(ry); d=Math.sin(ry);
+    let x1=x*c+z*d; z1=-x*d+z*c;
+    x=x1; z=z1;
+
+    c=Math.cos(rz); d=Math.sin(rz);
+    x1=x*c-y*d; y1=x*d+y*c;
+    return {x:x1,y:y1,z};
+  }
+
+  function shape3DGeometry(o){
+    if(!o || o.kind!=='shape3d') return {points:[],edges:[]};
+    const sx=Math.max(8,Number(o.sizeX)||120)/2;
+    const sy=Math.max(8,Number(o.sizeY)||120)/2;
+    const sz=Math.max(8,Number(o.sizeZ)||120)/2;
+
+    if(o.shape3dType==='pyramid'){
+      return {
+        points:[
+          {x:-sx,y: sy,z:-sz},{x: sx,y: sy,z:-sz},
+          {x: sx,y: sy,z: sz},{x:-sx,y: sy,z: sz},
+          {x:0,y:-sy,z:0}
+        ],
+        edges:[[0,1],[1,2],[2,3],[3,0],[0,4],[1,4],[2,4],[3,4]]
+      };
+    }
+
+    const points=[
+      {x:-sx,y:-sy,z:-sz},{x:sx,y:-sy,z:-sz},
+      {x:sx,y:sy,z:-sz},{x:-sx,y:sy,z:-sz},
+      {x:-sx,y:-sy,z:sz},{x:sx,y:-sy,z:sz},
+      {x:sx,y:sy,z:sz},{x:-sx,y:sy,z:sz}
+    ];
+    const edges=[
+      [0,1],[1,2],[2,3],[3,0],
+      [4,5],[5,6],[6,7],[7,4],
+      [0,4],[1,5],[2,6],[3,7]
+    ];
+    return {points,edges};
+  }
+
+  function shape3DProjectedPoints(o){
+    const g=shape3DGeometry(o);
+    const rx=Number(o.rotationX)||0;
+    const ry=Number(o.rotationY)||0;
+    const rz=Number(o.rotationZ)||0;
+    const perspective=Math.max(180,Number(o.perspective)||520);
+
+    return g.points.map(p=>{
+      const r=rotatePoint3D(p,rx,ry,rz);
+      const denom=Math.max(80,perspective+r.z);
+      const k=perspective/denom;
+      return {
+        x:o.center.x+r.x*k,
+        y:o.center.y+r.y*k,
+        z:r.z
+      };
+    });
+  }
+
+  function drawShape3D(o){
+    const g=shape3DGeometry(o);
+    const pts=shape3DProjectedPoints(o);
+    if(!pts.length) return;
+
+    const edges=g.edges.map(([a,b])=>({
+      a:pts[a],b:pts[b],
+      depth:(pts[a].z+pts[b].z)/2
+    })).sort((u,v)=>v.depth-u.depth);
+
+    ctx.save();
+    ctx.strokeStyle=(o.style&&o.style.color)||'#111111';
+    ctx.lineWidth=(o.style&&Number(o.style.width))||2;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+
+    for(const e of edges){
+      ctx.beginPath();
+      ctx.globalAlpha=e.depth>0 ? .55 : 1;
+      if(e.depth>0) ctx.setLineDash([5/viewZoom,4/viewZoom]);
+      else ctx.setLineDash([]);
+      ctx.moveTo(e.a.x,e.a.y);
+      ctx.lineTo(e.b.x,e.b.y);
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha=1;
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  function makeShape3D(type,cx,cy,scale,style){
+    const base={
+      kind:'shape3d',
+      center:{x:cx,y:cy},
+      sizeX:150*scale,
+      sizeY:150*scale,
+      sizeZ:150*scale,
+      rotationX:-0.45,
+      rotationY:0.65,
+      rotationZ:0,
+      perspective:520*scale,
+      style:{...style},
+      source:'menu',
+      boxAngle:0
+    };
+
+    if(type==='cube3d'){
+      base.shape3dType='box';
+      base.shapeName='cube 3D';
+    }else if(type==='box3d'){
+      base.shape3dType='box';
+      base.shapeName='rectangular prism 3D';
+      base.sizeX=190*scale;
+      base.sizeY=120*scale;
+      base.sizeZ=100*scale;
+    }else if(type==='pyramid3d'){
+      base.shape3dType='pyramid';
+      base.shapeName='pyramid 3D';
+      base.sizeX=180*scale;
+      base.sizeY=160*scale;
+      base.sizeZ=180*scale;
+    }else{
+      return null;
+    }
+    return base;
+  }
+
   function objectBounds(o){
     if(!o) return null;
 
     if(o.kind==='bezier'){
       return bezierCachedBounds(o);
+    }
+
+    if(o.kind==='shape3d'){
+      const pts=shape3DProjectedPoints(o);
+      return pts.length ? bbox(pts) : null;
     }
 
     if(o.kind==='text'){
@@ -6763,6 +6907,7 @@
   function selectionSamplePoints(o){
     if(!o) return [];
 
+    if(o.kind==='shape3d') return shape3DProjectedPoints(o);
     if(o.kind==='line') return [{...o.a},{...o.b}];
     if(o.kind==='bezier'){
       const pts=bezierSamplePoints(o,32);
@@ -7275,6 +7420,13 @@
       return;
     }
 
+    if(o.kind==='shape3d'){
+      o.center=rotatePoint(o.center,c,delta);
+      o.rotationZ=(Number(o.rotationZ)||0)+delta;
+      o.boxAngle=0;
+      return;
+    }
+
     if(o.kind==='rect' || o.kind==='ellipse' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image' || o.kind==='text' || o.kind==='symbol'){
       o.center=rotatePoint(o.center,c,delta);
       o.angle=(o.angle||0)+delta;
@@ -7334,6 +7486,14 @@
       o.center=scalePt(o.center);
       o.rx=Math.max(6,o.rx*s);
       o.ry=Math.max(6,o.ry*s);
+      return;
+    }
+
+    if(o.kind==='shape3d'){
+      o.center=scalePt(o.center);
+      o.sizeX=Math.max(12,(o.sizeX||120)*s);
+      o.sizeY=Math.max(12,(o.sizeY||120)*s);
+      o.sizeZ=Math.max(12,(o.sizeZ||120)*s);
       return;
     }
 
@@ -7655,6 +7815,14 @@
     if(o.kind==='ellipse'){
       o.rx=Math.max(6,o.rx*sx);
       o.ry=Math.max(6,o.ry*sy);
+      return;
+    }
+
+    if(o.kind==='shape3d'){
+      const ss=Math.max(.06,Math.sqrt(Math.abs(sx*sy)));
+      o.sizeX=Math.max(12,(o.sizeX||120)*ss);
+      o.sizeY=Math.max(12,(o.sizeY||120)*ss);
+      o.sizeZ=Math.max(12,(o.sizeZ||120)*ss);
       return;
     }
 
@@ -8571,7 +8739,7 @@
       o.center.x+=dx;o.center.y+=dy;
       o.a.x+=dx;o.a.y+=dy;
       o.b.x+=dx;o.b.y+=dy;
-    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image' || o.kind==='text' || o.kind==='symbol'){
+    }else if(o.kind==='ellipse' || o.kind==='rect' || o.kind==='polygon' || o.kind==='parabola' || o.kind==='axes' || o.kind==='image' || o.kind==='text' || o.kind==='symbol' || o.kind==='shape3d'){
       o.center.x+=dx;o.center.y+=dy;
       if(o.kind==='polygon' && o.baseVertices){
         o.baseVertices=o.baseVertices.map(p=>({x:p.x+dx,y:p.y+dy}));
@@ -8971,6 +9139,20 @@
       return true;
     }
 
+    if(snap.kind==='shape3d'){
+      const scale=Math.max(.06,Math.sqrt(Math.abs(sx*sy)));
+      o.center=newCenter;
+      o.sizeX=Math.max(12,(snap.sizeX||120)*scale);
+      o.sizeY=Math.max(12,(snap.sizeY||120)*scale);
+      o.sizeZ=Math.max(12,(snap.sizeZ||120)*scale);
+      o.rotationX=Number(snap.rotationX)||0;
+      o.rotationY=Number(snap.rotationY)||0;
+      o.rotationZ=Number(snap.rotationZ)||0;
+      o.perspective=Number(snap.perspective)||520;
+      o.boxAngle=0;
+      return true;
+    }
+
     if(snap.kind==='text'){
       if(handle==='sw'){
         // Area handle: the opposite corner (NE) stays fixed.
@@ -9273,6 +9455,7 @@
         }
       }else if(o.kind==='image') drawImageObject(o);
       else if(o.kind==='text') drawTextObject(o);
+      else if(o.kind==='shape3d') drawShape3D(o);
       else drawShape(o);
     }
     for(const item of remoteLiveInk.values()){
@@ -12402,6 +12585,28 @@
         if(Math.hypot(rawDx,rawDy)>2/viewZoom) multiHandleMoved=true;
 
       }else if(selectAction==='rotate'){
+        if(selectSnapshot.kind==='shape3d'){
+          const dx=p.x-selectStart.x;
+          const dy=p.y-selectStart.y;
+          objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
+          const target=objects[selectedIndex];
+          const step=e.shiftKey ? Math.PI/12 : 0;
+          let ry=(Number(selectSnapshot.rotationY)||0)+dx*.012;
+          let rx=(Number(selectSnapshot.rotationX)||0)-dy*.012;
+          if(step){
+            ry=Math.round(ry/step)*step;
+            rx=Math.round(rx/step)*step;
+          }
+          target.rotationY=ry;
+          target.rotationX=rx;
+          target.rotationZ=Number(selectSnapshot.rotationZ)||0;
+          statusEl.textContent=e.shiftKey
+            ? '3D döndürme — 15° adımlı'
+            : '3D döndürme — yatay: Y ekseni, dikey: X ekseni';
+          redraw();
+          return;
+        }
+
         const isArcLike=
           selectSnapshot.kind==='arc' ||
           selectSnapshot.kind==='sector';
@@ -14898,6 +15103,11 @@
         boxAngle:0
       }));
     }
+    if(t==='cube3d' || t==='box3d' || t==='pyramid3d'){
+      const obj=makeShape3D(t,cx,cy,insertionScale,style);
+      if(obj) objects.push(obj);
+    }
+
     if(objects.length>beforeCount){
       const added=objects.slice(beforeCount);
       pushUndoEntry({
