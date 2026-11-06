@@ -1195,7 +1195,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.45 · Kamera yukarıda ve YZ düzlemi dışında</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.46 · 3D rotation: Y / Shift+X / Ctrl+Z</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -12986,38 +12986,28 @@
           const target=objects[selectedIndex];
           const baseQ=shape3DQuaternion(selectSnapshot);
 
-          let deltaQ;
-          if(e.altKey){
-            const c=selectSnapshot.center;
-            const a0=Math.atan2(selectStart.y-c.y,selectStart.x-c.x);
-            const a1=Math.atan2(p.y-c.y,p.x-c.x);
-            let delta=a1-a0;
-            while(delta>Math.PI) delta-=Math.PI*2;
-            while(delta<-Math.PI) delta+=Math.PI*2;
-            if(e.shiftKey){
-              const step=Math.PI/12;
-              delta=Math.round(delta/step)*step;
-            }
-            deltaQ=quatFromAxisAngle({x:0,y:0,z:1},delta);
-          }else{
-            const c=selectSnapshot.center;
-            const r=arcballRadiusForObject(selectSnapshot);
-            const v0=arcballVector(selectStart,c,r);
-            const v1=arcballVector(p,c,r);
-            deltaQ=snapQuaternionAngle(
-              quatBetweenVectors(v0,v1),
-              e.shiftKey
-            );
+          const dx=p.x-selectStart.x;
+          const dy=p.y-selectStart.y;
+          const amount=(Math.abs(dx)>=Math.abs(dy) ? dx : -dy)*.012;
+
+          let axis={x:0,y:1,z:0};
+          let axisName='Y';
+
+          if(e.ctrlKey || e.metaKey){
+            axis={x:0,y:0,z:1};
+            axisName='Z';
+          }else if(e.shiftKey){
+            axis={x:1,y:0,z:0};
+            axisName='X';
           }
 
+          const deltaQ=quatFromAxisAngle(axis,amount);
           target.rotationQuat=quatMultiply(deltaQ,baseQ);
           target.rotationX=Number(selectSnapshot.rotationX)||0;
           target.rotationY=Number(selectSnapshot.rotationY)||0;
           target.rotationZ=Number(selectSnapshot.rotationZ)||0;
 
-          statusEl.textContent=e.altKey
-            ? (e.shiftKey ? 'Z ekseni — 15° adımlı' : 'Z ekseni etrafında döndürülüyor')
-            : (e.shiftKey ? 'Arcball — 15° adımlı' : 'Arcball 3D döndürme');
+          statusEl.textContent=`${axisName} ekseni etrafında döndürülüyor`;
           redraw();
           return;
         }
