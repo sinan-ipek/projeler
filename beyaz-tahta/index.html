@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.63</title>
+<title>Beyaz Tahta v18.64</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.63 · Kamera Z eksenine paralel, ekran merkezi global orijin</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.64 · Z modu fare ileri-geri ile taşıma</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6253,109 +6253,70 @@
   let global3DCameraTarget=null;
   const GLOBAL_3D_CAMERA_DISTANCE=1400;
 
-  // v18.61 — World Z movement is intentionally NOT tied to pointer dragging.
-  // The dedicated Z-move arrow activates a low-sensitivity mouse-wheel mode.
+  // v18.64 — Z taşıma modu:
+  // Z↕ kontrolü sarı olduğunda, fareyi fiziksel olarak ileri/geri
+  // (ekranda yukarı/aşağı) hareket ettirmek centerZ değerini değiştirir.
+  // Fare tuşunu basılı tutmak gerekmez.
   let shape3DZMoveIndex=-1;
-  let shape3DZTarget=0;
-  let shape3DZRAF=0;
   let shape3DZUndoArmed=false;
-  let shape3DZWheelAccumulator=0;
+  let shape3DZLastPointerScreen=null;
 
-  const SHAPE3D_Z_WHEEL_THRESHOLD=80;
-  const SHAPE3D_Z_WHEEL_STEP=6;
-  const SHAPE3D_Z_EASE=.16;
-  const SHAPE3D_Z_EPS=.03;
-  const SHAPE3D_Z_MAX_LEAD=36;
+  // 1 ekran pikseli başına dünya-Z hareketi.
+  // Düşük tutuldu: hızlı/sert bir Z hareketi oluşmasın.
+  const SHAPE3D_Z_POINTER_SENSITIVITY=.35;
 
   function deactivateShape3DZMove(){
     shape3DZMoveIndex=-1;
     shape3DZUndoArmed=false;
-    shape3DZWheelAccumulator=0;
-    if(shape3DZRAF){
-      cancelAnimationFrame(shape3DZRAF);
-      shape3DZRAF=0;
-    }
+    shape3DZLastPointerScreen=null;
   }
 
-  function activateShape3DZMove(index){
+  function activateShape3DZMove(index,screenPoint=null){
     const o=objects[index];
     if(!Number.isInteger(index) || !o || o.kind!=='shape3d' || o.locked) return false;
 
-    if(shape3DZRAF){
-      cancelAnimationFrame(shape3DZRAF);
-      shape3DZRAF=0;
-    }
-
     shape3DZMoveIndex=index;
-    shape3DZTarget=Number(o.centerZ)||0;
     shape3DZUndoArmed=false;
-    shape3DZWheelAccumulator=0;
+    shape3DZLastPointerScreen=screenPoint
+      ? {x:screenPoint.x,y:screenPoint.y}
+      : null;
     return true;
   }
 
-  function animateShape3DZMove(){
-    shape3DZRAF=0;
-
+  function moveShape3DZFromPointer(screenPoint){
     const o=objects[shape3DZMoveIndex];
     if(!o || o.kind!=='shape3d'){
       deactivateShape3DZMove();
-      return;
+      return false;
     }
 
-    const current=Number(o.centerZ)||0;
-    const diff=shape3DZTarget-current;
-
-    if(Math.abs(diff)<=SHAPE3D_Z_EPS){
-      o.centerZ=shape3DZTarget;
-      markBoardDirty();
-      redraw();
-      return;
-    }
-
-    o.centerZ=current+diff*SHAPE3D_Z_EASE;
-    markBoardDirty();
-    redraw();
-    shape3DZRAF=requestAnimationFrame(animateShape3DZMove);
-  }
-
-  function nudgeShape3DZFromWheel(deltaY){
-    const o=objects[shape3DZMoveIndex];
-    if(!o || o.kind!=='shape3d') return false;
-
-    // Trackpads can emit many tiny wheel events. Accumulate them first,
-    // so tiny movements do not throw the object rapidly through depth.
-    shape3DZWheelAccumulator+=Number(deltaY)||0;
-
-    if(Math.abs(shape3DZWheelAccumulator)<SHAPE3D_Z_WHEEL_THRESHOLD){
+    if(!shape3DZLastPointerScreen){
+      shape3DZLastPointerScreen={x:screenPoint.x,y:screenPoint.y};
       return true;
     }
 
-    // Wheel up => +Z, wheel down => -Z.
-    const direction=shape3DZWheelAccumulator<0 ? 1 : -1;
-    shape3DZWheelAccumulator-=Math.sign(shape3DZWheelAccumulator)*SHAPE3D_Z_WHEEL_THRESHOLD;
+    const dy=screenPoint.y-shape3DZLastPointerScreen.y;
+    shape3DZLastPointerScreen={x:screenPoint.x,y:screenPoint.y};
+
+    // Küçük titreşimleri yok say.
+    if(Math.abs(dy)<.25) return true;
 
     if(!shape3DZUndoArmed){
       recordObjectStates([shape3DZMoveIndex]);
       shape3DZUndoArmed=true;
     }
 
-    const current=Number(o.centerZ)||0;
-    const requested=shape3DZTarget+direction*SHAPE3D_Z_WHEEL_STEP;
+    // Fare ileri / ekranda yukarı => +Z.
+    // Fare geri / ekranda aşağı => -Z.
+    const dz=(-dy/viewZoom)*SHAPE3D_Z_POINTER_SENSITIVITY;
+    o.centerZ=(Number(o.centerZ)||0)+dz;
 
-    // Even if the wheel is spun quickly, do not let the target run far
-    // ahead of the visible object. This is the main anti-oversensitivity guard.
-    shape3DZTarget=Math.max(
-      current-SHAPE3D_Z_MAX_LEAD,
-      Math.min(current+SHAPE3D_Z_MAX_LEAD,requested)
-    );
-
-    if(!shape3DZRAF){
-      shape3DZRAF=requestAnimationFrame(animateShape3DZMove);
-    }
+    markBoardDirty();
+    redraw();
 
     statusEl.textContent=
-      'Z taşıma — teker: '+(direction>0?'+Z':'−Z')+
-      ' · hedef '+Math.round(shape3DZTarget);
+      'Z taşıma aktif · Z = '+Math.round((Number(o.centerZ)||0)*10)/10;
+
     return true;
   }
 
@@ -13158,13 +13119,13 @@
             objects[selectedIndex] &&
             objects[selectedIndex].kind==='shape3d'
           ){
-            activateShape3DZMove(selectedIndex);
+            activateShape3DZMove(selectedIndex,screenP);
             selectAction=null;
             selectStart=null;
             selectSnapshot=null;
             groupSnapshots=null;
             activeHandle=null;
-            statusEl.textContent='Z taşıma aktif — fare tekerini yavaşça çevir';
+            statusEl.textContent='Z taşıma aktif — fareyi ileri / geri hareket ettir';
             redraw();
             return;
           }
@@ -13446,6 +13407,19 @@
     const screenP=screenPointFromEvent(e);
     const p=pFromEvent(e);
     lastCanvasPointerWorld={x:p.x,y:p.y};
+
+    if(
+      mode==='select' &&
+      e.pointerType==='mouse' &&
+      shape3DZMoveIndex>=0 &&
+      shape3DZMoveIndex===selectedIndex &&
+      objects[shape3DZMoveIndex] &&
+      objects[shape3DZMoveIndex].kind==='shape3d'
+    ){
+      moveShape3DZFromPointer(screenP);
+      return;
+    }
+
     if(mode==='pen' && !bezierDragInfo){
       updateBezierHover(p);
       redraw();
@@ -14498,17 +14472,6 @@
 
   canvas.addEventListener('wheel',e=>{
     e.preventDefault();
-
-    if(
-      mode==='select' &&
-      shape3DZMoveIndex>=0 &&
-      shape3DZMoveIndex===selectedIndex &&
-      objects[shape3DZMoveIndex] &&
-      objects[shape3DZMoveIndex].kind==='shape3d'
-    ){
-      nudgeShape3DZFromWheel(e.deltaY);
-      return;
-    }
 
     const s=screenPointFromEvent(e);
     const worldBefore=screenToWorld(s);
