@@ -1195,7 +1195,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.36 · 3D prototip: küp, prizma, piramit + 3D döndürme</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.37 · 3D X/Y/Z boyut handle’ları</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6314,6 +6314,42 @@
     return raw.map(h=>({...h,...rotatePoint(h,o.center,a)}));
   }
 
+  function shape3DDimensionHandles(o){
+    if(!o || o.kind!=='shape3d') return [];
+    const box=orientedSelectionBox(o);
+    if(!box) return [];
+    const oc=orientedBoxCorners(box,8/viewZoom);
+    const off=28/viewZoom;
+    const diag=off/Math.SQRT2;
+
+    return [
+      {
+        name:'3d-x',
+        axis:'X',
+        x:oc.ne.x+off,
+        y:(oc.ne.y+oc.se.y)/2,
+        base:{x:(oc.ne.x+oc.se.x)/2,y:(oc.ne.y+oc.se.y)/2},
+        dir:{x:1,y:0}
+      },
+      {
+        name:'3d-y',
+        axis:'Y',
+        x:(oc.sw.x+oc.se.x)/2,
+        y:oc.se.y+off,
+        base:{x:(oc.sw.x+oc.se.x)/2,y:oc.se.y},
+        dir:{x:0,y:1}
+      },
+      {
+        name:'3d-z',
+        axis:'Z',
+        x:oc.nw.x-diag,
+        y:oc.nw.y-diag,
+        base:{x:oc.nw.x,y:oc.nw.y},
+        dir:{x:-1/Math.SQRT2,y:-1/Math.SQRT2}
+      }
+    ];
+  }
+
   function menuEditHandles(o){
     if(!o) return [];
 
@@ -6341,6 +6377,10 @@
         }
       });
       return out;
+    }
+
+    if(o.kind==='shape3d'){
+      return shape3DDimensionHandles(o);
     }
 
     if(o.source!=='menu') return [];
@@ -6385,6 +6425,7 @@
       s.startsWith('ellipse-') ||
       s.startsWith('arc-') ||
       s.startsWith('sqrt-') ||
+      s.startsWith('3d-') ||
       s.startsWith('bezier-anchor-') ||
       s.startsWith('bezier-in-') ||
       s.startsWith('bezier-out-')
@@ -8157,7 +8198,35 @@
         }
       }
 
-      for(const hnd of special){
+      if(selected.kind==='shape3d'){
+        for(const hnd of special){
+          ctx.save();
+          ctx.setLineDash([]);
+          ctx.strokeStyle='#2563eb';
+          ctx.lineWidth=1.2/viewZoom;
+
+          if(hnd.base){
+            ctx.beginPath();
+            ctx.moveTo(hnd.base.x,hnd.base.y);
+            ctx.lineTo(hnd.x,hnd.y);
+            ctx.stroke();
+          }
+
+          ctx.beginPath();
+          ctx.fillStyle='white';
+          ctx.strokeStyle='#2563eb';
+          ctx.arc(hnd.x,hnd.y,8/viewZoom,0,Math.PI*2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle='#2563eb';
+          ctx.font=`bold ${10/viewZoom}px Arial,sans-serif`;
+          ctx.textAlign='center';
+          ctx.textBaseline='middle';
+          ctx.fillText(hnd.axis||'',hnd.x,hnd.y+.2/viewZoom);
+          ctx.restore();
+        }
+      }else for(const hnd of special){
         ctx.beginPath();
         ctx.fillStyle=(
           selectedHandleIs(hnd.name) ||
@@ -8805,6 +8874,32 @@
 
   function moveMenuHandleFromSnapshot(o,snap,handle,p,lockArcRadius=false,breakBezierHandle=false){
     if(!o || !snap) return false;
+
+    if(snap.kind==='shape3d' && handle.startsWith('3d-')){
+      Object.assign(o,cloneObject(snap));
+      const h=shape3DDimensionHandles(snap).find(q=>q.name===handle);
+      if(!h) return false;
+
+      const dx=p.x-h.x;
+      const dy=p.y-h.y;
+      const delta=dx*h.dir.x+dy*h.dir.y;
+      const minSize=24/viewZoom;
+
+      if(handle==='3d-x'){
+        o.sizeX=Math.max(minSize,(snap.sizeX||120)+delta*2);
+        statusEl.textContent='X boyutu değiştiriliyor';
+      }else if(handle==='3d-y'){
+        o.sizeY=Math.max(minSize,(snap.sizeY||120)+delta*2);
+        statusEl.textContent='Y boyutu değiştiriliyor';
+      }else if(handle==='3d-z'){
+        o.sizeZ=Math.max(minSize,(snap.sizeZ||120)+delta*2);
+        statusEl.textContent='Z boyutu değiştiriliyor';
+      }else{
+        return false;
+      }
+
+      return true;
+    }
 
     if(snap.kind==='bezier' && handle.startsWith('bezier-')){
       Object.assign(o,JSON.parse(JSON.stringify(snap)));
@@ -11980,6 +12075,11 @@
           if(objects[selectedIndex] && objects[selectedIndex].kind==='text'){
             if(h==='sw') statusEl.textContent='Metin alanını genişlet / daralt';
             if(h==='se') statusEl.textContent='Metni büyüt / küçült';
+          }
+          if(objects[selectedIndex] && objects[selectedIndex].kind==='shape3d'){
+            if(h==='3d-x') statusEl.textContent='X boyutu — sürükle';
+            if(h==='3d-y') statusEl.textContent='Y boyutu — sürükle';
+            if(h==='3d-z') statusEl.textContent='Z boyutu — sürükle';
           }
 
           if(realHandle && selectedHandleIs(h) && selectedHandles.length>1){
