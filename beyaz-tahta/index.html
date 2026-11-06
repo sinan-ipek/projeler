@@ -973,6 +973,11 @@
         <option value="cube3d">Küp 3D</option>
         <option value="box3d">Dikdörtgenler prizması 3D</option>
         <option value="pyramid3d">Piramit 3D</option>
+        <option value="cylinder3d">Silindir 3D</option>
+        <option value="hexpyramid3d">Altıgen piramit 3D</option>
+        <option value="hexprism3d">Altıgen prizma 3D</option>
+        <option value="sphere3d">Küre 3D</option>
+        <option value="hemisphere3d">Yarım küre 3D</option>
       </optgroup>
     </select>
 
@@ -1195,7 +1200,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.46 · 3D rotation: Y / Shift+X / Ctrl+Z</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.47 · Silindir, altıgen piramit/prizma, küre ve yarım küre</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6097,13 +6102,59 @@
     return b ? Math.max(36,Math.max(b.w,b.h)/2+12/viewZoom) : 80/viewZoom;
   }
 
+  function circle3DPoints(radius,y,count=72){
+    const pts=[];
+    for(let i=0;i<count;i++){
+      const a=i*Math.PI*2/count;
+      pts.push({x:Math.cos(a)*radius,y,z:Math.sin(a)*radius});
+    }
+    return pts;
+  }
+
+  function sphereLatitudePoints(radius,lat,count=96){
+    const pts=[];
+    const y=-Math.sin(lat)*radius;
+    const rr=Math.cos(lat)*radius;
+    for(let i=0;i<count;i++){
+      const a=i*Math.PI*2/count;
+      pts.push({x:Math.cos(a)*rr,y,z:Math.sin(a)*rr});
+    }
+    return pts;
+  }
+
+  function sphereMeridianPoints(radius,longitude,count=96,half=false){
+    const pts=[];
+    const start=half ? -Math.PI/2 : -Math.PI;
+    const end=half ? Math.PI/2 : Math.PI;
+    for(let i=0;i<=count;i++){
+      const a=start+(end-start)*i/count;
+      const radial=Math.cos(a)*radius;
+      pts.push({
+        x:Math.cos(longitude)*radial,
+        y:-Math.sin(a)*radius,
+        z:Math.sin(longitude)*radial
+      });
+    }
+    return pts;
+  }
+
+  function regularRing3D(n,radius,y,phase=Math.PI/6){
+    const pts=[];
+    for(let i=0;i<n;i++){
+      const a=phase+i*Math.PI*2/n;
+      pts.push({x:Math.cos(a)*radius,y,z:Math.sin(a)*radius});
+    }
+    return pts;
+  }
+
   function shape3DGeometry(o){
-    if(!o || o.kind!=='shape3d') return {points:[],edges:[],faces:[]};
+    if(!o || o.kind!=='shape3d') return {points:[],edges:[],faces:[],curves:[]};
     const sx=Math.max(8,Number(o.sizeX)||120)/2;
     const sy=Math.max(8,Number(o.sizeY)||120)/2;
     const sz=Math.max(8,Number(o.sizeZ)||120)/2;
+    const t=o.shape3dType;
 
-    if(o.shape3dType==='pyramid'){
+    if(t==='pyramid'){
       return {
         points:[
           {x:-sx,y: sy,z:-sz},{x: sx,y: sy,z:-sz},
@@ -6112,11 +6163,92 @@
         ],
         edges:[[0,1],[1,2],[2,3],[3,0],[0,4],[1,4],[2,4],[3,4]],
         faces:[
-          [0,3,2,1],
-          [0,1,4],
-          [1,2,4],
-          [2,3,4],
-          [3,0,4]
+          [0,3,2,1],[0,1,4],[1,2,4],[2,3,4],[3,0,4]
+        ],
+        curves:[]
+      };
+    }
+
+    if(t==='hexpyramid'){
+      const base=regularRing3D(6,Math.min(sx,sz),sy,0);
+      const points=[...base,{x:0,y:-sy,z:0}];
+      const apex=6;
+      const edges=[];
+      const faces=[];
+      for(let i=0;i<6;i++){
+        const j=(i+1)%6;
+        edges.push([i,j],[i,apex]);
+        faces.push([i,j,apex]);
+      }
+      faces.unshift([5,4,3,2,1,0]);
+      return {points,edges,faces,curves:[]};
+    }
+
+    if(t==='hexprism'){
+      const r=Math.min(sx,sz);
+      const top=regularRing3D(6,r,-sy,0);
+      const bottom=regularRing3D(6,r,sy,0);
+      const points=[...top,...bottom];
+      const edges=[],faces=[];
+      for(let i=0;i<6;i++){
+        const j=(i+1)%6;
+        edges.push([i,j],[i+6,j+6],[i,i+6]);
+        faces.push([i,j,j+6,i+6]);
+      }
+      faces.unshift([5,4,3,2,1,0],[6,7,8,9,10,11]);
+      return {points,edges,faces,curves:[]};
+    }
+
+    if(t==='cylinder'){
+      const r=Math.min(sx,sz);
+      const top=circle3DPoints(r,-sy,96);
+      const bottom=circle3DPoints(r,sy,96);
+      return {
+        points:[
+          {x:-r,y:-sy,z:0},{x:r,y:-sy,z:0},
+          {x:-r,y:sy,z:0},{x:r,y:sy,z:0}
+        ],
+        edges:[[0,2],[1,3]],
+        faces:[],
+        curves:[
+          {points:top,mode:'rim',center:{x:0,y:-sy,z:0},normal:{x:0,y:-1,z:0},fullIfFacing:true},
+          {points:bottom,mode:'rim',center:{x:0,y:sy,z:0},normal:{x:0,y:1,z:0},fullIfFacing:true}
+        ]
+      };
+    }
+
+    if(t==='sphere'){
+      const r=Math.min(sx,sy,sz);
+      return {
+        points:[
+          {x:-r,y:0,z:0},{x:r,y:0,z:0},
+          {x:0,y:-r,z:0},{x:0,y:r,z:0},
+          {x:0,y:0,z:-r},{x:0,y:0,z:r}
+        ],
+        edges:[],
+        faces:[],
+        curves:[
+          {points:circle3DPoints(r,0,128),mode:'sphere',surface:'equator'},
+          {points:sphereMeridianPoints(r,0,128,false),mode:'sphere',surface:'meridian'},
+          {points:sphereMeridianPoints(r,Math.PI/2,128,false),mode:'silhouette'}
+        ]
+      };
+    }
+
+    if(t==='hemisphere'){
+      const r=Math.min(sx,sy,sz);
+      const dome=sphereMeridianPoints(r,0,96,true);
+      const rim=circle3DPoints(r,0,128);
+      return {
+        points:[
+          {x:-r,y:0,z:0},{x:r,y:0,z:0},
+          {x:0,y:-r,z:0},{x:0,y:0,z:-r},{x:0,y:0,z:r}
+        ],
+        edges:[],
+        faces:[],
+        curves:[
+          {points:dome,mode:'sphere',surface:'dome'},
+          {points:rim,mode:'rim',center:{x:0,y:0,z:0},normal:{x:0,y:1,z:0},fullIfFacing:false}
         ]
       };
     }
@@ -6133,14 +6265,10 @@
       [0,4],[1,5],[2,6],[3,7]
     ];
     const faces=[
-      [0,3,2,1],
-      [4,5,6,7],
-      [0,1,5,4],
-      [3,7,6,2],
-      [0,4,7,3],
-      [1,2,6,5]
+      [0,3,2,1],[4,5,6,7],[0,1,5,4],
+      [3,7,6,2],[0,4,7,3],[1,2,6,5]
     ];
-    return {points,edges,faces};
+    return {points,edges,faces,curves:[]};
   }
 
   function shape3DViewPoints(o){
@@ -6211,19 +6339,42 @@
     });
   }
 
-  function shape3DProjectedPoints(o){
-    const camPts=shape3DCameraSpacePoints(o);
-    const cam=shape3DCamera(o);
+  function shape3DLocalToViewPoint(o,p){
+    return rotatePointByQuat(p,shape3DQuaternion(o));
+  }
 
-    return camPts.map(r=>{
-      const depth=Math.max(60,r.z);
-      const k=cam.focalLength/depth;
-      return {
-        x:o.center.x+r.x*k,
-        y:o.center.y-r.y*k,
-        z:r.z
-      };
-    });
+  function shape3DViewToCameraPoint(o,p){
+    const cam=shape3DCamera(o);
+    const rel={
+      x:p.x-cam.position.x,
+      y:p.y-cam.position.y,
+      z:p.z-cam.position.z
+    };
+    return {
+      x:rel.x*cam.right.x+rel.y*cam.right.y+rel.z*cam.right.z,
+      y:rel.x*cam.up.x+rel.y*cam.up.y+rel.z*cam.up.z,
+      z:rel.x*cam.forward.x+rel.y*cam.forward.y+rel.z*cam.forward.z
+    };
+  }
+
+  function shape3DProjectViewPoint(o,p){
+    const cam=shape3DCamera(o);
+    const r=shape3DViewToCameraPoint(o,p);
+    const depth=Math.max(60,r.z);
+    const k=cam.focalLength/depth;
+    return {
+      x:o.center.x+r.x*k,
+      y:o.center.y-r.y*k,
+      z:r.z
+    };
+  }
+
+  function shape3DProjectLocalPoint(o,p){
+    return shape3DProjectViewPoint(o,shape3DLocalToViewPoint(o,p));
+  }
+
+  function shape3DProjectedPoints(o){
+    return shape3DViewPoints(o).map(p=>shape3DProjectViewPoint(o,p));
   }
 
   function shape3DFaceVisibility(o,g,viewPts){
@@ -6263,32 +6414,95 @@
     });
   }
 
+  function shape3DCurvePointVisible(o,localPoint,mode){
+    if(mode==='silhouette') return true;
+
+    const view=shape3DLocalToViewPoint(o,localPoint);
+    const cam=shape3DCamera(o);
+    const toCamera={
+      x:cam.position.x-view.x,
+      y:cam.position.y-view.y,
+      z:cam.position.z-view.z
+    };
+
+    if(mode==='sphere'){
+      const n=view;
+      return n.x*toCamera.x+n.y*toCamera.y+n.z*toCamera.z>=0;
+    }
+
+    if(mode==='rim'){
+      const radial={x:view.x,y:0,z:view.z};
+      return radial.x*toCamera.x+radial.z*toCamera.z>=0;
+    }
+
+    return true;
+  }
+
+  function drawShape3DCurve(o,curve){
+    const src=curve.points||[];
+    if(src.length<2) return;
+
+    let lastVisible=null;
+    for(let i=0;i<src.length;i++){
+      const a=src[i];
+      const b=src[(i+1)%src.length];
+      if(!b) break;
+
+      let visibleA=shape3DCurvePointVisible(o,a,curve.mode);
+      let visibleB=shape3DCurvePointVisible(o,b,curve.mode);
+      let visible=visibleA||visibleB;
+
+      if(curve.fullIfFacing && curve.normal && curve.center){
+        const center=shape3DLocalToViewPoint(o,curve.center);
+        const n=shape3DLocalToViewPoint(o,curve.normal);
+        const origin=shape3DLocalToViewPoint(o,{x:0,y:0,z:0});
+        const nv={x:n.x-origin.x,y:n.y-origin.y,z:n.z-origin.z};
+        const cam=shape3DCamera(o).position;
+        const tc={x:cam.x-center.x,y:cam.y-center.y,z:cam.z-center.z};
+        if(nv.x*tc.x+nv.y*tc.y+nv.z*tc.z>0) visible=true;
+      }
+
+      const pa=shape3DProjectLocalPoint(o,a);
+      const pb=shape3DProjectLocalPoint(o,b);
+
+      ctx.beginPath();
+      ctx.globalAlpha=visible ? 1 : .48;
+      ctx.setLineDash(visible ? [] : [5/viewZoom,4/viewZoom]);
+      ctx.moveTo(pa.x,pa.y);
+      ctx.lineTo(pb.x,pb.y);
+      ctx.stroke();
+      lastVisible=visible;
+    }
+    ctx.globalAlpha=1;
+    ctx.setLineDash([]);
+  }
+
   function drawShape3D(o){
     const g=shape3DGeometry(o);
     const viewPts=shape3DViewPoints(o);
     const pts=shape3DProjectedPoints(o);
-    if(!pts.length) return;
+    if(!pts.length && !(g.curves&&g.curves.length)) return;
 
     const visibleFaces=shape3DFaceVisibility(o,g,viewPts);
 
-    const edges=g.edges.map(([ia,ib])=>{
+    const edges=(g.edges||[]).map(([ia,ib])=>{
       const adjacent=[];
       (g.faces||[]).forEach((face,fi)=>{
         if(face.includes(ia) && face.includes(ib)) adjacent.push(fi);
       });
 
-      // Convex solid rule:
-      // an edge is visible if at least one adjacent face is camera-facing.
-      // Only edges belonging exclusively to back-facing faces are hidden.
       const hidden=adjacent.length>0 && !adjacent.some(fi=>visibleFaces[fi]);
 
       return {
         a:pts[ia],
         b:pts[ib],
         hidden,
-        depth:(viewPts[ia].z+viewPts[ib].z)/2
+        depth:(
+          (viewPts[ia]&&viewPts[ia].z||0)+
+          (viewPts[ib]&&viewPts[ib].z||0)
+        )/2
       };
-    }).sort((u,v)=>{
+    }).filter(e=>e.a&&e.b).sort((u,v)=>{
       if(u.hidden!==v.hidden) return u.hidden ? -1 : 1;
       return v.depth-u.depth;
     });
@@ -6299,7 +6513,6 @@
     ctx.lineCap='round';
     ctx.lineJoin='round';
 
-    // Hidden edges first; solid visible edges are painted over them.
     for(const e of edges){
       ctx.beginPath();
       ctx.globalAlpha=e.hidden ? .5 : 1;
@@ -6307,6 +6520,10 @@
       ctx.moveTo(e.a.x,e.a.y);
       ctx.lineTo(e.b.x,e.b.y);
       ctx.stroke();
+    }
+
+    for(const curve of (g.curves||[])){
+      drawShape3DCurve(o,curve);
     }
 
     ctx.globalAlpha=1;
@@ -6378,6 +6595,36 @@
       base.sizeX=180*scale;
       base.sizeY=160*scale;
       base.sizeZ=180*scale;
+    }else if(type==='cylinder3d'){
+      base.shape3dType='cylinder';
+      base.shapeName='cylinder 3D';
+      base.sizeX=160*scale;
+      base.sizeY=190*scale;
+      base.sizeZ=160*scale;
+    }else if(type==='hexpyramid3d'){
+      base.shape3dType='hexpyramid';
+      base.shapeName='hexagonal pyramid 3D';
+      base.sizeX=190*scale;
+      base.sizeY=175*scale;
+      base.sizeZ=190*scale;
+    }else if(type==='hexprism3d'){
+      base.shape3dType='hexprism';
+      base.shapeName='hexagonal prism 3D';
+      base.sizeX=180*scale;
+      base.sizeY=170*scale;
+      base.sizeZ=180*scale;
+    }else if(type==='sphere3d'){
+      base.shape3dType='sphere';
+      base.shapeName='sphere 3D';
+      base.sizeX=170*scale;
+      base.sizeY=170*scale;
+      base.sizeZ=170*scale;
+    }else if(type==='hemisphere3d'){
+      base.shape3dType='hemisphere';
+      base.shapeName='hemisphere 3D';
+      base.sizeX=180*scale;
+      base.sizeY=95*scale;
+      base.sizeZ=180*scale;
     }else{
       return null;
     }
@@ -6393,7 +6640,13 @@
     }
 
     if(o.kind==='shape3d'){
-      const pts=shape3DProjectedPoints(o);
+      const g=shape3DGeometry(o);
+      const pts=[
+        ...shape3DProjectedPoints(o),
+        ...(g.curves||[]).flatMap(curve=>
+          (curve.points||[]).map(p=>shape3DProjectLocalPoint(o,p))
+        )
+      ];
       return pts.length ? bbox(pts) : null;
     }
 
@@ -15508,7 +15761,10 @@
         boxAngle:0
       }));
     }
-    if(t==='cube3d' || t==='box3d' || t==='pyramid3d'){
+    if([
+      'cube3d','box3d','pyramid3d','cylinder3d',
+      'hexpyramid3d','hexprism3d','sphere3d','hemisphere3d'
+    ].includes(t)){
       const obj=makeShape3D(t,cx,cy,insertionScale,style);
       if(obj) objects.push(obj);
     }
