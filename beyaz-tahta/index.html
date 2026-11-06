@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.59</title>
+<title>Beyaz Tahta v18.60</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.59 · 3D snap denemeleri kaldırıldı; v18.54 temeline dönüldü</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.60 · Tüm 3D nesneler ortak global kamera kullanıyor</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6247,17 +6247,43 @@
     return g.points.map(p=>rotatePointByQuat(p,q));
   }
 
-  function shape3DCamera(o){
-    const d=Math.max(220,Number(o.cameraDistance)||Number(o.perspective)||520);
+  // One shared perspective camera for every 3D object.
+  // The target is fixed when the first 3D object is rendered/created.
+  // Therefore moving an object changes its view direction and perspective.
+  let global3DCameraTarget=null;
+  const GLOBAL_3D_CAMERA_DISTANCE=520;
 
-    // Camera is above the solid, off the YZ plane, and in front on +Z.
-    // It looks toward the object's local origin.
-    const position={
-      x:d*.55,
-      y:-d*.32,
-      z:d
+  function ensureGlobal3DCameraTarget(o){
+    if(!global3DCameraTarget){
+      global3DCameraTarget={
+        x:Number(o&&o.center&&o.center.x)||0,
+        y:Number(o&&o.center&&o.center.y)||0,
+        z:0
+      };
+    }
+    return global3DCameraTarget;
+  }
+
+  function shape3DLocalToWorldPoint(o,p){
+    const r=shape3DLocalToViewPoint(o,p);
+    return {
+      x:(Number(o&&o.center&&o.center.x)||0)+r.x,
+      y:(Number(o&&o.center&&o.center.y)||0)+r.y,
+      z:(Number(o&&o.centerZ)||0)+r.z
     };
-    const target={x:0,y:0,z:0};
+  }
+
+  function shape3DCamera(o){
+    const d=GLOBAL_3D_CAMERA_DISTANCE;
+    const target=ensureGlobal3DCameraTarget(o);
+
+    // Shared world-space camera. Same position/orientation is used
+    // for every 3D object on the board.
+    const position={
+      x:target.x+d*.55,
+      y:target.y-d*.32,
+      z:target.z+d
+    };
 
     const fx=target.x-position.x;
     const fy=target.y-position.y;
@@ -6283,7 +6309,7 @@
 
     return {
       position,
-      target,
+      target:{...target},
       forward,
       right,
       up,
@@ -6296,10 +6322,15 @@
     const cam=shape3DCamera(o);
 
     return viewPts.map(p=>{
+      const world={
+        x:(Number(o&&o.center&&o.center.x)||0)+p.x,
+        y:(Number(o&&o.center&&o.center.y)||0)+p.y,
+        z:(Number(o&&o.centerZ)||0)+p.z
+      };
       const rel={
-        x:p.x-cam.position.x,
-        y:p.y-cam.position.y,
-        z:p.z-cam.position.z
+        x:world.x-cam.position.x,
+        y:world.y-cam.position.y,
+        z:world.z-cam.position.z
       };
       return {
         x:rel.x*cam.right.x+rel.y*cam.right.y+rel.z*cam.right.z,
@@ -6315,10 +6346,15 @@
 
   function shape3DViewToCameraPoint(o,p){
     const cam=shape3DCamera(o);
+    const world={
+      x:(Number(o&&o.center&&o.center.x)||0)+p.x,
+      y:(Number(o&&o.center&&o.center.y)||0)+p.y,
+      z:(Number(o&&o.centerZ)||0)+p.z
+    };
     const rel={
-      x:p.x-cam.position.x,
-      y:p.y-cam.position.y,
-      z:p.z-cam.position.z
+      x:world.x-cam.position.x,
+      y:world.y-cam.position.y,
+      z:world.z-cam.position.z
     };
     return {
       x:rel.x*cam.right.x+rel.y*cam.right.y+rel.z*cam.right.z,
@@ -6333,8 +6369,8 @@
     const depth=Math.max(60,r.z);
     const k=cam.focalLength/depth;
     return {
-      x:o.center.x+r.x*k,
-      y:o.center.y-r.y*k,
+      x:cam.target.x+r.x*k,
+      y:cam.target.y-r.y*k,
       z:r.z
     };
   }
@@ -6371,14 +6407,21 @@
       centroid.y/=face.length;
       centroid.z/=face.length;
 
+      // Outward normal is still determined in object-centered coordinates.
       if(n.x*centroid.x+n.y*centroid.y+n.z*centroid.z<0){
         n={x:-n.x,y:-n.y,z:-n.z};
       }
 
+      const worldCentroid={
+        x:(Number(o&&o.center&&o.center.x)||0)+centroid.x,
+        y:(Number(o&&o.center&&o.center.y)||0)+centroid.y,
+        z:(Number(o&&o.centerZ)||0)+centroid.z
+      };
+
       const toCamera={
-        x:camera.x-centroid.x,
-        y:camera.y-centroid.y,
-        z:camera.z-centroid.z
+        x:camera.x-worldCentroid.x,
+        y:camera.y-worldCentroid.y,
+        z:camera.z-worldCentroid.z
       };
       return n.x*toCamera.x+n.y*toCamera.y+n.z*toCamera.z>0;
     });
@@ -6387,22 +6430,25 @@
   function shape3DCurvePointVisible(o,localPoint,mode){
     if(mode==='silhouette') return true;
 
-    const view=shape3DLocalToViewPoint(o,localPoint);
+    const world=shape3DLocalToWorldPoint(o,localPoint);
     const cam=shape3DCamera(o);
     const toCamera={
-      x:cam.position.x-view.x,
-      y:cam.position.y-view.y,
-      z:cam.position.z-view.z
+      x:cam.position.x-world.x,
+      y:cam.position.y-world.y,
+      z:cam.position.z-world.z
     };
 
     if(mode==='sphere'){
-      const n=view;
+      const n=transformedLocalVector(o,localPoint);
       return n.x*toCamera.x+n.y*toCamera.y+n.z*toCamera.z>=0;
     }
 
     if(mode==='rim'){
-      const radial={x:view.x,y:0,z:view.z};
-      return radial.x*toCamera.x+radial.z*toCamera.z>=0;
+      const radialLocal={x:localPoint.x,y:0,z:localPoint.z};
+      const radial=transformedLocalVector(o,radialLocal);
+      return radial.x*toCamera.x+
+             radial.y*toCamera.y+
+             radial.z*toCamera.z>=0;
     }
 
     return true;
@@ -6423,10 +6469,8 @@
       let visible=visibleA||visibleB;
 
       if(curve.fullIfFacing && curve.normal && curve.center){
-        const center=shape3DLocalToViewPoint(o,curve.center);
-        const n=shape3DLocalToViewPoint(o,curve.normal);
-        const origin=shape3DLocalToViewPoint(o,{x:0,y:0,z:0});
-        const nv={x:n.x-origin.x,y:n.y-origin.y,z:n.z-origin.z};
+        const center=shape3DLocalToWorldPoint(o,curve.center);
+        const nv=transformedLocalVector(o,curve.normal);
         const cam=shape3DCamera(o).position;
         const tc={x:cam.x-center.x,y:cam.y-center.y,z:cam.z-center.z};
         if(nv.x*tc.x+nv.y*tc.y+nv.z*tc.z>0) visible=true;
@@ -6658,7 +6702,7 @@
 
   function cylinderRingVisibility(o,localRing,ringY){
     const cam=shape3DCamera(o).position;
-    const centerView=shape3DLocalToViewPoint(o,{x:0,y:ringY,z:0});
+    const centerView=shape3DLocalToWorldPoint(o,{x:0,y:ringY,z:0});
     const capNormalLocal={x:0,y:ringY<0?-1:1,z:0};
     const capNormal=transformedLocalVector(o,capNormalLocal);
     const toCameraCenter={
@@ -6680,7 +6724,7 @@
         y:ringY,
         z:(p.z+q.z)/2
       };
-      const pointView=shape3DLocalToViewPoint(o,midLocal);
+      const pointView=shape3DLocalToWorldPoint(o,midLocal);
       const radialLocal={x:midLocal.x,y:0,z:midLocal.z};
       const radialView=transformedLocalVector(o,radialLocal);
       const toCamera={
@@ -6706,7 +6750,7 @@
     let bestDot=-Infinity;
 
     for(const c of candidates){
-      const center=shape3DLocalToViewPoint(o,{x:0,y:c.y,z:0});
+      const center=shape3DLocalToWorldPoint(o,{x:0,y:c.y,z:0});
       const normal=transformedLocalVector(o,c.n);
       const toCamera={
         x:cam.x-center.x,
@@ -6808,12 +6852,12 @@
             z:(aLocal.z+bLocal.z)/2
           };
 
-          const midView=shape3DLocalToViewPoint(o,midLocal);
-          const normal=midView;
+          const midWorld=shape3DLocalToWorldPoint(o,midLocal);
+          const normal=transformedLocalVector(o,midLocal);
           const toCamera={
-            x:cam.x-midView.x,
-            y:cam.y-midView.y,
-            z:cam.z-midView.z
+            x:cam.x-midWorld.x,
+            y:cam.y-midWorld.y,
+            z:cam.z-midWorld.z
           };
 
           visibility.push(
@@ -6925,11 +6969,15 @@
   }
 
   function makeShape3D(type,cx,cy,scale,style){
+    if(!global3DCameraTarget){
+      global3DCameraTarget={x:cx,y:cy,z:0};
+    }
     const pose=default3DPose(type);
 
     const base={
       kind:'shape3d',
       center:{x:cx,y:cy},
+      centerZ:0,
       sizeX:150*scale,
       sizeY:150*scale,
       sizeZ:150*scale,
