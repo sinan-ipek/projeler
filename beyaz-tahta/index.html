@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.48</title>
+<title>Beyaz Tahta v18.49</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.48 · Silindir ve küre sadeleştirildi; yarım küre ve prizma kaldırıldı</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.49 · Küre ve silindir bounding box düzeltildi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6698,6 +6698,34 @@
     return base;
   }
 
+  function shape3DSelectionPoints(o){
+    if(!o || o.kind!=='shape3d') return [];
+
+    const g=shape3DGeometry(o);
+    const pts=[
+      ...shape3DProjectedPoints(o),
+      ...(g.curves||[]).flatMap(curve=>
+        (curve.points||[]).map(p=>shape3DProjectLocalPoint(o,p))
+      )
+    ].filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));
+
+    if(o.shape3dType==='sphere'){
+      const eq=(g.curves||[]).find(c=>c.id==='equator')||(g.curves||[])[0];
+      const equator=(eq&&eq.points||[]).map(p=>shape3DProjectLocalPoint(o,p));
+      const circle=smallestEnclosingCircle2D(equator);
+      if(circle){
+        pts.push(
+          {x:circle.x-circle.r,y:circle.y},
+          {x:circle.x+circle.r,y:circle.y},
+          {x:circle.x,y:circle.y-circle.r},
+          {x:circle.x,y:circle.y+circle.r}
+        );
+      }
+    }
+
+    return pts;
+  }
+
   function objectBounds(o){
     if(!o) return null;
 
@@ -6706,13 +6734,7 @@
     }
 
     if(o.kind==='shape3d'){
-      const g=shape3DGeometry(o);
-      const pts=[
-        ...shape3DProjectedPoints(o),
-        ...(g.curves||[]).flatMap(curve=>
-          (curve.points||[]).map(p=>shape3DProjectLocalPoint(o,p))
-        )
-      ];
+      const pts=shape3DSelectionPoints(o);
       return pts.length ? bbox(pts) : null;
     }
 
@@ -7547,7 +7569,7 @@
   function selectionSamplePoints(o){
     if(!o) return [];
 
-    if(o.kind==='shape3d') return shape3DProjectedPoints(o);
+    if(o.kind==='shape3d') return shape3DSelectionPoints(o);
     if(o.kind==='line') return [{...o.a},{...o.b}];
     if(o.kind==='bezier'){
       const pts=bezierSamplePoints(o,32);
