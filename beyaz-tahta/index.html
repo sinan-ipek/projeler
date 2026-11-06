@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.26</title>
+<title>Beyaz Tahta v18.48</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -971,13 +971,11 @@
       <option value="axes">x-y</option>
       <optgroup label="3D">
         <option value="cube3d">Küp 3D</option>
-        <option value="box3d">Dikdörtgenler prizması 3D</option>
         <option value="pyramid3d">Piramit 3D</option>
         <option value="cylinder3d">Silindir 3D</option>
         <option value="hexpyramid3d">Altıgen piramit 3D</option>
         <option value="hexprism3d">Altıgen prizma 3D</option>
         <option value="sphere3d">Küre 3D</option>
-        <option value="hemisphere3d">Yarım küre 3D</option>
       </optgroup>
     </select>
 
@@ -1200,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.47 · Silindir, altıgen piramit/prizma, küre ve yarım küre</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.48 · Silindir ve küre sadeleştirildi; yarım küre ve prizma kaldırıldı</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6201,18 +6199,13 @@
 
     if(t==='cylinder'){
       const r=Math.min(sx,sz);
-      const top=circle3DPoints(r,-sy,96);
-      const bottom=circle3DPoints(r,sy,96);
       return {
-        points:[
-          {x:-r,y:-sy,z:0},{x:r,y:-sy,z:0},
-          {x:-r,y:sy,z:0},{x:r,y:sy,z:0}
-        ],
-        edges:[[0,2],[1,3]],
+        points:[],
+        edges:[],
         faces:[],
         curves:[
-          {points:top,mode:'rim',center:{x:0,y:-sy,z:0},normal:{x:0,y:-1,z:0},fullIfFacing:true},
-          {points:bottom,mode:'rim',center:{x:0,y:sy,z:0},normal:{x:0,y:1,z:0},fullIfFacing:true}
+          {id:'topEllipse',points:circle3DPoints(r,-sy,128)},
+          {id:'bottomEllipse',points:circle3DPoints(r,sy,128)}
         ]
       };
     }
@@ -6220,38 +6213,15 @@
     if(t==='sphere'){
       const r=Math.min(sx,sy,sz);
       return {
-        points:[
-          {x:-r,y:0,z:0},{x:r,y:0,z:0},
-          {x:0,y:-r,z:0},{x:0,y:r,z:0},
-          {x:0,y:0,z:-r},{x:0,y:0,z:r}
-        ],
+        points:[],
         edges:[],
         faces:[],
         curves:[
-          {points:circle3DPoints(r,0,128),mode:'sphere',surface:'equator'},
-          {points:sphereMeridianPoints(r,0,128,false),mode:'sphere',surface:'meridian'},
-          {points:sphereMeridianPoints(r,Math.PI/2,128,false),mode:'silhouette'}
+          {id:'equator',points:circle3DPoints(r,0,160)}
         ]
       };
     }
 
-    if(t==='hemisphere'){
-      const r=Math.min(sx,sy,sz);
-      const dome=sphereMeridianPoints(r,0,96,true);
-      const rim=circle3DPoints(r,0,128);
-      return {
-        points:[
-          {x:-r,y:0,z:0},{x:r,y:0,z:0},
-          {x:0,y:-r,z:0},{x:0,y:0,z:-r},{x:0,y:0,z:r}
-        ],
-        edges:[],
-        faces:[],
-        curves:[
-          {points:dome,mode:'sphere',surface:'dome'},
-          {points:rim,mode:'rim',center:{x:0,y:0,z:0},normal:{x:0,y:1,z:0},fullIfFacing:false}
-        ]
-      };
-    }
 
     const points=[
       {x:-sx,y:-sy,z:-sz},{x:sx,y:-sy,z:-sz},
@@ -6477,18 +6447,136 @@
     ctx.setLineDash([]);
   }
 
+  function drawClosedProjectedLoop(points){
+    if(!points || points.length<2) return;
+    ctx.beginPath();
+    ctx.moveTo(points[0].x,points[0].y);
+    for(let i=1;i<points.length;i++){
+      ctx.lineTo(points[i].x,points[i].y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  function smallestEnclosingCircle2D(points){
+    const pts=(points||[]).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));
+    if(!pts.length) return null;
+
+    const inside=(c,p)=>Math.hypot(p.x-c.x,p.y-c.y)<=c.r+1e-7;
+
+    const circle2=(a,b)=>{
+      const x=(a.x+b.x)/2;
+      const y=(a.y+b.y)/2;
+      return {x,y,r:Math.hypot(a.x-b.x,a.y-b.y)/2};
+    };
+
+    const circle3=(a,b,c)=>{
+      const d=2*(a.x*(b.y-c.y)+b.x*(c.y-a.y)+c.x*(a.y-b.y));
+      if(Math.abs(d)<1e-9) return null;
+
+      const a2=a.x*a.x+a.y*a.y;
+      const b2=b.x*b.x+b.y*b.y;
+      const c2=c.x*c.x+c.y*c.y;
+
+      const x=(a2*(b.y-c.y)+b2*(c.y-a.y)+c2*(a.y-b.y))/d;
+      const y=(a2*(c.x-b.x)+b2*(a.x-c.x)+c2*(b.x-a.x))/d;
+      return {x,y,r:Math.hypot(a.x-x,a.y-y)};
+    };
+
+    let best={x:pts[0].x,y:pts[0].y,r:0};
+
+    for(let i=0;i<pts.length;i++){
+      if(inside(best,pts[i])) continue;
+
+      best={x:pts[i].x,y:pts[i].y,r:0};
+
+      for(let j=0;j<i;j++){
+        if(inside(best,pts[j])) continue;
+
+        best=circle2(pts[i],pts[j]);
+
+        for(let k=0;k<j;k++){
+          if(inside(best,pts[k])) continue;
+
+          const c=circle3(pts[i],pts[j],pts[k]);
+          if(c) best=c;
+        }
+      }
+    }
+
+    return best;
+  }
+
   function drawShape3D(o){
     const g=shape3DGeometry(o);
     const viewPts=shape3DViewPoints(o);
     const pts=shape3DProjectedPoints(o);
-    if(!pts.length && !(g.curves&&g.curves.length)) return;
+
+    ctx.save();
+    ctx.strokeStyle=(o.style&&o.style.color)||'#111111';
+    ctx.lineWidth=(o.style&&Number(o.style.width))||2;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    ctx.globalAlpha=1;
+    ctx.setLineDash([]);
+
+    if(o.shape3dType==='cylinder'){
+      const curves=g.curves||[];
+      const topCurve=curves.find(c=>c.id==='topEllipse')||curves[0];
+      const bottomCurve=curves.find(c=>c.id==='bottomEllipse')||curves[1];
+
+      const top=(topCurve&&topCurve.points||[]).map(p=>shape3DProjectLocalPoint(o,p));
+      const bottom=(bottomCurve&&bottomCurve.points||[]).map(p=>shape3DProjectLocalPoint(o,p));
+
+      if(top.length>1 && bottom.length>1){
+        drawClosedProjectedLoop(top);
+        drawClosedProjectedLoop(bottom);
+
+        const topLeft=top.reduce((a,b)=>b.x<a.x?b:a,top[0]);
+        const topRight=top.reduce((a,b)=>b.x>a.x?b:a,top[0]);
+        const bottomLeft=bottom.reduce((a,b)=>b.x<a.x?b:a,bottom[0]);
+        const bottomRight=bottom.reduce((a,b)=>b.x>a.x?b:a,bottom[0]);
+
+        ctx.beginPath();
+        ctx.moveTo(topLeft.x,topLeft.y);
+        ctx.lineTo(bottomLeft.x,bottomLeft.y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(topRight.x,topRight.y);
+        ctx.lineTo(bottomRight.x,bottomRight.y);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    if(o.shape3dType==='sphere'){
+      const eq=(g.curves||[]).find(c=>c.id==='equator')||(g.curves||[])[0];
+      const equator=(eq&&eq.points||[]).map(p=>shape3DProjectLocalPoint(o,p));
+
+      if(equator.length>2){
+        drawClosedProjectedLoop(equator);
+
+        const circle=smallestEnclosingCircle2D(equator);
+        if(circle){
+          ctx.beginPath();
+          ctx.arc(circle.x,circle.y,circle.r,0,Math.PI*2);
+          ctx.stroke();
+        }
+      }
+
+      ctx.restore();
+      return;
+    }
 
     const visibleFaces=shape3DFaceVisibility(o,g,viewPts);
 
     const edges=(g.edges||[]).map(([ia,ib])=>{
       const adjacent=[];
       (g.faces||[]).forEach((face,fi)=>{
-        if(face.includes(ia) && face.includes(ib)) adjacent.push(fi);
+        if(face.includes(ia)&&face.includes(ib)) adjacent.push(fi);
       });
 
       const hidden=adjacent.length>0 && !adjacent.some(fi=>visibleFaces[fi]);
@@ -6498,32 +6586,22 @@
         b:pts[ib],
         hidden,
         depth:(
-          (viewPts[ia]&&viewPts[ia].z||0)+
-          (viewPts[ib]&&viewPts[ib].z||0)
+          ((viewPts[ia]&&viewPts[ia].z)||0)+
+          ((viewPts[ib]&&viewPts[ib].z)||0)
         )/2
       };
     }).filter(e=>e.a&&e.b).sort((u,v)=>{
-      if(u.hidden!==v.hidden) return u.hidden ? -1 : 1;
+      if(u.hidden!==v.hidden) return u.hidden?-1:1;
       return v.depth-u.depth;
     });
 
-    ctx.save();
-    ctx.strokeStyle=(o.style&&o.style.color)||'#111111';
-    ctx.lineWidth=(o.style&&Number(o.style.width))||2;
-    ctx.lineCap='round';
-    ctx.lineJoin='round';
-
     for(const e of edges){
       ctx.beginPath();
-      ctx.globalAlpha=e.hidden ? .5 : 1;
-      ctx.setLineDash(e.hidden ? [5/viewZoom,4/viewZoom] : []);
+      ctx.globalAlpha=e.hidden?.5:1;
+      ctx.setLineDash(e.hidden?[5/viewZoom,4/viewZoom]:[]);
       ctx.moveTo(e.a.x,e.a.y);
       ctx.lineTo(e.b.x,e.b.y);
       ctx.stroke();
-    }
-
-    for(const curve of (g.curves||[])){
-      drawShape3DCurve(o,curve);
     }
 
     ctx.globalAlpha=1;
@@ -6533,7 +6611,7 @@
 
   function default3DPose(type){
     // Camera determines the initial view; cube/box stay on world axes.
-    if(type==='cube3d' || type==='box3d'){
+    if(type==='cube3d'){
       return {
         rotationX:0,
         rotationY:0,
@@ -6583,12 +6661,6 @@
     if(type==='cube3d'){
       base.shape3dType='box';
       base.shapeName='cube 3D';
-    }else if(type==='box3d'){
-      base.shape3dType='box';
-      base.shapeName='rectangular prism 3D';
-      base.sizeX=190*scale;
-      base.sizeY=120*scale;
-      base.sizeZ=100*scale;
     }else if(type==='pyramid3d'){
       base.shape3dType='pyramid';
       base.shapeName='pyramid 3D';
@@ -6619,12 +6691,6 @@
       base.sizeX=170*scale;
       base.sizeY=170*scale;
       base.sizeZ=170*scale;
-    }else if(type==='hemisphere3d'){
-      base.shape3dType='hemisphere';
-      base.shapeName='hemisphere 3D';
-      base.sizeX=180*scale;
-      base.sizeY=95*scale;
-      base.sizeZ=180*scale;
     }else{
       return null;
     }
@@ -15762,8 +15828,8 @@
       }));
     }
     if([
-      'cube3d','box3d','pyramid3d','cylinder3d',
-      'hexpyramid3d','hexprism3d','sphere3d','hemisphere3d'
+      'cube3d','pyramid3d','cylinder3d',
+      'hexpyramid3d','hexprism3d','sphere3d'
     ].includes(t)){
       const obj=makeShape3D(t,cx,cy,insertionScale,style);
       if(obj) objects.push(obj);
