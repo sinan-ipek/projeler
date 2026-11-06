@@ -1195,7 +1195,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.43 · 3D ders kitabı oblique projeksiyon</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.44 · Perspektif kamera +Z → −Z, küp/prizma dik başlangıç</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6149,44 +6149,27 @@
     return g.points.map(p=>rotatePointByQuat(p,q));
   }
 
-  function shape3DProjectionParams(o){
-    const depthScale=Number.isFinite(Number(o&&o.depthProjectionScale))
-      ? Number(o.depthProjectionScale)
-      : .62;
-    const depthAngle=Number.isFinite(Number(o&&o.depthProjectionAngle))
-      ? Number(o.depthProjectionAngle)
-      : -Math.PI/6;
-
-    return {
-      ax:Math.cos(depthAngle)*depthScale,
-      ay:Math.sin(depthAngle)*depthScale
-    };
-  }
-
   function shape3DProjectedPoints(o){
     const viewPts=shape3DViewPoints(o);
-    const pr=shape3DProjectionParams(o);
+    const distance=Math.max(220,Number(o.cameraDistance)||Number(o.perspective)||520);
 
-    // Textbook / oblique projection:
-    // Y remains vertical on screen; Z creates a diagonal depth offset.
-    return viewPts.map(r=>({
-      x:o.center.x+r.x+r.z*pr.ax,
-      y:o.center.y+r.y+r.z*pr.ay,
-      z:r.z
-    }));
+    // Perspective camera:
+    // camera position = (0,0,+distance)
+    // viewing direction = -Z, looking at the object's origin.
+    return viewPts.map(r=>{
+      const denom=Math.max(60,distance-r.z);
+      const k=distance/denom;
+      return {
+        x:o.center.x+r.x*k,
+        y:o.center.y+r.y*k,
+        z:r.z
+      };
+    });
   }
 
   function shape3DFaceVisibility(o,g,viewPts){
-    const pr=shape3DProjectionParams(o);
-
-    // Orthographic-oblique viewing direction corresponding to:
-    // screenX = x + ax*z, screenY = y + ay*z.
-    // The camera is conceptually far away in the opposite ray direction.
-    const toCamera={
-      x:pr.ax,
-      y:pr.ay,
-      z:-1
-    };
+    const distance=Math.max(220,Number(o.cameraDistance)||Number(o.perspective)||520);
+    const camera={x:0,y:0,z:distance};
 
     return (g.faces||[]).map(face=>{
       if(!face || face.length<3) return false;
@@ -6209,10 +6192,16 @@
       centroid.y/=face.length;
       centroid.z/=face.length;
 
+      // Keep normals outward from the object's center.
       if(n.x*centroid.x+n.y*centroid.y+n.z*centroid.z<0){
         n={x:-n.x,y:-n.y,z:-n.z};
       }
 
+      const toCamera={
+        x:camera.x-centroid.x,
+        y:camera.y-centroid.y,
+        z:camera.z-centroid.z
+      };
       return n.x*toCamera.x+n.y*toCamera.y+n.z*toCamera.z>0;
     });
   }
@@ -6269,11 +6258,12 @@
   }
 
   function default3DPose(type){
-    // Educational default views: upright height, readable base and depth.
+    // Camera is on +Z, looking toward -Z.
+    // Cube and box remain upright: no X/Z tilt, only a 45° Y yaw.
     if(type==='cube3d'){
       return {
         rotationX:0,
-        rotationY:Math.PI/4,
+        rotationY:-Math.PI/4,
         rotationZ:0
       };
     }
@@ -6281,7 +6271,7 @@
     if(type==='box3d'){
       return {
         rotationX:0,
-        rotationY:Math.PI/4,
+        rotationY:-Math.PI/4,
         rotationZ:0
       };
     }
@@ -6289,14 +6279,14 @@
     if(type==='pyramid3d'){
       return {
         rotationX:-0.10,
-        rotationY:-0.92,
+        rotationY:0.92,
         rotationZ:0
       };
     }
 
     return {
-      rotationX:-0.28,
-      rotationY:-0.80,
+      rotationX:0,
+      rotationY:-Math.PI/4,
       rotationZ:0
     };
   }
@@ -6319,8 +6309,7 @@
         pose.rotationZ
       ),
       perspective:520*scale,
-      depthProjectionScale:.62,
-      depthProjectionAngle:-Math.PI/6,
+      cameraDistance:520*scale,
       style:{...style},
       source:'menu',
       boxAngle:0
@@ -9502,6 +9491,7 @@
       o.rotationZ=Number(snap.rotationZ)||0;
       o.rotationQuat=shape3DQuaternion(snap);
       o.perspective=Number(snap.perspective)||520;
+      o.cameraDistance=Number(snap.cameraDistance)||Number(snap.perspective)||520;
       o.boxAngle=0;
       return true;
     }
