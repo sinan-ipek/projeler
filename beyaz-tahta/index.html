@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.57</title>
+<title>Beyaz Tahta v18.58</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.57 · 3D snap artık birbirine bakan yüzleri seçiyor</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.58 · 3D snap yüz sınırı yakınlığına göre seçiliyor</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -9800,13 +9800,27 @@
           key:'cap-top',
           center:{x:0,y:-sy,z:0},
           normal:{x:0,y:-1,z:0},
-          vertices:[]
+          vertices:circle3DPoints(
+            Math.min(
+              Math.max(8,Number(o.sizeX)||120)/2,
+              Math.max(8,Number(o.sizeZ)||120)/2
+            ),
+            -sy,
+            32
+          )
         },
         {
           key:'cap-bottom',
           center:{x:0,y:sy,z:0},
           normal:{x:0,y:1,z:0},
-          vertices:[]
+          vertices:circle3DPoints(
+            Math.min(
+              Math.max(8,Number(o.sizeX)||120)/2,
+              Math.max(8,Number(o.sizeZ)||120)/2
+            ),
+            sy,
+            32
+          )
         }
       );
     }
@@ -9851,18 +9865,118 @@
     return {x:dx/len,y:dy/len,worldCenter:center,worldNormal:normal};
   }
 
+  function shape3DFaceScreenPolygon(o,face){
+    if(face && face.vertices && face.vertices.length>=3){
+      return face.vertices.map(p=>shape3DProjectLocalPoint(o,p));
+    }
+
+    // Fallback for any future planar face that has no explicit boundary.
+    const c=shape3DFaceScreenCenter(o,face);
+    return [c];
+  }
+
+  function pointSegmentDistance2D(p,a,b){
+    const vx=b.x-a.x;
+    const vy=b.y-a.y;
+    const len2=vx*vx+vy*vy;
+    if(len2<1e-12) return Math.hypot(p.x-a.x,p.y-a.y);
+    let t=((p.x-a.x)*vx+(p.y-a.y)*vy)/len2;
+    t=Math.max(0,Math.min(1,t));
+    const x=a.x+t*vx;
+    const y=a.y+t*vy;
+    return Math.hypot(p.x-x,p.y-y);
+  }
+
+  function pointInPolygon2D(p,poly){
+    if(!poly || poly.length<3) return false;
+    let inside=false;
+    for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+      const a=poly[i], b=poly[j];
+      const hit=
+        ((a.y>p.y)!==(b.y>p.y)) &&
+        (p.x < (b.x-a.x)*(p.y-a.y)/((b.y-a.y)||1e-12)+a.x);
+      if(hit) inside=!inside;
+    }
+    return inside;
+  }
+
+  function segmentIntersection2D(a,b,c,d){
+    const orient=(p,q,r)=>
+      (q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x);
+
+    const o1=orient(a,b,c);
+    const o2=orient(a,b,d);
+    const o3=orient(c,d,a);
+    const o4=orient(c,d,b);
+
+    return (
+      ((o1>0&&o2<0)||(o1<0&&o2>0)) &&
+      ((o3>0&&o4<0)||(o3<0&&o4>0))
+    );
+  }
+
+  function polygonDistance2D(a,b){
+    if(!a.length || !b.length) return Infinity;
+
+    if(a.length>=3 && b.length>=3){
+      if(pointInPolygon2D(a[0],b) || pointInPolygon2D(b[0],a)){
+        return 0;
+      }
+
+      for(let i=0;i<a.length;i++){
+        const a1=a[i], a2=a[(i+1)%a.length];
+        for(let j=0;j<b.length;j++){
+          const b1=b[j], b2=b[(j+1)%b.length];
+          if(segmentIntersection2D(a1,a2,b1,b2)) return 0;
+        }
+      }
+    }
+
+    let best=Infinity;
+
+    for(const p of a){
+      if(b.length===1){
+        best=Math.min(best,Math.hypot(p.x-b[0].x,p.y-b[0].y));
+      }else{
+        for(let j=0;j<b.length;j++){
+          best=Math.min(
+            best,
+            pointSegmentDistance2D(p,b[j],b[(j+1)%b.length])
+          );
+        }
+      }
+    }
+
+    for(const p of b){
+      if(a.length===1){
+        best=Math.min(best,Math.hypot(p.x-a[0].x,p.y-a[0].y));
+      }else{
+        for(let i=0;i<a.length;i++){
+          best=Math.min(
+            best,
+            pointSegmentDistance2D(p,a[i],a[(i+1)%a.length])
+          );
+        }
+      }
+    }
+
+    return best;
+  }
+
+  function polygonCentroid2D(poly){
+    if(!poly || !poly.length) return {x:0,y:0};
+    return {
+      x:poly.reduce((sum,p)=>sum+p.x,0)/poly.length,
+      y:poly.reduce((sum,p)=>sum+p.y,0)/poly.length
+    };
+  }
+
   function best3DFaceMagnetCandidate(moving,movingIndex,maxDistance){
     if(!pointSnapEnabled || !moving || moving.kind!=='shape3d') return null;
     if(moving.shape3dType==='sphere') return null;
 
     const movingFaces=shape3DLocalFaceDescriptors(moving);
     if(!movingFaces.length) return null;
-
-    const movingObjectCenter={
-      x:Number(moving.center&&moving.center.x)||0,
-      y:Number(moving.center&&moving.center.y)||0,
-      z:Number(moving.centerZ)||0
-    };
 
     let best=null;
 
@@ -9875,58 +9989,49 @@
       const targetFaces=shape3DLocalFaceDescriptors(target);
       if(!targetFaces.length) continue;
 
-      const targetObjectCenter={
-        x:Number(target.center&&target.center.x)||0,
-        y:Number(target.center&&target.center.y)||0,
-        z:Number(target.centerZ)||0
-      };
-
-      const towardTarget=vec3Normalize(
-        vec3Sub(targetObjectCenter,movingObjectCenter)
-      );
-      const towardMoving=vec3Scale(towardTarget,-1);
-
       for(const mf of movingFaces){
+        const movingPoly=shape3DFaceScreenPolygon(moving,mf);
+        const movingCenter=polygonCentroid2D(movingPoly);
         const mw=shape3DFaceWorldDescriptor(moving,mf);
-        const movingFacing=vec3Dot(mw.normal,towardTarget);
-
-        // Only the face that actually points toward the other object
-        // may become the magnetic contact face.
-        if(movingFacing<0.20) continue;
-
-        const ms=shape3DFaceScreenCenter(moving,mf);
 
         for(const tf of targetFaces){
+          const targetPoly=shape3DFaceScreenPolygon(target,tf);
+          const targetCenter=polygonCentroid2D(targetPoly);
+
+          // Primary criterion: the actual projected boundaries of the two
+          // faces, not object centers and not merely face centers.
+          const boundaryDistance=polygonDistance2D(
+            movingPoly,
+            targetPoly
+          );
+
+          if(boundaryDistance>maxDistance) continue;
+
           const tw=shape3DFaceWorldDescriptor(target,tf);
-          const targetFacing=vec3Dot(tw.normal,towardMoving);
-
-          // Likewise, choose a target face whose outward normal points
-          // back toward the approaching object.
-          if(targetFacing<0.20) continue;
-
-          const ts=shape3DFaceScreenCenter(target,tf);
-          const screenDist=Math.hypot(ms.x-ts.x,ms.y-ts.y);
-          if(screenDist>maxDistance) continue;
-
           const opposition=vec3Dot(
             mw.normal,
             vec3Scale(tw.normal,-1)
           );
 
-          // Facing direction is now the primary rule. Distance decides
-          // between valid "looking at each other" faces.
+          const centerDistance=Math.hypot(
+            movingCenter.x-targetCenter.x,
+            movingCenter.y-targetCenter.y
+          );
+
+          // Boundary proximity dominates. Center distance only stabilizes
+          // ties between overlapping candidate faces. Existing normal
+          // opposition has a very small weight because the moving face will
+          // be rotated into alignment after selection.
           const score=
-            screenDist+
-            (1-movingFacing)*22+
-            (1-targetFacing)*22+
-            (1-Math.max(-1,Math.min(1,opposition)))*4;
+            boundaryDistance*8+
+            centerDistance*.08+
+            (1-Math.max(-1,Math.min(1,opposition)))*2;
 
           if(!best || score<best.score){
             best={
               score,
-              screenDist,
-              movingFacing,
-              targetFacing,
+              screenDist:boundaryDistance,
+              centerDistance,
               movingFace:mf,
               targetFace:tf,
               targetObject:target,
@@ -10045,8 +10150,8 @@
       if(slide.detached) return 'detached';
     }
 
-    const alignDistance=72/viewZoom;
-    const attachDistance=25/viewZoom;
+    const alignDistance=42/viewZoom;
+    const attachDistance=10/viewZoom;
     const candidate=best3DFaceMagnetCandidate(
       moving,
       movingIndex,
@@ -10062,13 +10167,19 @@
       candidate.targetFace
     );
 
-    // Re-evaluate distance after the moving object has rotated into parallel.
-    const ms=shape3DFaceScreenCenter(moving,candidate.movingFace);
-    const ts=shape3DFaceScreenCenter(
+    // Re-evaluate the real projected face-boundary distance after alignment.
+    const movingPoly=shape3DFaceScreenPolygon(
+      moving,
+      candidate.movingFace
+    );
+    const targetPoly=shape3DFaceScreenPolygon(
       candidate.targetObject,
       candidate.targetFace
     );
-    const alignedDistance=Math.hypot(ms.x-ts.x,ms.y-ts.y);
+    const alignedDistance=polygonDistance2D(
+      movingPoly,
+      targetPoly
+    );
 
     if(alignedDistance<=attachDistance){
       attachMovingFaceToTarget(
