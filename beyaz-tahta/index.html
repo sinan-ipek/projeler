@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.52</title>
+<title>Beyaz Tahta v18.53</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.52 · Belirgin gizli yaylar + silindir taban görünürlüğü ve yarıçap</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.53 · Tüm 3D gizli çizgiler için ortak ve sıkı dash stili</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6436,8 +6436,9 @@
       const pb=shape3DProjectLocalPoint(o,b);
 
       ctx.beginPath();
-      ctx.globalAlpha=visible ? 1 : .48;
-      ctx.setLineDash(visible ? [] : [5/viewZoom,4/viewZoom]);
+      const hiddenStyle=hidden3DStyle();
+      ctx.globalAlpha=visible ? 1 : hiddenStyle.alpha;
+      ctx.setLineDash(visible ? [] : hiddenStyle.dash);
       ctx.moveTo(pa.x,pa.y);
       ctx.lineTo(pb.x,pb.y);
       ctx.stroke();
@@ -6572,7 +6573,14 @@
     return rotatePointByQuat(v,shape3DQuaternion(o));
   }
 
-  function drawLoopByVisibility(projected,visibility,dashPattern=[14/viewZoom,10/viewZoom]){
+  function hidden3DStyle(){
+    return {
+      dash:[10/viewZoom,7/viewZoom],
+      alpha:.5
+    };
+  }
+
+  function drawLoopByVisibility(projected,visibility,dashPattern=hidden3DStyle().dash){
     const n=projected.length;
     if(n<2 || visibility.length!==n) return;
 
@@ -6587,7 +6595,7 @@
 
     if(transition<0){
       ctx.beginPath();
-      ctx.globalAlpha=visibility[0] ? 1 : .48;
+      ctx.globalAlpha=visibility[0] ? 1 : hidden3DStyle().alpha;
       ctx.setLineDash(visibility[0] ? [] : dashPattern);
       ctx.moveTo(projected[0].x,projected[0].y);
       for(let i=1;i<n;i++) ctx.lineTo(projected[i].x,projected[i].y);
@@ -6610,7 +6618,7 @@
       if(v!==runVisible){
         if(run.length>1){
           ctx.beginPath();
-          ctx.globalAlpha=runVisible ? 1 : .48;
+          ctx.globalAlpha=runVisible ? 1 : hidden3DStyle().alpha;
           ctx.setLineDash(runVisible ? [] : dashPattern);
           ctx.moveTo(run[0].x,run[0].y);
           for(let k=1;k<run.length;k++) ctx.lineTo(run[k].x,run[k].y);
@@ -6625,7 +6633,7 @@
       const nextVisibility=visibility[j];
       if(nextVisibility!==runVisible && run.length>1){
         ctx.beginPath();
-        ctx.globalAlpha=runVisible ? 1 : .48;
+        ctx.globalAlpha=runVisible ? 1 : hidden3DStyle().alpha;
         ctx.setLineDash(runVisible ? [] : dashPattern);
         ctx.moveTo(run[0].x,run[0].y);
         for(let k=1;k<run.length;k++) ctx.lineTo(run[k].x,run[k].y);
@@ -6637,7 +6645,7 @@
 
     if(run.length>1){
       ctx.beginPath();
-      ctx.globalAlpha=runVisible ? 1 : .48;
+      ctx.globalAlpha=runVisible ? 1 : hidden3DStyle().alpha;
       ctx.setLineDash(runVisible ? [] : dashPattern);
       ctx.moveTo(run[0].x,run[0].y);
       for(let k=1;k<run.length;k++) ctx.lineTo(run[k].x,run[k].y);
@@ -6747,8 +6755,8 @@
         const topVisibility=cylinderRingVisibility(o,topLocal,-sy);
         const bottomVisibility=cylinderRingVisibility(o,bottomLocal,sy);
 
-        drawLoopByVisibility(top,topVisibility,[14/viewZoom,10/viewZoom]);
-        drawLoopByVisibility(bottom,bottomVisibility,[14/viewZoom,10/viewZoom]);
+        drawLoopByVisibility(top,topVisibility,hidden3DStyle().dash);
+        drawLoopByVisibility(bottom,bottomVisibility,hidden3DStyle().dash);
 
         const tangents=cylinderOuterTangentSegments(top,bottom);
         for(const seg of tangents){
@@ -6819,7 +6827,7 @@
         drawLoopByVisibility(
           equator,
           visibility,
-          [14/viewZoom,10/viewZoom]
+          hidden3DStyle().dash
         );
 
         const circle=smallestEnclosingCircle2D(equator);
@@ -6878,8 +6886,9 @@
 
     for(const e of edges){
       ctx.beginPath();
-      ctx.globalAlpha=e.hidden?.5:1;
-      ctx.setLineDash(e.hidden?[5/viewZoom,4/viewZoom]:[]);
+      const hiddenStyle=hidden3DStyle();
+      ctx.globalAlpha=e.hidden?hiddenStyle.alpha:1;
+      ctx.setLineDash(e.hidden?hiddenStyle.dash:[]);
       ctx.moveTo(e.a.x,e.a.y);
       ctx.lineTo(e.b.x,e.b.y);
       ctx.stroke();
