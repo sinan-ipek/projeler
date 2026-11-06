@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.53</title>
+<title>Beyaz Tahta v18.54</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.53 · Tüm 3D gizli çizgiler için ortak ve sıkı dash stili</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.54 · 3D dönüşler local X/Y/Z eksenlerine alındı</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -13633,12 +13633,16 @@
           }
 
           const deltaQ=quatFromAxisAngle(axis,amount);
-          target.rotationQuat=quatMultiply(deltaQ,baseQ);
+
+          // Local-axis rotation: post-multiply the current orientation.
+          // baseQ * deltaQ means X/Y/Z belong to the object itself,
+          // not to the world/camera coordinate system.
+          target.rotationQuat=quatMultiply(baseQ,deltaQ);
           target.rotationX=Number(selectSnapshot.rotationX)||0;
           target.rotationY=Number(selectSnapshot.rotationY)||0;
           target.rotationZ=Number(selectSnapshot.rotationZ)||0;
 
-          statusEl.textContent=`${axisName} ekseni etrafında döndürülüyor`;
+          statusEl.textContent=`Local ${axisName} ekseni etrafında döndürülüyor`;
           redraw();
           return;
         }
