@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.49</title>
+<title>Beyaz Tahta v18.50</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.49 · Küre ve silindir bounding box düzeltildi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.50 · Silindir yan çizgileri ortak dış teğet olarak dinamik</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6507,6 +6507,67 @@
     return best;
   }
 
+  function convexHullLabeled(points){
+    const pts=(points||[])
+      .filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y))
+      .slice()
+      .sort((a,b)=>a.x===b.x ? a.y-b.y : a.x-b.x);
+
+    if(pts.length<=1) return pts;
+
+    const cross=(o,a,b)=>
+      (a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);
+
+    const lower=[];
+    for(const p of pts){
+      while(lower.length>=2 && cross(lower[lower.length-2],lower[lower.length-1],p)<=0){
+        lower.pop();
+      }
+      lower.push(p);
+    }
+
+    const upper=[];
+    for(let i=pts.length-1;i>=0;i--){
+      const p=pts[i];
+      while(upper.length>=2 && cross(upper[upper.length-2],upper[upper.length-1],p)<=0){
+        upper.pop();
+      }
+      upper.push(p);
+    }
+
+    lower.pop();
+    upper.pop();
+    return lower.concat(upper);
+  }
+
+  function cylinderOuterTangentSegments(top,bottom){
+    const labeled=[
+      ...top.map((p,i)=>({...p,ring:'top',index:i})),
+      ...bottom.map((p,i)=>({...p,ring:'bottom',index:i}))
+    ];
+
+    const hull=convexHullLabeled(labeled);
+    const crossEdges=[];
+
+    for(let i=0;i<hull.length;i++){
+      const a=hull[i];
+      const b=hull[(i+1)%hull.length];
+      if(a.ring!==b.ring){
+        crossEdges.push({a,b});
+      }
+    }
+
+    // For two disjoint projected rims, the convex hull gives the two
+    // common external tangents. If numerical sampling produces extras,
+    // keep the two longest cross-ring hull edges.
+    return crossEdges
+      .sort((u,v)=>
+        Math.hypot(v.b.x-v.a.x,v.b.y-v.a.y)-
+        Math.hypot(u.b.x-u.a.x,u.b.y-u.a.y)
+      )
+      .slice(0,2);
+  }
+
   function drawShape3D(o){
     const g=shape3DGeometry(o);
     const viewPts=shape3DViewPoints(o);
@@ -6532,20 +6593,14 @@
         drawClosedProjectedLoop(top);
         drawClosedProjectedLoop(bottom);
 
-        const topLeft=top.reduce((a,b)=>b.x<a.x?b:a,top[0]);
-        const topRight=top.reduce((a,b)=>b.x>a.x?b:a,top[0]);
-        const bottomLeft=bottom.reduce((a,b)=>b.x<a.x?b:a,bottom[0]);
-        const bottomRight=bottom.reduce((a,b)=>b.x>a.x?b:a,bottom[0]);
+        const tangents=cylinderOuterTangentSegments(top,bottom);
 
-        ctx.beginPath();
-        ctx.moveTo(topLeft.x,topLeft.y);
-        ctx.lineTo(bottomLeft.x,bottomLeft.y);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(topRight.x,topRight.y);
-        ctx.lineTo(bottomRight.x,bottomRight.y);
-        ctx.stroke();
+        for(const seg of tangents){
+          ctx.beginPath();
+          ctx.moveTo(seg.a.x,seg.a.y);
+          ctx.lineTo(seg.b.x,seg.b.y);
+          ctx.stroke();
+        }
       }
 
       ctx.restore();
