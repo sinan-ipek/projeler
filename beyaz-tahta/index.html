@@ -1195,7 +1195,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.41 · 3D şekiller için öğretici varsayılan oryantasyon</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.42 · Küp ve prizma ders kitabı başlangıç görünümü</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6258,16 +6258,18 @@
     // Educational default views: upright height, readable base and depth.
     if(type==='cube3d'){
       return {
-        rotationX:-0.30,
-        rotationY:-0.82,
+        // Textbook-style cube: upright verticals, readable top/bottom depth.
+        rotationX:-0.28,
+        rotationY:0.78,
         rotationZ:0
       };
     }
 
     if(type==='box3d'){
       return {
-        rotationX:-0.26,
-        rotationY:-0.78,
+        // Same viewing direction as the cube; only proportions differ.
+        rotationX:-0.28,
+        rotationY:0.78,
         rotationZ:0
       };
     }
