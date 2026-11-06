@@ -1195,7 +1195,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.37 · 3D X/Y/Z boyut handle’ları</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.38 · 3D görünür/gizli kenar hesabı düzeltildi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -5988,7 +5988,7 @@
   }
 
   function shape3DGeometry(o){
-    if(!o || o.kind!=='shape3d') return {points:[],edges:[]};
+    if(!o || o.kind!=='shape3d') return {points:[],edges:[],faces:[]};
     const sx=Math.max(8,Number(o.sizeX)||120)/2;
     const sy=Math.max(8,Number(o.sizeY)||120)/2;
     const sz=Math.max(8,Number(o.sizeZ)||120)/2;
@@ -6000,7 +6000,14 @@
           {x: sx,y: sy,z: sz},{x:-sx,y: sy,z: sz},
           {x:0,y:-sy,z:0}
         ],
-        edges:[[0,1],[1,2],[2,3],[3,0],[0,4],[1,4],[2,4],[3,4]]
+        edges:[[0,1],[1,2],[2,3],[3,0],[0,4],[1,4],[2,4],[3,4]],
+        faces:[
+          [0,3,2,1],
+          [0,1,4],
+          [1,2,4],
+          [2,3,4],
+          [3,0,4]
+        ]
       };
     }
 
@@ -6015,18 +6022,30 @@
       [4,5],[5,6],[6,7],[7,4],
       [0,4],[1,5],[2,6],[3,7]
     ];
-    return {points,edges};
+    const faces=[
+      [0,3,2,1],
+      [4,5,6,7],
+      [0,1,5,4],
+      [3,7,6,2],
+      [0,4,7,3],
+      [1,2,6,5]
+    ];
+    return {points,edges,faces};
   }
 
-  function shape3DProjectedPoints(o){
+  function shape3DViewPoints(o){
     const g=shape3DGeometry(o);
     const rx=Number(o.rotationX)||0;
     const ry=Number(o.rotationY)||0;
     const rz=Number(o.rotationZ)||0;
+    return g.points.map(p=>rotatePoint3D(p,rx,ry,rz));
+  }
+
+  function shape3DProjectedPoints(o){
+    const viewPts=shape3DViewPoints(o);
     const perspective=Math.max(180,Number(o.perspective)||520);
 
-    return g.points.map(p=>{
-      const r=rotatePoint3D(p,rx,ry,rz);
+    return viewPts.map(r=>{
       const denom=Math.max(80,perspective+r.z);
       const k=perspective/denom;
       return {
@@ -6037,15 +6056,74 @@
     });
   }
 
+  function shape3DFaceVisibility(o,g,viewPts){
+    const perspective=Math.max(180,Number(o.perspective)||520);
+    const camera={x:0,y:0,z:-perspective};
+
+    return (g.faces||[]).map(face=>{
+      if(!face || face.length<3) return false;
+      const a=viewPts[face[0]], b=viewPts[face[1]], c=viewPts[face[2]];
+      if(!a||!b||!c) return false;
+
+      const ab={x:b.x-a.x,y:b.y-a.y,z:b.z-a.z};
+      const ac={x:c.x-a.x,y:c.y-a.y,z:c.z-a.z};
+      let n={
+        x:ab.y*ac.z-ab.z*ac.y,
+        y:ab.z*ac.x-ab.x*ac.z,
+        z:ab.x*ac.y-ab.y*ac.x
+      };
+
+      const centroid=face.reduce((sum,i)=>{
+        const p=viewPts[i];
+        return {x:sum.x+p.x,y:sum.y+p.y,z:sum.z+p.z};
+      },{x:0,y:0,z:0});
+      centroid.x/=face.length;
+      centroid.y/=face.length;
+      centroid.z/=face.length;
+
+      // Force the normal to point outward from the object's center.
+      if(n.x*centroid.x+n.y*centroid.y+n.z*centroid.z<0){
+        n={x:-n.x,y:-n.y,z:-n.z};
+      }
+
+      const toCamera={
+        x:camera.x-centroid.x,
+        y:camera.y-centroid.y,
+        z:camera.z-centroid.z
+      };
+      return n.x*toCamera.x+n.y*toCamera.y+n.z*toCamera.z>0;
+    });
+  }
+
   function drawShape3D(o){
     const g=shape3DGeometry(o);
+    const viewPts=shape3DViewPoints(o);
     const pts=shape3DProjectedPoints(o);
     if(!pts.length) return;
 
-    const edges=g.edges.map(([a,b])=>({
-      a:pts[a],b:pts[b],
-      depth:(pts[a].z+pts[b].z)/2
-    })).sort((u,v)=>v.depth-u.depth);
+    const visibleFaces=shape3DFaceVisibility(o,g,viewPts);
+
+    const edges=g.edges.map(([ia,ib])=>{
+      const adjacent=[];
+      (g.faces||[]).forEach((face,fi)=>{
+        if(face.includes(ia) && face.includes(ib)) adjacent.push(fi);
+      });
+
+      // Convex solid rule:
+      // an edge is visible if at least one adjacent face is camera-facing.
+      // Only edges belonging exclusively to back-facing faces are hidden.
+      const hidden=adjacent.length>0 && !adjacent.some(fi=>visibleFaces[fi]);
+
+      return {
+        a:pts[ia],
+        b:pts[ib],
+        hidden,
+        depth:(viewPts[ia].z+viewPts[ib].z)/2
+      };
+    }).sort((u,v)=>{
+      if(u.hidden!==v.hidden) return u.hidden ? -1 : 1;
+      return v.depth-u.depth;
+    });
 
     ctx.save();
     ctx.strokeStyle=(o.style&&o.style.color)||'#111111';
@@ -6053,11 +6131,11 @@
     ctx.lineCap='round';
     ctx.lineJoin='round';
 
+    // Hidden edges first; solid visible edges are painted over them.
     for(const e of edges){
       ctx.beginPath();
-      ctx.globalAlpha=e.depth>0 ? .55 : 1;
-      if(e.depth>0) ctx.setLineDash([5/viewZoom,4/viewZoom]);
-      else ctx.setLineDash([]);
+      ctx.globalAlpha=e.hidden ? .5 : 1;
+      ctx.setLineDash(e.hidden ? [5/viewZoom,4/viewZoom] : []);
       ctx.moveTo(e.a.x,e.a.y);
       ctx.lineTo(e.b.x,e.b.y);
       ctx.stroke();
