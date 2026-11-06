@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.50</title>
+<title>Beyaz Tahta v18.51</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.50 · Silindir yan çizgileri ortak dış teğet olarak dinamik</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.51 · Küre ekvatoru görünür/gizli + dönen yarıçap</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6609,17 +6609,72 @@
 
     if(o.shape3dType==='sphere'){
       const eq=(g.curves||[]).find(c=>c.id==='equator')||(g.curves||[])[0];
-      const equator=(eq&&eq.points||[]).map(p=>shape3DProjectLocalPoint(o,p));
+      const localEquator=(eq&&eq.points)||[];
+      const equator=localEquator.map(p=>shape3DProjectLocalPoint(o,p));
 
       if(equator.length>2){
-        drawClosedProjectedLoop(equator);
+        const cam=shape3DCamera(o).position;
 
+        // Equator: front half solid, hidden half dashed.
+        for(let i=0;i<localEquator.length;i++){
+          const aLocal=localEquator[i];
+          const bLocal=localEquator[(i+1)%localEquator.length];
+          const midLocal={
+            x:(aLocal.x+bLocal.x)/2,
+            y:(aLocal.y+bLocal.y)/2,
+            z:(aLocal.z+bLocal.z)/2
+          };
+
+          const midView=shape3DLocalToViewPoint(o,midLocal);
+          const normal=midView;
+          const toCamera={
+            x:cam.x-midView.x,
+            y:cam.y-midView.y,
+            z:cam.z-midView.z
+          };
+
+          const visible=
+            normal.x*toCamera.x+
+            normal.y*toCamera.y+
+            normal.z*toCamera.z >= 0;
+
+          const a=equator[i];
+          const b=equator[(i+1)%equator.length];
+
+          ctx.beginPath();
+          ctx.globalAlpha=visible ? 1 : .5;
+          ctx.setLineDash(visible ? [] : [5/viewZoom,4/viewZoom]);
+          ctx.moveTo(a.x,a.y);
+          ctx.lineTo(b.x,b.y);
+          ctx.stroke();
+        }
+
+        ctx.globalAlpha=1;
+        ctx.setLineDash([]);
+
+        // Smallest circle enclosing the projected equator.
         const circle=smallestEnclosingCircle2D(equator);
         if(circle){
           ctx.beginPath();
           ctx.arc(circle.x,circle.y,circle.r,0,Math.PI*2);
           ctx.stroke();
         }
+
+        // Radius in the equator plane. Because both endpoints are local 3D
+        // points, it rotates together with the sphere around Y/X/Z.
+        const radius3D=Math.max(8,Math.min(
+          Number(o.sizeX)||120,
+          Number(o.sizeY)||120,
+          Number(o.sizeZ)||120
+        )/2);
+
+        const center2D=shape3DProjectLocalPoint(o,{x:0,y:0,z:0});
+        const radiusEnd2D=shape3DProjectLocalPoint(o,{x:radius3D,y:0,z:0});
+
+        ctx.beginPath();
+        ctx.moveTo(center2D.x,center2D.y);
+        ctx.lineTo(radiusEnd2D.x,radiusEnd2D.y);
+        ctx.stroke();
       }
 
       ctx.restore();
