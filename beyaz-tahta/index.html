@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.54</title>
+<title>Beyaz Tahta v18.55</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.54 · 3D dönüşler local X/Y/Z eksenlerine alındı</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.55 · 3D düz yüz snap: hareket eden nesne döner ve yapışır</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6318,7 +6318,7 @@
     const rel={
       x:p.x-cam.position.x,
       y:p.y-cam.position.y,
-      z:p.z-cam.position.z
+      z:(p.z+(Number(o.centerZ)||0))-cam.position.z
     };
     return {
       x:rel.x*cam.right.x+rel.y*cam.right.y+rel.z*cam.right.z,
@@ -6930,6 +6930,7 @@
     const base={
       kind:'shape3d',
       center:{x:cx,y:cy},
+      centerZ:0,
       sizeX:150*scale,
       sizeY:150*scale,
       sizeZ:150*scale,
@@ -9712,6 +9713,194 @@
     }
   }
 
+  function vec3Sub(a,b){
+    return {x:a.x-b.x,y:a.y-b.y,z:a.z-b.z};
+  }
+
+  function vec3Add(a,b){
+    return {x:a.x+b.x,y:a.y+b.y,z:a.z+b.z};
+  }
+
+  function vec3Scale(a,k){
+    return {x:a.x*k,y:a.y*k,z:a.z*k};
+  }
+
+  function vec3Length(a){
+    return Math.hypot(a.x,a.y,a.z);
+  }
+
+  function vec3Normalize(a){
+    const n=vec3Length(a)||1;
+    return {x:a.x/n,y:a.y/n,z:a.z/n};
+  }
+
+  function vec3Cross(a,b){
+    return {
+      x:a.y*b.z-a.z*b.y,
+      y:a.z*b.x-a.x*b.z,
+      z:a.x*b.y-a.y*b.x
+    };
+  }
+
+  function vec3Dot(a,b){
+    return a.x*b.x+a.y*b.y+a.z*b.z;
+  }
+
+  function shape3DWorldPoint(o,localPoint,q=shape3DQuaternion(o)){
+    const r=rotatePointByQuat(localPoint,q);
+    return {
+      x:(o.center&&Number(o.center.x)||0)+r.x,
+      y:(o.center&&Number(o.center.y)||0)+r.y,
+      z:(Number(o.centerZ)||0)+r.z
+    };
+  }
+
+  function shape3DLocalFaceDescriptors(o){
+    if(!o || o.kind!=='shape3d' || o.shape3dType==='sphere') return [];
+
+    const g=shape3DGeometry(o);
+    const out=[];
+
+    for(const face of (g.faces||[])){
+      if(!face || face.length<3) continue;
+      const vertices=face.map(i=>g.points[i]).filter(Boolean);
+      if(vertices.length<3) continue;
+
+      const center=vertices.reduce(
+        (a,p)=>({x:a.x+p.x,y:a.y+p.y,z:a.z+p.z}),
+        {x:0,y:0,z:0}
+      );
+      center.x/=vertices.length;
+      center.y/=vertices.length;
+      center.z/=vertices.length;
+
+      const ab=vec3Sub(vertices[1],vertices[0]);
+      const ac=vec3Sub(vertices[2],vertices[0]);
+      let normal=vec3Normalize(vec3Cross(ab,ac));
+
+      // Force normal outward from object origin.
+      if(vec3Dot(normal,center)<0) normal=vec3Scale(normal,-1);
+
+      out.push({center,normal,vertices});
+    }
+
+    if(o.shape3dType==='cylinder'){
+      const sy=Math.max(8,Number(o.sizeY)||120)/2;
+      out.push(
+        {
+          center:{x:0,y:-sy,z:0},
+          normal:{x:0,y:-1,z:0},
+          vertices:[]
+        },
+        {
+          center:{x:0,y:sy,z:0},
+          normal:{x:0,y:1,z:0},
+          vertices:[]
+        }
+      );
+    }
+
+    return out;
+  }
+
+  function shape3DFaceWorldDescriptor(o,face,q=shape3DQuaternion(o)){
+    const center=shape3DWorldPoint(o,face.center,q);
+    const normal=vec3Normalize(rotatePointByQuat(face.normal,q));
+    return {center,normal,local:face};
+  }
+
+  function shape3DFaceScreenCenter(o,face){
+    return shape3DProjectLocalPoint(o,face.center);
+  }
+
+  function best3DFaceSnapCandidate(moving,movingIndex){
+    if(!pointSnapEnabled || !moving || moving.kind!=='shape3d') return null;
+    if(moving.shape3dType==='sphere') return null;
+
+    const movingFaces=shape3DLocalFaceDescriptors(moving);
+    if(!movingFaces.length) return null;
+
+    const threshold=34/viewZoom;
+    let best=null;
+
+    for(let j=0;j<objects.length;j++){
+      if(j===movingIndex) continue;
+      const target=objects[j];
+      if(!target || target.kind!=='shape3d' || target.shape3dType==='sphere') continue;
+
+      const targetFaces=shape3DLocalFaceDescriptors(target);
+      if(!targetFaces.length) continue;
+
+      for(const mf of movingFaces){
+        const ms=shape3DFaceScreenCenter(moving,mf);
+
+        for(const tf of targetFaces){
+          const ts=shape3DFaceScreenCenter(target,tf);
+          const screenDist=Math.hypot(ms.x-ts.x,ms.y-ts.y);
+          if(screenDist>threshold) continue;
+
+          const mw=shape3DFaceWorldDescriptor(moving,mf);
+          const tw=shape3DFaceWorldDescriptor(target,tf);
+          const opposition=vec3Dot(mw.normal,vec3Scale(tw.normal,-1));
+
+          // Prefer close centers and already roughly compatible normals.
+          const score=screenDist+(1-Math.max(-1,Math.min(1,opposition)))*10;
+
+          if(!best || score<best.score){
+            best={
+              score,
+              movingFace:mf,
+              targetFace:tf,
+              targetObject:target,
+              targetIndex:j
+            };
+          }
+        }
+      }
+    }
+
+    return best;
+  }
+
+  function apply3DFaceSnap(moving,movingIndex){
+    const candidate=best3DFaceSnapCandidate(moving,movingIndex);
+    if(!candidate) return false;
+
+    const mf=candidate.movingFace;
+    const target=candidate.targetObject;
+    const tf=candidate.targetFace;
+
+    const baseQ=shape3DQuaternion(moving);
+    const movingWorldNormal=vec3Normalize(
+      rotatePointByQuat(mf.normal,baseQ)
+    );
+
+    const targetQ=shape3DQuaternion(target);
+    const targetWorldNormal=vec3Normalize(
+      rotatePointByQuat(tf.normal,targetQ)
+    );
+    const desiredMovingNormal=vec3Scale(targetWorldNormal,-1);
+
+    const alignQ=quatBetweenVectors(
+      movingWorldNormal,
+      desiredMovingNormal
+    );
+
+    // World-space alignment rotation affects only the moving object.
+    const snappedQ=quatMultiply(alignQ,baseQ);
+    moving.rotationQuat=snappedQ;
+
+    const movingCenterBefore=shape3DWorldPoint(moving,mf.center,snappedQ);
+    const targetCenter=shape3DWorldPoint(target,tf.center,targetQ);
+    const delta=vec3Sub(targetCenter,movingCenterBefore);
+
+    moving.center.x+=delta.x;
+    moving.center.y+=delta.y;
+    moving.centerZ=(Number(moving.centerZ)||0)+delta.z;
+
+    return true;
+  }
+
   function translateObject(o,dx,dy){
     if(o && finitePoint(o.rotationPivot)){
       o.rotationPivot={
@@ -10169,6 +10358,7 @@
       o.rotationY=Number(snap.rotationY)||0;
       o.rotationZ=Number(snap.rotationZ)||0;
       o.rotationQuat=shape3DQuaternion(snap);
+      o.centerZ=Number(snap.centerZ)||0;
       o.perspective=Number(snap.perspective)||520;
       o.cameraDistance=Number(snap.cameraDistance)||Number(snap.perspective)||520;
       o.boxAngle=0;
@@ -13552,16 +13742,18 @@
         const rawDx=p.x-selectStart.x,rawDy=p.y-selectStart.y;
         let d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
 
-        const snappedMove=snapWholeObjectMove(
-          selectSnapshot,
-          d.dx,
-          d.dy,
-          selectedIndex
-        );
+        if(selectSnapshot.kind!=='shape3d'){
+          const snappedMove=snapWholeObjectMove(
+            selectSnapshot,
+            d.dx,
+            d.dy,
+            selectedIndex
+          );
 
-        if(snappedMove.snapped){
-          d={dx:snappedMove.dx,dy:snappedMove.dy};
-          statusEl.textContent='Nesne snap — köşe/uç noktaları hizalandı';
+          if(snappedMove.snapped){
+            d={dx:snappedMove.dx,dy:snappedMove.dy};
+            statusEl.textContent='Nesne snap — köşe/uç noktaları hizalandı';
+          }
         }
 
         if(Math.hypot(d.dx,d.dy)>1e-5){
@@ -13569,6 +13761,14 @@
         }
         objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
         translateObject(objects[selectedIndex],d.dx,d.dy);
+
+        if(
+          selectSnapshot.kind==='shape3d' &&
+          pointSnapEnabled &&
+          apply3DFaceSnap(objects[selectedIndex],selectedIndex)
+        ){
+          statusEl.textContent='3D yüz snap — yüzler yapıştı';
+        }
 
         if(selectPivotSnapshot){
           selectionPivot={
