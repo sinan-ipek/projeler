@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.62</title>
+<title>Beyaz Tahta v18.63</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.62 · Daha doğal 3D perspektif</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.63 · Kamera Z eksenine paralel, ekran merkezi global orijin</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6359,11 +6359,20 @@
     return true;
   }
 
-  function ensureGlobal3DCameraTarget(o){
+  function ensureGlobal3DCameraTarget(){
     if(!global3DCameraTarget){
+      const r=canvas.getBoundingClientRect();
+      const c=screenToWorld({
+        x:r.width/2,
+        y:r.height/2
+      });
+
+      // Global 3D origin:
+      // the intersection of the screen rectangle diagonals.
+      // In global coordinates this point is (0,0,0).
       global3DCameraTarget={
-        x:Number(o&&o.center&&o.center.x)||0,
-        y:Number(o&&o.center&&o.center.y)||0,
+        x:c.x,
+        y:c.y,
         z:0
       };
     }
@@ -6379,46 +6388,29 @@
     };
   }
 
-  function shape3DCamera(o){
+  function shape3DCamera(){
     const d=GLOBAL_3D_CAMERA_DISTANCE;
-    const target=ensureGlobal3DCameraTarget(o);
+    const origin=ensureGlobal3DCameraTarget();
 
-    // Shared world-space camera. Same position/orientation is used
-    // for every 3D object on the board.
+    // v18.63
+    // Camera coordinates relative to the global origin are exactly:
+    // (0, 0, +d).
+    // Its optical axis is exactly parallel to the global Z axis.
+    //
+    // Canvas Y grows downward, therefore camera "up" is global -Y.
+    // Explicit basis vectors are used so +X always projects to screen-right.
     const position={
-      x:target.x+d*.55,
-      y:target.y-d*.32,
-      z:target.z+d
-    };
-
-    const fx=target.x-position.x;
-    const fy=target.y-position.y;
-    const fz=target.z-position.z;
-    const fl=Math.hypot(fx,fy,fz)||1;
-    const forward={x:fx/fl,y:fy/fl,z:fz/fl};
-
-    // World "up" is -Y because canvas Y grows downward.
-    const worldUp={x:0,y:-1,z:0};
-    let right={
-      x:forward.y*worldUp.z-forward.z*worldUp.y,
-      y:forward.z*worldUp.x-forward.x*worldUp.z,
-      z:forward.x*worldUp.y-forward.y*worldUp.x
-    };
-    const rl=Math.hypot(right.x,right.y,right.z)||1;
-    right={x:right.x/rl,y:right.y/rl,z:right.z/rl};
-
-    const up={
-      x:right.y*forward.z-right.z*forward.y,
-      y:right.z*forward.x-right.x*forward.z,
-      z:right.x*forward.y-right.y*forward.x
+      x:origin.x,
+      y:origin.y,
+      z:origin.z+d
     };
 
     return {
       position,
-      target:{...target},
-      forward,
-      right,
-      up,
+      target:{...origin},
+      forward:{x:0,y:0,z:-1},
+      right:{x:1,y:0,z:0},
+      up:{x:0,y:-1,z:0},
       focalLength:d
     };
   }
@@ -7096,9 +7088,7 @@
   }
 
   function makeShape3D(type,cx,cy,scale,style){
-    if(!global3DCameraTarget){
-      global3DCameraTarget={x:cx,y:cy,z:0};
-    }
+    ensureGlobal3DCameraTarget();
     const pose=default3DPose(type);
 
     const base={
@@ -7439,33 +7429,24 @@
   function shape3DDepthMoveHandle(o){
     if(!o || o.kind!=='shape3d' || !o.center) return null;
 
-    const centerWorld={
-      x:Number(o.center.x)||0,
-      y:Number(o.center.y)||0,
-      z:Number(o.centerZ)||0
-    };
-    const plusZWorld={
-      x:centerWorld.x,
-      y:centerWorld.y,
-      z:centerWorld.z+80
-    };
+    // With the camera exactly parallel to Z, the Z axis projects to one point.
+    // Therefore this is intentionally a UI depth control, not a fake
+    // perspective arrow pretending to show the projected Z direction.
+    const box=orientedSelectionBox(o);
+    if(!box) return null;
+    const oc=orientedBoxCorners(box,8/viewZoom);
+    if(!oc) return null;
 
-    const a=shape3DProjectWorldPoint(o,centerWorld);
-    const b=shape3DProjectWorldPoint(o,plusZWorld);
-    let dx=b.x-a.x;
-    let dy=b.y-a.y;
-    const len=Math.hypot(dx,dy)||1;
-    dx/=len;
-    dy/=len;
-
-    const distance=52/viewZoom;
+    const dx=-1/Math.SQRT2;
+    const dy=-1/Math.SQRT2;
+    const distance=46/viewZoom;
 
     return {
       name:'3d-move-z',
       axis:'Z↕',
-      base:{x:a.x,y:a.y},
-      x:a.x+dx*distance,
-      y:a.y+dy*distance,
+      base:{x:oc.nw.x,y:oc.nw.y},
+      x:oc.nw.x+dx*distance,
+      y:oc.nw.y+dy*distance,
       dir:{x:dx,y:dy}
     };
   }
