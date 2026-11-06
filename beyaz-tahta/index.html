@@ -1195,7 +1195,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.42 · Küp ve prizma ders kitabı başlangıç görünümü</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.43 · 3D ders kitabı oblique projeksiyon</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6149,24 +6149,44 @@
     return g.points.map(p=>rotatePointByQuat(p,q));
   }
 
+  function shape3DProjectionParams(o){
+    const depthScale=Number.isFinite(Number(o&&o.depthProjectionScale))
+      ? Number(o.depthProjectionScale)
+      : .62;
+    const depthAngle=Number.isFinite(Number(o&&o.depthProjectionAngle))
+      ? Number(o.depthProjectionAngle)
+      : -Math.PI/6;
+
+    return {
+      ax:Math.cos(depthAngle)*depthScale,
+      ay:Math.sin(depthAngle)*depthScale
+    };
+  }
+
   function shape3DProjectedPoints(o){
     const viewPts=shape3DViewPoints(o);
-    const perspective=Math.max(180,Number(o.perspective)||520);
+    const pr=shape3DProjectionParams(o);
 
-    return viewPts.map(r=>{
-      const denom=Math.max(80,perspective+r.z);
-      const k=perspective/denom;
-      return {
-        x:o.center.x+r.x*k,
-        y:o.center.y+r.y*k,
-        z:r.z
-      };
-    });
+    // Textbook / oblique projection:
+    // Y remains vertical on screen; Z creates a diagonal depth offset.
+    return viewPts.map(r=>({
+      x:o.center.x+r.x+r.z*pr.ax,
+      y:o.center.y+r.y+r.z*pr.ay,
+      z:r.z
+    }));
   }
 
   function shape3DFaceVisibility(o,g,viewPts){
-    const perspective=Math.max(180,Number(o.perspective)||520);
-    const camera={x:0,y:0,z:-perspective};
+    const pr=shape3DProjectionParams(o);
+
+    // Orthographic-oblique viewing direction corresponding to:
+    // screenX = x + ax*z, screenY = y + ay*z.
+    // The camera is conceptually far away in the opposite ray direction.
+    const toCamera={
+      x:pr.ax,
+      y:pr.ay,
+      z:-1
+    };
 
     return (g.faces||[]).map(face=>{
       if(!face || face.length<3) return false;
@@ -6189,16 +6209,10 @@
       centroid.y/=face.length;
       centroid.z/=face.length;
 
-      // Force the normal to point outward from the object's center.
       if(n.x*centroid.x+n.y*centroid.y+n.z*centroid.z<0){
         n={x:-n.x,y:-n.y,z:-n.z};
       }
 
-      const toCamera={
-        x:camera.x-centroid.x,
-        y:camera.y-centroid.y,
-        z:camera.z-centroid.z
-      };
       return n.x*toCamera.x+n.y*toCamera.y+n.z*toCamera.z>0;
     });
   }
@@ -6258,18 +6272,16 @@
     // Educational default views: upright height, readable base and depth.
     if(type==='cube3d'){
       return {
-        // Textbook-style cube: upright verticals, readable top/bottom depth.
-        rotationX:-0.28,
-        rotationY:0.78,
+        rotationX:0,
+        rotationY:Math.PI/4,
         rotationZ:0
       };
     }
 
     if(type==='box3d'){
       return {
-        // Same viewing direction as the cube; only proportions differ.
-        rotationX:-0.28,
-        rotationY:0.78,
+        rotationX:0,
+        rotationY:Math.PI/4,
         rotationZ:0
       };
     }
@@ -6307,6 +6319,8 @@
         pose.rotationZ
       ),
       perspective:520*scale,
+      depthProjectionScale:.62,
+      depthProjectionAngle:-Math.PI/6,
       style:{...style},
       source:'menu',
       boxAngle:0
