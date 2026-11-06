@@ -1195,7 +1195,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.39 · 3D arcball döndürme + Alt Z ekseni</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.40 · Arcball görseli kaldırıldı, 3D dönüş korundu</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -8361,27 +8361,6 @@
     ctx.closePath();
     ctx.stroke();
     ctx.setLineDash([]);
-
-    if(selected.kind==='shape3d' && selectAction==='rotate'){
-      const r=arcballRadiusForObject(selected);
-      ctx.save();
-      ctx.strokeStyle='rgba(37,99,235,.42)';
-      ctx.lineWidth=1/viewZoom;
-      ctx.setLineDash([4/viewZoom,4/viewZoom]);
-
-      ctx.beginPath();
-      ctx.arc(selected.center.x,selected.center.y,r,0,Math.PI*2);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.ellipse(selected.center.x,selected.center.y,r,r*.34,0,0,Math.PI*2);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.ellipse(selected.center.x,selected.center.y,r*.34,r,0,0,Math.PI*2);
-      ctx.stroke();
-      ctx.restore();
-    }
 
     // Shape's own editable points
     if((selected.kind==='arc' || selected.kind==='sector') && special.length){
