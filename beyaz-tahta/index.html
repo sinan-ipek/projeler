@@ -1195,7 +1195,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.40 · Arcball görseli kaldırıldı, 3D dönüş korundu</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.41 · 3D şekiller için öğretici varsayılan oryantasyon</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6254,17 +6254,56 @@
     ctx.restore();
   }
 
+  function default3DPose(type){
+    // Educational default views: upright height, readable base and depth.
+    if(type==='cube3d'){
+      return {
+        rotationX:-0.30,
+        rotationY:-0.82,
+        rotationZ:0
+      };
+    }
+
+    if(type==='box3d'){
+      return {
+        rotationX:-0.26,
+        rotationY:-0.78,
+        rotationZ:0
+      };
+    }
+
+    if(type==='pyramid3d'){
+      return {
+        rotationX:-0.10,
+        rotationY:-0.92,
+        rotationZ:0
+      };
+    }
+
+    return {
+      rotationX:-0.28,
+      rotationY:-0.80,
+      rotationZ:0
+    };
+  }
+
   function makeShape3D(type,cx,cy,scale,style){
+    const pose=default3DPose(type);
+
     const base={
       kind:'shape3d',
       center:{x:cx,y:cy},
       sizeX:150*scale,
       sizeY:150*scale,
       sizeZ:150*scale,
-      rotationX:-0.45,
-      rotationY:0.65,
-      rotationZ:0,
-      rotationQuat:quatFromEuler(-0.45,0.65,0),
+      rotationX:pose.rotationX,
+      rotationY:pose.rotationY,
+      rotationZ:pose.rotationZ,
+      rotationQuat:quatFromEuler(
+        pose.rotationX,
+        pose.rotationY,
+        pose.rotationZ
+      ),
       perspective:520*scale,
       style:{...style},
       source:'menu',
@@ -6289,6 +6328,7 @@
     }else{
       return null;
     }
+
     return base;
   }
 
