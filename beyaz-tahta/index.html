@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.64</title>
+<title>Beyaz Tahta v18.65</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.64 · Z hareketi biraz hızlandırıldı</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.65 · 3D köşe ölçekleme sıçraması giderildi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -10405,11 +10405,43 @@
     }
 
     if(snap.kind==='shape3d'){
-      const scale=Math.max(.06,Math.sqrt(Math.abs(sx*sy)));
-      o.center=newCenter;
+      /*
+        3D corner scaling must NOT derive the object's world center from the
+        projected selection-box center. Under perspective those are different
+        points, which caused the object to jump as soon as dragging began.
+
+        Scale uniformly around the object's own world-space center instead.
+        center.x / center.y / centerZ remain exactly unchanged.
+      */
+      const handleCorner={
+        nw:{x:box.minX,y:box.minY},
+        ne:{x:box.maxX,y:box.minY},
+        se:{x:box.maxX,y:box.maxY},
+        sw:{x:box.minX,y:box.maxY}
+      }[handle];
+
+      if(!handleCorner) return false;
+
+      const startRadius=Math.max(
+        1,
+        Math.hypot(handleCorner.x,handleCorner.y)
+      );
+      const pointerRadius=Math.max(
+        1,
+        Math.hypot(lp.x,lp.y)
+      );
+      const scale=Math.max(.06,pointerRadius/startRadius);
+
+      o.center={
+        x:Number(snap.center&&snap.center.x)||0,
+        y:Number(snap.center&&snap.center.y)||0
+      };
+      o.centerZ=Number(snap.centerZ)||0;
+
       o.sizeX=Math.max(12,(snap.sizeX||120)*scale);
       o.sizeY=Math.max(12,(snap.sizeY||120)*scale);
       o.sizeZ=Math.max(12,(snap.sizeZ||120)*scale);
+
       o.rotationX=Number(snap.rotationX)||0;
       o.rotationY=Number(snap.rotationY)||0;
       o.rotationZ=Number(snap.rotationZ)||0;
