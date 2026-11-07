@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.68</title>
+<title>Beyaz Tahta v18.69</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1199,7 +1199,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.68 · Açılış aracı seçim oku</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.69 · Seçili 3D grid + grup XYZ dönüş + Esc/Space kısayolları</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1248,6 +1248,11 @@
 
           <section class="helpSection">
             <h3>Seçme ve düzenleme</h3>
+            <ul>
+              <li>Esc: seçim aracına dön.</li>
+              <li>Aralık: çizim kalemini seç.</li>
+              <li>3D nesne seçilince XZ grid görünür; birden çok 3D nesnede X/Y/Z grup döndürme kolları görünür.</li>
+            </ul>
             <ul>
               <li>Nesneye tıkla; boş alanda sürükleyerek çoklu seçim yap.</li>
               <li>Ctrl + tıklama ile seçime nesne ekle / çıkar.</li>
@@ -1637,6 +1642,7 @@
   let groupSnapshots = null;
   let groupBoxSnapshot = null;
   let groupSelectionAngle = 0;
+  let group3DRotationCentroidSnapshot = null;
   let activeHandle = null;
   let selectionPivot = null;
   let selectPivotSnapshot = null;
@@ -1800,6 +1806,7 @@
     selectSnapshot=null;
     groupSnapshots=null;
     groupBoxSnapshot=null;
+    group3DRotationCentroidSnapshot=null;
     activeHandle=null;
     marqueeStart=null;
     marqueeEnd=null;
@@ -8433,6 +8440,233 @@
     ] : [];
   }
 
+
+  function selected3DIndices(indices=selectedIndices){
+    return (indices||[])
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length)
+      .filter(i=>objects[i] && objects[i].kind==='shape3d');
+  }
+
+  function allSelectedAre3D(){
+    return selectedIndices.length>0 &&
+      selectedIndices.every(i=>objects[i] && objects[i].kind==='shape3d');
+  }
+
+  function shape3DWorldSamplePoints(o){
+    if(!o || o.kind!=='shape3d') return [];
+    const g=shape3DGeometry(o);
+    const q=shape3DQuaternion(o);
+    const local=[
+      ...(g.points||[]),
+      ...(g.curves||[]).flatMap(c=>{
+        const pts=c.points||[];
+        const stride=Math.max(1,Math.floor(pts.length/32));
+        return pts.filter((_,i)=>i%stride===0);
+      })
+    ];
+    return local.map(p=>{
+      const r=rotatePointByQuat(p,q);
+      return {
+        x:(Number(o.center&&o.center.x)||0)+r.x,
+        y:(Number(o.center&&o.center.y)||0)+r.y,
+        z:(Number(o.centerZ)||0)+r.z
+      };
+    });
+  }
+
+  function selected3DWorldCentroid(indices=selectedIndices){
+    const ids=selected3DIndices(indices);
+    if(!ids.length) return null;
+    const sum=ids.reduce((a,i)=>{
+      const o=objects[i];
+      a.x+=Number(o.center&&o.center.x)||0;
+      a.y+=Number(o.center&&o.center.y)||0;
+      a.z+=Number(o.centerZ)||0;
+      return a;
+    },{x:0,y:0,z:0});
+    return {
+      x:sum.x/ids.length,
+      y:sum.y/ids.length,
+      z:sum.z/ids.length
+    };
+  }
+
+  function selected3DGroundGridInfo(indices=selectedIndices){
+    const ids=selected3DIndices(indices);
+    if(!ids.length) return null;
+
+    const pts=[];
+    for(const i of ids) pts.push(...shape3DWorldSamplePoints(objects[i]));
+    if(!pts.length) return null;
+
+    let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity,maxY=-Infinity;
+    for(const p of pts){
+      minX=Math.min(minX,p.x); maxX=Math.max(maxX,p.x);
+      minZ=Math.min(minZ,p.z); maxZ=Math.max(maxZ,p.z);
+      maxY=Math.max(maxY,p.y);
+    }
+
+    const spanX=Math.max(40,maxX-minX);
+    const spanZ=Math.max(40,maxZ-minZ);
+    const margin=Math.max(28,Math.max(spanX,spanZ)*.14);
+
+    minX-=margin; maxX+=margin;
+    minZ-=margin; maxZ+=margin;
+
+    const targetLines=10;
+    const rawStep=Math.max(maxX-minX,maxZ-minZ)/targetLines;
+    const niceSteps=[10,20,25,40,50,80,100,150,200,300,500];
+    const step=niceSteps.find(v=>v>=rawStep)||Math.ceil(rawStep/100)*100;
+
+    return {
+      ids,
+      ref:objects[ids[0]],
+      y:maxY,
+      minX,maxX,minZ,maxZ,step
+    };
+  }
+
+  function drawSelected3DGroundGrid(){
+    const info=selected3DGroundGridInfo();
+    if(!info) return;
+
+    const {ref,y,minX,maxX,minZ,maxZ,step}=info;
+    const startX=Math.floor(minX/step)*step;
+    const endX=Math.ceil(maxX/step)*step;
+    const startZ=Math.floor(minZ/step)*step;
+    const endZ=Math.ceil(maxZ/step)*step;
+
+    ctx.save();
+    ctx.strokeStyle='rgba(148,163,184,.48)';
+    ctx.lineWidth=1/viewZoom;
+    ctx.setLineDash([]);
+
+    let count=0;
+    for(let x=startX;x<=endX+step*.5;x+=step){
+      const a=shape3DProjectWorldPoint(ref,{x,y,z:startZ});
+      const b=shape3DProjectWorldPoint(ref,{x,y,z:endZ});
+      ctx.beginPath();
+      ctx.moveTo(a.x,a.y);
+      ctx.lineTo(b.x,b.y);
+      ctx.stroke();
+      if(++count>80) break;
+    }
+
+    count=0;
+    for(let z=startZ;z<=endZ+step*.5;z+=step){
+      const a=shape3DProjectWorldPoint(ref,{x:startX,y,z});
+      const b=shape3DProjectWorldPoint(ref,{x:endX,y,z});
+      ctx.beginPath();
+      ctx.moveTo(a.x,a.y);
+      ctx.lineTo(b.x,b.y);
+      ctx.stroke();
+      if(++count>80) break;
+    }
+
+    ctx.restore();
+  }
+
+  function group3DRotationHandles(){
+    if(selectedIndices.length<2 || !allSelectedAre3D()) return [];
+    if(selectedIndices.some(i=>objects[i] && objects[i].locked)) return [];
+
+    const c=selected3DWorldCentroid();
+    if(!c) return [];
+
+    const ref=objects[selectedIndices[0]];
+    const info=selected3DGroundGridInfo();
+    const span=info
+      ? Math.max(info.maxX-info.minX,info.maxZ-info.minZ)
+      : 180;
+    const len=Math.max(70,Math.min(160,span*.28));
+
+    const center=shape3DProjectWorldPoint(ref,c);
+    const axes=[
+      {name:'3d-group-rotate-x',axis:'X',world:{x:c.x+len,y:c.y,z:c.z}},
+      {name:'3d-group-rotate-y',axis:'Y',world:{x:c.x,y:c.y+len,z:c.z}},
+      {name:'3d-group-rotate-z',axis:'Z',world:{x:c.x,y:c.y,z:c.z+len}}
+    ];
+
+    return axes.map(h=>{
+      const p=shape3DProjectWorldPoint(ref,h.world);
+      return {...h,base:{x:center.x,y:center.y},x:p.x,y:p.y,centroid:c};
+    });
+  }
+
+  function drawGroup3DRotationHandles(){
+    const handles=group3DRotationHandles();
+    if(!handles.length) return;
+
+    ctx.save();
+    ctx.lineWidth=1.5/viewZoom;
+    ctx.strokeStyle='#2563eb';
+    ctx.font=`bold ${10/viewZoom}px Arial,sans-serif`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+
+    for(const h of handles){
+      ctx.beginPath();
+      ctx.moveTo(h.base.x,h.base.y);
+      ctx.lineTo(h.x,h.y);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.fillStyle='white';
+      ctx.arc(h.x,h.y,8/viewZoom,0,Math.PI*2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle='#2563eb';
+      ctx.fillText(h.axis,h.x,h.y+.2/viewZoom);
+    }
+
+    const c=handles[0].base;
+    ctx.beginPath();
+    ctx.fillStyle='#f59e0b';
+    ctx.arc(c.x,c.y,4/viewZoom,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function rotateShape3DGroupSnapshot(axisName,angle){
+    if(!groupSnapshots || !group3DRotationCentroidSnapshot) return false;
+
+    const axis=
+      axisName==='x' ? {x:1,y:0,z:0} :
+      axisName==='y' ? {x:0,y:1,z:0} :
+      {x:0,y:0,z:1};
+
+    const q=quatFromAxisAngle(axis,angle);
+    const c=group3DRotationCentroidSnapshot;
+
+    for(const item of groupSnapshots){
+      const snap=item.object;
+      if(!snap || snap.kind!=='shape3d') continue;
+      const o=cloneObject(snap);
+
+      const rel={
+        x:(Number(snap.center&&snap.center.x)||0)-c.x,
+        y:(Number(snap.center&&snap.center.y)||0)-c.y,
+        z:(Number(snap.centerZ)||0)-c.z
+      };
+      const rr=rotatePointByQuat(rel,q);
+
+      o.center={x:c.x+rr.x,y:c.y+rr.y};
+      o.centerZ=c.z+rr.z;
+
+      // Global group-axis rotation: pre-multiply each object's orientation.
+      o.rotationQuat=quatMultiply(q,shape3DQuaternion(snap));
+      o.rotationX=Number(snap.rotationX)||0;
+      o.rotationY=Number(snap.rotationY)||0;
+      o.rotationZ=Number(snap.rotationZ)||0;
+      o.boxAngle=0;
+
+      objects[item.index]=o;
+    }
+
+    return true;
+  }
+
   function groupOrientedBox(indices=selectedIndices){
     const pts=[];
     for(const i of indices){
@@ -8611,13 +8845,20 @@
     if(!box) return null;
     const oc=orientedBoxCorners(box,8/viewZoom);
 
-    if(hitRotationPivot(p,pointerType)) return 'pivot';
-
     const hitR=(pointerType==='touch' ? 22 : 11)/viewZoom;
+
+    if(allSelectedAre3D()){
+      for(const h of group3DRotationHandles()){
+        if(Math.hypot(p.x-h.x,p.y-h.y)<=hitR) return h.name;
+      }
+    }else if(hitRotationPivot(p,pointerType)){
+      return 'pivot';
+    }
+
     for(const [name,h] of [['nw',oc.nw],['ne',oc.ne],['se',oc.se],['sw',oc.sw]]){
       if(Math.hypot(p.x-h.x,p.y-h.y)<=hitR) return name;
     }
-    if(Math.hypot(p.x-oc.rotate.x,p.y-oc.rotate.y)<=hitR) return 'rotate';
+    if(!allSelectedAre3D() && Math.hypot(p.x-oc.rotate.x,p.y-oc.rotate.y)<=hitR) return 'rotate';
     return null;
   }
 
@@ -8820,28 +9061,22 @@
         ctx.stroke();
       }
 
-      ctx.beginPath();
-      ctx.moveTo(oc.topCenter.x,oc.topCenter.y);
-      ctx.lineTo(oc.rotate.x,oc.rotate.y);
-      ctx.stroke();
+      if(allSelectedAre3D()){
+        drawGroup3DRotationHandles();
+      }else{
+        ctx.beginPath();
+        ctx.moveTo(oc.topCenter.x,oc.topCenter.y);
+        ctx.lineTo(oc.rotate.x,oc.rotate.y);
+        ctx.stroke();
 
-      ctx.beginPath();
-      ctx.fillStyle='white';
-      ctx.arc(oc.rotate.x,oc.rotate.y,(selected.kind==='shape3d'?8:6)/viewZoom,0,Math.PI*2);
-      ctx.fill();
-      ctx.stroke();
+        ctx.beginPath();
+        ctx.fillStyle='white';
+        ctx.arc(oc.rotate.x,oc.rotate.y,6/viewZoom,0,Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
 
-      if(selected.kind==='shape3d'){
-        ctx.save();
-        ctx.fillStyle='#2563eb';
-        ctx.font=`bold ${10/viewZoom}px Arial,sans-serif`;
-        ctx.textAlign='center';
-        ctx.textBaseline='middle';
-        ctx.fillText('↻',oc.rotate.x,oc.rotate.y+.2/viewZoom);
-        ctx.restore();
+        drawRotationPivot(currentSelectionPivot());
       }
-
-      drawRotationPivot(currentSelectionPivot());
     }
 
     ctx.restore();
@@ -10830,6 +11065,7 @@
     );
 
     drawAdaptiveGrid();
+    drawSelected3DGroundGrid();
 
     const viewportWorld=currentViewportWorldBounds(96);
 
@@ -13247,6 +13483,25 @@
             return;
           }
 
+          if(String(gh).startsWith('3d-group-rotate-')){
+            recordObjectStates(selectedIndices);
+            selectStart=p;
+            activeHandle=gh;
+            groupBoxSnapshot=groupOrientedBox();
+            group3DRotationCentroidSnapshot=selected3DWorldCentroid();
+            groupSnapshots=selectedIndices.map(i=>({
+              index:i,
+              object:cloneObject(objects[i])
+            }));
+            selectSnapshot=null;
+            selectAction='group3DRotateAxis';
+            statusEl.textContent=
+              '3D grup '+String(gh).slice(-1).toUpperCase()+
+              ' ekseni etrafında döndürülüyor';
+            redraw();
+            return;
+          }
+
           if(!e.altKey){
             recordObjectStates(selectedIndices);
           }
@@ -13743,6 +13998,38 @@
           ? 'Döndürme merkezi snap — köşe/uç noktasına kilitlendi'
           : 'Döndürme merkezi taşınıyor';
 
+        redraw();
+        return;
+      }
+
+      if(selectAction==='group3DRotateAxis'){
+        if(!groupSnapshots || !group3DRotationCentroidSnapshot) return;
+
+        const axisName=String(activeHandle||'').slice(-1).toLowerCase();
+        let amount=0;
+
+        if(axisName==='x'){
+          amount=-(p.y-selectStart.y)*.012;
+        }else if(axisName==='y'){
+          amount=(p.x-selectStart.x)*.012;
+        }else{
+          const ref=groupSnapshots[0] && groupSnapshots[0].object;
+          if(!ref) return;
+          const c2=shape3DProjectWorldPoint(ref,group3DRotationCentroidSnapshot);
+          const a0=Math.atan2(selectStart.y-c2.y,selectStart.x-c2.x);
+          const a1=Math.atan2(p.y-c2.y,p.x-c2.x);
+          amount=a1-a0;
+        }
+
+        if(e.shiftKey){
+          const step=Math.PI/12;
+          amount=Math.round(amount/step)*step;
+        }
+
+        rotateShape3DGroupSnapshot(axisName,amount);
+        statusEl.textContent=
+          '3D grup '+axisName.toUpperCase()+
+          ' ekseni · '+Math.round(amount*180/Math.PI)+'°';
         redraw();
         return;
       }
@@ -16638,7 +16925,7 @@
       return;
     }
 
-    if(!typingTarget && mode==='pen' && bezierDraftActive && (e.key==='Enter' || e.key==='Escape')){
+    if(!typingTarget && mode==='pen' && bezierDraftActive && e.key==='Enter'){
       e.preventDefault();
       finishBezierDraft('Açık Bézier tamamlandı');
       return;
@@ -16646,22 +16933,14 @@
 
     if(
       !typingTarget &&
-      mode==='select' &&
-      selectedIndices.length &&
       e.code==='Space' &&
-      !cmd
+      !cmd &&
+      !e.altKey &&
+      !e.shiftKey
     ){
       e.preventDefault();
-
-      if(!lastRepeatTransform){
-        statusEl.textContent='Tekrarlanacak bir transformasyon yok';
-        return;
-      }
-
-      applyRepeatTransformToSelection(
-        lastRepeatTransform,
-        e.shiftKey
-      );
+      inkBtn.click();
+      statusEl.textContent='Çizim kalemi';
       return;
     }
 
@@ -16701,16 +16980,44 @@
     }
 
     if(e.key==='Escape'){
-      if(helpModal.classList.contains('open')){
-        e.preventDefault();
-        closeHelpModal();
-        return;
-      }
+      e.preventDefault();
+
+      if(helpModal.classList.contains('open')) closeHelpModal();
+      if(feedbackModal.classList.contains('open')) closeFeedbackModal();
+      if(textEditing) closeTextEditor(true);
+      if(bezierDraftActive) finishBezierDraft('Açık Bézier tamamlandı');
+
+      selectLongPressTriggered=false;
+      mode='select';
       setSelection([]);
       selectAction=null;
+      selectStart=null;
+      selectSnapshot=null;
+      groupSnapshots=null;
+      groupBoxSnapshot=null;
+      group3DRotationCentroidSnapshot=null;
+      activeHandle=null;
       marqueeStart=null;
       marqueeEnd=null;
+      eraserCursor=null;
+
+      inkBtn.classList.remove('active');
+      penBtn.classList.remove('active');
+      eraserBtn.classList.remove('active');
+      fillBtn.classList.remove('active');
+      textBtn.classList.remove('active');
+      selectBtn.classList.add('active');
+
+      closeFillMenu();
+      closeSelectModeMenu();
+      closeContextMenu();
+      eraserMenu.classList.remove('open');
+      colorMenu.classList.remove('open');
+      restoreToolCursor();
+
+      statusEl.textContent='Seçim modu';
       redraw();
+      return;
     }
   });
 
