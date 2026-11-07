@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.70</title>
+<title>Beyaz Tahta v18.71</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -801,6 +801,17 @@
       </svg>
     </button>
 
+    <button id="grid3DBtn" class="iconBtn" title="3D XZ Grid" aria-label="3D XZ Grid" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3.5 8.5 12 4l8.5 4.5L12 13 3.5 8.5Z"
+              fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M3.5 12 12 16.5 20.5 12M3.5 15.5 12 20l8.5-4.5"
+              fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/>
+        <path d="m7.7 6.3 8.6 4.5M16.3 6.3l-8.6 4.5"
+              fill="none" stroke="currentColor" stroke-width="1.15"/>
+      </svg>
+    </button>
+
     <div class="selectToolWrap">
       <button id="selectBtn" class="active iconBtn" title="Seç" aria-label="Seç">
         <svg id="selectBtnIcon" viewBox="0 0 24 24" aria-hidden="true">
@@ -1199,7 +1210,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.70 · 3D seçim grid rengi koyulaştırıldı</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.71 · Aç/kapat evrensel XZ grid</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1251,7 +1262,8 @@
             <ul>
               <li>Esc: seçim aracına dön.</li>
               <li>Aralık: çizim kalemini seç.</li>
-              <li>3D nesne seçilince XZ grid görünür; birden çok 3D nesnede X/Y/Z grup döndürme kolları görünür.</li>
+              <li>Grid düğmesi: evrensel XZ gridini açar ve kapatır.</li>
+              <li>Birden çok 3D nesnede X/Y/Z grup döndürme kolları görünür.</li>
             </ul>
             <ul>
               <li>Nesneye tıkla; boş alanda sürükleyerek çoklu seçim yap.</li>
@@ -1409,6 +1421,7 @@
   const inkBtn = document.getElementById('inkBtn');
   const penBtn = document.getElementById('penBtn');
   const selectBtn = document.getElementById('selectBtn');
+  const grid3DBtn = document.getElementById('grid3DBtn');
   const selectBtnIconShaft = document.getElementById('selectBtnIconShaft');
   const selectBtnIconHead = document.getElementById('selectBtnIconHead');
   const selectModeMenu = document.getElementById('selectModeMenu');
@@ -1498,6 +1511,7 @@
   let viewX = 0;
   let viewY = 0;
   let viewZoom = 1;
+  let global3DGridVisible = false;
   const MIN_ZOOM = 0.12;
   const MAX_ZOOM = 8;
 
@@ -8491,6 +8505,45 @@
     };
   }
 
+
+  function drawUniversal3DXZGrid(){
+    if(!global3DGridVisible) return;
+
+    const origin=ensureGlobal3DCameraTarget();
+    const step=50;
+    const half=2000;
+    const y=origin.y;
+    const minX=origin.x-half;
+    const maxX=origin.x+half;
+    const minZ=-half;
+    const maxZ=half;
+
+    ctx.save();
+    ctx.strokeStyle='rgba(148,163,184,.48)';
+    ctx.lineWidth=1/viewZoom;
+    ctx.setLineDash([]);
+
+    for(let x=minX;x<=maxX+.1;x+=step){
+      const a=shape3DProjectWorldPoint(null,{x,y,z:minZ});
+      const b=shape3DProjectWorldPoint(null,{x,y,z:maxZ});
+      ctx.beginPath();
+      ctx.moveTo(a.x,a.y);
+      ctx.lineTo(b.x,b.y);
+      ctx.stroke();
+    }
+
+    for(let z=minZ;z<=maxZ+.1;z+=step){
+      const a=shape3DProjectWorldPoint(null,{x:minX,y,z});
+      const b=shape3DProjectWorldPoint(null,{x:maxX,y,z});
+      ctx.beginPath();
+      ctx.moveTo(a.x,a.y);
+      ctx.lineTo(b.x,b.y);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
   function selected3DGroundGridInfo(indices=selectedIndices){
     const ids=selected3DIndices(indices);
     if(!ids.length) return null;
@@ -8537,7 +8590,7 @@
     const endZ=Math.ceil(maxZ/step)*step;
 
     ctx.save();
-    ctx.strokeStyle='rgba(100,116,139,.68)';
+    ctx.strokeStyle='rgba(148,163,184,.48)';
     ctx.lineWidth=1/viewZoom;
     ctx.setLineDash([]);
 
@@ -11065,7 +11118,7 @@
     );
 
     drawAdaptiveGrid();
-    drawSelected3DGroundGrid();
+    drawUniversal3DXZGrid();
 
     const viewportWorld=currentViewportWorldBounds(96);
 
@@ -16295,6 +16348,17 @@
 
 
   updateBooleanButtons();
+
+  grid3DBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    global3DGridVisible=!global3DGridVisible;
+    grid3DBtn.classList.toggle('active',global3DGridVisible);
+    grid3DBtn.setAttribute('aria-pressed',String(global3DGridVisible));
+    statusEl.textContent=global3DGridVisible
+      ? '3D XZ grid açık'
+      : '3D XZ grid kapalı';
+    redraw();
+  });
 
   pointSnapBtn.addEventListener('click',e=>{
     e.stopPropagation();
