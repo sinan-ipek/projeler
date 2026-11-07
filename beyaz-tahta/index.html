@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.65</title>
+<title>Beyaz Tahta v18.66</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1198,7 +1198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.65 · 3D köşe ölçekleme sıçraması giderildi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.66 · Kamera biraz yukarı, Z kontrolü sağ üstte ve daha hızlı</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6262,7 +6262,7 @@
   let shape3DZWheelAccumulator=0;
 
   const SHAPE3D_Z_WHEEL_THRESHOLD=80;
-  const SHAPE3D_Z_WHEEL_STEP=8;
+  const SHAPE3D_Z_WHEEL_STEP=10;
   const SHAPE3D_Z_EASE=.16;
   const SHAPE3D_Z_EPS=.03;
   const SHAPE3D_Z_MAX_LEAD=36;
@@ -6392,25 +6392,38 @@
     const d=GLOBAL_3D_CAMERA_DISTANCE;
     const origin=ensureGlobal3DCameraTarget();
 
-    // v18.63
-    // Camera coordinates relative to the global origin are exactly:
-    // (0, 0, +d).
-    // Its optical axis is exactly parallel to the global Z axis.
-    //
-    // Canvas Y grows downward, therefore camera "up" is global -Y.
-    // Explicit basis vectors are used so +X always projects to screen-right.
+    // v18.66
+    // Kamera global Y ekseninde biraz yukarı alınmıştır.
+    // X konumu değişmez; bu yüzden global X ekranda yatay kalır.
+    // Canvas Y aşağı doğru büyüdüğü için "yukarı" negatif Y'dir.
+    const cameraYOffset=-120;
     const position={
       x:origin.x,
-      y:origin.y,
+      y:origin.y+cameraYOffset,
       z:origin.z+d
+    };
+
+    const fy=origin.y-position.y;
+    const fz=origin.z-position.z;
+    const fl=Math.hypot(fy,fz)||1;
+    const forward={x:0,y:fy/fl,z:fz/fl};
+
+    // X eksenini tam ekran yatayında tut.
+    const right={x:1,y:0,z:0};
+
+    // Kamera yukarısı, forward'a dik ve dünya -Y yönüyle uyumlu.
+    const up={
+      x:0,
+      y:forward.z,
+      z:-forward.y
     };
 
     return {
       position,
       target:{...origin},
-      forward:{x:0,y:0,z:-1},
-      right:{x:1,y:0,z:0},
-      up:{x:0,y:-1,z:0},
+      forward,
+      right,
+      up,
       focalLength:d
     };
   }
@@ -7437,16 +7450,16 @@
     const oc=orientedBoxCorners(box,8/viewZoom);
     if(!oc) return null;
 
-    const dx=-1/Math.SQRT2;
+    const dx=1/Math.SQRT2;
     const dy=-1/Math.SQRT2;
     const distance=46/viewZoom;
 
     return {
       name:'3d-move-z',
       axis:'Z↕',
-      base:{x:oc.nw.x,y:oc.nw.y},
-      x:oc.nw.x+dx*distance,
-      y:oc.nw.y+dy*distance,
+      base:{x:oc.ne.x,y:oc.ne.y},
+      x:oc.ne.x+dx*distance,
+      y:oc.ne.y+dy*distance,
       dir:{x:dx,y:dy}
     };
   }
