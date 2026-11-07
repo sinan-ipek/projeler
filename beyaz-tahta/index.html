@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.66</title>
+<title>Beyaz Tahta v18.67</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -973,6 +973,7 @@
         <option value="cube3d">Küp 3D</option>
         <option value="pyramid3d">Piramit 3D</option>
         <option value="cylinder3d">Silindir 3D</option>
+        <option value="cone3d">Koni 3D</option>
         <option value="hexpyramid3d">Altıgen piramit 3D</option>
         <option value="hexprism3d">Altıgen prizma 3D</option>
         <option value="sphere3d">Küre 3D</option>
@@ -1198,7 +1199,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.66 · Kamera biraz yukarı, Z kontrolü sağ üstte ve daha hızlı</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.67 · 3D koni eklendi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6210,6 +6211,18 @@
       };
     }
 
+    if(t==='cone'){
+      const r=Math.min(sx,sz);
+      return {
+        points:[{x:0,y:-sy,z:0}],
+        edges:[],
+        faces:[],
+        curves:[
+          {id:'baseEllipse',points:circle3DPoints(r,sy,128)}
+        ]
+      };
+    }
+
     if(t==='sphere'){
       const r=Math.min(sx,sy,sz);
       return {
@@ -6745,6 +6758,32 @@
       .slice(0,2);
   }
 
+  function coneOuterTangentSegments(base,apex){
+    if(!apex || !base || base.length<3) return [];
+
+    const labeled=[
+      ...base.map((p,i)=>({...p,part:'base',index:i})),
+      {...apex,part:'apex',index:-1}
+    ];
+    const hull=convexHullLabeled(labeled);
+    const tangents=[];
+
+    for(let i=0;i<hull.length;i++){
+      const a=hull[i];
+      const b=hull[(i+1)%hull.length];
+      if(a.part==='apex' || b.part==='apex'){
+        tangents.push({a,b});
+      }
+    }
+
+    return tangents
+      .sort((u,v)=>
+        Math.hypot(v.b.x-v.a.x,v.b.y-v.a.y)-
+        Math.hypot(u.b.x-u.a.x,u.b.y-u.a.y)
+      )
+      .slice(0,2);
+  }
+
   function transformedLocalVector(o,v){
     return rotatePointByQuat(v,shape3DQuaternion(o));
   }
@@ -6966,6 +7005,47 @@
       return;
     }
 
+    if(o.shape3dType==='cone'){
+      const curves=g.curves||[];
+      const baseCurve=curves.find(c=>c.id==='baseEllipse')||curves[0];
+      const baseLocal=(baseCurve&&baseCurve.points)||[];
+      const base=baseLocal.map(p=>shape3DProjectLocalPoint(o,p));
+      const sy=Math.max(8,Number(o.sizeY)||120)/2;
+      const apex=shape3DProjectLocalPoint(o,{x:0,y:-sy,z:0});
+
+      if(base.length>2 && apex){
+        const baseVisibility=cylinderRingVisibility(o,baseLocal,sy);
+        drawLoopByVisibility(base,baseVisibility,hidden3DStyle().dash);
+
+        const tangents=coneOuterTangentSegments(base,apex);
+        for(const seg of tangents){
+          ctx.beginPath();
+          ctx.globalAlpha=1;
+          ctx.setLineDash([]);
+          ctx.moveTo(seg.a.x,seg.a.y);
+          ctx.lineTo(seg.b.x,seg.b.y);
+          ctx.stroke();
+        }
+
+        const r=Math.max(8,Math.min(
+          Number(o.sizeX)||120,
+          Number(o.sizeZ)||120
+        )/2);
+        const center2D=shape3DProjectLocalPoint(o,{x:0,y:sy,z:0});
+        const radiusEnd2D=shape3DProjectLocalPoint(o,{x:r,y:sy,z:0});
+
+        ctx.beginPath();
+        ctx.globalAlpha=1;
+        ctx.setLineDash([]);
+        ctx.moveTo(center2D.x,center2D.y);
+        ctx.lineTo(radiusEnd2D.x,radiusEnd2D.y);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+      return;
+    }
+
     if(o.shape3dType==='sphere'){
       const eq=(g.curves||[]).find(c=>c.id==='equator')||(g.curves||[])[0];
       const localEquator=(eq&&eq.points)||[];
@@ -7141,6 +7221,12 @@
       base.sizeX=160*scale;
       base.sizeY=190*scale;
       base.sizeZ=160*scale;
+    }else if(type==='cone3d'){
+      base.shape3dType='cone';
+      base.shapeName='cone 3D';
+      base.sizeX=170*scale;
+      base.sizeY=200*scale;
+      base.sizeZ=170*scale;
     }else if(type==='hexpyramid3d'){
       base.shape3dType='hexpyramid';
       base.shapeName='hexagonal pyramid 3D';
@@ -16465,7 +16551,7 @@
       }));
     }
     if([
-      'cube3d','pyramid3d','cylinder3d',
+      'cube3d','pyramid3d','cylinder3d','cone3d',
       'hexpyramid3d','hexprism3d','sphere3d'
     ].includes(t)){
       const obj=makeShape3D(t,cx,cy,insertionScale,style);
