@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.72</title>
+<title>Beyaz Tahta v18.73</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1218,7 +1218,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.72 · Kalem ucu 1–12 aralığı</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.73 · Space transform tekrar, Esc kalem/seçim toggle</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1268,8 +1268,8 @@
           <section class="helpSection">
             <h3>Seçme ve düzenleme</h3>
             <ul>
-              <li>Esc: seçim aracına dön.</li>
-              <li>Aralık: çizim kalemini seç.</li>
+              <li>Esc: Kalem ↔ Seçim oku arasında geçiş yapar.</li>
+              <li>Aralık: son transformasyonu tekrarlar; Shift + Aralık kopya oluşturup son transformasyonu tekrarlar.</li>
               <li>Grid düğmesi: evrensel XZ gridini açar ve kapatır.</li>
               <li>Birden çok 3D nesnede X/Y/Z grup döndürme kolları görünür.</li>
             </ul>
@@ -17005,14 +17005,23 @@
 
     if(
       !typingTarget &&
+      mode==='select' &&
+      selectedIndices.length &&
       e.code==='Space' &&
       !cmd &&
-      !e.altKey &&
-      !e.shiftKey
+      !e.altKey
     ){
       e.preventDefault();
-      inkBtn.click();
-      statusEl.textContent='Çizim kalemi';
+
+      if(!lastRepeatTransform){
+        statusEl.textContent='Tekrarlanacak bir transformasyon yok';
+        return;
+      }
+
+      applyRepeatTransformToSelection(
+        lastRepeatTransform,
+        e.shiftKey
+      );
       return;
     }
 
@@ -17060,8 +17069,6 @@
       if(bezierDraftActive) finishBezierDraft('Açık Bézier tamamlandı');
 
       selectLongPressTriggered=false;
-      mode='select';
-      setSelection([]);
       selectAction=null;
       selectStart=null;
       selectSnapshot=null;
@@ -17073,22 +17080,20 @@
       marqueeEnd=null;
       eraserCursor=null;
 
-      inkBtn.classList.remove('active');
-      penBtn.classList.remove('active');
-      eraserBtn.classList.remove('active');
-      fillBtn.classList.remove('active');
-      textBtn.classList.remove('active');
-      selectBtn.classList.add('active');
-
       closeFillMenu();
       closeSelectModeMenu();
       closeContextMenu();
       eraserMenu.classList.remove('open');
       colorMenu.classList.remove('open');
-      restoreToolCursor();
 
-      statusEl.textContent='Seçim modu';
-      redraw();
+      if(mode==='select'){
+        inkBtn.click();
+        statusEl.textContent='Çizim kalemi';
+      }else{
+        selectBtn.click();
+        statusEl.textContent='Seçim modu';
+      }
+
       return;
     }
   });
