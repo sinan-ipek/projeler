@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Übungsblatt #01 – Çözüm Sunumu</title>
+<style>
+:root{--bg:#f3f6f4;--grid:#d9e3df;--ink:#1d2b3a;--mute:#5b6b78;--hl:#ffe36e;--acc:#1f6f6b;--card:#fff;--line:#c5d3ce;--bad:#a33b3b}
+@media (prefers-color-scheme:dark){:root{--bg:#14202b;--grid:#1e2d3a;--ink:#e8eef2;--mute:#9db0bd;--hl:#6b5a10;--acc:#5fc4bd;--card:#1a2a37;--line:#2f4352;--bad:#e58a8a}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;color:var(--ink);font:18px/1.55 Georgia,"Times New Roman",serif;overflow:hidden}
+.slide{position:absolute;inset:0;padding:40px 6vw 90px;overflow-y:auto;display:none}
+.slide.on{display:block}
+h1{font-size:clamp(34px,6vw,64px);line-height:1.05;margin:12vh 0 16px;letter-spacing:-.02em}
+h2{font-size:clamp(24px,3.4vw,36px);margin:0 0 6px}
+.sub{color:var(--mute);margin:0 0 22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;max-width:1200px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:6px;padding:16px 20px}
+.card h3{margin:0 0 8px;font-size:20px;color:var(--acc)}
+.s{opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s;visibility:hidden}
+.s.show{opacity:1;transform:none;visibility:visible}
+.step{display:block;margin:7px 0;padding-left:14px;border-left:3px solid var(--line)}
+.step.show{border-left-color:var(--acc)}
+.hl{background:linear-gradient(var(--hl),var(--hl)) no-repeat 0 90%/0 55%;transition:background-size .8s .25s}
+.show .hl,.hl.show{background-size:100% 55%}
+.m{font-family:"Cambria Math",Cambria,Georgia,serif;font-style:italic}
+.ok{color:var(--acc);font-weight:bold}
+.vw{position:relative;width:220px;height:190px;max-width:100%}
+.vw canvas{position:absolute;left:0;top:0;width:100%;height:100%}
+.sh{opacity:0;transition:opacity .9s .3s}
+.show .sh{opacity:1}
+.bar{position:fixed;left:0;bottom:0;height:5px;background:var(--acc);transition:width .4s;z-index:5}
+.nav{position:fixed;bottom:14px;right:18px;display:flex;gap:10px;align-items:center;z-index:5;font-size:15px;color:var(--mute)}
+.nav button{font:inherit;background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-radius:6px;padding:8px 16px;cursor:pointer}
+.nav button:focus-visible{outline:3px solid var(--acc)}
+.hint{color:var(--mute);font-size:16px}
+@media (prefers-reduced-motion:reduce){.s,.hl,.sh{transition:none}}
+</style>
+</head>
+<body>
+<div id="langtools" style="position:fixed;right:18px;top:8px;z-index:40;background:var(--card);border:1px solid var(--line);padding:7px;border-radius:12px;font:14px system-ui;display:flex;gap:8px;align-items:center">
+<button id="home" aria-label="Home" style="width:40px;height:37px;background:#ffda48;color:black;border:1px solid #dcb52c;border-radius:8px;cursor:pointer"><svg width="23" height="23" viewBox="0 0 24 24" style="fill:#000"><path d="M12 2 1 11h3v11h7v-7h3v7h7V11h3L12 2z"/></svg></button>
+<label for="language">Dil</label><select id="language" style="background:var(--card);color:var(--ink);border:1px solid var(--line);padding:8px;border-radius:8px"><option value="tr" selected>Türkçe</option><option value="de" >Deutsch</option></select>
+<button id="help" title="Yardım" style="width:34px;height:35px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;font-weight:bold;cursor:pointer">?</button></div>
+
+<section class="slide on">
+ <h1 class="s">Mathematik für Informatik 1<br>Übungsblatt #01</h1>
+ <p class="sub s" style="font-size:22px">Çözümler adım adım, animasyonlu anlatım</p>
+ <p class="hint s">İleri: <b>→</b>, <b>Boşluk</b> veya tıklama · Geri: <b>←</b> · Her tıklama bir adımı açar.</p>
+ <div class="card s" style="max-width:560px;margin-top:24px">
+  <b>Konular</b><br>
+  Aufgabe 1: Küme gösterimleri ve sadeleştirme<br>
+  Aufgabe 2: Venn diyagramları<br>
+  Aufgabe 3: (A∩B)∪C = (A∪C)∩(B∪C)<br>
+  Aufgabe 4: Kartezyen çarpım ve kuvvet kümesi<br>
+  Aufgabe 5: Kardinalite
+ </div>
+ <p class="hint s">Not: Burada ℕ = {0, 1, 2, …} kabul edilmiştir (0 dahil).</p>
+</section>
+
+<!-- A1 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 1: Küme gösterimleri</h2>
+ <div class="grid">
+  <div class="card s"><h3>(a) Kompakt gösterim</h3>
+   <span class="step s"><b>(i)</b> Çift doğal sayılar: <span class="hl m">{2k | k ∈ ℕ}</span> (ya da {n ∈ ℕ | n çift}).</span>
+   <span class="step s"><b>(ii)</b> 0 ile 1 arası rasyoneller (uçlar hariç): <span class="hl m">{x ∈ ℚ | 0 &lt; x &lt; 1}</span>.</span>
+   <span class="step s"><b>(iii)</b> −7'den küçük tam sayılar: <span class="hl m">{x ∈ ℤ | x &lt; −7}</span> = {…, −9, −8}.</span>
+   <span class="step s"><b>(iv)</b> Pozitif ve π'ye eşit veya küçük reeller: <span class="hl m">{x ∈ ℝ | 0 &lt; x ≤ π}</span> = (0, π].</span>
+  </div>
+  <div class="card s"><h3>(b)(i) {x∈ℚ | −3≤x&lt;10} ∩ {x∈ℤ | x&lt;9}</h3>
+   <span class="step s">Kesişimdeki x hem rasyonel aralıkta (−3 ≤ x &lt; 10) hem tam sayı hem x &lt; 9 olmalı.</span>
+   <span class="step s">Her tam sayı rasyoneldir. Yani koşullar: <span class="m">x ∈ ℤ, −3 ≤ x &lt; 9</span>.</span>
+   <span class="step s hl-wrap"><span class="hl m">= {−3, −2, −1, 0, 1, 2, 3, 4, 5, 6, 7, 8}</span> (12 eleman)</span>
+  </div>
+  <div class="card s"><h3>(b)(ii) {x∈ℤ | −2&lt;x≤π} ∖ {x∈ℕ | x≤2}</h3>
+   <span class="step s">π ≈ 3,14: ilk küme <span class="m">{−1, 0, 1, 2, 3}</span>.</span>
+   <span class="step s">İkinci küme (0 ∈ ℕ): <span class="m">{0, 1, 2}</span>.</span>
+   <span class="step s">Fark: 0, 1, 2 atılır. <span class="hl m">= {−1, 3}</span></span>
+   <span class="step s">(ℕ 0'sız tanımlansaydı sonuç {−1, 0, 3} olurdu.)</span>
+  </div>
+ </div>
+</section>
+
+<!-- A2 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 2: Venn diyagramları</h2>
+ <p class="sub s">Boyalı bölge, işlemin sonucunu gösterir.</p>
+ <div class="grid">
+  <div class="card s"><h3>(a) M ∩ N ∩ O</h3><div class="vw"><canvas class="sh" data-f="a"></canvas><canvas class="ol"></canvas></div>
+   <span class="step s">Üç dairenin ortak bölgesi.</span></div>
+  <div class="card s"><h3>(b) M ∩ (M ∪ N)</h3><div class="vw"><canvas class="sh" data-f="b"></canvas><canvas class="ol"></canvas></div>
+   <span class="step s">Emilim: M ⊂ M∪N olduğundan sonuç <span class="hl m">M</span>'in kendisi.</span></div>
+  <div class="card s"><h3>(c) M ∖ (N ∩ O)</h3><div class="vw"><canvas class="sh" data-f="c"></canvas><canvas class="ol"></canvas></div>
+   <span class="step s">M'nin tamamı, N∩O ile örtüşen kısım hariç.</span></div>
+  <div class="card s"><h3>(d) (M ∖ N) ∪ (N ∖ M)</h3><div class="vw"><canvas class="sh" data-f="d"></canvas><canvas class="ol"></canvas></div>
+   <span class="step s">Simetrik fark: yalnızca birinde olanlar. O dairesi dahil değil.</span></div>
+  <div class="card s"><h3>(e) ((M∩N)∖O) ∪ ((N∩O)∖M)</h3><div class="vw"><canvas class="sh" data-f="e"></canvas><canvas class="ol"></canvas></div>
+   <span class="step s">N'nin içinde, M ve O'dan <b>tam birine</b> ait olan iki parça. M∩N∩O ve yalnız N dahil değil.</span></div>
+ </div>
+</section>
+
+<!-- A3 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 3: (A∩B) ∪ C = (A∪C) ∩ (B∪C)</h2>
+ <p class="sub s">Küme eşitliği için iki kapsama gerekir. Eleman alıp durumlara ayırıyoruz.</p>
+ <div class="grid">
+  <div class="card s"><h3>(a) ⊂ yönü</h3>
+   <span class="step s">x ∈ (A∩B) ∪ C alalım. Yani x ∈ A∩B <b>veya</b> x ∈ C.</span>
+   <span class="step s"><b>Fall 1:</b> x ∈ A∩B. O zaman x ∈ A ve x ∈ B. Dolayısıyla x ∈ A∪C ve x ∈ B∪C.</span>
+   <span class="step s"><b>Fall 2:</b> x ∈ C. O zaman x ∈ A∪C ve x ∈ B∪C.</span>
+   <span class="step s">İki durumda da <span class="hl m">x ∈ (A∪C) ∩ (B∪C)</span>. ∎</span></div>
+  <div class="card s"><h3>(b) ⊃ yönü</h3>
+   <span class="step s">x ∈ (A∪C) ∩ (B∪C) alalım: x ∈ A∪C ve x ∈ B∪C.</span>
+   <span class="step s"><b>Fall 1:</b> x ∈ C. O zaman hemen <span class="m">x ∈ (A∩B) ∪ C</span>.</span>
+   <span class="step s"><b>Fall 2:</b> x ∉ C. x ∈ A∪C ⇒ x ∈ A. x ∈ B∪C ⇒ x ∈ B. Yani <span class="hl m">x ∈ A∩B</span>, dolayısıyla x ∈ (A∩B) ∪ C. ∎</span>
+   <span class="step s ok">İki kapsama birleşince eşitlik kanıtlanır.</span></div>
+ </div>
+</section>
+
+<!-- A4 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 4: Kartezyen çarpım ve kuvvet kümesi</h2>
+ <p class="sub s">A = {0, 2}, B = {1, b}, b ∈ ℝ, b ≠ 1.</p>
+ <div class="grid">
+  <div class="card s"><h3>(a)(i) A × B</h3>
+   <span class="step s"><span class="hl m">A × B = {(0,1), (0,b), (2,1), (2,b)}</span></span>
+   <span class="step s">b ≠ 1 olduğundan 4 eleman birbirinden farklı: |A×B| = 4.</span></div>
+  <div class="card s"><h3>(a)(ii) P(A × B): 2⁴ = 16 eleman</h3>
+   <span class="step s">Kısaltma: <span class="m">a = (0,1), c = (0,b), d = (2,1), e = (2,b)</span>.</span>
+   <span class="step s"><b>0 elemanlı:</b> ∅</span>
+   <span class="step s"><b>1 elemanlı:</b> {a}, {c}, {d}, {e}</span>
+   <span class="step s"><b>2 elemanlı:</b> {a,c}, {a,d}, {a,e}, {c,d}, {c,e}, {d,e}</span>
+   <span class="step s"><b>3 elemanlı:</b> {a,c,d}, {a,c,e}, {a,d,e}, {c,d,e}</span>
+   <span class="step s"><b>4 elemanlı:</b> {a,c,d,e} = A × B</span>
+   <span class="step s ok">1 + 4 + 6 + 4 + 1 = 16. (Her eleman için "var/yok": 2⁴.)</span></div>
+  <div class="card s"><h3>(b) P(C∩D) = P(C) ∩ P(D)</h3>
+   <span class="step s"><b>⊂:</b> Y ∈ P(C∩D) ⇒ Y ⊂ C∩D. Her y ∈ Y için y ∈ C ve y ∈ D. Yani Y ⊂ C ve Y ⊂ D, dolayısıyla <span class="m">Y ∈ P(C) ∩ P(D)</span>.</span>
+   <span class="step s"><b>⊃:</b> Y ∈ P(C) ∩ P(D) ⇒ Y ⊂ C ve Y ⊂ D. Her y ∈ Y için y ∈ C ve y ∈ D, yani y ∈ C∩D. Böylece <span class="hl m">Y ⊂ C∩D</span>, yani Y ∈ P(C∩D). ∎</span></div>
+ </div>
+</section>
+
+<!-- A5 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 5: Kardinalite</h2>
+ <div class="grid">
+  <div class="card s"><h3>(a) |A∩B| = 2 ve |A∪B| = 3</h3>
+   <span class="step s"><span class="hl m">A = {1,2,3}, B = {1,2}</span></span>
+   <span class="step s">A∩B = {1,2} (2 eleman), A∪B = {1,2,3} (3 eleman). ✓</span></div>
+  <div class="card s"><h3>(b) |A∪B| = |B|</h3>
+   <span class="step s"><span class="hl m">A = ∅, B = {1}</span>: A∪B = {1}, |A∪B| = 1 = |B|. ✓</span>
+   <span class="step s">Genel olarak A ⊂ B olduğunda hep sağlanır.</span></div>
+  <div class="card s"><h3>(c) |C∩D| ≤ |C|</h3>
+   <span class="step s">C, ayrık iki parçaya ayrılır: <span class="m">C = (C∩D) ∪ (C∖D)</span>.</span>
+   <span class="step s">Ayrık olduğu için <span class="hl m">|C| = |C∩D| + |C∖D|</span>.</span>
+   <span class="step s">|C∖D| ≥ 0 olduğundan <span class="m">|C∩D| ≤ |C|</span>. ∎</span>
+   <span class="step s"><b>Eşitlik ne zaman?</b> |C∖D| = 0 ⇔ C∖D = ∅ ⇔ <span class="hl m">C ⊂ D</span>.</span>
+   <span class="step s ok">Yani eşitlik tam olarak C ⊂ D iken olur (o zaman C∩D = C).</span></div>
+ </div>
+</section>
+
+<div class="bar" id="bar"></div>
+<div class="nav"><span id="pg"></span><button id="pv" aria-label="Geri">← Geri</button><button id="nx" aria-label="İleri">İleri →</button></div>
+
+<script>
+// Venn diagrams: sample every pixel, exact shading
+const C=[{x:80,y:70,l:'M'},{x:130,y:70,l:'N'},{x:105,y:115,l:'O'}],R=50;
+const F={a:(m,n,o)=>m&&n&&o,b:(m,n,o)=>m&&(m||n),c:(m,n,o)=>m&&!(n&&o),
+ d:(m,n,o)=>(m&&!n)||(n&&!m),e:(m,n,o)=>(m&&n&&!o)||(n&&o&&!m)};
+const css=getComputedStyle(document.documentElement);
+function draw(){
+ const acc=css.getPropertyValue('--acc').trim(),ink=css.getPropertyValue('--ink').trim();
+ document.querySelectorAll('.vw').forEach(w=>{
+  const sh=w.querySelector('.sh'),ol=w.querySelector('.ol');
+  [sh,ol].forEach(c=>{c.width=440;c.height=380});
+  const g=sh.getContext('2d');g.scale(2,2);g.fillStyle=acc;g.globalAlpha=.55;
+  const f=F[sh.dataset.f];
+  for(let x=0;x<220;x++)for(let y=0;y<190;y++){
+   const i=C.map(c=>(x-c.x)**2+(y-c.y)**2<=R*R);
+   if(f(...i))g.fillRect(x,y,1,1);
+  }
+  const o=ol.getContext('2d');o.scale(2,2);o.strokeStyle=ink;o.fillStyle=ink;o.lineWidth=1.5;o.font='italic 14px Georgia';
+  C.forEach(c=>{o.beginPath();o.arc(c.x,c.y,R,0,7);o.stroke()});
+  o.fillText('M',38,26);o.fillText('N',172,26);o.fillText('O',105,184);
+ });
+}
+draw();
+if(matchMedia)matchMedia('(prefers-color-scheme:dark)').addEventListener('change',draw);
+
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+const steps=i=>[...slides[i].querySelectorAll('.s')];
+const shown=i=>steps(i).filter(e=>e.classList.contains('show'));
+function show(i){slides.forEach((s,k)=>s.classList.toggle('on',k===i));cur=i;ui()}
+function ui(){document.getElementById('pg').textContent=(cur+1)+' / '+slides.length;
+ document.getElementById('bar').style.width=((cur+1)/slides.length*100)+'%'}
+function next(){
+ const hid=steps(cur).find(e=>!e.classList.contains('show'));
+ if(hid){
+  hid.classList.add('show');
+  if(hid.classList.contains('card')){const f=hid.querySelector('.s');if(f)f.classList.add('show')}
+  hid.scrollIntoView({behavior:'smooth',block:'nearest'});
+ } else if(cur<slides.length-1){show(cur+1);steps(cur)[0]&&steps(cur)[0].classList.add('show')}
+}
+function prev(){
+ const sh=shown(cur);
+ if(sh.length>1){sh[sh.length-1].classList.remove('show')}
+ else if(cur>0){show(cur-1)}
+}
+document.getElementById('nx').onclick=e=>{e.stopPropagation();next()};
+document.getElementById('pv').onclick=e=>{e.stopPropagation();prev()};
+document.addEventListener('keydown',e=>{
+ if(['ArrowRight',' ','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+ if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();prev()}
+});
+document.body.addEventListener('click',e=>{if(!e.target.closest('.nav'))next()});
+steps(0)[0].classList.add('show');ui();
+</script>
+<script>
+document.getElementById('langtools').addEventListener('click',e=>e.stopPropagation());
+document.getElementById('home').onclick=e=>{e.stopPropagation();location.href='../../index.html'};
+document.getElementById('language').onchange=e=>{e.stopPropagation();localStorage.setItem('elif-ub01-lang',e.target.value);location.href=e.target.value==='de'?'claude-de.html':'claude.html'};
+document.getElementById('help').onclick=e=>{e.stopPropagation();alert("Bu sayfa çözümleri adım adım gösterir. İleriye bas veya boşluk tuşunu kullan.")};
+</script><small style="position:fixed;left:8px;bottom:5px;z-index:15;color:var(--mute);font:11px system-ui">v1.0 · Türkçe tam sunum</small></body>
+</html>
