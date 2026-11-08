@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.83</title>
+<title>Beyaz Tahta v18.84</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -989,6 +989,7 @@
       <option value="hexagon">Altıgen</option>
       <option value="axes">x-y</option>
       <optgroup label="3D">
+        <option value="line3d">Çizgi 3D</option>
         <option value="cube3d">Küp 3D</option>
         <option value="pyramid3d">Piramit 3D</option>
         <option value="cylinder3d">Silindir 3D</option>
@@ -1222,7 +1223,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.83 · 3D Drop: XZ düzlemine indir</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.84 · 3D çizgi ve gelişmiş 3D snap</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6210,6 +6211,20 @@
     const sz=Math.max(8,Number(o.sizeZ)||120)/2;
     const t=o.shape3dType;
 
+    if(t==='line3d'){
+      const a=o.lineLocalA || {x:-90,y:0,z:0};
+      const b=o.lineLocalB || {x: 90,y:0,z:0};
+      return {
+        points:[
+          {x:Number(a.x)||0,y:Number(a.y)||0,z:Number(a.z)||0},
+          {x:Number(b.x)||0,y:Number(b.y)||0,z:Number(b.z)||0}
+        ],
+        edges:[[0,1]],
+        faces:[],
+        curves:[]
+      };
+    }
+
     if(t==='pyramid'){
       return {
         points:[
@@ -7617,7 +7632,15 @@
       boxAngle:0
     };
 
-    if(type==='cube3d'){
+    if(type==='line3d'){
+      base.shape3dType='line3d';
+      base.shapeName='line 3D';
+      base.lineLocalA={x:-100*scale,y:0,z:0};
+      base.lineLocalB={x: 100*scale,y:0,z:0};
+      base.sizeX=200*scale;
+      base.sizeY=24*scale;
+      base.sizeZ=24*scale;
+    }else if(type==='cube3d'){
       base.shape3dType='box';
       base.shapeName='cube 3D';
     }else if(type==='pyramid3d'){
@@ -7902,6 +7925,17 @@
 
   function shape3DDimensionHandles(o){
     if(!o || o.kind!=='shape3d') return [];
+
+    if(o.shape3dType==='line3d'){
+      const g=shape3DGeometry(o);
+      const pts=(g.points||[]).map(p=>shape3DProjectLocalPoint(o,p));
+      if(pts.length<2) return [];
+      return [
+        {name:'3d-line-a',axis:'',x:pts[0].x,y:pts[0].y},
+        {name:'3d-line-b',axis:'',x:pts[1].x,y:pts[1].y}
+      ];
+    }
+
     const box=orientedSelectionBox(o);
     if(!box) return [];
     const oc=orientedBoxCorners(box,8/viewZoom);
@@ -8039,6 +8073,7 @@
       s==='3d-x' ||
       s==='3d-y' ||
       s==='3d-z' ||
+      s.startsWith('3d-line-') ||
       s.startsWith('bezier-anchor-') ||
       s.startsWith('bezier-in-') ||
       s.startsWith('bezier-out-')
@@ -8412,6 +8447,283 @@
   function shape3DProjectedSnapPoint(world){
     const p=shape3DProjectWorldPoint(null,world);
     return {x:p.x,y:p.y};
+  }
+
+  function shape3DLineWorldEndpoints(o){
+    if(!o || o.kind!=='shape3d' || o.shape3dType!=='line3d') return [];
+    const g=shape3DGeometry(o);
+    return (g.points||[]).slice(0,2).map(p=>shape3DLocalToWorldPoint(o,p));
+  }
+
+  function shape3DInverseRotateVector(v,o){
+    const q=quatNormalize(shape3DQuaternion(o));
+    return rotatePointByQuat(v,{x:-q.x,y:-q.y,z:-q.z,w:q.w});
+  }
+
+  function shape3DSetLineEndpointWorld(o,endpointIndex,world){
+    if(!o || o.kind!=='shape3d' || o.shape3dType!=='line3d' || !world) return false;
+
+    const ends=shape3DLineWorldEndpoints(o);
+    if(ends.length<2) return false;
+
+    ends[endpointIndex===0 ? 0 : 1]={
+      x:Number(world.x)||0,
+      y:Number(world.y)||0,
+      z:Number(world.z)||0
+    };
+
+    const mid={
+      x:(ends[0].x+ends[1].x)/2,
+      y:(ends[0].y+ends[1].y)/2,
+      z:(ends[0].z+ends[1].z)/2
+    };
+
+    const toLocal=w=>shape3DInverseRotateVector({
+      x:w.x-mid.x,
+      y:w.y-mid.y,
+      z:w.z-mid.z
+    },o);
+
+    o.center={x:mid.x,y:mid.y};
+    o.centerZ=mid.z;
+    o.lineLocalA=toLocal(ends[0]);
+    o.lineLocalB=toLocal(ends[1]);
+
+    const len=Math.hypot(
+      ends[1].x-ends[0].x,
+      ends[1].y-ends[0].y,
+      ends[1].z-ends[0].z
+    );
+    o.sizeX=Math.max(24,len);
+    return true;
+  }
+
+  function shape3DUnprojectAtWorldZ(screenPoint,worldZ){
+    const cam=shape3DCamera();
+    const sx=Number(screenPoint&&screenPoint.x);
+    const sy=Number(screenPoint&&screenPoint.y);
+    if(!Number.isFinite(sx) || !Number.isFinite(sy)) return null;
+
+    const dc={
+      x:(sx-cam.target.x)/cam.focalLength,
+      y:-(sy-cam.target.y)/cam.focalLength,
+      z:1
+    };
+
+    const dir={
+      x:dc.x*cam.right.x+dc.y*cam.up.x+dc.z*cam.forward.x,
+      y:dc.x*cam.right.y+dc.y*cam.up.y+dc.z*cam.forward.y,
+      z:dc.x*cam.right.z+dc.y*cam.up.z+dc.z*cam.forward.z
+    };
+
+    if(Math.abs(dir.z)<1e-8) return null;
+    const t=(Number(worldZ)-cam.position.z)/dir.z;
+    return {
+      x:cam.position.x+dir.x*t,
+      y:cam.position.y+dir.y*t,
+      z:Number(worldZ)
+    };
+  }
+
+  function shape3DFeatureSnapTargets(o){
+    if(!o || o.kind!=='shape3d') return [];
+
+    const out=[];
+    const seen=new Set();
+    const addLocal=(p,type,priority=3)=>{
+      if(!p) return;
+      const world=shape3DLocalToWorldPoint(o,p);
+      if(!Number.isFinite(world.x)||!Number.isFinite(world.y)||!Number.isFinite(world.z)) return;
+      const key=[
+        Math.round(world.x*1000),
+        Math.round(world.y*1000),
+        Math.round(world.z*1000),
+        type
+      ].join(':');
+      if(seen.has(key)) return;
+      seen.add(key);
+      out.push({world,type,priority});
+    };
+
+    const g=shape3DGeometry(o);
+    const pts=(g.points||[]);
+
+    // Corners / endpoints.
+    pts.forEach(p=>addLocal(p,'corner',0));
+
+    // Straight edges: midpoint + continuous samples.
+    for(const edge of (g.edges||[])){
+      const a=pts[edge[0]], b=pts[edge[1]];
+      if(!a||!b) continue;
+      addLocal({
+        x:(a.x+b.x)/2,
+        y:(a.y+b.y)/2,
+        z:(a.z+b.z)/2
+      },'edge-midpoint',1);
+
+      for(let k=1;k<8;k++){
+        const t=k/8;
+        if(Math.abs(t-.5)<1e-7) continue;
+        addLocal({
+          x:a.x+(b.x-a.x)*t,
+          y:a.y+(b.y-a.y)*t,
+          z:a.z+(b.z-a.z)*t
+        },'edge',2);
+      }
+    }
+
+    // Flat faces: exact center plus a dense triangular sampling of the surface.
+    for(const face of (g.faces||[])){
+      if(!face || face.length<3) continue;
+      const fp=face.map(i=>pts[i]).filter(Boolean);
+      if(fp.length<3) continue;
+
+      const fc={
+        x:fp.reduce((s,p)=>s+p.x,0)/fp.length,
+        y:fp.reduce((s,p)=>s+p.y,0)/fp.length,
+        z:fp.reduce((s,p)=>s+p.z,0)/fp.length
+      };
+      addLocal(fc,'face-center',1);
+
+      const a=fp[0];
+      for(let j=1;j<fp.length-1;j++){
+        const b=fp[j], d=fp[j+1];
+        const n=5;
+        for(let u=0;u<=n;u++){
+          for(let v=0;v<=n-u;v++){
+            const w=n-u-v;
+            if((u===n&&v===0)||(v===n&&u===0)||(w===n&&u===0)) continue;
+            addLocal({
+              x:(a.x*w+b.x*u+d.x*v)/n,
+              y:(a.y*w+b.y*u+d.y*v)/n,
+              z:(a.z*w+b.z*u+d.z*v)/n
+            },'surface',3);
+          }
+        }
+      }
+    }
+
+    const sx=Math.max(8,Number(o.sizeX)||120)/2;
+    const sy=Math.max(8,Number(o.sizeY)||120)/2;
+    const sz=Math.max(8,Number(o.sizeZ)||120)/2;
+    const rXZ=Math.min(sx,sz);
+
+    if(o.shape3dType==='cylinder'){
+      for(const yy of [-sy,sy]){
+        addLocal({x:0,y:yy,z:0},'face-center',1);
+        for(const p of [
+          {x:rXZ,y:yy,z:0},{x:-rXZ,y:yy,z:0},
+          {x:0,y:yy,z:rXZ},{x:0,y:yy,z:-rXZ}
+        ]) addLocal(p,'radius-end',1);
+
+        for(let ir=1;ir<=3;ir++){
+          const rr=rXZ*ir/3;
+          for(let k=0;k<24;k++){
+            const a=Math.PI*2*k/24;
+            addLocal({x:Math.cos(a)*rr,y:yy,z:Math.sin(a)*rr},'surface',3);
+          }
+        }
+      }
+
+      for(let iy=0;iy<=8;iy++){
+        const yy=-sy+2*sy*iy/8;
+        for(let k=0;k<32;k++){
+          const a=Math.PI*2*k/32;
+          addLocal({x:Math.cos(a)*rXZ,y:yy,z:Math.sin(a)*rXZ},iy===0||iy===8?'edge':'surface',iy===0||iy===8?2:3);
+        }
+      }
+    }
+
+    if(o.shape3dType==='cone'){
+      addLocal({x:0,y:-sy,z:0},'corner',0);
+      addLocal({x:0,y:sy,z:0},'face-center',1);
+      for(const p of [
+        {x:rXZ,y:sy,z:0},{x:-rXZ,y:sy,z:0},
+        {x:0,y:sy,z:rXZ},{x:0,y:sy,z:-rXZ}
+      ]) addLocal(p,'radius-end',1);
+
+      for(let level=1;level<=8;level++){
+        const t=level/8;
+        const yy=-sy+2*sy*t;
+        const rr=rXZ*t;
+        for(let k=0;k<32;k++){
+          const a=Math.PI*2*k/32;
+          addLocal({x:Math.cos(a)*rr,y:yy,z:Math.sin(a)*rr},level===8?'edge':'surface',level===8?2:3);
+        }
+      }
+
+      for(let ir=1;ir<=3;ir++){
+        const rr=rXZ*ir/3;
+        for(let k=0;k<24;k++){
+          const a=Math.PI*2*k/24;
+          addLocal({x:Math.cos(a)*rr,y:sy,z:Math.sin(a)*rr},'surface',3);
+        }
+      }
+    }
+
+    if(o.shape3dType==='sphere'){
+      const r=Math.min(sx,sy,sz);
+      for(const p of [
+        {x:r,y:0,z:0},{x:-r,y:0,z:0},
+        {x:0,y:r,z:0},{x:0,y:-r,z:0},
+        {x:0,y:0,z:r},{x:0,y:0,z:-r}
+      ]) addLocal(p,'radius-end',1);
+
+      for(let il=0;il<=12;il++){
+        const lat=-Math.PI/2+Math.PI*il/12;
+        const yy=Math.sin(lat)*r;
+        const rr=Math.cos(lat)*r;
+        for(let k=0;k<32;k++){
+          const a=Math.PI*2*k/32;
+          addLocal({x:Math.cos(a)*rr,y:yy,z:Math.sin(a)*rr},'surface',3);
+        }
+      }
+    }
+
+    // Curved rims count as edges and their sampled points are valid edge snap targets.
+    for(const curve of (g.curves||[])){
+      const cp=curve&&curve.points||[];
+      const stride=Math.max(1,Math.floor(cp.length/48));
+      for(let i=0;i<cp.length;i+=stride){
+        addLocal(cp[i],'edge',2);
+      }
+    }
+
+    return out;
+  }
+
+  function snap3DLineEndpoint(screenPoint,excludeIndex=-1){
+    if(!pointSnapEnabled) return null;
+
+    const threshold=14/viewZoom;
+    let best=null;
+    let bestScore=Infinity;
+
+    for(let i=0;i<objects.length;i++){
+      if(i===excludeIndex) continue;
+      const o=objects[i];
+      if(!o || o.kind!=='shape3d') continue;
+
+      for(const target of shape3DFeatureSnapTargets(o)){
+        const sp=shape3DProjectedSnapPoint(target.world);
+        const d=Math.hypot(sp.x-screenPoint.x,sp.y-screenPoint.y);
+        if(d>threshold) continue;
+
+        // Prefer meaningful exact features when screen distances are almost equal.
+        const score=d+target.priority*.35/viewZoom;
+        if(score<bestScore){
+          bestScore=score;
+          best={
+            ...target,
+            objectIndex:i,
+            screen:sp,
+            distance:d
+          };
+        }
+      }
+    }
+
+    return best;
   }
 
   function snapShape3DMove(snapshot,dx,dy,excludeIndex=-1){
@@ -11217,6 +11529,45 @@
 
   function moveMenuHandleFromSnapshot(o,snap,handle,p,lockArcRadius=false,breakBezierHandle=false){
     if(!o || !snap) return false;
+
+    if(
+      snap.kind==='shape3d' &&
+      snap.shape3dType==='line3d' &&
+      (handle==='3d-line-a' || handle==='3d-line-b')
+    ){
+      Object.assign(o,cloneObject(snap));
+
+      const endpointIndex=handle==='3d-line-a' ? 0 : 1;
+      const ends=shape3DLineWorldEndpoints(snap);
+      if(ends.length<2) return false;
+
+      let targetWorld=null;
+      const snapped=snap3DLineEndpoint(p,selectedIndex);
+
+      if(snapped){
+        targetWorld={...snapped.world};
+        shape3DSnapCue={
+          targetWorld:{...snapped.world},
+          targetObjectIndex:snapped.objectIndex,
+          targetType:snapped.type
+        };
+        statusEl.textContent='3D snap — '+(
+          snapped.type==='corner' ? 'köşe/uç' :
+          snapped.type==='radius-end' ? 'yarıçap ucu' :
+          snapped.type==='edge-midpoint' ? 'kenar orta noktası' :
+          snapped.type==='edge' ? 'kenar' :
+          snapped.type==='face-center' ? 'yüzey merkezi' :
+          'yüzey'
+        );
+      }else{
+        shape3DSnapCue=null;
+        targetWorld=shape3DUnprojectAtWorldZ(p,ends[endpointIndex].z);
+        statusEl.textContent='3D çizgi ucu taşınıyor';
+      }
+
+      if(!targetWorld) return false;
+      return shape3DSetLineEndpointWorld(o,endpointIndex,targetWorld);
+    }
 
     if(snap.kind==='shape3d' && handle.startsWith('3d-')){
       Object.assign(o,cloneObject(snap));
@@ -15497,7 +15848,12 @@
               y:selectStart.y+d.dy
             };
 
-        if(pointSnapEnabled){
+        const is3DLineEndpoint=
+          selectSnapshot.kind==='shape3d' &&
+          selectSnapshot.shape3dType==='line3d' &&
+          (activeHandle==='3d-line-a' || activeHandle==='3d-line-b');
+
+        if(pointSnapEnabled && !is3DLineEndpoint){
           const snapped=snapPointToOtherObjectHandle(pointTarget,selectedIndex);
           if(snapped.snapped){
             pointTarget={x:snapped.x,y:snapped.y};
@@ -17438,7 +17794,7 @@
     }catch(_){}
     updatePointSnapUI();
     statusEl.textContent=pointSnapEnabled
-      ? 'Nokta snap açık — diğer nesnelerin köşe/uç noktalarına yapışır'
+      ? 'Nokta snap açık — 3D çizgi: köşe, yarıçap ucu, kenar, kenar ortası, yüzey ve yüzey merkezine yapışır'
       : 'Nokta snap kapalı — düzenleme noktaları serbest';
   });
 
@@ -17972,7 +18328,7 @@
       }));
     }
     if([
-      'cube3d','pyramid3d','cylinder3d','cone3d',
+      'line3d','cube3d','pyramid3d','cylinder3d','cone3d',
       'hexpyramid3d','hexprism3d','sphere3d'
     ].includes(t)){
       const obj=makeShape3D(t,cx,cy,insertionScale,style);
