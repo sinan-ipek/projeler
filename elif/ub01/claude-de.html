@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Übungsblatt #01 – Lösungspräsentation</title>
+<style>
+:root{--bg:#f3f6f4;--grid:#d9e3df;--ink:#1d2b3a;--mute:#5b6b78;--hl:#ffe36e;--acc:#1f6f6b;--card:#fff;--line:#c5d3ce;--bad:#a33b3b}
+@media (prefers-color-scheme:dark){:root{--bg:#14202b;--grid:#1e2d3a;--ink:#e8eef2;--mute:#9db0bd;--hl:#6b5a10;--acc:#5fc4bd;--card:#1a2a37;--line:#2f4352;--bad:#e58a8a}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;color:var(--ink);font:18px/1.55 Georgia,"Times New Roman",serif;overflow:hidden}
+.slide{position:absolute;inset:0;padding:40px 6vw 90px;overflow-y:auto;display:none}
+.slide.on{display:block}
+h1{font-size:clamp(34px,6vw,64px);line-height:1.05;margin:12vh 0 16px;letter-spacing:-.02em}
+h2{font-size:clamp(24px,3.4vw,36px);margin:0 0 6px}
+.sub{color:var(--mute);margin:0 0 22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;max-width:1200px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:6px;padding:16px 20px}
+.card h3{margin:0 0 8px;font-size:20px;color:var(--acc)}
+.s{opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s;visibility:hidden}
+.s.show{opacity:1;transform:none;visibility:visible}
+.step{display:block;margin:7px 0;padding-left:14px;border-left:3px solid var(--line)}
+.step.show{border-left-color:var(--acc)}
+.hl{background:linear-gradient(var(--hl),var(--hl)) no-repeat 0 90%/0 55%;transition:background-size .8s .25s}
+.show .hl,.hl.show{background-size:100% 55%}
+.m{font-family:"Cambria Math",Cambria,Georgia,serif;font-style:italic}
+.ok{color:var(--acc);font-weight:bold}
+.vw{position:relative;width:220px;height:190px;max-width:100%}
+.vw canvas{position:absolute;left:0;top:0;width:100%;height:100%}
+.sh{opacity:0;transition:opacity .9s .3s}
+.show .sh{opacity:1}
+.bar{position:fixed;left:0;bottom:0;height:5px;background:var(--acc);transition:width .4s;z-index:5}
+.nav{position:fixed;bottom:14px;right:18px;display:flex;gap:10px;align-items:center;z-index:5;font-size:15px;color:var(--mute)}
+.nav button{font:inherit;background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-radius:6px;padding:8px 16px;cursor:pointer}
+.nav button:focus-visible{outline:3px solid var(--acc)}
+.hint{color:var(--mute);font-size:16px}
+@media (prefers-reduced-motion:reduce){.s,.hl,.sh{transition:none}}
+</style>
+</head>
+<body>
+<div id="langtools" style="position:fixed;right:18px;top:8px;z-index:40;background:var(--card);border:1px solid var(--line);padding:7px;border-radius:12px;font:14px system-ui;display:flex;gap:8px;align-items:center">
+<button id="home" aria-label="Home" style="width:40px;height:37px;background:#ffda48;color:black;border:1px solid #dcb52c;border-radius:8px;cursor:pointer"><svg width="23" height="23" viewBox="0 0 24 24" style="fill:#000"><path d="M12 2 1 11h3v11h7v-7h3v7h7V11h3L12 2z"/></svg></button>
+<label for="language">Sprache</label><select id="language" style="background:var(--card);color:var(--ink);border:1px solid var(--line);padding:8px;border-radius:8px"><option value="tr" >Türkçe</option><option value="de" selected>Deutsch</option></select>
+<button id="help" title="Hilfe" style="width:34px;height:35px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;font-weight:bold;cursor:pointer">?</button></div>
+
+<section class="slide on">
+ <h1 class="s">Mathematik für Informatik 1<br>Übungsblatt #01</h1>
+ <p class="sub s" style="font-size:22px">Schrittweise Lösungen mit Animationen</p>
+ <p class="hint s">Weiter: <b>→</b>, <b>Leertaste</b> oder Klicken · Zurück: <b>←</b> · Jeder Klick deckt einen weiteren Schritt auf.</p>
+ <div class="card s" style="max-width:560px;margin-top:24px">
+  <b>Themen</b><br>
+  Aufgabe 1: Mengenschreibweisen und Vereinfachung<br>
+  Aufgabe 2: Venn-Diagramme<br>
+  Aufgabe 3: (A∩B)∪C = (A∪C)∩(B∪C)<br>
+  Aufgabe 4: Kartesisches Produkt und Potenzmenge<br>
+  Aufgabe 5: Kardinalität
+ </div>
+ <p class="hint s">Hinweis: Hier gilt ℕ = {0, 1, 2, …}, die Null ist enthalten.</p>
+</section>
+
+<!-- A1 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 1: Mengenschreibweisen</h2>
+ <div class="grid">
+  <div class="card s"><h3>(a) Kompakte Schreibweise</h3>
+   <span class="step s"><b>(i)</b> Gerade natürliche Zahlen: <span class="hl m">{2k | k ∈ ℕ}</span> (oder {n ∈ ℕ | n gerade}).</span>
+   <span class="step s"><b>(ii)</b> Rationale Zahlen strikt zwischen 0 und 1: <span class="hl m">{x ∈ ℚ | 0 &lt; x &lt; 1}</span>.</span>
+   <span class="step s"><b>(iii)</b> Ganze Zahlen kleiner als −7: <span class="hl m">{x ∈ ℤ | x &lt; −7}</span> = {…, −9, −8}.</span>
+   <span class="step s"><b>(iv)</b> Positive reelle Zahlen höchstens π: <span class="hl m">{x ∈ ℝ | 0 &lt; x ≤ π}</span> = (0, π].</span>
+  </div>
+  <div class="card s"><h3>(b)(i) {x∈ℚ | −3≤x&lt;10} ∩ {x∈ℤ | x&lt;9}</h3>
+   <span class="step s">Jedes x der Schnittmenge muss im rationalen Intervall −3 ≤ x &lt; 10 liegen, ganzzahlig sein und x &lt; 9 erfüllen.</span>
+   <span class="step s">Jede ganze Zahl ist rational. Es bleiben die Bedingungen: <span class="m">x ∈ ℤ, −3 ≤ x &lt; 9</span>.</span>
+   <span class="step s hl-wrap"><span class="hl m">= {−3, −2, −1, 0, 1, 2, 3, 4, 5, 6, 7, 8}</span> (12 Elemente)</span>
+  </div>
+  <div class="card s"><h3>(b)(ii) {x∈ℤ | −2&lt;x≤π} ∖ {x∈ℕ | x≤2}</h3>
+   <span class="step s">Wegen π ≈ 3,14 ist die erste Menge <span class="m">{−1, 0, 1, 2, 3}</span>.</span>
+   <span class="step s">Die zweite Menge (0 ∈ ℕ): <span class="m">{0, 1, 2}</span>.</span>
+   <span class="step s">Differenz: 0, 1 und 2 werden entfernt. <span class="hl m">= {−1, 3}</span></span>
+   <span class="step s">(Wäre 0 nicht in ℕ enthalten, erhielte man {−1, 0, 3}.)</span>
+  </div>
+ </div>
+</section>
+
+<!-- A2 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 2: Venn-Diagramme</h2>
+ <p class="sub s">Die eingefärbte Fläche zeigt das Ergebnis der Mengenoperation.</p>
+ <div class="grid">
+  <div class="card s"><h3>(a) M ∩ N ∩ O</h3><div class="vw"><canvas class="sh" data-f="a"></canvas><canvas class="ol"></canvas></div>
+   <span class="step s">Der gemeinsame Schnittbereich aller drei Kreise.</span></div>
+  <div class="card s"><h3>(b) M ∩ (M ∪ N)</h3><div class="vw"><canvas class="sh" data-f="b"></canvas><canvas class="ol"></canvas></div>
+   <span class="step s">Absorptionsgesetz: Da M ⊆ M∪N gilt, ist das Ergebnis <span class="hl m">M</span>selbst.</span></div>
+  <div class="card s"><h3>(c) M ∖ (N ∩ O)</h3><div class="vw"><canvas class="sh" data-f="c"></canvas><canvas class="ol"></canvas></div>
+   <span class="step s">Die ganze Menge M, außer ihrem Schnitt mit N∩O.</span></div>
+  <div class="card s"><h3>(d) (M ∖ N) ∪ (N ∖ M)</h3><div class="vw"><canvas class="sh" data-f="d"></canvas><canvas class="ol"></canvas></div>
+   <span class="step s">Symmetrische Differenz: Elemente, die genau in M oder in N liegen. O ist dafür unerheblich.</span></div>
+  <div class="card s"><h3>(e) ((M∩N)∖O) ∪ ((N∩O)∖M)</h3><div class="vw"><canvas class="sh" data-f="e"></canvas><canvas class="ol"></canvas></div>
+   <span class="step s">Innerhalb von N die beiden Bereiche, die zu <b>genau einer</b> der Mengen M und O gehören. M∩N∩O und der Bereich nur in N sind ausgeschlossen.</span></div>
+ </div>
+</section>
+
+<!-- A3 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 3: (A∩B) ∪ C = (A∪C) ∩ (B∪C)</h2>
+ <p class="sub s">Für die Mengengleichheit müssen wir beide Inklusionen beweisen. Dazu wählen wir ein Element und unterscheiden Fälle.</p>
+ <div class="grid">
+  <div class="card s"><h3>(a) Inklusion ⊆</h3>
+   <span class="step s">Sei x ∈ (A∩B) ∪ C. Dann gilt x ∈ A∩B <b>oder</b> x ∈ C.</span>
+   <span class="step s"><b>Fall 1:</b> x ∈ A∩B. Dann x ∈ A und x ∈ B. Folglich x ∈ A∪C und x ∈ B∪C.</span>
+   <span class="step s"><b>Fall 2:</b> x ∈ C. Dann gehört x sowohl zu A∪C als auch zu B∪C.</span>
+   <span class="step s">In beiden Fällen gilt <span class="hl m">x ∈ (A∪C) ∩ (B∪C)</span>. ∎</span></div>
+  <div class="card s"><h3>(b) Inklusion ⊇</h3>
+   <span class="step s">Sei x ∈ (A∪C) ∩ (B∪C). Also x ∈ A∪C und x ∈ B∪C.</span>
+   <span class="step s"><b>Fall 1:</b> x ∈ C. Dann gilt unmittelbar <span class="m">x ∈ (A∩B) ∪ C</span>.</span>
+   <span class="step s"><b>Fall 2:</b> x ∉ C. Aus x ∈ A∪C folgt x ∈ A; aus x ∈ B∪C folgt x ∈ B. Also <span class="hl m">x ∈ A∩B</span>, und damit x ∈ (A∩B) ∪ C. ∎</span>
+   <span class="step s ok">Beide Inklusionen zusammen beweisen die Mengengleichheit.</span></div>
+ </div>
+</section>
+
+<!-- A4 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 4: Kartesisches Produkt und Potenzmenge</h2>
+ <p class="sub s">A = {0, 2}, B = {1, b}, b ∈ ℝ, b ≠ 1.</p>
+ <div class="grid">
+  <div class="card s"><h3>(a)(i) A × B</h3>
+   <span class="step s"><span class="hl m">A × B = {(0,1), (0,b), (2,1), (2,b)}</span></span>
+   <span class="step s">Da b ≠ 1, sind die vier Paare verschieden: |A×B| = 4.</span></div>
+  <div class="card s"><h3>(a)(ii) P(A × B): 2⁴ = 16 Elemente</h3>
+   <span class="step s">Abkürzungen: <span class="m">a = (0,1), c = (0,b), d = (2,1), e = (2,b)</span>.</span>
+   <span class="step s"><b>Mit 0 Elementen:</b> ∅</span>
+   <span class="step s"><b>Mit 1 Element:</b> {a}, {c}, {d}, {e}</span>
+   <span class="step s"><b>Mit 2 Elementen:</b> {a,c}, {a,d}, {a,e}, {c,d}, {c,e}, {d,e}</span>
+   <span class="step s"><b>Mit 3 Elementen:</b> {a,c,d}, {a,c,e}, {a,d,e}, {c,d,e}</span>
+   <span class="step s"><b>Mit 4 Elementen:</b> {a,c,d,e} = A × B</span>
+   <span class="step s ok">1 + 4 + 6 + 4 + 1 = 16. (Jedes Element ist entweder enthalten oder nicht: 2⁴.)</span></div>
+  <div class="card s"><h3>(b) P(C∩D) = P(C) ∩ P(D)</h3>
+   <span class="step s"><b>⊂:</b> Y ∈ P(C∩D) ⇒ Y ⊆ C∩D. Jedes y ∈ Y liegt somit in C und D. Also Y ⊆ C und Y ⊆ D; daher <span class="m">Y ∈ P(C) ∩ P(D)</span>.</span>
+   <span class="step s"><b>⊃:</b> Y ∈ P(C) ∩ P(D) ⇒ Y ⊆ C und Y ⊆ D. Jedes y ∈ Y liegt daher in C∩D. Somit <span class="hl m">Y ⊂ C∩D</span>, also Y ∈ P(C∩D). ∎</span></div>
+ </div>
+</section>
+
+<!-- A5 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 5: Kardinalität</h2>
+ <div class="grid">
+  <div class="card s"><h3>(a) |A∩B| = 2 und |A∪B| = 3</h3>
+   <span class="step s"><span class="hl m">A = {1,2,3}, B = {1,2}</span></span>
+   <span class="step s">A∩B = {1,2} (2 Elemente), A∪B = {1,2,3} (3 Elemente). ✓</span></div>
+  <div class="card s"><h3>(b) |A∪B| = |B|</h3>
+   <span class="step s"><span class="hl m">A = ∅, B = {1}</span>: A∪B = {1}, |A∪B| = 1 = |B|. ✓</span>
+   <span class="step s">Allgemein gilt dies immer, wenn A ⊆ B.</span></div>
+  <div class="card s"><h3>(c) |C∩D| ≤ |C|</h3>
+   <span class="step s">C zerfällt in zwei disjunkte Teile: <span class="m">C = (C∩D) ∪ (C∖D)</span>.</span>
+   <span class="step s">Wegen der Disjunktheit gilt <span class="hl m">|C| = |C∩D| + |C∖D|</span>.</span>
+   <span class="step s">Da |C∖D| ≥ 0 gilt, folgt <span class="m">|C∩D| ≤ |C|</span>. ∎</span>
+   <span class="step s"><b>Wann gilt Gleichheit?</b> |C∖D| = 0 ⇔ C∖D = ∅ ⇔ <span class="hl m">C ⊂ D</span>.</span>
+   <span class="step s ok">Gleichheit gilt genau dann, wenn C ⊆ D ist (dann C∩D = C).</span></div>
+ </div>
+</section>
+
+<div class="bar" id="bar"></div>
+<div class="nav"><span id="pg"></span><button id="pv" aria-label="Zurück">← Zurück</button><button id="nx" aria-label="Weiter">Weiter →</button></div>
+
+<script>
+// Venn diagrams: sample every pixel, exact shading
+const C=[{x:80,y:70,l:'M'},{x:130,y:70,l:'N'},{x:105,y:115,l:'O'}],R=50;
+const F={a:(m,n,o)=>m&&n&&o,b:(m,n,o)=>m&&(m||n),c:(m,n,o)=>m&&!(n&&o),
+ d:(m,n,o)=>(m&&!n)||(n&&!m),e:(m,n,o)=>(m&&n&&!o)||(n&&o&&!m)};
+const css=getComputedStyle(document.documentElement);
+function draw(){
+ const acc=css.getPropertyValue('--acc').trim(),ink=css.getPropertyValue('--ink').trim();
+ document.querySelectorAll('.vw').forEach(w=>{
+  const sh=w.querySelector('.sh'),ol=w.querySelector('.ol');
+  [sh,ol].forEach(c=>{c.width=440;c.height=380});
+  const g=sh.getContext('2d');g.scale(2,2);g.fillStyle=acc;g.globalAlpha=.55;
+  const f=F[sh.dataset.f];
+  for(let x=0;x<220;x++)for(let y=0;y<190;y++){
+   const i=C.map(c=>(x-c.x)**2+(y-c.y)**2<=R*R);
+   if(f(...i))g.fillRect(x,y,1,1);
+  }
+  const o=ol.getContext('2d');o.scale(2,2);o.strokeStyle=ink;o.fillStyle=ink;o.lineWidth=1.5;o.font='italic 14px Georgia';
+  C.forEach(c=>{o.beginPath();o.arc(c.x,c.y,R,0,7);o.stroke()});
+  o.fillText('M',38,26);o.fillText('N',172,26);o.fillText('O',105,184);
+ });
+}
+draw();
+if(matchMedia)matchMedia('(prefers-color-scheme:dark)').addEventListener('change',draw);
+
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+const steps=i=>[...slides[i].querySelectorAll('.s')];
+const shown=i=>steps(i).filter(e=>e.classList.contains('show'));
+function show(i){slides.forEach((s,k)=>s.classList.toggle('on',k===i));cur=i;ui()}
+function ui(){document.getElementById('pg').textContent=(cur+1)+' / '+slides.length;
+ document.getElementById('bar').style.width=((cur+1)/slides.length*100)+'%'}
+function next(){
+ const hid=steps(cur).find(e=>!e.classList.contains('show'));
+ if(hid){
+  hid.classList.add('show');
+  if(hid.classList.contains('card')){const f=hid.querySelector('.s');if(f)f.classList.add('show')}
+  hid.scrollIntoView({behavior:'smooth',block:'nearest'});
+ } else if(cur<slides.length-1){show(cur+1);steps(cur)[0]&&steps(cur)[0].classList.add('show')}
+}
+function prev(){
+ const sh=shown(cur);
+ if(sh.length>1){sh[sh.length-1].classList.remove('show')}
+ else if(cur>0){show(cur-1)}
+}
+document.getElementById('nx').onclick=e=>{e.stopPropagation();next()};
+document.getElementById('pv').onclick=e=>{e.stopPropagation();prev()};
+document.addEventListener('keydown',e=>{
+ if(['ArrowRight',' ','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+ if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();prev()}
+});
+document.body.addEventListener('click',e=>{if(!e.target.closest('.nav'))next()});
+steps(0)[0].classList.add('show');ui();
+</script>
+<script>
+document.getElementById('langtools').addEventListener('click',e=>e.stopPropagation());
+document.getElementById('home').onclick=e=>{e.stopPropagation();location.href='../../index.html'};
+document.getElementById('language').onchange=e=>{e.stopPropagation();localStorage.setItem('elif-ub01-lang',e.target.value);location.href=e.target.value==='de'?'claude-de.html':'claude.html'};
+document.getElementById('help').onclick=e=>{e.stopPropagation();alert("Diese Seite zeigt die Lösungen schrittweise. Klicke auf Weiter oder drücke die Leertaste.")};
+</script><small style="position:fixed;left:8px;bottom:5px;z-index:15;color:var(--mute);font:11px system-ui">v1.0 · Deutsche vollständige Fassung</small></body>
+</html>
