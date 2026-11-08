@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.74</title>
+<title>Beyaz Tahta v18.75</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1218,7 +1218,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.74 · 3D XYZ dönüş gizmosu tek ve çoklu seçimde</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.75 · Tahta alanında tarayıcı sağ tık menüsü engellendi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -15005,9 +15005,13 @@
   canvas.addEventListener('pointerup',finishPointer);
   canvas.addEventListener('pointercancel',finishPointer);
 
-  canvas.addEventListener('contextmenu',e=>{
+  // Chrome / browser context menu must never cover the whiteboard.
+  // Capture on the whole stage so right-click, right-drag and our own
+  // context menu keep working even if the release lands off the canvas.
+  wrap.addEventListener('contextmenu',e=>{
     e.preventDefault();
-  });
+    e.stopPropagation();
+  },{capture:true});
 
   canvas.addEventListener('wheel',e=>{
     e.preventDefault();
