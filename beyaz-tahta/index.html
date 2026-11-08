@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.81</title>
+<title>Beyaz Tahta v18.82</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1218,7 +1218,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.81 · 3D derinlik sırası otomatik</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.82 · Grid üzerinde gerçek 3D gölge</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1272,6 +1272,7 @@
               <li>Esc: Kalem ↔ Seçim oku arasında geçiş yapar.</li>
               <li>Aralık: son transformasyonu tekrarlar; Shift + Aralık kopya oluşturup son transformasyonu tekrarlar.</li>
               <li>Grid düğmesi: evrensel XZ gridini açar ve kapatır.</li>
+              <li>Grid açıkken 3D nesneler aynı sol-üst-ön ışığa göre XZ grid düzlemine otomatik gölge düşürür.</li>
               <li>Bir veya daha fazla 3D nesnede lokal X/Y/Z döndürme gizmosu görünür; cisim döndükçe gizmo da döner. Çoklu seçimde ağırlık merkezi kullanılır.</li>
               <li>3D nesnelerin önde/arkada sırasını kullanıcı değil kamera derinliği belirler; yakın nesne otomatik önde çizilir.</li>
             </ul>
@@ -9109,6 +9110,189 @@
     ctx.restore();
   }
 
+
+  function shape3DShadowPlaneY(){
+    return ensureGlobal3DCameraTarget().y;
+  }
+
+  function shape3DShadowProjectWorldPoint(world,planeY){
+    // SHAPE3D_LIGHT_DIR points toward the light.
+    // A cast shadow travels in the opposite direction.
+    const ray={
+      x:-SHAPE3D_LIGHT_DIR.x,
+      y:-SHAPE3D_LIGHT_DIR.y,
+      z:-SHAPE3D_LIGHT_DIR.z
+    };
+
+    if(Math.abs(ray.y)<1e-7) return null;
+
+    const t=(planeY-world.y)/ray.y;
+    return {
+      x:world.x+ray.x*t,
+      y:planeY,
+      z:world.z+ray.z*t
+    };
+  }
+
+  function shape3DShadowLocalSamples(o){
+    if(!o || o.kind!=='shape3d') return [];
+
+    const g=shape3DGeometry(o);
+    const out=[];
+
+    // Polyhedral objects: real vertices are sufficient for their convex shadow.
+    for(const p of (g.points||[])){
+      if(
+        p &&
+        Number.isFinite(Number(p.x)) &&
+        Number.isFinite(Number(p.y)) &&
+        Number.isFinite(Number(p.z))
+      ){
+        out.push({x:Number(p.x),y:Number(p.y),z:Number(p.z)});
+      }
+    }
+
+    // Existing sampled curves already describe cylinder/cone/sphere rims well.
+    for(const curve of (g.curves||[])){
+      const pts=curve&&Array.isArray(curve.points) ? curve.points : [];
+      if(!pts.length) continue;
+      const stride=Math.max(1,Math.floor(pts.length/40));
+      for(let i=0;i<pts.length;i+=stride){
+        const p=pts[i];
+        out.push({x:p.x,y:p.y,z:p.z});
+      }
+    }
+
+    // A sphere needs more than its equator to cast a proper silhouette
+    // under an oblique light direction.
+    if(o.shape3dType==='sphere'){
+      const sx=Math.max(8,Number(o.sizeX)||120)/2;
+      const sy=Math.max(8,Number(o.sizeY)||120)/2;
+      const sz=Math.max(8,Number(o.sizeZ)||120)/2;
+      const r=Math.min(sx,sy,sz);
+
+      const latitudes=[-Math.PI/3,-Math.PI/6,0,Math.PI/6,Math.PI/3];
+      for(const lat of latitudes){
+        const y=-Math.sin(lat)*r;
+        const rr=Math.cos(lat)*r;
+        for(let i=0;i<32;i++){
+          const a=Math.PI*2*i/32;
+          out.push({
+            x:Math.cos(a)*rr,
+            y,
+            z:Math.sin(a)*rr
+          });
+        }
+      }
+      out.push({x:0,y:-r,z:0},{x:0,y:r,z:0});
+    }
+
+    // Cylinder: keep both full rings even if curve sampling changes later.
+    if(o.shape3dType==='cylinder'){
+      const sx=Math.max(8,Number(o.sizeX)||120)/2;
+      const sy=Math.max(8,Number(o.sizeY)||120)/2;
+      const sz=Math.max(8,Number(o.sizeZ)||120)/2;
+      const r=Math.min(sx,sz);
+      for(let i=0;i<40;i++){
+        const a=Math.PI*2*i/40;
+        const x=Math.cos(a)*r;
+        const z=Math.sin(a)*r;
+        out.push({x,y:-sy,z},{x,y:sy,z});
+      }
+    }
+
+    // Cone: base rim + apex.
+    if(o.shape3dType==='cone'){
+      const sx=Math.max(8,Number(o.sizeX)||120)/2;
+      const sy=Math.max(8,Number(o.sizeY)||120)/2;
+      const sz=Math.max(8,Number(o.sizeZ)||120)/2;
+      const r=Math.min(sx,sz);
+      out.push({x:0,y:-sy,z:0});
+      for(let i=0;i<40;i++){
+        const a=Math.PI*2*i/40;
+        out.push({
+          x:Math.cos(a)*r,
+          y:sy,
+          z:Math.sin(a)*r
+        });
+      }
+    }
+
+    return out;
+  }
+
+  function shape3DShadowScreenHull(o){
+    const planeY=shape3DShadowPlaneY();
+    const samples=shape3DShadowLocalSamples(o);
+    if(samples.length<3) return [];
+
+    const projected=[];
+    for(const local of samples){
+      const world=shape3DLocalToWorldPoint(o,local);
+      const shadow=shape3DShadowProjectWorldPoint(world,planeY);
+      if(!shadow) continue;
+      const screen=shape3DProjectWorldPoint(o,shadow);
+      if(Number.isFinite(screen.x) && Number.isFinite(screen.y)){
+        projected.push({x:screen.x,y:screen.y});
+      }
+    }
+
+    if(projected.length<3) return [];
+    return convexHullLabeled(projected);
+  }
+
+  function shape3DShadowHeight(o){
+    const planeY=shape3DShadowPlaneY();
+    const samples=shape3DShadowLocalSamples(o);
+    if(!samples.length) return 0;
+
+    let maxDistance=0;
+    for(const local of samples){
+      const world=shape3DLocalToWorldPoint(o,local);
+      maxDistance=Math.max(maxDistance,Math.abs(world.y-planeY));
+    }
+    return maxDistance;
+  }
+
+  function drawShape3DShadow(o){
+    if(!global3DGridVisible || !o || o.kind!=='shape3d') return;
+
+    const hull=shape3DShadowScreenHull(o);
+    if(hull.length<3) return;
+
+    const height=shape3DShadowHeight(o);
+    const alpha=Math.max(.10,Math.min(.22,.13+height/1800));
+    const blur=Math.max(1.5,Math.min(8,2+height/90))/viewZoom;
+
+    ctx.save();
+    ctx.setLineDash([]);
+    ctx.lineWidth=0;
+    ctx.filter=`blur(${blur}px)`;
+    ctx.fillStyle=`rgba(55,65,81,${alpha})`;
+
+    ctx.beginPath();
+    ctx.moveTo(hull[0].x,hull[0].y);
+    for(let i=1;i<hull.length;i++){
+      ctx.lineTo(hull[i].x,hull[i].y);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawAllShape3DShadows(){
+    if(!global3DGridVisible) return;
+
+    // Shadows are floor-level projections, so draw all of them over the grid
+    // but before the solid objects themselves.
+    const entries=shape3DDepthSortedEntries();
+    for(const entry of entries){
+      if(entry && entry.object) drawShape3DShadow(entry.object);
+    }
+  }
+
+
   function selected3DGroundGridInfo(indices=selectedIndices){
     const ids=selected3DIndices(indices);
     if(!ids.length) return null;
@@ -11780,6 +11964,7 @@
 
     drawAdaptiveGrid();
     drawUniversal3DXZGrid();
+    drawAllShape3DShadows();
 
     const viewportWorld=currentViewportWorldBounds(96);
 
