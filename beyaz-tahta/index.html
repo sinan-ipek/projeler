@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.77</title>
+<title>Beyaz Tahta v18.78</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1218,7 +1218,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.77 · Pastel 3D gizmo, pivot gizli, Z mouse ile</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.78 · Lokal 3D gizmo + sınırsız bağıl Z mouse hareketi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1271,7 +1271,7 @@
               <li>Esc: Kalem ↔ Seçim oku arasında geçiş yapar.</li>
               <li>Aralık: son transformasyonu tekrarlar; Shift + Aralık kopya oluşturup son transformasyonu tekrarlar.</li>
               <li>Grid düğmesi: evrensel XZ gridini açar ve kapatır.</li>
-              <li>Bir veya daha fazla 3D nesnede X/Y/Z döndürme gizmosu görünür; çoklu seçimde ağırlık merkezi kullanılır.</li>
+              <li>Bir veya daha fazla 3D nesnede lokal X/Y/Z döndürme gizmosu görünür; cisim döndükçe gizmo da döner. Çoklu seçimde ağırlık merkezi kullanılır.</li>
             </ul>
             <ul>
               <li>Nesneye tıkla; boş alanda sürükleyerek çoklu seçim yap.</li>
@@ -6302,8 +6302,9 @@
   let shape3DZUndoArmed=false;
   let shape3DZWheelAccumulator=0;
   let shape3DZPointerScreen=null;
+  let shape3DZPointerLocked=false;
 
-  const SHAPE3D_Z_POINTER_SENSITIVITY=.65;
+  const SHAPE3D_Z_POINTER_SENSITIVITY=.9;
   const SHAPE3D_Z_EASE=.16;
   const SHAPE3D_Z_EPS=.03;
 
@@ -6312,6 +6313,10 @@
     shape3DZUndoArmed=false;
     shape3DZWheelAccumulator=0;
     shape3DZPointerScreen=null;
+    shape3DZPointerLocked=false;
+    if(document.pointerLockElement===canvas){
+      try{ document.exitPointerLock(); }catch(_){}
+    }
     if(shape3DZRAF){
       cancelAnimationFrame(shape3DZRAF);
       shape3DZRAF=0;
@@ -6360,16 +6365,25 @@
     shape3DZRAF=requestAnimationFrame(animateShape3DZMove);
   }
 
-  function moveShape3DZFromPointer(screenP){
+  function moveShape3DZFromPointerEvent(e,screenP){
     const o=objects[shape3DZMoveIndex];
-    if(!o || o.kind!=='shape3d' || !screenP) return false;
+    if(!o || o.kind!=='shape3d') return false;
 
-    if(!shape3DZPointerScreen){
+    let dy=0;
+
+    if(document.pointerLockElement===canvas){
+      dy=Number(e.movementY)||0;
+      shape3DZPointerLocked=true;
+    }else{
+      if(!screenP) return false;
+      if(!shape3DZPointerScreen){
+        shape3DZPointerScreen={x:screenP.x,y:screenP.y};
+        return true;
+      }
+      dy=screenP.y-shape3DZPointerScreen.y;
       shape3DZPointerScreen={x:screenP.x,y:screenP.y};
-      return true;
     }
 
-    const dy=screenP.y-shape3DZPointerScreen.y;
     if(Math.abs(dy)<.01) return true;
 
     if(!shape3DZUndoArmed){
@@ -6377,10 +6391,10 @@
       shape3DZUndoArmed=true;
     }
 
+    // Relative mouse movement has no canvas-edge limit while pointer lock is active.
     // Mouse up => +Z, mouse down => -Z.
     o.centerZ=(Number(o.centerZ)||0)-dy*SHAPE3D_Z_POINTER_SENSITIVITY/viewZoom;
     shape3DZTarget=o.centerZ;
-    shape3DZPointerScreen={x:screenP.x,y:screenP.y};
     markBoardDirty();
     redraw();
     return true;
@@ -8668,15 +8682,29 @@
     const len=Math.max(70,Math.min(160,span*.28));
 
     const center=shape3DProjectWorldPoint(ref,c);
-    const axes=[
-      {name:'3d-group-rotate-x',axis:'X',world:{x:c.x+len,y:c.y,z:c.z}},
-      {name:'3d-group-rotate-y',axis:'Y',world:{x:c.x,y:c.y+len,z:c.z}},
-      {name:'3d-group-rotate-z',axis:'Z',world:{x:c.x,y:c.y,z:c.z+len}}
+    const q=shape3DQuaternion(ref);
+    const localAxes=[
+      {name:'3d-group-rotate-x',axis:'X',dir:{x:1,y:0,z:0}},
+      {name:'3d-group-rotate-y',axis:'Y',dir:{x:0,y:1,z:0}},
+      {name:'3d-group-rotate-z',axis:'Z',dir:{x:0,y:0,z:1}}
     ];
 
-    return axes.map(h=>{
-      const p=shape3DProjectWorldPoint(ref,h.world);
-      return {...h,base:{x:center.x,y:center.y},x:p.x,y:p.y,centroid:c};
+    return localAxes.map(h=>{
+      const d=rotatePointByQuat(h.dir,q);
+      const world={
+        x:c.x+d.x*len,
+        y:c.y+d.y*len,
+        z:c.z+d.z*len
+      };
+      const p=shape3DProjectWorldPoint(ref,world);
+      return {
+        ...h,
+        world,
+        worldDir:d,
+        base:{x:center.x,y:center.y},
+        x:p.x,y:p.y,
+        centroid:c
+      };
     });
   }
 
@@ -8716,11 +8744,18 @@
   function rotateShape3DGroupSnapshot(axisName,angle){
     if(!groupSnapshots || !group3DRotationCentroidSnapshot) return false;
 
-    const axis=
+    const localAxis=
       axisName==='x' ? {x:1,y:0,z:0} :
       axisName==='y' ? {x:0,y:1,z:0} :
       {x:0,y:0,z:1};
 
+    const firstSnap=groupSnapshots[0] && groupSnapshots[0].object;
+    if(!firstSnap || firstSnap.kind!=='shape3d') return false;
+
+    // The gizmo and the transformation share the same LOCAL frame.
+    // Convert the local axis into a world-space axis through the reference
+    // object's snapshot quaternion, then rotate every selected object around it.
+    const axis=rotatePointByQuat(localAxis,shape3DQuaternion(firstSnap));
     const q=quatFromAxisAngle(axis,angle);
     const c=group3DRotationCentroidSnapshot;
 
@@ -8739,7 +8774,7 @@
       o.center={x:c.x+rr.x,y:c.y+rr.y};
       o.centerZ=c.z+rr.z;
 
-      // Global group-axis rotation: pre-multiply each object's orientation.
+      // Local gizmo axis expressed in world space; pre-multiply the world delta.
       o.rotationQuat=quatMultiply(q,shape3DQuaternion(snap));
       o.rotationX=Number(snap.rotationX)||0;
       o.rotationY=Number(snap.rotationY)||0;
@@ -13208,6 +13243,18 @@
 
   canvas.addEventListener('pointerdown',e=>{
     const screenP=screenPointFromEvent(e);
+
+    if(
+      e.button===0 &&
+      shape3DZMoveIndex>=0 &&
+      document.pointerLockElement===canvas
+    ){
+      e.preventDefault();
+      deactivateShape3DZMove();
+      statusEl.textContent='Z taşıma kapalı';
+      redraw();
+      return;
+    }
     const p=pFromEvent(e);
     lastCanvasPointerWorld={x:p.x,y:p.y};
 
@@ -13644,12 +13691,18 @@
           ){
             activateShape3DZMove(selectedIndex);
             shape3DZPointerScreen={x:screenP.x,y:screenP.y};
+            try{
+              const lockPromise=canvas.requestPointerLock && canvas.requestPointerLock();
+              if(lockPromise && typeof lockPromise.catch==='function'){
+                lockPromise.catch(()=>{});
+              }
+            }catch(_){}
             selectAction=null;
             selectStart=null;
             selectSnapshot=null;
             groupSnapshots=null;
             activeHandle=null;
-            statusEl.textContent='Z taşıma aktif — fareyi yukarı/aşağı hareket ettir';
+            statusEl.textContent='Z taşıma aktif — fareyi yukarı/aşağı hareket ettir; tıklayınca çıkar';
             redraw();
             return;
           }
@@ -14112,7 +14165,7 @@
       objects[shape3DZMoveIndex].kind==='shape3d' &&
       !selectAction
     ){
-      moveShape3DZFromPointer(screenP);
+      moveShape3DZFromPointerEvent(e,screenP);
       return;
     }
 
@@ -15043,6 +15096,18 @@
   }
   canvas.addEventListener('pointerup',finishPointer);
   canvas.addEventListener('pointercancel',finishPointer);
+
+  document.addEventListener('pointerlockchange',()=>{
+    shape3DZPointerLocked=document.pointerLockElement===canvas;
+    if(!shape3DZPointerLocked && shape3DZMoveIndex>=0){
+      // Leaving pointer lock ends the unlimited Z gesture cleanly.
+      shape3DZMoveIndex=-1;
+      shape3DZUndoArmed=false;
+      shape3DZPointerScreen=null;
+      statusEl.textContent='Z taşıma kapalı';
+      redraw();
+    }
+  });
 
   // Chrome / browser context menu must never cover the whiteboard.
   // Capture on the whole stage so right-click, right-drag and our own
