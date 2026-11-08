@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="tr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -617,7 +617,7 @@ button:focus-visible{outline:3px solid rgba(47,111,237,.28);outline-offset:3px}
       <div class="brand-dot"></div>
       <div>
         <div class="brand-title">MAFI 1 • Übungsblatt 03</div>
-        <div class="brand-sub">Animierte Lösungspräsentation</div>
+        <div class="brand-sub">Animasyonlu çözüm sunumu</div>
       </div>
     </div>
 
@@ -642,7 +642,7 @@ button:focus-visible{outline:3px solid rgba(47,111,237,.28);outline-offset:3px}
   <main class="presentation" id="presentation"></main>
 
   <footer class="bottom">
-    <div class="version">v1.1 • ÜB03 · Türkisch/Deutsch · animierte Beweise</div>
+    <div class="version">v1.2 · Türkçe/Deutsch tam sunum</div>
     <div class="counter" id="slideCounter"></div>
   </footer>
 </div>
@@ -1197,15 +1197,59 @@ const slides = [
 
 // Vollständige deutsche Fassung aller 13 Teilaufgaben und sämtlicher Beweisschritte.
 const germanData = [null,{"title":"Warum ist punktweise Funktionsgleichheit eine Äquivalenzrelation?","goal":"Reflexivität, Symmetrie und Transitivität nachweisen.","steps":[["Was müssen wir zeigen?","Eine Äquivalenzrelation muss <b>reflexiv</b>, <b>symmetrisch</b> und <b>transitiv</b> sein. <div class=\"visual relation-row\"><div class=\"node blue\">f</div><div class=\"arrow flow\"></div><div class=\"node green\">g</div></div>"],["Reflexivität","Jede Funktion ist an jeder Stelle mit sich selbst gleich.<div class=\"mathbox\">\\[\\forall x\\in X:\\;f(x)=f(x)\\Longrightarrow f\\simeq f.\\]</div>Wir verwenden die <span class=\"hi\">Reflexivität der Gleichheit</span>."],["Symmetrie","Sei \\(f\\simeq g\\). Dann gilt \\(f(x)=g(x)\\) für alle \\(x\\). Wegen der Symmetrie der Gleichheit folgt:<div class=\"mathbox\">\\[f(x)=g(x)\\Rightarrow g(x)=f(x)\\Rightarrow g\\simeq f.\\]</div>"],["Transitivität","Seien \\(f\\simeq g\\) und \\(g\\simeq h\\). Für jedes \\(x\\) gilt:<div class=\"mathbox\">\\[f(x)=g(x)\\quad\\text{und}\\quad g(x)=h(x)\\Rightarrow f(x)=h(x).\\]</div>Also \\(f\\simeq h\\)."],["Ergebnis","Alle drei Eigenschaften sind erfüllt:<p class=\"good\">✓ reflexiv &nbsp; ✓ symmetrisch &nbsp; ✓ transitiv</p><div class=\"mathbox\">\\[\\boxed{\\simeq\\text{ ist eine Äquivalenzrelation.}}\\]</div>"]]},{"title":"Äquivalenzrelation für beliebige Relationen","goal":"Für jedes x die zugehörigen Teilmengen von Y vergleichen und die drei Eigenschaften nachweisen.","steps":[["Die Menge zu einem festen x","Wähle ein festes \\(x\\). Sammle alle \\(y\\), die in R mit x verbunden sind:<div class=\"mathbox\">\\[R_x:=\\{y\\in Y\\mid(x,y)\\in R\\}.\\]</div>Die Definition besagt: \\(R\\simeq_r S\\) genau dann, wenn \\(R_x=S_x\\) für jedes \\(x\\)."],["Reflexivität","Jede Menge ist mit sich selbst gleich:<div class=\"mathbox\">\\[\\forall x:\\;R_x=R_x\\Rightarrow R\\simeq_r R.\\]</div>"],["Symmetrie","Sei \\(R\\simeq_r S\\). Dann \\(R_x=S_x\\) für alle \\(x\\). Wegen der Symmetrie der Mengengleichheit gilt:<div class=\"mathbox\">\\[R_x=S_x\\Rightarrow S_x=R_x\\Rightarrow S\\simeq_r R.\\]</div>"],["Transitivität","Aus \\(R\\simeq_r S\\) und \\(S\\simeq_r T\\) folgt für jedes x:<div class=\"mathbox\">\\[R_x=S_x,\\;S_x=T_x\\Rightarrow R_x=T_x.\\]</div>Also \\(R\\simeq_r T\\)."],["Ergebnis","Entscheidend sind hier die drei Eigenschaften der <b>Mengengleichheit</b>.<div class=\"mathbox\">\\[\\boxed{\\simeq_r\\text{ ist ebenfalls eine Äquivalenzrelation.}}\\]</div>"]]},{"title":"Wann stimmen lexikographische Ordnung L und E überein?","goal":"Ein einfaches Beispiel finden, in dem kein anderes Paar vergleichbar sein muss.","steps":[["Wähle eine einelementige Menge","Sei \\(A=\\{0\\}\\) und \\(R=\\{(0,0)\\}\\).<div class=\"visual matrix\"><div class=\"pair hot\">(0,0)</div></div>"],["Wie viele Elemente hat A²?","Genau eines:<div class=\"mathbox\">\\[A^2=\\{(0,0)\\}.\\]</div>"],["E und L prüfen","Wir müssen nur \\((0,0)\\) mit sich selbst vergleichen. Beide Definitionen sind wahr:<div class=\"mathbox\">\\[(0,0)E(0,0)\\quad\\text{und}\\quad(0,0)L(0,0).\\]</div>"],["Ergebnis","Weitere Paare gibt es nicht. Beide Relationen sind daher gleich:<div class=\"mathbox\">\\[\\boxed{L=E=\\{((0,0),(0,0))\\}.}\\]</div>"]]},{"title":"Ein Gegenbeispiel für L ≠ E","goal":"Bei strikt kleiner erster Koordinate ist L unabhängig von der zweiten Koordinate; E ist das nicht.","steps":[["Beispiel wählen","Sei \\(A=\\{0,1\\}\\) und \\(R=\\le\\). Wir vergleichen:<div class=\"visual matrix\"><div class=\"pair hot\">(0,1)</div><div class=\"pair cool\">(1,0)</div></div>"],["Prüfung von L","Da \\(0<1\\), entscheidet bereits die erste Koordinate:<div class=\"mathbox\">\\[0\\le1\\;\\land\\;(\\neg(1\\le0)\\lor1\\le0).\\]</div>\\(\\neg(1\\le0)\\) ist wahr. Also <span class=\"good\">gilt L</span>."],["Prüfung von E","E verlangt die Bedingung in beiden Koordinaten:<div class=\"mathbox\">\\[0\\le1\\;\\land\\;1\\le0.\\]</div>Die zweite Aussage ist falsch; also <span class=\"bad\">gilt E nicht</span>."],["Ergebnis","Für dieselben Paare gilt L, aber nicht E:<div class=\"mathbox\">\\[\\boxed{L\\neq E.}\\]</div>"]]},{"title":"Warum ist E immer eine partielle Ordnung?","goal":"Reflexivität, Antisymmetrie und Transitivität beweisen.","steps":[["Reflexivität","R ist reflexiv. Deshalb gelten \\(aRa\\) und \\(bRb\\).<div class=\"mathbox\">\\[(a,b)E(a,b).\\]</div>"],["Voraussetzung für Antisymmetrie","Angenommen, \\((a,b)E(a',b')\\) und \\((a',b')E(a,b)\\). Nach Definition gelten:<div class=\"mathbox\">\\[aRa',\\;a'Ra,\\;bRb',\\;b'Rb.\\]</div>"],["Antisymmetrie von R verwenden","Aus \\(aRa'\\land a'Ra\\) folgt \\(a=a'\\). Aus \\(bRb'\\land b'Rb\\) folgt \\(b=b'\\).<div class=\"mathbox\">\\[(a,b)=(a',b').\\]</div>"],["Transitivität","Seien \\((a,b)E(a',b')\\) und \\((a',b')E(a'',b'')\\). Aus der Transitivität von R folgt:<div class=\"mathbox\">\\[aRa',\\;a'Ra''\\Rightarrow aRa'',\\qquad bRb',\\;b'Rb''\\Rightarrow bRb''.\\]</div>Damit \\((a,b)E(a'',b'')\\)."],["Ergebnis","Alle drei Eigenschaften sind nachgewiesen:<div class=\"mathbox\">\\[\\boxed{E\\text{ ist eine partielle Ordnung.}}\\]</div>"]]},{"title":"Warum ist E nicht immer total?","goal":"Zwei Elemente von A² finden, die bezüglich E nicht vergleichbar sind.","steps":[["Sei A={0,1}","Wir nehmen \\(R=\\le\\) und betrachten:<div class=\"visual matrix\"><div class=\"pair hot\">(0,1)</div><div class=\"pair hot\">(1,0)</div></div>"],["Erste Richtung","Für \\((0,1)E(1,0)\\) müssten beide Bedingungen gelten:<div class=\"mathbox\">\\[0\\le1\\;\\land\\;1\\le0.\\]</div>Das ist falsch."],["Umgekehrte Richtung","Für \\((1,0)E(0,1)\\) bräuchten wir:<div class=\"mathbox\">\\[1\\le0\\;\\land\\;0\\le1.\\]</div>Auch das ist falsch."],["Ergebnis","Keines der beiden Paare steht bezüglich E vor dem anderen.<div class=\"mathbox\">\\[\\boxed{E\\text{ muss nicht total sein.}}\\]</div>"]]},{"title":"Beweis der Antisymmetrie von L","goal":"Gelten beide L-Richtungen, dann zuerst a=a′ und anschließend b=b′ zeigen.","steps":[["Beide Richtungen annehmen","Es gelten \\((a,b)L(a',b')\\) und \\((a',b')L(a,b)\\). Daraus folgen insbesondere:<div class=\"mathbox\">\\[aRa'\\quad\\text{und}\\quad a'Ra.\\]</div>"],["Erste Koordinaten sind gleich","Da R antisymmetrisch ist, folgt:<div class=\"mathbox\">\\[a=a'.\\]</div>"],["Zur Klammer in L zurückkehren","Wegen \\(a=a'\\) ist \\(a'Ra\\) aufgrund der Reflexivität wahr. Deshalb ist<div class=\"mathbox\">\\[\\neg(a'Ra)\\]</div><span class=\"bad\">falsch</span>. Damit die Disjunktion in der Definition von L dennoch wahr bleibt, muss \\(bRb'\\) gelten."],["Auch die Gegenrichtung verwenden","Aus \\((a',b')L(a,b)\\) folgt mit demselben Argument:<div class=\"mathbox\">\\[b'Rb.\\]</div>"],["Zweite Koordinaten sind gleich","Die Antisymmetrie von R liefert:<div class=\"mathbox\">\\[bRb'\\land b'Rb\\Rightarrow b=b'.\\]</div>Also sind die Paare gleich:<div class=\"mathbox\">\\[\\boxed{L\\text{ ist antisymmetrisch.}}\\]</div>"]]},{"title":"Vollständige Induktion: n! ≥ 2ⁿ","goal":"Induktionsanfang, Induktionsvoraussetzung und Induktionsschritt durchführen.","steps":[["Induktionsanfang n=4","Wir prüfen:<div class=\"mathbox\">\\[4!=24\\ge16=2^4.\\]</div>Der Induktionsanfang gilt."],["Induktionsvoraussetzung","Für ein festes \\(n\\ge4\\) nehmen wir an:<div class=\"mathbox\">\\[n!\\ge2^n.\\]</div>"],["Den Fall n+1 beginnen","Zu zeigen ist:<div class=\"mathbox\">\\[(n+1)!\\ge2^{n+1}.\\]</div>Wir zerlegen die linke Seite:<div class=\"mathbox\">\\[(n+1)!=(n+1)n!.\\]</div>"],["Induktionsvoraussetzung einsetzen","Aus \\(n!\\ge2^n\\) folgt nach Multiplikation mit \\(n+1>0\\):<div class=\"mathbox\">\\[(n+1)n!\\ge(n+1)2^n.\\]</div>"],["Letzter Vergleich","Da \\(n\\ge4\\), gilt \\(n+1\\ge5\\ge2\\). Deshalb:<div class=\"mathbox\">\\[(n+1)2^n\\ge2\\cdot2^n=2^{n+1}.\\]</div><div class=\"visual ladder\"><div class=\"rung\">4</div><div class=\"rung\">n</div><div class=\"rung\">n+1</div><div class=\"rung\">✓</div></div>"],["Ergebnis","Der Induktionsbeweis ist abgeschlossen:<div class=\"mathbox\">\\[\\boxed{\\forall n\\ge4:\\;n!\\ge2^n.}\\]</div>"]]},{"title":"Jede k-fache Verkettung einer injektiven Funktion ist injektiv","goal":"Aus gleichen Funktionswerten der (k+1)-fachen Verkettung auf gleiche Eingaben schließen.","steps":[["Induktionsanfang k=1","Es gilt \\(f^1=f\\). Nach Voraussetzung ist f injektiv.<div class=\"mathbox\">\\[f^1\\text{ ist injektiv.}\\]</div>"],["Induktionsvoraussetzung","Für ein festes \\(k\\ge1\\) sei \\(f^k\\) injektiv."],["Injektivität nachweisen","Wir nehmen \\(f^{k+1}(x)=f^{k+1}(y)\\) an. Da \\(f^{k+1}=f^k\\circ f\\), ist dies gleichbedeutend mit:<div class=\"mathbox\">\\[f^k(f(x))=f^k(f(y)).\\]</div><div class=\"visual relation-row\"><div class=\"node blue\">x</div><div class=\"arrow flow\"></div><div class=\"node\">f(x)</div><div class=\"arrow flow\"></div><div class=\"node green\">fᵏ(f(x))</div></div>"],["Zuerst die Injektivität von fᵏ","Nach der Induktionsvoraussetzung ist \\(f^k\\) injektiv. Daher:<div class=\"mathbox\">\\[f^k(f(x))=f^k(f(y))\\Rightarrow f(x)=f(y).\\]</div>"],["Dann die Injektivität von f","Auch f ist injektiv. Folglich:<div class=\"mathbox\">\\[f(x)=f(y)\\Rightarrow x=y.\\]</div>Also ist \\(f^{k+1}\\) injektiv."],["Ergebnis","Mit vollständiger Induktion folgt:<div class=\"mathbox\">\\[\\boxed{\\forall k\\ge1:\\;f^k\\text{ ist injektiv}.}\\]</div>"]]},{"title":"Distributivgesetz für n Mengen","goal":"Im Fall n+1 das Distributivgesetz und die Induktionsvoraussetzung kombinieren.","steps":[["Induktionsanfang n=1","Beide Seiten sind identisch:<div class=\"mathbox\">\\[A_1\\cup C=A_1\\cup C.\\]</div>"],["Induktionsvoraussetzung","Für ein festes \\(n\\ge1\\) gelte:<div class=\"mathbox\">\\[(A_1\\cap\\cdots\\cap A_n)\\cup C=(A_1\\cup C)\\cap\\cdots\\cap(A_n\\cup C).\\]</div>"],["Den Fall n+1 zusammenfassen","Setze \\(B:=A_1\\cap\\cdots\\cap A_n\\). Die linke Seite ist nun:<div class=\"mathbox\">\\[(B\\cap A_{n+1})\\cup C.\\]</div>"],["Distributivgesetz anwenden","Mit dem vorgegebenen Gesetz folgt:<div class=\"mathbox\">\\[(B\\cap A_{n+1})\\cup C=(B\\cup C)\\cap(A_{n+1}\\cup C).\\]</div>"],["Induktionsvoraussetzung für B∪C","Ersetze \\(B\\cup C\\) mit der Induktionsvoraussetzung:<div class=\"mathbox\">\\[((A_1\\cup C)\\cap\\cdots\\cap(A_n\\cup C))\\cap(A_{n+1}\\cup C).\\]</div>"],["Ergebnis","Dies ist genau die Behauptung für n+1:<div class=\"mathbox\">\\[\\boxed{(A_1\\cap\\cdots\\cap A_{n+1})\\cup C=\\bigcap_{i=1}^{n+1}(A_i\\cup C).}\\]</div>"]]},{"title":"Kontraposition mit Fallunterscheidung","goal":"Statt der ursprünglichen Implikation ihre Kontraposition beweisen.","steps":[["Kontraposition formulieren","Die Aussage lautet:<div class=\"mathbox\">\\[A\\cup B=A\\cap B\\Rightarrow A=B.\\]</div>Ihre Kontraposition:<div class=\"mathbox\">\\[A\\neq B\\Rightarrow A\\cup B\\neq A\\cap B.\\]</div>"],["Was bedeutet A ≠ B?","Sind zwei Mengen verschieden, gibt es ein Element in genau einer der Mengen. Wir unterscheiden zwei Fälle:<div class=\"mathbox\">\\[\\exists x\\in A\\setminus B\\quad\\text{oder}\\quad\\exists x\\in B\\setminus A.\\]</div>"],["Fall 1","Sei \\(x\\in A\\setminus B\\). Dann liegt x in \\(A\\cup B\\), aber nicht in \\(A\\cap B\\). Damit sind die Mengen verschieden."],["Fall 2","Sei \\(x\\in B\\setminus A\\). Wieder liegt x in \\(A\\cup B\\), aber nicht in \\(A\\cap B\\)."],["Ergebnis","In beiden Fällen gilt die Kontraposition. Also ist die ursprüngliche Aussage bewiesen:<div class=\"mathbox\">\\[\\boxed{A\\cup B=A\\cap B\\Rightarrow A=B.}\\]</div>"]]},{"title":"Ringschluss: (i) ⇒ (ii) ⇒ (iii) ⇒ (i)","goal":"Drei Implikationen nacheinander beweisen, um die Äquivalenz zu erhalten.","steps":[["Plan des Ringschlusses","Wir zeigen die folgenden drei Implikationen:<div class=\"visual cycle\"><div class=\"bubble\">(i)<br>injektiv</div><div class=\"go\">→</div><div class=\"bubble\">(ii)<br>Urbild</div><div class=\"go\">→</div><div class=\"bubble\">(iii)<br>Faser</div><div class=\"back\">↘ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (iii) → (i) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↙</div></div>"],["(i) ⇒ (ii)","Sei \\(z\\in f^{-1}(f(A))\\). Dann liegt \\(f(z)\\) in \\(f(A)\\). Also existiert \\(a\\in A\\) mit \\(f(z)=f(a)\\). Wegen der Injektivität von f folgt \\(z=a\\in A\\).<div class=\"mathbox\">\\[f^{-1}(f(A))\\subseteq A.\\]</div>"],["(ii) ⇒ (iii): zunächst ⊆","Wähle in (ii) die Menge \\(A=\\{x\\}\\):<div class=\"mathbox\">\\[f^{-1}(f(\\{x\\}))\\subseteq\\{x\\}.\\]</div>Da \\(f(\\{x\\})=\\{f(x)\\}\\), folgt<div class=\"mathbox\">\\[f^{-1}(\\{f(x)\\})\\subseteq\\{x\\}.\\]</div>"],["(ii) ⇒ (iii): umgekehrte Inklusion","Da immer \\(f(x)\\in\\{f(x)\\}\\) gilt, folgt:<div class=\"mathbox\">\\[x\\in f^{-1}(\\{f(x)\\}).\\]</div>Damit \\(\\{x\\}\\subseteq f^{-1}(\\{f(x)\\})\\). Zusammen mit der anderen Inklusion ergibt sich Gleichheit."],["(iii) ⇒ (i)","Nehmen wir \\(f(x)=f(y)\\) an. Dann \\(y\\in f^{-1}(\\{f(x)\\})\\). Aus (iii) folgt, dass diese Menge gleich \\(\\{x\\}\\) ist. Also \\(y=x\\).<div class=\"mathbox\">\\[\\boxed{f\\text{ ist injektiv}.}\\]</div>"],["Der Ring ist geschlossen","Alle drei Implikationen wurden gezeigt:<div class=\"mathbox\">\\[\\boxed{(i)\\Rightarrow(ii)\\Rightarrow(iii)\\Rightarrow(i)}\\]</div>Folglich sind die drei Aussagen äquivalent."]]},{"title":"Widerspruch mit Fallunterscheidung: 3 Elemente passen nicht injektiv auf 2 Werte","goal":"Injektivität annehmen und zeigen, dass für das dritte Element kein freier Wert bleibt.","steps":[["Widerspruchsannahme","Angenommen, es gäbe eine injektive Funktion f. Dann gilt entweder \\(f(1)=1\\) oder \\(f(1)=2\\). Andere Werte gibt es nicht."],["Fall 1: f(1)=1","Wegen der Injektivität muss \\(f(2)\\neq1\\) gelten, also \\(f(2)=2\\). Was kann \\(f(3)\\) sein?<div class=\"visual relation-row\"><div class=\"node blue\">1</div><div class=\"arrow flow\"></div><div class=\"node green\">1</div><div class=\"node blue\">2</div><div class=\"arrow flow\"></div><div class=\"node green\">2</div><div class=\"node red\">3 ?</div></div>"],["Kein freier Wert für das dritte Element","Die Zielmenge ist \\(\\{1,2\\}\\). Falls \\(f(3)=1\\), dann \\(f(1)=f(3)\\). Falls \\(f(3)=2\\), dann \\(f(2)=f(3)\\). Beide Möglichkeiten widersprechen der Injektivität."],["Fall 2: f(1)=2","Die Injektivität erzwingt nun \\(f(2)=1\\). Für \\(f(3)\\) bleiben nur 1 und 2; beide Werte sind bereits vergeben. Wieder ein Widerspruch."],["Widerspruch","In beiden Fällen entsteht ein Widerspruch. Damit ist die Annahme falsch.<div class=\"mathbox\">\\[\\boxed{\\text{Es gibt keine injektive Abbildung }f:\\{1,2,3\\}\\to\\{1,2\\}.}\\]</div>"]]}];
-for(let i=1;i<slides.length;i++){
-  const item=germanData[i];
-  if(!item||item.steps.length!==slides[i].steps.length)throw Error("Fehlende Übersetzung in Folie "+i);
-  slides[i].title=item.title;
-  slides[i].goal=item.goal;
-  slides[i].steps.forEach((st,j)=>{st.title=item.steps[j][0];st.html=item.steps[j][1];});
+let lang = localStorage.getItem("elif-ub03-lang") || (location.pathname.endsWith("-de.html") ? "de" : "tr");
+
+const turkishData = slides.map(s=>({title:s.title, goal:s.goal, chip:s.chip, de:s.de, subtitle:s.subtitle, steps:s.steps?.map(st=>({title:st.title, html:st.html}))}));
+const germanStatements = slides.map(s=>s.de);
+const turkishStatements = [null,"Fonksiyonlar arasında \\(\\simeq\\) bağıntısı şöyle tanımlanıyor:\n\\[f\\simeq g\\iff\\forall x\\in X:\\;f(x)=g(x).\\]\nBu bağıntının bir <b>eşdeğerlik bağıntısı</b> olduğunu kanıtlayın.","\\(R,S\\subseteq X\\times Y\\) için şu bağıntı tanımlanıyor:\n\\[R\\simeq_r S\\iff\\forall x\\in X:\\;\\{y\\in Y\\mid(x,y)\\in R\\}=\\{y\\in Y\\mid(x,y)\\in S\\}.\\]\nBu da bir eşdeğerlik bağıntısı mıdır? Gerekçelendirin.","\\(R\\), \\(A\\) kümesi üzerinde tam sıralama olsun:\n\\[(a,b)E(a',b')\\iff aRa'\\land bRb',\\]\n\\[(a,b)L(a',b')\\iff aRa'\\land(\\neg(a'Ra)\\lor bRb').\\]\n\\(L=E\\) olacak bir \\(A\\) ve \\(R\\) örneği verin ve gerekçelendirin.","\\(R\\), \\(A\\) üzerinde tam sıralama olsun. \\(L\\neq E\\) olacak bir \\(A\\) ve \\(R\\) örneği verin; neden farklı olduklarını gösterin.","\\(E\\) bağıntısının bir <b>kısmi sıralama</b> olduğunu kanıtlayın.","Uygun bir karşı-örnek vererek \\(E\\) bağıntısının her zaman <b>tam sıralama</b> olmadığını gösterin.","\\(L\\) bağıntısının <b>antisimetri</b> özelliğini sağladığını kanıtlayın.","Tam tümevarım kullanarak \\(n\\ge4\\) olan bütün doğal sayılar için şu eşitsizliği kanıtlayın:\n\\[n!\\ge2^n.\\]","\\(f:X\\to X\\) bire bir (injektif) fonksiyon olsun. Tam tümevarımla bütün \\(k\\ge1\\) için şunu kanıtlayın:\n\\[f^k\\text{ bire birdir}.\\]\nBurada \\(f^1=f\\), \\(f^{k+1}=f^k\\circ f\\).","\\(A_1,A_2,\\ldots\\) ve \\(C\\) kümeleri verilsin. Bütün \\(n\\ge1\\) için tam tümevarımla şunu gösterin:\n\\[(A_1\\cap\\cdots\\cap A_n)\\cup C=(A_1\\cup C)\\cap\\cdots\\cap(A_n\\cup C).\\]","\\(A\\) ve \\(B\\) kümeleri için kanıtlayın:\n\\[A\\cup B=A\\cap B\\Rightarrow A=B.\\]\n<b>İstenen teknik:</b> Kontrapozisyon ve durumlara ayırma.","\\(f:X\\to Y\\) için şu üç önermenin eşdeğer olduğunu gösterin:\n<br>(i) \\(f\\) bire birdir.\n<br>(ii) Bütün \\(A\\subseteq X\\) için \\(f^{-1}(f(A))\\subseteq A\\).\n<br>(iii) Bütün \\(x\\in X\\) için \\(f^{-1}(\\{f(x)\\})=\\{x\\}\\).\n<br><b>İstenen teknik:</b> Halkalı ispat (Ringschluss).","Şu türde bire bir fonksiyon bulunmadığını kanıtlayın:\n\\[f:\\{1,2,3\\}\\to\\{1,2\\}.\\]\n<b>İstenen teknik:</b> Çelişkiyle ispat ve durumlara ayırma."];
+const footerEl = document.querySelector(".version");
+const brandSubEl = document.querySelector(".brand-sub");
+UI.tr.miniNote = "Önce soldaki soruyu oku. Sonra sağdaki çözümü adım adım aç. Her adım, ispatın nasıl ilerlediğini gösterir.";
+UI.de.miniNote = "Lies zuerst die Aufgabe links. Öffne dann rechts die Lösung Schritt für Schritt. Jeder Schritt zeigt, wie der Beweis weitergeht.";
+UI.tr.slideChip = "Soru";
+UI.de.slideChip = "Aufgabe";
+UI.tr.introSubtitle = "Bağıntılar • Sıralamalar • Tümevarım • İspat teknikleri";
+UI.de.introSubtitle = "Relationen • Ordnungen • Induktion • Beweistechniken";
+UI.tr.course = "Bilişim için Matematik 1";
+UI.de.course = "Mathematik für Informatik 1";
+UI.tr.brand = "Animasyonlu çözüm sunumu";
+UI.de.brand = "Animierte Lösungspräsentation";
+UI.tr.version = "v1.2 · Bütün sorular ve çözüm adımları Türkçe";
+UI.de.version = "v1.2 · Alle Aufgaben und Lösungsschritte auf Deutsch";
+function applyLanguage(chosen){
+  if(chosen!=="tr" && chosen!=="de") chosen="tr";
+  lang=chosen;
+  document.documentElement.lang=chosen;
+  document.title=chosen==="de"?"MAFI 1 – Übungsblatt 03 – Animierte Lösungspräsentation":"MAFI 1 – Übungsblatt 03 – Animasyonlu Çözüm Sunumu";
+  brandSubEl.textContent=UI[lang].brand;
+  footerEl.textContent=UI[lang].version;
+  slides[0].subtitle=UI[lang].introSubtitle;
+  for(let i=1;i<slides.length;i++){
+    const source=chosen==="de"?germanData[i]:turkishData[i];
+    const slide=slides[i];
+    slide.title=source.title;
+    slide.goal=source.goal;
+    slide.chip=(chosen==="de"?"Aufgabe ":"Soru ")+slide.chip.replace(/^(Aufgabe|Soru)\s*/,"");
+    slide.de=chosen==="de"?germanStatements[i]:turkishStatements[i];
+    slide.steps.forEach((st,j)=>{
+      st.title=chosen==="de"?source.steps[j][0]:source.steps[j].title;
+      st.html=chosen==="de"?source.steps[j][1]:source.steps[j].html;
+      if(chosen==="tr"){
+        st.html=st.html.replace(/\\text\{ ist eine Äquivalenzrelation\.\}/g,"\\text{ bir eşdeğerlik bağıntısıdır.}")
+          .replace(/\\text\{ ist ebenfalls eine Äquivalenzrelation\.\}/g,"\\text{ de bir eşdeğerlik bağıntısıdır.}")
+          .replace(/\\text\{ ist eine partielle Ordnung\.\}/g,"\\text{ bir kısmi sıralamadır.}")
+          .replace(/\\text\{ muss nicht total sein\.\}/g,"\\text{ her zaman tam sıralama değildir.}")
+          .replace(/\\text\{ ist antisymmetrisch\.\}/g,"\\text{ antisimetri özelliğini sağlar.}")
+          .replace(/\\text\{ ist injektiv\}/g,"\\text{ bire birdir}")
+          .replace(/\\text\{Es gibt keine injektive Abbildung \}/g,"\\text{Bire bir fonksiyon yoktur: }");
+      }
+    });
+  }
+  langBtn.setAttribute("aria-label",UI[lang].language);
+  localStorage.setItem("elif-ub03-lang",lang);
+  render();
 }
 
-let lang = "de";
 let slideIndex = 0;
 let revealed = 0;
 
@@ -1227,7 +1271,7 @@ function render(){
       el.innerHTML = `
         <div class="card intro">
           <div>
-            <div class="task-chip">Mathematik für Informatik 1</div>
+            <div class="task-chip">${UI[lang].course}</div>
             <h1>${s.title}</h1>
             <p><b>${s.subtitle}</b></p>
             <p>${UI[lang].introText}</p>
@@ -1258,9 +1302,7 @@ function render(){
           <h2 class="problem-title">${s.title}</h2>
           <div class="problem-de">${s.de}</div>
           <div class="goal"><b>${UI[lang].goal}</b>${s.goal}</div>
-          <div class="mini-note">
-            Lies zuerst die Aufgabe links. Öffne dann rechts die Lösung Schritt für Schritt. Jeder Schritt erklärt, warum der nächste folgt.
-          </div>
+          <div class="mini-note">${UI[lang].miniNote}</div>
         </aside>
 
         <section class="card solution-panel">
@@ -1353,11 +1395,8 @@ langBtn.addEventListener("click",(e)=>{
 });
 document.querySelectorAll(".lang-option").forEach(btn=>{
   btn.addEventListener("click",()=>{
-    lang=btn.dataset.lang;
-    localStorage.setItem("ub03-lang",lang);
     langMenu.classList.remove("open");
-    if(lang==="tr") { location.href="chatgpt.html"; return; }
-    render();
+    applyLanguage(btn.dataset.lang);
   });
 });
 document.addEventListener("click",()=>langMenu.classList.remove("open"));
@@ -1379,7 +1418,7 @@ document.addEventListener("keydown",(e)=>{
   }
 });
 
-render();
+applyLanguage(lang);
 </script>
 </body>
 </html>
