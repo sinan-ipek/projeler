@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.82</title>
+<title>Beyaz Tahta v18.83</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1193,6 +1193,10 @@
         <span id="groupMenuIcon" style="font-size:16px;width:22px;text-align:center">▦</span>
         <span id="groupMenuText">Grupla</span>
       </button>
+      <button id="dropContextBtn" role="menuitem" title="3D nesnenin en alt noktasını XZ düzlemine indir">
+        <span style="font-size:17px;width:22px;text-align:center">⇩</span>
+        <span>Drop</span>
+      </button>
       <button id="deleteContextBtn" role="menuitem">
         <span style="font-size:17px;width:22px;text-align:center">⌫</span>
         <span>Sil</span>
@@ -1218,7 +1222,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.82 · Grid üzerinde gerçek 3D gölge</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.83 · 3D Drop: XZ düzlemine indir</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1476,6 +1480,7 @@
   const groupToggleBtn = document.getElementById('groupToggleBtn');
   const groupMenuIcon = document.getElementById('groupMenuIcon');
   const groupMenuText = document.getElementById('groupMenuText');
+  const dropContextBtn = document.getElementById('dropContextBtn');
   const deleteContextBtn = document.getElementById('deleteContextBtn');
   const colorBtn = document.getElementById('colorBtn');
   const colorMenu = document.getElementById('colorMenu');
@@ -13733,6 +13738,16 @@
     lockToggleBtn.disabled=!hasTargets;
     flipHorizontalBtn.disabled=!hasTargets;
     flipVerticalBtn.disabled=!hasTargets;
+
+    const all3DTargets=
+      hasTargets &&
+      targets.every(o=>o.kind==='shape3d');
+
+    dropContextBtn.style.display=all3DTargets ? '' : 'none';
+    dropContextBtn.disabled=
+      !all3DTargets ||
+      targets.some(o=>!!o.locked);
+
     deleteContextBtn.disabled=!hasTargets || targets.every(o=>!!o.locked);
 
     if(!hasTargets){
@@ -13772,7 +13787,8 @@
 
     updateContextMenuState();
 
-    const menuW=190, menuH=344;
+    const menuW=190;
+    const menuH=dropContextBtn.style.display==='none' ? 344 : 386;
     const r=wrap.getBoundingClientRect();
     const x=Math.max(6,Math.min(screenP.x,r.width-menuW-6));
     const y=Math.max(6,Math.min(screenP.y,r.height-menuH-6));
@@ -13984,6 +14000,72 @@
 
     closeContextMenu();
     redraw();
+  });
+
+  function dropContextTargetsToXZPlane(){
+    const valid=expandGroupedIndices(contextTargetIndices)
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length)
+      .filter(i=>objects[i] && objects[i].kind==='shape3d');
+
+    if(!valid.length){
+      closeContextMenu();
+      return;
+    }
+
+    if(valid.some(i=>objects[i] && objects[i].locked)){
+      statusEl.textContent='Kilitli 3D nesne Drop ile taşınamaz';
+      closeContextMenu();
+      redraw();
+      return;
+    }
+
+    const planeY=shape3DShadowPlaneY();
+    let lowestY=-Infinity;
+
+    for(const i of valid){
+      const o=objects[i];
+      const samples=shape3DShadowLocalSamples(o);
+
+      for(const local of samples){
+        const world=shape3DLocalToWorldPoint(o,local);
+        if(Number.isFinite(world.y)){
+          // Canvas/world Y aşağı doğru büyür; bu yüzden en alt nokta max Y'dir.
+          lowestY=Math.max(lowestY,world.y);
+        }
+      }
+    }
+
+    if(!Number.isFinite(lowestY)){
+      closeContextMenu();
+      return;
+    }
+
+    const dy=planeY-lowestY;
+
+    if(Math.abs(dy)>1e-7){
+      recordObjectStates(valid);
+
+      for(const i of valid){
+        const o=objects[i];
+        o.center.y=(Number(o.center&&o.center.y)||0)+dy;
+      }
+
+      markBoardDirty();
+    }
+
+    setSelection(valid);
+    closeContextMenu();
+    redraw();
+
+    statusEl.textContent=valid.length>1
+      ? valid.length+' 3D nesne XZ düzlemine indirildi'
+      : '3D nesne XZ düzlemine indirildi';
+  }
+
+  dropContextBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(dropContextBtn.disabled) return;
+    dropContextTargetsToXZPlane();
   });
 
   deleteContextBtn.addEventListener('click',e=>{
