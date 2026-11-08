@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Übungsblatt #02 – Çözüm Sunumu</title>
+<style>
+:root{--bg:#f3f6f4;--grid:#d9e3df;--ink:#1d2b3a;--mute:#5b6b78;--hl:#ffe36e;--acc:#1f6f6b;--card:#fff;--line:#c5d3ce;--bad:#a33b3b}
+@media (prefers-color-scheme:dark){:root{--bg:#14202b;--grid:#1e2d3a;--ink:#e8eef2;--mute:#9db0bd;--hl:#6b5a10;--acc:#5fc4bd;--card:#1a2a37;--line:#2f4352;--bad:#e58a8a}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;color:var(--ink);font:18px/1.55 Georgia,"Times New Roman",serif;overflow:hidden}
+.slide{position:absolute;inset:0;padding:40px 6vw 90px;overflow-y:auto;display:none}
+.slide.on{display:block}
+h1{font-size:clamp(34px,6vw,64px);line-height:1.05;margin:12vh 0 16px;letter-spacing:-.02em}
+h2{font-size:clamp(24px,3.4vw,36px);margin:0 0 6px}
+.sub{color:var(--mute);margin:0 0 22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;max-width:1200px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:6px;padding:16px 20px}
+.card h3{margin:0 0 8px;font-size:20px;color:var(--acc)}
+.s{opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s;visibility:hidden}
+.s.show{opacity:1;transform:none;visibility:visible}
+.step{display:block;margin:7px 0;padding-left:14px;border-left:3px solid var(--line)}
+.step.show{border-left-color:var(--acc)}
+.hl{background:linear-gradient(var(--hl),var(--hl)) no-repeat 0 90%/0 55%;transition:background-size .8s .25s}
+.show .hl,.hl.show{background-size:100% 55%}
+.m{font-family:"Cambria Math",Cambria,Georgia,serif;font-style:italic}
+.ok{color:var(--acc);font-weight:bold}
+.no{color:var(--bad);font-weight:bold}
+.g{width:100%;max-width:190px;display:block;margin:4px 0 8px}
+.g rect,.g line.ax{fill:none;stroke:var(--ink);stroke-width:1.5}
+.g path{fill:none;stroke:var(--acc);stroke-width:3.5}
+.g text{fill:var(--mute);font-size:11px;font-style:italic}
+.ln{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.1s .2s}
+.show .ln{stroke-dashoffset:0}
+table{border-collapse:collapse;margin:6px 0;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:16px}
+th,td{border:1px solid var(--line);padding:3px 9px;text-align:center}
+th{color:var(--acc)}
+td.e{background:var(--hl);font-weight:bold}
+.bar{position:fixed;left:0;bottom:0;height:5px;background:var(--acc);transition:width .4s;z-index:5}
+.nav{position:fixed;bottom:14px;right:18px;display:flex;gap:10px;align-items:center;z-index:5;font-size:15px;color:var(--mute)}
+.nav button{font:inherit;background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-radius:6px;padding:8px 16px;cursor:pointer}
+.nav button:focus-visible{outline:3px solid var(--acc)}
+.hint{color:var(--mute);font-size:16px}
+@media (prefers-reduced-motion:reduce){.s,.hl,.ln{transition:none}}
+</style>
+</head>
+<body>
+
+<section class="slide on">
+ <h1 class="s">Mathematik für Informatik 1<br>Übungsblatt #02</h1>
+ <p class="sub s" style="font-size:22px">Çözümler adım adım, animasyonlu anlatım</p>
+ <p class="hint s">İleri: <b>→</b>, <b>Boşluk</b> veya tıklama · Geri: <b>←</b> · Her tıklama bir adımı açar.</p>
+ <div class="card s" style="max-width:560px;margin-top:24px">
+  <b>Konular</b><br>
+  Aufgabe 1: Fonksiyon grafikleri<br>
+  Aufgabe 2: İnjektiflik ve f(A)∩f(B) = f(A∩B)<br>
+  Aufgabe 3: g(p,q) = p/q<br>
+  Aufgabe 4: ℤ → ℕ∖{0} bijeksiyonu<br>
+  Aufgabe 5: Doğruluk tabloları
+ </div>
+</section>
+
+<!-- A1 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 1: Grafik örnekleri</h2>
+ <p class="sub s">Yatay çizgi testi: her yatay çizgi grafiği <b>en fazla bir kez</b> keserse f injektif. Y'deki her yükseklikte en az bir kez keserse f surjektif.</p>
+ <div class="grid">
+  <div class="card s"><h3>(i) Konstant</h3>
+   <svg class="g" viewBox="0 0 170 110"><rect x="10" y="10" width="140" height="80"/><path class="ln" pathLength="1" d="M10 50 L150 50"/><text x="10" y="106">X</text><text x="0" y="14">Y</text></svg>
+   <span class="step s">Her x aynı değere gider: yatay doğru. Ne injektif ne surjektif (|Y| > 1 iken).</span></div>
+  <div class="card s"><h3>(ii) Surjektif, injektif değil</h3>
+   <svg class="g" viewBox="0 0 170 110"><rect x="10" y="10" width="140" height="80"/><path class="ln" pathLength="1" d="M10 10 Q80 170 150 10"/><text x="10" y="106">X</text><text x="0" y="14">Y</text></svg>
+   <span class="step s">Eğri Y'nin alt kenarından üst kenarına kadar her yüksekliğe ulaşıyor: surjektif.</span>
+   <span class="step s">Çoğu yatay çizgi iki kez kesiyor: injektif değil. (Örnek: x ↦ x², X = [−1,1], Y = [0,1].)</span></div>
+  <div class="card s"><h3>(iii) Bijektif</h3>
+   <svg class="g" viewBox="0 0 170 110"><rect x="10" y="10" width="140" height="80"/><path class="ln" pathLength="1" d="M10 90 C60 80 100 20 150 10"/><text x="10" y="106">X</text><text x="0" y="14">Y</text></svg>
+   <span class="step s">Eğri tam alt kenardan tam üst kenara, hep yükselerek gidiyor.</span>
+   <span class="step s">Her yatay çizgi <b>tam bir kez</b> keser: hem injektif hem surjektif.</span></div>
+  <div class="card s"><h3>(iv) Ne surjektif ne injektif</h3>
+   <svg class="g" viewBox="0 0 170 110"><rect x="10" y="10" width="140" height="80"/><path class="ln" pathLength="1" d="M10 70 C45 25 115 25 150 70"/><text x="10" y="106">X</text><text x="0" y="14">Y</text></svg>
+   <span class="step s">Üst ve alt şeritlere hiç uğramıyor: surjektif değil.</span>
+   <span class="step s">Bazı yatay çizgiler iki kez kesiyor: injektif değil.</span></div>
+  <div class="card s"><h3>(v) X = Y ve f = Id<sub>X</sub></h3>
+   <svg class="g" viewBox="0 0 170 110"><rect x="40" y="10" width="80" height="80"/><path class="ln" pathLength="1" d="M40 90 L120 10"/><text x="40" y="106">X</text><text x="28" y="14">X</text></svg>
+   <span class="step s">Kare (X × X) ve köşegen: {(x,x) | x ∈ X}.</span></div>
+ </div>
+</section>
+
+<!-- A2 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 2: f injektif ⇔ ∀A,B ⊂ X: f(A) ∩ f(B) = f(A∩B)</h2>
+ <p class="sub s">İki yön ayrı ayrı gösterilir.</p>
+ <div class="grid">
+  <div class="card s"><h3>(a) ⇒ yönü</h3>
+   <span class="step s">f injektif olsun, A, B ⊂ X. Küme eşitliği için iki kapsama gerekir.</span>
+   <span class="step s"><b>⊇:</b> A∩B ⊂ A ⇒ f(A∩B) ⊂ f(A). A∩B ⊂ B ⇒ f(A∩B) ⊂ f(B). Yani <span class="hl m">f(A∩B) ⊂ f(A)∩f(B)</span>. (Bu yön injektiflik istemez.)</span>
+   <span class="step s"><b>⊆:</b> y ∈ f(A)∩f(B) alalım. O zaman a ∈ A ve b ∈ B için f(a) = y = f(b).</span>
+   <span class="step s">f injektif ⇒ a = b. Yani bu eleman hem A'da hem B'de: <span class="hl m">a ∈ A∩B</span>, dolayısıyla y = f(a) ∈ f(A∩B). ∎</span>
+  </div>
+  <div class="card s"><h3>(b) ⇐ yönü (kontraposition)</h3>
+   <span class="step s">Kanıtlanacak: f injektif değil ⇒ ∃A,B: f(A)∩f(B) ≠ f(A∩B).</span>
+   <span class="step s">f injektif değilse x ≠ x′ vardır ve f(x) = f(x′).</span>
+   <span class="step s">A = {x}, B = {x′} seç. O zaman <span class="m">f(A)∩f(B) = {f(x)}∩{f(x′)} = {f(x)}</span> ≠ ∅.</span>
+   <span class="step s">Ama x ≠ x′ olduğundan A∩B = ∅ ve <span class="hl m">f(A∩B) = f(∅) = ∅</span>. Eşitlik bozuldu. ∎</span>
+  </div>
+ </div>
+</section>
+
+<!-- A3 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 3: g : ℕ × (ℕ∖{0}) → ℚ, g(p,q) = p/q</h2>
+ <p class="sub s">Dikkat: ℕ burada 0'ı içeriyor (p ≥ 0), q ≥ 1. Hedef küme ℚ, yani negatifler de dahil.</p>
+ <div class="grid">
+  <div class="card s"><h3>(a) g injektiftir <span class="no">YANLIŞ</span></h3>
+   <span class="step s">Karşı örnek: <span class="m">g(1,2) = 1/2</span> ve <span class="m">g(2,4) = 2/4 = 1/2</span>.</span>
+   <span class="step s">(1,2) ≠ (2,4) ama aynı değere gidiyorlar: <span class="hl">injektif değil</span>.</span></div>
+  <div class="card s"><h3>(b) g surjektiftir <span class="no">YANLIŞ</span></h3>
+   <span class="step s">p ≥ 0 ve q ≥ 1 olduğundan her zaman <span class="m">p/q ≥ 0</span>.</span>
+   <span class="step s">Karşı örnek: <span class="hl m">−1 ∈ ℚ</span> için p/q = −1 olacak (p,q) yok.</span>
+   <span class="step s">Yani g surjektif değil. (Hedef ℚ yerine ℚ<sub>≥0</sub> olsaydı surjektif olurdu.)</span></div>
+ </div>
+</section>
+
+<!-- A4 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 4: f : ℤ → ℕ∖{0} bijektif</h2>
+ <p class="sub s"><span class="m">f(n) = 2n+1</span> (n ≥ 0), <span class="m">f(n) = −2n</span> (n &lt; 0). Pozitif tek sayılar n ≥ 0'dan, pozitif çift sayılar n &lt; 0'dan geliyor.</p>
+ <div class="grid">
+  <div class="card s"><h3>Tanım doğru mu?</h3>
+   <span class="step s">n ≥ 0 ⇒ f(n) = 2n+1 ≥ 1 ve <b>tek</b>.</span>
+   <span class="step s">n &lt; 0 ⇒ f(n) = −2n ≥ 2 ve <b>çift</b>. Değerler gerçekten ℕ∖{0}'da.</span>
+   <span class="step s"><span class="m">… f(−2)=4, f(−1)=2, f(0)=1, f(1)=3, f(2)=5 …</span></span></div>
+  <div class="card s"><h3>Injektiflik</h3>
+   <span class="step s">f(n) = f(m) olsun.</span>
+   <span class="step s"><b>Fall 1</b> (n,m ≥ 0): 2n+1 = 2m+1 ⇒ n = m.</span>
+   <span class="step s"><b>Fall 2</b> (n,m &lt; 0): −2n = −2m ⇒ n = m.</span>
+   <span class="step s"><b>Fall 3</b> (n ≥ 0, m &lt; 0): f(n) tek, f(m) çift, eşit olamaz. Bu durum <span class="hl">imkânsız</span>. (m ≥ 0, n &lt; 0 simetrik.) ∎</span></div>
+  <div class="card s"><h3>Surjektiflik</h3>
+   <span class="step s">k ∈ ℕ∖{0} alalım.</span>
+   <span class="step s"><b>Fall 1</b> (k tek): k = 2j+1, j = (k−1)/2 ≥ 0 tam sayı. n = j için f(n) = k.</span>
+   <span class="step s"><b>Fall 2</b> (k çift): k = 2j, j ≥ 1. n = −j &lt; 0 için <span class="m">f(n) = −2(−j) = 2j = k</span>. ∎</span>
+   <span class="step s ok">İnjektif + surjektif ⇒ f bijektif.</span></div>
+ </div>
+</section>
+
+<!-- A5 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 5: Doğruluk tabloları</h2>
+ <p class="sub s">Her tık bir satırı açar. Sarı sütunlar karşılaştırılacak son iki sütun.</p>
+ <div class="grid">
+  <div class="card s"><h3>(a) ¬(A∨B∨C) ≡ ¬A∧¬B∧¬C</h3>
+   <table>
+    <tr><th>A</th><th>B</th><th>C</th><th>A∨B∨C</th><th>¬(A∨B∨C)</th><th>¬A</th><th>¬B</th><th>¬C</th><th>¬A∧¬B∧¬C</th></tr>
+    <tr class="s"><td>W</td><td>W</td><td>W</td><td>W</td><td class="e">F</td><td>F</td><td>F</td><td>F</td><td class="e">F</td></tr>
+    <tr class="s"><td>W</td><td>W</td><td>F</td><td>W</td><td class="e">F</td><td>F</td><td>F</td><td>W</td><td class="e">F</td></tr>
+    <tr class="s"><td>W</td><td>F</td><td>W</td><td>W</td><td class="e">F</td><td>F</td><td>W</td><td>F</td><td class="e">F</td></tr>
+    <tr class="s"><td>W</td><td>F</td><td>F</td><td>W</td><td class="e">F</td><td>F</td><td>W</td><td>W</td><td class="e">F</td></tr>
+    <tr class="s"><td>F</td><td>W</td><td>W</td><td>W</td><td class="e">F</td><td>W</td><td>F</td><td>F</td><td class="e">F</td></tr>
+    <tr class="s"><td>F</td><td>W</td><td>F</td><td>W</td><td class="e">F</td><td>W</td><td>F</td><td>W</td><td class="e">F</td></tr>
+    <tr class="s"><td>F</td><td>F</td><td>W</td><td>W</td><td class="e">F</td><td>W</td><td>W</td><td>F</td><td class="e">F</td></tr>
+    <tr class="s"><td>F</td><td>F</td><td>F</td><td>F</td><td class="e">W</td><td>W</td><td>W</td><td>W</td><td class="e">W</td></tr>
+   </table>
+   <span class="step s ok">Sarı sütunlar her satırda aynı ⇒ eşdeğer. ∎ (W = doğru, F = yanlış)</span></div>
+  <div class="card s"><h3>(b) A⇒(B⇒C) ≡ (A∧B)⇒C</h3>
+   <table>
+    <tr><th>A</th><th>B</th><th>C</th><th>B⇒C</th><th>A⇒(B⇒C)</th><th>A∧B</th><th>(A∧B)⇒C</th></tr>
+    <tr class="s"><td>W</td><td>W</td><td>W</td><td>W</td><td class="e">W</td><td>W</td><td class="e">W</td></tr>
+    <tr class="s"><td>W</td><td>W</td><td>F</td><td>F</td><td class="e">F</td><td>W</td><td class="e">F</td></tr>
+    <tr class="s"><td>W</td><td>F</td><td>W</td><td>W</td><td class="e">W</td><td>F</td><td class="e">W</td></tr>
+    <tr class="s"><td>W</td><td>F</td><td>F</td><td>W</td><td class="e">W</td><td>F</td><td class="e">W</td></tr>
+    <tr class="s"><td>F</td><td>W</td><td>W</td><td>W</td><td class="e">W</td><td>F</td><td class="e">W</td></tr>
+    <tr class="s"><td>F</td><td>W</td><td>F</td><td>F</td><td class="e">W</td><td>F</td><td class="e">W</td></tr>
+    <tr class="s"><td>F</td><td>F</td><td>W</td><td>W</td><td class="e">W</td><td>F</td><td class="e">W</td></tr>
+    <tr class="s"><td>F</td><td>F</td><td>F</td><td>W</td><td class="e">W</td><td>F</td><td class="e">W</td></tr>
+   </table>
+   <span class="step s ok">Sarı sütunlar her satırda aynı ⇒ eşdeğer. ∎</span></div>
+ </div>
+</section>
+
+<div class="bar" id="bar"></div>
+<div class="nav"><span id="pg"></span><button id="pv" aria-label="Geri">← Geri</button><button id="nx" aria-label="İleri">İleri →</button></div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+const steps=i=>[...slides[i].querySelectorAll('.s')];
+const shown=i=>steps(i).filter(e=>e.classList.contains('show'));
+function show(i){slides.forEach((s,k)=>s.classList.toggle('on',k===i));cur=i;ui()}
+function ui(){document.getElementById('pg').textContent=(cur+1)+' / '+slides.length;
+ document.getElementById('bar').style.width=((cur+1)/slides.length*100)+'%'}
+function next(){
+ const hid=steps(cur).find(e=>!e.classList.contains('show'));
+ if(hid){
+  hid.classList.add('show');
+  if(hid.classList.contains('card')){const f=hid.querySelector('.s');if(f)f.classList.add('show')}
+  hid.scrollIntoView({behavior:'smooth',block:'nearest'});
+ } else if(cur<slides.length-1){show(cur+1);steps(cur)[0]&&steps(cur)[0].classList.add('show')}
+}
+function prev(){
+ const sh=shown(cur);
+ if(sh.length>1){sh[sh.length-1].classList.remove('show')}
+ else if(cur>0){show(cur-1)}
+}
+document.getElementById('nx').onclick=e=>{e.stopPropagation();next()};
+document.getElementById('pv').onclick=e=>{e.stopPropagation();prev()};
+document.addEventListener('keydown',e=>{
+ if(['ArrowRight',' ','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+ if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();prev()}
+});
+document.body.addEventListener('click',e=>{if(!e.target.closest('.nav'))next()});
+steps(0)[0].classList.add('show');ui();
+</script>
+<style>
+.ub02-tools{position:fixed;right:16px;top:12px;display:flex;align-items:center;gap:7px;z-index:100;background:var(--card);padding:7px;border:1px solid var(--line);border-radius:12px;font:15px system-ui;box-shadow:0 7px 24px #0002}
+.ub02-tools button,.ub02-tools select{border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--ink);background:var(--card);cursor:pointer;font:inherit}
+.ub02-tools .home{background:#ffdb48;color:#111;border-color:#d5ae19}
+.ub02-version{position:fixed;bottom:5px;left:8px;z-index:20;font:11px system-ui;color:var(--mute)}
+@media(max-width:700px){.slide{padding-top:70px}.ub02-tools{top:4px;right:4px}.ub02-tools button,.ub02-tools select{padding:5px}}
+</style>
+<div class="ub02-tools"><button class="home" id="ub02-home" aria-label="Home" title="Home"><svg width="19" height="19" viewBox="0 0 24 24" style="fill:black;vertical-align:middle"><path d="M12 2 1 11h3v11h7v-7h3v7h7V11h3L12 2z"/></svg></button><label for="ub02-language" id="ub02-language-label">Dil</label><select id="ub02-language"><option value="tr">Türkçe</option><option value="de">Deutsch</option></select><button id="ub02-help" aria-label="Help">?</button></div>
+<div class="ub02-version" id="ub02-version">v1.0 · İki dilli çözüm sunumu</div>
+<script>
+(function(){
+const trToDe=new Map([["Çözümler adım adım, animasyonlu anlatım","Lösungen Schritt für Schritt mit Animationen erklärt"],["İleri:","Weiter:"],["Boşluk","Leertaste"],["veya tıklama · Geri:","oder Klick · Zurück:"],["· Her tıklama bir adımı açar.","· Jeder Klick zeigt einen weiteren Schritt."],["Konular","Themen"],["Aufgabe 1: Fonksiyon grafikleri","Aufgabe 1: Funktionsgraphen"],["Aufgabe 2: İnjektiflik ve f(A)∩f(B) = f(A∩B)","Aufgabe 2: Injektivität und f(A)∩f(B) = f(A∩B)"],["Aufgabe 4: ℤ → ℕ∖{0} bijeksiyonu","Aufgabe 4: Bijektion ℤ → ℕ∖{0}"],["Aufgabe 5: Doğruluk tabloları","Aufgabe 5: Wahrheitstafeln"],["Aufgabe 1: Grafik örnekleri","Aufgabe 1: Beispiele für Funktionsgraphen"],["Yatay çizgi testi: her yatay çizgi grafiği","Horizontaler-Linien-Test: Wenn jede horizontale Linie den Graphen"],["en fazla bir kez","höchstens einmal"],["keserse f injektif. Y'deki her yükseklikte en az bir kez keserse f surjektif.","schneidet, ist f injektiv. Wird jede Höhe in Y mindestens einmal getroffen, ist f surjektiv."],["(i) Konstant","(i) Konstant"],["Her x aynı değere gider: yatay doğru. Ne injektif ne surjektif (|Y| > 1 iken).","Alle x werden auf denselben Wert abgebildet: eine horizontale Gerade. Weder injektiv noch surjektiv, sofern |Y| > 1 und X mehr als ein Element hat."],["(ii) Surjektif, injektif değil","(ii) Surjektiv, aber nicht injektiv"],["Eğri Y'nin alt kenarından üst kenarına kadar her yüksekliğe ulaşıyor: surjektif.","Die Kurve erreicht jede Höhe zwischen dem unteren und dem oberen Rand von Y: surjektiv."],["Çoğu yatay çizgi iki kez kesiyor: injektif değil. (Örnek: x ↦ x², X = [−1,1], Y = [0,1].)","Viele horizontale Geraden schneiden den Graphen zweimal: nicht injektiv. (Beispiel: x ↦ x², X = [−1,1], Y = [0,1].)"],["(iii) Bijektif","(iii) Bijektiv"],["Eğri tam alt kenardan tam üst kenara, hep yükselerek gidiyor.","Die Kurve verläuft streng steigend vom unteren bis zum oberen Rand."],["Her yatay çizgi","Jede horizontale Gerade"],["tam bir kez","genau einmal"],["keser: hem injektif hem surjektif.","schneidet den Graphen: injektiv und surjektiv."],["(iv) Ne surjektif ne injektif","(iv) Weder surjektiv noch injektiv"],["Üst ve alt şeritlere hiç uğramıyor: surjektif değil.","Oberer und unterer Bereich von Y werden nicht erreicht: nicht surjektiv."],["Bazı yatay çizgiler iki kez kesiyor: injektif değil.","Einige horizontale Geraden schneiden den Graphen zweimal: nicht injektiv."],["Kare (X × X) ve köşegen: {(x,x) | x ∈ X}.","Das Quadrat X × X und seine Diagonale: {(x,x) | x ∈ X}."],["Aufgabe 2: f injektif ⇔ ∀A,B ⊂ X: f(A) ∩ f(B) = f(A∩B)","Aufgabe 2: f injektiv ⇔ ∀A,B ⊂ X: f(A) ∩ f(B) = f(A∩B)"],["İki yön ayrı ayrı gösterilir.","Beide Richtungen müssen getrennt bewiesen werden."],["(a) ⇒ yönü","(a) Hinrichtung ⇒"],["f injektif olsun, A, B ⊂ X. Küme eşitliği için iki kapsama gerekir.","Sei f injektiv und A,B ⊂ X. Für die Mengengleichheit benötigen wir beide Inklusionen."],["A∩B ⊂ A ⇒ f(A∩B) ⊂ f(A). A∩B ⊂ B ⇒ f(A∩B) ⊂ f(B). Yani","Aus A∩B ⊂ A folgt f(A∩B) ⊂ f(A); ebenso folgt aus A∩B ⊂ B, dass f(A∩B) ⊂ f(B). Somit"],[". (Bu yön injektiflik istemez.)",". (Dafür benötigen wir keine Injektivität.)"],["y ∈ f(A)∩f(B) alalım. O zaman a ∈ A ve b ∈ B için f(a) = y = f(b).","Sei y ∈ f(A)∩f(B). Dann existieren a ∈ A und b ∈ B mit f(a) = y = f(b)."],["f injektif ⇒ a = b. Yani bu eleman hem A'da hem B'de:","Wegen der Injektivität von f folgt a = b. Das Element liegt daher in A und in B:"],[", dolayısıyla y = f(a) ∈ f(A∩B). ∎",", folglich y = f(a) ∈ f(A∩B). ∎"],["(b) ⇐ yönü (kontraposition)","(b) Rückrichtung ⇐ (Kontraposition)"],["Kanıtlanacak: f injektif değil ⇒ ∃A,B: f(A)∩f(B) ≠ f(A∩B).","Zu zeigen ist: Ist f nicht injektiv, so existieren A,B mit f(A)∩f(B) ≠ f(A∩B)."],["f injektif değilse x ≠ x′ vardır ve f(x) = f(x′).","Falls f nicht injektiv ist, gibt es x ≠ x′ mit f(x) = f(x′)."],["A = {x}, B = {x′} seç. O zaman","Wähle A = {x}, B = {x′}. Dann gilt"],["Ama x ≠ x′ olduğundan A∩B = ∅ ve","Wegen x ≠ x′ gilt aber A∩B = ∅ und"],[". Eşitlik bozuldu. ∎",". Die Gleichheit ist also verletzt. ∎"],["Dikkat: ℕ burada 0'ı içeriyor (p ≥ 0), q ≥ 1. Hedef küme ℚ, yani negatifler de dahil.","Beachte: ℕ enthält hier die 0 (p ≥ 0), q ≥ 1. Die Zielmenge ℚ enthält auch negative Zahlen."],["(a) g injektiftir","(a) g ist injektiv"],["YANLIŞ","FALSCH"],["Karşı örnek:","Gegenbeispiel:"],["(1,2) ≠ (2,4) ama aynı değere gidiyorlar:","(1,2) ≠ (2,4), aber beide Paare haben denselben Funktionswert:"],["injektif değil","nicht injektiv"],["(b) g surjektiftir","(b) g ist surjektiv"],["p ≥ 0 ve q ≥ 1 olduğundan her zaman","Da p ≥ 0 und q ≥ 1 gilt, ist immer"],["için p/q = −1 olacak (p,q) yok.","gibt es kein (p,q) mit p/q = −1."],["Yani g surjektif değil. (Hedef ℚ yerine ℚ","Also ist g nicht surjektiv. (Wäre die Zielmenge statt ℚ die Menge ℚ"],["olsaydı surjektif olurdu.)","gewählt, wäre g surjektiv.)"],["Aufgabe 4: f : ℤ → ℕ∖{0} bijektif","Aufgabe 4: f : ℤ → ℕ∖{0} ist bijektiv"],["(n < 0). Pozitif tek sayılar n ≥ 0'dan, pozitif çift sayılar n < 0'dan geliyor.","(n < 0). Positive ungerade Zahlen entstehen für n ≥ 0, positive gerade Zahlen für n < 0."],["Tanım doğru mu?","Ist die Abbildung wohldefiniert?"],["n ≥ 0 ⇒ f(n) = 2n+1 ≥ 1 ve","Für n ≥ 0 ist f(n) = 2n+1 ≥ 1 und"],["tek","ungerade"],["n < 0 ⇒ f(n) = −2n ≥ 2 ve","Für n < 0 ist f(n) = −2n ≥ 2 und"],["çift","gerade"],[". Değerler gerçekten ℕ∖{0}'da.",". Alle Werte liegen tatsächlich in ℕ∖{0}."],["Injektiflik","Injektivität"],["f(n) = f(m) olsun.","Sei f(n) = f(m)."],["(n ≥ 0, m < 0): f(n) tek, f(m) çift, eşit olamaz. Bu durum","(n ≥ 0, m < 0): f(n) ist ungerade, f(m) ist gerade; beide können nicht gleich sein. Dieser Fall ist"],["imkânsız","unmöglich"],[". (m ≥ 0, n < 0 simetrik.) ∎",". (Der Fall m ≥ 0, n < 0 ist symmetrisch.) ∎"],["Surjektiflik","Surjektivität"],["k ∈ ℕ∖{0} alalım.","Sei k ∈ ℕ∖{0}."],["(k tek): k = 2j+1, j = (k−1)/2 ≥ 0 tam sayı. n = j için f(n) = k.","(k ungerade): k = 2j+1, j = (k−1)/2 ≥ 0 ist ganzzahlig. Mit n = j gilt f(n) = k."],["(k çift): k = 2j, j ≥ 1. n = −j < 0 için","(k gerade): k = 2j, j ≥ 1. Für n = −j < 0 folgt"],["İnjektif + surjektif ⇒ f bijektif.","Injektiv + surjektiv ⇒ f ist bijektiv."],["Aufgabe 5: Doğruluk tabloları","Aufgabe 5: Wahrheitstafeln"],["Her tık bir satırı açar. Sarı sütunlar karşılaştırılacak son iki sütun.","Jeder Klick zeigt eine weitere Zeile. Die gelb markierten Spalten sind die beiden zu vergleichenden Endspalten."],["Sarı sütunlar her satırda aynı ⇒ eşdeğer. ∎ (W = doğru, F = yanlış)","Die gelben Spalten sind in jeder Zeile gleich ⇒ äquivalent. ∎ (W = wahr, F = falsch)"],["Sarı sütunlar her satırda aynı ⇒ eşdeğer. ∎","Die gelben Spalten sind in jeder Zeile gleich ⇒ äquivalent. ∎"],["← Geri","← Zurück"],["İleri →","Weiter →"]]);
+const nodes=[];
+const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&& !['SCRIPT','STYLE','OPTION'].includes(n.parentElement.tagName)&&!n.parentElement.closest('.ub02-tools,.ub02-version')&&n.textContent.trim()?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
+while(walker.nextNode()){const node=walker.currentNode;nodes.push({node,original:node.textContent,trimmed:node.textContent.trim()});}
+let language=localStorage.getItem("elif-ub02-lang")||"tr";
+function update(){document.documentElement.lang=language;document.getElementById("ub02-language").value=language;document.getElementById("ub02-language-label").textContent=language==="de"?"Sprache":"Dil";document.getElementById("ub02-version").textContent=language==="de"?"v1.0 · Vollständig zweisprachige Lösungen":"v1.0 · Tam iki dilli çözümler";document.title=language==="de"?"Übungsblatt 02 – Animierte Lösungspräsentation":"Übungsblatt 02 – Animasyonlu çözüm sunumu";
+ for(const entry of nodes){const original=entry.original;const token=entry.trimmed;const translated=language==="de"?(trToDe.get(token)||token):token;entry.node.textContent=original.replace(token,translated);}}
+document.getElementById("ub02-language").onchange=e=>{language=e.target.value;localStorage.setItem("elif-ub02-lang",language);update()};
+document.getElementById("ub02-home").onclick=()=>location.href="../../index.html";
+document.getElementById("ub02-help").onclick=()=>alert(language==="de"?"Diese Seite zeigt alle Aufgaben Schritt für Schritt. Mit Weiter oder der Leertaste erscheint der nächste Lösungsschritt.":"Bu sayfa bütün soruları adım adım gösterir. İleri ya da boşluk tuşuyla sonraki çözüm adımı açılır.");
+document.querySelector(".ub02-tools").addEventListener("click",e=>e.stopPropagation());
+update();
+})();
+</script>
+</body>
+</html>
