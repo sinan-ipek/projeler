@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.81</title>
+<title>Beyaz Tahta v18.82</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1218,7 +1218,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.81 · 3D derinlik sırası otomatik</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.82 · 3D yüzey bazlı kısmi kapatma</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1251,6 +1251,7 @@
               <li>Ctrl + sağ tık geçici silgidir; Ctrl bırakılınca önceki araca dönülür.</li>
               <li>Dikdörtgen, elips, çokgen ve daire dilimlerinin içini renkle doldur.</li>
               <li>Kova 3D nesneyi de boyar; sabit sol-üst-ön ışığa göre yüzleri otomatik tonlar.</li>
+              <li>Boyanmış 3D nesnelerin yüzeyleri ortak derinlik sırasıyla çizilir; kesişen cisimlerde kısmi kapatma korunur.</li>
               <li>Saydamlık sürgüsüyle dolgunun saydamlığını 0–100 arasında ayarla; 0 opak, 100 tamamen saydamdır.</li>
             </ul>
           </section>
@@ -7323,7 +7324,231 @@
     ctx.restore();
   }
 
+
+  let shape3DSceneMaterialPassActive=false;
+
+  function shape3DCameraDepthOfWorld(world){
+    const cam=shape3DCamera();
+    const rel={
+      x:world.x-cam.position.x,
+      y:world.y-cam.position.y,
+      z:world.z-cam.position.z
+    };
+    return (
+      rel.x*cam.forward.x+
+      rel.y*cam.forward.y+
+      rel.z*cam.forward.z
+    );
+  }
+
+  function shape3DTriangleNormalWorld(a,b,c){
+    return shape3DNormalize(shape3DCross(
+      {x:b.x-a.x,y:b.y-a.y,z:b.z-a.z},
+      {x:c.x-a.x,y:c.y-a.y,z:c.z-a.z}
+    ));
+  }
+
+  function shape3DTriangleFacingCamera(tri){
+    const center={
+      x:(tri.a.x+tri.b.x+tri.c.x)/3,
+      y:(tri.a.y+tri.b.y+tri.c.y)/3,
+      z:(tri.a.z+tri.b.z+tri.c.z)/3
+    };
+    const cam=shape3DCamera().position;
+    return shape3DDot(
+      tri.normal,
+      {x:cam.x-center.x,y:cam.y-center.y,z:cam.z-center.z}
+    )>0;
+  }
+
+  function shape3DSubdivideTriangle(a,b,c,level,out,meta){
+    if(level<=0){
+      out.push({
+        a,b,c,
+        normal:shape3DTriangleNormalWorld(a,b,c),
+        object:meta.object,
+        objectIndex:meta.objectIndex
+      });
+      return;
+    }
+
+    const ab={x:(a.x+b.x)/2,y:(a.y+b.y)/2,z:(a.z+b.z)/2};
+    const bc={x:(b.x+c.x)/2,y:(b.y+c.y)/2,z:(b.z+c.z)/2};
+    const ca={x:(c.x+a.x)/2,y:(c.y+a.y)/2,z:(c.z+a.z)/2};
+
+    shape3DSubdivideTriangle(a,ab,ca,level-1,out,meta);
+    shape3DSubdivideTriangle(ab,b,bc,level-1,out,meta);
+    shape3DSubdivideTriangle(ca,bc,c,level-1,out,meta);
+    shape3DSubdivideTriangle(ab,bc,ca,level-1,out,meta);
+  }
+
+  function shape3DAddPolyTriangles(o,objectIndex,out){
+    const g=shape3DGeometry(o);
+    const world=(g.points||[]).map(p=>shape3DLocalToWorldPoint(o,p));
+
+    for(const face of (g.faces||[])){
+      if(!face || face.length<3) continue;
+      const a=world[face[0]];
+      if(!a) continue;
+
+      for(let i=1;i<face.length-1;i++){
+        const b=world[face[i]];
+        const c=world[face[i+1]];
+        if(!b||!c) continue;
+
+        // 16 small triangles per source triangle.
+        shape3DSubdivideTriangle(
+          a,b,c,2,out,
+          {object:o,objectIndex}
+        );
+      }
+    }
+  }
+
+  function shape3DAddSphereTriangles(o,objectIndex,out){
+    const sx=Math.max(8,Number(o.sizeX)||120)/2;
+    const sy=Math.max(8,Number(o.sizeY)||120)/2;
+    const sz=Math.max(8,Number(o.sizeZ)||120)/2;
+    const r=Math.min(sx,sy,sz);
+    const latSteps=14;
+    const lonSteps=28;
+
+    const local=(lat,lon)=>({
+      x:Math.cos(lat)*Math.cos(lon)*r,
+      y:-Math.sin(lat)*r,
+      z:Math.cos(lat)*Math.sin(lon)*r
+    });
+
+    for(let iy=0;iy<latSteps;iy++){
+      const lat0=-Math.PI/2+Math.PI*iy/latSteps;
+      const lat1=-Math.PI/2+Math.PI*(iy+1)/latSteps;
+
+      for(let ix=0;ix<lonSteps;ix++){
+        const lon0=Math.PI*2*ix/lonSteps;
+        const lon1=Math.PI*2*(ix+1)/lonSteps;
+
+        const p00=shape3DLocalToWorldPoint(o,local(lat0,lon0));
+        const p01=shape3DLocalToWorldPoint(o,local(lat0,lon1));
+        const p10=shape3DLocalToWorldPoint(o,local(lat1,lon0));
+        const p11=shape3DLocalToWorldPoint(o,local(lat1,lon1));
+
+        if(iy>0){
+          out.push({
+            a:p00,b:p10,c:p01,
+            normal:shape3DTriangleNormalWorld(p00,p10,p01),
+            object:o,objectIndex
+          });
+        }
+        if(iy<latSteps-1){
+          out.push({
+            a:p01,b:p10,c:p11,
+            normal:shape3DTriangleNormalWorld(p01,p10,p11),
+            object:o,objectIndex
+          });
+        }
+      }
+    }
+  }
+
+  function shape3DAddCylinderTriangles(o,objectIndex,out){
+    const sx=Math.max(8,Number(o.sizeX)||120)/2;
+    const sy=Math.max(8,Number(o.sizeY)||120)/2;
+    const sz=Math.max(8,Number(o.sizeZ)||120)/2;
+    const r=Math.min(sx,sz);
+    const n=32;
+
+    const topCenter=shape3DLocalToWorldPoint(o,{x:0,y:-sy,z:0});
+    const bottomCenter=shape3DLocalToWorldPoint(o,{x:0,y:sy,z:0});
+
+    for(let i=0;i<n;i++){
+      const a0=Math.PI*2*i/n;
+      const a1=Math.PI*2*(i+1)/n;
+
+      const t0=shape3DLocalToWorldPoint(o,{x:Math.cos(a0)*r,y:-sy,z:Math.sin(a0)*r});
+      const t1=shape3DLocalToWorldPoint(o,{x:Math.cos(a1)*r,y:-sy,z:Math.sin(a1)*r});
+      const b0=shape3DLocalToWorldPoint(o,{x:Math.cos(a0)*r,y: sy,z:Math.sin(a0)*r});
+      const b1=shape3DLocalToWorldPoint(o,{x:Math.cos(a1)*r,y: sy,z:Math.sin(a1)*r});
+
+      out.push({a:t0,b:b0,c:t1,normal:shape3DTriangleNormalWorld(t0,b0,t1),object:o,objectIndex});
+      out.push({a:t1,b:b0,c:b1,normal:shape3DTriangleNormalWorld(t1,b0,b1),object:o,objectIndex});
+      out.push({a:topCenter,b:t1,c:t0,normal:shape3DTriangleNormalWorld(topCenter,t1,t0),object:o,objectIndex});
+      out.push({a:bottomCenter,b:b0,c:b1,normal:shape3DTriangleNormalWorld(bottomCenter,b0,b1),object:o,objectIndex});
+    }
+  }
+
+  function shape3DAddConeTriangles(o,objectIndex,out){
+    const sx=Math.max(8,Number(o.sizeX)||120)/2;
+    const sy=Math.max(8,Number(o.sizeY)||120)/2;
+    const sz=Math.max(8,Number(o.sizeZ)||120)/2;
+    const r=Math.min(sx,sz);
+    const n=36;
+
+    const apex=shape3DLocalToWorldPoint(o,{x:0,y:-sy,z:0});
+    const baseCenter=shape3DLocalToWorldPoint(o,{x:0,y:sy,z:0});
+
+    for(let i=0;i<n;i++){
+      const a0=Math.PI*2*i/n;
+      const a1=Math.PI*2*(i+1)/n;
+      const b0=shape3DLocalToWorldPoint(o,{x:Math.cos(a0)*r,y:sy,z:Math.sin(a0)*r});
+      const b1=shape3DLocalToWorldPoint(o,{x:Math.cos(a1)*r,y:sy,z:Math.sin(a1)*r});
+
+      out.push({a:apex,b:b0,c:b1,normal:shape3DTriangleNormalWorld(apex,b0,b1),object:o,objectIndex});
+      out.push({a:baseCenter,b:b1,c:b0,normal:shape3DTriangleNormalWorld(baseCenter,b1,b0),object:o,objectIndex});
+    }
+  }
+
+  function shape3DSceneTriangles(){
+    const out=[];
+
+    for(let i=0;i<objects.length;i++){
+      const o=objects[i];
+      if(!o || o.kind!=='shape3d' || !o.fillColor3D) continue;
+      if(shape3DMaterialAlpha(o)<=0) continue;
+
+      if(o.shape3dType==='sphere'){
+        shape3DAddSphereTriangles(o,i,out);
+      }else if(o.shape3dType==='cylinder'){
+        shape3DAddCylinderTriangles(o,i,out);
+      }else if(o.shape3dType==='cone'){
+        shape3DAddConeTriangles(o,i,out);
+      }else{
+        shape3DAddPolyTriangles(o,i,out);
+      }
+    }
+
+    for(const tri of out){
+      tri.depth=(
+        shape3DCameraDepthOfWorld(tri.a)+
+        shape3DCameraDepthOfWorld(tri.b)+
+        shape3DCameraDepthOfWorld(tri.c)
+      )/3;
+    }
+
+    return out
+      .filter(shape3DTriangleFacingCamera)
+      .sort((a,b)=>b.depth-a.depth);
+  }
+
+  function drawShape3DSceneMaterials(){
+    const tris=shape3DSceneTriangles();
+    if(!tris.length) return;
+
+    for(const tri of tris){
+      const pa=shape3DProjectWorldPoint(tri.object,tri.a);
+      const pb=shape3DProjectWorldPoint(tri.object,tri.b);
+      const pc=shape3DProjectWorldPoint(tri.object,tri.c);
+
+      const light=shape3DMaterialLight(tri.normal);
+      shape3DFillPolygon(
+        [pa,pb,pc],
+        shape3DShadedCss(tri.object.fillColor3D,light,1),
+        shape3DMaterialAlpha(tri.object)
+      );
+    }
+  }
+
   function drawShape3DMaterial(o,g,viewPts,pts){
+    if(shape3DSceneMaterialPassActive) return;
     if(!o || o.kind!=='shape3d' || !o.fillColor3D) return;
     if(shape3DMaterialAlpha(o)<=0) return;
 
@@ -11781,8 +12006,12 @@
     drawAdaptiveGrid();
     drawUniversal3DXZGrid();
 
+    // Filled 3D surfaces are painted as one shared depth-sorted triangle scene.
+    drawShape3DSceneMaterials();
+
     const viewportWorld=currentViewportWorldBounds(96);
 
+    shape3DSceneMaterialPassActive=true;
     for(const entry of renderEntriesWithAutomatic3DDepth()){
       const o=entry.object;
       if(!o) continue;
@@ -11809,6 +12038,8 @@
       else if(o.kind==='shape3d') drawShape3D(o);
       else drawShape(o);
     }
+    shape3DSceneMaterialPassActive=false;
+
     for(const item of remoteLiveInk.values()){
       if(item && item.points && item.points.length){
         if(item.inkEngine==='adaptive-v7'){
