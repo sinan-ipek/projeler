@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.73</title>
+<title>Beyaz Tahta v18.74</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1218,7 +1218,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.73 · Space transform tekrar, Esc kalem/seçim toggle</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.74 · 3D XYZ dönüş gizmosu tek ve çoklu seçimde</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1271,7 +1271,7 @@
               <li>Esc: Kalem ↔ Seçim oku arasında geçiş yapar.</li>
               <li>Aralık: son transformasyonu tekrarlar; Shift + Aralık kopya oluşturup son transformasyonu tekrarlar.</li>
               <li>Grid düğmesi: evrensel XZ gridini açar ve kapatır.</li>
-              <li>Birden çok 3D nesnede X/Y/Z grup döndürme kolları görünür.</li>
+              <li>Bir veya daha fazla 3D nesnede X/Y/Z döndürme gizmosu görünür; çoklu seçimde ağırlık merkezi kullanılır.</li>
             </ul>
             <ul>
               <li>Nesneye tıkla; boş alanda sürükleyerek çoklu seçim yap.</li>
@@ -8628,7 +8628,7 @@
   }
 
   function group3DRotationHandles(){
-    if(selectedIndices.length<2 || !allSelectedAre3D()) return [];
+    if(selectedIndices.length<1 || !allSelectedAre3D()) return [];
     if(selectedIndices.some(i=>objects[i] && objects[i].locked)) return [];
 
     const c=selected3DWorldCentroid();
@@ -9783,6 +9783,9 @@
           ctx.fillText('Z↕',moveZ.x,moveZ.y+.2/viewZoom);
           ctx.restore();
         }
+
+        // XYZ rotation gizmo is visible for a single 3D object as well.
+        drawGroup3DRotationHandles();
       }else for(const hnd of special){
         ctx.beginPath();
         ctx.fillStyle=(
@@ -9878,6 +9881,7 @@
     }
 
     const canRotate=
+      selected.kind!=='shape3d' &&
       selected.kind!=='arc' &&
       selected.kind!=='sector' &&
       !(selected.kind==='ellipse' && selected.shapeName==='circle');
@@ -9919,6 +9923,12 @@
       const hitR=(pointerType==='touch' ? 24 : 13)/viewZoom;
       if(moveZ && Math.hypot(p.x-moveZ.x,p.y-moveZ.y)<=hitR){
         return '3d-move-z';
+      }
+
+      for(const h of group3DRotationHandles()){
+        if(Math.hypot(p.x-h.x,p.y-h.y)<=hitR){
+          return h.name;
+        }
       }
     }
 
@@ -10002,6 +10012,7 @@
     }
 
     if(
+      selected.kind!=='shape3d' &&
       selected.kind!=='arc' &&
       selected.kind!=='sector' &&
       !(selected.kind==='ellipse' && selected.shapeName==='circle')
@@ -13612,6 +13623,29 @@
             groupSnapshots=null;
             activeHandle=null;
             statusEl.textContent='Z taşıma aktif — fare tekerini yavaşça çevir';
+            redraw();
+            return;
+          }
+
+          if(
+            String(h).startsWith('3d-group-rotate-') &&
+            objects[selectedIndex] &&
+            objects[selectedIndex].kind==='shape3d'
+          ){
+            recordObjectStates([selectedIndex]);
+            selectStart=p;
+            activeHandle=h;
+            groupBoxSnapshot=groupOrientedBox([selectedIndex]);
+            group3DRotationCentroidSnapshot=selected3DWorldCentroid([selectedIndex]);
+            groupSnapshots=[{
+              index:selectedIndex,
+              object:cloneObject(objects[selectedIndex])
+            }];
+            selectSnapshot=null;
+            selectAction='group3DRotateAxis';
+            statusEl.textContent=
+              '3D '+String(h).slice(-1).toUpperCase()+
+              ' ekseni etrafında döndürülüyor';
             redraw();
             return;
           }
