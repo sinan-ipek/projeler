@@ -284,6 +284,17 @@ update();
   langSel.addEventListener('change',()=>{try{sessionStorage.setItem(key,JSON.stringify({slide:cur,shown:steps(cur).filter(e=>e.classList.contains('show')).length}))}catch(e){}},true);
  }
  try{const saved=JSON.parse(sessionStorage.getItem(key)||'null');if(saved&&Number.isInteger(saved.slide)&&saved.slide>=0&&saved.slide<slides.length){show(saved.slide);steps(cur).forEach((node,i)=>node.classList.toggle('show',i<Math.max(0,saved.shown||0)));if(typeof revealLines==='function')revealLines();sessionStorage.removeItem(key)}}catch(e){}
+ const changeLanguage=document.getElementById('ub02-language');
+ if(changeLanguage){changeLanguage.addEventListener('change',()=>{
+  opts.forEach((item,idx)=>{
+    const slide=slideElements[item.slide];
+    const heading=slide.querySelector('h2')?.textContent.trim()||'Aufgabe '+item.slide;
+    const cards=[...slide.querySelectorAll('.card')];
+    const title=cards.find(card=>item.step===Math.max(1,[...slide.querySelectorAll('.s')].indexOf(card)+1))?.querySelector('h3')?.textContent.trim();
+    select.options[idx].textContent=item.step>0&&title?'  '+title:heading;
+  });
+  sync();
+ });}
  const baseUI=ui;ui=function(){baseUI();sync();const finished=cur===slides.length-1&&steps(cur).every(e=>e.classList.contains('show'));const nextBtn=document.getElementById('nx');if(nextBtn){nextBtn.disabled=finished;nextBtn.style.opacity=finished?'.45':'1';}};
  ui();
 })();
