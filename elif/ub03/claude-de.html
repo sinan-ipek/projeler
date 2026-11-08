@@ -41,7 +41,7 @@ h2{font-size:clamp(24px,3.4vw,36px);margin:0 0 6px}
 </head>
 <body>
 <div class="language-switch" style="position:fixed;right:18px;top:12px;z-index:30;background:var(--card);padding:7px 10px;border:1px solid var(--line);border-radius:9px;font:14px system-ui">
-<label for="language">Sprache: </label><select id="language" style="border:0;background:var(--card);color:var(--ink);font:inherit;cursor:pointer"><option value="tr">Türkçe</option><option value="de" selected>Deutsch</option></select></div>
+<button type="button" aria-label="Home" title="Home" onclick="event.stopPropagation();location.href='../../index.html'" style="background:#ffd84f;color:black;border:1px solid #e3b82b;border-radius:7px;width:38px;height:36px;margin-right:7px;cursor:pointer;vertical-align:middle"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align:middle;fill:black"><path d="M12 2 1 11h3v11h7v-7h3v7h7V11h3L12 2z"/></svg></button><button type="button" aria-label="Hilfe" title="Hilfe" onclick="event.stopPropagation();alert('Diese Präsentation zeigt alle Lösungen Schritt für Schritt. Mit Weiter oder der Leertaste wird der nächste Schritt sichtbar.')" style="background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:7px;width:36px;height:36px;margin-right:8px;cursor:pointer;font-weight:bold">?</button><label for="language">Sprache: </label><select id="language" style="border:0;background:var(--card);color:var(--ink);font:inherit;cursor:pointer"><option value="tr">Türkçe</option><option value="de" selected>Deutsch</option></select></div>
 
 
 <!-- TITLE -->
@@ -211,6 +211,7 @@ const obs=new MutationObserver(()=>document.querySelectorAll('.dots.show .ln').f
 obs.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
 steps(0)[0].classList.add('show');ui();
 </script>
-<script>document.getElementById('language').addEventListener('change',e=>{localStorage.setItem('elif-ub03-lang',e.target.value);location.href=e.target.value==='de'?'claude-de.html':'claude.html'});</script>
+<script>document.querySelector('.language-switch').addEventListener('click',e=>e.stopPropagation());document.getElementById('language').addEventListener('change',e=>{localStorage.setItem('elif-ub03-lang',e.target.value);location.href=e.target.value==='de'?'claude-de.html':'claude.html'});</script>
+<small style="position:fixed;left:8px;bottom:8px;z-index:20;color:var(--mute);font:11px system-ui">v1.1 · Vollständig übersetzt · TR/DE</small>
 </body>
 </html>
