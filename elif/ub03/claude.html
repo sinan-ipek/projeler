@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Übungsblatt #03 – Çözüm Sunumu</title>
+<title>Übungsblatt #03 – Çözüm Sunumu (Türkçe)</title>
 <style>
 :root{--bg:#f3f6f4;--grid:#d9e3df;--ink:#1d2b3a;--mute:#5b6b78;--hl:#ffe36e;--acc:#1f6f6b;--card:#fff;--line:#c5d3ce;--bad:#a33b3b}
 @media (prefers-color-scheme:dark){:root{--bg:#14202b;--grid:#1e2d3a;--ink:#e8eef2;--mute:#9db0bd;--hl:#6b5a10;--acc:#5fc4bd;--card:#1a2a37;--line:#2f4352;--bad:#e58a8a}}
@@ -40,6 +40,8 @@ h2{font-size:clamp(24px,3.4vw,36px);margin:0 0 6px}
 </style>
 </head>
 <body>
+<div class="language-switch" style="position:fixed;right:18px;top:12px;z-index:30;background:var(--card);padding:7px 10px;border:1px solid var(--line);border-radius:9px;font:14px system-ui">
+<label for="language">Dil: </label><select id="language" style="border:0;background:var(--card);color:var(--ink);font:inherit;cursor:pointer"><option value="tr" selected>Türkçe</option><option value="de">Deutsch</option></select></div>
 
 <!-- TITLE -->
 <section class="slide on">
@@ -208,5 +210,6 @@ const obs=new MutationObserver(()=>document.querySelectorAll('.dots.show .ln').f
 obs.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
 steps(0)[0].classList.add('show');ui();
 </script>
+<script>document.getElementById('language').addEventListener('change',e=>{localStorage.setItem('elif-ub03-lang',e.target.value);location.href=e.target.value==='de'?'claude-de.html':'claude.html'});</script>
 </body>
 </html>
