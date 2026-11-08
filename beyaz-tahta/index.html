@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.80</title>
+<title>Beyaz Tahta v18.81</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1218,7 +1218,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.80 · 3D köşe-köşe snap denemesi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.81 · 3D derinlik sırası otomatik</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1273,6 +1273,7 @@
               <li>Aralık: son transformasyonu tekrarlar; Shift + Aralık kopya oluşturup son transformasyonu tekrarlar.</li>
               <li>Grid düğmesi: evrensel XZ gridini açar ve kapatır.</li>
               <li>Bir veya daha fazla 3D nesnede lokal X/Y/Z döndürme gizmosu görünür; cisim döndükçe gizmo da döner. Çoklu seçimde ağırlık merkezi kullanılır.</li>
+              <li>3D nesnelerin önde/arkada sırasını kullanıcı değil kamera derinliği belirler; yakın nesne otomatik önde çizilir.</li>
             </ul>
             <ul>
               <li>Nesneye tıkla; boş alanda sürükleyerek çoklu seçim yap.</li>
@@ -10811,15 +10812,15 @@
   }
 
   function hitTestObject(p){
-    for(let i=objects.length-1;i>=0;i--){
-      if(selectionHitObject(objects[i],p)) return i;
+    for(const entry of hitTestEntriesFrontToBack()){
+      if(selectionHitObject(entry.object,p)) return entry.index;
     }
     return -1;
   }
 
   function hitTestObjectAny(p){
-    for(let i=objects.length-1;i>=0;i--){
-      if(selectionHitObject(objects[i],p)) return i;
+    for(const entry of hitTestEntriesFrontToBack()){
+      if(selectionHitObject(entry.object,p)) return entry.index;
     }
     return -1;
   }
@@ -11703,6 +11704,70 @@
     });
   }
 
+
+  function shape3DCenterCameraDepth(o){
+    if(!o || o.kind!=='shape3d') return Infinity;
+
+    const cam=shape3DCamera(o);
+    const world={
+      x:Number(o.center&&o.center.x)||0,
+      y:Number(o.center&&o.center.y)||0,
+      z:Number(o.centerZ)||0
+    };
+    const rel={
+      x:world.x-cam.position.x,
+      y:world.y-cam.position.y,
+      z:world.z-cam.position.z
+    };
+
+    return (
+      rel.x*cam.forward.x+
+      rel.y*cam.forward.y+
+      rel.z*cam.forward.z
+    );
+  }
+
+  function shape3DDepthSortedEntries(){
+    return objects
+      .map((object,index)=>({
+        object,
+        index,
+        depth:object&&object.kind==='shape3d'
+          ? shape3DCenterCameraDepth(object)
+          : null
+      }))
+      .filter(item=>item.object && item.object.kind==='shape3d')
+      // Larger camera depth = farther away. Paint far first, near last.
+      .sort((a,b)=>{
+        if(Math.abs(b.depth-a.depth)>1e-7) return b.depth-a.depth;
+        return a.index-b.index;
+      });
+  }
+
+  function renderEntriesWithAutomatic3DDepth(){
+    const result=objects.map((object,index)=>({object,index}));
+    const slots=[];
+    for(let i=0;i<result.length;i++){
+      if(result[i].object && result[i].object.kind==='shape3d') slots.push(i);
+    }
+
+    const sorted3D=shape3DDepthSortedEntries();
+
+    // Keep 2D/user layer positions unchanged. Only replace the 3D slots
+    // with the camera-depth order so users cannot manually fake 3D depth.
+    for(let k=0;k<slots.length;k++){
+      result[slots[k]]=sorted3D[k] || result[slots[k]];
+    }
+
+    return result;
+  }
+
+  function hitTestEntriesFrontToBack(){
+    const entries=renderEntriesWithAutomatic3DDepth();
+    // Rendering is back -> front, hit-testing must be front -> back.
+    return entries.slice().reverse();
+  }
+
   function redraw(){
     // Clear in device pixels, then render the infinite world through the camera.
     ctx.setTransform(1,0,0,1,0,0);
@@ -11718,7 +11783,10 @@
 
     const viewportWorld=currentViewportWorldBounds(96);
 
-    for(const o of objects){
+    for(const entry of renderEntriesWithAutomatic3DDepth()){
+      const o=entry.object;
+      if(!o) continue;
+
       // Bézier paths can be relatively expensive to evaluate and draw.
       // Skip them entirely when they are well outside the visible viewport.
       if(o.kind==='bezier' && !bezierVisibleInViewport(o,viewportWorld)){
@@ -13468,8 +13536,15 @@
 
     copyContextBtn.disabled=!hasTargets;
     pasteContextBtn.disabled=internalClipboard.length===0;
-    bringFrontBtn.disabled=!hasTargets;
-    sendBackBtn.disabled=!hasTargets;
+    const has3DTarget=targets.some(o=>o.kind==='shape3d');
+    bringFrontBtn.disabled=!hasTargets || has3DTarget;
+    sendBackBtn.disabled=!hasTargets || has3DTarget;
+    bringFrontBtn.title=has3DTarget
+      ? '3D nesnelerde önde/arkada sırasını kamera derinliği belirler'
+      : 'En öne getir';
+    sendBackBtn.title=has3DTarget
+      ? '3D nesnelerde önde/arkada sırasını kamera derinliği belirler'
+      : 'En arkaya gönder';
     lockToggleBtn.disabled=!hasTargets;
     flipHorizontalBtn.disabled=!hasTargets;
     flipVerticalBtn.disabled=!hasTargets;
@@ -13527,6 +13602,12 @@
       .sort((a,b)=>a-b);
 
     if(!valid.length){
+      closeContextMenu();
+      return;
+    }
+
+    if(valid.some(i=>objects[i] && objects[i].kind==='shape3d')){
+      statusEl.textContent='3D sırasını kamera derinliği otomatik belirler';
       closeContextMenu();
       return;
     }
