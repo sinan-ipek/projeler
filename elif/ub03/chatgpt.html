@@ -631,7 +631,7 @@ button:focus-visible{outline:3px solid rgba(47,111,237,.28);outline-offset:3px}
         <div class="lang-menu" id="langMenu">
           <button class="lang-option" data-lang="tr">Türkçe</button>
           <button class="lang-option" data-lang="de">Deutsch</button>
-          <button class="lang-option" data-lang="en">English</button>
+          
         </div>
       </div>
 
@@ -642,7 +642,7 @@ button:focus-visible{outline:3px solid rgba(47,111,237,.28);outline-offset:3px}
   <main class="presentation" id="presentation"></main>
 
   <footer class="bottom">
-    <div class="version">v1.0 • ÜB03 animasyonlu ispat ve çözüm adımları</div>
+    <div class="version">v1.1 • ÜB03 · Türkçe/Almanca tam sunum</div>
     <div class="counter" id="slideCounter"></div>
   </footer>
 </div>
@@ -1346,6 +1346,7 @@ document.querySelectorAll(".lang-option").forEach(btn=>{
     lang=btn.dataset.lang;
     localStorage.setItem("ub03-lang",lang);
     langMenu.classList.remove("open");
+    if(lang==="de") { location.href="chatgpt-de.html"; return; }
     render();
   });
 });
