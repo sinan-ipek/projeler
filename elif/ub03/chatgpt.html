@@ -1200,6 +1200,30 @@ const germanData = [null,{"title":"Warum ist punktweise Funktionsgleichheit eine
 let lang = localStorage.getItem("elif-ub03-lang") || (location.pathname.endsWith("-de.html") ? "de" : "tr");
 
 const turkishData = slides.map(s=>({title:s.title, goal:s.goal, chip:s.chip, de:s.de, subtitle:s.subtitle, steps:s.steps?.map(st=>({title:st.title, html:st.html}))}));
+const turkishGoals = [
+null,
+"Yansıma, simetri ve geçişlilik özelliklerinin üçünü de göstermek.",
+"Her x için oluşan Y altkümelerini karşılaştırmak ve eşdeğerlik bağıntısının üç özelliğini göstermek.",
+"En basit örneği seçmek: karşılaştırılacak farklı ikinci eleman bulunmasın.",
+"İlk koordinat kesin küçükse L ikinci koordinata bakmaz; E ise bakar.",
+"Yansıma + antisimetri + geçişlilik.",
+"A² içinde E bağıntısına göre karşılaştırılamayan iki çift bulmak.",
+"Her iki yönde L doğruysa önce a=a′, sonra b=b′ olduğunu göstermek.",
+"İndüksiyon başlangıcı, indüksiyon varsayımı ve indüksiyon adımı.",
+"k+1 kez bileşke alınmış fonksiyonun eşit çıktılarından girdilerin eşitliğini çıkarmak.",
+"n+1 durumunu dağılım yasası ve indüksiyon varsayımıyla kanıtlamak.",
+"Önermeyi doğrudan değil, karşıt tersini kanıtlayarak ispatlamak.",
+"Üç önermeyi halkalı ispat ile birbirine bağlamak.",
+"Fonksiyon bire bir kabul edildiğinde üçüncü elemanın gidebileceği boş yer kalmadığını göstermek."
+];
+turkishData.forEach((s,i)=>{
+ if(!i)return;
+ s.goal=turkishGoals[i];
+ s.title=s.title.replaceAll("Ringschluss","Halkalı ispat").replaceAll("injektif","bire bir").replaceAll("İnjektif","Bire bir").replaceAll("total değildir","tam sıralama değildir");
+ s.steps?.forEach(st=>{
+  st.title=st.title.replaceAll("Ringschluss","Halkalı ispat").replaceAll("Induktionsanfang","İndüksiyon başlangıcı").replaceAll("injektif","bire bir").replaceAll("İnjektif","Bire bir").replaceAll("Transitivite","Geçişlilik");
+ });
+});
 const germanStatements = slides.map(s=>s.de);
 const turkishStatements = [null,"Fonksiyonlar arasında \\(\\simeq\\) bağıntısı şöyle tanımlanıyor:\n\\[f\\simeq g\\iff\\forall x\\in X:\\;f(x)=g(x).\\]\nBu bağıntının bir <b>eşdeğerlik bağıntısı</b> olduğunu kanıtlayın.","\\(R,S\\subseteq X\\times Y\\) için şu bağıntı tanımlanıyor:\n\\[R\\simeq_r S\\iff\\forall x\\in X:\\;\\{y\\in Y\\mid(x,y)\\in R\\}=\\{y\\in Y\\mid(x,y)\\in S\\}.\\]\nBu da bir eşdeğerlik bağıntısı mıdır? Gerekçelendirin.","\\(R\\), \\(A\\) kümesi üzerinde tam sıralama olsun:\n\\[(a,b)E(a',b')\\iff aRa'\\land bRb',\\]\n\\[(a,b)L(a',b')\\iff aRa'\\land(\\neg(a'Ra)\\lor bRb').\\]\n\\(L=E\\) olacak bir \\(A\\) ve \\(R\\) örneği verin ve gerekçelendirin.","\\(R\\), \\(A\\) üzerinde tam sıralama olsun. \\(L\\neq E\\) olacak bir \\(A\\) ve \\(R\\) örneği verin; neden farklı olduklarını gösterin.","\\(E\\) bağıntısının bir <b>kısmi sıralama</b> olduğunu kanıtlayın.","Uygun bir karşı-örnek vererek \\(E\\) bağıntısının her zaman <b>tam sıralama</b> olmadığını gösterin.","\\(L\\) bağıntısının <b>antisimetri</b> özelliğini sağladığını kanıtlayın.","Tam tümevarım kullanarak \\(n\\ge4\\) olan bütün doğal sayılar için şu eşitsizliği kanıtlayın:\n\\[n!\\ge2^n.\\]","\\(f:X\\to X\\) bire bir (injektif) fonksiyon olsun. Tam tümevarımla bütün \\(k\\ge1\\) için şunu kanıtlayın:\n\\[f^k\\text{ bire birdir}.\\]\nBurada \\(f^1=f\\), \\(f^{k+1}=f^k\\circ f\\).","\\(A_1,A_2,\\ldots\\) ve \\(C\\) kümeleri verilsin. Bütün \\(n\\ge1\\) için tam tümevarımla şunu gösterin:\n\\[(A_1\\cap\\cdots\\cap A_n)\\cup C=(A_1\\cup C)\\cap\\cdots\\cap(A_n\\cup C).\\]","\\(A\\) ve \\(B\\) kümeleri için kanıtlayın:\n\\[A\\cup B=A\\cap B\\Rightarrow A=B.\\]\n<b>İstenen teknik:</b> Kontrapozisyon ve durumlara ayırma.","\\(f:X\\to Y\\) için şu üç önermenin eşdeğer olduğunu gösterin:\n<br>(i) \\(f\\) bire birdir.\n<br>(ii) Bütün \\(A\\subseteq X\\) için \\(f^{-1}(f(A))\\subseteq A\\).\n<br>(iii) Bütün \\(x\\in X\\) için \\(f^{-1}(\\{f(x)\\})=\\{x\\}\\).\n<br><b>İstenen teknik:</b> Halkalı ispat (Ringschluss).","Şu türde bire bir fonksiyon bulunmadığını kanıtlayın:\n\\[f:\\{1,2,3\\}\\to\\{1,2\\}.\\]\n<b>İstenen teknik:</b> Çelişkiyle ispat ve durumlara ayırma."];
 const footerEl = document.querySelector(".version");
