@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.83</title>
+<title>Beyaz Tahta v18.82</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1218,7 +1218,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.83 · Tepeden paralel 3D ışık ve dik gölge</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.82 · Grid üzerinde gerçek 3D gölge</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1272,7 +1272,7 @@
               <li>Esc: Kalem ↔ Seçim oku arasında geçiş yapar.</li>
               <li>Aralık: son transformasyonu tekrarlar; Shift + Aralık kopya oluşturup son transformasyonu tekrarlar.</li>
               <li>Grid düğmesi: evrensel XZ gridini açar ve kapatır.</li>
-              <li>Grid açıkken 3D nesneler tepeden gelen paralel ışığa göre XZ grid düzlemine tam dik gölge düşürür.</li>
+              <li>Grid açıkken 3D nesneler aynı sol-üst-ön ışığa göre XZ grid düzlemine otomatik gölge düşürür.</li>
               <li>Bir veya daha fazla 3D nesnede lokal X/Y/Z döndürme gizmosu görünür; cisim döndükçe gizmo da döner. Çoklu seçimde ağırlık merkezi kullanılır.</li>
               <li>3D nesnelerin önde/arkada sırasını kullanıcı değil kamera derinliği belirler; yakın nesne otomatik önde çizilir.</li>
             </ul>
@@ -7092,9 +7092,8 @@
     return `rgba(${clamp(rgb.r*k)},${clamp(rgb.g*k)},${clamp(rgb.b*k)},${Math.max(0,Math.min(1,alpha))})`;
   }
 
-  // One shared parallel light for the whole 3D world: straight from above.
-  // World/canvas Y grows downward in this app, so "toward the light" is -Y.
-  const SHAPE3D_LIGHT_DIR=shape3DNormalize({x:0,y:-1,z:0});
+  // One shared light for the whole 3D world: upper-left-front.
+  const SHAPE3D_LIGHT_DIR=shape3DNormalize({x:-.55,y:-.78,z:.92});
 
   function shape3DMaterialAlpha(o){
     const transparency=Math.max(0,Math.min(100,Number(o&&o.fillOpacity)||0));
@@ -9117,12 +9116,21 @@
   }
 
   function shape3DShadowProjectWorldPoint(world,planeY){
-    // Parallel top light: every ray is vertical.
-    // Therefore a shadow keeps the same X and Z and lands only on grid Y.
+    // SHAPE3D_LIGHT_DIR points toward the light.
+    // A cast shadow travels in the opposite direction.
+    const ray={
+      x:-SHAPE3D_LIGHT_DIR.x,
+      y:-SHAPE3D_LIGHT_DIR.y,
+      z:-SHAPE3D_LIGHT_DIR.z
+    };
+
+    if(Math.abs(ray.y)<1e-7) return null;
+
+    const t=(planeY-world.y)/ray.y;
     return {
-      x:world.x,
+      x:world.x+ray.x*t,
       y:planeY,
-      z:world.z
+      z:world.z+ray.z*t
     };
   }
 
