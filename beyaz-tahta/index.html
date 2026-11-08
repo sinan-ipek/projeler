@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.76</title>
+<title>Beyaz Tahta v18.77</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1218,7 +1218,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.76 · 3D dönüş gizmosu mavi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.77 · Pastel 3D gizmo, pivot gizli, Z mouse ile</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6295,24 +6295,23 @@
   let global3DCameraTarget=null;
   const GLOBAL_3D_CAMERA_DISTANCE=1400;
 
-  // v18.61 — World Z movement is intentionally NOT tied to pointer dragging.
-  // The dedicated Z-move arrow activates a low-sensitivity mouse-wheel mode.
+  // v18.77 — Dedicated Z control: click once, then move the mouse.
   let shape3DZMoveIndex=-1;
   let shape3DZTarget=0;
   let shape3DZRAF=0;
   let shape3DZUndoArmed=false;
   let shape3DZWheelAccumulator=0;
+  let shape3DZPointerScreen=null;
 
-  const SHAPE3D_Z_WHEEL_THRESHOLD=80;
-  const SHAPE3D_Z_WHEEL_STEP=10;
+  const SHAPE3D_Z_POINTER_SENSITIVITY=.65;
   const SHAPE3D_Z_EASE=.16;
   const SHAPE3D_Z_EPS=.03;
-  const SHAPE3D_Z_MAX_LEAD=36;
 
   function deactivateShape3DZMove(){
     shape3DZMoveIndex=-1;
     shape3DZUndoArmed=false;
     shape3DZWheelAccumulator=0;
+    shape3DZPointerScreen=null;
     if(shape3DZRAF){
       cancelAnimationFrame(shape3DZRAF);
       shape3DZRAF=0;
@@ -6332,6 +6331,7 @@
     shape3DZTarget=Number(o.centerZ)||0;
     shape3DZUndoArmed=false;
     shape3DZWheelAccumulator=0;
+    shape3DZPointerScreen=null;
     return true;
   }
 
@@ -6358,6 +6358,32 @@
     markBoardDirty();
     redraw();
     shape3DZRAF=requestAnimationFrame(animateShape3DZMove);
+  }
+
+  function moveShape3DZFromPointer(screenP){
+    const o=objects[shape3DZMoveIndex];
+    if(!o || o.kind!=='shape3d' || !screenP) return false;
+
+    if(!shape3DZPointerScreen){
+      shape3DZPointerScreen={x:screenP.x,y:screenP.y};
+      return true;
+    }
+
+    const dy=screenP.y-shape3DZPointerScreen.y;
+    if(Math.abs(dy)<.01) return true;
+
+    if(!shape3DZUndoArmed){
+      recordObjectStates([shape3DZMoveIndex]);
+      shape3DZUndoArmed=true;
+    }
+
+    // Mouse up => +Z, mouse down => -Z.
+    o.centerZ=(Number(o.centerZ)||0)-dy*SHAPE3D_Z_POINTER_SENSITIVITY/viewZoom;
+    shape3DZTarget=o.centerZ;
+    shape3DZPointerScreen={x:screenP.x,y:screenP.y};
+    markBoardDirty();
+    redraw();
+    return true;
   }
 
   function nudgeShape3DZFromWheel(deltaY){
@@ -8658,9 +8684,11 @@
     const handles=group3DRotationHandles();
     if(!handles.length) return;
 
+    const gizmoBlue='#78a7d8';
+
     ctx.save();
     ctx.lineWidth=1.5/viewZoom;
-    ctx.strokeStyle='#2563eb';
+    ctx.strokeStyle=gizmoBlue;
     ctx.font=`bold ${10/viewZoom}px Arial,sans-serif`;
     ctx.textAlign='center';
     ctx.textBaseline='middle';
@@ -8672,7 +8700,8 @@
       ctx.stroke();
 
       ctx.beginPath();
-      ctx.fillStyle='#2563eb';
+      ctx.fillStyle=gizmoBlue;
+      ctx.strokeStyle=gizmoBlue;
       ctx.arc(h.x,h.y,8/viewZoom,0,Math.PI*2);
       ctx.fill();
       ctx.stroke();
@@ -8681,11 +8710,6 @@
       ctx.fillText(h.axis,h.x,h.y+.2/viewZoom);
     }
 
-    const c=handles[0].base;
-    ctx.beginPath();
-    ctx.fillStyle='#2563eb';
-    ctx.arc(c.x,c.y,4/viewZoom,0,Math.PI*2);
-    ctx.fill();
     ctx.restore();
   }
 
@@ -9899,7 +9923,9 @@
       ctx.stroke();
     }
 
-    drawRotationPivot(currentSelectionPivot());
+    if(selected.kind!=='shape3d'){
+      drawRotationPivot(currentSelectionPivot());
+    }
 
     ctx.restore();
   }
@@ -9914,7 +9940,7 @@
     const selected=objects[selectedIndex];
     if(!selected || selected.locked) return null;
 
-    if(hitRotationPivot(p,pointerType)) return 'pivot';
+    if(selected.kind!=='shape3d' && hitRotationPivot(p,pointerType)) return 'pivot';
 
     const rawSpecial=menuEditHandles(selected);
 
@@ -13617,12 +13643,13 @@
             objects[selectedIndex].kind==='shape3d'
           ){
             activateShape3DZMove(selectedIndex);
+            shape3DZPointerScreen={x:screenP.x,y:screenP.y};
             selectAction=null;
             selectStart=null;
             selectSnapshot=null;
             groupSnapshots=null;
             activeHandle=null;
-            statusEl.textContent='Z taşıma aktif — fare tekerini yavaşça çevir';
+            statusEl.textContent='Z taşıma aktif — fareyi yukarı/aşağı hareket ettir';
             redraw();
             return;
           }
@@ -14074,6 +14101,18 @@
       }
 
       redraw();
+      return;
+    }
+
+    if(
+      mode==='select' &&
+      shape3DZMoveIndex>=0 &&
+      shape3DZMoveIndex===selectedIndex &&
+      objects[shape3DZMoveIndex] &&
+      objects[shape3DZMoveIndex].kind==='shape3d' &&
+      !selectAction
+    ){
+      moveShape3DZFromPointer(screenP);
       return;
     }
 
@@ -15015,17 +15054,6 @@
 
   canvas.addEventListener('wheel',e=>{
     e.preventDefault();
-
-    if(
-      mode==='select' &&
-      shape3DZMoveIndex>=0 &&
-      shape3DZMoveIndex===selectedIndex &&
-      objects[shape3DZMoveIndex] &&
-      objects[shape3DZMoveIndex].kind==='shape3d'
-    ){
-      nudgeShape3DZFromWheel(e.deltaY);
-      return;
-    }
 
     const s=screenPointFromEvent(e);
     const worldBefore=screenToWorld(s);
