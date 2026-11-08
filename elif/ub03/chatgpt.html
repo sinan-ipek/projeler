@@ -1,0 +1,1374 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MAFI 1 • Übungsblatt 03 • Animasyonlu Çözüm Sunumu</title>
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+:root{
+  --bg:#f5f7fb;
+  --paper:#ffffff;
+  --ink:#172033;
+  --muted:#64748b;
+  --line:#dbe3ef;
+  --blue:#2f6fed;
+  --blue2:#eaf1ff;
+  --green:#148a64;
+  --green2:#e9f8f2;
+  --amber:#f4c542;
+  --amber2:#fff7d1;
+  --red:#d9485f;
+  --red2:#fff0f2;
+  --violet:#7657d7;
+  --shadow:0 18px 55px rgba(29,45,80,.12);
+  --radius:24px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;overflow:hidden}
+button{font:inherit}
+button:focus-visible{outline:3px solid rgba(47,111,237,.28);outline-offset:3px}
+
+#app{
+  height:100vh;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 18px;
+  border-bottom:1px solid rgba(219,227,239,.9);
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(14px);
+  z-index:20;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.brand-dot{
+  width:14px;height:14px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--violet));
+  box-shadow:0 0 0 5px #edf2ff;
+  flex:0 0 auto;
+}
+.brand-title{
+  font-weight:850;
+  letter-spacing:-.02em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.brand-sub{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:2px;
+}
+
+.actions{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+.icon-btn,.lang-btn{
+  height:44px;
+  border-radius:13px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--ink);
+  box-shadow:0 5px 18px rgba(29,45,80,.07);
+  cursor:pointer;
+  transition:.18s ease;
+}
+.icon-btn:hover,.lang-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(29,45,80,.11)}
+.home-btn{
+  width:44px;
+  background:#ffd84f;
+  border-color:#e4ba1e;
+  color:#111;
+  font-size:22px;
+  display:grid;
+  place-items:center;
+}
+.help-btn{width:44px;font-size:20px;font-weight:900}
+.lang-wrap{position:relative}
+.lang-btn{padding:0 13px;display:flex;align-items:center;gap:8px;font-weight:750}
+.lang-menu{
+  position:absolute;
+  top:52px;
+  right:0;
+  min-width:170px;
+  padding:7px;
+  border-radius:15px;
+  border:1px solid var(--line);
+  background:#fff;
+  box-shadow:var(--shadow);
+  display:none;
+  z-index:40;
+}
+.lang-menu.open{display:block;animation:pop .18s ease}
+.lang-option{
+  width:100%;
+  border:0;
+  background:transparent;
+  padding:10px 11px;
+  border-radius:10px;
+  text-align:left;
+  cursor:pointer;
+}
+.lang-option:hover{background:#f2f5fa}
+
+.presentation{
+  min-height:0;
+  position:relative;
+  padding:18px 18px 10px;
+}
+
+.slide{
+  height:100%;
+  max-width:1500px;
+  margin:0 auto;
+  display:none;
+}
+.slide.active{
+  display:grid;
+  grid-template-columns:minmax(330px,.85fr) minmax(0,1.55fr);
+  gap:18px;
+  animation:slideIn .32s ease;
+}
+
+.card{
+  background:var(--paper);
+  border:1px solid rgba(219,227,239,.9);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  min-height:0;
+}
+
+.problem-panel{
+  padding:24px;
+  display:flex;
+  flex-direction:column;
+  overflow:auto;
+}
+.task-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  align-self:flex-start;
+  font-size:12px;
+  font-weight:850;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--blue);
+  background:var(--blue2);
+  border:1px solid #cfe0ff;
+  border-radius:999px;
+  padding:7px 10px;
+}
+.problem-title{
+  font-size:clamp(25px,2.1vw,39px);
+  line-height:1.08;
+  letter-spacing:-.035em;
+  margin:16px 0 12px;
+}
+.problem-de{
+  padding:16px 17px;
+  background:#f8fafc;
+  border:1px solid var(--line);
+  border-radius:18px;
+  line-height:1.58;
+  color:#334155;
+  font-size:15px;
+}
+.goal{
+  margin-top:16px;
+  padding:14px 16px;
+  border-radius:16px;
+  background:var(--amber2);
+  border:1px solid #f2df82;
+  line-height:1.55;
+}
+.goal b{display:block;margin-bottom:5px}
+.mini-note{
+  margin-top:auto;
+  padding-top:18px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.55;
+}
+
+.solution-panel{
+  padding:22px;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  min-height:0;
+  overflow:hidden;
+}
+.solution-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:12px;
+}
+.solution-title{
+  font-size:20px;
+  font-weight:850;
+}
+.progress{
+  flex:0 0 210px;
+}
+.progress-top{
+  display:flex;
+  justify-content:space-between;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:7px;
+}
+.progress-track{
+  height:8px;
+  background:#edf1f6;
+  border-radius:99px;
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  width:0;
+  background:linear-gradient(90deg,var(--blue),var(--violet));
+  border-radius:99px;
+  transition:width .32s ease;
+}
+
+.stage{
+  min-height:0;
+  overflow:auto;
+  padding:8px 4px 8px 2px;
+  display:grid;
+  align-content:start;
+  gap:12px;
+}
+
+.step{
+  opacity:0;
+  transform:translateY(14px) scale(.985);
+  pointer-events:none;
+  max-height:0;
+  overflow:hidden;
+  margin:0;
+  padding:0 16px;
+  border:1px solid transparent;
+  border-radius:18px;
+  transition:
+    opacity .34s ease,
+    transform .34s ease,
+    max-height .48s ease,
+    padding .34s ease,
+    margin .34s ease,
+    border-color .34s ease,
+    background .34s ease;
+}
+.step.visible{
+  opacity:1;
+  transform:none;
+  pointer-events:auto;
+  max-height:1000px;
+  margin:0;
+  padding:15px 16px;
+  background:#fff;
+  border-color:var(--line);
+  box-shadow:0 7px 22px rgba(29,45,80,.055);
+}
+.step.current{
+  background:linear-gradient(180deg,#fff,#fbfdff);
+  border-color:#bfd3ff;
+  box-shadow:0 10px 28px rgba(47,111,237,.12);
+}
+.step-label{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.075em;
+  color:var(--blue);
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+.step-num{
+  width:25px;height:25px;border-radius:50%;
+  display:grid;place-items:center;
+  background:var(--blue);
+  color:#fff;
+  font-size:12px;
+}
+.step p{
+  margin:6px 0;
+  line-height:1.58;
+}
+.mathbox{
+  margin-top:10px;
+  padding:12px 14px;
+  border-radius:14px;
+  background:#f8fafc;
+  border:1px solid #e1e8f0;
+  overflow:auto;
+}
+.good{color:var(--green);font-weight:800}
+.bad{color:var(--red);font-weight:800}
+.hi{
+  display:inline-block;
+  background:#fff1a9;
+  border-radius:7px;
+  padding:0 5px;
+  animation:hiPulse 1.5s ease-in-out infinite;
+}
+
+.visual{
+  margin-top:12px;
+  border-radius:17px;
+  border:1px dashed #c9d4e4;
+  background:linear-gradient(180deg,#fbfdff,#f7faff);
+  min-height:120px;
+  padding:14px;
+  overflow:hidden;
+}
+.relation-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+  min-height:86px;
+}
+.node{
+  min-width:72px;
+  min-height:52px;
+  padding:10px 13px;
+  border-radius:14px;
+  border:2px solid #cbd8eb;
+  background:#fff;
+  display:grid;
+  place-items:center;
+  font-weight:850;
+  box-shadow:0 8px 18px rgba(29,45,80,.06);
+}
+.node.blue{border-color:#8bb1ff;background:#f0f5ff}
+.node.green{border-color:#89d7bd;background:#effbf7}
+.node.red{border-color:#efa1ae;background:#fff4f5}
+.arrow{
+  position:relative;
+  width:80px;
+  height:4px;
+  background:#9fb6df;
+  border-radius:99px;
+  overflow:visible;
+}
+.arrow::after{
+  content:"";
+  position:absolute;right:-2px;top:50%;
+  width:12px;height:12px;
+  border-top:4px solid #718bb8;
+  border-right:4px solid #718bb8;
+  transform:translateY(-50%) rotate(45deg);
+}
+.arrow.flow::before{
+  content:"";
+  position:absolute;
+  width:18px;height:4px;border-radius:99px;background:var(--blue);
+  left:-20px;top:0;
+  animation:flow 1.5s linear infinite;
+}
+
+.matrix{
+  display:grid;
+  grid-template-columns:repeat(2,72px);
+  gap:10px;
+  justify-content:center;
+}
+.pair{
+  height:58px;
+  border:2px solid #cad6e8;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  background:#fff;
+  font-weight:800;
+}
+.pair.hot{border-color:#f1c21f;background:#fff8cf;animation:breathe 1.6s ease-in-out infinite}
+.pair.cool{border-color:#74bfa6;background:#effbf7}
+
+.ladder{
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+  min-height:130px;
+  justify-content:center;
+}
+.rung{
+  width:58px;
+  border-radius:12px 12px 4px 4px;
+  background:linear-gradient(180deg,#b7ccff,#6d92ed);
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding-top:8px;
+  color:#17366d;
+  font-weight:900;
+  animation:rise .6s both;
+}
+.rung:nth-child(1){height:50px}
+.rung:nth-child(2){height:70px;animation-delay:.08s}
+.rung:nth-child(3){height:92px;animation-delay:.16s}
+.rung:nth-child(4){height:118px;animation-delay:.24s}
+
+.cycle{
+  display:grid;
+  grid-template-columns:1fr 70px 1fr 70px 1fr;
+  align-items:center;
+  gap:5px;
+}
+.cycle .bubble{
+  min-height:92px;border-radius:50%;
+  border:2px solid #bfd0eb;background:#fff;
+  display:grid;place-items:center;text-align:center;padding:8px;
+  font-weight:850;
+}
+.cycle .go{
+  font-size:34px;text-align:center;color:var(--blue);
+  animation:nudge 1.1s ease-in-out infinite;
+}
+.cycle .back{
+  grid-column:1/-1;text-align:center;color:var(--violet);font-weight:850;margin-top:4px;
+}
+
+.controls{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:13px;
+}
+.control-left,.control-right{display:flex;gap:9px;align-items:center}
+.ctrl{
+  height:44px;
+  padding:0 15px;
+  border-radius:13px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--ink);
+  font-weight:800;
+  cursor:pointer;
+}
+.ctrl.primary{
+  background:var(--blue);
+  color:#fff;
+  border-color:var(--blue);
+}
+.ctrl:disabled{opacity:.42;cursor:not-allowed}
+.keyboard-tip{font-size:12px;color:var(--muted)}
+
+.bottom{
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 18px 8px;
+  position:relative;
+}
+.version{
+  position:absolute;
+  left:20px;
+  bottom:9px;
+  font-size:11px;
+  color:#8b95a7;
+}
+.counter{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:750;
+}
+
+.modal-backdrop{
+  position:fixed;inset:0;
+  background:rgba(15,23,42,.35);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
+  padding:20px;
+}
+.modal-backdrop.open{display:flex;animation:fade .16s ease}
+.modal{
+  width:min(500px,100%);
+  background:#fff;
+  border-radius:22px;
+  box-shadow:0 25px 70px rgba(15,23,42,.28);
+  padding:22px;
+  border:1px solid var(--line);
+}
+.modal h3{margin:0 0 10px;font-size:22px}
+.modal p{line-height:1.65;color:#475569}
+.modal .close{float:right;border:0;background:#eef2f7;width:36px;height:36px;border-radius:10px;cursor:pointer;font-weight:900}
+
+.intro{
+  grid-column:1/-1;
+  padding:34px;
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  gap:28px;
+  align-items:center;
+}
+.intro h1{
+  font-size:clamp(42px,5vw,78px);
+  line-height:.98;
+  letter-spacing:-.05em;
+  margin:10px 0 16px;
+}
+.intro p{font-size:18px;line-height:1.62;color:#526079;max-width:780px}
+.intro-visual{
+  min-height:390px;
+  display:grid;
+  place-items:center;
+  position:relative;
+}
+.orbit{
+  width:290px;height:290px;border-radius:50%;
+  border:2px dashed #c5d5ef;
+  position:relative;
+  animation:spin 18s linear infinite;
+}
+.orbit .planet{
+  position:absolute;width:72px;height:72px;border-radius:20px;
+  display:grid;place-items:center;font-weight:900;
+  box-shadow:0 10px 28px rgba(29,45,80,.12);
+  transform:translate(-50%,-50%);
+}
+.p1{left:50%;top:0;background:#eaf1ff;color:#2f6fed}
+.p2{left:100%;top:50%;background:#e9f8f2;color:#148a64}
+.p3{left:50%;top:100%;background:#fff7d1;color:#a17600}
+.p4{left:0;top:50%;background:#f3edff;color:#7657d7}
+.center-ball{
+  position:absolute;width:145px;height:145px;border-radius:50%;
+  background:#fff;box-shadow:var(--shadow);
+  display:grid;place-items:center;text-align:center;font-weight:900;font-size:22px;
+  border:1px solid var(--line);
+}
+.start-btn{
+  margin-top:10px;height:52px;padding:0 20px;border:0;border-radius:15px;background:var(--blue);color:#fff;font-weight:850;cursor:pointer;
+}
+
+@media (max-width:980px){
+  .slide.active{grid-template-columns:1fr}
+  .problem-panel{max-height:34vh}
+  .solution-panel{min-height:0}
+  .presentation{padding:10px}
+  .intro{grid-template-columns:1fr;overflow:auto}
+  .intro-visual{min-height:260px}
+  .orbit{width:220px;height:220px}
+  .version{display:none}
+  .keyboard-tip{display:none}
+}
+@media (max-width:650px){
+  .brand-sub{display:none}
+  .brand-title{font-size:14px}
+  .lang-btn span.label{display:none}
+  .slide.active{gap:10px}
+  .problem-panel,.solution-panel{padding:15px}
+  .solution-head{display:block}
+  .progress{margin-top:10px;max-width:none}
+  .cycle{grid-template-columns:1fr}
+  .cycle .go{transform:rotate(90deg)}
+  .cycle .back{grid-column:1}
+}
+
+@keyframes slideIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:translateY(-5px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes flow{from{left:-20px}to{left:100%}}
+@keyframes breathe{50%{transform:scale(1.045);box-shadow:0 0 0 8px rgba(244,197,66,.16)}}
+@keyframes hiPulse{50%{box-shadow:0 0 0 6px rgba(244,197,66,.18)}}
+@keyframes rise{from{transform:scaleY(.15);transform-origin:bottom;opacity:.2}to{transform:scaleY(1);opacity:1}}
+@keyframes nudge{50%{transform:translateX(6px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <div>
+        <div class="brand-title">MAFI 1 • Übungsblatt 03</div>
+        <div class="brand-sub">Animasyonlu çözüm sunumu</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="icon-btn home-btn" id="homeBtn" title="Home" aria-label="Home">⌂</button>
+
+      <div class="lang-wrap">
+        <button class="lang-btn" id="langBtn" aria-haspopup="true" aria-expanded="false">
+          <span>🌐</span><span class="label" id="langLabel">Dil</span><span>▾</span>
+        </button>
+        <div class="lang-menu" id="langMenu">
+          <button class="lang-option" data-lang="tr">Türkçe</button>
+          <button class="lang-option" data-lang="de">Deutsch</button>
+          <button class="lang-option" data-lang="en">English</button>
+        </div>
+      </div>
+
+      <button class="icon-btn help-btn" id="helpBtn" title="Help" aria-label="Help">?</button>
+    </div>
+  </header>
+
+  <main class="presentation" id="presentation"></main>
+
+  <footer class="bottom">
+    <div class="version">v1.0 • ÜB03 animasyonlu ispat ve çözüm adımları</div>
+    <div class="counter" id="slideCounter"></div>
+  </footer>
+</div>
+
+<div class="modal-backdrop" id="helpModal">
+  <div class="modal">
+    <button class="close" id="closeHelp">×</button>
+    <h3 id="helpTitle">Yardım</h3>
+    <p id="helpText">
+      Bu sayfa soruları adım adım gösterir. “Sonraki adım” düğmesine bas.
+      Çözüm yavaş yavaş açılır. Sağ ve sol ok tuşlarıyla slayt değişir.
+    </p>
+  </div>
+</div>
+
+<script>
+const UI = {
+  tr:{
+    language:"Dil", helpTitle:"Yardım",
+    helpText:"Bu sayfa soruları adım adım gösterir. “Sonraki adım” düğmesine bas. Çözüm yavaş yavaş açılır. Sağ ve sol ok tuşlarıyla slayt değişir.",
+    solution:"Çözüm akışı", step:"Adım", prev:"Önceki", next:"Sonraki slayt", nextStep:"Sonraki adım",
+    reset:"Baştan", goal:"Amaç", tip:"← → slayt • Space adım",
+    introText:"Bu sunum, Übungsblatt 03 içindeki bütün soruları tek tek çözer. Her adım ayrı açılır; böylece ispatın neden çalıştığını takip edebilirsin.",
+    start:"Başla"
+  },
+  de:{
+    language:"Sprache", helpTitle:"Hilfe",
+    helpText:"Diese Seite zeigt die Aufgaben Schritt für Schritt. Klicke auf „Nächster Schritt“. Mit den Pfeiltasten wechselst du die Folie.",
+    solution:"Lösungsweg", step:"Schritt", prev:"Zurück", next:"Nächste Folie", nextStep:"Nächster Schritt",
+    reset:"Neu", goal:"Ziel", tip:"← → Folie • Space Schritt",
+    introText:"Diese Präsentation löst alle Aufgaben aus Übungsblatt 03 Schritt für Schritt. Jeder Beweisschritt erscheint einzeln.",
+    start:"Start"
+  },
+  en:{
+    language:"Language", helpTitle:"Help",
+    helpText:"This page shows each problem step by step. Click “Next step”. Use the left and right arrow keys to change slides.",
+    solution:"Solution flow", step:"Step", prev:"Previous", next:"Next slide", nextStep:"Next step",
+    reset:"Restart", goal:"Goal", tip:"← → slide • Space step",
+    introText:"This presentation solves every problem from Worksheet 03 step by step. Each proof step appears separately.",
+    start:"Start"
+  }
+};
+
+const slides = [
+{
+  intro:true,
+  title:"Übungsblatt 03",
+  subtitle:"Relationen • Ordnungen • Induktion • Beweistechniken"
+},
+{
+  chip:"Aufgabe 1(a)",
+  title:"Fonksiyon eşitliği neden bir eşdeğerlik bağıntısıdır?",
+  de:`Die Relation \\(\\simeq\\) zwischen Funktionen \\(f,g:X\\to Y\\) ist definiert durch
+      \\[f\\simeq g \\iff \\forall x\\in X:\\; f(x)=g(x).\\]
+      Beweisen Sie, dass \\(\\simeq\\) eine Äquivalenzrelation ist.`,
+  goal:"Reflexivität, Symmetrie ve Transitivität özelliklerinin üçünü de göstermek.",
+  steps:[
+    {
+      title:"Ne kanıtlamalıyız?",
+      html:`Bir bağıntının eşdeğerlik bağıntısı olması için üç özellik gerekir:
+      <b>refleksif</b>, <b>simetrik</b>, <b>transitif</b>.
+      <div class="visual relation-row"><div class="node blue">f</div><div class="arrow flow"></div><div class="node green">g</div></div>`
+    },
+    {
+      title:"Refleksiflik",
+      html:`Her fonksiyon kendi kendisine noktasal olarak eşittir.
+      <div class="mathbox">\\[\\forall x\\in X:\\; f(x)=f(x)\\quad\\Longrightarrow\\quad f\\simeq f.\\]</div>
+      Burada özel bir şey yapmıyoruz: <span class="hi">eşitliğin refleksifliğini</span> kullanıyoruz.`
+    },
+    {
+      title:"Simetri",
+      html:`\\(f\\simeq g\\) varsayalım. O zaman her \\(x\\) için \\(f(x)=g(x)\\).
+      Eşitlik simetrik olduğundan:
+      <div class="mathbox">\\[f(x)=g(x)\\Rightarrow g(x)=f(x)\\Rightarrow g\\simeq f.\\]</div>`
+    },
+    {
+      title:"Transitivite",
+      html:`\\(f\\simeq g\\) ve \\(g\\simeq h\\) olsun.
+      Her \\(x\\) için
+      <div class="mathbox">\\[f(x)=g(x)\\quad\\text{ve}\\quad g(x)=h(x)\\Rightarrow f(x)=h(x).\\]</div>
+      Dolayısıyla \\(f\\simeq h\\).`
+    },
+    {
+      title:"Sonuç",
+      html:`Üç özellik de sağlandı:
+      <p class="good">✓ reflexiv &nbsp; ✓ symmetrisch &nbsp; ✓ transitiv</p>
+      <div class="mathbox">\\[\\boxed{\\simeq\\text{ ist eine Äquivalenzrelation.}}\\]</div>`
+    }
+  ]
+},
+{
+  chip:"Aufgabe 1(b)",
+  title:"Aynı fikir, bu kez genel bağıntıların lifleri üzerinde",
+  de:`Für \\(R,S\\subseteq X\\times Y\\) sei
+      \\[R\\simeq_r S\\iff \\forall x\\in X:
+      \\{y\\in Y\\mid(x,y)\\in R\\}=\\{y\\in Y\\mid(x,y)\\in S\\}.\\]
+      Ist \\(\\simeq_r\\) eine Äquivalenzrelation?`,
+  goal:"Her x için oluşan Y-altkümelerini karşılaştırmak ve yine üç eşdeğerlik özelliğini göstermek.",
+  steps:[
+    {
+      title:"Bir 'lif' düşün",
+      html:`Sabit bir \\(x\\) seç. \\(R\\) bağıntısında bu \\(x\\)'e bağlı bütün \\(y\\)'leri topla:
+      <div class="mathbox">\\[R_x:=\\{y\\in Y\\mid(x,y)\\in R\\}.\\]</div>
+      Tanım aslında şunu söylüyor: \\(R\\simeq_r S\\) iff her \\(x\\) için \\(R_x=S_x\\).`
+    },
+    {
+      title:"Refleksiflik",
+      html:`Her küme kendisine eşittir:
+      <div class="mathbox">\\[\\forall x:\\;R_x=R_x\\Rightarrow R\\simeq_r R.\\]</div>`
+    },
+    {
+      title:"Simetri",
+      html:`\\(R\\simeq_r S\\) ise her \\(x\\) için \\(R_x=S_x\\).
+      Küme eşitliği simetriktir:
+      <div class="mathbox">\\[R_x=S_x\\Rightarrow S_x=R_x\\Rightarrow S\\simeq_r R.\\]</div>`
+    },
+    {
+      title:"Transitivite",
+      html:`\\(R\\simeq_r S\\) ve \\(S\\simeq_r T\\) ise:
+      <div class="mathbox">\\[R_x=S_x,\\;S_x=T_x\\Rightarrow R_x=T_x.\\]</div>
+      Bu her \\(x\\) için geçerli olduğundan \\(R\\simeq_r T\\).`
+    },
+    {
+      title:"Sonuç",
+      html:`Burada da temel motor sadece <b>küme eşitliğinin</b> üç özelliğidir.
+      <div class="mathbox">\\[\\boxed{\\simeq_r\\text{ ist ebenfalls eine Äquivalenzrelation.}}\\]</div>`
+    }
+  ]
+},
+{
+  chip:"Aufgabe 2(a)",
+  title:"Ne zaman leksikografik L ile eleman-eleman E aynı olur?",
+  de:`Sei \\(R\\subseteq A\\times A\\) eine totale Ordnung.
+      \\[(a,b)E(a',b')\\iff aRa'\\land bRb'\\]
+      \\[(a,b)L(a',b')\\iff aRa'\\land(\\neg(a'Ra)\\lor bRb').\\]
+      Geben Sie \\(A,R\\) an, sodass \\(L=E\\).`,
+  goal:"En kolay örneği seçmek: karşılaştırılacak ikinci farklı eleman hiç olmasın.",
+  steps:[
+    {
+      title:"Basit bir A seç",
+      html:`\\(A=\\{0\\}\\) ve \\(R=\\{(0,0)\\}\\) seçelim.
+      <div class="visual matrix"><div class="pair hot">(0,0)</div></div>`
+    },
+    {
+      title:"A²'de kaç eleman var?",
+      html:`Yalnızca bir tane:
+      <div class="mathbox">\\[A^2=\\{(0,0)\\}.\\]</div>`
+    },
+    {
+      title:"E ve L'yi kontrol et",
+      html:`Tek olası karşılaştırma \\((0,0)\\) ile yine \\((0,0)\\)'dır.
+      Her iki tanım da doğru olur.
+      <div class="mathbox">\\[(0,0)E(0,0)\\quad\\text{ve}\\quad(0,0)L(0,0).\\]</div>`
+    },
+    {
+      title:"Sonuç",
+      html:`Başka çift olmadığı için iki bağıntı aynı kümedir:
+      <div class="mathbox">\\[\\boxed{L=E=\\{((0,0),(0,0))\\}.}\\]</div>`
+    }
+  ]
+},
+{
+  chip:"Aufgabe 2(b)",
+  title:"L ≠ E yapan en küçük karşı-örnek",
+  de:`Geben Sie ein \\(A\\) und eine totale Ordnung \\(R\\) an, sodass \\(L\\neq E\\).`,
+  goal:"İlk koordinatta kesin küçüklük varsa L ikinci koordinatı önemsemez; E ise önemser.",
+  steps:[
+    {
+      title:"Örnek seç",
+      html:`\\(A=\\{0,1\\}\\) ve \\(R=\\le\\) olsun. Karşılaştır:
+      <div class="visual matrix"><div class="pair hot">(0,1)</div><div class="pair cool">(1,0)</div></div>`
+    },
+    {
+      title:"L için",
+      html:`\\(0<1\\) olduğu için ilk koordinat işi bitirir:
+      <div class="mathbox">\\[0\\le1\\;\\land\\;(\\neg(1\\le0)\\lor 1\\le0).\\]</div>
+      Burada \\(\\neg(1\\le0)\\) doğru olduğundan <span class="good">L doğru</span>.`
+    },
+    {
+      title:"E için",
+      html:`E iki koordinatı da ister:
+      <div class="mathbox">\\[0\\le1\\;\\land\\;1\\le0.\\]</div>
+      İkinci kısım yanlış, yani <span class="bad">E yanlış</span>.`
+    },
+    {
+      title:"Sonuç",
+      html:`Aynı iki çift için L doğru, E yanlış olduğuna göre:
+      <div class="mathbox">\\[\\boxed{L\\neq E.}\\]</div>`
+    }
+  ]
+},
+{
+  chip:"Aufgabe 2(c)",
+  title:"E neden her zaman kısmi sıralamadır?",
+  de:`Beweisen Sie, dass \\(E\\) eine partielle Ordnung ist.`,
+  goal:"Reflexivität + Antisymmetrie + Transitivität.",
+  steps:[
+    {
+      title:"Refleksiflik",
+      html:`R refleksif olduğundan \\(aRa\\) ve \\(bRb\\).
+      <div class="mathbox">\\[(a,b)E(a,b).\\]</div>`
+    },
+    {
+      title:"Antisimetri varsayımı",
+      html:`Hem \\((a,b)E(a',b')\\) hem \\((a',b')E(a,b)\\) olsun.
+      O zaman:
+      <div class="mathbox">\\[aRa',\\;a'Ra,\\;bRb',\\;b'Rb.\\]</div>`
+    },
+    {
+      title:"R'nin antisimetresini kullan",
+      html:`\\(aRa'\\land a'Ra\\Rightarrow a=a'\\) ve
+      \\(bRb'\\land b'Rb\\Rightarrow b=b'\\).
+      <div class="mathbox">\\[(a,b)=(a',b').\\]</div>`
+    },
+    {
+      title:"Transitivite",
+      html:`\\((a,b)E(a',b')\\) ve \\((a',b')E(a'',b'')\\) ise:
+      <div class="mathbox">\\[aRa',\\;a'Ra''\\Rightarrow aRa'',\\qquad bRb',\\;b'Rb''\\Rightarrow bRb''.\\]</div>
+      Dolayısıyla \\((a,b)E(a'',b'')\\).`
+    },
+    {
+      title:"Sonuç",
+      html:`Üç özellik sağlandı:
+      <div class="mathbox">\\[\\boxed{E\\text{ ist eine partielle Ordnung.}}\\]</div>`
+    }
+  ]
+},
+{
+  chip:"Aufgabe 2(d)",
+  title:"E neden her zaman total değildir?",
+  de:`Zeigen Sie durch ein geeignetes Beispiel, dass \\(E\\) nicht immer eine totale Ordnung ist.`,
+  goal:"A² içinde birbiriyle E yönünde karşılaştırılamayan iki çift bulmak.",
+  steps:[
+    {
+      title:"Yine A={0,1}",
+      html:`\\(R=\\le\\) olsun. İki çift seç:
+      <div class="visual matrix"><div class="pair hot">(0,1)</div><div class="pair hot">(1,0)</div></div>`
+    },
+    {
+      title:"Birinci yön",
+      html:`\\((0,1)E(1,0)\\) için
+      <div class="mathbox">\\[0\\le1\\;\\land\\;1\\le0\\]</div>
+      gerekir. Bu yanlış.`
+    },
+    {
+      title:"Ters yön",
+      html:`\\((1,0)E(0,1)\\) için
+      <div class="mathbox">\\[1\\le0\\;\\land\\;0\\le1\\]</div>
+      gerekir. Bu da yanlış.`
+    },
+    {
+      title:"Sonuç",
+      html:`İki çiftin hiçbiri diğerinden E'ye göre küçük/eşit değil:
+      <div class="mathbox">\\[\\boxed{E\\text{ muss nicht total sein.}}\\]</div>`
+    }
+  ]
+},
+{
+  chip:"Aufgabe 2(e)",
+  title:"L'nin antisimetri ispatı",
+  de:`Beweisen Sie, dass \\(L\\) antisymmetrisch ist.`,
+  goal:"Her iki yönde L doğruysa önce a=a′, sonra b=b′ olduğunu göstermek.",
+  steps:[
+    {
+      title:"İki yönü varsay",
+      html:`\\((a,b)L(a',b')\\) ve \\((a',b')L(a,b)\\) olsun.
+      Tanımdan özellikle:
+      <div class="mathbox">\\[aRa'\\quad\\text{ve}\\quad a'Ra.\\]</div>`
+    },
+    {
+      title:"İlk koordinatlar eşit",
+      html:`R antisimetri olduğundan:
+      <div class="mathbox">\\[a=a'.\\]</div>`
+    },
+    {
+      title:"L'nin parantezine geri dön",
+      html:`Artık \\(a=a'\\). R refleksif olduğu için \\(a'Ra\\) doğrudur.
+      Bu nedenle
+      <div class="mathbox">\\[\\neg(a'Ra)\\]</div>
+      kısmı <span class="bad">yanlıştır</span>. O halde L'nin doğru kalabilmesi için mutlaka \\(bRb'\\) gerekir.`
+    },
+    {
+      title:"Ters yönden de",
+      html:`Aynı şekilde \\((a',b')L(a,b)\\) bize
+      <div class="mathbox">\\[b'Rb\\]</div>
+      verir.`
+    },
+    {
+      title:"İkinci koordinatlar da eşit",
+      html:`R antisimetri:
+      <div class="mathbox">\\[bRb'\\land b'Rb\\Rightarrow b=b'.\\]</div>
+      Dolayısıyla \\((a,b)=(a',b')\\).
+      <div class="mathbox">\\[\\boxed{L\\text{ ist antisymmetrisch.}}\\]</div>`
+    }
+  ]
+},
+{
+  chip:"Aufgabe 3(a)",
+  title:"Tam indüksiyon: n! ≥ 2ⁿ",
+  de:`Zeigen Sie durch vollständige Induktion, dass für alle \\(n\\in\\mathbb N\\) mit \\(n\\ge4\\) gilt:
+      \\[n!\\ge 2^n.\\]`,
+  goal:"Induktionsanfang, Induktionsvoraussetzung, Induktionsschritt.",
+  steps:[
+    {
+      title:"Induktionsanfang n=4",
+      html:`Kontrol:
+      <div class="mathbox">\\[4!=24\\ge16=2^4.\\]</div>
+      Başlangıç doğru.`
+    },
+    {
+      title:"İndüksiyon varsayımı",
+      html:`Bir \\(n\\ge4\\) için doğru olduğunu varsay:
+      <div class="mathbox">\\[n!\\ge2^n.\\]</div>`
+    },
+    {
+      title:"n+1 ile başla",
+      html:`Göstermek istediğimiz:
+      <div class="mathbox">\\[(n+1)!\\ge2^{n+1}.\\]</div>
+      Sol tarafı aç:
+      <div class="mathbox">\\[(n+1)!=(n+1)n!.\\]</div>`
+    },
+    {
+      title:"Varsayımı yerine koy",
+      html:`İndüksiyon varsayımından \\(n!\\ge2^n\\):
+      <div class="mathbox">\\[(n+1)n!\\ge(n+1)2^n.\\]</div>`
+    },
+    {
+      title:"Son karşılaştırma",
+      html:`\\(n\\ge4\\) olduğundan \\(n+1\\ge5\\ge2\\).
+      <div class="mathbox">\\[(n+1)2^n\\ge2\\cdot2^n=2^{n+1}.\\]</div>
+      <div class="visual ladder"><div class="rung">4</div><div class="rung">n</div><div class="rung">n+1</div><div class="rung">✓</div></div>`
+    },
+    {
+      title:"Sonuç",
+      html:`İndüksiyon tamamlandı:
+      <div class="mathbox">\\[\\boxed{\\forall n\\ge4:\\;n!\\ge2^n.}\\]</div>`
+    }
+  ]
+},
+{
+  chip:"Aufgabe 3(b)",
+  title:"İnjektif fonksiyonun her k-kat bileşkesi de injektiftir",
+  de:`Sei \\(f:X\\to X\\) injektiv. Zeigen Sie durch vollständige Induktion:
+      \\[\\forall k\\ge1:\\;f^k\\text{ ist injektiv}.\\]
+      Es gilt \\(f^1=f\\) und \\(f^{k+1}=f^k\\circ f\\).`,
+  goal:"k+1. bileşkenin eşit çıktılarından eşit girdilere geri gitmek.",
+  steps:[
+    {
+      title:"Başlangıç k=1",
+      html:`\\(f^1=f\\). f zaten injektif verildi.
+      <div class="mathbox">\\[f^1\\text{ ist injektiv}.\\]</div>`
+    },
+    {
+      title:"İndüksiyon varsayımı",
+      html:`Bir \\(k\\ge1\\) için \\(f^k\\) injektif olsun.`
+    },
+    {
+      title:"İnjektiflik testi",
+      html:`\\(f^{k+1}(x)=f^{k+1}(y)\\) varsayalım.
+      <div class="mathbox">\\[f^k(f(x))=f^k(f(y)).\\]</div>
+      <div class="visual relation-row"><div class="node blue">x</div><div class="arrow flow"></div><div class="node">f(x)</div><div class="arrow flow"></div><div class="node green">fᵏ(f(x))</div></div>`
+    },
+    {
+      title:"Önce fᵏ injektif",
+      html:`İndüksiyon varsayımına göre \\(f^k\\) injektif:
+      <div class="mathbox">\\[f^k(f(x))=f^k(f(y))\\Rightarrow f(x)=f(y).\\]</div>`
+    },
+    {
+      title:"Sonra f injektif",
+      html:`f de injektif:
+      <div class="mathbox">\\[f(x)=f(y)\\Rightarrow x=y.\\]</div>
+      Böylece \\(f^{k+1}\\) injektiftir.`
+    },
+    {
+      title:"Sonuç",
+      html:`İndüksiyonla:
+      <div class="mathbox">\\[\\boxed{\\forall k\\ge1:\\;f^k\\text{ ist injektiv}.}\\]</div>`
+    }
+  ]
+},
+{
+  chip:"Aufgabe 3(c)",
+  title:"Kümelerde dağılım yasasının n kümeye genişletilmesi",
+  de:`Zeigen Sie durch vollständige Induktion:
+      \\[(A_1\\cap\\cdots\\cap A_n)\\cup C=(A_1\\cup C)\\cap\\cdots\\cap(A_n\\cup C).\\]`,
+  goal:"n+1 durumunu tek bir dağılım yasası ve indüksiyon varsayımıyla açmak.",
+  steps:[
+    {
+      title:"Başlangıç n=1",
+      html:`Her iki taraf da aynı şeydir:
+      <div class="mathbox">\\[A_1\\cup C=A_1\\cup C.\\]</div>`
+    },
+    {
+      title:"İndüksiyon varsayımı",
+      html:`Bir \\(n\\ge1\\) için
+      <div class="mathbox">\\[(A_1\\cap\\cdots\\cap A_n)\\cup C=(A_1\\cup C)\\cap\\cdots\\cap(A_n\\cup C).\\]</div>`
+    },
+    {
+      title:"n+1 durumunu grupla",
+      html:`\\(B:=A_1\\cap\\cdots\\cap A_n\\) de.
+      O zaman sol taraf:
+      <div class="mathbox">\\[(B\\cap A_{n+1})\\cup C.\\]</div>`
+    },
+    {
+      title:"Dağılım yasasını kullan",
+      html:`Verilen yasa:
+      <div class="mathbox">\\[(B\\cap A_{n+1})\\cup C=(B\\cup C)\\cap(A_{n+1}\\cup C).\\]</div>`
+    },
+    {
+      title:"B∪C yerine indüksiyon varsayımı",
+      html:`\\(B\\cup C\\) ifadesini aç:
+      <div class="mathbox">\\[((A_1\\cup C)\\cap\\cdots\\cap(A_n\\cup C))\\cap(A_{n+1}\\cup C).\\]</div>`
+    },
+    {
+      title:"Sonuç",
+      html:`Bu tam olarak n+1 formudur:
+      <div class="mathbox">\\[\\boxed{(A_1\\cap\\cdots\\cap A_{n+1})\\cup C=\\bigcap_{i=1}^{n+1}(A_i\\cup C).}\\]</div>`
+    }
+  ]
+},
+{
+  chip:"Aufgabe 4(a)",
+  title:"Kontrapozisyon + durum ayrımı",
+  de:`Beweisen Sie:
+      \\[A\\cup B=A\\cap B\\Rightarrow A=B.\\]
+      Beweistechnik: Kontraposition und Fallunterscheidung.`,
+  goal:"Doğrudan önermeyi değil, karşıt tersini ispatlamak.",
+  steps:[
+    {
+      title:"Kontrapozisyonu yaz",
+      html:`Orijinal:
+      <div class="mathbox">\\[A\\cup B=A\\cap B\\Rightarrow A=B.\\]</div>
+      Kontrapozisyon:
+      <div class="mathbox">\\[A\\neq B\\Rightarrow A\\cup B\\neq A\\cap B.\\]</div>`
+    },
+    {
+      title:"A ≠ B ne demek?",
+      html:`İki küme farklıysa simetrik farkta bir eleman vardır. İki durum:
+      <div class="mathbox">\\[\\exists x\\in A\\setminus B\\quad\\text{veya}\\quad\\exists x\\in B\\setminus A.\\]</div>`
+    },
+    {
+      title:"1. durum",
+      html:`\\(x\\in A\\setminus B\\) olsun.
+      O zaman \\(x\\in A\\cup B\\), fakat \\(x\\notin A\\cap B\\).
+      Demek ki iki küme eşit değildir.`
+    },
+    {
+      title:"2. durum",
+      html:`\\(x\\in B\\setminus A\\) için de aynı:
+      \\(x\\in A\\cup B\\), ama \\(x\\notin A\\cap B\\).`
+    },
+    {
+      title:"Sonuç",
+      html:`Her iki durumda da kontrapozisyon doğru.
+      Dolayısıyla asıl önerme de doğrudur:
+      <div class="mathbox">\\[\\boxed{A\\cup B=A\\cap B\\Rightarrow A=B.}\\]</div>`
+    }
+  ]
+},
+{
+  chip:"Aufgabe 4(b)",
+  title:"Ringschluss: (i) ⇒ (ii) ⇒ (iii) ⇒ (i)",
+  de:`Für \\(f:X\\to Y\\) sind äquivalent:
+      <br>(i) \\(f\\) ist injektiv.
+      <br>(ii) \\(\\forall A\\subseteq X:\\;f^{-1}(f(A))\\subseteq A\\).
+      <br>(iii) \\(\\forall x\\in X:\\;f^{-1}(\\{f(x)\\})=\\{x\\}\\).`,
+  goal:"Üç önermeyi halka şeklinde birbirine bağlamak.",
+  steps:[
+    {
+      title:"Ringschluss planı",
+      html:`Şu üç oku kanıtlamak yeterlidir:
+      <div class="visual cycle"><div class="bubble">(i)<br>injektiv</div><div class="go">→</div><div class="bubble">(ii)<br>preimage</div><div class="go">→</div><div class="bubble">(iii)<br>fiber</div><div class="back">↘ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (iii) → (i) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↙</div></div>`
+    },
+    {
+      title:"(i) ⇒ (ii)",
+      html:`\\(z\\in f^{-1}(f(A))\\) al.
+      O zaman \\(f(z)\\in f(A)\\), yani bir \\(a\\in A\\) vardır ve
+      \\(f(z)=f(a)\\).
+      f injektif olduğundan \\(z=a\\in A\\).
+      <div class="mathbox">\\[f^{-1}(f(A))\\subseteq A.\\]</div>`
+    },
+    {
+      title:"(ii) ⇒ (iii), önce ⊆",
+      html:`(ii)'de \\(A=\\{x\\}\\) seç:
+      <div class="mathbox">\\[f^{-1}(f(\\{x\\}))\\subseteq\\{x\\}.\\]</div>
+      Ama \\(f(\\{x\\})=\\{f(x)\\}\\), yani
+      \\[f^{-1}(\\{f(x)\\})\\subseteq\\{x\\}.\\]`
+    },
+    {
+      title:"(ii) ⇒ (iii), ters kapsama",
+      html:`Her zaman \\(f(x)\\in\\{f(x)\\}\\), dolayısıyla
+      <div class="mathbox">\\[x\\in f^{-1}(\\{f(x)\\}).\\]</div>
+      Böylece \\(\\{x\\}\\subseteq f^{-1}(\\{f(x)\\})\\).
+      İki kapsama birlikte eşitlik verir.`
+    },
+    {
+      title:"(iii) ⇒ (i)",
+      html:`\\(f(x)=f(y)\\) varsay.
+      O zaman \\(y\\in f^{-1}(\\{f(x)\\})\\).
+      (iii)'e göre bu küme \\(\\{x\\}\\)'tir.
+      Demek ki \\(y=x\\).
+      <div class="mathbox">\\[\\boxed{f\\text{ ist injektiv}.}\\]</div>`
+    },
+    {
+      title:"Halka kapandı",
+      html:`Üç ok da kanıtlandı:
+      <div class="mathbox">\\[\\boxed{(i)\\Rightarrow(ii)\\Rightarrow(iii)\\Rightarrow(i)}\\]</div>
+      Dolayısıyla üç ifade eşdeğerdir.`
+    }
+  ]
+},
+{
+  chip:"Aufgabe 4(c)",
+  title:"Çelişki + durum ayrımı: 3 eleman 2 yere injektif gidemez",
+  de:`Beweisen Sie, dass es keine injektive Abbildung
+      \\[f:\\{1,2,3\\}\\to\\{1,2\\}\\]
+      gibt. Beweistechnik: Widerspruch mit Fallunterscheidung.`,
+  goal:"İnjektif olduğunu varsayıp üçüncü elemanın gidecek yeri kalmadığını göstermek.",
+  steps:[
+    {
+      title:"Çelişki varsayımı",
+      html:`Böyle bir injektif \\(f\\) varmış gibi düşünelim.
+      \\(f(1)\\) ya 1'dir ya 2'dir. Başka seçenek yok.`
+    },
+    {
+      title:"1. durum: f(1)=1",
+      html:`İnjektiflik nedeniyle \\(f(2)\\neq1\\), dolayısıyla \\(f(2)=2\\).
+      Şimdi \\(f(3)\\) ne olabilir?
+      <div class="visual relation-row"><div class="node blue">1</div><div class="arrow flow"></div><div class="node green">1</div><div class="node blue">2</div><div class="arrow flow"></div><div class="node green">2</div><div class="node red">3 ?</div></div>`
+    },
+    {
+      title:"Üçüncü eleman için yer yok",
+      html:`Kodomain yalnızca \\(\\{1,2\\}\\).
+      \\(f(3)=1\\) olursa \\(f(1)=f(3)\\).
+      \\(f(3)=2\\) olursa \\(f(2)=f(3)\\).
+      Her iki seçenek de injektifliğe aykırı.`
+    },
+    {
+      title:"2. durum: f(1)=2",
+      html:`Aynı mantıkla injektiflik \\(f(2)=1\\) zorlar.
+      Yine \\(f(3)\\) için 1 veya 2 dışında seçenek yok ve ikisi de çakışır.`
+    },
+    {
+      title:"Çelişki",
+      html:`Her iki durum da çelişki verdi.
+      <div class="mathbox">\\[\\boxed{\\text{Es gibt keine injektive Abbildung }f:\\{1,2,3\\}\\to\\{1,2\\}.}\\]</div>`
+    }
+  ]
+}
+];
+
+let lang = localStorage.getItem("ub03-lang") || "tr";
+let slideIndex = 0;
+let revealed = 0;
+
+const presentation = document.getElementById("presentation");
+const slideCounter = document.getElementById("slideCounter");
+const langBtn = document.getElementById("langBtn");
+const langMenu = document.getElementById("langMenu");
+const langLabel = document.getElementById("langLabel");
+const helpModal = document.getElementById("helpModal");
+
+function render(){
+  presentation.innerHTML = "";
+  slides.forEach((s,i)=>{
+    const el = document.createElement("section");
+    el.className = "slide" + (i===slideIndex ? " active":"");
+    el.dataset.index = i;
+
+    if(s.intro){
+      el.innerHTML = `
+        <div class="card intro">
+          <div>
+            <div class="task-chip">Mathematik für Informatik 1</div>
+            <h1>${s.title}</h1>
+            <p><b>${s.subtitle}</b></p>
+            <p>${UI[lang].introText}</p>
+            <button class="start-btn" onclick="goTo(1)">${UI[lang].start} →</button>
+          </div>
+          <div class="intro-visual">
+            <div class="orbit">
+              <div class="planet p1">≃</div>
+              <div class="planet p2">E / L</div>
+              <div class="planet p3">∑</div>
+              <div class="planet p4">⇒</div>
+            </div>
+            <div class="center-ball">ÜB<br>03</div>
+          </div>
+        </div>`;
+    }else{
+      const stepHtml = s.steps.map((st,idx)=>`
+        <article class="step ${idx<revealed ? "visible":""} ${idx===revealed-1 ? "current":""}" data-step="${idx}">
+          <div class="step-label"><span class="step-num">${idx+1}</span>${UI[lang].step} ${idx+1} • ${st.title}</div>
+          <div>${st.html}</div>
+        </article>`).join("");
+
+      const pct = s.steps.length ? Math.round((revealed/s.steps.length)*100) : 0;
+
+      el.innerHTML = `
+        <aside class="card problem-panel">
+          <div class="task-chip">${s.chip}</div>
+          <h2 class="problem-title">${s.title}</h2>
+          <div class="problem-de">${s.de}</div>
+          <div class="goal"><b>${UI[lang].goal}</b>${s.goal}</div>
+          <div class="mini-note">
+            Soruyu önce soldan oku. Sonra sağdaki çözümü adım adım aç.
+            Her adım, önceki adımın neden gerekli olduğunu gösterecek şekilde düzenlendi.
+          </div>
+        </aside>
+
+        <section class="card solution-panel">
+          <div class="solution-head">
+            <div class="solution-title">${UI[lang].solution}</div>
+            <div class="progress">
+              <div class="progress-top"><span>${revealed}/${s.steps.length}</span><span>${pct}%</span></div>
+              <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+            </div>
+          </div>
+
+          <div class="stage">${stepHtml}</div>
+
+          <div class="controls">
+            <div class="control-left">
+              <button class="ctrl" onclick="prevSlide()" ${slideIndex===0?"disabled":""}>← ${UI[lang].prev}</button>
+              <button class="ctrl" onclick="resetSteps()" ${revealed===0?"disabled":""}>↺ ${UI[lang].reset}</button>
+            </div>
+            <div class="keyboard-tip">${UI[lang].tip}</div>
+            <div class="control-right">
+              <button class="ctrl primary" onclick="primaryAction()">${revealed < s.steps.length ? UI[lang].nextStep : UI[lang].next + " →"}</button>
+            </div>
+          </div>
+        </section>`;
+    }
+
+    presentation.appendChild(el);
+  });
+
+  slideCounter.textContent = `${slideIndex+1} / ${slides.length}`;
+  langLabel.textContent = UI[lang].language;
+  document.getElementById("helpTitle").textContent = UI[lang].helpTitle;
+  document.getElementById("helpText").textContent = UI[lang].helpText;
+
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetClear?.();
+    MathJax.typesetPromise([presentation]).catch(()=>{});
+  }
+
+  requestAnimationFrame(()=>{
+    const current = presentation.querySelector(".slide.active .step.current");
+    current?.scrollIntoView({behavior:"smooth",block:"nearest"});
+  });
+}
+
+function primaryAction(){
+  const s = slides[slideIndex];
+  if(s.intro){ nextSlide(); return; }
+  if(revealed < s.steps.length){
+    revealed++;
+    render();
+  }else{
+    nextSlide();
+  }
+}
+function resetSteps(){ revealed=0; render(); }
+function nextSlide(){
+  if(slideIndex < slides.length-1){
+    slideIndex++;
+    revealed=0;
+    render();
+  }
+}
+function prevSlide(){
+  if(slideIndex>0){
+    slideIndex--;
+    revealed=0;
+    render();
+  }
+}
+function goTo(i){
+  slideIndex = Math.max(0,Math.min(slides.length-1,i));
+  revealed=0;
+  render();
+}
+window.primaryAction=primaryAction;
+window.resetSteps=resetSteps;
+window.nextSlide=nextSlide;
+window.prevSlide=prevSlide;
+window.goTo=goTo;
+
+document.getElementById("homeBtn").addEventListener("click",()=>{
+  window.location.href="https://sinan-ipek.github.io/projeler/index.html";
+});
+
+langBtn.addEventListener("click",(e)=>{
+  e.stopPropagation();
+  langMenu.classList.toggle("open");
+  langBtn.setAttribute("aria-expanded",langMenu.classList.contains("open"));
+});
+document.querySelectorAll(".lang-option").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    lang=btn.dataset.lang;
+    localStorage.setItem("ub03-lang",lang);
+    langMenu.classList.remove("open");
+    render();
+  });
+});
+document.addEventListener("click",()=>langMenu.classList.remove("open"));
+
+document.getElementById("helpBtn").addEventListener("click",()=>helpModal.classList.add("open"));
+document.getElementById("closeHelp").addEventListener("click",()=>helpModal.classList.remove("open"));
+helpModal.addEventListener("click",(e)=>{ if(e.target===helpModal) helpModal.classList.remove("open"); });
+
+document.addEventListener("keydown",(e)=>{
+  if(helpModal.classList.contains("open")){
+    if(e.key==="Escape") helpModal.classList.remove("open");
+    return;
+  }
+  if(e.key==="ArrowRight") nextSlide();
+  else if(e.key==="ArrowLeft") prevSlide();
+  else if(e.key===" " || e.key==="Enter"){
+    e.preventDefault();
+    primaryAction();
+  }
+});
+
+render();
+</script>
+</body>
+</html>
