@@ -36,6 +36,7 @@ h2{font-size:clamp(24px,3.4vw,36px);margin:0 0 6px}
 .nav button:focus-visible{outline:3px solid var(--acc)}
 .hint{color:var(--mute);font-size:16px}
 @media (prefers-reduced-motion:reduce){.s,.hl,.sh{transition:none}}
+.jumpnav{position:fixed;left:14px;top:14px;z-index:30;display:flex;gap:6px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:6px 9px;font:14px system-ui;max-width:min(55vw,580px)}.jumpnav select{max-width:min(48vw,430px);border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px;border-radius:8px;font:inherit}.slide{scroll-behavior:smooth}@media(max-width:780px){.jumpnav{top:65px;left:8px;max-width:93vw}.jumpnav select{max-width:72vw}.slide{padding-top:118px}}
 </style>
 </head>
 <body>
@@ -160,6 +161,7 @@ h2{font-size:clamp(24px,3.4vw,36px);margin:0 0 6px}
  </div>
 </section>
 
+<div class="jumpnav" id="jumpnav"><label for="jumpselect" id="jump-label">Aufgabe auswählen</label><select id="jumpselect" aria-label="Aufgabe und Teilaufgabe"></select></div>
 <div class="bar" id="bar"></div>
 <div class="nav"><span id="pg"></span><button id="pv" aria-label="Zurück">← Zurück</button><button id="nx" aria-label="Weiter">Weiter →</button></div>
 
@@ -192,15 +194,17 @@ const slides=[...document.querySelectorAll('.slide')];
 let cur=0;
 const steps=i=>[...slides[i].querySelectorAll('.s')];
 const shown=i=>steps(i).filter(e=>e.classList.contains('show'));
-function show(i){slides.forEach((s,k)=>s.classList.toggle('on',k===i));cur=i;ui()}
+function show(i){if(!Number.isInteger(i)||i<0||i>=slides.length)return;slides.forEach((s,k)=>s.classList.toggle('on',k===i));cur=i;slides[cur].scrollTop=0;ui();}
 function ui(){document.getElementById('pg').textContent=(cur+1)+' / '+slides.length;
  document.getElementById('bar').style.width=((cur+1)/slides.length*100)+'%'}
 function next(){
+ if(cur===slides.length-1 && steps(cur).every(e=>e.classList.contains('show')))return;
  const hid=steps(cur).find(e=>!e.classList.contains('show'));
  if(hid){
   hid.classList.add('show');
   if(hid.classList.contains('card')){const f=hid.querySelector('.s');if(f)f.classList.add('show')}
-  hid.scrollIntoView({behavior:'smooth',block:'nearest'});
+  if(hid.classList.contains('dots') && typeof revealLines==='function')revealLines();
+  const container=slides[cur];if(hid.getBoundingClientRect().bottom>window.innerHeight-80){container.scrollTo({top:Math.max(0,hid.offsetTop-150),behavior:'smooth'});}
  } else if(cur<slides.length-1){show(cur+1);steps(cur)[0]&&steps(cur)[0].classList.add('show')}
 }
 function prev(){
@@ -222,5 +226,35 @@ document.getElementById('langtools').addEventListener('click',e=>e.stopPropagati
 document.getElementById('home').onclick=e=>{e.stopPropagation();location.href='../../index.html'};
 document.getElementById('language').onchange=e=>{e.stopPropagation();localStorage.setItem('elif-ub01-lang',e.target.value);location.href=e.target.value==='de'?'claude-de.html':'claude.html'};
 document.getElementById('help').onclick=e=>{e.stopPropagation();alert("Diese Seite zeigt die Lösungen schrittweise. Klicke auf Weiter oder drücke die Leertaste.")};
-</script><small style="position:fixed;left:8px;bottom:5px;z-index:15;color:var(--mute);font:11px system-ui">v1.0 · Deutsche vollständige Fassung</small></body>
+</script><small style="position:fixed;left:8px;bottom:5px;z-index:15;color:var(--mute);font:11px system-ui">v1.0 · Deutsche vollständige Fassung</small><script>
+(function(){
+ const key="elif-ub01-claude-position";
+ const slideElements=[...document.querySelectorAll('.slide')];
+ const select=document.getElementById('jumpselect');
+ const label=document.getElementById('jump-label');
+ const german=document.documentElement.lang==='de'||document.getElementById('language')?.value==='de';
+ const opts=[];
+ slideElements.forEach((section,slide)=>{
+   if(slide===0)return;
+   const heading=section.querySelector('h2')?.textContent.trim()||('Aufgabe '+slide);
+   opts.push({slide,label:heading,step:0});
+   const cards=[...section.querySelectorAll('.card')];
+   cards.forEach((card,j)=>{const title=card.querySelector('h3')?.textContent.trim();if(title){let node=card;const all=[...section.querySelectorAll('.s')];const idx=all.indexOf(node);opts.push({slide,label:'  '+title,step:Math.max(1,idx+1)})}});
+ });
+ opts.forEach(o=>{const option=document.createElement('option');option.value=String(opts.indexOf(o));option.textContent=o.label;select.appendChild(option)});
+ function sync(){const items=opts.filter(o=>o.slide===cur);const chosen=items.length?items[0]:opts[0];if(chosen)select.value=String(opts.indexOf(chosen));}
+ select.addEventListener('click',e=>e.stopPropagation());
+ select.addEventListener('change',e=>{e.stopPropagation();const item=opts[Number(select.value)];if(!item)return;show(item.slide);const every=steps(cur);every.forEach((el,i)=>el.classList.toggle('show',i<item.step));if(item.step>0){const target=every[Math.min(item.step-1,every.length-1)];if(target)slides[cur].scrollTop=Math.max(0,target.offsetTop-160);}if(typeof revealLines==='function')revealLines();ui();});
+ document.getElementById('jumpnav').addEventListener('click',e=>e.stopPropagation());
+ // Preserve slide and all revealed steps when switching between complete language versions.
+ const langSel=document.getElementById('language');
+ if(langSel && "01"!=='02'){
+  langSel.addEventListener('change',()=>{try{sessionStorage.setItem(key,JSON.stringify({slide:cur,shown:steps(cur).filter(e=>e.classList.contains('show')).length}))}catch(e){}},true);
+ }
+ try{const saved=JSON.parse(sessionStorage.getItem(key)||'null');if(saved&&Number.isInteger(saved.slide)&&saved.slide>=0&&saved.slide<slides.length){show(saved.slide);steps(cur).forEach((node,i)=>node.classList.toggle('show',i<Math.max(0,saved.shown||0)));if(typeof revealLines==='function')revealLines();sessionStorage.removeItem(key)}}catch(e){}
+ const baseUI=ui;ui=function(){baseUI();sync();const finished=cur===slides.length-1&&steps(cur).every(e=>e.classList.contains('show'));const nextBtn=document.getElementById('nx');if(nextBtn){nextBtn.disabled=finished;nextBtn.style.opacity=finished?'.45':'1';}};
+ ui();
+})();
+</script>
+</body>
 </html>
