@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.79</title>
+<title>Beyaz Tahta v18.80</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1218,7 +1218,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.79 · Kova ile 3D renk + otomatik aydınlatma</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.80 · 3D köşe-köşe snap denemesi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1285,6 +1285,7 @@
               <li>Nokta Snap düğmesi açıkken gerçek düzenleme noktaları diğer nesnelerin köşe/uç/düzenleme noktalarına yapışır.</li>
               <li>Ayrıca köşe/uç noktaları olan bir nesne taşınırken, bu noktalar başka bir nesnenin köşe/uç noktasına yaklaşırsa tüm nesne snap olur.</li>
               <li>Çoklu seçim taşınırken de seçili nesnelerden herhangi birinin köşe/uç noktası seçili olmayan başka bir nesnenin köşe/uç noktasına yaklaşırsa tüm seçim birlikte snap olur.</li>
+              <li>3D nesnelerde gerçek geometrik köşeler diğer 3D köşelere X/Y/Z olarak yapışır; hedef köşe sarı halka ile görünür.</li>
               <li>Ctrl ile birden fazla gerçek handle seçip birlikte taşı.</li>
               <li>Bounding-box resize ve rotate tutamaçları handle çoklu seçimine dahil değildir.</li>
             </ul>
@@ -1509,6 +1510,7 @@
   let pointSnapEnabled=localStorage.getItem(POINT_SNAP_KEY)==='1';
 
   function updatePointSnapUI(){
+    if(!pointSnapEnabled) shape3DSnapCue=null;
     pointSnapBtn.classList.toggle('active',pointSnapEnabled);
     pointSnapBtn.setAttribute('aria-pressed',String(pointSnapEnabled));
     pointSnapBtn.title=pointSnapEnabled
@@ -1666,6 +1668,7 @@
   let groupBoxSnapshot = null;
   let groupSelectionAngle = 0;
   let group3DRotationCentroidSnapshot = null;
+  let shape3DSnapCue = null;
   let activeHandle = null;
   let selectionPivot = null;
   let selectPivotSnapshot = null;
@@ -1819,6 +1822,7 @@
     transformStartRadius=1;
     lockPointer=null;
     inkPointerId=null;
+    shape3DSnapCue=null;
 
     erasing=false;
     eraserLastPoint=null;
@@ -8373,6 +8377,187 @@
       : {dx,dy,snapped:false};
   }
 
+
+  function shape3DSnapVertices(o){
+    if(!o || o.kind!=='shape3d') return [];
+
+    const g=shape3DGeometry(o);
+    const pts=(g.points||[]).filter(p=>
+      p &&
+      Number.isFinite(Number(p.x)) &&
+      Number.isFinite(Number(p.y)) &&
+      Number.isFinite(Number(p.z))
+    );
+
+    // Curved objects have no geometric corners.
+    // Cone keeps its apex because that is a real geometric vertex.
+    if(o.shape3dType==='sphere' || o.shape3dType==='cylinder'){
+      return [];
+    }
+
+    return pts.map((p,index)=>({
+      local:{x:p.x,y:p.y,z:p.z},
+      world:shape3DLocalToWorldPoint(o,p),
+      index
+    }));
+  }
+
+  function shape3DProjectedSnapPoint(world){
+    const p=shape3DProjectWorldPoint(null,world);
+    return {x:p.x,y:p.y};
+  }
+
+  function snapShape3DMove(snapshot,dx,dy,excludeIndex=-1){
+    if(!pointSnapEnabled || !snapshot || snapshot.kind!=='shape3d'){
+      return {dx,dy,dz:0,snapped:false};
+    }
+
+    const tentative=cloneObject(snapshot);
+    translateObject(tentative,dx,dy);
+
+    const moving=shape3DSnapVertices(tentative);
+    if(!moving.length) return {dx,dy,dz:0,snapped:false};
+
+    const targets=[];
+    for(let i=0;i<objects.length;i++){
+      if(i===excludeIndex) continue;
+      const o=objects[i];
+      if(!o || o.kind!=='shape3d') continue;
+
+      for(const v of shape3DSnapVertices(o)){
+        targets.push({
+          objectIndex:i,
+          world:v.world,
+          screen:shape3DProjectedSnapPoint(v.world)
+        });
+      }
+    }
+
+    if(!targets.length) return {dx,dy,dz:0,snapped:false};
+
+    const threshold=12/viewZoom;
+    let best=null;
+    let bestD=Infinity;
+
+    for(const mv of moving){
+      const ms=shape3DProjectedSnapPoint(mv.world);
+
+      for(const tv of targets){
+        const d=Math.hypot(tv.screen.x-ms.x,tv.screen.y-ms.y);
+        if(d<=threshold && d<bestD){
+          bestD=d;
+          best={
+            dx:dx+(tv.world.x-mv.world.x),
+            dy:dy+(tv.world.y-mv.world.y),
+            dz:tv.world.z-mv.world.z,
+            snapped:true,
+            targetWorld:tv.world,
+            targetObjectIndex:tv.objectIndex,
+            distance:d
+          };
+        }
+      }
+    }
+
+    return best || {dx,dy,dz:0,snapped:false};
+  }
+
+  function snapShape3DGroupMove(snapshots,dx,dy,selectedSet){
+    if(
+      !pointSnapEnabled ||
+      !Array.isArray(snapshots) ||
+      !snapshots.length ||
+      snapshots.some(item=>!item || !item.object || item.object.kind!=='shape3d')
+    ){
+      return {dx,dy,dz:0,snapped:false};
+    }
+
+    const moving=[];
+    for(const item of snapshots){
+      const tentative=cloneObject(item.object);
+      translateObject(tentative,dx,dy);
+      for(const v of shape3DSnapVertices(tentative)){
+        moving.push({world:v.world});
+      }
+    }
+
+    if(!moving.length) return {dx,dy,dz:0,snapped:false};
+
+    const targets=[];
+    for(let i=0;i<objects.length;i++){
+      if(selectedSet && selectedSet.has(i)) continue;
+      const o=objects[i];
+      if(!o || o.kind!=='shape3d') continue;
+
+      for(const v of shape3DSnapVertices(o)){
+        targets.push({
+          objectIndex:i,
+          world:v.world,
+          screen:shape3DProjectedSnapPoint(v.world)
+        });
+      }
+    }
+
+    if(!targets.length) return {dx,dy,dz:0,snapped:false};
+
+    const threshold=12/viewZoom;
+    let best=null;
+    let bestD=Infinity;
+
+    for(const mv of moving){
+      const ms=shape3DProjectedSnapPoint(mv.world);
+
+      for(const tv of targets){
+        const d=Math.hypot(tv.screen.x-ms.x,tv.screen.y-ms.y);
+        if(d<=threshold && d<bestD){
+          bestD=d;
+          best={
+            dx:dx+(tv.world.x-mv.world.x),
+            dy:dy+(tv.world.y-mv.world.y),
+            dz:tv.world.z-mv.world.z,
+            snapped:true,
+            targetWorld:tv.world,
+            targetObjectIndex:tv.objectIndex,
+            distance:d
+          };
+        }
+      }
+    }
+
+    return best || {dx,dy,dz:0,snapped:false};
+  }
+
+  function applyShape3DWorldMove(o,dx,dy,dz=0){
+    translateObject(o,dx,dy);
+    if(o && o.kind==='shape3d'){
+      o.centerZ=(Number(o.centerZ)||0)+(Number(dz)||0);
+    }
+  }
+
+  function drawShape3DSnapCue(){
+    if(!shape3DSnapCue || !shape3DSnapCue.targetWorld) return;
+
+    const p=shape3DProjectedSnapPoint(shape3DSnapCue.targetWorld);
+
+    ctx.save();
+    ctx.setLineDash([]);
+    ctx.lineWidth=2/viewZoom;
+    ctx.strokeStyle='#f4b942';
+    ctx.fillStyle='rgba(244,185,66,.18)';
+
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,9/viewZoom,0,Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,3/viewZoom,0,Math.PI*2);
+    ctx.fillStyle='#f4b942';
+    ctx.fill();
+
+    ctx.restore();
+  }
+
   function realHandlePosition(o,name){
     const h=realEditHandles(o).find(item=>String(item.name)===String(name));
     return h ? {x:h.x,y:h.y} : null;
@@ -11582,6 +11767,7 @@
     if(mode==='select'){
       drawSelection();
       if(selectAction==='marquee') drawMarquee();
+      drawShape3DSnapCue();
     }else if(mode==='pen'){
       const idx=(selectedIndices.length===1 && objects[selectedIndices[0]] && objects[selectedIndices[0]].kind==='bezier')
         ? selectedIndices[0]
@@ -13573,6 +13759,7 @@
   });
 
   canvas.addEventListener('pointerdown',e=>{
+    shape3DSnapCue=null;
     const screenP=screenPointFromEvent(e);
 
     if(
@@ -14729,25 +14916,54 @@
             .filter(i=>Number.isInteger(i))
         );
 
-        const snappedGroup=snapGroupMove(
-          groupSnapshots,
-          d.dx,
-          d.dy,
-          selectedSet
+        let dz=0;
+        shape3DSnapCue=null;
+
+        const all3D=groupSnapshots.every(item=>
+          item && item.object && item.object.kind==='shape3d'
         );
 
-        if(snappedGroup.snapped){
-          d={dx:snappedGroup.dx,dy:snappedGroup.dy};
-          statusEl.textContent='Grup snap — köşe/uç noktaları hizalandı';
+        if(all3D){
+          const snappedGroup3D=snapShape3DGroupMove(
+            groupSnapshots,
+            d.dx,
+            d.dy,
+            selectedSet
+          );
+
+          if(snappedGroup3D.snapped){
+            d={dx:snappedGroup3D.dx,dy:snappedGroup3D.dy};
+            dz=snappedGroup3D.dz;
+            shape3DSnapCue={
+              targetWorld:{...snappedGroup3D.targetWorld}
+            };
+            statusEl.textContent='3D grup snap — köşe köşeye yapıştı';
+          }
+        }else{
+          const snappedGroup=snapGroupMove(
+            groupSnapshots,
+            d.dx,
+            d.dy,
+            selectedSet
+          );
+
+          if(snappedGroup.snapped){
+            d={dx:snappedGroup.dx,dy:snappedGroup.dy};
+            statusEl.textContent='Grup snap — köşe/uç noktaları hizalandı';
+          }
         }
 
-        if(Math.hypot(d.dx,d.dy)>1e-5){
+        if(Math.hypot(d.dx,d.dy)>1e-5 || Math.abs(dz)>1e-5){
           pendingRepeatTransform={type:'move',dx:d.dx,dy:d.dy};
         }
 
         for(const item of groupSnapshots){
           objects[item.index]=cloneObject(item.object);
-          translateObject(objects[item.index],d.dx,d.dy);
+          if(all3D){
+            applyShape3DWorldMove(objects[item.index],d.dx,d.dy,dz);
+          }else{
+            translateObject(objects[item.index],d.dx,d.dy);
+          }
         }
 
         if(selectPivotSnapshot){
@@ -14768,24 +14984,44 @@
       if(selectAction==='move'){
         const rawDx=p.x-selectStart.x,rawDy=p.y-selectStart.y;
         let d=constrainMoveDelta(rawDx,rawDy,e.shiftKey);
+        let dz=0;
+        shape3DSnapCue=null;
 
-        const snappedMove=snapWholeObjectMove(
-          selectSnapshot,
-          d.dx,
-          d.dy,
-          selectedIndex
-        );
+        if(selectSnapshot.kind==='shape3d'){
+          const snapped3D=snapShape3DMove(
+            selectSnapshot,
+            d.dx,
+            d.dy,
+            selectedIndex
+          );
 
-        if(snappedMove.snapped){
-          d={dx:snappedMove.dx,dy:snappedMove.dy};
-          statusEl.textContent='Nesne snap — köşe/uç noktaları hizalandı';
+          if(snapped3D.snapped){
+            d={dx:snapped3D.dx,dy:snapped3D.dy};
+            dz=snapped3D.dz;
+            shape3DSnapCue={
+              targetWorld:{...snapped3D.targetWorld}
+            };
+            statusEl.textContent='3D snap — köşe köşeye yapıştı';
+          }
+        }else{
+          const snappedMove=snapWholeObjectMove(
+            selectSnapshot,
+            d.dx,
+            d.dy,
+            selectedIndex
+          );
+
+          if(snappedMove.snapped){
+            d={dx:snappedMove.dx,dy:snappedMove.dy};
+            statusEl.textContent='Nesne snap — köşe/uç noktaları hizalandı';
+          }
         }
 
-        if(Math.hypot(d.dx,d.dy)>1e-5){
+        if(Math.hypot(d.dx,d.dy)>1e-5 || Math.abs(dz)>1e-5){
           pendingRepeatTransform={type:'move',dx:d.dx,dy:d.dy};
         }
         objects[selectedIndex]=JSON.parse(JSON.stringify(selectSnapshot));
-        translateObject(objects[selectedIndex],d.dx,d.dy);
+        applyShape3DWorldMove(objects[selectedIndex],d.dx,d.dy,dz);
 
         if(selectPivotSnapshot){
           selectionPivot={
