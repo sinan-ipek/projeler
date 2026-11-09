@@ -19,7 +19,82 @@ try{
   const bin=atob(b64);
   const bytes=new Uint8Array(bin.length);
   for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-  const html=new TextDecoder("utf-8").decode(bytes);
+  let html=new TextDecoder("utf-8").decode(bytes);
+
+  const langCss = `
+  <style id="lang-style">
+    .lang-switch{display:flex;gap:6px;align-items:center}
+    .lang-btn{border:1px solid var(--line,#ddd);background:var(--panel,#fff);border-radius:10px;padding:7px 9px;cursor:pointer;font-size:18px;line-height:1;opacity:.55}
+    .lang-btn.active{opacity:1;box-shadow:0 0 0 2px var(--ink,#222) inset}
+    body.lang-tr .lang.de,body.lang-de .lang.tr{display:none!important}
+    body.lang-tr .lang.tr,body.lang-de .lang.de{display:block!important}
+    @media(max-width:720px){.lang-switch{gap:4px}.lang-btn{padding:6px 8px;font-size:17px}}
+  </style>`;
+
+  const langButtons = `<div class="lang-switch" aria-label="Dil / Sprache">
+    <button class="lang-btn" id="trBtn" title="Türkçe" aria-label="Türkçe">🇹🇷</button>
+    <button class="lang-btn" id="deBtn" title="Deutsch" aria-label="Deutsch">🇩🇪</button>
+  </div>`;
+
+  const langScript = `
+  <script id="lang-script">
+  (function(){
+    const titleDE={
+      "Kesirler ve Ondalık Sayılar":"Brüche und Dezimalzahlen",
+      "Nasıl kullanılır?":"Wie benutzt man die Präsentation?",
+      "Konu anlatımı: Virgül kaydırma":"Theorie: Kommaverschiebung",
+      "Konu anlatımı: Ondalık sayılarda çarpma ve bölme":"Theorie: Dezimalzahlen multiplizieren und dividieren",
+      "Karışık sorular":"Vermischte Aufgaben",
+      "Karışık sorular · devam":"Vermischte Aufgaben · Fortsetzung",
+      "Mini özet":"Kurz-Zusammenfassung",
+      "Bitti!":"Fertig!"
+    };
+    const reverseTitle=Object.fromEntries(Object.entries(titleDE).map(([tr,de])=>[de,tr]));
+    let lang=localStorage.getItem("matheLang")||"tr";
+
+    function txt(tr,de){return lang==="tr"?tr:de}
+    function apply(){
+      document.body.classList.toggle("lang-tr",lang==="tr");
+      document.body.classList.toggle("lang-de",lang==="de");
+      document.documentElement.lang=lang;
+      localStorage.setItem("matheLang",lang);
+
+      const trBtn=document.getElementById("trBtn"),deBtn=document.getElementById("deBtn");
+      if(trBtn) trBtn.classList.toggle("active",lang==="tr");
+      if(deBtn) deBtn.classList.toggle("active",lang==="de");
+
+      const prev=document.getElementById("prev"),next=document.getElementById("next"),reveal=document.getElementById("reveal");
+      if(prev) prev.textContent=txt("← Geri","← Zurück");
+      if(next) next.textContent=txt("İleri →","Weiter →");
+      if(reveal){
+        const shown=document.getElementById("slide")?.classList.contains("revealed");
+        reveal.textContent=shown?txt("Çözümü gizle","Lösung ausblenden"):txt("Çözümü göster","Lösung zeigen");
+      }
+
+      const h1=document.querySelector("#slide h1");
+      if(h1){
+        if(lang==="de" && titleDE[h1.textContent]) h1.textContent=titleDE[h1.textContent];
+        if(lang==="tr" && reverseTitle[h1.textContent]) h1.textContent=reverseTitle[h1.textContent];
+      }
+
+      document.querySelectorAll(".answer.step>b:first-child").forEach(b=>b.textContent=txt("Çözüm","Lösung"));
+      document.querySelectorAll(".why.step>b:first-child").forEach(b=>b.textContent=txt("Neden?","Warum?"));
+    }
+
+    document.getElementById("trBtn")?.addEventListener("click",()=>{lang="tr";apply()});
+    document.getElementById("deBtn")?.addEventListener("click",()=>{lang="de";apply()});
+
+    const obs=new MutationObserver(()=>apply());
+    const slide=document.getElementById("slide");
+    if(slide) obs.observe(slide,{childList:true,subtree:true});
+    apply();
+  })();
+  <\/script>`;
+
+  html=html.replace("</head>",langCss+"</head>");
+  html=html.replace('<div class="brand">Mathe Checkliste</div>','<div class="brand">Mathe Checkliste</div>'+langButtons);
+  html=html.replace("</body>",langScript+"</body>");
+
   document.open();
   document.write(html);
   document.close();
