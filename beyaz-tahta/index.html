@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.89</title>
+<title>Beyaz Tahta v18.90</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1248,7 +1248,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.89 · Kaydet normal indirmeye çevrildi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.90 · Yay/doğru tanıma ayrımı iyileştirildi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -13403,7 +13403,9 @@
     if(rs.length<8) return null;
 
     const fit=fitCircleForArc(rs);
-    if(!fit || fit.meanAbs>0.045 || fit.rms>0.060) return null;
+    // Elde çizilen yaylarda küçük yarıçap dalgalanmalarına tolerans ver.
+    // Önceki 4.5% / 6% eşikleri çok katıydı ve gerçek yayları eliyordu.
+    if(!fit || fit.meanAbs>0.080 || fit.rms>0.105) return null;
 
     const chord=dist(rs[0],rs[rs.length-1]);
     if(chord<35) return null;
@@ -13422,8 +13424,22 @@
     }
     meanChordDeviation/=rs.length;
 
-    if(maxChordDeviation/chord<0.045) return null;
-    if(meanChordDeviation/chord<0.020) return null;
+    if(maxChordDeviation/chord<0.035) return null;
+    if(meanChordDeviation/chord<0.014) return null;
+
+    // Gerçek bir yayda noktaların büyük çoğunluğu A-B kirişinin aynı tarafında olur.
+    // Bu kontrol, dalgalı bir doğruyu "yay" sanmayı önler.
+    const ax=rs[0].x, ay=rs[0].y;
+    const bx=rs[rs.length-1].x, by=rs[rs.length-1].y;
+    let posSide=0,negSide=0;
+    for(let i=1;i<rs.length-1;i++){
+      const p=rs[i];
+      const cross=(bx-ax)*(p.y-ay)-(by-ay)*(p.x-ax);
+      if(cross>0) posSide++;
+      else if(cross<0) negSide++;
+    }
+    const dominantSide=Math.max(posSide,negSide)/Math.max(1,posSide+negSide);
+    if(dominantSide<0.82) return null;
 
     // Unwrap angular progress around the fitted center. A genuine hand-drawn
     // arc should turn mostly in one direction without backtracking.
@@ -13441,8 +13457,8 @@
     }
 
     const span=Math.abs(total);
-    if(span<0.38 || span>3.05) return null; // ~22° .. 175°
-    if(totalAbs/Math.max(0.001,span)>1.32) return null;
+    if(span<0.30 || span>3.12) return null; // ~17° .. 179°
+    if(totalAbs/Math.max(0.001,span)>1.42) return null;
 
     // Circle fit must be clearly more convincing than a straight segment.
     const circleErr=fit.meanAbs;
@@ -13475,9 +13491,9 @@
 
   function openStrokeLineIntent(pts){
     /*
-      A single open A→B stroke should become AB even if it is curved.
-      We only send the stroke to polygon/ellipse recognition when there is
-      convincing closure or several strong directional turns.
+      Açık bir A→B çizimini doğru kabul et, fakat yalnızca gerçekten
+      "doğruya yakınsa". Önceki sürüm belirgin kavisli açık çizgileri de
+      doğrudan doğruya çeviriyordu.
     */
     if(!pts || pts.length<4) return false;
 
@@ -13489,7 +13505,6 @@
     for(let i=1;i<pts.length;i++) pathLen+=dist(pts[i-1],pts[i]);
     const chord=Math.max(1,gap);
 
-    // Strong corner count from a uniformly resampled stroke.
     const rs=resamplePolyline(pts,64);
     let strongTurns=0;
     const step=3;
@@ -13501,15 +13516,31 @@
       if(turn>0.48) strongTurns++;
     }
 
-    // If endpoints are clearly separate, the stroke is not trying to close.
     const clearlyOpen = gap > maxDim*.42;
-
-    // A simple curved line may be longer than its chord, but should not contain
-    // repeated sharp corners or loop around on itself.
     const pathRatio=pathLen/chord;
-    const simpleOpenCurve = pathRatio < 1.85 && strongTurns <= 5;
 
-    return clearlyOpen && simpleOpenCurve;
+    // Doğrunun en önemli ölçütü: A-B kirişinden sapma küçük olmalı.
+    let maxDev=0,meanDev=0;
+    for(const p of rs){
+      const d=pointToSegmentDistance(p,rs[0],rs[rs.length-1]);
+      maxDev=Math.max(maxDev,d);
+      meanDev+=d;
+    }
+    meanDev/=Math.max(1,rs.length);
+
+    const maxDevRatio=maxDev/chord;
+    const meanDevRatio=meanDev/chord;
+
+    // Hafif el titremesine izin ver, fakat belirgin kavis varsa doğru deme.
+    const straightEnough =
+      maxDevRatio < 0.055 &&
+      meanDevRatio < 0.022;
+
+    const simpleOpenStroke =
+      pathRatio < 1.30 &&
+      strongTurns <= 4;
+
+    return clearlyOpen && simpleOpenStroke && straightEnough;
   }
 
   function forceABLine(pts,style){
