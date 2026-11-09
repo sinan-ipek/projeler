@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.86</title>
+<title>Beyaz Tahta v18.87</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -47,6 +47,32 @@
 
   #status{
     display:none;
+  }
+
+  #fileToast{
+    position:fixed;
+    left:50%;
+    bottom:34px;
+    transform:translateX(-50%) translateY(8px);
+    z-index:140;
+    max-width:min(560px,calc(100vw - 32px));
+    padding:9px 13px;
+    border:1px solid rgba(0,0,0,.12);
+    border-radius:10px;
+    background:rgba(32,36,42,.94);
+    color:#fff;
+    font:500 13px/1.35 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+    box-shadow:0 8px 28px rgba(0,0,0,.18);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .16s ease,transform .16s ease;
+  }
+  #fileToast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+  #fileToast.error{
+    background:rgba(151,31,31,.96);
   }
 
   #boardScope{
@@ -1207,10 +1233,9 @@
 
     <div id="boardLoadConfirm" aria-hidden="true">
       <div class="boardConfirmCard" role="dialog" aria-modal="true" aria-labelledby="boardConfirmTitle">
-        <div id="boardConfirmTitle" class="boardConfirmTitle">Ortak tahtaya geri yükle</div>
-        <div class="boardConfirmText">
-          Bu dosya mevcut ortak tahtanın yerini alacak ve değişiklik tüm bağlı cihazlara yansıyacak.
-          Mevcut çalışma ayrıca kaydedilmediyse geri alınamayabilir.
+        <div id="boardConfirmTitle" class="boardConfirmTitle">Tahtayı yükle</div>
+        <div id="boardConfirmText" class="boardConfirmText">
+          Bu dosya mevcut tahtanın yerini alacak.
         </div>
         <div class="boardConfirmActions">
           <button id="cancelBoardLoadBtn">İptal</button>
@@ -1223,7 +1248,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.86 · Ctrl kaydında seçim korunur</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.87 · Kaydet/Yükle düzeltildi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1391,6 +1416,8 @@
     </div>
   </div>
 
+  <div id="fileToast" role="status" aria-live="polite"></div>
+
   <div id="feedbackModal" aria-hidden="true">
     <div class="feedbackCard" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
       <div id="feedbackTitle" class="feedbackTitle">Sinan İpek'e mesaj</div>
@@ -1424,8 +1451,12 @@
   const shareBoardBtn = document.getElementById('shareBoardBtn');
   const boardFileInput = document.getElementById('boardFileInput');
   const boardLoadConfirm = document.getElementById('boardLoadConfirm');
+  const boardConfirmTitle = document.getElementById('boardConfirmTitle');
+  const boardConfirmText = document.getElementById('boardConfirmText');
   const cancelBoardLoadBtn = document.getElementById('cancelBoardLoadBtn');
   const confirmBoardLoadBtn = document.getElementById('confirmBoardLoadBtn');
+  const fileToast = document.getElementById('fileToast');
+  let fileToastTimer = null;
   const creatorSignature = document.getElementById('creatorSignature');
   const helpBtn = document.getElementById('helpBtn');
   const helpModal = document.getElementById('helpModal');
@@ -16524,6 +16555,18 @@
     fileMenu.classList.remove('open');
   }
 
+  function showFileToast(message,{error=false,duration=2600}={}){
+    if(!fileToast) return;
+    clearTimeout(fileToastTimer);
+    fileToast.textContent=String(message||'');
+    fileToast.classList.toggle('error',!!error);
+    fileToast.classList.add('show');
+    fileToastTimer=setTimeout(()=>{
+      fileToast.classList.remove('show');
+      fileToast.classList.remove('error');
+    },duration);
+  }
+
   async function boardFilePayload(){
     const exportObjects=JSON.parse(JSON.stringify(objects));
 
@@ -17013,16 +17056,16 @@
   }
 
   async function downloadCurrentBoard(){
-    try{
-      const payload=await boardFilePayload();
-      const text=JSON.stringify(payload,null,2);
-      const suggestedName=safeBoardFilename();
+    const suggestedName=safeBoardFilename();
+    let fileHandle=null;
 
-      // Chromium tabanlı tarayıcılarda gerçek sistem "Farklı Kaydet"
-      // penceresini aç. Kullanıcı burada adı/konumu değiştirebilir.
+    try{
+      // ÖNEMLİ: Dosya seçiciyi kullanıcının tıklamasından hemen sonra aç.
+      // Böylece büyük/resimli tahtalarda boardFilePayload() beklerken
+      // tarayıcının user-activation izni kaybolmaz.
       if('showSaveFilePicker' in window){
         try{
-          const handle=await window.showSaveFilePicker({
+          fileHandle=await window.showSaveFilePicker({
             suggestedName,
             types:[
               {
@@ -17034,41 +17077,45 @@
             ],
             excludeAcceptAllOption:false
           });
-
-          const writable=await handle.createWritable();
-          await writable.write(text);
-          await writable.close();
-
-          statusEl.textContent=`${objects.length} nesneli tahta kaydedildi`;
-          return;
         }catch(err){
-          // Kullanıcı kayıt penceresini iptal ettiyse hata mesajı gösterme.
           if(err && err.name==='AbortError'){
             statusEl.textContent='Kaydetme iptal edildi';
+            showFileToast('Kaydetme iptal edildi');
             return;
           }
           console.warn('Sistem kayıt penceresi kullanılamadı, indirme yöntemine geçiliyor:',err);
         }
       }
 
-      // showSaveFilePicker desteklenmiyorsa klasik tarayıcı indirmesi.
+      statusEl.textContent='Tahta dosyası hazırlanıyor…';
+      showFileToast('Tahta dosyası hazırlanıyor…',{duration:1200});
+
+      const payload=await boardFilePayload();
+      const text=JSON.stringify(payload,null,2);
+
+      if(fileHandle){
+        const writable=await fileHandle.createWritable();
+        await writable.write(text);
+        await writable.close();
+
+        statusEl.textContent=`${objects.length} nesneli tahta kaydedildi`;
+        showFileToast('Tahta kaydedildi');
+        return;
+      }
+
+      // File System Access API yoksa klasik tarayıcı indirmesi.
       const blob=new Blob(
         [text],
         {type:'application/json;charset=utf-8'}
       );
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url;
-      a.download=suggestedName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(()=>URL.revokeObjectURL(url),0);
+      downloadBlob(blob,suggestedName);
 
       statusEl.textContent=`${objects.length} nesneli tahta yerel dosyaya kaydedildi`;
+      showFileToast('Tahta indirildi');
     }catch(err){
       console.error('Tahta kaydedilemedi:',err);
       statusEl.textContent='Tahta kaydedilemedi';
+      showFileToast('Tahta kaydedilemedi',{error:true,duration:3600});
     }
   }
 
@@ -17095,6 +17142,19 @@
       objects:objectsFromFile,
       fileName:String(fileName||'')
     };
+
+    if(boardMode==='everyone'){
+      boardConfirmTitle.textContent='Ortak tahtaya yükle';
+      boardConfirmText.textContent=
+        'Bu dosya mevcut ortak tahtanın yerini alacak ve değişiklik tüm bağlı cihazlara yansıyacak.';
+      confirmBoardLoadBtn.textContent='Ortak tahtaya yükle';
+    }else{
+      boardConfirmTitle.textContent='Yerel tahtaya yükle';
+      boardConfirmText.textContent=
+        'Bu dosya yalnızca bu cihazdaki mevcut tahtanın yerini alacak.';
+      confirmBoardLoadBtn.textContent='Tahtaya yükle';
+    }
+
     boardLoadConfirm.classList.add('open');
     boardLoadConfirm.setAttribute('aria-hidden','false');
   }
@@ -17165,12 +17225,15 @@
         collabLastSignature=collabSignature(state);
         collabRebuildLiveSnapshot();
         statusEl.textContent=`Kaydedilmiş tahta ortak odaya yüklendi — ${objects.length} nesne`;
+        showFileToast('Tahta ortak odaya yüklendi');
       }catch(err){
         console.error('Kaydedilmiş tahta Supabase’e yazılamadı:',err);
         statusEl.textContent='Tahta yerelde açıldı; ortak odaya kalıcı yazma başarısız';
+        showFileToast('Tahta açıldı; ortak odaya kaydetme başarısız',{error:true,duration:4200});
       }
     }else{
       statusEl.textContent=`Kaydedilmiş tahta açıldı — ${objects.length} nesne`;
+      showFileToast('Tahta yüklendi');
     }
   }
 
@@ -17223,10 +17286,12 @@
         pendingBoardLoad=null;
         hideBoardLoadConfirmation();
         statusEl.textContent='Dosya açılamadı — geçerli bir whiteboard dosyası değil';
+      showFileToast('Dosya açılamadı — geçerli bir Beyaz Tahta dosyası değil',{error:true,duration:3600});
       }
     };
     reader.onerror=()=>{
       statusEl.textContent='Dosya okunamadı';
+      showFileToast('Dosya okunamadı',{error:true,duration:3600});
     };
     reader.readAsText(file);
   });
