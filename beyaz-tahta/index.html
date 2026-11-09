@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.85</title>
+<title>Beyaz Tahta v18.86</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1223,7 +1223,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.85 · Ctrl transformasyon zinciri + Space ile uygula</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.86 · Ctrl kaydında seçim korunur</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -15175,35 +15175,45 @@
         clearHandleSelection();
         const clickedIndices=expandGroupedIndices([hit]);
 
-        if(e.ctrlKey || e.metaKey){
-          const next=new Set(selectedIndices);
-          const allAlreadySelected=clickedIndices.every(i=>next.has(i));
-
-          if(allAlreadySelected){
-            for(const i of clickedIndices) next.delete(i);
-          }else{
-            for(const i of clickedIndices) next.add(i);
-          }
-
-          setSelection([...next]);
-
-          // Ctrl/Cmd-click changes only the selection list.
-          // Movement starts on a later normal drag/click.
-          selectAction=null;
-          selectStart=null;
-          selectSnapshot=null;
-          groupSnapshots=null;
-          groupBoxSnapshot=null;
-          activeHandle=null;
-
-          redraw();
-          statusEl.textContent=selectedIndices.length
-            ? `${selectedIndices.length} nesne seçili`
-            : 'Seçim kaldırıldı';
-          return;
-        }
-
         const hitAlreadySelected=selectedIndices.includes(hit);
+
+        if(e.ctrlKey || e.metaKey){
+          // v18.86:
+          // Ctrl transformasyon kaydı sırasında seçili nesneye basmak,
+          // eski Ctrl+tıklama davranışı yüzünden nesneyi seçimden çıkarmamalı.
+          // Seçili nesnede devam edip normal taşıma/döndürme akışına geçiyoruz.
+          const keepSelectionForCtrlTransform=
+            ctrlTransformRecording &&
+            hitAlreadySelected;
+
+          if(!keepSelectionForCtrlTransform){
+            const next=new Set(selectedIndices);
+            const allAlreadySelected=clickedIndices.every(i=>next.has(i));
+
+            if(allAlreadySelected){
+              for(const i of clickedIndices) next.delete(i);
+            }else{
+              for(const i of clickedIndices) next.add(i);
+            }
+
+            setSelection([...next]);
+
+            // Ctrl/Cmd-click changes only the selection list.
+            // Movement starts on a later normal drag/click.
+            selectAction=null;
+            selectStart=null;
+            selectSnapshot=null;
+            groupSnapshots=null;
+            groupBoxSnapshot=null;
+            activeHandle=null;
+
+            redraw();
+            statusEl.textContent=selectedIndices.length
+              ? `${selectedIndices.length} nesne seçili`
+              : 'Seçim kaldırıldı';
+            return;
+          }
+        }
 
         // Clicking a new object collapses to a single selection.
         if(!hitAlreadySelected){
