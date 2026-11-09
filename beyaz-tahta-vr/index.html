@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beyaz Tahta VR</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff;font-family:system-ui,sans-serif}
+#info{position:fixed;top:12px;left:12px;color:#333;background:#ffffffdf;border-radius:9px;padding:10px 14px;font-size:13px;max-width:310px;pointer-events:none}
+#version{position:fixed;bottom:9px;left:12px;color:#888;font:11px system-ui;pointer-events:none}
+#home{position:fixed;right:15px;top:14px;width:44px;height:44px;border:2px solid #222;background:#ffd330;border-radius:8px;display:grid;place-items:center;text-decoration:none;color:#111;font-size:27px;z-index:2}
+#lang{position:fixed;right:66px;top:14px;background:#fff;border:1px solid #888;border-radius:7px;padding:10px;z-index:2}
+#help{position:fixed;right:174px;top:14px;background:#fff;border:1px solid #888;border-radius:7px;padding:10px 14px;z-index:2}
+#helpbox{position:fixed;right:15px;top:70px;max-width:280px;display:none;padding:12px;background:white;border:1px solid #bbb;border-radius:8px;font-size:13px;z-index:3}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.181.2/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.181.2/examples/jsm/"}}</script>
+</head>
+<body>
+<a id="home" href="https://sinan-ipek.github.io/projeler/index.html" title="Home" aria-label="Home">⌂</a>
+<select id="lang" aria-label="Language"><option value="tr">Türkçe</option><option value="de">Deutsch</option><option value="en">English</option></select>
+<button id="help">?</button><div id="helpbox"></div>
+<div id="info">Beyaz Tahta VR · Meta Quest / WebXR<br>VR gözlüğünde “Enter VR” düğmesine basın.</div>
+<div id="version">v0.1.1 · VR modül yüklemesi düzeltildi</div>
+<script type="module">
+import * as THREE from 'three';
+import { VRButton } from 'three/addons/webxr/VRButton.js';
+
+const copy = {
+ tr:{start:'Beyaz Tahta VR · Meta Quest / WebXR',enter:'Gözlükte VR modunu açın.',help:'Tetik: araç veya nesne seç. Çizgi modunda basılı tutup düz çizgi çiz. Kavrama: seçili nesneyi taşı, döndür veya boyutlandır. Çizgi uçları birbirine yaklaşınca birleşir.',object:'NESNELER',tool:'ARAÇLAR',box:'Küp',sphere:'Küre',cylinder:'Silindir',cone:'Koni',line:'Çizgi',select:'Seç',move:'Taşı',rotate:'Döndür',width:'En',height:'Boy',depth:'Derinlik',erase:'Sil',undo:'Geri',reset:'Temizle'},
+ de:{start:'Whiteboard VR · Meta Quest / WebXR',enter:'VR-Modus im Headset starten.',help:'Trigger: Werkzeug oder Objekt wählen. Linienwerkzeug: gedrückt halten und eine gerade Linie zeichnen. Grip: gewähltes Objekt bewegen, drehen oder skalieren. Linienenden rasten ein.',object:'OBJEKTE',tool:'WERKZEUGE',box:'Würfel',sphere:'Kugel',cylinder:'Zylinder',cone:'Kegel',line:'Linie',select:'Wählen',move:'Bewegen',rotate:'Drehen',width:'Breite',height:'Höhe',depth:'Tiefe',erase:'Löschen',undo:'Zurück',reset:'Leeren'},
+ en:{start:'Whiteboard VR · Meta Quest / WebXR',enter:'Enter VR in your headset.',help:'Trigger: choose a tool or object. Line tool: hold trigger to draw a straight line. Grip: move, rotate or resize the selected object. Nearby line endpoints snap together.',object:'OBJECTS',tool:'TOOLS',box:'Box',sphere:'Sphere',cylinder:'Cylinder',cone:'Cone',line:'Line',select:'Select',move:'Move',rotate:'Rotate',width:'Width',height:'Height',depth:'Depth',erase:'Delete',undo:'Undo',reset:'Clear'}
+};
+let language=localStorage.getItem('vr-lang')||'tr';if(!copy[language])language='tr';
+const uiLang=document.getElementById('lang');uiLang.value=language;const helpbox=document.getElementById('helpbox');
+function updateHTML(){document.documentElement.lang=language;document.getElementById('info').innerHTML=copy[language].start+'<br>'+copy[language].enter;helpbox.textContent=copy[language].help;}
+uiLang.addEventListener('change',e=>{language=e.target.value;localStorage.setItem('vr-lang',language);updateHTML();rebuildMenu();});
+document.getElementById('help').addEventListener('click',()=>helpbox.style.display=helpbox.style.display==='block'?'none':'block');updateHTML();
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xffffff);
+const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.01,2000);camera.position.set(0,1.65,0);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.xr.enabled=true;renderer.xr.setReferenceSpaceType('local-floor');renderer.outputColorSpace=THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);document.body.appendChild(VRButton.createButton(renderer));
+scene.add(new THREE.HemisphereLight(0xffffff,0xb3b3b3,2));
+const light=new THREE.DirectionalLight(0xffffff,2.1);light.position.set(2,5,4);scene.add(light);
+const boardZ=-2.5;
+const plane=new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide}));
+plane.position.set(0,1.6,boardZ);scene.add(plane);
+const workPlane=new THREE.Plane(new THREE.Vector3(0,0,1),-boardZ);
+const objects=[],lineSegments=[],history=[];
+const raycaster=new THREE.Raycaster();raycaster.far=1000;
+const tmpMatrix=new THREE.Matrix4(),tempV=new THREE.Vector3();
+let selected=null,tool='select',editMode='move',menu=null,buttonMeshes=[];
+const lineMaterial=new THREE.MeshStandardMaterial({color:0x222222,roughness:.75,metalness:0});
+let outline=null;const ctrl=[];
+function textTexture(text,{width=512,height=128,color='#222222',background='rgba(0,0,0,0)',size=50}={}){
+ const cvs=document.createElement('canvas');cvs.width=width;cvs.height=height;
+ const c=cvs.getContext('2d');c.fillStyle=background;c.fillRect(0,0,width,height);
+ c.fillStyle=color;c.font='bold '+size+'px system-ui,Arial';c.textAlign='center';c.textBaseline='middle';c.fillText(text,width/2,height/2,width-20);
+ const t=new THREE.CanvasTexture(cvs);t.colorSpace=THREE.SRGBColorSpace;return t;
+}
+function label(text,x,y,z,w=.25,h=.057,color='#333'){
+ const mat=new THREE.MeshBasicMaterial({map:textTexture(text,{color,size:42}),transparent:true,depthTest:false});
+ const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);mesh.position.set(x,y,z);return mesh;
+}
+function button(parent,key,action,x,y,w=.255,h=.103,accent=false){
+ const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:accent?0xffd330:0xf4f4f4,side:THREE.DoubleSide,depthTest:false}));
+ mesh.position.set(x,y,.007);mesh.userData.action=action;mesh.userData.key=key;
+ parent.add(mesh);mesh.add(label(copy[language][key]||key,0,0,.002,w*.92,h*.65));buttonMeshes.push(mesh);
+}
+function rebuildMenu(){
+ if(menu){menu.traverse(o=>{if(o.isMesh){o.geometry?.dispose();o.material?.map?.dispose();o.material?.dispose();}});scene.remove(menu);}
+ buttonMeshes=[];menu=new THREE.Group();menu.position.set(-1.2,2.18,-1.7);
+ const bg=new THREE.Mesh(new THREE.PlaneGeometry(.85,1.01),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide,depthTest:false}));bg.position.z=-.005;menu.add(bg);
+ const border=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(.85,1.01)),new THREE.LineBasicMaterial({color:0xcccccc,depthTest:false}));border.position.z=-.003;menu.add(border);
+ menu.add(label(copy[language].object,0,.452,.012,.6,.07));
+ button(menu,'box','add:box',-.22,.34);button(menu,'sphere','add:sphere',.22,.34);
+ button(menu,'cylinder','add:cylinder',-.22,.22);button(menu,'cone','add:cone',.22,.22);
+ menu.add(label(copy[language].tool,0,.12,.012,.6,.07));
+ button(menu,'line','tool:line',-.22,.015);button(menu,'select','tool:select',.22,.015);
+ button(menu,'move','mode:move',-.22,-.102);button(menu,'rotate','mode:rotate',.22,-.102);
+ button(menu,'width','mode:width',-.22,-.22);button(menu,'height','mode:height',.22,-.22);
+ button(menu,'depth','mode:depth',-.22,-.335);button(menu,'erase','delete',.22,-.335);
+ button(menu,'undo','undo',-.22,-.447);button(menu,'reset','reset',.22,-.447);
+ menu.add(label('v0.1.1',.31,.46,.012,.15,.035,'#888888'));scene.add(menu);
+}
+rebuildMenu();
+function controllerRay(controller){tmpMatrix.identity().extractRotation(controller.matrixWorld);
+ const origin=new THREE.Vector3().setFromMatrixPosition(controller.matrixWorld);
+ const direction=new THREE.Vector3(0,0,-1).applyMatrix4(tmpMatrix).normalize();
+ return new THREE.Ray(origin,direction);
+}
+function intersectBoard(ray){const out=new THREE.Vector3();return ray.intersectPlane(workPlane,out)?out:null;}
+function snapToEndpoint(p){let best=null,dist=.095;for(const line of lineSegments){for(const endpoint of [line.userData.a,line.userData.b]){const d=p.distanceTo(endpoint);if(d<dist){dist=d;best=endpoint;}}}return best?best.clone():p.clone();}
+function makeRod(a,b,radius=.008,material=lineMaterial){const mid=a.clone().add(b).multiplyScalar(.5);const delta=b.clone().sub(a);
+ const mesh=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,Math.max(delta.length(),.0001),8),material);mesh.position.copy(mid);mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());return mesh;
+}
+function makeLine(a,b,isPreview=false){const mesh=makeRod(a,b,isPreview?.006:.009,isPreview?new THREE.MeshBasicMaterial({color:0xffaa00}):lineMaterial);
+ mesh.userData.kind='line';mesh.userData.a=a.clone();mesh.userData.b=b.clone();mesh.userData.preview=isPreview;scene.add(mesh);return mesh;
+}
+function updateLine(line,a,b){line.position.copy(a).add(b).multiplyScalar(.5);const delta=b.clone().sub(a);
+ line.scale.set(1,Math.max(delta.length(),.0001)/line.geometry.parameters.height,1);
+ line.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());line.userData.a.copy(a);line.userData.b.copy(b);
+}
+function addObject(kind,position=null){
+ const geometries={box:()=>new THREE.BoxGeometry(.28,.28,.28),sphere:()=>new THREE.SphereGeometry(.18,24,16),cylinder:()=>new THREE.CylinderGeometry(.14,.14,.33,24),cone:()=>new THREE.ConeGeometry(.16,.34,24)};
+ const mesh=new THREE.Mesh(geometries[kind](),new THREE.MeshStandardMaterial({color:0x57a4e9,roughness:.62,metalness:0}));
+ mesh.position.copy(position||new THREE.Vector3(0,1.55,boardZ+.26));mesh.userData.kind=kind;
+ objects.push(mesh);history.push({type:'add',mesh});scene.add(mesh);setSelected(mesh);
+}
+function setSelected(mesh){selected=mesh;if(outline){scene.remove(outline);outline.geometry.dispose();outline.material.dispose();outline=null;}
+ if(mesh&&mesh.userData.kind!=='line'){outline=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),new THREE.LineBasicMaterial({color:0xffad00,depthTest:false}));scene.add(outline);}
+}
+function deleteSelected(){if(!selected)return;const mesh=selected;scene.remove(mesh);const arr=mesh.userData.kind==='line'?lineSegments:objects;const idx=arr.indexOf(mesh);if(idx>=0)arr.splice(idx,1);history.push({type:'delete',mesh});setSelected(null);}
+function undo(){const last=history.pop();if(!last)return;const mesh=last.mesh;const arr=mesh.userData.kind==='line'?lineSegments:objects;
+ if(last.type==='add'){scene.remove(mesh);const i=arr.indexOf(mesh);if(i>=0)arr.splice(i,1);if(selected===mesh)setSelected(null);}
+ else if(last.type==='delete'){scene.add(mesh);arr.push(mesh);}
+}
+function reset(){for(const mesh of [...objects,...lineSegments])scene.remove(mesh);objects.length=0;lineSegments.length=0;history.length=0;setSelected(null);}
+function perform(action,ray){if(action.startsWith('add:')){const p=intersectBoard(ray);addObject(action.split(':')[1],p?p.clone().add(new THREE.Vector3(0,0,.2)):null);tool='select';return;}
+ if(action.startsWith('tool:')){tool=action.split(':')[1];return;}
+ if(action.startsWith('mode:')){editMode=action.split(':')[1];tool='select';return;}
+ if(action==='delete')deleteSelected();else if(action==='undo')undo();else if(action==='reset')reset();}
+function pickObject(ray){raycaster.ray.copy(ray);const hits=raycaster.intersectObjects([...objects,...lineSegments],false);return hits.length?hits[0].object:null;}
+function rayFromController(i){return controllerRay(ctrl[i].controller);}
+function selectStart(i){const st=ctrl[i];st.selecting=true;const ray=rayFromController(i);
+ raycaster.ray.copy(ray);const hit=raycaster.intersectObjects(buttonMeshes,false)[0];
+ if(hit){perform(hit.object.userData.action,ray);st.selecting=false;return;}
+ if(tool==='line'){const hitPoint=intersectBoard(ray);if(!hitPoint)return;
+ const start=snapToEndpoint(hitPoint);st.drawStart=start;st.preview=makeLine(start,start.clone().add(new THREE.Vector3(0,.001,0)),true);return;}
+ setSelected(pickObject(ray));
+}
+function selectEnd(i){const st=ctrl[i];st.selecting=false;
+ if(st.drawStart&&st.preview){const ray=rayFromController(i);let end=intersectBoard(ray);
+ if(end){end=snapToEndpoint(end);if(end.distanceTo(st.drawStart)>.018){const obj=makeLine(st.drawStart,end);lineSegments.push(obj);history.push({type:'add',mesh:obj});}}
+ scene.remove(st.preview);st.preview.geometry.dispose();st.preview.material.dispose();st.drawStart=null;st.preview=null;}
+}
+function squeezeStart(i){const st=ctrl[i];if(!selected)return;st.grabbing=true;st.originalPos=selected.position.clone();st.originalRot=selected.rotation.clone();st.originalScale=selected.scale.clone();st.startPos=new THREE.Vector3().setFromMatrixPosition(st.controller.matrixWorld);}
+function squeezeEnd(i){ctrl[i].grabbing=false;}
+for(let i=0;i<2;i++){
+ const controller=renderer.xr.getController(i);scene.add(controller);
+ const geometry=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,-1)]);
+ const guide=new THREE.Line(geometry,new THREE.LineBasicMaterial({color:i===0?0x3366dd:0x555555,transparent:true,opacity:.7}));guide.scale.z=3;controller.add(guide);
+ ctrl.push({controller,selecting:false,grabbing:false,drawStart:null,preview:null});
+ controller.addEventListener('selectstart',()=>selectStart(i));controller.addEventListener('selectend',()=>selectEnd(i));
+ controller.addEventListener('squeezestart',()=>squeezeStart(i));controller.addEventListener('squeezeend',()=>squeezeEnd(i));
+}
+function onFrame(){for(const st of ctrl){
+ if(st.preview&&st.drawStart){const p=intersectBoard(controllerRay(st.controller));if(p)updateLine(st.preview,st.drawStart,snapToEndpoint(p));}
+ if(st.grabbing&&selected){const now=new THREE.Vector3().setFromMatrixPosition(st.controller.matrixWorld);const delta=now.sub(st.startPos);
+ if(editMode==='move'){selected.position.copy(st.originalPos).add(delta);
+  if(selected.userData.kind==='line'){const a=selected.userData.a.clone().add(delta),b=selected.userData.b.clone().add(delta);updateLine(selected,a,b);}
+ }else if(editMode==='rotate'){selected.rotation.copy(st.originalRot);selected.rotation.y+=delta.x*2.5;selected.rotation.x-=delta.y*2.5;}
+ else{selected.scale.copy(st.originalScale);const axis=editMode==='width'?'x':editMode==='height'?'y':'z';selected.scale[axis]=Math.max(.08,st.originalScale[axis]+(delta.x+delta.y)*2);}}
+ }
+ if(outline&&selected){selected.updateWorldMatrix(true,false);outline.position.copy(selected.position);outline.quaternion.copy(selected.quaternion);
+ const bbox=new THREE.Box3().setFromObject(selected);const dimensions=bbox.getSize(tempV);outline.scale.copy(dimensions).multiplyScalar(1.065);}
+ renderer.render(scene,camera);
+}
+renderer.setAnimationLoop(onFrame);
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script>
+</body>
+</html>
