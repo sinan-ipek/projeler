@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.92</title>
+<title>Beyaz Tahta v18.93</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1248,7 +1248,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.92 · Puanlamalı otomatik şekil tanıma</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.93 · Gelişmiş otomatik şekil tanıma</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -13694,11 +13694,64 @@
     };
   }
 
-  function arcRecognitionScore(pts){
-    const arc=arcCandidate(pts,strokeStyle());
-    if(!arc) return 0;
+  function smoothRecognitionStroke(pts,count=96){
+    if(!Array.isArray(pts) || pts.length<2) return [];
 
-    const rs=resamplePolyline(pts,64);
+    const rs=resamplePolyline(pts,count);
+    if(rs.length<5) return rs.map(p=>({x:p.x,y:p.y}));
+
+    // Hafif 1-2-3-2-1 filtresi: kalem titremesini bastırır,
+    // fakat köşe ve genel eğriliği korur.
+    const weights=[1,2,3,2,1];
+    const out=[];
+
+    for(let i=0;i<rs.length;i++){
+      if(i===0 || i===rs.length-1){
+        out.push({x:rs[i].x,y:rs[i].y});
+        continue;
+      }
+
+      let sx=0,sy=0,sw=0;
+      for(let k=-2;k<=2;k++){
+        const j=Math.max(0,Math.min(rs.length-1,i+k));
+        const w=weights[k+2];
+        sx+=rs[j].x*w;
+        sy+=rs[j].y*w;
+        sw+=w;
+      }
+      out.push({x:sx/sw,y:sy/sw});
+    }
+
+    return out;
+  }
+
+  function recognitionTopology(pts){
+    if(!pts || pts.length<2){
+      return {gapRatio:1,closedness:0,openWeight:1,closedWeight:0};
+    }
+
+    const b=bbox(pts);
+    const scale=Math.max(1,Math.max(b.w,b.h));
+    const gap=dist(pts[0],pts[pts.length-1]);
+    const gapRatio=gap/scale;
+
+    // 0.22 altı güçlü kapalı, 0.52 üstü güçlü açık.
+    // Arada iki aile de değerlendirilebilir.
+    const closedWeight=clamp01((0.52-gapRatio)/0.30);
+    const openWeight=clamp01((gapRatio-0.22)/0.30);
+
+    return {
+      gapRatio,
+      closedness:1-clamp01(gapRatio/0.52),
+      openWeight,
+      closedWeight
+    };
+  }
+
+  function arcRecognitionScore(pts,arcShape){
+    if(!arcShape) return 0;
+
+    const rs=resamplePolyline(pts,72);
     const fit=fitCircleForArc(rs);
     if(!fit) return 0;
 
@@ -13707,29 +13760,45 @@
     let pathLen=0;
     let maxDev=0;
     let meanDev=0;
+    let pos=0,neg=0;
+
+    const a=rs[0], b=rs[rs.length-1];
+
     for(let i=1;i<rs.length;i++) pathLen+=dist(rs[i-1],rs[i]);
-    for(const p of rs){
-      const d=pointToSegmentDistance(p,rs[0],rs[rs.length-1]);
+
+    for(let i=0;i<rs.length;i++){
+      const p=rs[i];
+      const d=pointToSegmentDistance(p,a,b);
       maxDev=Math.max(maxDev,d);
       meanDev+=d;
+
+      if(i>0 && i<rs.length-1){
+        const cross=(b.x-a.x)*(p.y-a.y)-(b.y-a.y)*(p.x-a.x);
+        if(cross>0) pos++;
+        else if(cross<0) neg++;
+      }
     }
     meanDev/=Math.max(1,rs.length);
 
     const fitScore=
-      0.55*clamp01(1-fit.meanAbs/0.080) +
-      0.45*clamp01(1-fit.rms/0.105);
+      0.55*clamp01(1-fit.meanAbs/0.090) +
+      0.45*clamp01(1-fit.rms/0.120);
 
     const curveScore=
-      0.55*clamp01((maxDev/chord-0.025)/0.16) +
-      0.45*clamp01((meanDev/chord-0.010)/0.08);
+      0.55*clamp01((maxDev/chord-0.022)/0.16) +
+      0.45*clamp01((meanDev/chord-0.009)/0.08);
+
+    const dominantSide=Math.max(pos,neg)/Math.max(1,pos+neg);
+    const sideScore=clamp01((dominantSide-0.70)/0.30);
 
     const pathRatio=pathLen/chord;
-    const smoothScore=clamp01(1-Math.abs(pathRatio-1.10)/0.65);
+    const smoothScore=clamp01(1-Math.max(0,pathRatio-1.55)/0.55);
 
     return clamp01(
-      0.48*fitScore +
-      0.37*curveScore +
-      0.15*smoothScore
+      0.40*fitScore +
+      0.31*curveScore +
+      0.17*sideScore +
+      0.12*smoothScore
     );
   }
 
@@ -13738,17 +13807,14 @@
 
     const rs=resamplePolyline(pts,72);
     const b=bbox(rs);
-    const aspect=Math.max(1,b.h/Math.max(1,b.w));
+    const aspect=b.h/Math.max(1,b.w);
+    const gap=dist(rs[0],rs[rs.length-1]);
 
-    // bracketCandidate zaten güçlü geometrik filtrelerden geçmiş olur.
-    // Burada yalnızca ne kadar "tipik parantez" olduğunu derecelendiriyoruz.
-    const aspectScore=clamp01((aspect-1.6)/3.0);
-    const openScore=clamp01(
-      dist(rs[0],rs[rs.length-1]) /
-      Math.max(1,b.h*0.85)
-    );
+    const aspectScore=clamp01((aspect-1.55)/2.8);
+    const openScore=clamp01(gap/Math.max(1,b.h*0.80));
 
-    return clamp01(0.76 + 0.14*aspectScore + 0.10*openScore);
+    // bracketCandidate zaten iki köşe + üç doğru parçası kontrolünden geçti.
+    return clamp01(0.74 + 0.16*aspectScore + 0.10*openScore);
   }
 
   function recognitionCandidate(name,shape,score,minScore){
@@ -13758,127 +13824,130 @@
 
   function recognize(pts){
     try{
-      if(pts.length<6) return null;
+      if(!Array.isArray(pts) || pts.length<6) return null;
 
       const style=strokeStyle();
-      const trimmed=trimOvershootForClosedIntent(pts);
-      const close=closureScore(trimmed);
+
+      // Ham kalem örneklerini önce eşit aralıklı ve hafif yumuşatılmış hale getir.
+      const clean=smoothRecognitionStroke(pts,96);
+      if(clean.length<6) return null;
+
+      const topology=recognitionTopology(clean);
       const candidates=[];
+      const add=c=>{ if(c) candidates.push(c); };
 
-      const add=c=>{
-        if(c) candidates.push(c);
-      };
+      // =====================================================
+      // AÇIK ŞEKİLLER: doğru, yay, köşeli parantez
+      // =====================================================
+      if(topology.openWeight>0.08){
+        const bracket=bracketCandidate(clean,style);
+        if(bracket){
+          const score=bracketRecognitionScore(clean,bracket)*
+            (0.82+0.18*topology.openWeight);
+          add(recognitionCandidate('bracket',bracket,score,0.73));
+        }
 
-      // 1) Köşeli parantez
-      const bracket=bracketCandidate(pts,style);
-      add(recognitionCandidate(
-        'bracket',
-        bracket,
-        bracketRecognitionScore(pts,bracket),
-        0.76
-      ));
+        const arc=arcCandidate(clean,style);
+        if(arc){
+          const score=arcRecognitionScore(clean,arc)*
+            (0.80+0.20*topology.openWeight);
+          add(recognitionCandidate('arc',arc,score,0.55));
+        }
 
-      // 2) Yay
-      const arc=arcCandidate(pts,style);
-      add(recognitionCandidate(
-        'arc',
-        arc,
-        arcRecognitionScore(pts),
-        0.54
-      ));
+        const directLine=lineCandidate(clean,style);
+        const openLine=openStrokeLineIntent(clean)
+          ? forceABLine(clean,style)
+          : null;
+        const lineShape=directLine||openLine;
 
-      // 3) Doğru — yalnızca açık ve gerçekten doğruya yakın çizimlerde.
-      const directLine=lineCandidate(pts,style);
-      const openLine=openStrokeLineIntent(pts)
-        ? forceABLine(pts,style)
-        : null;
-      const lineShape=directLine || openLine;
-      let sLine=lineScore(pts);
-
-      // Kapalı şekillerin doğru olarak seçilmesini ciddi biçimde cezalandır.
-      if(close>0.45) sLine*=Math.max(0,1-(close-0.45)*1.8);
-
-      add(recognitionCandidate(
-        'line',
-        lineShape,
-        sLine,
-        0.72
-      ));
-
-      // 4) Daire — kendi güçlü geometrik skoruyla.
-      const circle=circleCandidateRobust(trimmed,style);
-      if(circle){
-        add(recognitionCandidate(
-          'circle',
-          circle.shape,
-          circle.score,
-          0.53
-        ));
+        if(lineShape){
+          let score=lineScore(clean);
+          score*=0.80+0.20*topology.openWeight;
+          add(recognitionCandidate('line',lineShape,score,0.70));
+        }
       }
 
-      // 5) Elips
-      const ellipse=buildEllipseIdeal(trimmed,style);
-      const sEllipse=ellipseScore(trimmed);
-      add(recognitionCandidate(
-        'ellipse',
-        ellipse,
-        sEllipse,
-        0.55
-      ));
+      // =====================================================
+      // KAPALI ŞEKİLLER: daire, elips, dikdörtgen, üçgen
+      // =====================================================
+      if(topology.closedWeight>0.08){
+        const closed=trimOvershootForClosedIntent(clean);
+        const closedBoost=0.78+0.22*topology.closedWeight;
 
-      // 6) Dikdörtgen/kare
-      const rect=buildRectIdeal(trimmed,style);
-      const sRect=rectangleScore(trimmed);
-      const rectMin=rectangleHasStrongEvidence(trimmed) ? 0.53 : 0.58;
-      add(recognitionCandidate(
-        'rectangle',
-        rect,
-        sRect,
-        rectMin
-      ));
+        const circle=circleCandidateRobust(closed,style);
+        if(circle){
+          const bb=bbox(closed);
+          const aspect=Math.min(bb.w,bb.h)/Math.max(1,Math.max(bb.w,bb.h));
+          const circularityBoost=0.88+0.12*clamp01((aspect-0.72)/0.28);
+          add(recognitionCandidate(
+            'circle',
+            circle.shape,
+            circle.score*closedBoost*circularityBoost,
+            0.52
+          ));
+        }
 
-      // 7) Üçgen
-      const tri=buildTriangleIdeal(trimmed,style);
-      const sTri=triangleScore(trimmed);
-      add(recognitionCandidate(
-        'triangle',
-        tri,
-        sTri,
-        0.55
-      ));
+        const ellipse=buildEllipseIdeal(closed,style);
+        if(ellipse){
+          const bb=bbox(closed);
+          const aspect=Math.min(bb.w,bb.h)/Math.max(1,Math.max(bb.w,bb.h));
 
-      // 8) Beşgen / altıgen
-      const turnModel=robustPolygonIntent(trimmed);
-      if(turnModel && (turnModel.n===5 || turnModel.n===6)){
-        const pg=buildRegularPolygonIdeal(trimmed,turnModel.n,style);
-        const pgScore=regularPolygonScore(trimmed,turnModel.n);
-        add(recognitionCandidate(
-          turnModel.n===5 ? 'pentagon' : 'hexagon',
-          pg,
-          pgScore,
-          0.57
-        ));
+          // Neredeyse dairesel çizimde elips, daireyle gereksiz yarışmasın.
+          const nonCircleBoost=0.72+0.28*clamp01((0.92-aspect)/0.30);
+          const score=ellipseScore(closed)*closedBoost*nonCircleBoost;
+
+          add(recognitionCandidate('ellipse',ellipse,score,0.53));
+        }
+
+        const rect=buildRectIdeal(closed,style);
+        if(rect){
+          let score=rectangleScore(closed)*closedBoost;
+          if(rectangleHasStrongEvidence(closed)) score=Math.min(1,score+0.055);
+          add(recognitionCandidate('rectangle',rect,score,0.54));
+        }
+
+        const tri=buildTriangleIdeal(closed,style);
+        if(tri){
+          const score=triangleScore(closed)*closedBoost;
+          add(recognitionCandidate('triangle',tri,score,0.54));
+        }
       }
 
-      if(!candidates.length) return null;
+      if(!candidates.length){
+        statusEl.textContent='Şekil algılanmadı — çizim korunuyor';
+        return null;
+      }
 
       candidates.sort((a,b)=>b.score-a.score);
       const best=candidates[0];
-      const second=candidates[1] || null;
+      const second=candidates[1]||null;
 
-      // En iyi aday da yeterince güvenli değilse hiçbir şeyi zorlamayalım.
-      if(best.score<0.58) return null;
+      // Mutlak güven eşiği.
+      if(best.score<0.58){
+        statusEl.textContent=
+          'Şekil güveni düşük — çizim korunuyor ('+
+          Math.round(best.score*100)+'%)';
+        return null;
+      }
 
-      // İki farklı model birbirine çok yakınsa çizimi olduğu gibi bırak.
-      // Yanlış otomatik dönüşüm, dönüşüm olmamasından daha kötü.
+      // En iyi iki farklı aday çok yakınsa zorla seçim yapma.
+      const requiredMargin=(
+        best.name==='circle' && second && second.name==='ellipse'
+      ) || (
+        best.name==='ellipse' && second && second.name==='circle'
+      )
+        ? 0.035
+        : 0.060;
+
       if(
         second &&
         second.name!==best.name &&
-        (best.score-second.score)<0.055
+        (best.score-second.score)<requiredMargin
       ){
         statusEl.textContent=
-          'Şekil belirsiz — '+best.name+' / '+second.name+
-          ' ('+Math.round(best.score*100)+' / '+Math.round(second.score*100)+')';
+          'Şekil belirsiz — çizim korunuyor: '+
+          best.name+' '+Math.round(best.score*100)+' / '+
+          second.name+' '+Math.round(second.score*100);
         return null;
       }
 
