@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.88</title>
+<title>Beyaz Tahta v18.89</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1248,7 +1248,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.88 · Kaydetme doğrulaması eklendi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.89 · Kaydet normal indirmeye çevrildi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -17055,41 +17055,6 @@
     }
   }
 
-  async function verifySavedBoardFile(fileHandle){
-    if(!fileHandle || typeof fileHandle.getFile!=='function'){
-      throw new Error('Kaydedilen dosya doğrulanamıyor');
-    }
-
-    const savedFile=await fileHandle.getFile();
-
-    if(!savedFile || !Number.isFinite(savedFile.size) || savedFile.size<=0){
-      throw new Error('Kaydedilen dosya boş');
-    }
-
-    const savedText=await savedFile.text();
-    let parsed;
-
-    try{
-      parsed=JSON.parse(savedText);
-    }catch{
-      throw new Error('Kaydedilen dosya geçerli JSON değil');
-    }
-
-    if(
-      !parsed ||
-      parsed.format!=='sinan-ipek-whiteboard' ||
-      !Array.isArray(parsed.objects)
-    ){
-      throw new Error('Kaydedilen dosya geçerli Beyaz Tahta biçiminde değil');
-    }
-
-    return {
-      name:savedFile.name || safeBoardFilename(),
-      size:savedFile.size,
-      objectCount:parsed.objects.length
-    };
-  }
-
   function formatFileSize(bytes){
     const n=Number(bytes)||0;
     if(n<1024) return n+' B';
@@ -17098,78 +17063,37 @@
   }
 
   async function downloadCurrentBoard(){
-    const suggestedName=safeBoardFilename();
-    let fileHandle=null;
-
     try{
-      if('showSaveFilePicker' in window){
-        try{
-          fileHandle=await window.showSaveFilePicker({
-            suggestedName,
-            types:[
-              {
-                description:'Beyaz Tahta dosyası',
-                accept:{
-                  'application/json':['.whiteboard']
-                }
-              }
-            ],
-            excludeAcceptAllOption:false
-          });
-        }catch(err){
-          if(err && err.name==='AbortError'){
-            statusEl.textContent='Kaydetme iptal edildi';
-            showFileToast('Kaydetme iptal edildi');
-            return;
-          }
-          console.warn('Sistem kayıt penceresi kullanılamadı, indirme yöntemine geçiliyor:',err);
-        }
-      }
-
       statusEl.textContent='Tahta dosyası hazırlanıyor…';
-      showFileToast('Tahta dosyası hazırlanıyor…',{duration:1200});
+      showFileToast('Tahta dosyası hazırlanıyor…',{duration:1000});
 
       const payload=await boardFilePayload();
       const text=JSON.stringify(payload,null,2);
+      const suggestedName=safeBoardFilename();
 
-      if(fileHandle){
-        const writable=await fileHandle.createWritable();
-        await writable.write(text);
-        await writable.close();
-
-        // Başarı mesajı vermeden önce gerçekten diske yazılmış dosyayı geri oku.
-        const verified=await verifySavedBoardFile(fileHandle);
-        const sizeText=formatFileSize(verified.size);
-
-        statusEl.textContent=
-          `Kaydedildi: ${verified.name} · ${sizeText} · ${verified.objectCount} nesne`;
-        showFileToast(
-          `Kaydedildi: ${verified.name} · ${sizeText}`,
-          {duration:4200}
-        );
-        return;
-      }
-
-      // File System Access API yoksa klasik indirme yapılır.
-      // Tarayıcı indirme hedefini geri okuyamadığımız için "doğrulandı" denmez.
       const blob=new Blob(
         [text],
         {type:'application/json;charset=utf-8'}
       );
+
+      // Yalnızca tarayıcının standart indirme mekanizmasını kullan.
+      // Chrome indirme ayarlarına göre dosya doğrudan İndirilenler'e gider
+      // veya kullanıcıdan kayıt konumu istenir.
       downloadBlob(blob,suggestedName);
 
+      const sizeText=formatFileSize(blob.size);
       statusEl.textContent=
-        `İndirme başlatıldı: ${suggestedName} · ${formatFileSize(blob.size)}`;
+        `İndirme başlatıldı: ${suggestedName} · ${sizeText}`;
       showFileToast(
-        `İndirme başlatıldı: ${suggestedName} · ${formatFileSize(blob.size)}`,
+        `İndirme başlatıldı: ${suggestedName} · ${sizeText}`,
         {duration:4200}
       );
     }catch(err){
-      console.error('Tahta kaydedilemedi veya doğrulanamadı:',err);
+      console.error('Tahta dosyası indirilemedi:',err);
       const detail=err && err.message ? String(err.message) : '';
-      statusEl.textContent='Kaydetme başarısız'+(detail ? ' — '+detail : '');
+      statusEl.textContent='İndirme başarısız'+(detail ? ' — '+detail : '');
       showFileToast(
-        'Kaydetme başarısız'+(detail ? ': '+detail : ''),
+        'İndirme başarısız'+(detail ? ': '+detail : ''),
         {error:true,duration:5000}
       );
     }
