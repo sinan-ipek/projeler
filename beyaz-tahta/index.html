@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.93</title>
+<title>Beyaz Tahta v18.94</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1248,7 +1248,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.93 · Gelişmiş otomatik şekil tanıma</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.94 · Ölçekten bağımsız otomatik tanıma</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -13694,6 +13694,63 @@
     };
   }
 
+  function normalizeRecognitionGeometry(pts,targetSize=240){
+    if(!Array.isArray(pts) || pts.length<2) return null;
+
+    const b=bbox(pts);
+    const maxDim=Math.max(b.w,b.h);
+
+    // Çok küçük bir dokunuşu şekil sanma.
+    if(!Number.isFinite(maxDim) || maxDim<10) return null;
+
+    const scale=targetSize/Math.max(1,maxDim);
+    const origin={x:b.cx,y:b.cy};
+
+    return {
+      points:pts.map(p=>({
+        x:(p.x-origin.x)*scale,
+        y:(p.y-origin.y)*scale
+      })),
+      origin,
+      scale
+    };
+  }
+
+  function denormalizeRecognitionPoint(p,norm){
+    return {
+      x:p.x/norm.scale+norm.origin.x,
+      y:p.y/norm.scale+norm.origin.y
+    };
+  }
+
+  function denormalizeRecognizedShape(shape,norm){
+    if(!shape || !norm) return shape;
+
+    const o=cloneObject(shape);
+    const un=p=>denormalizeRecognitionPoint(p,norm);
+    const inv=1/norm.scale;
+
+    if(o.center) o.center=un(o.center);
+    if(o.a) o.a=un(o.a);
+    if(o.b) o.b=un(o.b);
+
+    if(Array.isArray(o.points)){
+      o.points=o.points.map(un);
+    }
+
+    if(Array.isArray(o.baseVertices)){
+      o.baseVertices=o.baseVertices.map(un);
+    }
+
+    if(Number.isFinite(o.rx)) o.rx*=inv;
+    if(Number.isFinite(o.ry)) o.ry*=inv;
+    if(Number.isFinite(o.w)) o.w*=inv;
+    if(Number.isFinite(o.h)) o.h*=inv;
+    if(Number.isFinite(o.radius)) o.radius*=inv;
+
+    return o;
+  }
+
   function smoothRecognitionStroke(pts,count=96){
     if(!Array.isArray(pts) || pts.length<2) return [];
 
@@ -13828,8 +13885,15 @@
 
       const style=strokeStyle();
 
-      // Ham kalem örneklerini önce eşit aralıklı ve hafif yumuşatılmış hale getir.
-      const clean=smoothRecognitionStroke(pts,96);
+      // Tanımayı çizimin gerçek piksel boyutundan bağımsız yap.
+      // Küçük ve büyük şekiller aynı yaklaşık 240 birimlik koordinat
+      // sisteminde analiz edilir; sonuç sonunda tekrar gerçek boyuta döner.
+      const norm=normalizeRecognitionGeometry(pts,240);
+      if(!norm) return null;
+
+      // Ham kalem örneklerini standart ölçekte eşit aralıklı ve hafif
+      // yumuşatılmış hale getir.
+      const clean=smoothRecognitionStroke(norm.points,96);
       if(clean.length<6) return null;
 
       const topology=recognitionTopology(clean);
@@ -13955,7 +14019,7 @@
         'Algılandı: '+best.name+
         ' · güven '+Math.round(best.score*100)+'%';
 
-      return best.shape;
+      return denormalizeRecognizedShape(best.shape,norm);
 
     }catch(err){
       console.warn('Tanıma adayı atlandı:',err);
