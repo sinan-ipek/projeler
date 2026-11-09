@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.90</title>
+<title>Beyaz Tahta v18.91</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1248,7 +1248,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.90 · Yay/doğru tanıma ayrımı iyileştirildi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.91 · Köşeli parantez otomatik tanıma eklendi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -5274,6 +5274,16 @@
     const style=cloneObject(o.style||strokeStyle());
     const source=o.source||'auto';
     const shapeType=o.shapeType||o.shapeName||o.kind;
+
+    if(o.kind==='bracket'){
+      return straightBezierFromPoints(o.points||[],{
+        closed:false,
+        style,
+        shapeType:'square bracket',
+        source,
+        boxAngle:o.boxAngle||0
+      });
+    }
 
     if(o.kind==='line'){
       return straightBezierFromPoints([o.a,o.b],{
@@ -13554,10 +13564,145 @@
     };
   }
 
+
+  function bracketCandidate(pts,style){
+    if(!pts || pts.length<10) return null;
+
+    const rs=resamplePolyline(pts,72);
+    if(rs.length<12) return null;
+
+    const b=bbox(rs);
+    const w=Math.max(1,b.w);
+    const h=Math.max(1,b.h);
+
+    // Dikey ağırlıklı, açık bir şekil olmalı.
+    if(h<45 || w<12 || h/w<1.8) return null;
+
+    const endGap=dist(rs[0],rs[rs.length-1]);
+    if(endGap<Math.max(18,h*0.35)) return null;
+
+    // Belirgin yön değişimlerini bul.
+    const rawTurns=[];
+    const step=4;
+    for(let i=step;i<rs.length-step;i++){
+      const a1=Math.atan2(rs[i].y-rs[i-step].y,rs[i].x-rs[i-step].x);
+      const a2=Math.atan2(rs[i+step].y-rs[i].y,rs[i+step].x-rs[i].x);
+      const turn=Math.abs(angleDiff(a2,a1));
+      if(turn>0.62) rawTurns.push(i);
+    }
+    if(rawTurns.length<2) return null;
+
+    // Aynı köşeye ait yakın örnekleri grupla.
+    const groups=[];
+    for(const i of rawTurns){
+      const g=groups[groups.length-1];
+      if(!g || i-g[g.length-1]>6) groups.push([i]);
+      else g.push(i);
+    }
+    if(groups.length!==2) return null;
+
+    const c1=Math.round(groups[0].reduce((a,v)=>a+v,0)/groups[0].length);
+    const c2=Math.round(groups[1].reduce((a,v)=>a+v,0)/groups[1].length);
+    if(c1<3 || c2>rs.length-4 || c2-c1<10) return null;
+
+    const p0=rs[0];
+    const p1=rs[c1];
+    const p2=rs[c2];
+    const p3=rs[rs.length-1];
+
+    const l1=dist(p0,p1);
+    const l2=dist(p1,p2);
+    const l3=dist(p2,p3);
+
+    if(l1<8 || l3<8 || l2<h*0.45) return null;
+
+    const aTop=Math.atan2(p1.y-p0.y,p1.x-p0.x);
+    const aMid=Math.atan2(p2.y-p1.y,p2.x-p1.x);
+    const aBot=Math.atan2(p3.y-p2.y,p3.x-p2.x);
+
+    const verticalErr=Math.min(
+      Math.abs(angleDiff(aMid,Math.PI/2)),
+      Math.abs(angleDiff(aMid,-Math.PI/2))
+    );
+    const horizontalErrTop=Math.min(
+      Math.abs(angleDiff(aTop,0)),
+      Math.abs(angleDiff(aTop,Math.PI))
+    );
+    const horizontalErrBot=Math.min(
+      Math.abs(angleDiff(aBot,0)),
+      Math.abs(angleDiff(aBot,Math.PI))
+    );
+
+    if(verticalErr>0.38 || horizontalErrTop>0.45 || horizontalErrBot>0.45) return null;
+
+    const corner1=Math.abs(Math.abs(angleDiff(aMid,aTop))-Math.PI/2);
+    const corner2=Math.abs(Math.abs(angleDiff(aBot,aMid))-Math.PI/2);
+    if(corner1>0.42 || corner2>0.42) return null;
+
+    // Üst ve alt kollar aynı tarafa bakmalı: [ veya ].
+    const topDir=Math.sign(p0.x-p1.x);
+    const bottomDir=Math.sign(p3.x-p2.x);
+    if(!topDir || !bottomDir || topDir!==bottomDir) return null;
+
+    // Üç parça da kendi ideal doğru parçasına yakın olmalı.
+    const segmentDeviation=(a,b,start,end)=>{
+      let max=0,mean=0,count=0;
+      for(let i=start;i<=end;i++){
+        const d=pointToSegmentDistance(rs[i],a,b);
+        max=Math.max(max,d);
+        mean+=d;
+        count++;
+      }
+      return {max,mean:mean/Math.max(1,count)};
+    };
+
+    const d1=segmentDeviation(p0,p1,0,c1);
+    const d2=segmentDeviation(p1,p2,c1,c2);
+    const d3=segmentDeviation(p2,p3,c2,rs.length-1);
+    const tol=Math.max(5,Math.min(14,w*0.22));
+
+    if(d1.max>tol || d2.max>tol || d3.max>tol) return null;
+
+    // İdeal parantezi eksenlere hizala; eldeki küçük açı/titremeleri temizle.
+    const leftSide=topDir<0;
+    const xSpine=(p1.x+p2.x)/2;
+    const topY=(p0.y+p1.y)/2;
+    const bottomY=(p2.y+p3.y)/2;
+    const arm=Math.max(10,(l1+l3)/2);
+
+    const xOuter=leftSide ? xSpine-arm : xSpine+arm;
+
+    return {
+      kind:'bracket',
+      points:leftSide
+        ? [
+            {x:xOuter,y:topY},
+            {x:xSpine,y:topY},
+            {x:xSpine,y:bottomY},
+            {x:xOuter,y:bottomY}
+          ]
+        : [
+            {x:xOuter,y:topY},
+            {x:xSpine,y:topY},
+            {x:xSpine,y:bottomY},
+            {x:xOuter,y:bottomY}
+          ],
+      style,
+      shapeName:leftSide ? 'left square bracket' : 'right square bracket',
+      source:'auto',
+      boxAngle:0
+    };
+  }
+
   function recognize(pts){
     try{
       if(pts.length<6) return null;
       const style=strokeStyle();
+
+      // Köşeli parantez uzun bir dikey parça içerdiği için doğru testinden
+      // önce denenir; aksi halde [ ve ] kolayca doğruya dönüşebilir.
+      const bracket=bracketCandidate(pts,style);
+      if(bracket) return bracket;
 
       // A clearly circular open curve wins before the broad A→B line intent.
       // Very shallow curves are rejected by arcCandidate and remain lines.
