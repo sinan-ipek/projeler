@@ -150,7 +150,7 @@ function createPreview(a,b){const mesh=new THREE.Mesh(new THREE.CylinderGeometry
 function movePreview(mesh,a,b){const delta=b.clone().sub(a);mesh.position.copy(a).add(b).multiplyScalar(.5);mesh.scale.y=Math.max(.001,delta.length());mesh.quaternion.setFromUnitVectors(vecY,delta.lengthSq()>0?delta.normalize():vecY);}
 function endLeftSelect(c){if(c.lineStart){const b=snapPoint(castSurface(worldRay(c)));if(b.distanceTo(c.lineStart)>.025){const line=createLine(c.lineStart,b);setSelection(line,1);}if(c.preview){scene.remove(c.preview);disposeGraph(c.preview);}c.lineStart=null;c.preview=null;}}
 function startEdit(c,precision){const ray=worldRay(c);
- if(menuVisible&&menu){const hit=pick(ray,menuTargets);if(hit){action(hit.object.userData.menuAction);return;}}
+ if(menuVisible&&menu&&menu.visible){const hit=pick(ray,menuTargets);if(hit){action(hit.object.userData.menuAction);return;}}
  if(!selected)return;
  const g=pick(ray,gizmoTargets);if(!g)return;
  const handle=g.object.userData.gizmo;
