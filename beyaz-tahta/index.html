@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.84</title>
+<title>Beyaz Tahta v18.85</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1223,7 +1223,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.84 · 3D çizgi ve gelişmiş 3D snap</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.85 · Ctrl transformasyon zinciri + Space ile uygula</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1379,8 +1379,9 @@
           <div class="helpShortcutRow"><kbd>Alt + sürükleme</kbd><span>Kopyala ve taşı; doğru parçasında A/B ucunda kopyala + ucu taşı</span></div>
           <div class="helpShortcutRow"><kbd>Alt + boyutlandırma</kbd><span>Kopyala ve boyutlandır</span></div>
           <div class="helpShortcutRow"><kbd>Alt + döndürme</kbd><span>Kopyala ve döndür</span></div>
-          <div class="helpShortcutRow"><kbd>Space</kbd><span>Son transformasyonu tekrarla</span></div>
-          <div class="helpShortcutRow"><kbd>Shift + Space</kbd><span>Kopyala ve son transformasyonu uygula</span></div>
+          <div class="helpShortcutRow"><kbd>Ctrl + transformasyonlar</kbd><span>Taşıma, döndürme ve yatay/dikey yansıtmayı sırayla kaydet</span></div>
+          <div class="helpShortcutRow"><kbd>Space</kbd><span>Ctrl ile kaydedilmiş zincir varsa tümünü; yoksa son transformasyonu uygula</span></div>
+          <div class="helpShortcutRow"><kbd>Shift + Space</kbd><span>Kopyala ve kayıtlı zinciri ya da son transformasyonu uygula</span></div>
           <div class="helpShortcutRow"><kbd>Delete / Backspace</kbd><span>Seçili nesneyi / nesneleri sil</span></div>
           <div class="helpShortcutRow"><kbd>Ctrl + C</kbd><span>Seçili nesneyi / nesneleri kopyala</span></div>
           <div class="helpShortcutRow"><kbd>Ctrl + V</kbd><span>Kopyalanan nesneyi / nesneleri yapıştır</span></div>
@@ -1685,6 +1686,30 @@
   // Space repeats it; Shift+Space duplicates the current selection first. Line endpoint drags are repeatable too.
   let lastRepeatTransform = null;
   let pendingRepeatTransform = null;
+
+  // v18.85 — Ctrl transformasyon zinciri.
+  // Ctrl basılıyken tamamlanan taşıma, döndürme ve yansıtma işlemleri sırayla kaydedilir.
+  // Ctrl bırakıldığında zincir saklanır; Space zincirin tamamını mevcut seçime uygular.
+  let ctrlTransformRecording = false;
+  let ctrlTransformSequenceWorking = [];
+  let ctrlTransformSequence = [];
+
+  function appendCtrlTransformStep(transform){
+    if(!ctrlTransformRecording || !transform) return;
+    if(!['move','rotate','reflect'].includes(transform.type)) return;
+    ctrlTransformSequenceWorking.push(cloneObject(transform));
+  }
+
+  function finishCtrlTransformRecording(){
+    if(!ctrlTransformRecording) return;
+    ctrlTransformRecording=false;
+    if(ctrlTransformSequenceWorking.length){
+      ctrlTransformSequence=ctrlTransformSequenceWorking.map(cloneObject);
+      statusEl.textContent=
+        ctrlTransformSequence.length+' transformasyon kaydedildi — Space ile uygula';
+    }
+    ctrlTransformSequenceWorking=[];
+  }
 
   let marqueeStart = null;
   let marqueeEnd = null;
@@ -10485,16 +10510,19 @@
     }
   }
 
-  function applyRepeatTransformToSelection(transform,duplicateFirst=false){
+  function applyRepeatTransformToSelection(transform,duplicateFirst=false,options={}){
     if(!transform || !selectedIndices.length) return false;
 
+    const skipUndo=!!options.skipUndo;
+    const silent=!!options.silent;
+
     if(selectedIndices.some(i=>objects[i] && objects[i].locked)){
-      statusEl.textContent='Kilitli nesneye transformasyon uygulanamaz';
+      if(!silent) statusEl.textContent='Kilitli nesneye transformasyon uygulanamaz';
       redraw();
       return false;
     }
 
-    if(!duplicateFirst){
+    if(!duplicateFirst && !skipUndo){
       recordObjectStates(selectedIndices);
     }
 
@@ -10570,16 +10598,63 @@
         return false;
       }
 
+    }else if(transform.type==='reflect'){
+      const axis=transform.axis;
+      if(axis!=='horizontal' && axis!=='vertical') return false;
+      const b=groupSelectionBounds(indices);
+      if(!b) return false;
+      const pivot={x:b.cx,y:b.cy};
+      for(const i of indices){
+        if(objects[i]) reflectObject(objects[i],pivot,axis);
+      }
+
     }else{
       return false;
     }
 
     if(duplicateFirst) commitAddedObjectsUndo();
     redraw();
-    statusEl.textContent=duplicateFirst
-      ? 'Kopya oluşturuldu ve son transformasyon tekrarlandı'
-      : 'Son transformasyon tekrarlandı';
+    if(!silent){
+      statusEl.textContent=duplicateFirst
+        ? 'Kopya oluşturuldu ve son transformasyon tekrarlandı'
+        : 'Son transformasyon tekrarlandı';
+    }
     return true;
+  }
+
+  function applyCtrlTransformSequenceToSelection(duplicateFirst=false){
+    if(!ctrlTransformSequence.length || !selectedIndices.length) return false;
+
+    if(selectedIndices.some(i=>objects[i] && objects[i].locked)){
+      statusEl.textContent='Kilitli nesneye transformasyon zinciri uygulanamaz';
+      redraw();
+      return false;
+    }
+
+    if(duplicateFirst){
+      const pivotBeforeDuplicate=selectionPivot
+        ? {x:selectionPivot.x,y:selectionPivot.y}
+        : null;
+      const dupIndices=duplicateSelection(selectedIndices);
+      setSelectionPreservePivot(dupIndices,pivotBeforeDuplicate);
+      armAddedObjectsUndo(dupIndices);
+    }else{
+      recordObjectStates(selectedIndices);
+    }
+
+    let applied=0;
+    for(const step of ctrlTransformSequence){
+      if(applyRepeatTransformToSelection(step,false,{skipUndo:true,silent:true})){
+        applied++;
+      }
+    }
+
+    if(duplicateFirst) commitAddedObjectsUndo();
+    redraw();
+    statusEl.textContent=duplicateFirst
+      ? 'Kopya oluşturuldu ve Ctrl transformasyon zinciri uygulandı'
+      : ctrlTransformSequence.length+' adımlık Ctrl transformasyon zinciri uygulandı';
+    return applied>0;
   }
 
   function drawSelection(){
@@ -14227,7 +14302,7 @@
     reorderContextTargets(false);
   });
 
-  function reflectContextTargets(axis){
+  function reflectContextTargets(axis,recordInCtrlSequence=false){
     const valid=expandGroupedIndices(contextTargetIndices)
       .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length);
 
@@ -14250,6 +14325,10 @@
 
     contextTargetIndices=valid;
     setSelection(valid.filter(i=>objects[i]));
+
+    if(recordInCtrlSequence){
+      appendCtrlTransformStep({type:'reflect',axis});
+    }
 
     statusEl.textContent=axis==='horizontal'
       ? (valid.length>1 ? `${valid.length} nesne yatayda yansıtıldı` : 'Nesne yatayda yansıtıldı')
@@ -14305,12 +14384,12 @@
 
   flipHorizontalBtn.addEventListener('click',e=>{
     e.stopPropagation();
-    reflectContextTargets('horizontal');
+    reflectContextTargets('horizontal',!!(e.ctrlKey||e.metaKey));
   });
 
   flipVerticalBtn.addEventListener('click',e=>{
     e.stopPropagation();
-    reflectContextTargets('vertical');
+    reflectContextTargets('vertical',!!(e.ctrlKey||e.metaKey));
   });
 
   groupToggleBtn.addEventListener('click',e=>{
@@ -16253,6 +16332,10 @@
         ['move','rotate','scale','lineEndpoint'].includes(pendingRepeatTransform.type)
       ){
         lastRepeatTransform=cloneObject(pendingRepeatTransform);
+
+        if(['move','rotate'].includes(pendingRepeatTransform.type)){
+          appendCtrlTransformStep(pendingRepeatTransform);
+        }
       }
       pendingRepeatTransform=null;
 
@@ -18394,8 +18477,11 @@
 
 
   window.addEventListener('keyup',e=>{
-    if(e.key==='Control' && temporaryEraserActive){
-      releaseTemporaryEraser();
+    if(e.key==='Control'){
+      finishCtrlTransformRecording();
+      if(temporaryEraserActive){
+        releaseTemporaryEraser();
+      }
     }
   });
 
@@ -18410,6 +18496,11 @@
       tag==='select' ||
       (target && target.isContentEditable) ||
       !!textEditing;
+
+    if(!typingTarget && e.key==='Control' && !e.repeat){
+      ctrlTransformRecording=true;
+      ctrlTransformSequenceWorking=[];
+    }
 
     if(e.altKey && e.code==='Space'){
       return;
@@ -18430,6 +18521,11 @@
       !e.altKey
     ){
       e.preventDefault();
+
+      if(ctrlTransformSequence.length){
+        applyCtrlTransformSequenceToSelection(e.shiftKey);
+        return;
+      }
 
       if(!lastRepeatTransform){
         statusEl.textContent='Tekrarlanacak bir transformasyon yok';
