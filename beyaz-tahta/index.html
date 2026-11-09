@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.91</title>
+<title>Beyaz Tahta v18.92</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1248,7 +1248,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.91 · Köşeli parantez otomatik tanıma eklendi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.92 · Puanlamalı otomatik şekil tanıma</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -13694,83 +13694,199 @@
     };
   }
 
+  function arcRecognitionScore(pts){
+    const arc=arcCandidate(pts,strokeStyle());
+    if(!arc) return 0;
+
+    const rs=resamplePolyline(pts,64);
+    const fit=fitCircleForArc(rs);
+    if(!fit) return 0;
+
+    const chord=Math.max(1,dist(rs[0],rs[rs.length-1]));
+
+    let pathLen=0;
+    let maxDev=0;
+    let meanDev=0;
+    for(let i=1;i<rs.length;i++) pathLen+=dist(rs[i-1],rs[i]);
+    for(const p of rs){
+      const d=pointToSegmentDistance(p,rs[0],rs[rs.length-1]);
+      maxDev=Math.max(maxDev,d);
+      meanDev+=d;
+    }
+    meanDev/=Math.max(1,rs.length);
+
+    const fitScore=
+      0.55*clamp01(1-fit.meanAbs/0.080) +
+      0.45*clamp01(1-fit.rms/0.105);
+
+    const curveScore=
+      0.55*clamp01((maxDev/chord-0.025)/0.16) +
+      0.45*clamp01((meanDev/chord-0.010)/0.08);
+
+    const pathRatio=pathLen/chord;
+    const smoothScore=clamp01(1-Math.abs(pathRatio-1.10)/0.65);
+
+    return clamp01(
+      0.48*fitScore +
+      0.37*curveScore +
+      0.15*smoothScore
+    );
+  }
+
+  function bracketRecognitionScore(pts,shape){
+    if(!shape) return 0;
+
+    const rs=resamplePolyline(pts,72);
+    const b=bbox(rs);
+    const aspect=Math.max(1,b.h/Math.max(1,b.w));
+
+    // bracketCandidate zaten güçlü geometrik filtrelerden geçmiş olur.
+    // Burada yalnızca ne kadar "tipik parantez" olduğunu derecelendiriyoruz.
+    const aspectScore=clamp01((aspect-1.6)/3.0);
+    const openScore=clamp01(
+      dist(rs[0],rs[rs.length-1]) /
+      Math.max(1,b.h*0.85)
+    );
+
+    return clamp01(0.76 + 0.14*aspectScore + 0.10*openScore);
+  }
+
+  function recognitionCandidate(name,shape,score,minScore){
+    if(!shape || !Number.isFinite(score) || score<minScore) return null;
+    return {name,shape,score};
+  }
+
   function recognize(pts){
     try{
       if(pts.length<6) return null;
+
       const style=strokeStyle();
-
-      // Köşeli parantez uzun bir dikey parça içerdiği için doğru testinden
-      // önce denenir; aksi halde [ ve ] kolayca doğruya dönüşebilir.
-      const bracket=bracketCandidate(pts,style);
-      if(bracket) return bracket;
-
-      // A clearly circular open curve wins before the broad A→B line intent.
-      // Very shallow curves are rejected by arcCandidate and remain lines.
-      const arc=arcCandidate(pts,style);
-      if(arc) return arc;
-
-      // NEW: an open A→B stroke remains a line even if the hand path is curved.
-      if(openStrokeLineIntent(pts)){
-        return forceABLine(pts,style);
-      }
-
       const trimmed=trimOvershootForClosedIntent(pts);
+      const close=closureScore(trimmed);
+      const candidates=[];
 
-      // 1) Straight line keeps the familiar v6 behavior.
-      const lineCand=lineCandidate(trimmed,style);
-      const sLine=lineScore(trimmed);
-      if(lineCand && sLine>0.78) return lineCand;
+      const add=c=>{
+        if(c) candidates.push(c);
+      };
 
-      /*
-        2) Circle is now an independent geometric model.
-        It no longer depends on the generic ellipse score.
-      */
+      // 1) Köşeli parantez
+      const bracket=bracketCandidate(pts,style);
+      add(recognitionCandidate(
+        'bracket',
+        bracket,
+        bracketRecognitionScore(pts,bracket),
+        0.76
+      ));
+
+      // 2) Yay
+      const arc=arcCandidate(pts,style);
+      add(recognitionCandidate(
+        'arc',
+        arc,
+        arcRecognitionScore(pts),
+        0.54
+      ));
+
+      // 3) Doğru — yalnızca açık ve gerçekten doğruya yakın çizimlerde.
+      const directLine=lineCandidate(pts,style);
+      const openLine=openStrokeLineIntent(pts)
+        ? forceABLine(pts,style)
+        : null;
+      const lineShape=directLine || openLine;
+      let sLine=lineScore(pts);
+
+      // Kapalı şekillerin doğru olarak seçilmesini ciddi biçimde cezalandır.
+      if(close>0.45) sLine*=Math.max(0,1-(close-0.45)*1.8);
+
+      add(recognitionCandidate(
+        'line',
+        lineShape,
+        sLine,
+        0.72
+      ));
+
+      // 4) Daire — kendi güçlü geometrik skoruyla.
       const circle=circleCandidateRobust(trimmed,style);
-
-      // Compute rectangle evidence before accepting circle.
-      const rectCand=buildRectIdeal(trimmed,style);
-      const sRect=rectangleScore(trimmed);
-
       if(circle){
-        /*
-          A rectangle may only steal the result when it has clearly stronger
-          four-straight-edge evidence. This prevents "almost round" hand circles
-          from being rejected by tiny corner noise.
-        */
-        if(rectCand && rectangleHasStrongEvidence(trimmed) && sRect > circle.score + 0.10){
-          return rectCand;
-        }
-        return circle.shape;
+        add(recognitionCandidate(
+          'circle',
+          circle.shape,
+          circle.score,
+          0.53
+        ));
       }
 
-      // 3) Generic ellipse for non-circular ellipses.
-      const ellCand=buildEllipseIdeal(trimmed,style);
-      const sEll=ellipseScore(trimmed);
+      // 5) Elips
+      const ellipse=buildEllipseIdeal(trimmed,style);
+      const sEllipse=ellipseScore(trimmed);
+      add(recognitionCandidate(
+        'ellipse',
+        ellipse,
+        sEllipse,
+        0.55
+      ));
 
-      // 4) Triangle / rectangle.
-      const triCand=buildTriangleIdeal(trimmed,style);
+      // 6) Dikdörtgen/kare
+      const rect=buildRectIdeal(trimmed,style);
+      const sRect=rectangleScore(trimmed);
+      const rectMin=rectangleHasStrongEvidence(trimmed) ? 0.53 : 0.58;
+      add(recognitionCandidate(
+        'rectangle',
+        rect,
+        sRect,
+        rectMin
+      ));
+
+      // 7) Üçgen
+      const tri=buildTriangleIdeal(trimmed,style);
       const sTri=triangleScore(trimmed);
+      add(recognitionCandidate(
+        'triangle',
+        tri,
+        sTri,
+        0.55
+      ));
 
-      // Strong rectangle evidence wins over ellipse.
-      if(rectCand && rectangleHasStrongEvidence(trimmed) && sRect>=0.56){
-        return rectCand;
-      }
-
-      if(ellCand && sEll>=0.54){
-        return ellCand;
-      }
-
-      // 5) v7 turning-angle engine for 5/6-gons.
+      // 8) Beşgen / altıgen
       const turnModel=robustPolygonIntent(trimmed);
       if(turnModel && (turnModel.n===5 || turnModel.n===6)){
         const pg=buildRegularPolygonIdeal(trimmed,turnModel.n,style);
-        if(pg) return pg;
+        const pgScore=regularPolygonScore(trimmed,turnModel.n);
+        add(recognitionCandidate(
+          turnModel.n===5 ? 'pentagon' : 'hexagon',
+          pg,
+          pgScore,
+          0.57
+        ));
       }
 
-      if(triCand && sTri>=0.54) return triCand;
-      if(rectCand && sRect>=0.54) return rectCand;
+      if(!candidates.length) return null;
 
-      return null;
+      candidates.sort((a,b)=>b.score-a.score);
+      const best=candidates[0];
+      const second=candidates[1] || null;
+
+      // En iyi aday da yeterince güvenli değilse hiçbir şeyi zorlamayalım.
+      if(best.score<0.58) return null;
+
+      // İki farklı model birbirine çok yakınsa çizimi olduğu gibi bırak.
+      // Yanlış otomatik dönüşüm, dönüşüm olmamasından daha kötü.
+      if(
+        second &&
+        second.name!==best.name &&
+        (best.score-second.score)<0.055
+      ){
+        statusEl.textContent=
+          'Şekil belirsiz — '+best.name+' / '+second.name+
+          ' ('+Math.round(best.score*100)+' / '+Math.round(second.score*100)+')';
+        return null;
+      }
+
+      statusEl.textContent=
+        'Algılandı: '+best.name+
+        ' · güven '+Math.round(best.score*100)+'%';
+
+      return best.shape;
 
     }catch(err){
       console.warn('Tanıma adayı atlandı:',err);
@@ -13778,6 +13894,7 @@
       return null;
     }
   }
+
   function armHold(){
     clearTimeout(holdTimer);
     holdTimer=setTimeout(()=>{
