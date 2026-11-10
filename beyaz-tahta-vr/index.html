@@ -261,7 +261,7 @@ async function togglePassthrough(){
 }
 const presets=['sin(x)*cos(z)','0.4*sin(2*x)+0.3*cos(2*z)','0.6*exp(-(x*x+z*z))','0.5*sin(sqrt(x*x+z*z)*4)'];
 let presetIndex=0;
-const formulaKeys=['x','z','+','-','*','/','^','(',')','sin(','cos(','sqrt(','0','1','2','3','.','⌫'];
+const formulaKeys=['x','z','+','-','*','/','^','(',')','sin(','cos(','sqrt(','0','1','2','3','.','C','⌫'];
 function evaluateFormula(expr,x,z){
  // Whitelisted, non-eval expression tokenizer + shunting-yard interpreter.
  const tokens=(expr.replace(/\s+/g,'').match(/(?:\d+(?:\.\d*)?|\.\d+)|(?:sin|cos|tan|sqrt|abs|exp|log)|(?:x|z|pi)|[()+\-*/^]/g)||[]);
@@ -326,7 +326,7 @@ function toggleSurfacePanel(force=false){
 function surfaceAction(act){
  if(act==='graph'){createSurface();return;}
  if(act==='prev'||act==='next'){presetIndex=(presetIndex+(act==='next'?1:presets.length-1))%presets.length;formulaText=presets[presetIndex];}
- if(act.startsWith('key:')){const ch=act.slice(4);formulaText=ch==='⌫'?formulaText.slice(0,-1):(formulaText+ch).slice(0,80);}
+ if(act.startsWith('key:')){const ch=act.slice(4);formulaText=ch==='C'?'':ch==='⌫'?formulaText.slice(0,-1):(formulaText+ch).slice(0,80);}
  toggleSurfacePanel(true);
 }
 
