@@ -16,7 +16,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#fff;font-family:syste
 <a id="home" href="https://sinan-ipek.github.io/projeler/index.html" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linejoin="round"><path d="M3 10 12 3l9 7M5.5 9v12h13V9M10 21v-8h4v8"/></svg></a>
 <select id="language" aria-label="Language"><option value="tr">Türkçe</option><option value="de">Deutsch</option><option value="en">English</option></select>
 <button id="help" aria-label="Help">?</button><div id="helptext"></div>
-<div id="status"></div><div id="version">v0.3.1 · Kompakt formül paneli ve sol menü düğmesi</div>
+<div id="status"></div><div id="version">v0.3.2 · Kompakt formül paneli ve sol menü düğmesi</div>
 <script type="module">
 import * as THREE from 'three';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
@@ -81,7 +81,7 @@ function makeMenu(){const wasVisible=menuVisible;if(menu){ctrl.forEach(c=>{if(c.
  uiLabel(menu,T[lang].looks,0,-.245,.8,.065);
  [['color','color'],['alpha','alpha'],['material','material']].forEach(([k,a],i)=>uiButton(menu,k,a,[-.345,0,.345][i],-.349,.316));
  [['snap','snap'],['outline','outline'],['space','space'],['pass','pass'],['surface','surface'],['formula','formula']].forEach(([k,a],i)=>uiButton(menu,k,a,[-.345,0,.345][i%3],-.48-Math.floor(i/3)*.115,.316));
- uiLabel(menu,'v0.3.1',.382,-.744,.17,.038,'#89929a',31);
+ uiLabel(menu,'v0.3.2',.382,-.744,.17,.038,'#89929a',31);
  attachMenu();menuVisible=wasVisible;menu.visible=wasVisible;
 }
 function attachMenu(){const left=controllerOf('left');if(menu&&left){left.add(menu);menu.position.set(.22,.22,-.36);menu.rotation.set(-.35,0,0);menu.scale.setScalar(.79);}}
@@ -237,8 +237,8 @@ function updateOutline(item){
  if(item.outline){item.mesh.remove(item.outline);item.outline.material.dispose();item.outline=null;}
  if(!outlineEnabled||item.type!=='shape')return;
  const shell=new THREE.Mesh(item.mesh.geometry,new THREE.ShaderMaterial({
- uniforms:{outlineColor:{value:new THREE.Color(0x20242c)},thickness:{value:.012}},
- vertexShader:'uniform float thickness; void main(){vec3 displaced=position+normal*thickness;gl_Position=projectionMatrix*modelViewMatrix*vec4(displaced,1.0);}',
+ uniforms:{outlineColor:{value:new THREE.Color(0x20242c)},outlineScale:{value:1.01}},
+ vertexShader:'uniform float outlineScale; void main(){vec3 enlarged=position*outlineScale;gl_Position=projectionMatrix*modelViewMatrix*vec4(enlarged,1.0);}',
  fragmentShader:'uniform vec3 outlineColor;void main(){gl_FragColor=vec4(outlineColor,1.0);}',
  side:THREE.BackSide,depthTest:true,depthWrite:false
  }));
