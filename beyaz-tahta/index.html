@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.96</title>
+<title>Beyaz Tahta v18.97</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -513,6 +513,16 @@
     border-radius:999px;
     display:block;
   }
+  #lineStyleBtn[data-line-style="dashed"] #lineStylePreview{
+    border-top:0;
+    height:3px;
+    background:
+      repeating-linear-gradient(
+        to right,
+        currentColor 0 7px,
+        transparent 7px 12px
+      );
+  }
   #lineStyleBtn[data-line-style="dotted"] #lineStylePreview{
     border-top:0;
     height:3px;
@@ -545,6 +555,14 @@
   .lineStyleSample{
     width:34px;height:3px;display:inline-block;flex:0 0 34px;
     border-radius:999px;background:#222;
+  }
+  .lineStyleSample.dashed{
+    background:
+      repeating-linear-gradient(
+        to right,
+        #222 0 9px,
+        transparent 9px 15px
+      );
   }
   .lineStyleSample.dotted{
     background:
@@ -986,6 +1004,9 @@
         <button class="lineStyleOption active" type="button" data-line-style="solid" role="menuitem">
           <span class="lineStyleSample" aria-hidden="true"></span><span>Solid</span>
         </button>
+        <button class="lineStyleOption" type="button" data-line-style="dashed" role="menuitem">
+          <span class="lineStyleSample dashed" aria-hidden="true"></span><span>Dashed</span>
+        </button>
         <button class="lineStyleOption" type="button" data-line-style="dotted" role="menuitem">
           <span class="lineStyleSample dotted" aria-hidden="true"></span><span>Dotted</span>
         </button>
@@ -1313,7 +1334,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.96 · Dotted seçim hatası düzeltildi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.97 · Dashed çizgi stili eklendi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -3187,9 +3208,10 @@
         setWidthControlValue(Number(o.style.width));
       }
 
-      const selectedLineStyle=o.style.lineStyle==='dotted' ? 'dotted' : 'solid';
+      const selectedLineStyle=normalizeLineStyle(o.style.lineStyle);
       lineStyleBtn.dataset.lineStyle=selectedLineStyle;
-      lineStyleBtn.title='Çizgi stili: '+(selectedLineStyle==='dotted'?'Dotted':'Solid');
+      lineStyleBtn.title='Çizgi stili: '+
+        (selectedLineStyle==='dotted'?'Dotted':selectedLineStyle==='dashed'?'Dashed':'Solid');
       lineStyleOptions.forEach(btn=>{
         btn.classList.toggle('active',btn.dataset.lineStyle===selectedLineStyle);
       });
@@ -3211,7 +3233,8 @@
     });
     setWidthControlValue(currentWidth);
     lineStyleBtn.dataset.lineStyle=currentLineStyle;
-    lineStyleBtn.title='Çizgi stili: '+(currentLineStyle==='dotted'?'Dotted':'Solid');
+    lineStyleBtn.title='Çizgi stili: '+
+      (currentLineStyle==='dotted'?'Dotted':currentLineStyle==='dashed'?'Dashed':'Solid');
     lineStyleOptions.forEach(btn=>{
       btn.classList.toggle('active',btn.dataset.lineStyle===currentLineStyle);
     });
@@ -3253,7 +3276,7 @@
   }
 
   function applyLineStyleToSelection(lineStyle){
-    const value=lineStyle==='dotted' ? 'dotted' : 'solid';
+    const value=normalizeLineStyle(lineStyle);
     const targets=styleEditableIndices();
     if(!targets.length) return 0;
 
@@ -3273,7 +3296,7 @@
     const payload={
       color:style.color || currentColor,
       width:Number.isFinite(Number(style.width)) ? Number(style.width) : Number(widthEl.value)||4,
-      lineStyle:style.lineStyle==='dotted' ? 'dotted' : 'solid',
+      lineStyle:normalizeLineStyle(style.lineStyle),
       hasFill:false,
       fillColor:null,
       fillOpacity:0
@@ -3313,7 +3336,7 @@
         ...(o.style||{}),
         color:payload.color,
         width:payload.width,
-        lineStyle:payload.lineStyle==='dotted' ? 'dotted' : 'solid'
+        lineStyle:normalizeLineStyle(payload.lineStyle)
       };
 
       if(payload.hasFill){
@@ -3397,22 +3420,32 @@
     redraw();
   }
 
+  function normalizeLineStyle(value){
+    return value==='dotted' || value==='dashed' ? value : 'solid';
+  }
+
   function strokeStyle(){
     return {
       color:currentColor,
       width:currentWidth,
-      lineStyle:currentLineStyle
+      lineStyle:normalizeLineStyle(currentLineStyle)
     };
   }
 
   function applyCanvasLineStyle(targetCtx,style){
-    const dotted=style && style.lineStyle==='dotted';
+    const lineStyle=normalizeLineStyle(style && style.lineStyle);
     const width=Math.max(.75,Number(style && style.width)||1);
     targetCtx.lineCap='round';
-    if(dotted){
+
+    if(lineStyle==='dotted'){
       targetCtx.setLineDash([
         Math.max(.25,width*.16),
         Math.max(3,width*2.15)
+      ]);
+    }else if(lineStyle==='dashed'){
+      targetCtx.setLineDash([
+        Math.max(6,width*3.2),
+        Math.max(4,width*1.8)
       ]);
     }else{
       targetCtx.setLineDash([]);
@@ -3586,7 +3619,7 @@
     const baseWidth=Math.max(.75,Number(style && style.width)||1);
     applyCanvasLineStyle(ctx,style);
 
-    if(style && style.lineStyle==='dotted'){
+    if(style && (style.lineStyle==='dotted' || style.lineStyle==='dashed')){
       ctx.lineWidth=baseWidth;
       ctx.beginPath();
       ctx.moveTo(pts[0].x,pts[0].y);
@@ -3824,7 +3857,7 @@
   function drawAdaptiveInkStroke(targetCtx,pts,style){
     if(!pts || !pts.length) return;
 
-    if(style && style.lineStyle==='dotted'){
+    if(style && (style.lineStyle==='dotted' || style.lineStyle==='dashed')){
       drawFastCommittedStroke(targetCtx,pts,style);
       return;
     }
@@ -3894,7 +3927,7 @@
 
     const style=strokeStyle();
 
-    if(style.lineStyle==='dotted'){
+    if(style.lineStyle==='dotted' || style.lineStyle==='dashed'){
       drawFastCommittedStroke(inkOverlayCtx,[wetLast],style);
       return;
     }
@@ -3911,7 +3944,7 @@
   function appendWetInk(raw){
     const style=strokeStyle();
 
-    if(style.lineStyle==='dotted'){
+    if(style.lineStyle==='dotted' || style.lineStyle==='dashed'){
       wetRawLast={...raw};
       wetLast={...raw};
       clearInkOverlay();
@@ -18434,9 +18467,10 @@
     btn.addEventListener('click',e=>{
       e.stopPropagation();
 
-      currentLineStyle=btn.dataset.lineStyle==='dotted' ? 'dotted' : 'solid';
+      currentLineStyle=normalizeLineStyle(btn.dataset.lineStyle);
       lineStyleBtn.dataset.lineStyle=currentLineStyle;
-      lineStyleBtn.title='Çizgi stili: '+(currentLineStyle==='dotted'?'Dotted':'Solid');
+      lineStyleBtn.title='Çizgi stili: '+
+        (currentLineStyle==='dotted'?'Dotted':currentLineStyle==='dashed'?'Dashed':'Solid');
 
       lineStyleOptions.forEach(b=>{
         b.classList.toggle('active',b===btn);
@@ -18452,7 +18486,8 @@
         }
       }else{
         statusEl.textContent=
-          'Çizgi stili: '+(currentLineStyle==='dotted'?'Dotted':'Solid');
+          'Çizgi stili: '+
+          (currentLineStyle==='dotted'?'Dotted':currentLineStyle==='dashed'?'Dashed':'Solid');
       }
     });
   });
