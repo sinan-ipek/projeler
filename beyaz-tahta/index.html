@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.95</title>
+<title>Beyaz Tahta v18.96</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1313,7 +1313,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.95 · Solid/Dotted çizgi stili eklendi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.96 · Dotted seçim hatası düzeltildi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -18427,7 +18427,6 @@
     closeFillMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
-    lineStyleMenu.classList.remove('open');
     lineStyleMenu.classList.toggle('open');
   });
 
@@ -18832,7 +18831,9 @@
     }
     if(!e.target.closest('.colorWrap')){
       colorMenu.classList.remove('open');
-    lineStyleMenu.classList.remove('open');
+    }
+    if(!e.target.closest('.lineStyleWrap')){
+      lineStyleMenu.classList.remove('open');
     }
   });
 
