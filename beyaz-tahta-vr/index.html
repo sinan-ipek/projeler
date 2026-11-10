@@ -359,13 +359,33 @@ function pickGizmo(ray){
  }
  return best;
 }
+
+function pickFlatHandle(ray){
+ if(!selected?.flat)return null;
+ const direct=pick(ray,flatTargets);
+ if(direct)return direct;
+ let best=null,bestError=Infinity;
+ for(const handle of flatTargets){
+  const point=handle.position;
+  const t=point.clone().sub(ray.origin).dot(ray.direction);
+  if(t<=0||t>8)continue;
+  const aim=ray.at(t,new THREE.Vector3());
+  const error=aim.distanceTo(point);
+  // Slight assistance, but keep vertex and edge targets distinguishable.
+  if(error<.043&&error<bestError){
+   bestError=error;best={object:handle,point:point.clone(),distance:t};
+  }
+ }
+ return best;
+}
 function rayTarget(ray){
  const ui=pick(ray,[...(surfacePanel?.visible?surfaceButtons:[]),...(menuVisible&&menu?.visible?menuTargets:[])]);
- const e=pick(ray,endpointTargets),g=pickGizmo(ray),o=pick(ray,items.map(i=>i.mesh));
+ const e=pick(ray,endpointTargets),f=pickFlatHandle(ray),g=pickGizmo(ray),o=pick(ray,items.map(i=>i.mesh));
  if(ui&&(!g||ui.distance<g.distance-.03))return ui;
  if(e&&(!g||e.distance<g.distance-.05))return e;
+ if(f&&(!g||f.distance<g.distance+.065))return f;
  if(g&&(!o||g.distance<o.distance+.28))return g;
- return [ui,e,g,o].filter(Boolean).sort((a,b)=>a.distance-b.distance)[0]||null;
+ return [ui,e,f,g,o].filter(Boolean).sort((a,b)=>a.distance-b.distance)[0]||null;
 }
 function rightSelect(c){
  const hit=rayTarget(worldRay(c));
@@ -373,6 +393,7 @@ function rightSelect(c){
  const obj=hit.object;
  if(obj.userData.surfaceAction){surfaceAction(obj.userData.surfaceAction);return;}
  if(obj.userData.menuAction){action(obj.userData.menuAction);return;}
+ if(obj.userData.flatHandle){startFlatEdit(c,obj.userData.flatHandle,true);return;}
  if(obj.userData.gizmo){startEdit(c,true,hit);return;}
  if(obj.userData.isHandle){setSelection(obj.userData.owner,obj.userData.end);return;}
  if(obj.userData.isItem){setSelection(obj.userData.owner,-1);return;}
@@ -594,7 +615,8 @@ for(let i=0;i<2;i++){
  controller.addEventListener('selectstart',()=>{if(c.hand==='right')rightSelect(c);});
  controller.addEventListener('disconnected',()=>{c.inputSource=null;});
  controller.addEventListener('selectend',()=>{if(c.hand==='right'){if(c.lineStart)endLeftSelect(c);if(c.edit?.precision)c.edit=null;}});
- controller.addEventListener('squeezestart',()=>{if(c.hand!=='right')return;const target=rayTarget(worldRay(c));if(target?.object.userData.gizmo)startEdit(c,false,target);else if(activeGizmo){const hit=gizmoTargets.find(x=>x.userData.gizmo?.axis===activeGizmo.axis&&x.userData.gizmo?.mode===activeGizmo.mode);if(hit)startEdit(c,false,{object:hit});}});
+ controller.addEventListener('squeezestart',()=>{if(c.hand!=='right')return;const target=rayTarget(worldRay(c));if(target?.object.userData.flatHandle)startFlatEdit(c,target.object.userData.flatHandle,false);
+ else if(target?.object.userData.gizmo)startEdit(c,false,target);else if(activeGizmo){const hit=gizmoTargets.find(x=>x.userData.gizmo?.axis===activeGizmo.axis&&x.userData.gizmo?.mode===activeGizmo.mode);if(hit)startEdit(c,false,{object:hit});}});
  controller.addEventListener('squeezeend',()=>{if(c.hand==='right'&&c.edit&&!c.edit.precision)c.edit=null;});
 }
 makeMenu();
@@ -608,7 +630,7 @@ function pollMenuKey(){
  priorMenuPressed=pressed;
 }
 function animate(){pollMenuKey();for(const c of ctrl){if(c.hand==='right'&&c.preview&&c.lineStart){movePreview(c.preview,c.lineStart,snapPoint(castSurface(worldRay(c))));}if(c.hand==='right'&&c.edit)editFrame(c);}
- syncGizmo();updateRayVisuals();renderer.render(scene,camera);}
+ syncGizmo();syncFlatHandles();updateRayVisuals();renderer.render(scene,camera);}
 renderer.setAnimationLoop(animate);
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 </script></body></html>
