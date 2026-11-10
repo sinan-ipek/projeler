@@ -162,13 +162,18 @@ function rebuildFlatHandles(){
    handle.renderOrder=18;scene.add(handle);flatTargets.push(handle);
   }
  }
+ // The small blue diamond moves the whole 2D object, separately from uniform scaling.
+ const body=new THREE.Mesh(new THREE.OctahedronGeometry(.024),new THREE.MeshBasicMaterial({color:0x3a86dd,depthTest:false}));
+ body.position.copy(item.mesh.localToWorld(new THREE.Vector3(0,-.065,.018)));
+ body.userData.flatHandle={item,kind:'body',index:-1,next:-1};
+ body.renderOrder=19;scene.add(body);flatTargets.push(body);
 }
 function syncFlatHandles(){
  if(!selected?.flat||flatTargets.length===0)return;
  selected.mesh.updateWorldMatrix(true,false);
  for(const h of flatTargets){
   const meta=h.userData.flatHandle;
-  const pos=flatPointWorld(selected,meta.index);
+  const pos=meta.kind==='body'?selected.mesh.localToWorld(new THREE.Vector3(0,-.065,.018)):flatPointWorld(selected,meta.index);
   if(meta.kind==='edge')pos.lerp(flatPointWorld(selected,meta.next),.5);
   h.position.copy(pos);
  }
@@ -182,12 +187,16 @@ function rebuildFlatGeometry(item){
 function startFlatEdit(c,meta,precise){
  if(selected!==meta.item)setSelection(meta.item);
  const p=new THREE.Vector3();c.controller.getWorldPosition(p);
- c.edit={mode:'flatHandle',precision:precise,flatMeta:meta,startPos:p,initialVertices:meta.item.vertices.map(x=>x.clone()),startQuaternion:meta.item.mesh.quaternion.clone(),startScale:meta.item.mesh.scale.clone()};
+ c.edit={mode:'flatHandle',precision:precise,flatMeta:meta,startPos:p,initialVertices:meta.item.vertices.map(x=>x.clone()),startWorldMeshPosition:meta.item.mesh.position.clone(),startQuaternion:meta.item.mesh.quaternion.clone(),startScale:meta.item.mesh.scale.clone()};
  activeGizmo=null;highlightGizmo();
 }
 function updateFlatEdit(c){
  const e=c.edit,item=e.flatMeta.item,p=new THREE.Vector3();c.controller.getWorldPosition(p);
  const delta=p.sub(e.startPos);
+ if(e.flatMeta.kind==='body'){
+  item.mesh.position.copy(e.startWorldMeshPosition).addScaledVector(delta,e.precision?.18:1);
+  syncFlatHandles();syncGizmo();return;
+ }
  // Controller movement in world space -> the local XY plane of the shape.
  delta.applyQuaternion(e.startQuaternion.clone().invert());
  delta.x/=Math.max(.001,e.startScale.x);delta.y/=Math.max(.001,e.startScale.y);
