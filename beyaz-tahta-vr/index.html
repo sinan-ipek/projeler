@@ -16,14 +16,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:#fff;font-family:syste
 <a id="home" href="https://sinan-ipek.github.io/projeler/index.html" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linejoin="round"><path d="M3 10 12 3l9 7M5.5 9v12h13V9M10 21v-8h4v8"/></svg></a>
 <select id="language" aria-label="Language"><option value="tr">Türkçe</option><option value="de">Deutsch</option><option value="en">English</option></select>
 <button id="help" aria-label="Help">?</button><div id="helptext"></div>
-<div id="status"></div><div id="version">v0.4.1 · Kompakt formül paneli ve sol menü düğmesi</div>
+<div id="status"></div><div id="version">v0.5.0 · Kompakt formül paneli ve sol menü düğmesi</div>
 <script type="module">
 import * as THREE from 'three';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 const T={
-tr:{status:'Beyaz Tahta VR · Sağ tetik/ray: seç · Sağ grip: hızlı hareket · Sol X: menü',help:'Sağ tetik ve lazer: seç, hassas gizmo hareketi yap. Sağ grip: seçili gizmoyu hızlı düzenle. Sol X: menüyü aç/kapat. Sarı gizmo seçilidir. Snap, kontur, lokal/global, passthrough ve formüllü yüzey seçenekleri menüdedir.',shapes:'NESNELER',tools:'ÇİZİM / İŞLEM',looks:'GÖRÜNÜM',box:'Küp',sphere:'Küre',cylinder:'Silindir',cone:'Koni',torus:'Halka',capsule:'Kapsül',tetra:'Piramit',octa:'Okta',dodeca:'Dodeka',plane:'Levha',hexPyramid:'Altıgen piramit',hexCylinder:'Altıgen silindir',line:'Düz çizgi',select:'Seç',ground:'Zemine indir',delete:'Sil',undo:'Geri al',clear:'Temizle',color:'Renk',alpha:'Saydamlık',material:'Malzeme',hide:'Menüyü kapat',snap:'Snap',outline:'Kontur',space:'Lokal/Global',pass:'Passthrough',surface:'Yüzey',formula:'Formül',plot:'Grafik',mode:'Sağ tetik: seç/hassas',fine:'Sağ grip: hızlı'},
-de:{status:'Whiteboard VR · Rechter Trigger: wählen · Rechter Grip: schnell · Linkes X: Menü',help:'Linker Trigger: Objekt oder Linienende wählen. Linke X-Taste: Menü öffnen/schließen. Rechter Grip: schnell bearbeiten. Rechter Trigger: fein bearbeiten. Farbe, Transparenz und Material im Menü ändern. Auf Boden: Objekt auf den Boden setzen.',shapes:'OBJEKTE',tools:'ZEICHNEN / AKTION',looks:'AUSSEHEN',box:'Würfel',sphere:'Kugel',cylinder:'Zylinder',cone:'Kegel',torus:'Ring',capsule:'Kapsel',tetra:'Pyramide',octa:'Okta',dodeca:'Dodeka',plane:'Platte',hexPyramid:'Sechseckpyramide',hexCylinder:'Sechseckprisma',line:'Gerade',select:'Wählen',ground:'Auf Boden',delete:'Löschen',undo:'Zurück',clear:'Leeren',color:'Farbe',alpha:'Transparenz',material:'Material',hide:'Menü schließen',snap:'Snap',outline:'Kontur',space:'Lokal/Global',pass:'Passthrough',surface:'Fläche',formula:'Formel',plot:'Grafik',mode:'Rechter Trigger: wählen/fein',fine:'Rechter Grip: schnell'},
-en:{status:'Whiteboard VR · Right trigger/ray: select · Right grip: fast · Left X: menu',help:'Left trigger: select object or line endpoint. Left X: toggle menu. Right grip: quick gizmo edit. Right trigger: fine gizmo edit. Change color, opacity and material using the menu. Ground: drop object onto the floor.',shapes:'OBJECTS',tools:'DRAW / ACTIONS',looks:'APPEARANCE',box:'Box',sphere:'Sphere',cylinder:'Cylinder',cone:'Cone',torus:'Torus',capsule:'Capsule',tetra:'Pyramid',octa:'Octa',dodeca:'Dodeca',plane:'Panel',hexPyramid:'Hex pyramid',hexCylinder:'Hex prism',line:'Straight line',select:'Select',ground:'Drop to floor',delete:'Delete',undo:'Undo',clear:'Clear',color:'Color',alpha:'Opacity',material:'Material',hide:'Close menu',snap:'Snap',outline:'Outline',space:'Local/World',pass:'Passthrough',surface:'Surface',formula:'Formula',plot:'Graph',mode:'Right trigger: select/precision',fine:'Right grip: fast'}
+tr:{status:'Beyaz Tahta VR · Sağ tetik/ray: seç · Sağ grip: hızlı hareket · Sol X: menü',help:'Sağ tetik ve lazer: seç, hassas gizmo hareketi yap. Sağ grip: seçili gizmoyu hızlı düzenle. Sol X: menüyü aç/kapat. Sarı gizmo seçilidir. Snap, kontur, lokal/global, passthrough ve formüllü yüzey seçenekleri menüdedir.',shapes:'NESNELER',tools:'ÇİZİM / İŞLEM',looks:'GÖRÜNÜM',box:'Küp',sphere:'Küre',cylinder:'Silindir',cone:'Koni',torus:'Halka',capsule:'Kapsül',tetra:'Piramit',octa:'Okta',dodeca:'Dodeka',plane:'Levha',circle2d:'Daire',rect2d:'Dikdörtgen',tri2d:'Üçgen',pent2d:'Beşgen',hex2d:'Altıgen',tab3d:'3D',tab2d:'2D',tabDraw:'Araç',tabLook:'Renk',tabExtra:'Ayar',hexPyramid:'Altıgen piramit',hexCylinder:'Altıgen silindir',line:'Düz çizgi',select:'Seç',ground:'Zemine indir',delete:'Sil',undo:'Geri al',clear:'Temizle',color:'Renk',alpha:'Saydamlık',material:'Malzeme',hide:'Menüyü kapat',snap:'Snap',outline:'Kontur',space:'Lokal/Global',pass:'Passthrough',surface:'Yüzey',formula:'Formül',plot:'Grafik',mode:'Sağ tetik: seç/hassas',fine:'Sağ grip: hızlı'},
+de:{status:'Whiteboard VR · Rechter Trigger: wählen · Rechter Grip: schnell · Linkes X: Menü',help:'Linker Trigger: Objekt oder Linienende wählen. Linke X-Taste: Menü öffnen/schließen. Rechter Grip: schnell bearbeiten. Rechter Trigger: fein bearbeiten. Farbe, Transparenz und Material im Menü ändern. Auf Boden: Objekt auf den Boden setzen.',shapes:'OBJEKTE',tools:'ZEICHNEN / AKTION',looks:'AUSSEHEN',box:'Würfel',sphere:'Kugel',cylinder:'Zylinder',cone:'Kegel',torus:'Ring',capsule:'Kapsel',tetra:'Pyramide',octa:'Okta',dodeca:'Dodeka',plane:'Platte',circle2d:'Kreis',rect2d:'Rechteck',tri2d:'Dreieck',pent2d:'Fünfeck',hex2d:'Sechseck',tab3d:'3D',tab2d:'2D',tabDraw:'Werkz.',tabLook:'Farbe',tabExtra:'Extra',hexPyramid:'Sechseckpyramide',hexCylinder:'Sechseckprisma',line:'Gerade',select:'Wählen',ground:'Auf Boden',delete:'Löschen',undo:'Zurück',clear:'Leeren',color:'Farbe',alpha:'Transparenz',material:'Material',hide:'Menü schließen',snap:'Snap',outline:'Kontur',space:'Lokal/Global',pass:'Passthrough',surface:'Fläche',formula:'Formel',plot:'Grafik',mode:'Rechter Trigger: wählen/fein',fine:'Rechter Grip: schnell'},
+en:{status:'Whiteboard VR · Right trigger/ray: select · Right grip: fast · Left X: menu',help:'Left trigger: select object or line endpoint. Left X: toggle menu. Right grip: quick gizmo edit. Right trigger: fine gizmo edit. Change color, opacity and material using the menu. Ground: drop object onto the floor.',shapes:'OBJECTS',tools:'DRAW / ACTIONS',looks:'APPEARANCE',box:'Box',sphere:'Sphere',cylinder:'Cylinder',cone:'Cone',torus:'Torus',capsule:'Capsule',tetra:'Pyramid',octa:'Octa',dodeca:'Dodeca',plane:'Panel',circle2d:'Circle',rect2d:'Rectangle',tri2d:'Triangle',pent2d:'Pentagon',hex2d:'Hexagon',tab3d:'3D',tab2d:'2D',tabDraw:'Tools',tabLook:'Look',tabExtra:'More',hexPyramid:'Hex pyramid',hexCylinder:'Hex prism',line:'Straight line',select:'Select',ground:'Drop to floor',delete:'Delete',undo:'Undo',clear:'Clear',color:'Color',alpha:'Opacity',material:'Material',hide:'Close menu',snap:'Snap',outline:'Outline',space:'Local/World',pass:'Passthrough',surface:'Surface',formula:'Formula',plot:'Graph',mode:'Right trigger: select/precision',fine:'Right grip: fast'}
 };
 let lang=localStorage.getItem('whiteboard-vr-lang')||'tr';if(!T[lang])lang='tr';
 const langSelect=document.querySelector('#language'),helpText=document.querySelector('#helptext');langSelect.value=lang;
@@ -56,7 +56,8 @@ plane:()=>new THREE.BoxGeometry(.33,.25,.018)
 };
 const colors=[0x55a6f1,0xec5e67,0x62bb80,0xf7bf4a,0x9f7be7,0x383e4a,0xffffff];
 const matTypes=['standard','metal','basic','wire'];
-const items=[],history=[],endpointTargets=[];
+const items=[],history=[],endpointTargets=[],flatTargets=[];
+let menuPage='3d';
 let selected=null,selectedEnd=-1,drawMode=false,menu=null,menuTargets=[],gizmo=null,gizmoTargets=[],menuVisible=true;
 let snapEnabled=true,outlineEnabled=false,localGizmo=false,passThrough=false,activeGizmo=null;
 let formulaText='sin(x)*cos(z)',surfacePanel=null,surfaceButtons=[],surfaceMode=false;
@@ -69,22 +70,36 @@ function disposeGraph(root){if(!root)return;root.traverse(o=>{if(o.geometry)o.ge
 function canvasTex(str,bg='#ffffff',fg='#233046',fontSize=46){const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,512,128);g.fillStyle=fg;g.textAlign='center';g.textBaseline='middle';g.font='600 '+fontSize+'px system-ui,Arial';g.fillText(str,256,64,490);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());tex.minFilter=THREE.LinearMipmapLinearFilter;return tex;}
 function uiLabel(parent,str,x,y,w=.32,h=.074,fg='#233046',fs=49){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:canvasTex(str,'#ffffff',fg,fs),transparent:true,depthTest:false,side:THREE.DoubleSide}));m.position.set(x,y,.012);parent.add(m);}
 function uiButton(parent,key,action,x,y,w=.31){const panel=new THREE.Mesh(new THREE.PlaneGeometry(w,.106),new THREE.MeshBasicMaterial({color:0xf0f3f6,side:THREE.DoubleSide,depthTest:false}));panel.position.set(x,y,.006);panel.userData.menuAction=action;parent.add(panel);menuTargets.push(panel);uiLabel(panel,T[lang][key]||key,0,0,w*.95,.075);}
-function makeMenu(){const wasVisible=menuVisible;if(menu){ctrl.forEach(c=>{if(c.controller&&menu.parent===c.controller)c.controller.remove(menu)});scene.remove(menu);disposeGraph(menu);}
+
+function makeMenu(){
+ const wasVisible=menuVisible;
+ if(menu){menu.parent?.remove(menu);disposeGraph(menu);}
  menuTargets=[];menu=new THREE.Group();menu.name='Left-controller-menu';
- const bg=new THREE.Mesh(new THREE.PlaneGeometry(1.06,1.62),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide,depthTest:false}));bg.position.z=-.009;menu.add(bg);
- uiLabel(menu,T[lang].shapes,0,.75,.8,.075);
- const shapes=['box','sphere','cylinder','cone','torus','capsule','tetra','octa','dodeca','plane','hexPyramid','hexCylinder'];
- shapes.forEach((k,i)=>{uiButton(menu,k,'add:'+k,[-.345,0,.345][i%3],.63-Math.floor(i/3)*.116,.316);});
- uiLabel(menu,T[lang].tools,0,.125,.8,.065);
- const actions=[['line','tool:line'],['select','tool:select'],['ground','ground'],['delete','delete'],['undo','undo'],['clear','clear']];
- actions.forEach(([k,a],i)=>uiButton(menu,k,a,[-.345,0,.345][i%3],.015-Math.floor(i/3)*.115,.316));
- uiLabel(menu,T[lang].looks,0,-.245,.8,.065);
- [['color','color'],['alpha','alpha'],['material','material']].forEach(([k,a],i)=>uiButton(menu,k,a,[-.345,0,.345][i],-.349,.316));
- [['snap','snap'],['outline','outline'],['space','space'],['pass','pass'],['surface','surface'],['formula','formula']].forEach(([k,a],i)=>uiButton(menu,k,a,[-.345,0,.345][i%3],-.48-Math.floor(i/3)*.115,.316));
- uiLabel(menu,'v0.4.1',.382,-.744,.17,.038,'#89929a',31);
+ const bg=new THREE.Mesh(new THREE.PlaneGeometry(.91,.66),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide,depthTest:false}));
+ bg.position.z=-.01;menu.add(bg);
+ const tabs=[['tab3d','3d'],['tab2d','2d'],['tabDraw','draw'],['tabLook','look'],['tabExtra','extra']];
+ tabs.forEach(([key,page],i)=>{
+  const b=new THREE.Mesh(new THREE.PlaneGeometry(.17,.09),new THREE.MeshBasicMaterial({color:page===menuPage?0xffdc66:0xe6ebf0,side:THREE.DoubleSide,depthTest:false}));
+  b.position.set(-.36+i*.18,.255,.01);b.userData.menuAction='page:'+page;menu.add(b);menuTargets.push(b);
+  uiLabel(b,T[lang][key],0,0,.16,.065,'#1a2836',68);
+ });
+ let entries=[];
+ if(menuPage==='3d')entries=['box','sphere','cylinder','cone','torus','capsule','tetra','octa','dodeca','plane','hexPyramid','hexCylinder'].map(k=>[k,'add:'+k]);
+ if(menuPage==='2d')entries=['circle2d','rect2d','tri2d','pent2d','hex2d'].map(k=>[k,'add:'+k]);
+ if(menuPage==='draw')entries=[['line','tool:line'],['select','tool:select'],['ground','ground'],['delete','delete'],['undo','undo'],['clear','clear']];
+ if(menuPage==='look')entries=[['color','color'],['alpha','alpha'],['material','material']];
+ if(menuPage==='extra')entries=[['snap','snap'],['outline','outline'],['space','space'],['pass','pass'],['surface','surface'],['formula','formula']];
+ entries.forEach(([key,action],i)=>{
+  const x=[-.30,0,.30][i%3],y=.12-Math.floor(i/3)*.117;
+  const b=new THREE.Mesh(new THREE.PlaneGeometry(.282,.096),new THREE.MeshBasicMaterial({color:0xf1f5f8,side:THREE.DoubleSide,depthTest:false}));
+  b.position.set(x,y,.01);b.userData.menuAction=action;menu.add(b);menuTargets.push(b);
+  uiLabel(b,T[lang][key]||key,0,0,.275,.07,'#182536',key.length>9?49:63);
+ });
+ uiLabel(menu,'v0.5.0',.325,-.294,.15,.035,'#89929a',35);
  attachMenu();menuVisible=wasVisible;menu.visible=wasVisible;
 }
-function attachMenu(){const left=controllerOf('left');if(menu&&left){left.add(menu);menu.position.set(.22,.22,-.36);menu.rotation.set(-.35,0,0);menu.scale.setScalar(.79);}}
+
+function attachMenu(){const left=controllerOf('left');if(menu&&left){left.add(menu);menu.position.set(.17,.13,-.37);menu.rotation.set(-.26,0,0);menu.scale.setScalar(.8);}}
 function controllerOf(hand){return ctrl.find(c=>c.hand===hand)?.controller||null;}
 function worldRay(c){const o=new THREE.Vector3(),dir=new THREE.Vector3(0,0,-1);c.controller.getWorldPosition(o);c.controller.getWorldQuaternion(c.tmpQuat);dir.applyQuaternion(c.tmpQuat).normalize();return new THREE.Ray(o,dir);}
 function intersections(ray,targets){raycaster.ray.copy(ray);raycaster.near=.005;raycaster.far=8;return raycaster.intersectObjects(targets,false);}
@@ -99,7 +114,102 @@ function buildMaterial(item){const kind=item.materialKind,opacity=item.opacity;
  item.mesh.material?.dispose();item.mesh.material=material;
  updateOutline(item);
 }
-function addShape(kind){const mesh=new THREE.Mesh(geometries[kind](),new THREE.MeshStandardMaterial());mesh.position.copy(spawnPos());mesh.userData.isItem=true;scene.add(mesh);
+
+const flatShapes=new Set(['circle2d','rect2d','tri2d','pent2d','hex2d']);
+function regular2D(count,r=.17,angle=Math.PI/2){
+ return Array.from({length:count},(_,i)=>new THREE.Vector2(r*Math.cos(angle+i*2*Math.PI/count),r*Math.sin(angle+i*2*Math.PI/count)));
+}
+function initial2D(kind){
+ if(kind==='rect2d')return [new THREE.Vector2(-.16,-.16),new THREE.Vector2(.16,-.16),new THREE.Vector2(.16,.16),new THREE.Vector2(-.16,.16)];
+ if(kind==='circle2d')return regular2D(32,.17,0);
+ return regular2D(kind==='tri2d'?3:kind==='pent2d'?5:6,.19,Math.PI/2);
+}
+function flatGeometry(points){
+ const shape=new THREE.Shape();
+ points.forEach((p,i)=>i?shape.lineTo(p.x,p.y):shape.moveTo(p.x,p.y));
+ shape.closePath();
+ return new THREE.ShapeGeometry(shape,8);
+}
+function addFlat(kind){
+ const vertices=initial2D(kind);
+ const mesh=new THREE.Mesh(flatGeometry(vertices),new THREE.MeshStandardMaterial({color:colors[0],side:THREE.DoubleSide}));
+ mesh.position.copy(spawnPos());
+ const item={type:'shape',kind,mesh,flat:true,vertices,color:colors[0],opacity:1,materialKind:'standard',outline:null};
+ mesh.userData.isItem=true;mesh.userData.owner=item;scene.add(mesh);items.push(item);
+ history.push({action:'add',item});buildMaterial(item);setSelection(item);drawMode=false;
+}
+function clearFlatHandles(){
+ for(const h of flatTargets){scene.remove(h);disposeGraph(h);}
+ flatTargets.length=0;
+}
+function flatPointWorld(item,index){
+ return item.mesh.localToWorld(new THREE.Vector3(item.vertices[index].x,item.vertices[index].y,0));
+}
+function rebuildFlatHandles(){
+ clearFlatHandles();if(!selected?.flat)return;
+ const item=selected,n=item.vertices.length,step=item.kind==='circle2d'?4:1;
+ item.mesh.updateWorldMatrix(true,false);
+ const colorCorner=0xf0aa35,colorEdge=0x4eb6ae;
+ for(let i=0;i<n;i+=step){
+  const next=(i+step)%n;
+  for(const kind of ['vertex','edge']){
+   const world=kind==='vertex'?flatPointWorld(item,i):
+    flatPointWorld(item,i).lerp(flatPointWorld(item,next),.5);
+   const handle=new THREE.Mesh(
+    kind==='vertex'?new THREE.BoxGeometry(.029,.029,.029):new THREE.SphereGeometry(.018,12,8),
+    new THREE.MeshBasicMaterial({color:kind==='vertex'?colorCorner:colorEdge,depthTest:false}));
+   handle.position.copy(world);handle.userData.flatHandle={item,kind,index:i,next};
+   handle.renderOrder=18;scene.add(handle);flatTargets.push(handle);
+  }
+ }
+}
+function syncFlatHandles(){
+ if(!selected?.flat||flatTargets.length===0)return;
+ selected.mesh.updateWorldMatrix(true,false);
+ for(const h of flatTargets){
+  const meta=h.userData.flatHandle;
+  const pos=flatPointWorld(selected,meta.index);
+  if(meta.kind==='edge')pos.lerp(flatPointWorld(selected,meta.next),.5);
+  h.position.copy(pos);
+ }
+}
+function rebuildFlatGeometry(item){
+ const old=item.mesh.geometry;
+ item.mesh.geometry=flatGeometry(item.vertices);old.dispose();
+ if(item.outline)updateOutline(item);
+ syncFlatHandles();
+}
+function startFlatEdit(c,meta,precise){
+ if(selected!==meta.item)setSelection(meta.item);
+ const p=new THREE.Vector3();c.controller.getWorldPosition(p);
+ c.edit={mode:'flatHandle',precision:precise,flatMeta:meta,startPos:p,initialVertices:meta.item.vertices.map(x=>x.clone()),startQuaternion:meta.item.mesh.quaternion.clone(),startScale:meta.item.mesh.scale.clone()};
+ activeGizmo=null;highlightGizmo();
+}
+function updateFlatEdit(c){
+ const e=c.edit,item=e.flatMeta.item,p=new THREE.Vector3();c.controller.getWorldPosition(p);
+ const delta=p.sub(e.startPos);
+ // Controller movement in world space -> the local XY plane of the shape.
+ delta.applyQuaternion(e.startQuaternion.clone().invert());
+ delta.x/=Math.max(.001,e.startScale.x);delta.y/=Math.max(.001,e.startScale.y);
+ delta.multiplyScalar(e.precision?.18:1);
+ const index=e.flatMeta.index,next=e.flatMeta.next,n=item.vertices.length;
+ item.vertices=e.initialVertices.map(pt=>pt.clone());
+ if(item.kind==='circle2d'){
+  const blend=Array(n).fill(0),step=4;
+  const center=e.flatMeta.kind==='vertex'?index:(index+step/2)%n;
+  for(let i=0;i<n;i++){
+   const d=Math.min((i-center+n)%n,(center-i+n)%n);
+   blend[i]=Math.max(0,1-d/5);
+  }
+  item.vertices.forEach((pt,i)=>pt.addScaledVector(delta,blend[i]));
+ }else{
+  item.vertices[index].add(delta);
+  if(e.flatMeta.kind==='edge')item.vertices[next].add(delta);
+ }
+ rebuildFlatGeometry(item);
+}
+
+function addShape(kind){if(flatShapes.has(kind)){addFlat(kind);return;}const mesh=new THREE.Mesh(geometries[kind](),new THREE.MeshStandardMaterial());mesh.position.copy(spawnPos());mesh.userData.isItem=true;scene.add(mesh);
  const item={type:'shape',kind,mesh,color:colors[0],opacity:1,materialKind:'standard',outline:null};mesh.userData.owner=item;items.push(item);history.push({action:'add',item});buildMaterial(item);setSelection(item,-1);drawMode=false;}
 function lineEndpoints(item){return item.points;}
 function createLine(a,b){const geom=new THREE.CylinderGeometry(.004,.004,1,8);const mesh=new THREE.Mesh(geom,new THREE.MeshStandardMaterial({color:0x252b33,roughness:.8}));mesh.userData.isItem=true;scene.add(mesh);
@@ -108,7 +218,7 @@ function applyLine(item){const a=item.points[0],b=item.points[1],d=b.clone().sub
 function addEndpoints(){endpointTargets.length=0;for(const i of items){if(i.type!=='line')continue;for(let n=0;n<2;n++){const mesh=new THREE.Mesh(new THREE.SphereGeometry(.013,12,10),new THREE.MeshBasicMaterial({color:i===selected?0xffa500:0x5e89aa,depthTest:false}));mesh.position.copy(i.points[n]);mesh.userData.owner=i;mesh.userData.end=n;mesh.userData.isHandle=true;mesh.renderOrder=9;scene.add(mesh);endpointTargets.push(mesh);}}}
 function clearEndpoints(){for(const e of endpointTargets){scene.remove(e);disposeGraph(e);}endpointTargets.length=0;}
 function refreshEnds(){clearEndpoints();if(selected?.type==='line'){for(let n=0;n<2;n++){const e=new THREE.Mesh(new THREE.SphereGeometry(.019,14,10),new THREE.MeshBasicMaterial({color:n===selectedEnd?0xffb21b:0x4a90e2,depthTest:false}));e.position.copy(selected.points[n]);e.userData.owner=selected;e.userData.end=n;e.userData.isHandle=true;e.renderOrder=11;scene.add(e);endpointTargets.push(e);}}else addEndpoints();}
-function setSelection(item,end=-1){selected=item;selectedEnd=end;activeGizmo=null;refreshEnds();createGizmo();}
+function setSelection(item,end=-1){selected=item;selectedEnd=end;activeGizmo=null;refreshEnds();createGizmo();rebuildFlatHandles();}
 function destroyGizmo(){if(gizmo){scene.remove(gizmo);disposeGraph(gizmo);}gizmo=null;gizmoTargets=[];}
 function tube(a,b,r,color){const d=b.clone().sub(a);const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r,r,Math.max(.00001,d.length()),10),new THREE.MeshBasicMaterial({color,depthTest:false}));mesh.position.copy(a).add(b).multiplyScalar(.5);mesh.quaternion.setFromUnitVectors(vecY,d.normalize());return mesh;}
 function createGizmo(){destroyGizmo();if(!selected)return;
@@ -142,6 +252,7 @@ function groundItem(){if(!selected)return;if(selected.type==='line'){const min=M
 function discard(it){scene.remove(it.mesh);const index=items.indexOf(it);if(index>=0)items.splice(index,1);if(selected===it)setSelection(null);}
 function undo(){const last=history.pop();if(!last)return;if(last.action==='add'){discard(last.item);}else if(last.action==='delete'){scene.add(last.item.mesh);items.push(last.item);setSelection(last.item);}}
 function action(name){if(name.startsWith('add:')){addShape(name.split(':')[1]);return;}
+ if(name.startsWith('page:')){menuPage=name.slice(5);makeMenu();return;}
  if(name==='tool:line'){drawMode=true;setSelection(null);return;}if(name==='tool:select'){drawMode=false;return;}
  if(name==='snap'){snapEnabled=!snapEnabled;return;}
  if(name==='outline'){outlineEnabled=!outlineEnabled;items.forEach(updateOutline);return;}
@@ -178,7 +289,7 @@ function startEdit(c,precision,chosen=null){const ray=worldRay(c);
  c.edit={mode:handle.mode,axis:handle.axis,precision,startPos:new THREE.Vector3(),lastPos:new THREE.Vector3(),startRot:selected.mesh.rotation.clone(),startScale:selected.mesh.scale.clone(),startPoints:selected.type==='line'?selected.points.map(p=>p.clone()):null,startWorld:selected.mesh.position.clone(),startQuaternion:selected.mesh.quaternion.clone()};
  c.controller.getWorldPosition(c.edit.startPos);c.edit.lastPos.copy(c.edit.startPos);
 }
-function editFrame(c){if(!c.edit||!selected)return;const e=c.edit,pos=new THREE.Vector3();c.controller.getWorldPosition(pos);
+function editFrame(c){if(!c.edit||!selected)return;if(c.edit.mode==='flatHandle'){updateFlatEdit(c);return;}const e=c.edit,pos=new THREE.Vector3();c.controller.getWorldPosition(pos);
  const delta=pos.clone().sub(e.startPos);const axis=axisVector[e.axis]||vecY,speed=e.precision?.18:1;
  const effectiveAxis=localGizmo&&selected.type==='shape'?axis.clone().applyQuaternion(e.startQuaternion):axis;
  const projected=delta.dot(effectiveAxis)*speed;
