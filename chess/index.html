@@ -521,6 +521,29 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 #board .sq>.piece img,#board .sq>.piece svg,#board .chess-playback-layer .playback-square>.piece img,#board .chess-playback-layer .playback-square>.piece svg{width:82%!important;height:82%!important;max-width:82%!important;max-height:82%!important;object-fit:contain}
 #board .chess-playback-layer .playback-square{min-width:0;min-height:0;overflow:hidden}
 .chess-playback-controls button:focus-visible{outline:2px solid #245cb5;outline-offset:2px}
+</style><style id="igorPrototypeStyle">
+#simpleIgor.selected{background:#ffe47d!important;border-color:#b58e00!important}
+.igor-panel{border:1px solid #ddd;border-radius:12px;background:#fff;padding:13px;color:#191919}
+.igor-panel[hidden]{display:none!important}
+.igor-panel h2{margin:0 0 12px;background:#f6f6f6;padding:8px;border-radius:8px;display:flex;justify-content:space-between;font-size:18px}
+.igor-books{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.igor-books button{min-width:0;text-align:left;background:#fafafa;border:1px solid #d3d3d3;border-radius:10px;padding:10px;cursor:pointer;min-height:74px;color:#222}
+.igor-books button.selected{background:#fff5bd;border:2px solid #d4ab00;padding:9px}
+.igor-books strong,.igor-books small{display:block}.igor-books small{font-size:10px;color:#555;white-space:normal;margin-top:4px}
+.igor-info{font-size:12px;color:#666;margin-top:15px}
+#igorTask{font-weight:600;font-size:14px}
+#igorGo{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:12px 0}
+#igorGo input{width:82px;min-width:0;border:1px solid #aaa;border-radius:8px;padding:10px;font-size:16px;background:#fff;color:#111}
+.igor-panel button{font-family:inherit}
+#igorGo button,.igor-navigation button,.igor-review{border:1px solid #bbb;border-radius:9px;padding:11px 8px;background:#f6f6f6;color:#222;cursor:pointer;font-size:14px}
+.igor-navigation{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+.igor-navigation button:disabled{opacity:.4;cursor:default}
+.igor-review{margin-top:8px;width:100%}
+#igorFeedback{font-size:13px;min-height:20px;line-height:1.4;color:#315d37}
+.igor-version{color:#999;font-size:10px}
+body.igor-mode #chessPlaybackControls{display:none!important}
+@media(max-width:900px){body.igor-mode .playArea{grid-template-columns:1fr!important}body.igor-mode .boardColumn{max-width:560px;margin:auto}body.igor-mode .sideInfo{max-width:560px;width:100%;margin:auto}}
+@media(max-width:500px){.wrap{padding:8px!important}.igor-panel{padding:10px}.igor-books button{min-height:70px}.igor-navigation button{min-height:46px}.simpleNav{padding:0 8px;gap:5px}.simpleNav button{min-height:40px}}
 </style></head>
 
 <body>
@@ -2073,7 +2096,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 
   let loadedReviewMode=false;
   async function maybeEngineMove(){
-    if(loadedReviewMode||engineThinking||!window.ChessOpponent)return;
+    if(igorActive||loadedReviewMode||engineThinking||!window.ChessOpponent)return;
     if(game.gameStatus().over||isPlayersTurn())return;
     const id=++opponentRequest;
     const fen=game.getFEN();
@@ -2298,14 +2321,15 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 
     const st = game.gameStatus();
     if (st.over) return;
-    if (!isPlayersTurn()) return;
+    if (!igorActive && !isPlayersTurn()) return;
+    if (igorActive && !igorCurrent) return;
 
     const sq = e.currentTarget.dataset.sq;
     const p = game.pieceAt(sq);
     const pColor = colorOf(p);
 
     if (!selectedSq){
-      if (!p || pColor !== playerSide) return;
+      if (!p || pColor !== (igorActive?game.turn:playerSide)) return;
       selectedSq = sq;
       legalFromSelected = game.legalMovesFrom(sq);
       showSelection();
@@ -2319,7 +2343,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
       return;
     }
 
-    if (p && pColor === playerSide){
+    if (p && pColor === (igorActive?game.turn:playerSide)){
       selectedSq = sq;
       legalFromSelected = game.legalMovesFrom(sq);
       showSelection();
@@ -2350,6 +2374,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
     render();
 
     // run coach
+    if(igorActive){igorAfterMove(undo);return;}
     runCoachOnPlayerMove(beforeFEN, mv, playedSAN, idx);
 
     setTimeout(()=>maybeEngineMove(), 930);
@@ -2389,6 +2414,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
       clearHighlights();
       render();
 
+      if(igorActive){igorAfterMove(undo);return;}
       runCoachOnPlayerMove(beforeFEN, pick, playedSAN, idx);
 
       setTimeout(()=>maybeEngineMove(), 30);
@@ -2411,6 +2437,7 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
 
   document.getElementById("btnFlip").addEventListener("click", ()=>{
     ensureAudio();
+    if(igorActive){igorSave.orientation=igorSave.orientation==="w"?"b":"w";orientation=igorSave.orientation;igorPersist();render();return;}
     const next = (playerSide === "w") ? "b" : "w";
     setPlayerSide(next);
   });
@@ -2872,9 +2899,173 @@ select,textarea,input[type=text]{background:#fff!important;color:#171717!importa
     }
   };
 
+
+  // ===== Igor Chess Camp prototype v2.0.0 =====
+  const igorBooks=[
+    "Move, Attack, and Capture","Simple Checkmates","Checkmates with Many Pieces",
+    "Elementary Endgames","Two-Move Checkmates","Tactics in Attack and Defense",
+    "Opening Tactics","Chess Gems"
+  ];
+  // Verified against the supplied book diagrams. Unconverted exercises are NOT fabricated.
+  const igorProblems={
+    1:[
+      {id:1,fen:"8/8/8/3Rr3/8/8/8/8 w - - 0 1",task:"Beyaz oynar. Siyah kaleyi alabilir mi?",goal:"capture",target:"e5",uci:"d5e5",kingless:true,page:7},
+      {id:3,fen:"8/8/8/8/8/8/8/R5r1 w - - 0 1",task:"Beyaz oynar. Siyah kaleyi alabilir mi?",goal:"capture",target:"g1",uci:"a1g1",kingless:true,page:7}
+    ],
+    2:[
+      {id:1,fen:"k1K5/8/2R5/8/8/8/8/8 w - - 0 1",task:"Beyaz oynar. Tek hamlede mat.",goal:"mate1",uci:"c6a6",page:7},
+      {id:2,fen:"k7/8/K1R5/8/8/8/8/8 w - - 0 1",task:"Beyaz oynar. Tek hamlede mat.",goal:"mate1",uci:"c6c8",page:7},
+      {id:3,fen:"7k/5K2/8/8/3R4/8/8/8 w - - 0 1",task:"Beyaz oynar. Tek hamlede mat.",goal:"mate1",uci:"d4h4",page:7},
+      {id:4,fen:"7k/8/6K1/8/8/2R5/8/8 w - - 0 1",task:"Beyaz oynar. Tek hamlede mat.",goal:"mate1",uci:"c3h3",page:7},
+      {id:5,fen:"4k3/1R6/5K2/8/8/8/8/8 w - - 0 1",task:"Beyaz oynar. Tek hamlede mat.",goal:"mate1",uci:"b7b8",page:7},
+      {id:6,fen:"6R1/8/5K1k/8/8/8/8/8 w - - 0 1",task:"Beyaz oynar. Tek hamlede mat.",goal:"mate1",uci:"g8h8",page:7}
+    ]
+  };
+  const igorKey="chess-igor-progress-v1";
+  let igorActive=false,igorShowAnswer=false,igorStartFen="",igorCurrent=null;
+  let igorSave={book:2,pos:1,orientation:"w",last:{},solved:{},review:{}};
+  try{const p=JSON.parse(localStorage.getItem(igorKey)||"null");if(p&&typeof p==="object")igorSave={...igorSave,...p};}catch(e){}
+  function igorPersist(){try{localStorage.setItem(igorKey,JSON.stringify(igorSave));}catch(e){}}
+  function igorList(){return igorProblems[igorSave.book]||[];}
+  function igorMessage(t){document.getElementById("igorFeedback").textContent=t;}
+  function igorRenderPanel(){
+    const panel=document.getElementById("igorPanel");
+    panel.hidden=!igorActive;
+    if(!igorActive)return;
+    panel.querySelectorAll("[data-igor-book]").forEach(btn=>{
+      const b=Number(btn.dataset.igorBook);
+      btn.classList.toggle("selected",b===igorSave.book);
+      btn.querySelector(".igor-last").textContent=igorSave.last[b]?"Son: "+igorSave.last[b]:"";
+    });
+    document.getElementById("igorNumber").value=igorSave.pos;
+    const list=igorList();
+    const noData=!list.length;
+    document.getElementById("igorTask").textContent=igorCurrent?igorCurrent.task:"Bu kitaptaki problemler henüz dijitalleştirilmedi.";
+    document.getElementById("igorInfo").textContent=igorCurrent?
+      "Kitap "+igorSave.book+" · Problem "+igorCurrent.id+" · Sayfa "+igorCurrent.page+
+      (igorSave.solved[igorSave.book+":"+igorCurrent.id]?" · ✓ Çözüldü":""):
+      "Kitap "+igorSave.book+" · Veri hazırlanıyor";
+    document.getElementById("igorPrev").disabled=noData||list.findIndex(p=>p.id===igorSave.pos)<=0;
+    document.getElementById("igorNext").disabled=noData||list.findIndex(p=>p.id===igorSave.pos)>=list.length-1;
+    document.getElementById("igorAnswer").disabled=!igorCurrent;
+    document.getElementById("igorHint").disabled=!igorCurrent;
+    document.getElementById("igorReview").disabled=!igorCurrent;
+    document.getElementById("igorAnswer").textContent=igorShowAnswer?"Çözümü Gizle":"Çözümü Göster";
+    document.getElementById("igorReview").textContent=igorSave.review[igorSave.book+":"+igorSave.pos]?"★ Tekrar işaretli":"☆ Tekrar et";
+  }
+  function igorLoad(book,no){
+    igorSave.book=book;
+    const list=igorList();
+    const p=list.find(x=>x.id===no)||list[0]||null;
+    igorCurrent=p;
+    igorSave.pos=p?p.id:(no||1);
+    igorSave.last[book]=igorSave.pos;
+    igorShowAnswer=false;
+    stopEngine();
+    loadedReviewMode=true;
+    selectedSq=null;legalFromSelected=[];clearHighlights();
+    if(p){
+      if(!game.loadFEN(p.fen)){igorMessage("FEN hatası: Problem "+p.id);return;}
+      igorStartFen=p.fen;
+      playerSide=game.turn;
+      orientation=igorSave.orientation;
+      document.getElementById("playerSide").value=playerSide;
+    } else {
+      game.reset();
+      orientation=igorSave.orientation;
+    }
+    igorPersist();render();igorRenderPanel();
+    igorMessage(p?"Problemi çözmek için tahtada hamle yap.":"Bu kitabın veri dosyası henüz eklenmedi.");
+  }
+  function igorStart(){
+    igorActive=true;
+    document.getElementById("simpleIgor").classList.add("selected");
+    document.body.classList.add("igor-mode");
+    igorLoad(igorSave.book,igorSave.last[igorSave.book]||igorSave.pos||1);
+  }
+  function igorExit(){
+    igorActive=false;
+    document.body.classList.remove("igor-mode");
+    document.getElementById("simpleIgor").classList.remove("selected");
+    loadedReviewMode=false;
+    stopEngine();game.reset();playerSide="w";orientation="w";
+    selectedSq=null;legalFromSelected=[];clearHighlights();render();igorRenderPanel();
+    setTimeout(()=>maybeEngineMove(),50);
+  }
+  function igorAfterMove(undo){
+    if(!igorActive||!igorCurrent)return;
+    const last=game.history[game.history.length-1];
+    const uci=last?moveToUCI(last.m):"";
+    const expected=igorCurrent.uci;
+    const mate=igorCurrent.goal==="mate1"&&game.gameStatus().over&&game.gameStatus().reason==="checkmate";
+    const capture=igorCurrent.goal==="capture"&&!!undo.toP&&undo.m.to===igorCurrent.target;
+    if(mate||capture){
+      const key=igorSave.book+":"+igorCurrent.id;
+      igorSave.solved[key]=true;igorPersist();
+      igorMessage(uci===expected?"✓ Doğru!":"✓ Doğru! Kitaptakinden farklı geçerli çözüm.");
+      igorRenderPanel();
+    } else {
+      igorMessage("Bu hamle henüz problem hedefini karşılamıyor. Geri alıp yeniden deneyebilirsin.");
+    }
+  }
+  function igorBuild(){
+    const nav=document.querySelector(".simpleNav");
+    const btn=document.createElement("button");
+    btn.id="simpleIgor";btn.type="button";btn.textContent="Igor";
+    nav.appendChild(btn);btn.addEventListener("click",()=>igorActive?igorExit():igorStart());
+    const panel=document.createElement("section");
+    panel.id="igorPanel";panel.hidden=true;panel.className="igor-panel";
+    panel.innerHTML=
+      '<h2>Igor <span style="font-size:12px;font-weight:400">Kitap seç</span></h2>'+
+      '<div class="igor-books">'+igorBooks.map((t,i)=>'<button type="button" data-igor-book="'+(i+1)+'">'+
+      '<strong>'+(i===7?"Chess Gems":"Kitap "+(i+1))+'</strong><small>'+t+'</small><small class="igor-last"></small></button>').join("")+'</div>'+
+      '<p id="igorInfo" class="igor-info"></p><p id="igorTask"></p>'+
+      '<form id="igorGo"><label for="igorNumber">Problem numarası</label><input id="igorNumber" type="number" min="1" step="1" inputmode="numeric" value="1"><button type="submit">Git</button></form>'+
+      '<div class="igor-navigation"><button id="igorPrev" type="button">‹ Önceki</button><button id="igorNext" type="button">Sonraki ›</button></div>'+
+      '<div class="igor-navigation"><button id="igorFlip" type="button">↻ Tahtayı Çevir</button><button id="igorReset" type="button">↺ Yeniden Dene</button></div>'+
+      '<div class="igor-navigation"><button id="igorHint" type="button">İpucu</button><button id="igorAnswer" type="button">Çözümü Göster</button></div>'+
+      '<button id="igorReview" type="button" class="igor-review">☆ Tekrar et</button>'+
+      '<p id="igorFeedback" aria-live="polite"></p>'+
+      '<small class="igor-version">v2.0.0 · Igor mobil prototip; kitap verileri aşamalı ekleniyor</small>';
+    document.querySelector(".sideInfo").prepend(panel);
+    panel.querySelectorAll("[data-igor-book]").forEach(b=>b.addEventListener("click",()=>{
+      const n=Number(b.dataset.igorBook);igorLoad(n,igorSave.last[n]||1);
+    }));
+    const step=d=>{const l=igorList();const i=l.findIndex(p=>p.id===igorSave.pos);if(l[i+d])igorLoad(igorSave.book,l[i+d].id);};
+    document.getElementById("igorPrev").addEventListener("click",()=>step(-1));
+    document.getElementById("igorNext").addEventListener("click",()=>step(1));
+    document.getElementById("igorGo").addEventListener("submit",e=>{
+      e.preventDefault();
+      const n=Number(document.getElementById("igorNumber").value);
+      if(igorList().some(p=>p.id===n))igorLoad(igorSave.book,n);
+      else igorMessage("Bu problem henüz aktarılmadı. Hazır sorular: "+(igorList().map(p=>p.id).join(", ")||"yok")+".");
+    });
+    document.getElementById("igorFlip").addEventListener("click",()=>{
+      igorSave.orientation=igorSave.orientation==="w"?"b":"w";
+      orientation=igorSave.orientation;igorPersist();render();
+    });
+    document.getElementById("igorReset").addEventListener("click",()=>igorLoad(igorSave.book,igorSave.pos));
+    document.getElementById("igorHint").addEventListener("click",()=>{
+      const x=igorCurrent?.uci;
+      igorMessage(x?"İpucu: "+x.slice(0,2)+" karesindeki taşı incele.":"Bu problem için ipucu yok.");
+    });
+    document.getElementById("igorAnswer").addEventListener("click",()=>{
+      if(!igorCurrent)return;
+      igorShowAnswer=!igorShowAnswer;
+      igorMessage(igorShowAnswer?"Kitabın hamlesi: "+igorCurrent.uci.slice(0,2)+" → "+igorCurrent.uci.slice(2,4):"Çözüm gizlendi.");
+      igorRenderPanel();
+    });
+    document.getElementById("igorReview").addEventListener("click",()=>{
+      const k=igorSave.book+":"+igorSave.pos;igorSave.review[k]=!igorSave.review[k];
+      igorPersist();igorRenderPanel();
+    });
+  }
+  igorBuild();
+  // ===== end Igor =====
+
   boot();
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.9.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v1.9.3 · Mat balonu tahta dışına taşınca görünür</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.9.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v2.0.0 · Mat balonu tahta dışına taşınca görünür</div></body>
 </html>
