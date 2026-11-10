@@ -16,7 +16,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#fff;font-family:syste
 <a id="home" href="https://sinan-ipek.github.io/projeler/index.html" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linejoin="round"><path d="M3 10 12 3l9 7M5.5 9v12h13V9M10 21v-8h4v8"/></svg></a>
 <select id="language" aria-label="Language"><option value="tr">Türkçe</option><option value="de">Deutsch</option><option value="en">English</option></select>
 <button id="help" aria-label="Help">?</button><div id="helptext"></div>
-<div id="status"></div><div id="version">v0.3.0 · Sağ ışın seçimi, lazer, kontur, yüzey ve snap</div>
+<div id="status"></div><div id="version">v0.3.1 · Kompakt formül paneli ve sol menü düğmesi</div>
 <script type="module">
 import * as THREE from 'three';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
@@ -66,7 +66,7 @@ const vecX=new THREE.Vector3(1,0,0),vecY=new THREE.Vector3(0,1,0),vecZ=new THREE
 const axisVector={x:vecX,y:vecY,z:vecZ};
 const rigidMat=new THREE.MeshStandardMaterial({color:0x242b35,roughness:.8});
 function disposeGraph(root){if(!root)return;root.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){for(const m of (Array.isArray(o.material)?o.material:[o.material])){m.map?.dispose();m.dispose();}}});}
-function canvasTex(str,bg='#ffffff',fg='#233046',fontSize=46){const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,512,128);g.fillStyle=fg;g.textAlign='center';g.textBaseline='middle';g.font='600 '+fontSize+'px system-ui,Arial';g.fillText(str,256,64,490);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;return tex;}
+function canvasTex(str,bg='#ffffff',fg='#233046',fontSize=46){const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,512,128);g.fillStyle=fg;g.textAlign='center';g.textBaseline='middle';g.font='600 '+fontSize+'px system-ui,Arial';g.fillText(str,256,64,490);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());tex.minFilter=THREE.LinearMipmapLinearFilter;return tex;}
 function uiLabel(parent,str,x,y,w=.32,h=.074,fg='#233046',fs=49){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:canvasTex(str,'#ffffff',fg,fs),transparent:true,depthTest:false,side:THREE.DoubleSide}));m.position.set(x,y,.012);parent.add(m);}
 function uiButton(parent,key,action,x,y,w=.31){const panel=new THREE.Mesh(new THREE.PlaneGeometry(w,.106),new THREE.MeshBasicMaterial({color:0xf0f3f6,side:THREE.DoubleSide,depthTest:false}));panel.position.set(x,y,.006);panel.userData.menuAction=action;parent.add(panel);menuTargets.push(panel);uiLabel(panel,T[lang][key]||key,0,0,w*.95,.075);}
 function makeMenu(){const wasVisible=menuVisible;if(menu){ctrl.forEach(c=>{if(c.controller&&menu.parent===c.controller)c.controller.remove(menu)});scene.remove(menu);disposeGraph(menu);}
@@ -81,7 +81,7 @@ function makeMenu(){const wasVisible=menuVisible;if(menu){ctrl.forEach(c=>{if(c.
  uiLabel(menu,T[lang].looks,0,-.245,.8,.065);
  [['color','color'],['alpha','alpha'],['material','material']].forEach(([k,a],i)=>uiButton(menu,k,a,[-.345,0,.345][i],-.349,.316));
  [['snap','snap'],['outline','outline'],['space','space'],['pass','pass'],['surface','surface'],['formula','formula']].forEach(([k,a],i)=>uiButton(menu,k,a,[-.345,0,.345][i%3],-.48-Math.floor(i/3)*.115,.316));
- uiLabel(menu,'v0.3.0',.382,-.744,.17,.038,'#89929a',31);
+ uiLabel(menu,'v0.3.1',.382,-.744,.17,.038,'#89929a',31);
  attachMenu();menuVisible=wasVisible;menu.visible=wasVisible;
 }
 function attachMenu(){const left=controllerOf('left');if(menu&&left){left.add(menu);menu.position.set(.22,.22,-.36);menu.rotation.set(-.35,0,0);menu.scale.setScalar(.79);}}
@@ -202,8 +202,8 @@ function highlightGizmo(){
 }
 function rightSelect(c){
  const ray=worldRay(c);
- if(menuVisible&&menu?.visible){const ui=pick(ray,menuTargets);if(ui){action(ui.object.userData.menuAction);return;}}
  if(surfacePanel?.visible){const s=pick(ray,surfaceButtons);if(s){surfaceAction(s.object.userData.surfaceAction);return;}}
+ if(menuVisible&&menu?.visible){const ui=pick(ray,menuTargets);if(ui){action(ui.object.userData.menuAction);return;}}
  const gh=pick(ray,gizmoTargets);
  const eh=pick(ray,endpointTargets);
  const oh=pick(ray,items.map(it=>it.mesh));
@@ -308,23 +308,34 @@ function createSurface(){
  document.querySelector('#status').textContent='Surface: y = '+formulaText;
  }catch(e){document.querySelector('#status').textContent='Formül hatası: '+e.message;}
 }
-function clearSurfacePanel(){if(surfacePanel){scene.remove(surfacePanel);disposeGraph(surfacePanel);surfacePanel=null;surfaceButtons=[];}}
-function toggleSurfacePanel(force=false){
- if(surfacePanel&&!force){clearSurfacePanel();return;}
- clearSurfacePanel();surfacePanel=new THREE.Group();surfaceButtons=[];
- const bg=new THREE.Mesh(new THREE.PlaneGeometry(.86,.85),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide,depthTest:false}));surfacePanel.add(bg);bg.position.z=-.005;
- function key(str,act,x,y,w=.18){
- const panel=new THREE.Mesh(new THREE.PlaneGeometry(w,.086),new THREE.MeshBasicMaterial({color:0xeaf0f6,depthTest:false,side:THREE.DoubleSide}));
- panel.position.set(x,y,.009);panel.userData.surfaceAction=act;surfacePanel.add(panel);surfaceButtons.push(panel);uiLabel(panel,str,0,0,w*.94,.067,'#182534',54);
- }
- uiLabel(surfacePanel,'y = '+formulaText.slice(0,25),0,.36,.8,.08,'#14385e',27);
- key('◀', 'prev',-.29,.25);key('▶','next',0,.25);key('Graph','graph',.29,.25);
- formulaKeys.forEach((txt,i)=>key(txt,'key:'+txt,-.292+(i%4)*.195,.12-Math.floor(i/4)*.113,.174));
- const {p,d}=viewerPose();surfacePanel.position.copy(p).addScaledVector(d,.72).add(new THREE.Vector3(0,-.06,0));surfacePanel.quaternion.copy(renderer.xr.isPresenting?renderer.xr.getCamera(camera).quaternion:camera.quaternion);
- scene.add(surfacePanel);
+let menuBeforeFormula=true;
+function clearSurfacePanel(restore=true){
+ if(surfacePanel){surfacePanel.parent?.remove(surfacePanel);disposeGraph(surfacePanel);surfacePanel=null;surfaceButtons=[];}
+ if(restore){menuVisible=menuBeforeFormula;if(menu)menu.visible=menuVisible;}
 }
+function toggleSurfacePanel(force=false){
+ if(surfacePanel&&!force){clearSurfacePanel(true);return;}
+ if(!surfacePanel)menuBeforeFormula=menuVisible;
+ clearSurfacePanel(false);menuVisible=false;if(menu)menu.visible=false;
+ surfacePanel=new THREE.Group();surfaceButtons=[];
+ const bg=new THREE.Mesh(new THREE.PlaneGeometry(.78,.77),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide,depthTest:false}));bg.position.z=-.009;surfacePanel.add(bg);
+ function key(str,act,x,y,w=.165){
+ const panel=new THREE.Mesh(new THREE.PlaneGeometry(w,.078),new THREE.MeshBasicMaterial({color:act==='close'?0xf4c1bf:0xeaf0f6,side:THREE.DoubleSide,depthTest:false}));
+ panel.position.set(x,y,.011);panel.userData.surfaceAction=act;surfacePanel.add(panel);surfaceButtons.push(panel);
+ uiLabel(panel,str,0,0,w*.94,.063,'#152438',str.length>5?32:56);
+ }
+ uiLabel(surfacePanel,'y = '+formulaText.slice(0,33),-.075,.329,.59,.068,'#17283e',30);
+ key('X','close',.324,.329,.09);
+ key('◀','prev',-.265,.227,.19);key('▶','next',0,.227,.19);key('Grafik','graph',.265,.227,.19);
+ formulaKeys.forEach((txt,i)=>key(txt,'key:'+txt,-.267+(i%4)*.178,.103-Math.floor(i/4)*.104,.159));
+ const left=controllerOf('left');
+ if(left){left.add(surfacePanel);surfacePanel.position.set(.025,.11,-.42);surfacePanel.rotation.set(-.33,0,0);surfacePanel.scale.setScalar(.75);}
+ else{const {p,d}=viewerPose();surfacePanel.position.copy(p).addScaledVector(d,.64);scene.add(surfacePanel);surfacePanel.scale.setScalar(.72);}
+}
+
 function surfaceAction(act){
- if(act==='graph'){createSurface();return;}
+ if(act==='close'){clearSurfacePanel(true);return;}
+ if(act==='graph'){createSurface();clearSurfacePanel(true);return;}
  if(act==='prev'||act==='next'){presetIndex=(presetIndex+(act==='next'?1:presets.length-1))%presets.length;formulaText=presets[presetIndex];}
  if(act.startsWith('key:')){const ch=act.slice(4);formulaText=ch==='C'?'':ch==='⌫'?formulaText.slice(0,-1):(formulaText+ch).slice(0,80);}
  toggleSurfacePanel(true);
@@ -335,14 +346,24 @@ for(let i=0;i<2;i++){
  const rayMesh=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3(0,0,-1)]),new THREE.LineBasicMaterial({color:i?0x507dba:0x3f586c,transparent:true,opacity:.85}));rayMesh.scale.z=1;controller.add(rayMesh);
  const rayDot=new THREE.Mesh(new THREE.SphereGeometry(.008,12,8),new THREE.MeshBasicMaterial({color:0xffd12e,depthTest:false}));scene.add(rayDot);
  const c=ctrl[i];Object.assign(c,{controller,hand:'',tmpQuat:new THREE.Quaternion(),lineStart:null,preview:null,edit:null,rayMesh,rayDot});
- controller.addEventListener('connected',ev=>{c.hand=ev.data.handedness|| (i===0?'left':'right');rayMesh.material.color.set(c.hand==='left'?0x2681d6:0x444e5c);if(c.hand==='left')attachMenu();});
+ controller.addEventListener('connected',ev=>{c.inputSource=ev.data;c.hand=ev.data.handedness|| (i===0?'left':'right');rayMesh.material.color.set(c.hand==='left'?0x2681d6:0x444e5c);if(c.hand==='left')attachMenu();});
  controller.addEventListener('selectstart',()=>{if(c.hand==='right')rightSelect(c);});
+ controller.addEventListener('disconnected',()=>{c.inputSource=null;});
  controller.addEventListener('selectend',()=>{if(c.hand==='right'){if(c.lineStart)endLeftSelect(c);if(c.edit?.precision)c.edit=null;}});
- controller.addEventListener('squeezestart',()=>{if(c.hand==='left'){menuVisible=!menuVisible;if(menu)menu.visible=menuVisible;}else if(activeGizmo){const hit=gizmoTargets.find(x=>x.userData.gizmo?.axis===activeGizmo.axis&&x.userData.gizmo?.mode===activeGizmo.mode);if(hit)startEdit(c,false,{object:hit});}});
+ controller.addEventListener('squeezestart',()=>{if(c.hand==='right'&&activeGizmo){const hit=gizmoTargets.find(x=>x.userData.gizmo?.axis===activeGizmo.axis&&x.userData.gizmo?.mode===activeGizmo.mode);if(hit)startEdit(c,false,{object:hit});}});
  controller.addEventListener('squeezeend',()=>{if(c.hand==='right'&&c.edit&&!c.edit.precision)c.edit=null;});
 }
 makeMenu();
-function animate(){for(const c of ctrl){if(c.hand==='right'&&c.preview&&c.lineStart){movePreview(c.preview,c.lineStart,snapPoint(castSurface(worldRay(c))));}if(c.hand==='right'&&c.edit)editFrame(c);}
+let priorMenuPressed=false;
+function pollMenuKey(){
+ const left=ctrl.find(x=>x.hand==='left');
+ const buttons=left?.inputSource?.gamepad?.buttons;
+ // Quest OS often reserves system-menu. Left X (button 4) is used where available.
+ const pressed=!!buttons?.[4]?.pressed;
+ if(pressed&&!priorMenuPressed){if(surfacePanel)clearSurfacePanel(true);else{menuVisible=!menuVisible;if(menu)menu.visible=menuVisible;}}
+ priorMenuPressed=pressed;
+}
+function animate(){pollMenuKey();for(const c of ctrl){if(c.hand==='right'&&c.preview&&c.lineStart){movePreview(c.preview,c.lineStart,snapPoint(castSurface(worldRay(c))));}if(c.hand==='right'&&c.edit)editFrame(c);}
  syncGizmo();updateRayVisuals();renderer.render(scene,camera);}
 renderer.setAnimationLoop(animate);
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
