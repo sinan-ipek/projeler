@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.94</title>
+<title>Beyaz Tahta v18.95</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -502,6 +502,56 @@
   .colorOption .colorSwatch{width:22px;height:22px}
   .colorOption.active{background:#eaf1ff;border-color:#9db7ff}
 
+  .lineStyleWrap{position:relative;display:inline-flex}
+  #lineStyleBtn{
+    width:42px;height:36px;padding:0 7px;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  #lineStylePreview{
+    width:25px;height:0;
+    border-top:3px solid currentColor;
+    border-radius:999px;
+    display:block;
+  }
+  #lineStyleBtn[data-line-style="dotted"] #lineStylePreview{
+    border-top:0;
+    height:3px;
+    background:
+      radial-gradient(circle,currentColor 1.5px,transparent 1.7px)
+      left center/7px 3px repeat-x;
+  }
+  #lineStyleMenu{
+    position:absolute;top:42px;left:0;
+    display:none;
+    min-width:118px;
+    padding:6px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,.12);
+    z-index:25;
+  }
+  #lineStyleMenu.open{display:block}
+  .lineStyleOption{
+    width:100%;height:34px;
+    display:flex;align-items:center;gap:9px;
+    padding:0 9px;
+    border-radius:8px;
+    border:0;
+    background:transparent;
+  }
+  .lineStyleOption:hover{background:#f3f5f8}
+  .lineStyleOption.active{background:#eaf1ff}
+  .lineStyleSample{
+    width:34px;height:3px;display:inline-block;flex:0 0 34px;
+    border-radius:999px;background:#222;
+  }
+  .lineStyleSample.dotted{
+    background:
+      radial-gradient(circle,#222 1.6px,transparent 1.8px)
+      left center/8px 3px repeat-x;
+  }
+
   .app-version{
     position:fixed;
     left:12px;
@@ -927,6 +977,21 @@
       <option value="12">12</option>
     </select>
 
+    <div class="lineStyleWrap">
+      <button id="lineStyleBtn" class="iconBtn" type="button"
+              title="Çizgi stili: Solid" aria-label="Çizgi stili" data-line-style="solid">
+        <span id="lineStylePreview" aria-hidden="true"></span>
+      </button>
+      <div id="lineStyleMenu" role="menu" aria-label="Çizgi stili">
+        <button class="lineStyleOption active" type="button" data-line-style="solid" role="menuitem">
+          <span class="lineStyleSample" aria-hidden="true"></span><span>Solid</span>
+        </button>
+        <button class="lineStyleOption" type="button" data-line-style="dotted" role="menuitem">
+          <span class="lineStyleSample dotted" aria-hidden="true"></span><span>Dotted</span>
+        </button>
+      </div>
+    </div>
+
     <button id="formatPainterBtn" class="iconBtn" title="Biçim boyayıcısı" aria-label="Biçim boyayıcısı">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M5 4.5h10.5a2 2 0 0 1 2 2v2.2a2 2 0 0 1-2 2H5z"
@@ -1248,7 +1313,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.94 · Ölçekten bağımsız otomatik tanıma</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.95 · Solid/Dotted çizgi stili eklendi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1521,6 +1586,7 @@
   const currentColorSwatch = document.getElementById('currentColorSwatch');
   let currentColor = '#111111';
   let currentWidth = 4;
+  let currentLineStyle = 'solid';
   let currentFillColor = '#facc15';
   let currentFillOpacity = 0;
   let fillOpacityUndoArmed = false;
@@ -1535,6 +1601,9 @@
   let selectPressTimer = null;
   let selectLongPressTriggered = false;
   const widthEl = document.getElementById('width');
+  const lineStyleBtn = document.getElementById('lineStyleBtn');
+  const lineStyleMenu = document.getElementById('lineStyleMenu');
+  const lineStyleOptions = Array.from(document.querySelectorAll('.lineStyleOption'));
   const formatPainterBtn = document.getElementById('formatPainterBtn');
   const statusEl = document.getElementById('status');
   const boardScope = document.getElementById('boardScope');
@@ -3118,6 +3187,13 @@
         setWidthControlValue(Number(o.style.width));
       }
 
+      const selectedLineStyle=o.style.lineStyle==='dotted' ? 'dotted' : 'solid';
+      lineStyleBtn.dataset.lineStyle=selectedLineStyle;
+      lineStyleBtn.title='Çizgi stili: '+(selectedLineStyle==='dotted'?'Dotted':'Solid');
+      lineStyleOptions.forEach(btn=>{
+        btn.classList.toggle('active',btn.dataset.lineStyle===selectedLineStyle);
+      });
+
       if(
         (isFillableKind(o) && o.fillColor) ||
         (o.kind==='shape3d' && o.fillColor3D)
@@ -3134,6 +3210,11 @@
       btn.classList.toggle('active',btn.dataset.color===currentColor);
     });
     setWidthControlValue(currentWidth);
+    lineStyleBtn.dataset.lineStyle=currentLineStyle;
+    lineStyleBtn.title='Çizgi stili: '+(currentLineStyle==='dotted'?'Dotted':'Solid');
+    lineStyleOptions.forEach(btn=>{
+      btn.classList.toggle('active',btn.dataset.lineStyle===currentLineStyle);
+    });
   }
 
   function styleEditableIndices(indices=selectedIndices){
@@ -3171,6 +3252,20 @@
     return targets.length;
   }
 
+  function applyLineStyleToSelection(lineStyle){
+    const value=lineStyle==='dotted' ? 'dotted' : 'solid';
+    const targets=styleEditableIndices();
+    if(!targets.length) return 0;
+
+    recordObjectStates(targets);
+    for(const i of targets){
+      const o=objects[i];
+      o.style={...(o.style||{}),lineStyle:value};
+    }
+    redraw();
+    return targets.length;
+  }
+
   function copyFormatFromObject(o){
     if(!o || o.kind==='image') return null;
 
@@ -3178,6 +3273,7 @@
     const payload={
       color:style.color || currentColor,
       width:Number.isFinite(Number(style.width)) ? Number(style.width) : Number(widthEl.value)||4,
+      lineStyle:style.lineStyle==='dotted' ? 'dotted' : 'solid',
       hasFill:false,
       fillColor:null,
       fillOpacity:0
@@ -3216,7 +3312,8 @@
       o.style={
         ...(o.style||{}),
         color:payload.color,
-        width:payload.width
+        width:payload.width,
+        lineStyle:payload.lineStyle==='dotted' ? 'dotted' : 'solid'
       };
 
       if(payload.hasFill){
@@ -3301,7 +3398,25 @@
   }
 
   function strokeStyle(){
-    return {color:currentColor,width:currentWidth};
+    return {
+      color:currentColor,
+      width:currentWidth,
+      lineStyle:currentLineStyle
+    };
+  }
+
+  function applyCanvasLineStyle(targetCtx,style){
+    const dotted=style && style.lineStyle==='dotted';
+    const width=Math.max(.75,Number(style && style.width)||1);
+    targetCtx.lineCap='round';
+    if(dotted){
+      targetCtx.setLineDash([
+        Math.max(.25,width*.16),
+        Math.max(3,width*2.15)
+      ]);
+    }else{
+      targetCtx.setLineDash([]);
+    }
   }
 
   function clamp01(v){
@@ -3469,6 +3584,25 @@
     ctx.lineJoin='round';
 
     const baseWidth=Math.max(.75,Number(style && style.width)||1);
+    applyCanvasLineStyle(ctx,style);
+
+    if(style && style.lineStyle==='dotted'){
+      ctx.lineWidth=baseWidth;
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x,pts[0].y);
+      for(let i=1;i<pts.length-1;i++){
+        const mx=(pts[i].x+pts[i+1].x)/2;
+        const my=(pts[i].y+pts[i+1].y)/2;
+        ctx.quadraticCurveTo(pts[i].x,pts[i].y,mx,my);
+      }
+      if(pts.length>1){
+        const last=pts[pts.length-1];
+        ctx.lineTo(last.x,last.y);
+      }
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
 
     // Legacy strokes keep their historical appearance exactly.
     if(!dynamic){
@@ -3662,6 +3796,7 @@
     targetCtx.lineWidth=width;
     targetCtx.lineCap='round';
     targetCtx.lineJoin='round';
+    applyCanvasLineStyle(targetCtx,style);
 
     if(pts.length===1){
       targetCtx.beginPath();
@@ -3688,6 +3823,11 @@
 
   function drawAdaptiveInkStroke(targetCtx,pts,style){
     if(!pts || !pts.length) return;
+
+    if(style && style.lineStyle==='dotted'){
+      drawFastCommittedStroke(targetCtx,pts,style);
+      return;
+    }
 
     const base=Math.max(.75,Number(style&&style.width)||1);
     const color=(style&&style.color)||'#111111';
@@ -3753,6 +3893,12 @@
     wetRawLast={...p};
 
     const style=strokeStyle();
+
+    if(style.lineStyle==='dotted'){
+      drawFastCommittedStroke(inkOverlayCtx,[wetLast],style);
+      return;
+    }
+
     const base=Math.max(.75,Number(style.width)||1);
     const r=Math.max(.45,adaptiveInkWidth(wetLast,base,null)/2);
 
@@ -3764,6 +3910,14 @@
 
   function appendWetInk(raw){
     const style=strokeStyle();
+
+    if(style.lineStyle==='dotted'){
+      wetRawLast={...raw};
+      wetLast={...raw};
+      clearInkOverlay();
+      drawFastCommittedStroke(inkOverlayCtx,points,style);
+      return true;
+    }
 
     if(
       wetRawLast &&
@@ -5587,7 +5741,12 @@
       ctx.lineWidth = ghost ? Math.max(2,Number(o.style.width)||2) : (Number(o.style.width)||2);
       ctx.lineCap='round';
       ctx.lineJoin='round';
-      if(ghost){ctx.setLineDash([6,5]);ctx.globalAlpha=.88}
+      if(ghost){
+        ctx.setLineDash([6,5]);
+        ctx.globalAlpha=.88;
+      }else{
+        applyCanvasLineStyle(ctx,o.style);
+      }
 
       ctx.beginPath();
 
@@ -17648,6 +17807,7 @@
     closeFillMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
     closeContextMenu();
     fileMenu.classList.toggle('open');
   });
@@ -17755,6 +17915,7 @@
     eraserBtn.classList.remove('active');
     fillBtn.classList.add('active');
     colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
     eraserMenu.classList.remove('open');
     closeContextMenu();
     canvas.style.cursor='default';
@@ -17772,6 +17933,7 @@
       fillLongPressTriggered=true;
       eraserMenu.classList.remove('open');
       colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
       closeContextMenu();
       fillMenu.classList.add('open');
     },520);
@@ -18000,6 +18162,7 @@
     closeFillMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
     mode='text';
     setSelection([]);
     eraserCursor=null;
@@ -18020,6 +18183,7 @@
     closeFillMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
     const r=canvas.getBoundingClientRect();
     const centerWorld=screenToWorld({x:r.width/2,y:r.height/2});
     const scale=1/viewZoom;
@@ -18057,6 +18221,7 @@
     closeFillMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
 
     const r=canvas.getBoundingClientRect();
     const center=screenToWorld({x:r.width/2,y:r.height/2});
@@ -18109,6 +18274,7 @@
     closeFillMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
 
     const opening=!mathKeyboardMenu.classList.contains('open');
     if(opening){
@@ -18230,6 +18396,7 @@
       currentColorSwatch.style.background=currentColor;
       colorOptions.forEach(b=>b.classList.toggle('active',b===btn));
       colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
 
       if(mode==='select' && selectedIndices.length){
         const count=applyStrokeColorToSelection(currentColor);
@@ -18253,6 +18420,42 @@
           : 'Nesnenin çizgi kalınlığı değiştirildi';
       }
     }
+  });
+
+  lineStyleBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    closeFillMenu();
+    eraserMenu.classList.remove('open');
+    colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
+    lineStyleMenu.classList.toggle('open');
+  });
+
+  lineStyleOptions.forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+
+      currentLineStyle=btn.dataset.lineStyle==='dotted' ? 'dotted' : 'solid';
+      lineStyleBtn.dataset.lineStyle=currentLineStyle;
+      lineStyleBtn.title='Çizgi stili: '+(currentLineStyle==='dotted'?'Dotted':'Solid');
+
+      lineStyleOptions.forEach(b=>{
+        b.classList.toggle('active',b===btn);
+      });
+      lineStyleMenu.classList.remove('open');
+
+      if(mode==='select' && selectedIndices.length){
+        const count=applyLineStyleToSelection(currentLineStyle);
+        if(count){
+          statusEl.textContent=count>1
+            ? `${count} nesnenin çizgi stili değiştirildi`
+            : 'Nesnenin çizgi stili değiştirildi';
+        }
+      }else{
+        statusEl.textContent=
+          'Çizgi stili: '+(currentLineStyle==='dotted'?'Dotted':'Solid');
+      }
+    });
   });
 
   formatPainterBtn.addEventListener('click',e=>{
@@ -18315,6 +18518,7 @@
       closeContextMenu();
       eraserMenu.classList.remove('open');
       colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
       selectModeMenu.classList.add('open');
     },520);
   });
@@ -18373,6 +18577,7 @@
     closeContextMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
     mode='pen';
     eraserCursor=null;
     penBtn.classList.add('active');
@@ -18415,6 +18620,7 @@
     closeContextMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
     mode='ink';
     setSelection([]);
     eraserCursor=null;
@@ -18442,6 +18648,7 @@
     closeContextMenu();
     eraserMenu.classList.remove('open');
     colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
     mode='select';
     eraserCursor=null;
     selectBtn.classList.add('active');
@@ -18509,6 +18716,7 @@
     closeFillMenu();
     closeContextMenu();
     colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
     eraserMenu.classList.remove('open');
 
     canvas.style.cursor='none';
@@ -18536,6 +18744,7 @@
     closeFillMenu();
     closeContextMenu();
     colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
 
     eraserKind=kind;
     if(eraserKind==='point'){
@@ -18579,6 +18788,7 @@
       eraserLongPressTriggered=true;
       closeFillMenu();
       colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
       closeContextMenu();
       eraserMenu.classList.add('open');
     },520);
@@ -18622,6 +18832,7 @@
     }
     if(!e.target.closest('.colorWrap')){
       colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
     }
   });
 
@@ -19080,6 +19291,7 @@
       closeContextMenu();
       eraserMenu.classList.remove('open');
       colorMenu.classList.remove('open');
+    lineStyleMenu.classList.remove('open');
 
       if(mode==='select'){
         inkBtn.click();
