@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.98</title>
+<title>Beyaz Tahta v18.99</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1334,7 +1334,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.98 · Dashed çizgi stili · Pages yeniden tetiklendi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.99 · Metin düzenleme kaybolma hatası düzeltildi</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -18035,55 +18035,77 @@
     const value=textEditor.value;
     const clean=value.replace(/\r/g,'');
 
-    if(commit){
-      const visualW=Math.max(40,textEditor.offsetWidth);
-      const visualH=Math.max(30,Math.max(textEditor.offsetHeight,textEditor.scrollHeight));
-      const w=visualW/viewZoom;
-      const h=visualH/viewZoom;
+    try{
+      if(commit){
+        const visualW=Math.max(40,textEditor.offsetWidth);
+        const visualH=Math.max(30,Math.max(textEditor.offsetHeight,textEditor.scrollHeight));
+        const w=visualW/viewZoom;
+        const h=visualH/viewZoom;
 
-      if(state.isNew){
-        if(clean.trim()!==''){
-          const newTextObject={
-            id:makeObjectId(),
-            kind:'text',
-            center:{...state.center},
-            w,h,
-            angle:0,
-            text:clean,
-            fontSize:state.fontSize,
-            style:{...state.style},
-            source:'text',
-            shapeName:'text',
-            textBoxManual:false,
-            boxAngle:0
-          };
-          fitTextObjectToContent(newTextObject);
-          objects.push(newTextObject);
-          recordAddedObjectUndo(newTextObject,objects.length-1);
-          setSelection([objects.length-1]);
-        }
-      }else if(state.index>=0 && objects[state.index]){
-        objects[state.index].text=clean;
-        if(objects[state.index].textBoxManual){
-          objects[state.index].w=w;
-          objects[state.index].h=h;
+        if(state.isNew){
+          if(clean.trim()!==''){
+            const newTextObject={
+              id:makeObjectId(),
+              kind:'text',
+              center:{...state.center},
+              w,h,
+              angle:0,
+              text:clean,
+              fontSize:state.fontSize,
+              style:{...state.style},
+              source:'text',
+              shapeName:'text',
+              textBoxManual:false,
+              boxAngle:0
+            };
+            fitTextObjectToContent(newTextObject);
+            objects.push(newTextObject);
+            recordAddedObjectUndo(newTextObject,objects.length-1);
+            setSelection([objects.length-1]);
+            markBoardDirty();
+          }
         }else{
-          fitTextObjectToContent(objects[state.index]);
-        }
-        if(clean.trim()===''){
-          objects.splice(state.index,1);
-          setSelection([]);
-        }else{
-          setSelection([state.index]);
+          // Eski metin nesnesini dizi indeksine değil benzersiz id'sine göre bul.
+          // Böylece blur / araç değiştirme / ortak tahta güncellemesi sırasında
+          // indeks kayması yanlış nesneyi güncellemez veya silmez.
+          let idx=state.objectId
+            ? objects.findIndex(o=>o && o.id===state.objectId)
+            : -1;
+
+          // Eski dosyalardaki id'siz nesneler için güvenli geri dönüş.
+          if(idx<0 && Number.isInteger(state.index) && state.index>=0 &&
+             objects[state.index] && objects[state.index].kind==='text'){
+            idx=state.index;
+          }
+
+          if(idx>=0 && objects[idx] && objects[idx].kind==='text'){
+            const obj=objects[idx];
+
+            // Mevcut metin düzenleme sırasında otomatik olarak silinmez.
+            // Editör anlık boş değer üretse bile nesne korunur.
+            obj.text=clean;
+
+            if(obj.textBoxManual){
+              obj.w=w;
+              obj.h=h;
+            }else{
+              fitTextObjectToContent(obj);
+            }
+
+            setSelection([idx]);
+            markBoardDirty();
+          }else{
+            console.warn('Düzenlenen metin nesnesi bulunamadı; metin korunamadı.',state);
+          }
         }
       }
+    }finally{
+      textEditor.style.display='none';
+      textEditor.value='';
+      textEditing=null;
+      textEditorFinishing=false;
+      redraw();
     }
-
-    textEditor.style.display='none';
-    textEditor.value='';
-    textEditing=null;
-    textEditorFinishing=false;
-    redraw();
   }
 
   function positionTextEditor(){
@@ -18108,9 +18130,12 @@
     let state;
     if(existingIndex>=0 && objects[existingIndex] && objects[existingIndex].kind==='text'){
       const o=objects[existingIndex];
+      if(!o.id) o.id=makeObjectId();
       recordObjectStates([existingIndex]);
       state={
         index:existingIndex,
+        objectId:o.id || null,
+        originalText:o.text || '',
         isNew:false,
         center:{...o.center},
         w:o.w,
@@ -18167,7 +18192,8 @@
     if(e.key==='Escape'){
       e.preventDefault();
       closeTextEditor(false);
-    }else if((e.ctrlKey || e.metaKey) && e.key==='Enter'){
+    }else if(e.key==='Enter' && !e.shiftKey){
+      // Enter = kaydet ve bitir. Yeni satır için Shift+Enter.
       e.preventDefault();
       closeTextEditor(true);
     }
