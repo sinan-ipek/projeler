@@ -136,7 +136,8 @@ function syncGizmo(){if(!gizmo||!selected)return;const center=selected.type==='l
  gizmo.quaternion.copy(localGizmo&&selected.type==='shape'?selected.mesh.quaternion:new THREE.Quaternion());
  const {p}=viewerPose();const dist=p.distanceTo(center);gizmo.scale.setScalar(Math.max(.6,Math.min(1.6,dist*.7)));}
 function snapPoint(p,exceptItem=null,exceptEnd=-1){if(!snapEnabled)return p.clone();let best=p,dist=.075;for(const it of items){if(it.type!=='line')continue;for(let n=0;n<2;n++){if(it===exceptItem&&n===exceptEnd)continue;const d=p.distanceTo(it.points[n]);if(d<dist){dist=d;best=it.points[n];}}}return best.clone();}
-function changePoint(it,n,p){it.points[n].copy(snapPoint(p,it,n));applyLine(it);refreshEnds();syncGizmo();}
+function syncEndpoints(){for(const h of endpointTargets){const item=h.userData.owner,idx=h.userData.end;if(item?.type==='line'&&idx!==undefined)h.position.copy(item.points[idx]);}}
+function changePoint(it,n,p){it.points[n].copy(snapPoint(p,it,n));applyLine(it);syncEndpoints();syncGizmo();}
 function groundItem(){if(!selected)return;if(selected.type==='line'){const min=Math.min(...selected.points.map(p=>p.y));for(const p of selected.points)p.y-=min;applyLine(selected);}else{const box=new THREE.Box3().setFromObject(selected.mesh);selected.mesh.position.y-=box.min.y;}refreshEnds();syncGizmo();}
 function discard(it){scene.remove(it.mesh);const index=items.indexOf(it);if(index>=0)items.splice(index,1);if(selected===it)setSelection(null);}
 function undo(){const last=history.pop();if(!last)return;if(last.action==='add'){discard(last.item);}else if(last.action==='delete'){scene.add(last.item.mesh);items.push(last.item);setSelection(last.item);}}
@@ -184,10 +185,10 @@ function editFrame(c){if(!c.edit||!selected)return;const e=c.edit,pos=new THREE.
  if(selected.type==='line'){
   if(e.mode==='move'){if(selectedEnd>=0){changePoint(selected,selectedEnd,e.startPoints[selectedEnd].clone().addScaledVector(axis,projected));}else{
    selected.points[0].copy(e.startPoints[0].clone().addScaledVector(axis,projected));
-   selected.points[1].copy(e.startPoints[1].clone().addScaledVector(axis,projected));applyLine(selected);refreshEnds();}
+   selected.points[1].copy(e.startPoints[1].clone().addScaledVector(axis,projected));applyLine(selected);syncEndpoints();}
   }else if(e.mode==='scale'){const anchor=selectedEnd===0?selected.points[1]:selected.points[0];const end=selectedEnd===0?0:1;
    const orig=e.startPoints[end].clone().sub(e.startPoints[1-end]);const factor=Math.max(.06,1+projected*3);changePoint(selected,end,e.startPoints[1-end].clone().add(orig.multiplyScalar(factor)));
-  }else if(e.mode==='rotate'){const center=e.startPoints[0].clone().add(e.startPoints[1]).multiplyScalar(.5);const q=new THREE.Quaternion().setFromAxisAngle(axis,delta.length()*(e.precision?.35:2.5)*Math.sign(delta.x+delta.y+0.0001));selected.points.forEach((p,i)=>p.copy(e.startPoints[i]).sub(center).applyQuaternion(q).add(center));applyLine(selected);refreshEnds();}
+  }else if(e.mode==='rotate'){const center=e.startPoints[0].clone().add(e.startPoints[1]).multiplyScalar(.5);const q=new THREE.Quaternion().setFromAxisAngle(axis,delta.length()*(e.precision?.35:2.5)*Math.sign(delta.x+delta.y+0.0001));selected.points.forEach((p,i)=>p.copy(e.startPoints[i]).sub(center).applyQuaternion(q).add(center));applyLine(selected);syncEndpoints();}
  }else{
   if(e.mode==='uniformScale'){const f=Math.max(.05,1+(delta.x+delta.y)*speed*3);selected.mesh.scale.copy(e.startScale).multiplyScalar(f);}
   if(e.mode==='move'){selected.mesh.position.copy(e.startWorld).addScaledVector(effectiveAxis,projected);}
@@ -197,14 +198,30 @@ function editFrame(c){if(!c.edit||!selected)return;const e=c.edit,pos=new THREE.
  syncGizmo();
 }
 
+
 function highlightGizmo(){
- for(const visual of gizmo.children.filter(x=>x.userData.gizmoVisual)){const m=visual.userData.gizmoVisual;const on=activeGizmo?.mode===m.mode&&activeGizmo?.axis===m.axis;visual.scale.setScalar(on?1.2:1);visual.material.color.setHex(on?0xffd02a:0xffffff);}
- for(const mesh of gizmoTargets){const g=mesh.userData.gizmo;if(!g)continue;
-  const active=activeGizmo?.mode===g.mode&&activeGizmo?.axis===g.axis;
-  mesh.material.color.setHex(active?0xffd02a:({x:0xe44b56,y:0x38b26e,z:0x3c88e7,all:0xffffff}[g.axis]));
-  mesh.material.opacity=active?.78:(g.mode==='scale'?1:.12);
-  mesh.scale.setScalar(active?1.18:1);
+ if(!gizmo)return;
+ const previous=gizmo.userData.highlight;
+ if(previous){gizmo.remove(previous);previous.geometry.dispose();previous.material.dispose();gizmo.userData.highlight=null;}
+ for(const hit of gizmoTargets){hit.material.opacity=0;hit.scale.setScalar(1);}
+ for(const obj of gizmo.children){
+  if(!obj.userData.gizmoVisual)continue;
+  const active=activeGizmo?.mode===obj.userData.gizmoVisual.mode&&activeGizmo?.axis===obj.userData.gizmoVisual.axis;
+  obj.scale.setScalar(active?1.24:1);
+  obj.material.color.setHex(active?0xffd02a:0xffffff);
  }
+ if(!activeGizmo)return;
+ const hit=gizmoTargets.find(m=>m.userData.gizmo?.mode===activeGizmo.mode&&m.userData.gizmo?.axis===activeGizmo.axis);
+ if(!hit)return;
+ let marker;
+ if(activeGizmo.mode==='rotate'){
+   marker=new THREE.Mesh(new THREE.TorusGeometry(.33,.017,10,72),new THREE.MeshBasicMaterial({color:0xffd02a,depthTest:false,depthWrite:false}));
+   marker.quaternion.copy(hit.quaternion);
+ }else{
+   marker=new THREE.Mesh(new THREE.TorusGeometry(.077,.012,8,32),new THREE.MeshBasicMaterial({color:0xffd02a,depthTest:false,depthWrite:false}));
+   marker.position.copy(hit.position);
+ }
+ marker.raycast=()=>{};marker.renderOrder=20;gizmo.add(marker);gizmo.userData.highlight=marker;
 }
 
 function pickGizmo(ray){
