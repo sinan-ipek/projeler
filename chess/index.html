@@ -1944,13 +1944,13 @@ body.igor-mode #chessPlaybackControls{display:none!important}
         setStatus("Oyun bitti.", "Berabere.");
       }
       // oyun bitince koç açıksa otomatik kaydet önerisi
-      if (coachEnabled){
+      if (coachEnabled && !igorActive){
         setTimeout(()=>maybeAutoSaveOnGameOver(), 50);
       }
       return;
     }
     const turnText = (game.turn==="w") ? "Beyaz" : "Siyah";
-    const who = (isPlayersTurn() ? "Senin sıran" : "Motorun sırası");
+    const who = igorActive ? "Igor alıştırması" : (isPlayersTurn() ? "Senin sıran" : "Motorun sırası");
     const extra = st.inCheck ? " (Şah çekildi!)" : "";
     setStatus(`${who} – ${turnText} oynar${extra}`, `FEN: ${game.getFEN()}`);
   }
@@ -2997,7 +2997,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const last=game.history[game.history.length-1];
     const uci=last?moveToUCI(last.m):"";
     const expected=igorCurrent.uci;
-    const mate=igorCurrent.goal==="mate1"&&game.gameStatus().over&&game.gameStatus().reason==="checkmate";
+    const mate=igorCurrent.goal==="mate1"&&game.gameStatus().over&&game.gameStatus().type==="mate";
     const capture=igorCurrent.goal==="capture"&&!!undo.toP&&undo.m.to===igorCurrent.target;
     if(mate||capture){
       const key=igorSave.book+":"+igorCurrent.id;
