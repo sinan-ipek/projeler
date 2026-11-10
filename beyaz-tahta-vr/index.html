@@ -16,7 +16,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#fff;font-family:syste
 <a id="home" href="https://sinan-ipek.github.io/projeler/index.html" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linejoin="round"><path d="M3 10 12 3l9 7M5.5 9v12h13V9M10 21v-8h4v8"/></svg></a>
 <select id="language" aria-label="Language"><option value="tr">Türkçe</option><option value="de">Deutsch</option><option value="en">English</option></select>
 <button id="help" aria-label="Help">?</button><div id="helptext"></div>
-<div id="status"></div><div id="version">v0.3.2 · Kompakt formül paneli ve sol menü düğmesi</div>
+<div id="status"></div><div id="version">v0.4.1 · Kompakt formül paneli ve sol menü düğmesi</div>
 <script type="module">
 import * as THREE from 'three';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
@@ -81,7 +81,7 @@ function makeMenu(){const wasVisible=menuVisible;if(menu){ctrl.forEach(c=>{if(c.
  uiLabel(menu,T[lang].looks,0,-.245,.8,.065);
  [['color','color'],['alpha','alpha'],['material','material']].forEach(([k,a],i)=>uiButton(menu,k,a,[-.345,0,.345][i],-.349,.316));
  [['snap','snap'],['outline','outline'],['space','space'],['pass','pass'],['surface','surface'],['formula','formula']].forEach(([k,a],i)=>uiButton(menu,k,a,[-.345,0,.345][i%3],-.48-Math.floor(i/3)*.115,.316));
- uiLabel(menu,'v0.3.2',.382,-.744,.17,.038,'#89929a',31);
+ uiLabel(menu,'v0.4.1',.382,-.744,.17,.038,'#89929a',31);
  attachMenu();menuVisible=wasVisible;menu.visible=wasVisible;
 }
 function attachMenu(){const left=controllerOf('left');if(menu&&left){left.add(menu);menu.position.set(.22,.22,-.36);menu.rotation.set(-.35,0,0);menu.scale.setScalar(.79);}}
@@ -126,6 +126,10 @@ function createGizmo(){destroyGizmo();if(!selected)return;
   const ringHit=new THREE.Mesh(new THREE.TorusGeometry(.28,.043,8,64),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.10,depthTest:false}));ringHit.quaternion.copy(ring.quaternion);ringHit.userData.gizmo={mode:'rotate',axis};gizmo.add(ringHit);gizmoTargets.push(ringHit);
   const scaleHit=new THREE.Mesh(new THREE.BoxGeometry(.085,.085,.085),new THREE.MeshBasicMaterial({color:col,depthTest:false}));scaleHit.position.copy(direction).multiplyScalar(-.22);scaleHit.userData.gizmo={mode:'scale',axis};gizmo.add(scaleHit);gizmoTargets.push(scaleHit);
  }
+ if(!(selected.type==='line'&&selectedEnd>=0)){
+ const u=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.08),new THREE.MeshBasicMaterial({color:0xffffff,depthTest:false}));u.userData.gizmoVisual={mode:'uniformScale',axis:'all'};gizmo.add(u);
+ const hit=new THREE.Mesh(new THREE.BoxGeometry(.14,.14,.14),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthWrite:false}));hit.userData.gizmo={mode:'uniformScale',axis:'all'};gizmo.add(hit);gizmoTargets.push(hit);
+ }
  syncGizmo();
 }
 function syncGizmo(){if(!gizmo||!selected)return;const center=selected.type==='line'&&selectedEnd>=0?selected.points[selectedEnd]:selected.mesh.position;gizmo.position.copy(center);
@@ -166,7 +170,7 @@ function movePreview(mesh,a,b){const delta=b.clone().sub(a);mesh.position.copy(a
 function endLeftSelect(c){if(c.lineStart){const b=snapPoint(castSurface(worldRay(c)));if(b.distanceTo(c.lineStart)>.025){const line=createLine(c.lineStart,b);setSelection(line,1);}if(c.preview){scene.remove(c.preview);disposeGraph(c.preview);}c.lineStart=null;c.preview=null;}}
 function startEdit(c,precision,chosen=null){const ray=worldRay(c);
  if(!selected)return;
- const g=chosen||pick(ray,gizmoTargets);if(!g)return;
+ const g=chosen||pickGizmo(ray);if(!g)return;
  const handle=g.object.userData.gizmo;
  if(!handle)return;
  activeGizmo=handle;highlightGizmo();
@@ -174,7 +178,7 @@ function startEdit(c,precision,chosen=null){const ray=worldRay(c);
  c.controller.getWorldPosition(c.edit.startPos);c.edit.lastPos.copy(c.edit.startPos);
 }
 function editFrame(c){if(!c.edit||!selected)return;const e=c.edit,pos=new THREE.Vector3();c.controller.getWorldPosition(pos);
- const delta=pos.clone().sub(e.startPos);const axis=axisVector[e.axis],speed=e.precision?.18:1;
+ const delta=pos.clone().sub(e.startPos);const axis=axisVector[e.axis]||vecY,speed=e.precision?.18:1;
  const effectiveAxis=localGizmo&&selected.type==='shape'?axis.clone().applyQuaternion(e.startQuaternion):axis;
  const projected=delta.dot(effectiveAxis)*speed;
  if(selected.type==='line'){
@@ -185,6 +189,7 @@ function editFrame(c){if(!c.edit||!selected)return;const e=c.edit,pos=new THREE.
    const orig=e.startPoints[end].clone().sub(e.startPoints[1-end]);const factor=Math.max(.06,1+projected*3);changePoint(selected,end,e.startPoints[1-end].clone().add(orig.multiplyScalar(factor)));
   }else if(e.mode==='rotate'){const center=e.startPoints[0].clone().add(e.startPoints[1]).multiplyScalar(.5);const q=new THREE.Quaternion().setFromAxisAngle(axis,delta.length()*(e.precision?.35:2.5)*Math.sign(delta.x+delta.y+0.0001));selected.points.forEach((p,i)=>p.copy(e.startPoints[i]).sub(center).applyQuaternion(q).add(center));applyLine(selected);refreshEnds();}
  }else{
+  if(e.mode==='uniformScale'){const f=Math.max(.05,1+(delta.x+delta.y)*speed*3);selected.mesh.scale.copy(e.startScale).multiplyScalar(f);}
   if(e.mode==='move'){selected.mesh.position.copy(e.startWorld).addScaledVector(effectiveAxis,projected);}
   else if(e.mode==='scale'){selected.mesh.scale.copy(e.startScale);selected.mesh.scale[e.axis]=Math.max(.04,e.startScale[e.axis]*(1+projected*3.4));}
   else if(e.mode==='rotate'){selected.mesh.rotation.copy(e.startRot);const angle=(delta.x+delta.y+delta.z)*(e.precision?.35:2.2);if(localGizmo)selected.mesh.rotateOnAxis(axis,angle);else selected.mesh.rotateOnWorldAxis(axis,angle);}
@@ -193,46 +198,70 @@ function editFrame(c){if(!c.edit||!selected)return;const e=c.edit,pos=new THREE.
 }
 
 function highlightGizmo(){
+ for(const visual of gizmo.children.filter(x=>x.userData.gizmoVisual)){const m=visual.userData.gizmoVisual;const on=activeGizmo?.mode===m.mode&&activeGizmo?.axis===m.axis;visual.scale.setScalar(on?1.2:1);visual.material.color.setHex(on?0xffd02a:0xffffff);}
  for(const mesh of gizmoTargets){const g=mesh.userData.gizmo;if(!g)continue;
   const active=activeGizmo?.mode===g.mode&&activeGizmo?.axis===g.axis;
-  mesh.material.color.setHex(active?0xffd02a:({x:0xe44b56,y:0x38b26e,z:0x3c88e7}[g.axis]));
+  mesh.material.color.setHex(active?0xffd02a:({x:0xe44b56,y:0x38b26e,z:0x3c88e7,all:0xffffff}[g.axis]));
   mesh.material.opacity=active?.78:(g.mode==='scale'?1:.12);
   mesh.scale.setScalar(active?1.18:1);
  }
 }
-function rightSelect(c){
- const ray=worldRay(c);
- if(surfacePanel?.visible){const s=pick(ray,surfaceButtons);if(s){surfaceAction(s.object.userData.surfaceAction);return;}}
- if(menuVisible&&menu?.visible){const ui=pick(ray,menuTargets);if(ui){action(ui.object.userData.menuAction);return;}}
- const gh=pick(ray,gizmoTargets);
- const eh=pick(ray,endpointTargets);
- const oh=pick(ray,items.map(it=>it.mesh));
- const hits=[gh,eh,oh].filter(Boolean).sort((a,b)=>a.distance-b.distance);
- const target=hits[0];
- if(target?.object.userData.gizmo){startEdit(c,true,target);return;}
- if(target?.object.userData.isHandle){setSelection(target.object.userData.owner,target.object.userData.end);return;}
- if(target?.object.userData.isItem){setSelection(target.object.userData.owner,-1);return;}
- if(drawMode){onLeftSelect(c);return;}
- setSelection(null);
+
+function pickGizmo(ray){
+ if(!gizmo)return null;
+ const direct=pick(ray,gizmoTargets);
+ if(direct)return direct;
+ let best=null,bestScore=Infinity;
+ for(const obj of gizmoTargets){
+  const meta=obj.userData.gizmo;
+  const p=obj.getWorldPosition(new THREE.Vector3());
+  const t=p.clone().sub(ray.origin).dot(ray.direction);
+  if(t<=.02)continue;
+  let point=ray.at(t,new THREE.Vector3());
+  let dist=point.distanceTo(p);
+  if(meta.mode==='rotate'){
+   const normal=axisVector[meta.axis].clone().applyQuaternion(gizmo.quaternion);
+   const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,gizmo.position);
+   point=ray.intersectPlane(plane,new THREE.Vector3());
+   if(!point)continue;
+   dist=Math.abs(point.distanceTo(gizmo.position)-.28*gizmo.scale.x);
+  }
+  const limit=(meta.mode==='rotate'?.075:meta.mode==='uniformScale'?.11:.095)*gizmo.scale.x;
+  if(dist<limit&&dist<bestScore){bestScore=dist;best={object:obj,point:point.clone(),distance:point.distanceTo(ray.origin)};}
+ }
+ return best;
 }
+function rayTarget(ray){
+ const ui=pick(ray,[...(surfacePanel?.visible?surfaceButtons:[]),...(menuVisible&&menu?.visible?menuTargets:[])]);
+ const e=pick(ray,endpointTargets),g=pickGizmo(ray),o=pick(ray,items.map(i=>i.mesh));
+ if(ui&&(!g||ui.distance<g.distance-.03))return ui;
+ if(e&&(!g||e.distance<g.distance-.05))return e;
+ if(g&&(!o||g.distance<o.distance+.28))return g;
+ return [ui,e,g,o].filter(Boolean).sort((a,b)=>a.distance-b.distance)[0]||null;
+}
+function rightSelect(c){
+ const hit=rayTarget(worldRay(c));
+ if(!hit){if(drawMode)onLeftSelect(c);else setSelection(null);return;}
+ const obj=hit.object;
+ if(obj.userData.surfaceAction){surfaceAction(obj.userData.surfaceAction);return;}
+ if(obj.userData.menuAction){action(obj.userData.menuAction);return;}
+ if(obj.userData.gizmo){startEdit(c,true,hit);return;}
+ if(obj.userData.isHandle){setSelection(obj.userData.owner,obj.userData.end);return;}
+ if(obj.userData.isItem){setSelection(obj.userData.owner,-1);return;}
+}
+
+
 function updateRayVisuals(){
  for(const c of ctrl){if(!c.hand)continue;
- const ray=worldRay(c);
- const all=[...items.map(it=>it.mesh),...endpointTargets,...gizmoTargets];
- if(menuVisible&&menu?.visible)all.push(...menuTargets);
- if(surfacePanel?.visible)all.push(...surfaceButtons);
- const hit=pick(ray,all);
- const planeHit=new THREE.Vector3();
- let nearest=hit?.distance??2.1;
- const groundHit=ray.intersectPlane(new THREE.Plane(vecY,0),planeHit);
- if(groundHit){const gd=groundHit.distanceTo(ray.origin);if(gd>0&&gd<nearest)nearest=gd;}
- nearest=Math.min(5,Math.max(.08,nearest));
- c.rayMesh.scale.z=nearest;
- c.rayDot.position.copy(ray.at(nearest,new THREE.Vector3()));
- c.rayDot.visible=renderer.xr.isPresenting;
- c.rayMesh.visible=renderer.xr.isPresenting;
+  const ray=worldRay(c),hit=rayTarget(ray);
+  const gp=ray.intersectPlane(new THREE.Plane(vecY,0),new THREE.Vector3());
+  const d=Math.max(.06,Math.min(5,hit?.distance??(gp?gp.distanceTo(ray.origin):2.1)));
+  c.rayMesh.scale.z=d;
+  c.rayDot.position.copy(ray.at(d,new THREE.Vector3()));
+  c.rayDot.visible=renderer.xr.isPresenting;c.rayMesh.visible=renderer.xr.isPresenting;
  }
 }
+
 function updateOutline(item){
  if(item.outline){item.mesh.remove(item.outline);item.outline.material.dispose();item.outline=null;}
  if(!outlineEnabled||item.type!=='shape')return;
@@ -350,7 +379,7 @@ for(let i=0;i<2;i++){
  controller.addEventListener('selectstart',()=>{if(c.hand==='right')rightSelect(c);});
  controller.addEventListener('disconnected',()=>{c.inputSource=null;});
  controller.addEventListener('selectend',()=>{if(c.hand==='right'){if(c.lineStart)endLeftSelect(c);if(c.edit?.precision)c.edit=null;}});
- controller.addEventListener('squeezestart',()=>{if(c.hand==='right'&&activeGizmo){const hit=gizmoTargets.find(x=>x.userData.gizmo?.axis===activeGizmo.axis&&x.userData.gizmo?.mode===activeGizmo.mode);if(hit)startEdit(c,false,{object:hit});}});
+ controller.addEventListener('squeezestart',()=>{if(c.hand!=='right')return;const target=rayTarget(worldRay(c));if(target?.object.userData.gizmo)startEdit(c,false,target);else if(activeGizmo){const hit=gizmoTargets.find(x=>x.userData.gizmo?.axis===activeGizmo.axis&&x.userData.gizmo?.mode===activeGizmo.mode);if(hit)startEdit(c,false,{object:hit});}});
  controller.addEventListener('squeezeend',()=>{if(c.hand==='right'&&c.edit&&!c.edit.precision)c.edit=null;});
 }
 makeMenu();
