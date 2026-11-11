@@ -37,7 +37,7 @@ function check(){
   bubble=document.createElement("div");bubble.className="chess-mate-bubble";bubble.textContent="Mat!";
   bubble.setAttribute("role","status");bubble.setAttribute("aria-label","Mat!");
   document.body.appendChild(bubble);placeBubble();
- },950);
+ },760);
 }
 new MutationObserver(check).observe(status,{childList:true,characterData:true,subtree:true});
 new MutationObserver(()=>{if(active&&!isMate())clear();}).observe(board,{childList:true,subtree:true});
