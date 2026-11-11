@@ -3163,6 +3163,32 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       if(igorActive&&igorSave.book===3)igorMessage("3. kitap yüklenemedi. Sayfayı yenile.");
     }
   }
+  // Chess Camp Volume 4: image-derived endgame positions, original answers retained.
+  let igorVol4Loading=true;
+  async function igorLoadVolumeFour(){
+    try{
+      const response=await fetch("igor-vol4-data.b64?v=1");
+      if(!response.ok)throw Error("HTTP "+response.status);
+      const bytes=Uint8Array.from(atob((await response.text()).trim()),c=>c.charCodeAt(0));
+      const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate"));
+      const data=JSON.parse(await new Response(stream).text());
+      if(!Array.isArray(data.rows)||data.rows.length!==618)throw Error("618 endgame positions expected");
+      igorProblems[4]=data.rows.map((row,i)=>({
+        id:i+1,book:4,page:7+Math.floor(i/6),
+        fen:row[0],task:data.instructions[row[1]],solution:row[2],
+        uci:row[3],answerType:row[4],
+        sourceTask:data.sourceInstructions[row[5]],
+        section:data.sections[row[6]],goal:row[7],
+        multiMove:row[4]!=="yes"&&row[4]!=="no"
+      }));
+      igorVol4Loading=false;
+      if(igorActive&&igorSave.book===4)igorLoad(4,igorSave.pos||1);
+    }catch(e){
+      igorVol4Loading=false;
+      console.error("Igor Vol4 dataset",e);
+      if(igorActive&&igorSave.book===4)igorMessage("4. kitap yüklenemedi. Sayfayı yenile.");
+    }
+  }
   const igorKey="chess-igor-progress-v1";
   let igorActive=false,igorShowAnswer=false,igorStartFen="",igorCurrent=null;
   let igorConstructionPiece="";
@@ -3227,7 +3253,18 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       if(!igorActive || igorFeedbackSequence!==sequence ||
          igorSave.book!==pending.book || igorSave.pos!==pending.pos ||
          game.history[game.history.length-1]!==move)return;
-      if(pending.correct){
+      if(pending.book===4){
+        if(pending.mate){
+          const k=pending.book+":"+pending.pos;
+          igorSave.solved[k]=true;igorPersist();
+          igorMessage("Doğru!");
+          igorRenderPanel();
+        }else if(pending.correct){
+          igorMessage("Kitaptaki ilk hamle. Devam et.");
+        }else{
+          igorMessage("Hamle oynandı. Sonuç henüz doğrulanmadı.");
+        }
+      }else if(pending.correct){
         if(pending.multiMove){
           igorMessage("İlk hamle doğru. Devam et.");
         }else{
@@ -3276,7 +3313,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     document.getElementById("igorTask").textContent=igorCurrent?igorCurrent.task:"Bu kitaptaki problemler henüz hazırlanmadı.";
     const list=igorList(),at=list.findIndex(p=>p.id===igorSave.pos);
     document.getElementById("igorPrev").disabled=igorSave.pos<=1;
-    document.getElementById("igorNext").disabled=igorSave.book===1?igorSave.pos>=624:(igorSave.book===2||igorSave.book===3)?igorSave.pos>=618:igorSave.book===8?igorSave.pos>=1000:false;
+    document.getElementById("igorNext").disabled=igorSave.book===1?igorSave.pos>=624:(igorSave.book===2||igorSave.book===3||igorSave.book===4)?igorSave.pos>=618:igorSave.book===8?igorSave.pos>=1000:false;
     document.getElementById("igorNumber").disabled=false;
     document.getElementById("igorFlip").disabled=false;
     igorRenderChoices();
@@ -3286,7 +3323,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const list=igorList();
     const valid=Number.isSafeInteger(no)&&no>=1;
     if(!valid)return;
-    const max=book===1?624:(book===2||book===3)?618:book===8?1000:Infinity;
+    const max=book===1?624:(book===2||book===3||book===4)?618:book===8?1000:Infinity;
     if(no>max){igorMessage("Son problem: "+max);return;}
     const p=list.find(x=>x.id===no)||null;
     igorCurrent=p;
@@ -3315,7 +3352,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       orientation=igorSave.orientation;
     }
     igorPersist();render();igorRenderPanel();
-    igorMessage(p?(book===2&&no===357?"Kitapta bu diyagramın cevabı tutarsız.":""):book===1&&igorVol1Loading?"1. kitap yükleniyor...":book===2&&igorVol2Loading?"2. kitap yükleniyor...":book===3&&igorVol3Loading?"3. kitap yükleniyor...":"Problem "+no+" henüz yüklenmedi.");
+    igorMessage(p?(book===2&&no===357?"Kitapta bu diyagramın cevabı tutarsız.":""):book===1&&igorVol1Loading?"1. kitap yükleniyor...":book===2&&igorVol2Loading?"2. kitap yükleniyor...":book===3&&igorVol3Loading?"3. kitap yükleniyor...":book===4&&igorVol4Loading?"4. kitap yükleniyor...":"Problem "+no+" henüz yüklenmedi.");
   }
   function igorStart(){
     igorActive=true;
@@ -3350,7 +3387,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const alternativeCheck=igorCurrent.goal==="reference"&&/Give (double |discovered )?check|Check with/i.test(source)&&game.inCheck(game.turn);
     // Game state has already changed, but the visible piece may still be travelling.
     igorPendingFeedback={move:last,book:igorSave.book,pos:igorSave.pos,
-      correct:igorCurrent.goal==="mate1"?mate:(mate||capture||expected||alternativeCapture||alternativeEP||alternativeCastle||alternativeCheck),
+      correct:igorCurrent.book===4?expected:(igorCurrent.goal==="mate1"?mate:(mate||capture||expected||alternativeCapture||alternativeEP||alternativeCastle||alternativeCheck)),
       mate,multiMove:!!igorCurrent.multiMove};
     if(!activeMoveAnimation)igorFinishFeedback(last);
   }
@@ -3389,7 +3426,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     });
     const step=d=>{
       const n=igorSave.pos+d;
-      if(n<1||(igorSave.book===1&&n>624)||((igorSave.book===2||igorSave.book===3)&&n>618)||(igorSave.book===8&&n>1000))return;
+      if(n<1||(igorSave.book===1&&n>624)||((igorSave.book===2||igorSave.book===3||igorSave.book===4)&&n>618)||(igorSave.book===8&&n>1000))return;
       igorLoad(igorSave.book,n);
     };
     document.getElementById("igorPrev").addEventListener("click",()=>step(-1));
@@ -3397,7 +3434,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const numberInput=document.getElementById("igorNumber");
     const jump=()=>{
       const n=Number(numberInput.value);
-      if(Number.isSafeInteger(n)&&n>=1&&(igorSave.book!==1||n<=624)&&((igorSave.book!==2&&igorSave.book!==3)||n<=618)&&(igorSave.book!==8||n<=1000)){
+      if(Number.isSafeInteger(n)&&n>=1&&(igorSave.book!==1||n<=624)&&((igorSave.book!==2&&igorSave.book!==3&&igorSave.book!==4)||n<=618)&&(igorSave.book!==8||n<=1000)){
         if(n!==igorSave.pos)igorLoad(igorSave.book,n);
       }else{
         numberInput.value=igorSave.pos;
@@ -3418,10 +3455,11 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   igorProblems[2]=[];
   igorProblems[3]=[];
   // Vol 4 is image-based: only diagrams independently checked against the PDF are included.
-  igorProblems[4]=[{"id":1,"fen":"k7/8/8/8/8/3K4/2r5/8 b - - 0 1","task":"Siyah oynar. Şahını oynatmalı mı?","goal":"choice","answerType":"no","page":7},{"id":2,"fen":"8/8/8/8/4r2k/5K2/8/8 b - - 0 1","task":"Siyah oynar. Şahını oynatmalı mı?","goal":"choice","answerType":"no","page":7},{"id":3,"fen":"8/8/8/4r3/3K4/8/4k3/8 b - - 0 1","task":"Siyah oynar. Şahını oynatmalı mı?","goal":"choice","answerType":"no","page":7},{"id":4,"fen":"8/8/8/8/6k1/8/7r/4K3 b - - 0 1","task":"Siyah oynar. Şahını oynatmalı mı?","goal":"choice","answerType":"yes","page":7},{"id":5,"fen":"8/8/8/8/2k5/8/1r6/K7 b - - 0 1","task":"Siyah oynar. Şahını oynatmalı mı?","goal":"choice","answerType":"no","page":7},{"id":6,"fen":"8/8/8/8/8/1k6/1r6/K7 b - - 0 1","task":"Siyah oynar. Şahını oynatmalı mı?","goal":"choice","answerType":"no","page":7},{"id":7,"fen":"8/3k4/6R1/3K4/8/8/8/8 w - - 0 1","task":"Beyaz oynar. Siyah şahı son yataya veya kenar dikeye çekilmeye zorla.","goal":"reference","uci":"g6g7","page":8},{"id":8,"fen":"5R2/8/8/8/4K1k1/8/8/8 w - - 0 1","task":"Beyaz oynar. Siyah şahı son yataya veya kenar dikeye çekilmeye zorla.","goal":"reference","uci":"f8g8","page":8},{"id":9,"fen":"8/1k6/2R5/8/4K3/8/8/8 w - - 0 1","task":"Beyaz oynar. Siyah şahı son yataya veya kenar dikeye çekilmeye zorla.","goal":"reference","uci":"e4d5","page":8},{"id":10,"fen":"8/8/8/8/8/8/6k1/3RK3 w - - 0 1","task":"Beyaz oynar. Siyah şahı son yataya veya kenar dikeye çekilmeye zorla.","goal":"reference","uci":"d1d3","page":8},{"id":11,"fen":"8/1k6/4K2R/8/8/8/8/8 w - - 0 1","task":"Beyaz oynar. Siyah şahı son yataya veya kenar dikeye çekilmeye zorla.","goal":"reference","uci":"e6d7","page":8},{"id":12,"fen":"8/6k1/7R/6K1/8/8/8/8 w - - 0 1","task":"Beyaz oynar. Siyah şahı son yataya veya kenar dikeye çekilmeye zorla.","goal":"reference","uci":"h6f6","page":8}];
+  igorProblems[4]=[];
   igorLoadVolumeOne();
   igorLoadVolumeTwo();
   igorLoadVolumeThree();
+  igorLoadVolumeFour();
   // ===== end Igor =====
 
   boot();
