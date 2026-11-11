@@ -565,6 +565,18 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 .versionNote{left:8px!important;right:auto!important}
 @media(max-width:900px){.igor-mode .playArea{grid-template-columns:1fr!important}.igor-mode .boardColumn{width:100%;max-width:560px;margin:auto}.igor-mode .sideInfo{max-width:560px;width:100%;margin:auto}}
 @media(max-width:500px){#igorPanel.igor-panel{padding:10px 6px}.igor-mode .wrap{padding:8px!important}#igorTask{margin-top:13px}#igorGo button{min-height:48px}}
+</style>
+<style id="igorCompactV202">
+/* Small, tactile Igor controls. Overrides older broad grid/button rules. */
+#igorPanel #igorGo{display:flex!important;grid-template-columns:none!important;justify-content:center!important;align-items:center!important;gap:8px!important;margin:10px 0 14px!important;max-width:none!important}
+#igorPanel #igorGo button{flex:0 0 38px!important;width:38px!important;min-width:38px!important;max-width:38px!important;height:36px!important;min-height:36px!important;padding:0!important;border-radius:7px!important;font-size:15px!important;border:1px solid #c8c8c8!important;background:#f9f9f9!important;color:#222!important;box-shadow:0 2px 5px rgba(0,0,0,.16)!important;line-height:1!important}
+#igorPanel #igorGo button:hover:not(:disabled){background:#eee!important;box-shadow:0 3px 7px rgba(0,0,0,.2)!important}
+#igorPanel #igorGo button:disabled{opacity:.35!important;box-shadow:none!important}
+#igorPanel #igorNumber{flex:0 0 62px!important;width:62px!important;max-width:62px!important;min-width:0!important;height:36px!important;min-height:36px!important;padding:3px 2px!important;font-size:16px!important;text-align:center!important;border:1px solid #c8c8c8!important;border-radius:7px!important;box-sizing:border-box!important;box-shadow:0 1px 4px rgba(0,0,0,.10)!important;appearance:textfield;-moz-appearance:textfield}
+#igorPanel #igorNumber::-webkit-inner-spin-button,#igorPanel #igorNumber::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#igorPanel #igorFlip{display:block!important;width:auto!important;max-width:max-content!important;min-width:0!important;height:35px!important;min-height:35px!important;padding:6px 13px!important;margin:2px auto!important;font-size:13px!important;font-weight:400!important;white-space:nowrap!important;border:1px solid #c8c8c8!important;border-radius:7px!important;background:#f8f8f8!important;box-shadow:0 2px 5px rgba(0,0,0,.15)!important}
+#igorPanel #igorFlip:hover{background:#eee!important}
+@media(max-width:500px){#igorPanel #igorGo button{width:38px!important;min-width:38px!important;height:38px!important;min-height:38px!important}}
 </style></head>
 
 <body>
@@ -2957,17 +2969,21 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     document.getElementById("igorNumber").value=String(igorSave.pos);
     document.getElementById("igorTask").textContent=igorCurrent?igorCurrent.task:"Bu kitaptaki problemler henüz hazırlanmadı.";
     const list=igorList(),at=list.findIndex(p=>p.id===igorSave.pos);
-    document.getElementById("igorPrev").disabled=at<=0;
-    document.getElementById("igorNext").disabled=at<0||at>=list.length-1;
-    document.getElementById("igorNumber").disabled=!list.length;
-    document.getElementById("igorFlip").disabled=!igorCurrent;
+    document.getElementById("igorPrev").disabled=igorSave.pos<=1;
+    document.getElementById("igorNext").disabled=igorSave.book===2?igorSave.pos>=618:igorSave.book===8?igorSave.pos>=1000:false;
+    document.getElementById("igorNumber").disabled=false;
+    document.getElementById("igorFlip").disabled=false;
   }
   function igorLoad(book,no){
     igorSave.book=book;
     const list=igorList();
-    const p=list.find(x=>x.id===no)||list[0]||null;
+    const valid=Number.isSafeInteger(no)&&no>=1;
+    if(!valid)return;
+    const max=book===2?618:book===8?1000:Infinity;
+    if(no>max){igorMessage("Son problem: "+max);return;}
+    const p=list.find(x=>x.id===no)||null;
     igorCurrent=p;
-    igorSave.pos=p?p.id:(no||1);
+    igorSave.pos=no;
     igorSave.last[book]=igorSave.pos;
     igorShowAnswer=false;
     stopEngine();
@@ -2980,11 +2996,12 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       orientation=igorSave.orientation;
       document.getElementById("playerSide").value=playerSide;
     } else {
-      game.reset();
+      // An unconverted exercise must not silently show a different puzzle or the regular starting position.
+      game.loadFEN("8/8/8/8/8/8/8/8 w - - 0 1");
       orientation=igorSave.orientation;
     }
     igorPersist();render();igorRenderPanel();
-    igorMessage(p?"":"");
+    igorMessage(p?"":"Problem "+no+" henüz yüklenmedi.");
   }
   function igorStart(){
     igorActive=true;
@@ -3049,18 +3066,27 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     document.getElementById("igorBook").addEventListener("change",e=>{
       const b=Number(e.target.value);igorLoad(b,igorSave.last[b]||1);
     });
-    const step=d=>{const l=igorList();const i=l.findIndex(p=>p.id===igorSave.pos);if(l[i+d])igorLoad(igorSave.book,l[i+d].id);};
+    const step=d=>{
+      const n=igorSave.pos+d;
+      if(n<1||(igorSave.book===2&&n>618)||(igorSave.book===8&&n>1000))return;
+      igorLoad(igorSave.book,n);
+    };
     document.getElementById("igorPrev").addEventListener("click",()=>step(-1));
     document.getElementById("igorNext").addEventListener("click",()=>step(1));
-    document.getElementById("igorGo").addEventListener("submit",e=>{
-      e.preventDefault();
-      const n=Number(document.getElementById("igorNumber").value);
-      if(igorList().some(p=>p.id===n))igorLoad(igorSave.book,n);
-      else {
-        document.getElementById("igorNumber").value=igorSave.pos;
-        igorMessage("Bu problem henüz yüklenmedi.");
+    const numberInput=document.getElementById("igorNumber");
+    const jump=()=>{
+      const n=Number(numberInput.value);
+      if(Number.isSafeInteger(n)&&n>=1&&(igorSave.book!==2||n<=618)&&(igorSave.book!==8||n<=1000)){
+        if(n!==igorSave.pos)igorLoad(igorSave.book,n);
+      }else{
+        numberInput.value=igorSave.pos;
+        igorMessage("Geçerli bir problem numarası gir.");
       }
-    });
+    };
+    // Keyboard Enter, mobile Done, arrows/spinner and leaving the number field all work.
+    document.getElementById("igorGo").addEventListener("submit",e=>{e.preventDefault();jump();numberInput.blur();});
+    numberInput.addEventListener("change",jump);
+    numberInput.addEventListener("blur",()=>{if(numberInput.value!=="")jump();});
     document.getElementById("igorFlip").addEventListener("click",()=>{
       igorSave.orientation=igorSave.orientation==="w"?"b":"w";
       orientation=igorSave.orientation;igorPersist();render();
@@ -3073,5 +3099,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.9.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v2.0.1 · Igor minimal panel ve mod geçişi</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.9.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v2.0.2 · Küçük düğmeler, doğrudan soru seçimi</div></body>
 </html>
