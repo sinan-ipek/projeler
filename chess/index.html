@@ -631,6 +631,20 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 }
 #igorPanel #igorRetry:hover{background:#ededed!important}
 #igorPanel #igorRetry:focus-visible{outline:2px solid #a64747;outline-offset:2px}
+</style><style id="igorRetryMinimalV207">
+/* Single compact red retry control; no duplicate failure text. */
+#igorPanel #igorFeedback.igor-retry{
+ display:flex!important;align-items:center!important;
+ animation:none!important;font-size:initial!important;min-height:40px!important;
+}
+#igorPanel #igorRetry{
+ color:#b34b4b!important;
+ font-size:15px!important;font-weight:600!important;
+ padding:7px 13px!important;min-height:34px!important;
+ background:#fafafa!important;border:1px solid #ddd!important;
+ border-radius:7px!important;box-shadow:0 2px 5px rgba(0,0,0,.12)!important;
+}
+#igorPanel #igorRetry:hover{background:#f3f3f3!important}
 </style></head>
 
 <body>
@@ -3050,9 +3064,10 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     if(t==="Doğru!") el.classList.add("igor-correct");
     else if(t==="Yeniden dene."){
       el.classList.add("igor-retry");
+      el.textContent="";
       const retry=document.createElement("button");
       retry.id="igorRetry";retry.type="button";
-      retry.textContent="↻ Yeniden dene";
+      retry.textContent="Yeniden dene";
       retry.setAttribute("aria-label","Bu problemi yeniden dene");
       retry.addEventListener("click",()=>igorLoad(igorSave.book,igorSave.pos));
       el.appendChild(retry);
@@ -3197,5 +3212,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.9.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v2.0.6 · Önce Mat, sonra Doğru</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.9.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v2.0.7 · Tek kırmızı yeniden dene düğmesi</div></body>
 </html>
