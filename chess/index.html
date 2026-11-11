@@ -3110,7 +3110,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   let igorVol2Loading=true;
   async function igorLoadVolumeTwo(){
     try{
-      const response=await fetch("igor-vol2-data.b64?v=1");
+      const response=await fetch("igor-vol2-data.b64?v=2");
       if(!response.ok)throw Error("HTTP "+response.status);
       const encoded=(await response.text()).trim();
       const bytes=Uint8Array.from(atob(encoded),x=>x.charCodeAt(0));
@@ -3289,7 +3289,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       orientation=igorSave.orientation;
     }
     igorPersist();render();igorRenderPanel();
-    igorMessage(p?"":book===1&&igorVol1Loading?"1. kitap yükleniyor...":book===2&&igorVol2Loading?"2. kitap yükleniyor...":"Problem "+no+" henüz yüklenmedi.");
+    igorMessage(p?(book===2&&no===357?"Kitapta bu diyagramın cevabı tutarsız.":""):book===1&&igorVol1Loading?"1. kitap yükleniyor...":book===2&&igorVol2Loading?"2. kitap yükleniyor...":"Problem "+no+" henüz yüklenmedi.");
   }
   function igorStart(){
     igorActive=true;
@@ -3398,5 +3398,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=2.0.8"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.1.1 · Cilt 2: 618 problem, mat ve yapım soruları</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=2.0.8"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.1.2 · Cilt 2: 618 problem; cevap anahtarı kontrol edildi</div></body>
 </html>
