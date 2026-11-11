@@ -3120,7 +3120,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       igorProblems[2]=decoded.rows.map((row,i)=>{
         const id=i+1, special=row[7];
         return {
-          id, book:2, page:8+Math.floor(i/6),
+          id, book:2, page:7+Math.floor(i/6),
           fen:row[0]+" "+row[1]+" "+row[2]+" "+row[3]+" 0 1",
           task:decoded.instructions[row[4]],
           solution:row[5],uci:row[6],
@@ -3173,10 +3173,20 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       valid=JSON.stringify(actual)===JSON.stringify(expected.sort());
       igorConstructionDone=true;
     }
+    // A constructed mate must be evaluated from the losing side's turn.
+    if(special==="place-piece")game.turn="b";
     render();
     if(valid){
       igorSave.solved[igorSave.book+":"+igorSave.pos]=true;igorPersist();
-      igorMessage("Doğru!");
+      const matchedBook=igorSave.book,matchedPos=igorSave.pos;
+      const serial=++igorFeedbackSequence;
+      // Reuse the existing mate animation: first "Mat!", then "Doğru!".
+      const isMate=game.gameStatus().type==="mate";
+      if(isMate)setTimeout(()=>{
+        if(igorActive&&igorFeedbackSequence===serial&&
+           igorSave.book===matchedBook&&igorSave.pos===matchedPos)igorMessage("Doğru!");
+      },950);
+      else igorMessage("Doğru!");
     }else igorMessage("Yeniden dene.");
     return true;
   }
@@ -3388,5 +3398,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=2.0.8"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.1.0 · Cilt 2: 618 konum, mat ve özel alıştırmalar</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=2.0.8"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.1.1 · Cilt 2: 618 problem, mat ve yapım soruları</div></body>
 </html>
