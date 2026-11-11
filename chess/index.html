@@ -650,6 +650,11 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 #igorChoices:empty{display:none}
 #igorChoices button{width:auto!important;min-width:0!important;min-height:32px!important;padding:5px 12px!important;border:1px solid #ddd!important;border-radius:7px!important;background:#fafafa!important;box-shadow:0 1px 4px rgba(0,0,0,.10)!important;font:500 13px/1.2 system-ui,sans-serif!important;color:#444!important;cursor:pointer}
 #igorChoices button:hover{background:#eee!important}
+</style><style id="igorVol2Style">
+#igorChoices .igor-piece-selected{background:#fff0a0!important;border-color:#c9a000!important}
+#igorChoices button[aria-label="Vezir"],#igorChoices button[aria-label="Kale"],
+#igorChoices button[aria-label="Fil"],#igorChoices button[aria-label="At"],
+#igorChoices button[aria-label="Piyon"]{font-size:23px!important;padding:3px 11px!important;min-height:35px!important}
 </style></head>
 
 <body>
@@ -2427,6 +2432,10 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     ensureAudio();
     if (engineThinking || (igorActive && activeMoveAnimation)) return;
 
+    if(igorActive && igorCurrent?.goal==="construction"){
+      igorConstructionClick(e.currentTarget.dataset.sq);
+      return;
+    }
     const st = game.gameStatus();
     if (st.over) return;
     if (!igorActive && !isPlayersTurn()) return;
@@ -3048,6 +3057,18 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     if(!igorCurrent)return;
     const kind=igorCurrent.answerType;
     let opts=null;
+    if(igorCurrent.special==="place-piece"){
+      for(const [piece,label] of [["Q","♕"],["R","♖"],["B","♗"],["N","♘"],["P","♙"]]){
+        const button=document.createElement("button");
+        button.type="button";button.textContent=label;
+        button.title=({Q:"Vezir",R:"Kale",B:"Fil",N:"At",P:"Piyon"})[piece];
+        button.setAttribute("aria-label",button.title);
+        button.classList.toggle("igor-piece-selected",piece===igorConstructionPiece);
+        button.addEventListener("click",()=>{igorConstructionPiece=piece;igorRenderChoices();});
+        el.appendChild(button);
+      }
+      return;
+    }
     if(kind==="yes"||kind==="no")opts=[["Evet",kind==="yes"],["Hayır",kind==="no"]];
     else if(kind==="stalemate"||kind==="checkmate"||kind==="not-stalemate")
       opts=[["Mat",kind==="checkmate"],["Pat",kind==="stalemate"],["Hiçbiri",kind==="not-stalemate"]];
@@ -3086,8 +3107,79 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       if(igorActive&&igorSave.book===1)igorMessage("1. kitap yüklenemedi. Sayfayı yenile.");
     }
   }
+  let igorVol2Loading=true;
+  async function igorLoadVolumeTwo(){
+    try{
+      const response=await fetch("igor-vol2-data.b64?v=1");
+      if(!response.ok)throw Error("HTTP "+response.status);
+      const encoded=(await response.text()).trim();
+      const bytes=Uint8Array.from(atob(encoded),x=>x.charCodeAt(0));
+      const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate"));
+      const decoded=JSON.parse(await new Response(stream).text());
+      if(!Array.isArray(decoded.rows)||decoded.rows.length!==618)throw Error("618 problems expected");
+      igorProblems[2]=decoded.rows.map((row,i)=>{
+        const id=i+1, special=row[7];
+        return {
+          id, book:2, page:8+Math.floor(i/6),
+          fen:row[0]+" "+row[1]+" "+row[2]+" "+row[3]+" 0 1",
+          task:decoded.instructions[row[4]],
+          solution:row[5],uci:row[6],
+          special:special==="mate1"?"":special,
+          goal:special==="mate1"||special==="en-passant"?"mate1":"construction",
+          answerType:special
+        };
+      });
+      igorVol2Loading=false;
+      if(igorActive&&igorSave.book===2)igorLoad(2,igorSave.pos||1);
+    }catch(err){
+      igorVol2Loading=false;
+      console.error("Igor Vol2 data",err);
+      if(igorActive&&igorSave.book===2)igorMessage("2. kitap yüklenemedi. Sayfayı yenile.");
+    }
+  }
   const igorKey="chess-igor-progress-v1";
   let igorActive=false,igorShowAnswer=false,igorStartFen="",igorCurrent=null;
+  let igorConstructionPiece="";
+  let igorConstructionPicked=new Set();
+  let igorConstructionDone=false;
+  function igorConstructionClick(square){
+    const p=igorCurrent;
+    if(!igorActive||!p||p.goal!=="construction")return false;
+    if(igorConstructionDone)return true;
+    const special=p.special;
+    const answer=p.solution.replace(/[.]/g,"").trim();
+    const piece=game.pieceAt(square);
+    let valid=false;
+    if(special==="place-king"||special==="place-piece"){
+      const chosen=special==="place-king"?"K":igorConstructionPiece;
+      if(!chosen){igorMessage("Önce taşı seç.");return true;}
+      if(piece){return true;}
+      game.setPiece(square,chosen);
+      valid=(chosen+square)===answer;
+      igorConstructionDone=true;
+    }else if(special==="recolor-pieces"){
+      if(!piece)return true;
+      // In these puzzles the diagrams intentionally show all pieces in white.
+      if(igorConstructionPicked.has(square)){
+        igorConstructionPicked.delete(square);
+        game.setPiece(square,piece.toUpperCase());
+      }else{
+        igorConstructionPicked.add(square);
+        game.setPiece(square,piece.toLowerCase());
+      }
+      const expected=answer.split(",").map(x=>x.trim()).filter(Boolean);
+      if(igorConstructionPicked.size<expected.length){render();return true;}
+      const actual=[...igorConstructionPicked].map(q=>game.pieceAt(q).toUpperCase()+q).sort();
+      valid=JSON.stringify(actual)===JSON.stringify(expected.sort());
+      igorConstructionDone=true;
+    }
+    render();
+    if(valid){
+      igorSave.solved[igorSave.book+":"+igorSave.pos]=true;igorPersist();
+      igorMessage("Doğru!");
+    }else igorMessage("Yeniden dene.");
+    return true;
+  }
   let igorPendingFeedback=null;
   let igorFeedbackSequence=0;
   function igorFinishFeedback(move){
@@ -3165,6 +3257,9 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     igorSave.pos=no;
     igorSave.last[book]=igorSave.pos;
     igorShowAnswer=false;
+    igorConstructionPiece="";
+    igorConstructionPicked=new Set();
+    igorConstructionDone=false;
     igorPendingFeedback=null;
     igorFeedbackSequence++;
     if(activeMoveAnimation)activeMoveAnimation();
@@ -3184,7 +3279,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       orientation=igorSave.orientation;
     }
     igorPersist();render();igorRenderPanel();
-    igorMessage(p?"":book===1&&igorVol1Loading?"1. kitap yükleniyor...":"Problem "+no+" henüz yüklenmedi.");
+    igorMessage(p?"":book===1&&igorVol1Loading?"1. kitap yükleniyor...":book===2&&igorVol2Loading?"2. kitap yükleniyor...":"Problem "+no+" henüz yüklenmedi.");
   }
   function igorStart(){
     igorActive=true;
@@ -3219,7 +3314,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const alternativeCheck=igorCurrent.goal==="reference"&&/Give (double |discovered )?check|Check with/i.test(source)&&game.inCheck(game.turn);
     // Game state has already changed, but the visible piece may still be travelling.
     igorPendingFeedback={move:last,book:igorSave.book,pos:igorSave.pos,
-      correct:mate||capture||expected||alternativeCapture||alternativeEP||alternativeCastle||alternativeCheck,
+      correct:igorCurrent.goal==="mate1"?mate:(mate||capture||expected||alternativeCapture||alternativeEP||alternativeCastle||alternativeCheck),
       mate,multiMove:!!igorCurrent.multiMove};
     if(!activeMoveAnimation)igorFinishFeedback(last);
   }
@@ -3284,12 +3379,14 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   }
   igorBuild();
   igorProblems[1]=[];
+  igorProblems[2]=[];
   igorLoadVolumeOne();
+  igorLoadVolumeTwo();
   // ===== end Igor =====
 
   boot();
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=2.0.8"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.0.1 · Cilt 1: 624 konum ve temel alternatif hamleler</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=2.0.8"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.1.0 · Cilt 2: 618 konum, mat ve özel alıştırmalar</div></body>
 </html>
