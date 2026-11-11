@@ -3013,19 +3013,31 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   const igorKey="chess-igor-progress-v1";
   let igorActive=false,igorShowAnswer=false,igorStartFen="",igorCurrent=null;
   let igorPendingFeedback=null;
+  let igorFeedbackSequence=0;
   function igorFinishFeedback(move){
     const pending=igorPendingFeedback;
     if(!pending || !igorActive || pending.move!==move ||
        pending.book!==igorSave.book || pending.pos!==igorSave.pos)return;
     igorPendingFeedback=null;
-    if(pending.correct){
-      const k=pending.book+":"+pending.pos;
-      igorSave.solved[k]=true;igorPersist();
-      igorMessage("Doğru!");
-      igorRenderPanel();
-    }else{
-      igorMessage("Yeniden dene.");
-    }
+    const showResult=()=>{
+      if(!igorActive || igorFeedbackSequence!==sequence ||
+         igorSave.book!==pending.book || igorSave.pos!==pending.pos ||
+         game.history[game.history.length-1]!==move)return;
+      if(pending.correct){
+        const k=pending.book+":"+pending.pos;
+        igorSave.solved[k]=true;igorPersist();
+        igorMessage("Doğru!");
+        igorRenderPanel();
+      }else{
+        igorMessage("Yeniden dene.");
+      }
+    };
+    const sequence=++igorFeedbackSequence;
+    if(pending.correct && pending.mate){
+      // Existing "Mat!" bubble starts after the final move animation (950ms from status).
+      // Give that bubble time to appear before showing "Doğru!".
+      setTimeout(showResult,900);
+    }else showResult();
   }
   let igorSave={book:2,pos:1,orientation:"w",last:{},solved:{},review:{}};
   try{const p=JSON.parse(localStorage.getItem(igorKey)||"null");if(p&&typeof p==="object")igorSave={...igorSave,...p};}catch(e){}
@@ -3072,6 +3084,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     igorSave.last[book]=igorSave.pos;
     igorShowAnswer=false;
     igorPendingFeedback=null;
+    igorFeedbackSequence++;
     if(activeMoveAnimation)activeMoveAnimation();
     lastAnimatedMove=null;
     stopEngine();
@@ -3099,6 +3112,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   }
   function igorExit(){
     igorPendingFeedback=null;
+    igorFeedbackSequence++;
     if(activeMoveAnimation)activeMoveAnimation();
     lastAnimatedMove=null;
     igorActive=false;
@@ -3115,7 +3129,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const mate=igorCurrent.goal==="mate1"&&game.gameStatus().over&&game.gameStatus().type==="mate";
     const capture=igorCurrent.goal==="capture"&&!!undo.toP&&undo.m.to===igorCurrent.target;
     // Game state has already changed, but the visible piece may still be travelling.
-    igorPendingFeedback={move:last,book:igorSave.book,pos:igorSave.pos,correct:mate||capture};
+    igorPendingFeedback={move:last,book:igorSave.book,pos:igorSave.pos,correct:mate||capture,mate};
     if(!activeMoveAnimation)igorFinishFeedback(last);
   }
   function igorBuild(){
@@ -3183,5 +3197,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.9.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v2.0.5 · Hamle sonunda sonuç, daha hızlı taş hareketi</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.9.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v2.0.6 · Önce Mat, sonra Doğru</div></body>
 </html>
