@@ -18,10 +18,10 @@ function placeBubble(){
  const a=kingSquare.getBoundingClientRect();
  const width=bubble.offsetWidth||100,height=bubble.offsetHeight||50;
  const x=Math.max(width/2+8,Math.min(window.innerWidth-width/2-8,a.left+a.width/2));
- const above=a.top-height-8>=8;
+ const above=a.top-height-5>=8;
  bubble.classList.toggle("chess-mate-below",!above);
  bubble.style.left=x+"px";
- bubble.style.top=(above?a.top-4.5:Math.min(window.innerHeight-height-8,a.bottom+6))+"px";
+ bubble.style.top=(above?a.top-2.7:Math.min(window.innerHeight-height-8,a.bottom+3.6))+"px";
 }
 function check(){
  if(!isMate()){if(active)clear();return;}
