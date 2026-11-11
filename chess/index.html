@@ -2430,7 +2430,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   // ===================== SQUARE CLICK =====================
   async function onSquareClick(e){
     ensureAudio();
-    if (engineThinking || (igorActive && activeMoveAnimation)) return;
+    if (engineThinking || (igorActive && activeMoveAnimation) || (igorActive && (igorMate2Defending || igorMate2Locked))) return;
 
     if(igorActive && igorCurrent?.goal==="construction"){
       igorConstructionClick(e.currentTarget.dataset.sq);
@@ -3189,6 +3189,53 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       if(igorActive&&igorSave.book===4)igorMessage("4. kitap yüklenemedi. Sayfayı yenile.");
     }
   }
+  let igorVol5Loading=true;
+  async function igorLoadVolumeFive(){
+    try{
+      const response=await fetch("igor-vol5-data.b64?v=1");
+      if(!response.ok)throw Error("HTTP "+response.status);
+      const bytes=Uint8Array.from(atob((await response.text()).trim()),c=>c.charCodeAt(0));
+      const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate"));
+      const data=JSON.parse(await new Response(stream).text());
+      if(!Array.isArray(data.rows)||data.rows.length!==618)throw Error("618 puzzles expected");
+      igorProblems[5]=data.rows.map(r=>({
+        id:r.id,book:5,fen:r.fen,task:r.instruction,
+        page:r.sourcePrintedPage,sourceAnswer:r.firstMoveBookRaw,
+        goal:"mate2",answerType:"mate2",multiMove:true,
+        verification:r.validation
+      }));
+      igorVol5Loading=false;
+      if(igorActive&&igorSave.book===5)igorLoad(5,igorSave.pos||1);
+    }catch(err){
+      igorVol5Loading=false;
+      console.error("Igor Vol5 data",err);
+      if(igorActive&&igorSave.book===5)igorMessage("5. kitap yüklenemedi. Sayfayı yenile.");
+    }
+  }
+  // Independent of board orientation: find a first move that forces mate
+  // after EVERY legal defense. An accidental mate against one weak reply
+  // is not sufficient.
+  let igorMate2Stage=0,igorMate2Defending=false,igorMate2Locked=false;
+  function igorMate2AssessFirst(){
+    if(game.gameStatus().type==="mate")return {correct:true,mate:true};
+    const defenses=game.generateLegalMoves();
+    if(!defenses.length)return {correct:false,mate:false};
+    let chosen=null,minMates=Infinity;
+    for(const defense of defenses){
+      const undoDefense=game.makeMove(defense,true);
+      let count=0;
+      const followUps=game.generateLegalMoves();
+      for(const second of followUps){
+        const undoSecond=game.makeMove(second,true);
+        if(game.inCheck(game.turn)&&game.generateLegalMoves().length===0)count++;
+        game.undoMove(undoSecond,true);
+      }
+      game.undoMove(undoDefense,true);
+      if(count===0)return {correct:false,mate:false};
+      if(count<minMates){minMates=count;chosen={...defense};}
+    }
+    return {correct:true,mate:false,defense:chosen};
+  }
   const igorKey="chess-igor-progress-v1";
   let igorActive=false,igorShowAnswer=false,igorStartFen="",igorCurrent=null;
   let igorConstructionPiece="";
@@ -3253,7 +3300,37 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       if(!igorActive || igorFeedbackSequence!==sequence ||
          igorSave.book!==pending.book || igorSave.pos!==pending.pos ||
          game.history[game.history.length-1]!==move)return;
-      if(pending.book===4){
+      if(pending.book===5){
+        if(!pending.correct){
+          igorMate2Locked=true;
+          igorMessage("Yeniden dene.");
+        }else if(pending.mate){
+          igorMate2Locked=true;
+          const k=pending.book+":"+pending.pos;
+          igorSave.solved[k]=true;igorPersist();
+          igorMessage("Doğru!");
+          igorRenderPanel();
+        }else if(pending.mate2first && pending.defense){
+          igorMate2Stage=1;
+          igorMate2Defending=true;
+          igorMessage("");
+          // Automatic defense. This is not the normal opponent motor.
+          setTimeout(()=>{
+            if(!igorActive||igorSave.book!==pending.book||
+               igorSave.pos!==pending.pos||
+               igorFeedbackSequence!==sequence||
+               game.history[game.history.length-1]!==move)return;
+            const reply=game.generateLegalMoves().find(m=>
+              m.from===pending.defense.from&&m.to===pending.defense.to&&
+              (m.promo||"")===(pending.defense.promo||""));
+            if(!reply){igorMate2Defending=false;igorMessage("Savunma yüklenemedi.");return;}
+            game.makeMove(reply,false);
+            selectedSq=null;legalFromSelected=[];clearHighlights();
+            render();
+            igorMate2Defending=false;
+          },200);
+        }
+      }else if(pending.book===4){
         if(pending.mate){
           const k=pending.book+":"+pending.pos;
           igorSave.solved[k]=true;igorPersist();
@@ -3313,7 +3390,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     document.getElementById("igorTask").textContent=igorCurrent?igorCurrent.task:"Bu kitaptaki problemler henüz hazırlanmadı.";
     const list=igorList(),at=list.findIndex(p=>p.id===igorSave.pos);
     document.getElementById("igorPrev").disabled=igorSave.pos<=1;
-    document.getElementById("igorNext").disabled=igorSave.book===1?igorSave.pos>=624:(igorSave.book===2||igorSave.book===3||igorSave.book===4)?igorSave.pos>=618:igorSave.book===8?igorSave.pos>=1000:false;
+    document.getElementById("igorNext").disabled=igorSave.book===1?igorSave.pos>=624:(igorSave.book===2||igorSave.book===3||igorSave.book===4||igorSave.book===5)?igorSave.pos>=618:igorSave.book===8?igorSave.pos>=1000:false;
     document.getElementById("igorNumber").disabled=false;
     document.getElementById("igorFlip").disabled=false;
     igorRenderChoices();
@@ -3323,13 +3400,14 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const list=igorList();
     const valid=Number.isSafeInteger(no)&&no>=1;
     if(!valid)return;
-    const max=book===1?624:(book===2||book===3||book===4)?618:book===8?1000:Infinity;
+    const max=book===1?624:(book===2||book===3||book===4||book===5)?618:book===8?1000:Infinity;
     if(no>max){igorMessage("Son problem: "+max);return;}
     const p=list.find(x=>x.id===no)||null;
     igorCurrent=p;
     igorSave.pos=no;
     igorSave.last[book]=igorSave.pos;
     igorShowAnswer=false;
+    igorMate2Stage=0;igorMate2Defending=false;igorMate2Locked=false;
     igorConstructionPiece="";
     igorConstructionPicked=new Set();
     igorConstructionDone=false;
@@ -3352,7 +3430,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       orientation=igorSave.orientation;
     }
     igorPersist();render();igorRenderPanel();
-    igorMessage(p?(book===2&&no===357?"Kitapta bu diyagramın cevabı tutarsız.":""):book===1&&igorVol1Loading?"1. kitap yükleniyor...":book===2&&igorVol2Loading?"2. kitap yükleniyor...":book===3&&igorVol3Loading?"3. kitap yükleniyor...":book===4&&igorVol4Loading?"4. kitap yükleniyor...":"Problem "+no+" henüz yüklenmedi.");
+    igorMessage(p?(book===2&&no===357?"Kitapta bu diyagramın cevabı tutarsız.":""):book===1&&igorVol1Loading?"1. kitap yükleniyor...":book===2&&igorVol2Loading?"2. kitap yükleniyor...":book===3&&igorVol3Loading?"3. kitap yükleniyor...":book===4&&igorVol4Loading?"4. kitap yükleniyor...":book===5&&igorVol5Loading?"5. kitap yükleniyor...":"Problem "+no+" henüz yüklenmedi.");
   }
   function igorStart(){
     igorActive=true;
@@ -3361,6 +3439,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     igorLoad(igorSave.book,igorSave.last[igorSave.book]||igorSave.pos||1);
   }
   function igorExit(){
+    igorMate2Stage=0;igorMate2Defending=false;igorMate2Locked=false;
     igorPendingFeedback=null;
     igorFeedbackSequence++;
     if(activeMoveAnimation)activeMoveAnimation();
@@ -3377,6 +3456,17 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     if(!igorActive||!igorCurrent)return;
     const last=game.history[game.history.length-1];
     const mate=game.gameStatus().over&&game.gameStatus().type==="mate";
+    if(igorCurrent.goal==="mate2"){
+      const check=igorMate2Stage===0?igorMate2AssessFirst():{correct:mate,mate};
+      igorPendingFeedback={
+        move:last,book:igorSave.book,pos:igorSave.pos,
+        correct:check.correct,mate:check.mate,
+        mate2first:igorMate2Stage===0&&!check.mate,
+        defense:check.defense,multiMove:false
+      };
+      if(!activeMoveAnimation)igorFinishFeedback(last);
+      return;
+    }
     const capture=igorCurrent.goal==="capture"&&!!undo.toP&&undo.m.to===igorCurrent.target;
     const expected=!!igorCurrent.uci && !!last && moveToUCI(last.m)===igorCurrent.uci;
     const source=igorCurrent.sourceTask||"";
@@ -3426,7 +3516,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     });
     const step=d=>{
       const n=igorSave.pos+d;
-      if(n<1||(igorSave.book===1&&n>624)||((igorSave.book===2||igorSave.book===3||igorSave.book===4)&&n>618)||(igorSave.book===8&&n>1000))return;
+      if(n<1||(igorSave.book===1&&n>624)||((igorSave.book===2||igorSave.book===3||igorSave.book===4||igorSave.book===5)&&n>618)||(igorSave.book===8&&n>1000))return;
       igorLoad(igorSave.book,n);
     };
     document.getElementById("igorPrev").addEventListener("click",()=>step(-1));
@@ -3434,7 +3524,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const numberInput=document.getElementById("igorNumber");
     const jump=()=>{
       const n=Number(numberInput.value);
-      if(Number.isSafeInteger(n)&&n>=1&&(igorSave.book!==1||n<=624)&&((igorSave.book!==2&&igorSave.book!==3&&igorSave.book!==4)||n<=618)&&(igorSave.book!==8||n<=1000)){
+      if(Number.isSafeInteger(n)&&n>=1&&(igorSave.book!==1||n<=624)&&((igorSave.book!==2&&igorSave.book!==3&&igorSave.book!==4&&igorSave.book!==5)||n<=618)&&(igorSave.book!==8||n<=1000)){
         if(n!==igorSave.pos)igorLoad(igorSave.book,n);
       }else{
         numberInput.value=igorSave.pos;
@@ -3456,15 +3546,17 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   igorProblems[3]=[];
   // Vol 4 is image-based: only diagrams independently checked against the PDF are included.
   igorProblems[4]=[];
+  igorProblems[5]=[];
   igorLoadVolumeOne();
   igorLoadVolumeTwo();
   igorLoadVolumeThree();
   igorLoadVolumeFour();
+  igorLoadVolumeFive();
   // ===== end Igor =====
 
   boot();
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=2.0.8"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.3.0 · Cilt 4 aktarımı başladı: doğrulanan ilk 12 konum</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=2.0.8"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.4.0 · Cilt 5: 618 iki hamlede mat problemi</div></body>
 </html>
