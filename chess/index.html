@@ -613,6 +613,24 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   #igorPanel #igorFeedback.igor-correct,
   #igorPanel #igorFeedback.igor-retry{animation:none!important}
 }
+</style>
+<style id="igorRetryV204">
+#igorPanel #igorFeedback.igor-retry{
+  display:flex!important;align-items:center!important;
+  flex-wrap:wrap!important;gap:12px!important;
+}
+#igorPanel #igorRetry{
+  display:inline-flex!important;align-items:center;justify-content:center;
+  width:auto!important;min-width:0!important;max-width:max-content!important;
+  min-height:35px!important;padding:6px 12px!important;
+  font:500 13px/1.2 system-ui,sans-serif!important;
+  color:#333!important;background:#f8f8f8!important;
+  border:1px solid #c8c8c8!important;border-radius:7px!important;
+  box-shadow:0 2px 5px rgba(0,0,0,.15)!important;
+  cursor:pointer!important;white-space:nowrap!important;
+}
+#igorPanel #igorRetry:hover{background:#ededed!important}
+#igorPanel #igorRetry:focus-visible{outline:2px solid #a64747;outline-offset:2px}
 </style></head>
 
 <body>
@@ -3001,7 +3019,15 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     el.textContent=t;
     el.classList.remove("igor-correct","igor-retry");
     if(t==="Doğru!") el.classList.add("igor-correct");
-    else if(t==="Yeniden dene.") el.classList.add("igor-retry");
+    else if(t==="Yeniden dene."){
+      el.classList.add("igor-retry");
+      const retry=document.createElement("button");
+      retry.id="igorRetry";retry.type="button";
+      retry.textContent="↻ Yeniden dene";
+      retry.setAttribute("aria-label","Bu problemi yeniden dene");
+      retry.addEventListener("click",()=>igorLoad(igorSave.book,igorSave.pos));
+      el.appendChild(retry);
+    }
   }
   function igorRenderPanel(){
     const panel=document.getElementById("igorPanel");
@@ -3141,5 +3167,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.9.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v2.0.3 · Okunur başarı mesajı ve kısa animasyon</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=1.9.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v2.0.4 · Yanlış hamlede yeniden dene düğmesi</div></body>
 </html>
