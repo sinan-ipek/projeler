@@ -3137,6 +3137,32 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       if(igorActive&&igorSave.book===2)igorMessage("2. kitap yüklenemedi. Sayfayı yenile.");
     }
   }
+  let igorVol3Loading=true;
+  async function igorLoadVolumeThree(){
+    try{
+      const response=await fetch("igor-vol3-data.b64?v=2");
+      if(!response.ok)throw Error("HTTP "+response.status);
+      if(typeof DecompressionStream!=="function")throw Error("Tarayıcı veri açma özelliğini desteklemiyor.");
+      const encoded=(await response.text()).trim();
+      const bytes=Uint8Array.from(atob(encoded),x=>x.charCodeAt(0));
+      const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate"));
+      const decoded=JSON.parse(await new Response(stream).text());
+      if(!Array.isArray(decoded.rows)||decoded.rows.length!==618)throw Error("618 problems expected");
+      igorProblems[3]=decoded.rows.map((row,i)=>({
+        id:i+1,book:3,page:7+Math.floor(i/6),
+        fen:row[0]+" "+row[1]+" "+row[2]+" "+row[3]+" 0 1",
+        task:decoded.instructions[row[4]],
+        solution:row[5],uci:row[6],verifiedMates:row[7],
+        goal:"mate1",answerType:"mate1"
+      }));
+      igorVol3Loading=false;
+      if(igorActive&&igorSave.book===3)igorLoad(3,igorSave.pos||1);
+    }catch(err){
+      igorVol3Loading=false;
+      console.error("Igor Vol3 data",err);
+      if(igorActive&&igorSave.book===3)igorMessage("3. kitap yüklenemedi. Sayfayı yenile.");
+    }
+  }
   const igorKey="chess-igor-progress-v1";
   let igorActive=false,igorShowAnswer=false,igorStartFen="",igorCurrent=null;
   let igorConstructionPiece="";
@@ -3250,7 +3276,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     document.getElementById("igorTask").textContent=igorCurrent?igorCurrent.task:"Bu kitaptaki problemler henüz hazırlanmadı.";
     const list=igorList(),at=list.findIndex(p=>p.id===igorSave.pos);
     document.getElementById("igorPrev").disabled=igorSave.pos<=1;
-    document.getElementById("igorNext").disabled=igorSave.book===1?igorSave.pos>=624:igorSave.book===2?igorSave.pos>=618:igorSave.book===8?igorSave.pos>=1000:false;
+    document.getElementById("igorNext").disabled=igorSave.book===1?igorSave.pos>=624:(igorSave.book===2||igorSave.book===3)?igorSave.pos>=618:igorSave.book===8?igorSave.pos>=1000:false;
     document.getElementById("igorNumber").disabled=false;
     document.getElementById("igorFlip").disabled=false;
     igorRenderChoices();
@@ -3260,7 +3286,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const list=igorList();
     const valid=Number.isSafeInteger(no)&&no>=1;
     if(!valid)return;
-    const max=book===1?624:book===2?618:book===8?1000:Infinity;
+    const max=book===1?624:(book===2||book===3)?618:book===8?1000:Infinity;
     if(no>max){igorMessage("Son problem: "+max);return;}
     const p=list.find(x=>x.id===no)||null;
     igorCurrent=p;
@@ -3289,7 +3315,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       orientation=igorSave.orientation;
     }
     igorPersist();render();igorRenderPanel();
-    igorMessage(p?(book===2&&no===357?"Kitapta bu diyagramın cevabı tutarsız.":""):book===1&&igorVol1Loading?"1. kitap yükleniyor...":book===2&&igorVol2Loading?"2. kitap yükleniyor...":"Problem "+no+" henüz yüklenmedi.");
+    igorMessage(p?(book===2&&no===357?"Kitapta bu diyagramın cevabı tutarsız.":""):book===1&&igorVol1Loading?"1. kitap yükleniyor...":book===2&&igorVol2Loading?"2. kitap yükleniyor...":book===3&&igorVol3Loading?"3. kitap yükleniyor...":"Problem "+no+" henüz yüklenmedi.");
   }
   function igorStart(){
     igorActive=true;
@@ -3363,7 +3389,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     });
     const step=d=>{
       const n=igorSave.pos+d;
-      if(n<1||(igorSave.book===1&&n>624)||(igorSave.book===2&&n>618)||(igorSave.book===8&&n>1000))return;
+      if(n<1||(igorSave.book===1&&n>624)||((igorSave.book===2||igorSave.book===3)&&n>618)||(igorSave.book===8&&n>1000))return;
       igorLoad(igorSave.book,n);
     };
     document.getElementById("igorPrev").addEventListener("click",()=>step(-1));
@@ -3371,7 +3397,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const numberInput=document.getElementById("igorNumber");
     const jump=()=>{
       const n=Number(numberInput.value);
-      if(Number.isSafeInteger(n)&&n>=1&&(igorSave.book!==1||n<=624)&&(igorSave.book!==2||n<=618)&&(igorSave.book!==8||n<=1000)){
+      if(Number.isSafeInteger(n)&&n>=1&&(igorSave.book!==1||n<=624)&&((igorSave.book!==2&&igorSave.book!==3)||n<=618)&&(igorSave.book!==8||n<=1000)){
         if(n!==igorSave.pos)igorLoad(igorSave.book,n);
       }else{
         numberInput.value=igorSave.pos;
@@ -3390,13 +3416,15 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   igorBuild();
   igorProblems[1]=[];
   igorProblems[2]=[];
+  igorProblems[3]=[];
   igorLoadVolumeOne();
   igorLoadVolumeTwo();
+  igorLoadVolumeThree();
   // ===== end Igor =====
 
   boot();
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=2.0.8"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.1.2 · Cilt 2: 618 problem; cevap anahtarı kontrol edildi</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=2.0.8"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.2.0 · Cilt 3: 618 mat problemi ve alternatif doğrulama</div></body>
 </html>
