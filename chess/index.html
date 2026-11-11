@@ -645,6 +645,11 @@ body.igor-mode #chessPlaybackControls{display:none!important}
  border-radius:7px!important;box-shadow:0 2px 5px rgba(0,0,0,.12)!important;
 }
 #igorPanel #igorRetry:hover{background:#f3f3f3!important}
+</style><style id="igorChoicesV300">
+#igorChoices{display:flex;gap:7px;flex-wrap:wrap;margin:3px 0 7px}
+#igorChoices:empty{display:none}
+#igorChoices button{width:auto!important;min-width:0!important;min-height:32px!important;padding:5px 12px!important;border:1px solid #ddd!important;border-radius:7px!important;background:#fafafa!important;box-shadow:0 1px 4px rgba(0,0,0,.10)!important;font:500 13px/1.2 system-ui,sans-serif!important;color:#444!important;cursor:pointer}
+#igorChoices button:hover{background:#eee!important}
 </style></head>
 
 <body>
@@ -3024,6 +3029,63 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       {id:6,fen:"6R1/8/5K1k/8/8/8/8/8 w - - 0 1",task:"Beyaz oynar. Tek hamlede mat.",goal:"mate1",uci:"g8h8",page:7}
     ]
   };
+
+  // Volume 1: all 624 diagrams and corresponding source-book answer-key entries.
+  const igorVolumeOneTR=["Beyaz oynar. Siyah kaleyi alabilir mi?","Siyah oynar. Beyaz kalelerden birini al.","Beyaz oynar. Kaleyi almak doğru mu? Siyah karşılık verebilir mi?","Siyah oynar. Değişim sonunda daha çok kalen kalacak şekilde kale al.","Beyaz oynar. Siyah fili alabilir mi?","Siyah oynar. Beyaz fili al.","Beyaz oynar. Hangi fil taş alabilir?","Beyaz oynar. Kaleyle file iki farklı biçimde saldır.","Siyah oynar. Fille kaleye saldır.","Beyaz oynar. Kaleyle iki file birden saldır.","Siyah oynar. Fille iki kaleye birden saldır.","Beyaz oynar. Kaleyi iki fille aynı hat veya sıraya getirerek fil kazan.","Siyah oynar. Fili iki kaleyle aynı çapraza getir.","Beyaz oynar. Korunmayan siyah taşı al.","Beyaz oynar. Hangi hamlede siyah fil veya kaleyi kaybeder?","Siyah oynar. Taş kaybını önle.","Beyaz oynar. Taş kaybını önle.","Siyah oynar. Beyaz taşla değişimi zorla.","Beyaz oynar. En iyi hamle dizisini bul.","Beyaz oynar. Siyah veziri alabilir mi?","Siyah oynar. Veziri tehlikeye sokmadan kaleye saldır.","Beyaz oynar. Veziri tehlikeye sokmadan file üç farklı yoldan saldır.","Beyaz oynar. Veziri tehlikeye sokmadan iki file birden saldır.","Siyah oynar. Veziri tehlikeye sokmadan iki taşa saldır.","Beyaz oynar. İki taşı nasıl kurtarırsın?","Siyah oynar. Korunmayan taşı al.","Beyaz oynar. En iyi fırsatı bul.","Siyah oynar. Beyaz veziri değişime zorla.","Beyaz oynar. En iyi hamleyi bul.","Beyaz oynar. Siyah atı alabilir mi?","Siyah oynar. Hangi atı alabilirsin?","Siyah oynar. At nereye sıçramalı?","Beyaz oynar. Siyah atı almak iyi bir fikir mi?","Siyah oynar. Hangi hamle beyaz atı kazandırır?","Beyaz oynar. Hangi hamle dizisi siyah atı kazandırır?","Beyaz oynar. Siyah atın bütün kaçış karelerini kapat.","Siyah oynar. Beyaz atın bütün kaçış karelerini kapat.","Beyaz oynar. Atla rakip taşa saldır.","Siyah oynar. Atla iki beyaz taşa saldır.","Beyaz oynar. Atla korunmayan taşı al.","Siyah oynar. Taşı nasıl kurtarırsın?","Beyaz oynar. Bir taş kazan.","Siyah oynar. En iyi fırsatı bul.","Beyaz oynar. Siyah piyonu alabilir mi?","Siyah oynar. Tek mümkün hamleyi bul.","Beyaz oynar. Hangi piyonu alabilirsin?","Siyah oynar. Beyaz piyonu almak doğru mu?","Beyaz oynar. Hangi piyonu almak daha iyi?","Siyah oynar. En iyi fırsatı bul.","Beyaz oynar. Siyahın hamle yapmasını nasıl engellersin?","Siyah oynar. Beyaz piyona saldırmak için hangi taşa terfi etmeli?","Siyah oynar. Piyonlardan birini önce vezire terfi ettir.","Beyaz oynar. Piyonlardan birini önce vezire terfi ettir.","Beyaz oynar. Piyonla siyah taşa saldır.","Siyah oynar. Piyonla iki beyaz taşa saldır.","Beyaz oynar. Korunmayan taşı al.","Siyah oynar. Bir taş kazan.","Beyaz oynar. Tehdit altındaki taşını veya piyonunu koru.","Siyah oynar. Taşını veya piyonunu kurtar.","Beyaz oynar. Siyah piyonu nasıl durdurursun?","Beyaz oynar. İki piyonu nasıl yenersin?","Siyah oynar. En az bir piyonu vezire terfi ettir.","Beyaz oynar. Kazanmanın yolunu bul.","Siyah oynar. En az bir piyonu vezire terfi ettir.","Beyaz oynar. Kazanmanın yolunu bul.","Siyah oynar. Piyonu vezire terfi ettir veya atı tuzağa düşür.","Beyaz oynar. Kazanmanın yolunu bul.","Siyah oynar. Kazanmanın yolunu bul.","Beyaz oynar. Şah hangi karelere gidebilir? Bir veya iki seçenek bul.","Siyah oynar. Şahla beyaz bir piyon veya taşa saldır.","Beyaz oynar. Şahla iki siyah taşa veya piyona saldır.","Siyah oynar. Hangi taşı veya piyonu alabilirsin?","Beyaz oynar. Hangi taşı veya piyonu alabilirsin?","Beyaz oynar. Taşı veya piyonu nasıl kurtarırsın?","Siyah oynar. Taşı veya piyonu nasıl kurtarırsın?","Beyaz oynar. En iyi hamleyi bul.","Beyaz oynar. Kaleyi tuzağa düşür.","Siyah oynar. Fili tuzağa düşür.","Beyaz oynar. Veziri tuzağa düşür.","Siyah oynar. Atı tuzağa düşür.","Beyaz oynar. En iyi fırsatı bul.","Beyaz oynar. Beyaz şah çekilmiş mi?","Beyaz oynar. Kaleyle, şahın alamayacağı bir şah çek.","Siyah oynar. Fille, şahın alamayacağı bir şah çek.","Beyaz oynar. Atla şah çek.","Siyah oynar. Piyon hamlesiyle şah çek.","Beyaz oynar. Vezirle, rakibin alamayacağı şekilde şah çek.","Siyah oynar. Şaha karşı savunma bul.","Beyaz oynar. Açmazdan çıkarak şah çek.","Siyah oynar. Bir taş kazan.","Beyaz oynar. Çifte şah çek.","Siyah oynar. Siyah şah mat olmuş mu?","Beyaz oynar. Beyaz şah mat olmuş mu?","Siyah oynar. Siyah şah pat olmuş mu?","Beyaz oynar. Beyaz şah pat olmuş mu?","Siyah oynar. Konum mat mı, pat mı?","Beyaz oynar. Konum mat mı, pat mı?","Beyaz oynar. Sürekli şah çek.","Siyah oynar. Sürekli şah çek.","Beyaz oynar. Bu konumda rok yapılabilir mi?","Siyah oynar. Bu konumda rok yapılabilir mi?","Beyaz oynar. Siyah az önce piyonu iki kare sürdü. Geçerken alınabilir mi?","Siyah oynar. Beyaz az önce piyonu iki kare sürdü. Geçerken alınabilir mi?"];
+  let igorVol1Loading=true;
+  function igorChoice(label,correct){
+    if(correct){
+      const k=igorSave.book+":"+igorSave.pos;
+      igorSave.solved[k]=true;
+      igorPersist();
+      igorMessage("Doğru!");
+    }else igorMessage("Yeniden dene.");
+  }
+  function igorRenderChoices(){
+    const el=document.getElementById("igorChoices");
+    if(!el)return;
+    el.replaceChildren();
+    if(!igorCurrent)return;
+    const kind=igorCurrent.answerType;
+    let opts=null;
+    if(kind==="yes"||kind==="no")opts=[["Evet",kind==="yes"],["Hayır",kind==="no"]];
+    else if(kind==="stalemate"||kind==="checkmate"||kind==="not-stalemate")
+      opts=[["Mat",kind==="checkmate"],["Pat",kind==="stalemate"],["Hiçbiri",kind==="not-stalemate"]];
+    if(!opts)return;
+    for(const [label,correct] of opts){
+      const button=document.createElement("button");
+      button.type="button";button.textContent=label;
+      button.addEventListener("click",()=>igorChoice(label,correct));
+      el.appendChild(button);
+    }
+  }
+  async function igorLoadVolumeOne(){
+    try{
+      const response=await fetch("igor-vol1-data.b64?v=1");
+      if(!response.ok)throw new Error("HTTP "+response.status);
+      if(typeof DecompressionStream!=="function")throw new Error("DecompressionStream bu tarayıcıda yok.");
+      const encoded=(await response.text()).trim();
+      const data=Uint8Array.from(atob(encoded),x=>x.charCodeAt(0));
+      const stream=new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate"));
+      const decoded=JSON.parse(await new Response(stream).text());
+      if(!Array.isArray(decoded.rows)||decoded.rows.length!==624 || !Array.isArray(decoded.instructions))throw new Error("624 problem bekleniyor.");
+      igorProblems[1]=decoded.rows.map((r,i)=>({
+        id:i+1,
+        fen:r[0]+" "+r[1]+" "+r[2]+" "+r[3]+" 0 1",
+        task:igorVolumeOneTR[r[4]]||decoded.instructions[r[4]],
+        sourceTask:decoded.instructions[r[4]],
+        solution:r[5],uci:r[6],answerType:r[7]==="text"?"not-stalemate":r[7],
+        page:7+Math.floor(i/6),book:1,goal:r[7]==="move"?"reference":"choice",
+        multiMove:/\\b2\\./.test(r[5])
+      }));
+      igorVol1Loading=false;
+      if(igorActive&&igorSave.book===1)igorLoad(1,igorSave.pos||1);
+    }catch(err){
+      igorVol1Loading=false;
+      console.error("Igor Vol1 data",err);
+      if(igorActive&&igorSave.book===1)igorMessage("1. kitap yüklenemedi. Sayfayı yenile.");
+    }
+  }
   const igorKey="chess-igor-progress-v1";
   let igorActive=false,igorShowAnswer=false,igorStartFen="",igorCurrent=null;
   let igorPendingFeedback=null;
@@ -3038,10 +3100,14 @@ body.igor-mode #chessPlaybackControls{display:none!important}
          igorSave.book!==pending.book || igorSave.pos!==pending.pos ||
          game.history[game.history.length-1]!==move)return;
       if(pending.correct){
-        const k=pending.book+":"+pending.pos;
-        igorSave.solved[k]=true;igorPersist();
-        igorMessage("Doğru!");
-        igorRenderPanel();
+        if(pending.multiMove){
+          igorMessage("İlk hamle doğru. Devam et.");
+        }else{
+          const k=pending.book+":"+pending.pos;
+          igorSave.solved[k]=true;igorPersist();
+          igorMessage("Doğru!");
+          igorRenderPanel();
+        }
       }else{
         igorMessage("Yeniden dene.");
       }
@@ -3082,16 +3148,17 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     document.getElementById("igorTask").textContent=igorCurrent?igorCurrent.task:"Bu kitaptaki problemler henüz hazırlanmadı.";
     const list=igorList(),at=list.findIndex(p=>p.id===igorSave.pos);
     document.getElementById("igorPrev").disabled=igorSave.pos<=1;
-    document.getElementById("igorNext").disabled=igorSave.book===2?igorSave.pos>=618:igorSave.book===8?igorSave.pos>=1000:false;
+    document.getElementById("igorNext").disabled=igorSave.book===1?igorSave.pos>=624:igorSave.book===2?igorSave.pos>=618:igorSave.book===8?igorSave.pos>=1000:false;
     document.getElementById("igorNumber").disabled=false;
     document.getElementById("igorFlip").disabled=false;
+    igorRenderChoices();
   }
   function igorLoad(book,no){
     igorSave.book=book;
     const list=igorList();
     const valid=Number.isSafeInteger(no)&&no>=1;
     if(!valid)return;
-    const max=book===2?618:book===8?1000:Infinity;
+    const max=book===1?624:book===2?618:book===8?1000:Infinity;
     if(no>max){igorMessage("Son problem: "+max);return;}
     const p=list.find(x=>x.id===no)||null;
     igorCurrent=p;
@@ -3117,7 +3184,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       orientation=igorSave.orientation;
     }
     igorPersist();render();igorRenderPanel();
-    igorMessage(p?"":"Problem "+no+" henüz yüklenmedi.");
+    igorMessage(p?"":book===1&&igorVol1Loading?"1. kitap yükleniyor...":"Problem "+no+" henüz yüklenmedi.");
   }
   function igorStart(){
     igorActive=true;
@@ -3141,10 +3208,11 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   function igorAfterMove(undo){
     if(!igorActive||!igorCurrent)return;
     const last=game.history[game.history.length-1];
-    const mate=igorCurrent.goal==="mate1"&&game.gameStatus().over&&game.gameStatus().type==="mate";
+    const mate=game.gameStatus().over&&game.gameStatus().type==="mate";
     const capture=igorCurrent.goal==="capture"&&!!undo.toP&&undo.m.to===igorCurrent.target;
+    const expected=!!igorCurrent.uci && !!last && moveToUCI(last.m)===igorCurrent.uci;
     // Game state has already changed, but the visible piece may still be travelling.
-    igorPendingFeedback={move:last,book:igorSave.book,pos:igorSave.pos,correct:mate||capture,mate};
+    igorPendingFeedback={move:last,book:igorSave.book,pos:igorSave.pos,correct:mate||capture||expected,mate,multiMove:!!igorCurrent.multiMove};
     if(!activeMoveAnimation)igorFinishFeedback(last);
   }
   function igorBuild(){
@@ -3168,6 +3236,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     panel.innerHTML=
       '<select id="igorBook" aria-label="Kitap seç">'+select+'</select>'+
       '<p id="igorTask"></p>'+
+      '<div id="igorChoices" aria-label="Cevap seçenekleri"></div>'+
       '<p id="igorFeedback" aria-live="polite"></p>'+
       '<form id="igorGo" aria-label="Problem seç">'+
       '<button id="igorPrev" type="button" aria-label="Önceki problem">❮</button>'+
@@ -3181,7 +3250,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     });
     const step=d=>{
       const n=igorSave.pos+d;
-      if(n<1||(igorSave.book===2&&n>618)||(igorSave.book===8&&n>1000))return;
+      if(n<1||(igorSave.book===1&&n>624)||(igorSave.book===2&&n>618)||(igorSave.book===8&&n>1000))return;
       igorLoad(igorSave.book,n);
     };
     document.getElementById("igorPrev").addEventListener("click",()=>step(-1));
@@ -3189,7 +3258,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const numberInput=document.getElementById("igorNumber");
     const jump=()=>{
       const n=Number(numberInput.value);
-      if(Number.isSafeInteger(n)&&n>=1&&(igorSave.book!==2||n<=618)&&(igorSave.book!==8||n<=1000)){
+      if(Number.isSafeInteger(n)&&n>=1&&(igorSave.book!==1||n<=624)&&(igorSave.book!==2||n<=618)&&(igorSave.book!==8||n<=1000)){
         if(n!==igorSave.pos)igorLoad(igorSave.book,n);
       }else{
         numberInput.value=igorSave.pos;
@@ -3206,11 +3275,13 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     });
   }
   igorBuild();
+  igorProblems[1]=[];
+  igorLoadVolumeOne();
   // ===== end Igor =====
 
   boot();
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=2.0.8"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v2.0.8 · Mat yazısı daha erken görünür</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=2.0.8"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.0.0 · Chess Camp 1: 624 problem veri entegrasyonu</div></body>
 </html>
