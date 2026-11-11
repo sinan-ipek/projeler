@@ -3236,6 +3236,31 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     }
     return {correct:true,mate:false,defense:chosen};
   }
+  // Chess Camp volume 6: tactics in attack and defense.
+  // Source answer key is preserved as RAW book text; it is not a verified UCI move.
+  let igorVol6Loading=true;
+  async function igorLoadVolumeSix(){
+    try{
+      const response=await fetch("igor-vol6-data.b64?v=1");
+      if(!response.ok)throw Error("HTTP "+response.status);
+      const bytes=Uint8Array.from(atob((await response.text()).trim()),c=>c.charCodeAt(0));
+      const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate"));
+      const data=JSON.parse(await new Response(stream).text());
+      if(!Array.isArray(data.rows)||data.rows.length!==618)throw Error("618 tactical positions expected");
+      igorProblems[6]=data.rows.map(row=>({
+        id:row.id,book:6,fen:row.fen,task:row.instruction,
+        page:row.sourcePrintedPage,sourceTask:row.sourceHeading,
+        solution:row.sourceAnswerRaw,answerStatus:row.answerStatus,
+        goal:"tactic",answerType:"tactic",verification:row.verification
+      }));
+      igorVol6Loading=false;
+      if(igorActive&&igorSave.book===6)igorLoad(6,igorSave.pos||1);
+    }catch(error){
+      igorVol6Loading=false;
+      console.error("Igor Vol6 dataset",error);
+      if(igorActive&&igorSave.book===6)igorMessage("6. kitap yüklenemedi. Sayfayı yenile.");
+    }
+  }
   const igorKey="chess-igor-progress-v1";
   let igorActive=false,igorShowAnswer=false,igorStartFen="",igorCurrent=null;
   let igorConstructionPiece="";
@@ -3300,7 +3325,11 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       if(!igorActive || igorFeedbackSequence!==sequence ||
          igorSave.book!==pending.book || igorSave.pos!==pending.pos ||
          game.history[game.history.length-1]!==move)return;
-      if(pending.book===5){
+      if(pending.book===6){
+        // A legal move is not equivalent to solving a tactical objective.
+        // Don't award a solved badge before the whole tactic is verified.
+        igorMessage("Hamle oynandı. Çözüm henüz doğrulanmadı.");
+      }else if(pending.book===5){
         if(!pending.correct){
           igorMate2Locked=true;
           igorMessage("Yeniden dene.");
@@ -3390,7 +3419,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     document.getElementById("igorTask").textContent=igorCurrent?igorCurrent.task:"Bu kitaptaki problemler henüz hazırlanmadı.";
     const list=igorList(),at=list.findIndex(p=>p.id===igorSave.pos);
     document.getElementById("igorPrev").disabled=igorSave.pos<=1;
-    document.getElementById("igorNext").disabled=igorSave.book===1?igorSave.pos>=624:(igorSave.book===2||igorSave.book===3||igorSave.book===4||igorSave.book===5)?igorSave.pos>=618:igorSave.book===8?igorSave.pos>=1000:false;
+    document.getElementById("igorNext").disabled=igorSave.book===1?igorSave.pos>=624:(igorSave.book===2||igorSave.book===3||igorSave.book===4||igorSave.book===5||igorSave.book===6)?igorSave.pos>=618:igorSave.book===8?igorSave.pos>=1000:false;
     document.getElementById("igorNumber").disabled=false;
     document.getElementById("igorFlip").disabled=false;
     igorRenderChoices();
@@ -3400,7 +3429,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const list=igorList();
     const valid=Number.isSafeInteger(no)&&no>=1;
     if(!valid)return;
-    const max=book===1?624:(book===2||book===3||book===4||book===5)?618:book===8?1000:Infinity;
+    const max=book===1?624:(book===2||book===3||book===4||book===5||book===6)?618:book===8?1000:Infinity;
     if(no>max){igorMessage("Son problem: "+max);return;}
     const p=list.find(x=>x.id===no)||null;
     igorCurrent=p;
@@ -3430,7 +3459,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       orientation=igorSave.orientation;
     }
     igorPersist();render();igorRenderPanel();
-    igorMessage(p?(book===2&&no===357?"Kitapta bu diyagramın cevabı tutarsız.":""):book===1&&igorVol1Loading?"1. kitap yükleniyor...":book===2&&igorVol2Loading?"2. kitap yükleniyor...":book===3&&igorVol3Loading?"3. kitap yükleniyor...":book===4&&igorVol4Loading?"4. kitap yükleniyor...":book===5&&igorVol5Loading?"5. kitap yükleniyor...":"Problem "+no+" henüz yüklenmedi.");
+    igorMessage(p?(book===2&&no===357?"Kitapta bu diyagramın cevabı tutarsız.":""):book===1&&igorVol1Loading?"1. kitap yükleniyor...":book===2&&igorVol2Loading?"2. kitap yükleniyor...":book===3&&igorVol3Loading?"3. kitap yükleniyor...":book===4&&igorVol4Loading?"4. kitap yükleniyor...":book===5&&igorVol5Loading?"5. kitap yükleniyor...":book===6&&igorVol6Loading?"6. kitap yükleniyor...":"Problem "+no+" henüz yüklenmedi.");
   }
   function igorStart(){
     igorActive=true;
@@ -3477,7 +3506,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const alternativeCheck=igorCurrent.goal==="reference"&&/Give (double |discovered )?check|Check with/i.test(source)&&game.inCheck(game.turn);
     // Game state has already changed, but the visible piece may still be travelling.
     igorPendingFeedback={move:last,book:igorSave.book,pos:igorSave.pos,
-      correct:igorCurrent.book===4?expected:(igorCurrent.goal==="mate1"?mate:(mate||capture||expected||alternativeCapture||alternativeEP||alternativeCastle||alternativeCheck)),
+      correct:igorCurrent.book===6?false:(igorCurrent.book===4?expected:(igorCurrent.goal==="mate1"?mate:(mate||capture||expected||alternativeCapture||alternativeEP||alternativeCastle||alternativeCheck))),
       mate,multiMove:!!igorCurrent.multiMove};
     if(!activeMoveAnimation)igorFinishFeedback(last);
   }
@@ -3516,7 +3545,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     });
     const step=d=>{
       const n=igorSave.pos+d;
-      if(n<1||(igorSave.book===1&&n>624)||((igorSave.book===2||igorSave.book===3||igorSave.book===4||igorSave.book===5)&&n>618)||(igorSave.book===8&&n>1000))return;
+      if(n<1||(igorSave.book===1&&n>624)||((igorSave.book===2||igorSave.book===3||igorSave.book===4||igorSave.book===5||igorSave.book===6)&&n>618)||(igorSave.book===8&&n>1000))return;
       igorLoad(igorSave.book,n);
     };
     document.getElementById("igorPrev").addEventListener("click",()=>step(-1));
@@ -3524,7 +3553,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const numberInput=document.getElementById("igorNumber");
     const jump=()=>{
       const n=Number(numberInput.value);
-      if(Number.isSafeInteger(n)&&n>=1&&(igorSave.book!==1||n<=624)&&((igorSave.book!==2&&igorSave.book!==3&&igorSave.book!==4&&igorSave.book!==5)||n<=618)&&(igorSave.book!==8||n<=1000)){
+      if(Number.isSafeInteger(n)&&n>=1&&(igorSave.book!==1||n<=624)&&((igorSave.book!==2&&igorSave.book!==3&&igorSave.book!==4&&igorSave.book!==5&&igorSave.book!==6)||n<=618)&&(igorSave.book!==8||n<=1000)){
         if(n!==igorSave.pos)igorLoad(igorSave.book,n);
       }else{
         numberInput.value=igorSave.pos;
@@ -3547,16 +3576,18 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   // Vol 4 is image-based: only diagrams independently checked against the PDF are included.
   igorProblems[4]=[];
   igorProblems[5]=[];
+  igorProblems[6]=[];
   igorLoadVolumeOne();
   igorLoadVolumeTwo();
   igorLoadVolumeThree();
   igorLoadVolumeFour();
   igorLoadVolumeFive();
+  igorLoadVolumeSix();
   // ===== end Igor =====
 
   boot();
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=2.0.8"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.4.0 · Cilt 5: 618 iki hamlede mat problemi</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=2.0.8"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.5.0 · Cilt 6: 618 taktik konumu, doğrulama işaretli</div></body>
 </html>
