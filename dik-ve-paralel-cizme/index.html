@@ -84,6 +84,14 @@
   }
   #langMenu button:hover{background:#f0f4f8}
 
+  .point-anim-toggle{
+    background:#fff;
+    color:#344050;
+    white-space:nowrap;
+    font-size:13px;
+    padding:10px 12px;
+  }
+  .point-anim-toggle[aria-pressed="false"]{background:#e9edf3;color:#657080}
   #modePanel{
     margin-left:auto;
     display:flex;
@@ -350,6 +358,8 @@
   </div>
 
   <button id="helpBtn" class="iconBtn" title="Help" aria-label="Help">?</button>
+  <button id="pointAnimBtn" class="modeBtn point-anim-toggle" type="button"
+    aria-pressed="true" title="Nokta animasyonunu kapat">Nokta ışığı: Açık</button>
 
   <div id="modePanel">
     <button id="perpBtn" class="modeBtn active">Dik çiz</button>
@@ -374,7 +384,7 @@
 </div>
 
 <button id="resetBtn" class="actionBtn">Yeni soru</button>
-<div id="version">v1.2 — Açı yaklaşırken doğru boyunca aralıklı ışın animasyonu.</div>
+<div id="version">v1.3 — Nokta uyarı ışıkları açılıp kapatılabilir.</div>
 <div id="audioHint">Ses için sayfaya bir kez tıkla.</div>
 
 <div id="helpOverlay">
@@ -417,6 +427,8 @@
   const rewardText = document.getElementById("rewardText");
   const perpBtn = document.getElementById("perpBtn");
   const parallelBtn = document.getElementById("parallelBtn");
+  const pointAnimBtn = document.getElementById("pointAnimBtn");
+  let pointAnimEnabled = localStorage.getItem("geo-point-anim") !== "off";
   const resetBtn = document.getElementById("resetBtn");
 
   let dpr = Math.max(1, window.devicePixelRatio || 1);
@@ -578,6 +590,7 @@
       lang:"TR ▾",
       perp:"Dik çiz",
       parallel:"Paralel çiz",
+      pointOn:"Nokta ışığı: Açık", pointOff:"Nokta ışığı: Kapalı",
       reset:"Yeni soru",
       helpTitle:"Nasıl oynanır?",
       h1:"Dik çizimde önce kırmızı noktayı, sonra doğruyu hizala ve çiz.",
@@ -601,6 +614,7 @@
       lang:"DE ▾",
       perp:"Senkrecht",
       parallel:"Parallel",
+      pointOn:"Punktlicht: An", pointOff:"Punktlicht: Aus",
       reset:"Neue Aufgabe",
       helpTitle:"Wie geht es?",
       h1:"Bei Senkrecht: erst den roten Punkt treffen, dann ausrichten und zeichnen.",
@@ -624,6 +638,7 @@
       lang:"EN ▾",
       perp:"Perpendicular",
       parallel:"Parallel",
+      pointOn:"Point light: On", pointOff:"Point light: Off",
       reset:"New task",
       helpTitle:"How to play",
       h1:"For perpendicular: hit the red point, align, then draw.",
@@ -652,6 +667,7 @@
     document.getElementById("langBtn").textContent = t.lang;
     perpBtn.textContent = t.perp;
     parallelBtn.textContent = t.parallel;
+    updatePointAnimButton();
     resetBtn.textContent = t.reset;
     document.getElementById("helpTitle").textContent = t.helpTitle;
     document.getElementById("helpP1").textContent = t.h1;
@@ -662,6 +678,18 @@
     updateInstruction();
     if(stage===4) rewardText.textContent = t.done;
   }
+
+  function updatePointAnimButton(){
+    const t = texts[lang];
+    pointAnimBtn.textContent = pointAnimEnabled ? t.pointOn : t.pointOff;
+    pointAnimBtn.setAttribute("aria-pressed", String(pointAnimEnabled));
+    pointAnimBtn.title = pointAnimEnabled ? t.pointOff : t.pointOn;
+  }
+  pointAnimBtn.addEventListener("click",()=>{
+    pointAnimEnabled = !pointAnimEnabled;
+    localStorage.setItem("geo-point-anim", pointAnimEnabled ? "on" : "off");
+    updatePointAnimButton();
+  });
 
   function updateModeButtons(){
     perpBtn.classList.toggle("active", mode==="perp");
@@ -970,7 +998,6 @@
     setRulerTransform();
     if(mode==="parallel" && stage!==4) updateParallelSnap(false);
   });
-
   function endPan(e){
     if(e.pointerId !== panPointerId) return;
     panPointerId = null;
@@ -997,7 +1024,8 @@
         const p=projectToBase(pt);
         drawing={a:p,b:p,minS:p.s,maxS:p.s};
         return;
-      }      if(stage===1){
+      }
+      if(stage===1){
         if(e.target===rotateHandle){
           pointerMode="rotate";
           rotateStartAngle=Math.atan2(e.clientY-rulerState.y,e.clientX-rulerState.x);
@@ -1323,9 +1351,10 @@
       if(stage===1){
         const d=distance(rulerState,target);
         const closeness=1-Math.min(1,d/260);
-        const alpha=(d<=POSITION_LOCK_DISTANCE) ? 1 : (.28+.72*(.5+.5*Math.sin(now*2*Math.PI/(1050-closeness*900))));
-        drawBurstOnPoint(target.x,target.y,Math.max(0,closeness),now,"#ff3149");
+        const alpha=(!pointAnimEnabled || d<=POSITION_LOCK_DISTANCE) ? 1 : (.28+.72*(.5+.5*Math.sin(now*2*Math.PI/(1050-closeness*900))));
+        if(pointAnimEnabled) drawBurstOnPoint(target.x,target.y,Math.max(0,closeness),now,"#ff3149");
 
+        if(pointAnimEnabled){
         ctx.save();
         ctx.globalAlpha = 0.18 + 0.25*alpha;
         ctx.fillStyle = "#ff6b78";
@@ -1333,6 +1362,7 @@
         ctx.arc(target.x,target.y,16 + (0.5+0.5*Math.sin(now*0.01))*2,0,Math.PI*2);
         ctx.fill();
         ctx.restore();
+        }
 
         ctx.save();
         ctx.globalAlpha=alpha;
@@ -1359,7 +1389,8 @@
         const distOffset = Math.abs(currentGuideOffset - parallelTargetOffset);
         proximity = Math.max(0, 1 - Math.min(1, distOffset/80));
       }
-      drawBurstOnPoint(target.x,target.y,proximity,now,"#ff3149");
+      if(pointAnimEnabled) drawBurstOnPoint(target.x,target.y,proximity,now,"#ff3149");
+      if(pointAnimEnabled){
       ctx.save();
       ctx.globalAlpha = 0.22 + 0.22*proximity;
       ctx.fillStyle = "#ff6b78";
@@ -1367,6 +1398,7 @@
       ctx.arc(target.x,target.y,16,0,Math.PI*2);
       ctx.fill();
       ctx.restore();
+      }
 
       ctx.save();
       ctx.shadowBlur = stage===2 ? 18 : 12;
