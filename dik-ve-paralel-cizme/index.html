@@ -384,7 +384,7 @@
 </div>
 
 <button id="resetBtn" class="actionBtn">Yeni soru</button>
-<div id="version">v1.3 — Nokta uyarı ışıkları açılıp kapatılabilir.</div>
+<div id="version">v1.5 — Zoom, dokunmatik kaydırma ve Çınar için başarı mesajı.</div>
 <div id="audioHint">Ses için sayfaya bir kez tıkla.</div>
 
 <div id="helpOverlay">
@@ -398,7 +398,7 @@
   </div>
 </div>
 
-<div id="reward"><div id="rewardText">Bravo! Başardın!</div></div>
+<div id="reward"><div id="rewardText">Bravo! Başardın Çınar!</div></div>
 
 
 <script>
@@ -446,6 +446,30 @@
   let panPointerId = null;
   let panStart = null;
   let panObjectsStart = null;
+  // Görünüm dönüşümü: nesnelerin koordinatları değişmez.
+  const camera = {scale:1, x:0, y:0};
+  const MIN_ZOOM = 0.45, MAX_ZOOM = 4;
+  const touchPointers = new Map();
+  let touchGesture = null;
+
+  function screenToWorld(x,y){
+    return {x:(x-camera.x)/camera.scale,y:(y-camera.y)/camera.scale};
+  }
+  function worldToScreen(pt){
+    return {x:camera.x+pt.x*camera.scale,y:camera.y+pt.y*camera.scale};
+  }
+  function applyCamera(){
+    setRulerTransform();
+    placeBubble(true);
+  }
+  function zoomAt(x,y, scale){
+    const world=screenToWorld(x,y);
+    camera.scale=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,scale));
+    camera.x=x-world.x*camera.scale;
+    camera.y=y-world.y*camera.scale;
+    applyCamera();
+  }
+
 
   let pointerMode = null; // move | rotate | draw
   let pointerId = null;
@@ -608,7 +632,7 @@
       par_ss1:"İçteki yeşil çizgilerden biri doğru ile çakışsın.",
       par_s2:"Harika! Şimdi uzun kenardan çiz.",
       par_ss2:"Çizgin, kırmızı noktadan geçsin.",
-      done:"Bravo! Başardın!"
+      done:"Bravo! Başardın Çınar!"
     },
     de:{
       lang:"DE ▾",
@@ -779,9 +803,11 @@
     return Math.abs(dx*n.x+dy*n.y);
   }
   function setRulerTransform(){
-    ruler.style.left=(rulerState.x-RULER_W/2)+"px";
-    ruler.style.top=(rulerState.y-RULER_H)+"px";
-    ruler.style.transform=`rotate(${rulerState.angle}deg)`;
+    const o=worldToScreen(rulerState);
+    // transform-origin gönyenin alt orta noktasıdır.
+    ruler.style.left=(o.x-RULER_W/2)+"px";
+    ruler.style.top=(o.y-RULER_H)+"px";
+    ruler.style.transform=`rotate(${rulerState.angle}deg) scale(${camera.scale})`;
   }
 
   function placeBubble(force=false){
@@ -808,13 +834,15 @@
       score += ox*oy*.045;
       for(let a=0;a<=4;a++) for(let b=0;b<=4;b++){
         const px=box.left+bw*a/4, py=box.top+bh*b/4;
-        const d=Math.abs((px-line.x)*uy-(py-line.y)*ux);
+        const screenLine=worldToScreen(line);
+        const d=Math.abs((px-screenLine.x)*uy-(py-screenLine.y)*ux);
         if(d<28)score+=26;
         else if(d<66)score+=6;
       }
-      const nearTargetX=Math.max(box.left,Math.min(target.x,box.right));
-      const nearTargetY=Math.max(box.top,Math.min(target.y,box.bottom));
-      if(Math.hypot(nearTargetX-target.x,nearTargetY-target.y)<75)score+=260;
+      const screenTarget=worldToScreen(target);
+      const nearTargetX=Math.max(box.left,Math.min(screenTarget.x,box.right));
+      const nearTargetY=Math.max(box.top,Math.min(screenTarget.y,box.bottom));
+      if(Math.hypot(nearTargetX-screenTarget.x,nearTargetY-screenTarget.y)<75)score+=260;
       if(i>=2 && h<540)score+=80;
       return score;
     });
@@ -850,6 +878,11 @@
 
   function randomTask(){
     clearTaskState();
+    camera.scale=1;
+    camera.x=0;
+    camera.y=0;
+    touchPointers.clear();
+    touchGesture=null;
     stage=1;
     const w=window.innerWidth,h=window.innerHeight;
 
@@ -964,48 +997,84 @@
       }
     }else{
       stage = 1;
-    }
-  }
+    }  }
 
-  // Sağ tuş ile tüm sahneyi kaydır
+  // Sağ tık = kamera kaydırma; iki parmak = pinch + kaydırma.
   const stageEl = document.getElementById("stage");
   stageEl.addEventListener("contextmenu", e => e.preventDefault());
 
-  stageEl.addEventListener("pointerdown", e => {
-    if(e.button !== 2) return;
-    ensureAudio();
-    if(panPointerId !== null) return;
-    panPointerId = e.pointerId;
-    panStart = {x:e.clientX, y:e.clientY};
-    panObjectsStart = {
-      line:{...line},
-      target:{...target},
-      ruler:{...rulerState}
+  function touchMetrics(){
+    const pts=[...touchPointers.values()].slice(0,2);
+    return {
+      mid:{x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2},
+      distance:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)
     };
+  }
+  function beginTouchGesture(){
+    if(touchPointers.size<2)return;
+    // Daha önce başlayan tek-parmakla çizim/taşıma iptal edilir.
+    pointerMode=null;
+    pointerId=null;
+    drawing=null;
+    ruler.classList.remove("dragging");
+    const m=touchMetrics();
+    touchGesture={
+      startScale:camera.scale,
+      startDistance:Math.max(1,m.distance),
+      anchor:screenToWorld(m.mid.x,m.mid.y)
+    };
+    for(const id of touchPointers.keys()){
+      try{stageEl.setPointerCapture(id);}catch(_){}
+    }
+  }
+
+  stageEl.addEventListener("pointerdown",e=>{
+    if(e.pointerType==="touch"){
+      touchPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(touchPointers.size===2)beginTouchGesture();
+      return;
+    }
+    if(e.button!==2)return;
+    ensureAudio();
+    panPointerId=e.pointerId;
+    panStart={x:e.clientX,y:e.clientY};
+    panObjectsStart={x:camera.x,y:camera.y};
     stageEl.setPointerCapture(e.pointerId);
   });
 
-  stageEl.addEventListener("pointermove", e => {
-    if(e.pointerId !== panPointerId || !panStart) return;
-    const dx = e.clientX - panStart.x;
-    const dy = e.clientY - panStart.y;
-    line.x = panObjectsStart.line.x + dx;
-    line.y = panObjectsStart.line.y + dy;
-    target.x = panObjectsStart.target.x + dx;
-    target.y = panObjectsStart.target.y + dy;
-    rulerState.x = panObjectsStart.ruler.x + dx;
-    rulerState.y = panObjectsStart.ruler.y + dy;
-    setRulerTransform();
-    if(mode==="parallel" && stage!==4) updateParallelSnap(false);
+  stageEl.addEventListener("pointermove",e=>{
+    if(e.pointerType==="touch" && touchPointers.has(e.pointerId)){
+      touchPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(touchGesture && touchPointers.size>=2){
+        e.preventDefault();
+        const m=touchMetrics();
+        const next=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,
+          touchGesture.startScale*m.distance/touchGesture.startDistance));
+        camera.scale=next;
+        camera.x=m.mid.x-touchGesture.anchor.x*next;
+        camera.y=m.mid.y-touchGesture.anchor.y*next;
+        applyCamera();
+      }
+      return;
+    }
+    if(e.pointerId!==panPointerId || !panStart)return;
+    camera.x=panObjectsStart.x+(e.clientX-panStart.x);
+    camera.y=panObjectsStart.y+(e.clientY-panStart.y);
+    applyCamera();
   });
   function endPan(e){
-    if(e.pointerId !== panPointerId) return;
-    panPointerId = null;
-    panStart = null;
-    panObjectsStart = null;
+    if(e.pointerType==="touch"){
+      touchPointers.delete(e.pointerId);
+      if(touchPointers.size<2)touchGesture=null;
+      return;
+    }
+    if(e.pointerId!==panPointerId)return;
+    panPointerId=null;
+    panStart=null;
+    panObjectsStart=null;
   }
-  stageEl.addEventListener("pointerup", endPan);
-  stageEl.addEventListener("pointercancel", endPan);
+  stageEl.addEventListener("pointerup",endPan);
+  stageEl.addEventListener("pointercancel",endPan);
 
   ruler.addEventListener("pointerdown", e=>{
     if(e.button!==0 || panPointerId!==null) return;
@@ -1016,7 +1085,8 @@
     pointerId=e.pointerId;
     ruler.classList.add("dragging");
 
-    const pt={x:e.clientX,y:e.clientY};
+    if(touchGesture)return;
+    const pt=screenToWorld(e.clientX,e.clientY);
 
     if(mode==="perp"){
       if(stage===3 && distanceToBase(pt) < 18){
@@ -1028,16 +1098,16 @@
       if(stage===1){
         if(e.target===rotateHandle){
           pointerMode="rotate";
-          rotateStartAngle=Math.atan2(e.clientY-rulerState.y,e.clientX-rulerState.x);
+          rotateStartAngle=Math.atan2(pt.y-rulerState.y,pt.x-rulerState.x);
           rulerAngleStart=rulerState.angle;
         }else{
           pointerMode="move";
-          pointerStart={x:e.clientX,y:e.clientY};
+          pointerStart={...pt};
           rulerStart={...rulerState};
         }
       }else if(stage===2){
         pointerMode="rotate";
-        rotateStartAngle=Math.atan2(e.clientY-rulerState.y,e.clientX-rulerState.x);
+        rotateStartAngle=Math.atan2(pt.y-rulerState.y,pt.x-rulerState.x);
         rulerAngleStart=rulerState.angle;
       }
     }else{
@@ -1049,11 +1119,11 @@
       }
       if(e.target===rotateHandle){
         pointerMode="rotate";
-        rotateStartAngle=Math.atan2(e.clientY-rulerState.y,e.clientX-rulerState.x);
+        rotateStartAngle=Math.atan2(pt.y-rulerState.y,pt.x-rulerState.x);
         rulerAngleStart=rulerState.angle;
       }else{
         pointerMode="move";
-        pointerStart={x:e.clientX,y:e.clientY};
+        pointerStart={...pt};
         rulerStart={...rulerState};
       }
     }
@@ -1061,12 +1131,13 @@
 
   ruler.addEventListener("pointermove", e=>{
     if(e.pointerId!==pointerId || !pointerMode) return;
-    const pt={x:e.clientX,y:e.clientY};
+    if(touchGesture)return;
+    const pt=screenToWorld(e.clientX,e.clientY);
 
     if(mode==="perp"){
       if(pointerMode==="move" && stage===1){
-        rulerState.x=rulerStart.x+(e.clientX-pointerStart.x);
-        rulerState.y=rulerStart.y+(e.clientY-pointerStart.y);
+        rulerState.x=rulerStart.x+(pt.x-pointerStart.x);
+        rulerState.y=rulerStart.y+(pt.y-pointerStart.y);
         setRulerTransform();
 
         const d=distance(rulerState,target);
@@ -1081,7 +1152,7 @@
         }
       }
       else if(pointerMode==="rotate" && (stage===1 || stage===2)){
-        const a=Math.atan2(e.clientY-rulerState.y,e.clientX-rulerState.x);
+        const a=Math.atan2(pt.y-rulerState.y,pt.x-rulerState.x);
         rulerState.angle=rulerAngleStart+rad2deg(a-rotateStartAngle);
         setRulerTransform();
 
@@ -1108,13 +1179,13 @@
       }
     }else{
       if(pointerMode==="move"){
-        rulerState.x=rulerStart.x+(e.clientX-pointerStart.x);
-        rulerState.y=rulerStart.y+(e.clientY-pointerStart.y);
+        rulerState.x=rulerStart.x+(pt.x-pointerStart.x);
+        rulerState.y=rulerStart.y+(pt.y-pointerStart.y);
         setRulerTransform();
         updateParallelSnap(true);
         updateInstruction();
       }else if(pointerMode==="rotate"){
-        const a=Math.atan2(e.clientY-rulerState.y,e.clientX-rulerState.x);
+        const a=Math.atan2(pt.y-rulerState.y,pt.x-rulerState.x);
         rulerState.angle=rulerAngleStart+rad2deg(a-rotateStartAngle);
         setRulerTransform();
         updateParallelSnap(true);
@@ -1169,40 +1240,17 @@
   ruler.addEventListener("pointerup",endPointer);
   ruler.addEventListener("pointercancel",endPointer);
 
+  // Masaüstü: tekerlek = imlecin olduğu yere odaklı zoom.
   stageEl.addEventListener("wheel",e=>{
-    if(stage===4) return;
-    const r=ruler.getBoundingClientRect();
-    const inside=e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom;
-    if(!inside) return;
     e.preventDefault();
-    ensureAudio();
-
-    rulerState.angle += e.deltaY>0 ? 2 : -2;
-    if(mode==="perp"){
-      if(stage===2){
-        const diff=angleDiffUndirected(rulerState.angle+90,line.angle);
-        if(diff<=ANGLE_LOCK_TOLERANCE){
-          let candidate=line.angle-90;
-          while(candidate-rulerState.angle>90) candidate-=180;
-          while(candidate-rulerState.angle<-90) candidate+=180;
-          rulerState.angle=candidate;
-          stage=3;
-          beep(1220,.10,.07);
-          setTimeout(()=>beep(1500,.12,.06),110);
-          updateInstruction();
-        }
-      }
-    }else{
-      updateParallelSnap(true);
-      updateInstruction();
-    }
-    setRulerTransform();
+    const multiplier=Math.exp(-e.deltaY*0.0015);
+    zoomAt(e.clientX,e.clientY,camera.scale*multiplier);
   },{passive:false});
 
   function drawInfiniteLine(x,y,angle,style){
     const a=deg2rad(angle);
     const ux=Math.cos(a),uy=Math.sin(a);
-    const L=Math.max(window.innerWidth,window.innerHeight)*1.5;
+    const L=Math.max(window.innerWidth,window.innerHeight)*2.5/MIN_ZOOM;
 
     ctx.save();
     ctx.lineWidth=style.width||4;
@@ -1323,7 +1371,10 @@
 
   function draw(){
     const w=window.innerWidth,h=window.innerHeight;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
     ctx.clearRect(0,0,w,h);
+    ctx.setTransform(dpr*camera.scale,0,0,dpr*camera.scale,
+                     dpr*camera.x,dpr*camera.y);
     const now=performance.now();
 
     drawInfiniteLine(line.x,line.y,line.angle,{
