@@ -384,7 +384,7 @@
 </div>
 
 <button id="resetBtn" class="actionBtn">Yeni soru</button>
-<div id="version">v1.7 — Çizim yönünü gösteren tek seferlik beyaz ok.</div>
+<div id="version">v1.8 — Dik açı işareti tek çeyrek yay olarak düzeltildi.</div>
 <div id="audioHint">Ses için sayfaya bir kez tıkla.</div>
 
 <div id="helpOverlay">
@@ -610,17 +610,29 @@
     g.arc(RULER_W/2, RULER_H-4, 5.5, 0, Math.PI*2);
     g.fill();
 
-    // Almanya'da yaygın kullanılan dik açı işareti:
-    // çeyrek daire yayı + ortasında küçük nokta
-    g.lineWidth = 2.2;
-    g.strokeStyle = "rgba(30,70,170,.82)";
+    // Almanya'da kullanılan dik açı işareti:
+    // merkez doğrudan O noktasıdır; tek çeyrek yay + içte küçük nokta
+    const ox = RULER_W/2;
+    const oy = RULER_H - 4;
+    const rightAngleR = 34;
+
+    g.lineWidth = 3.2;
+    g.strokeStyle = "rgba(30,70,220,.86)";
     g.beginPath();
-    g.arc(RULER_W/2 + 20, RULER_H - 24, 20, Math.PI, 1.5 * Math.PI, false);
+    // Yukarı yön ile sağ yön arasındaki çeyrek yay
+    g.arc(ox, oy, rightAngleR, -Math.PI/2, 0, false);
     g.stroke();
 
-    g.fillStyle = "rgba(30,70,170,.82)";
+    // İçte küçük nokta
+    g.fillStyle = "rgba(70,110,235,.92)";
     g.beginPath();
-    g.arc(RULER_W/2 + 9.5, RULER_H - 14.5, 2.6, 0, Math.PI * 2);
+    g.arc(
+      ox + rightAngleR * 0.58 * Math.cos(-Math.PI/4),
+      oy + rightAngleR * 0.58 * Math.sin(-Math.PI/4),
+      4.4,
+      0,
+      Math.PI * 2
+    );
     g.fill();
 
     return c.toDataURL("image/png");
@@ -735,8 +747,7 @@
   });
 
   function updateModeButtons(){
-    perpBtn.classList.toggle("active", mode==="perp");
-    parallelBtn.classList.toggle("active", mode==="parallel");
+    perpBtn.classList.toggle("active", mode==="perp");    parallelBtn.classList.toggle("active", mode==="parallel");
   }
 
   function updateInstruction(){
@@ -747,7 +758,8 @@
       return;
     }
     if(mode==="perp"){
-      if(stage===1){        instructionMain.textContent = t.perp_s1;
+      if(stage===1){
+        instructionMain.textContent = t.perp_s1;
         instructionSub.textContent = t.perp_ss1;
       }else if(stage===2){
         instructionMain.textContent = t.perp_s2;
@@ -1485,7 +1497,6 @@
         const closeness=1-Math.min(1,d/260);
         const alpha=(!pointAnimEnabled || d<=POSITION_LOCK_DISTANCE) ? 1 : (.28+.72*(.5+.5*Math.sin(now*2*Math.PI/(1050-closeness*900))));
         if(pointAnimEnabled) drawBurstOnPoint(target.x,target.y,Math.max(0,closeness),now,"#ff3149");
-
         if(pointAnimEnabled){
         ctx.save();
         ctx.globalAlpha = 0.18 + 0.25*alpha;
@@ -1496,7 +1507,8 @@
         ctx.restore();
         }
 
-        ctx.save();        ctx.globalAlpha=alpha;
+        ctx.save();
+        ctx.globalAlpha=alpha;
         ctx.shadowBlur=20;
         ctx.shadowColor="#ff3149";
         ctx.fillStyle="#ff3149";
