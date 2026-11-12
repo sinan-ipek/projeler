@@ -655,7 +655,15 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 #igorChoices button[aria-label="Vezir"],#igorChoices button[aria-label="Kale"],
 #igorChoices button[aria-label="Fil"],#igorChoices button[aria-label="At"],
 #igorChoices button[aria-label="Piyon"]{font-size:23px!important;padding:3px 11px!important;min-height:35px!important}
-</style></head>
+</style><style id="igorTenWrongV375">
+#igorAssist[hidden],#igorSolution[hidden]{display:none!important}
+#igorAssist{margin:0 0 12px;padding:0}
+#igorShowSolution{font:500 13px/1.3 system-ui,sans-serif!important;min-height:34px!important;width:auto!important;max-width:max-content!important;padding:6px 12px!important;border:1px solid #c9c9c9!important;border-radius:7px!important;background:#f8f8f8!important;color:#292929!important;box-shadow:0 2px 5px rgba(0,0,0,.12)!important;cursor:pointer!important}
+#igorShowSolution:hover{background:#ececec!important}
+#igorShowSolution:focus-visible{outline:2px solid #b48b00;outline-offset:2px}
+#igorSolution{margin:9px 0 0;font-size:14px;line-height:1.45;color:#333;overflow-wrap:anywhere}
+</style>
+</head>
 
 <body>
 
@@ -3469,6 +3477,39 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       setTimeout(showResult,900);
     }else showResult();
   }
+  // Per-question consecutive wrong answers. Retry keeps count; switching question resets it.
+  let igorWrongCount=0,igorAttemptKey="";
+  function igorSolutionText(){
+    const p=igorCurrent;
+    if(!p)return "Bu problem için çözüm kaydı yok.";
+    if(p.book===2&&p.id===357)return "Kitaptaki cevap ile diyagram uyuşmuyor; doğrulanmış mat hamlesi bulunamadı.";
+    if(p.answerType==="yes")return "Kitabın cevabı: Evet.";
+    if(p.answerType==="no")return "Kitabın cevabı: Hayır.";
+    if(p.answerType==="stalemate")return "Kitabın cevabı: Pat.";
+    if(p.answerType==="checkmate")return "Kitabın cevabı: Mat.";
+    if(p.answerType==="not-stalemate")return "Kitabın cevabı: Hiçbiri.";
+    const uci=typeof p.uci==="string"?p.uci:"";
+    if(/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(uci)){
+      const promotion={q:"vezir",r:"kale",b:"fil",n:"at"}[uci[4]];
+      const move=uci.slice(0,2)+" → "+uci.slice(2,4)+(promotion?" ("+promotion+" terfisi)":"");
+      return p.book===4?"Kitaptaki ilk hamle: "+move+". Devamı ayrıca doğrulanmalıdır.":"Çözüm: "+move+".";
+    }
+    const raw=String(p.sourceAnswer||p.solution||"").trim();
+    if(raw)return "Kitabın verdiği cevap: "+raw+(p.book>=4?" (Kaynak metni; tam varyant henüz doğrulanmadı.)":"");
+    return "Bu problem için doğrulanmış çözüm henüz aktarılmadı.";
+  }
+  function igorUpdateAssistance(){
+    const panel=document.getElementById("igorAssist");
+    const button=document.getElementById("igorShowSolution");
+    const text=document.getElementById("igorSolution");
+    if(!panel||!button||!text)return;
+    const visible=igorActive&&!!igorCurrent&&igorWrongCount>=10;
+    panel.hidden=!visible;
+    if(!visible){text.hidden=true;text.textContent="";return;}
+    button.textContent=igorShowAnswer?"Çözümü gizle":"Çözümü göster";
+    text.hidden=!igorShowAnswer;
+    text.textContent=igorShowAnswer?igorSolutionText():"";
+  }
   let igorSave={book:1,pos:1,orientation:"w",last:{},solved:{},review:{}};
   try{const p=JSON.parse(localStorage.getItem(igorKey)||"null");if(p&&typeof p==="object")igorSave={...igorSave,...p};}catch(e){}
   function igorPersist(){try{localStorage.setItem(igorKey,JSON.stringify(igorSave));}catch(e){}}
@@ -3477,8 +3518,13 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     const el=document.getElementById("igorFeedback");
     el.textContent=t;
     el.classList.remove("igor-correct","igor-retry");
-    if(t==="Doğru!") el.classList.add("igor-correct");
-    else if(t==="Yeniden dene."){
+    if(t==="Doğru!"){
+      igorWrongCount=0;
+      igorShowAnswer=false;
+      el.classList.add("igor-correct");
+    }else if(t==="Yeniden dene."){
+      // Only a definitively wrong answer counts. Unverified tactical moves don't.
+      igorWrongCount++;
       el.classList.add("igor-retry");
       el.textContent="";
       const retry=document.createElement("button");
@@ -3488,6 +3534,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       retry.addEventListener("click",()=>igorLoad(igorSave.book,igorSave.pos));
       el.appendChild(retry);
     }
+    igorUpdateAssistance();
   }
   function igorRenderPanel(){
     const panel=document.getElementById("igorPanel");
@@ -3502,6 +3549,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     document.getElementById("igorNumber").disabled=false;
     document.getElementById("igorFlip").disabled=false;
     igorRenderChoices();
+    igorUpdateAssistance();
   }
   function igorLoad(book,no){
     igorSave.book=book;
@@ -3510,6 +3558,8 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     if(!valid)return;
     const max=book===1?624:(book===2||book===3||book===4||book===5||book===6||book===7)?618:book===8?1043:Infinity;
     if(no>max){igorMessage("Son problem: "+max);return;}
+    const attemptKey=book+":"+no;
+    if(igorAttemptKey!==attemptKey){igorAttemptKey=attemptKey;igorWrongCount=0;}
     const p=list.find(x=>x.id===no)||null;
     igorCurrent=p;
     igorSave.pos=no;
@@ -3547,6 +3597,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     igorLoad(igorSave.book,igorSave.last[igorSave.book]||igorSave.pos||1);
   }
   function igorExit(){
+    igorWrongCount=0;igorAttemptKey="";igorShowAnswer=false;
     igorMate2Stage=0;igorMate2Defending=false;igorMate2Locked=false;
     igorPendingFeedback=null;
     igorFeedbackSequence++;
@@ -3612,6 +3663,8 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       '<p id="igorTask"></p>'+
       '<div id="igorChoices" aria-label="Cevap seçenekleri"></div>'+
       '<p id="igorFeedback" aria-live="polite"></p>'+
+      '<div id="igorAssist" hidden><button id="igorShowSolution" type="button">Çözümü göster</button>'+
+      '<p id="igorSolution" hidden aria-live="polite"></p></div>'+
       '<form id="igorGo" aria-label="Problem seç">'+
       '<button id="igorPrev" type="button" aria-label="Önceki problem">❮</button>'+
       '<input id="igorNumber" type="number" min="1" step="1" inputmode="numeric" aria-label="Problem numarası" title="Numarayı yazıp Enter tuşuna bas">'+
@@ -3619,6 +3672,11 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       '</form>'+
       '<button id="igorFlip" type="button">↻ Tahtayı Çevir</button>';
     document.querySelector(".sideInfo").prepend(panel);
+    document.getElementById("igorShowSolution").addEventListener("click",()=>{
+      if(igorWrongCount<10||!igorCurrent)return;
+      igorShowAnswer=!igorShowAnswer;
+      igorUpdateAssistance();
+    });
     document.getElementById("igorBook").addEventListener("change",e=>{
       const b=Number(e.target.value);igorLoad(b,igorSave.last[b]||1);
     });
@@ -3672,5 +3730,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.7.4 · 4. kitap: 55 ilk hamle ve rok hakları düzeltildi</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.7.5 · 10 yanlış sonrası soruya özel çözüm düğmesi</div></body>
 </html>
