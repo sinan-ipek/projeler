@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Übungsblatt 04 – ChatGPT Lösungen</title>
+<style>
+:root{color-scheme:light;--bg:#f4f7f6;--card:#fff;--ink:#1a2732;--mint:#11685c;--muted:#506572;--line:#d3deda}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 system-ui,"Segoe UI",sans-serif}header{padding:28px max(20px,calc((100vw - 1050px)/2));background:#e1f0eb;border-bottom:1px solid var(--line)}
+header h1{margin:0 0 5px;font-size:clamp(27px,4vw,42px)}header p{margin:5px 0;color:var(--muted)}nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+nav a,.back{display:inline-block;background:white;color:var(--mint);border:1px solid #adccc0;padding:7px 12px;border-radius:9px;text-decoration:none;font-weight:650}
+main{max-width:1050px;margin:26px auto 70px;padding:0 18px}section{background:var(--card);border:1px solid var(--line);border-radius:16px;margin:20px 0;padding:22px 28px;box-shadow:0 5px 17px #253b3410}
+h2{color:#135e53;margin:0 0 12px}h3{margin:26px 0 7px;color:#204e49;font-size:1.07em}
+p{margin:10px 0} .math{overflow-x:auto;padding:7px 0} .aside{background:#f0f8f5;border-left:4px solid #32927d;padding:9px 13px;color:#25473f}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid #d9e2dd;padding:8px;text-align:left}footer{max-width:1050px;margin:30px auto;padding:15px;color:var(--muted)}
+@media(max-width:600px){section{padding:17px}body{font-size:15px}}
+</style>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script></head>
+<body>
+<header><a class="back" href="index.html">← Übungsblatt 4</a><h1>Mathematik für Informatik 1 · Übungsblatt #04</h1>
+<p>ChatGPT çözümü · Almanca tam ispatlar · Prof. S. Harmeling · Abgabe: 16.11.2026</p>
+<nav><a href="#a1">Aufgabe 1</a><a href="#a2">Aufgabe 2</a><a href="#a3">Aufgabe 3</a><a href="#a4">Aufgabe 4</a><a href="claude.html">Claude sunumu</a></nav></header>
+<main>
+<section id="a1"><h2>Aufgabe 1 · Polynomraum</h2>
+<p>Es sei \(V=\{ax^4+bx^3+cx^2+dx+e\mid a,b,c,d,e\in\mathbb R\}\). Wir verwenden die gewöhnliche punktweise Addition und Skalarmultiplikation. Sei \(p,q,r\in V\) und \(\lambda,\mu\in\mathbb R\).</p>
+<h3>(a) Nachweis aller Axiome aus Definition 2.12</h3>
+<p><b>Nichtleerheit und Abgeschlossenheit.</b> Das Nullpolynom gehört zu \(V\). Für \(p(x)=\sum_{i=0}^4a_ix^i\) und \(q(x)=\sum_{i=0}^4b_ix^i\) gilt</p>
+<div class="math">\[ (p+q)(x)=\sum_{i=0}^4(a_i+b_i)x^i\in V,\qquad(\lambda p)(x)=\sum_{i=0}^4(\lambda a_i)x^i\in V.\]</div>
+<p>Alle neuen Koeffizienten sind reell; damit sind beide Abbildungen wohldefiniert.</p>
+<p><b>(V1) Assoziativität der Addition.</b> Für jedes \(x\in\mathbb R\):</p>
+<div class="math">\[((p+q)+r)(x)=(p(x)+q(x))+r(x)=p(x)+(q(x)+r(x))=(p+(q+r))(x).\]</div>
+<p><b>(V2) Kommutativität der Addition.</b></p>
+<div class="math">\[(p+q)(x)=p(x)+q(x)=q(x)+p(x)=(q+p)(x).\]</div>
+<p><b>(V3) Neutrales Element.</b> Mit \(0_V(x)=0\) gilt \(0_V\in V\) und</p>
+<div class="math">\[(p+0_V)(x)=p(x)+0=p(x).\]</div>
+<p><b>(V4) Additives Inverses.</b> Definiere \((-p)(x)=-p(x)=\sum_{i=0}^4(-a_i)x^i\in V\). Dann</p>
+<div class="math">\[(p+(-p))(x)=p(x)-p(x)=0=0_V(x).\]</div>
+<p><b>(V5) Assoziativität der Skalarmultiplikation.</b></p>
+<div class="math">\[(\lambda(\mu p))(x)=\lambda(\mu p(x))=(\lambda\mu)p(x)=((\lambda\mu)p)(x).\]</div>
+<p><b>(V6) Neutrales Element der Skalarmultiplikation.</b></p>
+<div class="math">\[(1p)(x)=1\cdot p(x)=p(x).\]</div>
+<p><b>(V7) Erstes Distributivgesetz.</b></p>
+<div class="math">\[(\lambda(p+q))(x)=\lambda(p(x)+q(x))=\lambda p(x)+\lambda q(x)=(\lambda p+\lambda q)(x).\]</div>
+<p><b>(V8) Zweites Distributivgesetz.</b></p>
+<div class="math">\[((\lambda+\mu)p)(x)=(\lambda+\mu)p(x)=\lambda p(x)+\mu p(x)=(\lambda p+\mu p)(x).\]</div>
+<p>Alle Gleichheiten folgen aus den entsprechenden Rechengesetzen in \(\mathbb R\) und gelten für jedes \(x\). Somit sind <b>alle acht Axiome</b> direkt gezeigt, ohne Satz 2.9, 2.10 oder 2.11 zu benutzen. Also ist \(V\) ein reeller Vektorraum. \(\square\)</p>
+<h3>(b) Untervektorraum \(U=\{p\in V\mid p(3)=0\}\)</h3>
+<p><b>Nullpolynom:</b> \(0_V(3)=0\), also \(0_V\in U\).</p>
+<p><b>Addition:</b> Seien \(p,q\in U\). Dann \(p+q\in V\) und</p>
+<div class="math">\[(p+q)(3)=p(3)+q(3)=0+0=0\quad\Longrightarrow\quad p+q\in U.\]</div>
+<p><b>Skalarmultiplikation:</b> Sei \(p\in U,\lambda\in\mathbb R\). Dann \(\lambda p\in V\) und</p>
+<div class="math">\[(\lambda p)(3)=\lambda p(3)=\lambda\cdot0=0\quad\Longrightarrow\quad\lambda p\in U.\]</div>
+<p>Somit ist \(U\) ein Untervektorraum von \(V\). \(\square\)</p>
+</section>
+<section id="a2"><h2>Aufgabe 2 · Schnitt und Vereinigung</h2>
+<p>Seien \(U,W\) Untervektorräume eines \(K\)-Vektorraums \(V\).</p>
+<h3>(a) \(U\cap W\) ist ein Untervektorraum.</h3>
+<p>Da \(0_V\in U\) und \(0_V\in W\), gilt \(0_V\in U\cap W\). Für \(x,y\in U\cap W\) gilt \(x,y\in U\) und \(x,y\in W\). Wegen der Abgeschlossenheit beider Unterräume ist \(x+y\in U\cap W\). Für \(\lambda\in K\) und \(x\in U\cap W\) gilt analog \(\lambda x\in U\) und \(\lambda x\in W\), also \(\lambda x\in U\cap W\). Folglich ist \(U\cap W\) ein Untervektorraum. \(\square\)</p>
+<h3>(b) Gegenbeispiel für \(U\cup W\)</h3>
+<p>Wähle \(V=\mathbb R^2,\ U=\{(t,0)\mid t\in\mathbb R\}\) und \(W=\{(0,t)\mid t\in\mathbb R\}\). Beide sind Untervektorräume. Zwar liegen \((1,0),(0,1)\in U\cup W\), aber \((1,0)+(0,1)=(1,1)\notin U\cup W\). Somit ist die Vereinigung nicht unter Addition abgeschlossen und daher kein Untervektorraum. \(\square\)</p>
+<h3>(c) Wann ist \(U\cup W\) ein Untervektorraum?</h3>
+<div class="math">\[\boxed{U\cup W\text{ ist Untervektorraum}\quad\Longleftrightarrow\quad U\subseteq W\text{ oder }W\subseteq U.}\]</div>
+<p><b>„\(\Leftarrow\)“:</b> Gilt \(U\subseteq W\), so ist \(U\cup W=W\) ein Untervektorraum. Entsprechend gilt dies für \(W\subseteq U\).</p>
+<p><b>„\(\Rightarrow\)“:</b> Angenommen, \(U\cup W\) ist ein Untervektorraum und weder \(U\subseteq W\) noch \(W\subseteq U\). Dann existieren \(u\in U\setminus W\) und \(w\in W\setminus U\). Wegen der Abgeschlossenheit von \(U\cup W\) gilt \(u+w\in U\cup W\). Falls \(u+w\in U\), folgt \(w=(u+w)-u\in U\), Widerspruch. Falls \(u+w\in W\), folgt \(u=(u+w)-w\in W\), ebenfalls Widerspruch. Also muss eine der beiden Inklusionen gelten. \(\square\)</p>
+</section>
+<section id="a3"><h2>Aufgabe 3 · Produktraum \(V_1\times V_2\)</h2>
+<p>Seien \(V_1,V_2\) Vektorräume über \(K\) und \(P=V_1\times V_2\). Wir schreiben \(x=(x_1,x_2),y=(y_1,y_2),z=(z_1,z_2)\in P\), \(\lambda,\mu\in K\). Alle Gleichheiten folgen komponentenweise aus den Axiomen in \(V_1\) und \(V_2\).</p>
+<p><b>Abgeschlossenheit:</b> \(x_i+y_i,\lambda x_i\in V_i\) für \(i=1,2\), also \(x+y,\lambda x\in P\). Außerdem \(P\ne\varnothing\), da \((0_{V_1},0_{V_2})\in P\).</p>
+<p><b>(V1) Assoziativität:</b></p><div class="math">\[(x+y)+z=((x_1+y_1)+z_1,(x_2+y_2)+z_2)=(x_1+(y_1+z_1),x_2+(y_2+z_2))=x+(y+z).\]</div>
+<p><b>(V2) Kommutativität:</b></p><div class="math">\[x+y=(x_1+y_1,x_2+y_2)=(y_1+x_1,y_2+x_2)=y+x.\]</div>
+<p><b>(V3) Nullvektor:</b> \(0_P=(0_{V_1},0_{V_2})\), denn</p><div class="math">\[x+0_P=(x_1+0_{V_1},x_2+0_{V_2})=x.\]</div>
+<p><b>(V4) Inverses Element:</b> \(-x=(-x_1,-x_2)\in P\), denn \(x+(-x)=0_P\).</p>
+<p><b>(V5) Skalarassoziativität:</b></p><div class="math">\[\lambda(\mu x)=(\lambda(\mu x_1),\lambda(\mu x_2))=((\lambda\mu)x_1,(\lambda\mu)x_2)=(\lambda\mu)x.\]</div>
+<p><b>(V6) Eins:</b> \(1x=(1x_1,1x_2)=x\).</p>
+<p><b>(V7) Distributivgesetz:</b></p><div class="math">\[\lambda(x+y)=(\lambda(x_1+y_1),\lambda(x_2+y_2))=(\lambda x_1+\lambda y_1,\lambda x_2+\lambda y_2)=\lambda x+\lambda y.\]</div>
+<p><b>(V8) Distributivgesetz:</b></p><div class="math">\[(\lambda+\mu)x=((\lambda+\mu)x_1,(\lambda+\mu)x_2)=(\lambda x_1+\mu x_1,\lambda x_2+\mu x_2)=\lambda x+\mu x.\]</div>
+<p>Damit sind alle acht Axiome erfüllt. Also ist \(V_1\times V_2\) ein Vektorraum über \(K\). \(\square\)</p>
+</section>
+<section id="a4"><h2>Aufgabe 4 · Wahr oder falsch?</h2>
+<h3>(a) \(A=\{(a_1,a_2)\in\mathbb R^2\mid a_1^4+a_2^2=0\}\) — Wahr</h3>
+<p>Beide Summanden sind nichtnegativ; ihre Summe ist genau dann \(0\), wenn \(a_1=a_2=0\). Also \(A=\{(0,0)\}\), der Nullunterraum von \(\mathbb R^2\). Er enthält \(0\) und ist unter Addition sowie Skalarmultiplikation abgeschlossen. \(\square\)</p>
+<h3>(b) \(B=\{(b_1,b_2,b_3)\in\mathbb R^3\mid b_1\le b_2\le b_3\}\) — Falsch</h3>
+<p>\((0,1,2)\in B\). Für den Skalar \(-1\) gilt jedoch \(-(0,1,2)=(0,-1,-2)\notin B\), weil \(0\le -1\) falsch ist. \(B\) ist nicht skalarabgeschlossen. \(\square\)</p>
+<h3>(c) \(C=\{(c_1,c_2)\in\mathbb C^2\mid c_2=0\}\) — Wahr</h3>
+<p>\((0,0)\in C\). Für \((z,0),(w,0)\in C\) ist \((z,0)+(w,0)=(z+w,0)\in C\). Für \(\lambda\in\mathbb C\) ist \(\lambda(z,0)=(\lambda z,0)\in C\). Also ist \(C\) ein Untervektorraum von \(\mathbb C^2\) (auch über \(\mathbb R\)). \(\square\)</p>
+<h3>(d) \(D_n=\{(d_1,\ldots,d_n)\in\mathbb R^n\mid\sum_{i=1}^n d_i=0\}\) — Wahr</h3>
+<p>Der Nullvektor erfüllt \(\sum_{i=1}^n0=0\). Für \(d,e\in D_n\) gilt</p>
+<div class="math">\[\sum_{i=1}^n(d_i+e_i)=\sum_{i=1}^n d_i+\sum_{i=1}^n e_i=0+0=0.\]</div>
+<p>Für \(\lambda\in\mathbb R\) und \(d\in D_n\) gilt</p>
+<div class="math">\[\sum_{i=1}^n\lambda d_i=\lambda\sum_{i=1}^n d_i=\lambda\cdot0=0.\]</div>
+<p>Damit ist \(D_n\) für jedes \(n\ge1\) ein Untervektorraum von \(\mathbb R^n\). Falls \(0\in\mathbb N\) vereinbart ist, gilt auch \(D_0=\mathbb R^0=\{()\}\). \(\square\)</p>
+</section>
+<section><h2>Hinweis zur Abgabe</h2>
+<p>Das Aufgabenblatt verlangt <b>handschriftliche Abgaben</b> im Team, pro Aufgabe eine eigene PDF von höchstens 2 MB. Diese HTML-Seite ist eine Lern- und Kontrolllösung, keine handschriftliche Moodle-Abgabe.</p></section>
+</main><footer>ChatGPT · Übungsblatt 04 · eigenständige Lösung · <a href="index.html">Zurück zur Auswahl</a></footer>
+</body></html>
