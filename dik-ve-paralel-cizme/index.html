@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dik ve Paralel Çizme</title>
+<style>
+  :root{
+    --bg:#f4f7fb;
+    --panel:#ffffff;
+    --ink:#1c2430;
+    --muted:#6f7885;
+    --yellow:#ffd54a;
+    --blue:#2176ff;
+    --green:#12a66a;
+    --red:#ff4d5a;
+  }
+  *{box-sizing:border-box}
+  html,body{width:100%;height:100%;margin:0;overflow:hidden}
+  body{
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    user-select:none;
+  }
+
+  #topbar{
+    position:fixed;
+    left:0; right:0; top:0;
+    height:72px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 18px;
+    z-index:30;
+    pointer-events:none;
+  }
+  #topbar > *{pointer-events:auto}
+
+  .iconBtn,.modeBtn,.actionBtn{
+    border:0;
+    border-radius:14px;
+    box-shadow:0 3px 12px rgba(0,0,0,.14);
+    cursor:pointer;
+    font-weight:700;
+  }
+  .iconBtn{
+    width:48px;height:48px;
+    background:#fff;
+    font-size:24px;
+  }
+  #homeBtn{
+    background:var(--yellow);
+    color:#111;
+    border-radius:10px;
+  }
+  #langWrap{position:relative}
+  #langBtn{
+    min-width:72px;
+    width:auto;
+    padding:0 12px;
+    font-size:15px;
+  }
+  #langMenu{
+    display:none;
+    position:absolute;
+    top:55px;
+    left:0;
+    min-width:150px;
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 8px 30px rgba(0,0,0,.18);
+    overflow:hidden;
+  }
+  #langMenu.open{display:block}
+  #langMenu button{
+    width:100%;
+    border:0;
+    background:#fff;
+    padding:11px 14px;
+    text-align:left;
+    cursor:pointer;
+    font-size:14px;
+  }
+  #langMenu button:hover{background:#f0f4f8}
+
+  #modePanel{
+    margin-left:auto;
+    display:flex;
+    gap:8px;
+    padding:6px;
+    background:rgba(255,255,255,.88);
+    border-radius:16px;
+    box-shadow:0 3px 12px rgba(0,0,0,.10);
+    backdrop-filter:blur(6px);
+  }
+  .modeBtn{
+    padding:10px 18px;
+    background:#eef2f7;
+    color:#344050;
+  }
+  .modeBtn.active{
+    background:var(--blue);
+    color:#fff;
+  }
+  .modeBtn[disabled]{
+    opacity:.45;
+    cursor:not-allowed;
+  }
+
+  #stage{
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+    touch-action:none;
+  }
+  #board{
+    width:100%;
+    height:100%;
+    display:block;
+    background:
+      radial-gradient(circle at 20px 20px, rgba(30,70,110,.055) 1px, transparent 1.2px) 0 0/24px 24px,
+      linear-gradient(#fbfdff,#f2f6fb);
+  }
+
+  /* Yönlendirme balonu: çizim alanına göre en uygun köşeye taşınır. */
+  #instruction{
+    position:fixed;
+    z-index:20;
+    left:18px;
+    top:88px;
+    bottom:auto;
+    transform:none;
+    width:min(310px,calc(100vw - 32px));
+    max-width:310px;
+    background:rgba(255,255,255,.97);
+    border:2px solid #bed9ff;
+    border-radius:19px;
+    box-shadow:0 5px 18px rgba(26,45,70,.12);
+    padding:13px 15px;
+    font-size:15px;
+    line-height:1.35;
+    font-weight:700;
+    text-align:left;
+    pointer-events:none;
+    backdrop-filter:blur(5px);
+    transition:left .22s ease,top .22s ease,opacity .6s ease;
+  }
+  #instruction::after{
+    content:"";
+    position:absolute;
+    bottom:-11px;
+    left:28px;
+    width:17px;
+    height:17px;
+    background:rgba(255,255,255,.97);
+    border-right:2px solid #bed9ff;
+    border-bottom:2px solid #bed9ff;
+    transform:rotate(45deg);
+  }
+  #instruction.right::after{left:auto;right:28px}
+  #instruction.bottom::after{
+    top:-11px;
+    bottom:auto;
+    border-right:0;
+    border-bottom:0;
+    border-top:2px solid #bed9ff;
+    border-left:2px solid #bed9ff;
+  }
+  #instruction small{
+    display:block;
+    margin-top:4px;
+    font-weight:500;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  #ruler{
+    position:absolute;
+    width:520px;
+    height:260px;
+    transform-origin:50% 100%;
+    will-change:transform;
+    z-index:10;
+    cursor:grab;
+    filter:drop-shadow(0 10px 10px rgba(22,40,64,.22));
+    opacity:1;
+    transition:opacity 1.65s ease-in-out;
+  }
+  #ruler.fade-out{opacity:0;pointer-events:none}
+  #instruction.hidden-after-success{opacity:0;pointer-events:none}
+  #ruler.dragging{cursor:grabbing}
+  #rulerImg{
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    display:block;
+  }
+
+  #rotateHandle{
+    position:absolute;
+    left:50%;
+    top:10px;
+    transform:translate(-50%,-50%);
+    width:42px;height:42px;
+    border-radius:50%;
+    background:#fff;
+    border:3px solid var(--blue);
+    color:var(--blue);
+    display:grid;
+    place-items:center;
+    font-size:24px;
+    font-weight:900;
+    box-shadow:0 3px 12px rgba(0,0,0,.16);
+    cursor:grab;
+    z-index:3;
+  }
+
+  #oMarker{
+    position:absolute;
+    left:50%;
+    bottom:0;
+    transform:translate(-50%,50%);
+    width:18px;height:18px;
+    border-radius:50%;
+    background:#ff253a;
+    border:3px solid #fff;
+    box-shadow:0 0 0 2px rgba(0,0,0,.25);
+    pointer-events:none;
+    z-index:4;
+  }
+  #oLabel{
+    position:absolute;
+    left:50%;
+    bottom:8px;
+    transform:translateX(12px);
+    font-size:16px;
+    font-weight:900;
+    color:#c7162b;
+    pointer-events:none;
+  }
+
+  #resetBtn{
+    position:fixed;
+    z-index:25;
+    right:18px;
+    bottom:18px;
+    padding:11px 16px;
+    background:#fff;
+    color:#344050;
+  }
+  #version{
+    position:fixed;
+    left:12px;
+    bottom:8px;
+    z-index:25;
+    color:#9299a3;
+    font-size:11px;
+    pointer-events:none;
+  }
+
+  #helpOverlay{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(20,26,35,.42);
+    z-index:100;
+  }
+  #helpOverlay.open{display:flex}
+  #helpCard{
+    width:min(460px,calc(100vw - 36px));
+    background:#fff;
+    border-radius:20px;
+    padding:24px;
+    box-shadow:0 20px 80px rgba(0,0,0,.28);
+  }
+  #helpCard h2{margin:0 0 10px;font-size:22px}
+  #helpCard p{line-height:1.55;margin:8px 0}
+  #helpClose{
+    float:right;
+    border:0;
+    background:#eef2f7;
+    border-radius:10px;
+    padding:8px 12px;
+    cursor:pointer;
+    font-weight:700;
+  }
+
+  #reward{
+    position:fixed;
+    left:50%;
+    bottom:135px;
+    transform:translateX(-50%);
+    display:none;
+    z-index:70;
+    pointer-events:none;
+  }
+  #reward.show{display:block}
+  #rewardText{
+    font-size:clamp(25px,3.6vw,48px);
+    white-space:nowrap;
+    font-weight:1000;
+    color:#0f9d61;
+    text-shadow:0 4px 0 #fff,0 8px 24px rgba(0,0,0,.18);
+    transform:scale(.8);
+    animation:pop .55s cubic-bezier(.2,1.7,.4,1) forwards;
+  }
+  @keyframes pop{
+    to{transform:scale(1)}
+  }
+
+  .confetti{
+    position:fixed;
+    width:8px;
+    height:18px;
+    border-radius:3px;
+    z-index:71;
+    pointer-events:none;
+  }
+
+  #audioHint{
+    position:fixed;
+    left:50%;
+    bottom:18px;
+    transform:translateX(-50%);
+    z-index:25;
+    color:#697482;
+    background:rgba(255,255,255,.8);
+    border-radius:999px;
+    padding:6px 11px;
+    font-size:11px;
+    pointer-events:none;
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <button id="homeBtn" class="iconBtn" title="Home" aria-label="Home">⌂</button>
+
+  <div id="langWrap">
+    <button id="langBtn" class="iconBtn" title="Dil">TR ▾</button>
+    <div id="langMenu">
+      <button data-lang="tr">Türkçe</button>
+      <button data-lang="de">Deutsch</button>
+      <button data-lang="en">English</button>
+    </div>
+  </div>
+
+  <button id="helpBtn" class="iconBtn" title="Help" aria-label="Help">?</button>
+
+  <div id="modePanel">
+    <button id="perpBtn" class="modeBtn active">Dik çiz</button>
+    <button id="parallelBtn" class="modeBtn" disabled>Paralel çiz</button>
+  </div>
+</div>
+
+<div id="instruction">
+  <span id="instructionMain">Gönyenin sıfırını kırmızı noktanın üzerine getir.</span>
+  <small id="instructionSub">Gönyeyi sürükleyebilirsin. Mavi döndürme tutamacı ile çevirebilirsin.</small>
+</div>
+
+<div id="stage">
+  <canvas id="board"></canvas>
+
+  <div id="ruler">
+    <img id="rulerImg" alt="Yarı saydam gönye" />
+    <div id="rotateHandle">↻</div>
+    <div id="oMarker"></div>
+    
+  </div>
+</div>
+
+<button id="resetBtn" class="actionBtn">Yeni soru</button>
+<div id="version">v1.2 — Açı yaklaşırken doğru boyunca aralıklı ışın animasyonu.</div>
+<div id="audioHint">Ses için sayfaya bir kez tıkla.</div>
+
+<div id="helpOverlay">
+  <div id="helpCard">
+    <button id="helpClose">Kapat</button>
+    <h2 id="helpTitle">Nasıl oynanır?</h2>
+    <p id="helpP1">1. Gönyenin ortasındaki sıfırı kırmızı noktaya götür.</p>
+    <p id="helpP2">2. Gönyeyi döndür. Kesikli çizgi, doğru ile çakışsın.</p>
+    <p id="helpP3">3. Uzun kenardan kırmızı noktanın iki yanına çizgi çiz.</p>
+    <p id="helpP4">Yaklaştıkça bip sesi hızlanır. Doğru yapınca ödül gelir.</p>
+  </div>
+</div>
+
+<div id="reward"><div id="rewardText">Bravo! Başardın!</div></div>
+
+
+<script>
+(() => {
+  "use strict";
+
+  const RULER_W = 520;
+  const RULER_H = 260;
+  const POSITION_LOCK_DISTANCE = 9;
+  const ANGLE_LOCK_TOLERANCE = 1.4;
+  const MIN_DRAW_LENGTH = 65;
+  const PARALLEL_ANGLE_SNAP = 4.2;
+  const PARALLEL_LINE_SNAP = 10;
+  const GUIDE_OFFSETS = [38, 74, 110]; // tabandan içeri doğru paralel yardımcı çizgiler
+
+  const board = document.getElementById("board");
+  const ctx = board.getContext("2d");
+  const ruler = document.getElementById("ruler");
+  const rulerImg = document.getElementById("rulerImg");
+  const rotateHandle = document.getElementById("rotateHandle");
+  const instruction = document.getElementById("instruction");
+  const instructionMain = document.getElementById("instructionMain");
+  const instructionSub = document.getElementById("instructionSub");
+  const audioHint = document.getElementById("audioHint");
+  const reward = document.getElementById("reward");
+  const rewardText = document.getElementById("rewardText");
+  const perpBtn = document.getElementById("perpBtn");
+  const parallelBtn = document.getElementById("parallelBtn");
+  const resetBtn = document.getElementById("resetBtn");
+
+  let dpr = Math.max(1, window.devicePixelRatio || 1);
+
+  let mode = "perp"; // "perp" | "parallel"
+  let stage = 1;
+  let finishTimer = null;
+  let bubblePosition = -1;
+  let bubbleTick = 0;
+  let line = { x: 0, y: 0, angle: 0 };
+  let target = { x: 0, y: 0 };
+
+  let rulerState = { x: 350, y: 470, angle: -8 };
+
+  let panPointerId = null;
+  let panStart = null;
+  let panObjectsStart = null;
+
+  let pointerMode = null; // move | rotate | draw
+  let pointerId = null;
+  let pointerStart = null;
+  let rulerStart = null;
+  let rotateStartAngle = 0;
+  let rulerAngleStart = 0;
+
+  let drawing = null;       // current drawing data
+  let drawnSegments = [];   // perpendicular mode segments on base
+  let finishedLine = null;  // parallel mode final segment
+
+  let audioCtx = null;
+  let lastBeep1 = 0;
+  let lastBeep2 = 0;
+
+  let parallelTargetOffset = GUIDE_OFFSETS[1];
+  let currentGuideOffset = null;
+  let parallelSnapped = false;
+
+  function ensureAudio(){
+    if (!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    audioHint.style.display = "none";
+  }
+
+  function beep(freq=620, duration=0.045, volume=0.04){
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(volume, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + duration + 0.02);
+  }
+
+  window.addEventListener("pointerdown", ensureAudio, {once:true});
+
+  function makeRulerPNG(){
+    const scale = 2;
+    const c = document.createElement("canvas");
+    c.width = RULER_W * scale;
+    c.height = RULER_H * scale;
+    const g = c.getContext("2d");
+    g.scale(scale, scale);
+
+    g.beginPath();
+    g.moveTo(4, RULER_H - 4);
+    g.lineTo(RULER_W - 4, RULER_H - 4);
+    g.lineTo(RULER_W/2, 8);
+    g.closePath();
+    g.fillStyle = "rgba(255, 214, 62, 0.34)";
+    g.fill();
+    g.lineWidth = 5;
+    g.strokeStyle = "rgba(50, 60, 72, 0.82)";
+    g.stroke();
+
+    // t çizgisi (öğrenci etiketsiz görür)
+    g.save();
+    g.setLineDash([10, 8]);
+    g.lineWidth = 3;
+    g.strokeStyle = "rgba(28, 82, 210, .92)";
+    g.beginPath();
+    g.moveTo(RULER_W/2, RULER_H - 3);
+    g.lineTo(RULER_W/2, 25);
+    g.stroke();
+    g.restore();
+
+    // p çizgileri
+    const ys = [RULER_H-42, RULER_H-78, RULER_H-114];
+    ys.forEach((y) => {
+      const half = (RULER_W/2 - 10) * (1 - (RULER_H-y)/(RULER_H-10)) - 8;
+      const x1 = RULER_W/2 - Math.max(55, half);
+      const x2 = RULER_W/2 + Math.max(55, half);
+
+      g.lineWidth = 2;
+      g.strokeStyle = "rgba(8,120,90,.70)";
+      g.beginPath();
+      g.moveTo(x1,y);
+      g.lineTo(x2,y);
+      g.stroke();
+    });
+
+    // hipotenüs ölçeği
+    g.lineWidth = 1.3;
+    g.strokeStyle = "rgba(35,42,52,.70)";
+    g.fillStyle = "rgba(35,42,52,.82)";
+    g.font = "12px system-ui";
+    const centerX = RULER_W/2;
+    const baseY = RULER_H - 5;
+    const cmStep = 34;
+    const totalSide = 6;
+
+    for(let side of [-1, 1]){
+      for(let cm=0; cm<=totalSide; cm++){
+        const x = centerX + side * cm * cmStep;
+        if (x < 12 || x > RULER_W - 12) continue;
+
+        if (cm < totalSide){
+          for(let mm=0; mm<10; mm++){
+            const tx = x + side * (mm * cmStep / 10);
+            if (tx < 12 || tx > RULER_W - 12) continue;
+            let len = 6;
+            if (mm === 0) len = 18;
+            else if (mm === 5) len = 12;
+            else if (mm % 2 === 0) len = 9;
+            g.beginPath();
+            g.moveTo(tx, baseY);
+            g.lineTo(tx, baseY - len);
+            g.stroke();
+          }
+        }
+
+        g.fillText(String(cm), x - 3, baseY - 22);
+      }
+    }
+
+    g.fillStyle = "rgba(205,20,45,.96)";
+    g.beginPath();
+    g.arc(RULER_W/2, RULER_H-4, 5.5, 0, Math.PI*2);
+    g.fill();
+
+    g.lineWidth = 2;
+    g.strokeStyle = "rgba(30,70,170,.76)";
+    g.strokeRect(RULER_W/2, RULER_H-28, 22, 22);
+
+    return c.toDataURL("image/png");
+  }
+
+  rulerImg.src = makeRulerPNG();
+
+  const texts = {
+    tr:{
+      lang:"TR ▾",
+      perp:"Dik çiz",
+      parallel:"Paralel çiz",
+      reset:"Yeni soru",
+      helpTitle:"Nasıl oynanır?",
+      h1:"Dik çizimde önce kırmızı noktayı, sonra doğruyu hizala ve çiz.",
+      h2:"Paralel çizimde önce içteki yeşil çizgilerden birini doğruyla üst üste getir.",
+      h3:"Sonra kırmızı noktadan geçen paralel çizgiyi çiz.",
+      h4:"Yaklaştıkça ışıklar ve bip sesi hızlanır.",
+      close:"Kapat",
+      perp_s1:"Gönyenin sıfırını kırmızı noktanın üzerine getir.",
+      perp_ss1:"Gönyeyi sürükleyebilirsin. Mavi döndürme tutamacı ile çevirebilirsin.",
+      perp_s2:"Şimdi gönyeyi döndür. Doğru ile çakışsın.",
+      perp_ss2:"Yaklaştıkça mavi ışıklar ve ses daha hızlı olur.",
+      perp_s3:"Güzel! Uzun kenar boyunca kırmızı noktanın iki tarafına da çiz.",
+      perp_ss3:"Bir tarafa çizmek yetmez. İki tarafta da çizgi olmalı.",
+      par_s1:"Gönyeyi doğruyun üstüne getir.",
+      par_ss1:"İçteki yeşil çizgilerden biri doğru ile çakışsın.",
+      par_s2:"Harika! Şimdi uzun kenardan çiz.",
+      par_ss2:"Çizgin, kırmızı noktadan geçsin.",
+      done:"Bravo! Başardın!"
+    },
+    de:{
+      lang:"DE ▾",
+      perp:"Senkrecht",
+      parallel:"Parallel",
+      reset:"Neue Aufgabe",
+      helpTitle:"Wie geht es?",
+      h1:"Bei Senkrecht: erst den roten Punkt treffen, dann ausrichten und zeichnen.",
+      h2:"Bei Parallel: eine grüne Hilfslinie auf die gegebene Linie legen.",
+      h3:"Dann die Parallele durch den roten Punkt zeichnen.",
+      h4:"Je näher du kommst, desto schneller werden Licht und Piepen.",
+      close:"Schließen",
+      perp_s1:"Schiebe die Null des Geodreiecks auf den roten Punkt.",
+      perp_ss1:"Du kannst das Geodreieck ziehen und am blauen Griff drehen.",
+      perp_s2:"Drehe jetzt das Geodreieck. Es soll genau auf der Linie liegen.",
+      perp_ss2:"Je näher du kommst, desto schneller werden Licht und Ton.",
+      perp_s3:"Gut! Zeichne an der langen Kante auf beiden Seiten des roten Punktes.",
+      perp_ss3:"Nur eine Seite reicht nicht.",
+      par_s1:"Lege das Geodreieck auf die Linie.",
+      par_ss1:"Eine der grünen Hilfslinien soll genau auf der Linie liegen.",
+      par_s2:"Super! Zeichne jetzt an der langen Kante.",
+      par_ss2:"Die neue Linie soll durch den roten Punkt gehen.",
+      done:"Bravo! Geschafft!"
+    },
+    en:{
+      lang:"EN ▾",
+      perp:"Perpendicular",
+      parallel:"Parallel",
+      reset:"New task",
+      helpTitle:"How to play",
+      h1:"For perpendicular: hit the red point, align, then draw.",
+      h2:"For parallel: place one green guide line on the given line.",
+      h3:"Then draw the parallel line through the red point.",
+      h4:"Lights and beeps get faster as you get closer.",
+      close:"Close",
+      perp_s1:"Move the zero point of the set square onto the red point.",
+      perp_ss1:"You can drag the set square. Use the blue handle to rotate it.",
+      perp_s2:"Now rotate the set square. Make it lie on the line.",
+      perp_ss2:"Lights and sound get faster when you get closer.",
+      perp_s3:"Good! Draw on both sides of the red point along the long edge.",
+      perp_ss3:"One side is not enough.",
+      par_s1:"Put the set square onto the line.",
+      par_ss1:"One green guide line should lie exactly on the line.",
+      par_s2:"Great! Now draw along the long edge.",
+      par_ss2:"Your line should go through the red point.",
+      done:"Bravo! You did it!"
+    }
+  };
+  let lang = localStorage.getItem("geo-lang") || "tr";
+
+  function applyLanguage(){
+    const t = texts[lang];
+    document.documentElement.lang = lang;
+    document.getElementById("langBtn").textContent = t.lang;
+    perpBtn.textContent = t.perp;
+    parallelBtn.textContent = t.parallel;
+    resetBtn.textContent = t.reset;
+    document.getElementById("helpTitle").textContent = t.helpTitle;
+    document.getElementById("helpP1").textContent = t.h1;
+    document.getElementById("helpP2").textContent = t.h2;
+    document.getElementById("helpP3").textContent = t.h3;
+    document.getElementById("helpP4").textContent = t.h4;
+    document.getElementById("helpClose").textContent = t.close;
+    updateInstruction();
+    if(stage===4) rewardText.textContent = t.done;
+  }
+
+  function updateModeButtons(){
+    perpBtn.classList.toggle("active", mode==="perp");
+    parallelBtn.classList.toggle("active", mode==="parallel");
+  }
+
+  function updateInstruction(){
+    const t = texts[lang];
+    if(stage===4){
+      instructionMain.textContent = t.done;
+      instructionSub.textContent = "";
+      return;
+    }
+    if(mode==="perp"){
+      if(stage===1){
+        instructionMain.textContent = t.perp_s1;
+        instructionSub.textContent = t.perp_ss1;
+      }else if(stage===2){
+        instructionMain.textContent = t.perp_s2;
+        instructionSub.textContent = t.perp_ss2;
+      }else{
+        instructionMain.textContent = t.perp_s3;
+        instructionSub.textContent = t.perp_ss3;
+      }
+    }else{
+      if(stage===1){
+        instructionMain.textContent = t.par_s1;
+        instructionSub.textContent = t.par_ss1;
+      }else{
+        instructionMain.textContent = t.par_s2;
+        instructionSub.textContent = t.par_ss2;
+      }
+    }
+  }
+
+  document.getElementById("langBtn").onclick = e => {
+    e.stopPropagation();
+    document.getElementById("langMenu").classList.toggle("open");
+  };
+  document.querySelectorAll("#langMenu button").forEach(b=>{
+    b.onclick=()=>{
+      lang=b.dataset.lang;
+      localStorage.setItem("geo-lang",lang);
+      document.getElementById("langMenu").classList.remove("open");
+      applyLanguage();
+      placeBubble(true);
+    };
+  });
+  window.addEventListener("pointerdown",()=>document.getElementById("langMenu").classList.remove("open"));
+
+  document.getElementById("homeBtn").onclick=()=>{
+    location.href="https://sinan-ipek.github.io/projeler/index.html";
+  };
+
+  const helpOverlay=document.getElementById("helpOverlay");
+  document.getElementById("helpBtn").onclick=()=>helpOverlay.classList.add("open");
+  document.getElementById("helpClose").onclick=()=>helpOverlay.classList.remove("open");
+  helpOverlay.addEventListener("pointerdown",e=>{
+    if(e.target===helpOverlay) helpOverlay.classList.remove("open");
+  });
+
+  function deg2rad(d){return d*Math.PI/180;}
+  function rad2deg(r){return r*180/Math.PI;}
+  function normalize180(a){ return ((a + 90) % 180 + 180) % 180 - 90; }
+  function angleDiffUndirected(a,b){ return Math.abs(normalize180(a-b)); }
+  function distance(a,b){ return Math.hypot(a.x-b.x,a.y-b.y); }
+  function vecFromAngle(angle){ const t=deg2rad(angle); return {x:Math.cos(t), y:Math.sin(t)}; }
+  function normalFromAngle(angle){ const t=deg2rad(angle); return {x:Math.sin(t), y:-Math.cos(t)}; } // base üstüne doğru
+  function signedDistancePointToLine(pt, linePt, angle){
+    const n=normalFromAngle(angle);
+    return (pt.x-linePt.x)*n.x + (pt.y-linePt.y)*n.y;
+  }
+  function pointOnGuide(offset, x=rulerState.x, y=rulerState.y, angle=rulerState.angle){
+    const n=normalFromAngle(angle);
+    return {x:x + n.x*offset, y:y + n.y*offset};
+  }
+  function projectToBase(pt){
+    const u=vecFromAngle(rulerState.angle);
+    const dx=pt.x-rulerState.x, dy=pt.y-rulerState.y;
+    let s=dx*u.x+dy*u.y;
+    s=Math.max(-RULER_W/2+8,Math.min(RULER_W/2-8,s));
+    return {x:rulerState.x+s*u.x,y:rulerState.y+s*u.y,s};
+  }
+  function distanceToBase(pt){
+    const n=normalFromAngle(rulerState.angle);
+    const dx=pt.x-rulerState.x, dy=pt.y-rulerState.y;
+    return Math.abs(dx*n.x+dy*n.y);
+  }
+  function setRulerTransform(){
+    ruler.style.left=(rulerState.x-RULER_W/2)+"px";
+    ruler.style.top=(rulerState.y-RULER_H)+"px";
+    ruler.style.transform=`rotate(${rulerState.angle}deg)`;
+  }
+
+  function placeBubble(force=false){
+    const el = instruction;
+    if(stage===4) return;
+    const w=window.innerWidth,h=window.innerHeight;
+    const bw=Math.min(330,w-32);
+    const bh=el.offsetHeight||96;
+    const pad=16;
+    const positions=[
+      {x:pad,y:88},
+      {x:w-bw-pad,y:88},
+      {x:pad,y:h-bh-66},
+      {x:w-bw-pad,y:h-bh-66}
+    ];
+    const r=ruler.getBoundingClientRect();
+    const theta=deg2rad(line.angle);
+    const ux=Math.cos(theta),uy=Math.sin(theta);
+    const scores=positions.map((pos,i)=>{
+      let score=0;
+      const box={left:pos.x,top:pos.y,right:pos.x+bw,bottom:pos.y+bh};
+      const ox=Math.max(0,Math.min(box.right,r.right)-Math.max(box.left,r.left));
+      const oy=Math.max(0,Math.min(box.bottom,r.bottom)-Math.max(box.top,r.top));
+      score += ox*oy*.045;
+      for(let a=0;a<=4;a++) for(let b=0;b<=4;b++){
+        const px=box.left+bw*a/4, py=box.top+bh*b/4;
+        const d=Math.abs((px-line.x)*uy-(py-line.y)*ux);
+        if(d<28)score+=26;
+        else if(d<66)score+=6;
+      }
+      const nearTargetX=Math.max(box.left,Math.min(target.x,box.right));
+      const nearTargetY=Math.max(box.top,Math.min(target.y,box.bottom));
+      if(Math.hypot(nearTargetX-target.x,nearTargetY-target.y)<75)score+=260;
+      if(i>=2 && h<540)score+=80;
+      return score;
+    });
+    let best=scores.indexOf(Math.min(...scores));
+    if(!force && bubblePosition>=0 && scores[bubblePosition] <= scores[best]+32) best=bubblePosition;
+    bubblePosition=best;
+    el.style.left=positions[best].x + "px";
+    el.style.top=positions[best].y + "px";
+    el.style.bottom="auto";
+    el.style.transform="none";
+    el.style.maxWidth=bw+"px";
+  }
+
+  function clearTaskState(){
+    if(finishTimer!==null){
+      clearTimeout(finishTimer);
+      finishTimer=null;
+    }
+    ruler.classList.remove("fade-out");
+    instruction.classList.remove("hidden-after-success");
+    reward.classList.remove("show");
+    panPointerId=null;
+    panStart=null;
+    panObjectsStart=null;
+    pointerMode=null;
+    pointerId=null;
+    drawing=null;
+    drawnSegments=[];
+    finishedLine=null;
+    currentGuideOffset=null;
+    parallelSnapped=false;
+  }
+
+  function randomTask(){
+    clearTaskState();
+    stage=1;
+    const w=window.innerWidth,h=window.innerHeight;
+
+    if(mode==="perp"){
+      const marginX=Math.min(260,w*.22);
+      const x=marginX + Math.random()*(w-2*marginX);
+      const y=Math.max(250,h*.38) + Math.random()*Math.max(80,h*.18);
+      const angle=-28 + Math.random()*56;
+      line={x,y,angle};
+      target={x,y};
+      rulerState={
+        x:Math.max(170,Math.min(w-170,x + (Math.random()>.5?1:-1)*(170+Math.random()*100))),
+        y:Math.min(h-90,y + 120 + Math.random()*70),
+        angle: -15 + Math.random()*30
+      };
+    }else{
+      const margin=180;
+      const angle=-26 + Math.random()*52;
+      const n=normalFromAngle(angle);
+      let x=0,y=0, ok=false;
+      parallelTargetOffset = GUIDE_OFFSETS[Math.floor(Math.random()*GUIDE_OFFSETS.length)];
+
+      for(let tries=0; tries<60 && !ok; tries++){
+        x = margin + Math.random()*(w-2*margin);
+        y = margin + Math.random()*(h-2*margin);
+        const px = x - n.x*parallelTargetOffset;
+        const py = y - n.y*parallelTargetOffset;
+        if(px>70 && px<w-70 && py>120 && py<h-80) ok=true;
+      }
+      line={x,y,angle};
+      target={x:x - n.x*parallelTargetOffset, y:y - n.y*parallelTargetOffset};
+      rulerState={
+        x:Math.max(150,Math.min(w-150,x + (Math.random()>.5?1:-1)*(120+Math.random()*90))),
+        y:Math.max(180,Math.min(h-90,y + (Math.random()>.5?1:-1)*(90+Math.random()*90))),
+        angle: angle + (-30 + Math.random()*60)
+      };
+    }
+
+    setRulerTransform();
+    updateInstruction();
+    placeBubble(true);
+  }
+
+  function resize(){
+    dpr=Math.max(1,window.devicePixelRatio||1);
+    const w=window.innerWidth,h=window.innerHeight;
+    board.width=Math.round(w*dpr);
+    board.height=Math.round(h*dpr);
+    board.style.width=w+"px";
+    board.style.height=h+"px";
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    draw();
+    placeBubble(true);
+  }
+  window.addEventListener("resize",resize);
+
+  function getParallelAlignmentInfo(candidateX=rulerState.x, candidateY=rulerState.y, candidateAngle=rulerState.angle){
+    const angleDiff = angleDiffUndirected(candidateAngle, line.angle);
+    let bestOffset = GUIDE_OFFSETS[0];
+    let bestDist = Infinity;
+    let bestSigned = 0;
+    for(const off of GUIDE_OFFSETS){
+      const p = pointOnGuide(off, candidateX, candidateY, candidateAngle);
+      const sd = signedDistancePointToLine(p, line, line.angle);
+      const d = Math.abs(sd);
+      if(d < bestDist){
+        bestDist=d;
+        bestSigned=sd;
+        bestOffset=off;
+      }
+    }
+    const closeness = Math.max(0, 1 - Math.min(1, angleDiff/40)) * Math.max(0, 1 - Math.min(1, bestDist/40));
+    return {angleDiff, bestOffset, bestDist, bestSigned, closeness};
+  }
+
+  function nearestEquivalentAngle(baseAngle, targetAngle){
+    let candidate = targetAngle;
+    while(candidate - baseAngle > 90) candidate -= 180;
+    while(candidate - baseAngle < -90) candidate += 180;
+    return candidate;
+  }
+
+  function updateParallelSnap(triggerBeep=true){
+    const info = getParallelAlignmentInfo();
+    parallelSnapped = false;
+    currentGuideOffset = null;
+
+    if(info.angleDiff <= PARALLEL_ANGLE_SNAP && info.bestDist <= PARALLEL_LINE_SNAP){
+      const beforeStage = stage;
+      const snappedAngle = nearestEquivalentAngle(rulerState.angle, line.angle);
+      rulerState.angle = snappedAngle;
+      const n = normalFromAngle(line.angle);
+      rulerState.x -= n.x * info.bestSigned;
+      rulerState.y -= n.y * info.bestSigned;
+      parallelSnapped = true;
+      currentGuideOffset = info.bestOffset;
+      setRulerTransform();
+
+      if(currentGuideOffset === parallelTargetOffset){
+        stage = 2;
+      }else{
+        stage = 1;
+      }
+
+      if(triggerBeep && beforeStage !== stage){
+        if(stage===2){
+          beep(1220,.10,.07);
+          setTimeout(()=>beep(1500,.12,.06),110);
+        }else{
+          beep(980,.06,.04);
+        }
+      }
+    }else{
+      stage = 1;
+    }
+  }
+
+  // Sağ tuş ile tüm sahneyi kaydır
+  const stageEl = document.getElementById("stage");
+  stageEl.addEventListener("contextmenu", e => e.preventDefault());
+
+  stageEl.addEventListener("pointerdown", e => {
+    if(e.button !== 2) return;
+    ensureAudio();
+    if(panPointerId !== null) return;
+    panPointerId = e.pointerId;
+    panStart = {x:e.clientX, y:e.clientY};
+    panObjectsStart = {
+      line:{...line},
+      target:{...target},
+      ruler:{...rulerState}
+    };
+    stageEl.setPointerCapture(e.pointerId);
+  });
+
+  stageEl.addEventListener("pointermove", e => {
+    if(e.pointerId !== panPointerId || !panStart) return;
+    const dx = e.clientX - panStart.x;
+    const dy = e.clientY - panStart.y;
+    line.x = panObjectsStart.line.x + dx;
+    line.y = panObjectsStart.line.y + dy;
+    target.x = panObjectsStart.target.x + dx;
+    target.y = panObjectsStart.target.y + dy;
+    rulerState.x = panObjectsStart.ruler.x + dx;
+    rulerState.y = panObjectsStart.ruler.y + dy;
+    setRulerTransform();
+    if(mode==="parallel" && stage!==4) updateParallelSnap(false);
+  });
+
+  function endPan(e){
+    if(e.pointerId !== panPointerId) return;
+    panPointerId = null;
+    panStart = null;
+    panObjectsStart = null;
+  }
+  stageEl.addEventListener("pointerup", endPan);
+  stageEl.addEventListener("pointercancel", endPan);
+
+  ruler.addEventListener("pointerdown", e=>{
+    if(e.button!==0 || panPointerId!==null) return;
+    if(stage===4) return;
+    ensureAudio();
+    e.preventDefault();
+    ruler.setPointerCapture(e.pointerId);
+    pointerId=e.pointerId;
+    ruler.classList.add("dragging");
+
+    const pt={x:e.clientX,y:e.clientY};
+
+    if(mode==="perp"){
+      if(stage===3 && distanceToBase(pt) < 18){
+        pointerMode="draw";
+        const p=projectToBase(pt);
+        drawing={a:p,b:p,minS:p.s,maxS:p.s};
+        return;
+      }      if(stage===1){
+        if(e.target===rotateHandle){
+          pointerMode="rotate";
+          rotateStartAngle=Math.atan2(e.clientY-rulerState.y,e.clientX-rulerState.x);
+          rulerAngleStart=rulerState.angle;
+        }else{
+          pointerMode="move";
+          pointerStart={x:e.clientX,y:e.clientY};
+          rulerStart={...rulerState};
+        }
+      }else if(stage===2){
+        pointerMode="rotate";
+        rotateStartAngle=Math.atan2(e.clientY-rulerState.y,e.clientX-rulerState.x);
+        rulerAngleStart=rulerState.angle;
+      }
+    }else{
+      if(stage===2 && parallelSnapped && currentGuideOffset===parallelTargetOffset && distanceToBase(pt) < 18){
+        pointerMode="draw";
+        const p=projectToBase(pt);
+        drawing={a:p,b:p,minS:p.s,maxS:p.s};
+        return;
+      }
+      if(e.target===rotateHandle){
+        pointerMode="rotate";
+        rotateStartAngle=Math.atan2(e.clientY-rulerState.y,e.clientX-rulerState.x);
+        rulerAngleStart=rulerState.angle;
+      }else{
+        pointerMode="move";
+        pointerStart={x:e.clientX,y:e.clientY};
+        rulerStart={...rulerState};
+      }
+    }
+  });
+
+  ruler.addEventListener("pointermove", e=>{
+    if(e.pointerId!==pointerId || !pointerMode) return;
+    const pt={x:e.clientX,y:e.clientY};
+
+    if(mode==="perp"){
+      if(pointerMode==="move" && stage===1){
+        rulerState.x=rulerStart.x+(e.clientX-pointerStart.x);
+        rulerState.y=rulerStart.y+(e.clientY-pointerStart.y);
+        setRulerTransform();
+
+        const d=distance(rulerState,target);
+        if(d<=POSITION_LOCK_DISTANCE){
+          rulerState.x=target.x;
+          rulerState.y=target.y;
+          setRulerTransform();
+          stage=2;
+          pointerMode=null;
+          beep(900,.08,.06);
+          updateInstruction();
+        }
+      }
+      else if(pointerMode==="rotate" && (stage===1 || stage===2)){
+        const a=Math.atan2(e.clientY-rulerState.y,e.clientX-rulerState.x);
+        rulerState.angle=rulerAngleStart+rad2deg(a-rotateStartAngle);
+        setRulerTransform();
+
+        if(stage===2){
+          const diff=angleDiffUndirected(rulerState.angle+90,line.angle);
+          if(diff<=ANGLE_LOCK_TOLERANCE){
+            let candidate=line.angle-90;
+            while(candidate-rulerState.angle>90) candidate-=180;
+            while(candidate-rulerState.angle<-90) candidate+=180;
+            rulerState.angle=candidate;
+            setRulerTransform();
+            stage=3;
+            pointerMode=null;
+            beep(1220,.10,.07);
+            setTimeout(()=>beep(1500,.12,.06),110);
+            updateInstruction();
+          }
+        }
+      }
+      else if(pointerMode==="draw" && stage===3){
+        drawing.b=projectToBase(pt);
+        drawing.minS=Math.min(drawing.minS,drawing.b.s);
+        drawing.maxS=Math.max(drawing.maxS,drawing.b.s);
+      }
+    }else{
+      if(pointerMode==="move"){
+        rulerState.x=rulerStart.x+(e.clientX-pointerStart.x);
+        rulerState.y=rulerStart.y+(e.clientY-pointerStart.y);
+        setRulerTransform();
+        updateParallelSnap(true);
+        updateInstruction();
+      }else if(pointerMode==="rotate"){
+        const a=Math.atan2(e.clientY-rulerState.y,e.clientX-rulerState.x);
+        rulerState.angle=rulerAngleStart+rad2deg(a-rotateStartAngle);
+        setRulerTransform();
+        updateParallelSnap(true);
+        updateInstruction();
+      }else if(pointerMode==="draw" && stage===2){
+        drawing.b=projectToBase(pt);
+        drawing.minS=Math.min(drawing.minS,drawing.b.s);
+        drawing.maxS=Math.max(drawing.maxS,drawing.b.s);
+      }
+    }
+  });
+
+  function endPointer(e){
+    if(e.pointerId!==pointerId) return;
+    ruler.classList.remove("dragging");
+
+    if(pointerMode==="draw" && drawing){
+      if(mode==="perp" && stage===3){
+        if(drawing.maxS-drawing.minS >= 5){
+          drawnSegments.push({start:drawing.minS,end:drawing.maxS});
+          drawnSegments.sort((a,b)=>a.start-b.start);
+          const merged=[];
+          for(const seg of drawnSegments){
+            const last=merged[merged.length-1];
+            if(last && seg.start <= last.end+4){
+              last.end=Math.max(last.end,seg.end);
+            }else{
+              merged.push({...seg});
+            }
+          }
+          drawnSegments=merged;
+          const completed=drawnSegments.some(seg=> seg.start<=-MIN_DRAW_LENGTH && seg.end>=MIN_DRAW_LENGTH );
+          if(completed){
+            stage=4;
+            updateInstruction();
+            success();
+          }
+        }
+      }else if(mode==="parallel" && stage===2){
+        if(drawing.maxS - drawing.minS >= MIN_DRAW_LENGTH){
+          finishedLine={start:drawing.minS, end:drawing.maxS};
+          stage=4;
+          updateInstruction();
+          success();
+        }
+      }
+      drawing=null;
+    }
+    pointerMode=null;
+    pointerId=null;
+  }
+  ruler.addEventListener("pointerup",endPointer);
+  ruler.addEventListener("pointercancel",endPointer);
+
+  stageEl.addEventListener("wheel",e=>{
+    if(stage===4) return;
+    const r=ruler.getBoundingClientRect();
+    const inside=e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom;
+    if(!inside) return;
+    e.preventDefault();
+    ensureAudio();
+
+    rulerState.angle += e.deltaY>0 ? 2 : -2;
+    if(mode==="perp"){
+      if(stage===2){
+        const diff=angleDiffUndirected(rulerState.angle+90,line.angle);
+        if(diff<=ANGLE_LOCK_TOLERANCE){
+          let candidate=line.angle-90;
+          while(candidate-rulerState.angle>90) candidate-=180;
+          while(candidate-rulerState.angle<-90) candidate+=180;
+          rulerState.angle=candidate;
+          stage=3;
+          beep(1220,.10,.07);
+          setTimeout(()=>beep(1500,.12,.06),110);
+          updateInstruction();
+        }
+      }
+    }else{
+      updateParallelSnap(true);
+      updateInstruction();
+    }
+    setRulerTransform();
+  },{passive:false});
+
+  function drawInfiniteLine(x,y,angle,style){
+    const a=deg2rad(angle);
+    const ux=Math.cos(a),uy=Math.sin(a);
+    const L=Math.max(window.innerWidth,window.innerHeight)*1.5;
+
+    ctx.save();
+    ctx.lineWidth=style.width||4;
+    ctx.strokeStyle=style.color||"#273443";
+    ctx.globalAlpha=style.alpha ?? 1;
+    ctx.shadowBlur=style.glow||0;
+    ctx.shadowColor=style.glowColor||style.color||"#000";
+    if(style.dash) ctx.setLineDash(style.dash);
+    ctx.beginPath();
+    ctx.moveTo(x-ux*L,y-uy*L);
+    ctx.lineTo(x+ux*L,y+uy*L);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBurstOnPoint(x,y, proximity, now, color){
+    const period=1300-1110*proximity;
+    const phase=(now%period)/period;
+    if(phase<0.46){
+      const progress=phase/0.46;
+      const envelope=Math.sin(Math.PI*progress);
+      const opacity=Math.pow(envelope,1.55);
+      const rayLength=(8+23*proximity)*envelope;
+      if(opacity>0.005){
+        ctx.save();
+        ctx.strokeStyle=color;
+        ctx.lineWidth=2.1+0.9*opacity;
+        ctx.lineCap="round";
+        ctx.globalAlpha=opacity;
+        ctx.shadowColor=color;
+        ctx.shadowBlur=6+18*opacity;
+        const rayCount=10;
+        for(let i=0;i<rayCount;i++){
+          const a=(Math.PI*2/rayCount)*i;
+          const x1=x + Math.cos(a)*14;
+          const y1=y + Math.sin(a)*14;
+          const x2=x + Math.cos(a)*(14+rayLength);
+          const y2=y + Math.sin(a)*(14+rayLength);
+          ctx.beginPath();
+          ctx.moveTo(x1,y1);
+          ctx.lineTo(x2,y2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+  }
+
+  function drawLineRays(proximity, now){
+    const period=1300-1110*proximity;
+    const phase=(now%period)/period;
+    if(phase<0.46){
+      const progress=phase/0.46;
+      const envelope=Math.sin(Math.PI*progress);
+      const opacity=Math.pow(envelope,1.5);
+      const rayLength=(7+22*proximity)*envelope;
+      if(opacity>0.005){
+        const a=deg2rad(line.angle);
+        const ux=Math.cos(a),uy=Math.sin(a);
+        const nx=-uy,ny=ux;
+        ctx.save();
+        ctx.strokeStyle="#378dff";
+        ctx.lineWidth=2+1.1*opacity;
+        ctx.lineCap="round";
+        ctx.globalAlpha=opacity;
+        ctx.shadowColor="#378dff";
+        ctx.shadowBlur=5+16*opacity;
+        for(let i=-4;i<=4;i++){
+          const bx=line.x+i*38*ux;
+          const by=line.y+i*38*uy;
+          for(const sign of [-1,1]){
+            ctx.beginPath();
+            ctx.moveTo(bx+nx*sign*5, by+ny*sign*5);
+            ctx.lineTo(bx+nx*sign*(5+rayLength), by+ny*sign*(5+rayLength));
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      }
+    }
+  }
+
+  function drawCurrentStudentLine(){
+    const u = vecFromAngle(rulerState.angle);
+    const segmentDraw=(lo,hi)=>{
+      ctx.beginPath();
+      ctx.moveTo(rulerState.x+lo*u.x,rulerState.y+lo*u.y);
+      ctx.lineTo(rulerState.x+hi*u.x,rulerState.y+hi*u.y);
+      ctx.stroke();
+    };
+
+    if(mode==="perp"){
+      if(drawnSegments.length || drawing){
+        ctx.save();
+        ctx.lineWidth=6;
+        ctx.lineCap="round";
+        ctx.strokeStyle="#18a66a";
+        ctx.shadowBlur=12;
+        ctx.shadowColor="#18a66a";
+        drawnSegments.forEach(seg=>segmentDraw(seg.start,seg.end));
+        if(drawing) segmentDraw(drawing.minS,drawing.maxS);
+        ctx.restore();
+      }
+    }else{
+      if(finishedLine || drawing){
+        ctx.save();
+        ctx.lineWidth=6;
+        ctx.lineCap="round";
+        ctx.strokeStyle="#18a66a";
+        ctx.shadowBlur=12;
+        ctx.shadowColor="#18a66a";
+        if(finishedLine) segmentDraw(finishedLine.start, finishedLine.end);
+        if(drawing) segmentDraw(drawing.minS, drawing.maxS);
+        ctx.restore();
+      }
+    }
+  }
+
+  function draw(){
+    const w=window.innerWidth,h=window.innerHeight;
+    ctx.clearRect(0,0,w,h);
+    const now=performance.now();
+
+    drawInfiniteLine(line.x,line.y,line.angle,{
+      width:5,
+      color:"#263648",
+      alpha:1,
+      glow:stage>=3 || (mode==="parallel" && stage===2) ? 8 : 0,
+      glowColor:"#4c8cff"
+    });
+
+    if(mode==="perp" && stage===2){
+      const difference=angleDiffUndirected(rulerState.angle+90,line.angle);
+      const proximity=Math.max(0,1-Math.min(1,difference/45));
+      drawLineRays(proximity, now);
+    }
+
+    if(mode==="parallel" && stage!==4){
+      const info = getParallelAlignmentInfo();
+      const proximity = Math.max(0, 1 - Math.min(1, info.angleDiff/40)) * Math.max(0, 1 - Math.min(1, info.bestDist/40));
+      drawLineRays(proximity, now);
+    }
+
+    // Kırmızı hedef nokta
+    if(mode==="perp"){
+      if(stage===1){
+        const d=distance(rulerState,target);
+        const closeness=1-Math.min(1,d/260);
+        const alpha=(d<=POSITION_LOCK_DISTANCE) ? 1 : (.28+.72*(.5+.5*Math.sin(now*2*Math.PI/(1050-closeness*900))));
+        drawBurstOnPoint(target.x,target.y,Math.max(0,closeness),now,"#ff3149");
+
+        ctx.save();
+        ctx.globalAlpha = 0.18 + 0.25*alpha;
+        ctx.fillStyle = "#ff6b78";
+        ctx.beginPath();
+        ctx.arc(target.x,target.y,16 + (0.5+0.5*Math.sin(now*0.01))*2,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalAlpha=alpha;
+        ctx.shadowBlur=20;
+        ctx.shadowColor="#ff3149";
+        ctx.fillStyle="#ff3149";
+        ctx.beginPath();
+        ctx.arc(target.x,target.y,10,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }else if(stage!==4){
+        ctx.save();
+        ctx.shadowBlur=12;
+        ctx.shadowColor="#ff3149";
+        ctx.fillStyle="#ff3149";
+        ctx.beginPath();
+        ctx.arc(target.x,target.y,8,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }else if(stage!==4){
+      let proximity = 0;
+      if(parallelSnapped && currentGuideOffset!==null){
+        const distOffset = Math.abs(currentGuideOffset - parallelTargetOffset);
+        proximity = Math.max(0, 1 - Math.min(1, distOffset/80));
+      }
+      drawBurstOnPoint(target.x,target.y,proximity,now,"#ff3149");
+      ctx.save();
+      ctx.globalAlpha = 0.22 + 0.22*proximity;
+      ctx.fillStyle = "#ff6b78";
+      ctx.beginPath();
+      ctx.arc(target.x,target.y,16,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.save();
+      ctx.shadowBlur = stage===2 ? 18 : 12;
+      ctx.shadowColor="#ff3149";
+      ctx.fillStyle="#ff3149";
+      ctx.beginPath();
+      ctx.arc(target.x,target.y,8,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    drawCurrentStudentLine();
+    soundFeedback(now);
+  }
+
+  function soundFeedback(now){
+    if(!audioCtx || stage===4) return;
+
+    if(mode==="perp"){
+      if(stage===1){
+        const d=distance(rulerState,target);
+        const closeness=1-Math.min(1,d/280);
+        if(closeness>0.08){
+          const interval=850-closeness*760;
+          if(now-lastBeep1>interval){
+            beep(540+closeness*240,.035,.028);
+            lastBeep1=now;
+          }
+        }
+      }else if(stage===2){
+        const diff=angleDiffUndirected(rulerState.angle+90,line.angle);
+        const closeness=1-Math.min(1,diff/45);
+        if(closeness>0.08){
+          const interval=800-closeness*700;
+          if(now-lastBeep2>interval){
+            beep(980+closeness*260,.035,.025);
+            lastBeep2=now;
+          }
+        }
+      }
+    }else{
+      const info = getParallelAlignmentInfo();
+      const closeness = Math.max(0, 1 - Math.min(1, info.angleDiff/40)) * Math.max(0, 1 - Math.min(1, info.bestDist/40));
+      if(closeness>0.08){
+        const interval=820-closeness*720;
+        if(now-lastBeep1>interval){
+          beep(760+closeness*220,.035,.025);
+          lastBeep1=now;
+        }
+      }
+    }
+  }
+
+  function animate(t){
+    draw();
+    if(t-bubbleTick>450 && stage!==4){
+      bubbleTick=t;
+      placeBubble();
+    }
+    requestAnimationFrame(animate);
+  }
+
+  function success(){
+    rewardText.textContent=texts[lang].done;
+    reward.classList.add("show");
+    instruction.classList.add("hidden-after-success");
+    beep(880,.08,.06);
+    setTimeout(()=>beep(1100,.08,.06),100);
+    setTimeout(()=>beep(1320,.15,.07),200);
+    launchConfetti();
+
+    finishTimer=setTimeout(()=>{
+      reward.classList.remove("show");
+      instruction.classList.add("hidden-after-success");
+      ruler.classList.add("fade-out");
+      finishTimer=null;
+    },1300);
+  }
+
+  function removeConfetti(){
+    document.querySelectorAll(".confetti").forEach(x=>x.remove());
+  }
+
+  function launchConfetti(){
+    removeConfetti();
+    const colors=["#ff3e5f","#ffcc33","#29a3ff","#13b87a","#7d5cff","#ff8a2a"];
+    for(let i=0;i<120;i++){
+      const p=document.createElement("div");
+      p.className="confetti";
+      p.style.background=colors[i%colors.length];
+      p.style.left=(Math.random()*100)+"vw";
+      p.style.top=(-20-Math.random()*90)+"px";
+      p.style.transform=`rotate(${Math.random()*360}deg)`;
+      const dur=1200+Math.random()*1600;
+      p.animate([
+        {transform:`translate(0,0) rotate(0deg)`,opacity:1},
+        {transform:`translate(${(Math.random()-.5)*240}px, ${window.innerHeight+160}px) rotate(${540+Math.random()*720}deg)`,opacity:.95}
+      ],{duration:dur,easing:"cubic-bezier(.18,.7,.28,1)",fill:"forwards"});
+      document.body.appendChild(p);
+      setTimeout(()=>p.remove(),dur+100);
+    }
+  }
+
+  resetBtn.onclick = randomTask;
+  parallelBtn.disabled = false;
+  perpBtn.onclick = () => { mode="perp"; updateModeButtons(); randomTask(); applyLanguage(); };
+  parallelBtn.onclick = () => { mode="parallel"; updateModeButtons(); randomTask(); applyLanguage(); };
+
+  resize();
+  updateModeButtons();
+  randomTask();
+  applyLanguage();
+  requestAnimationFrame(animate);
+})();
+</script>
+
+</body>
+</html>
