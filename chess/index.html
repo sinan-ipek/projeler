@@ -3170,6 +3170,9 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       if(igorActive&&igorSave.book===3)igorMessage("3. kitap yüklenemedi. Sayfayı yenile.");
     }
   }
+  // Volume 4 printed PDF answers, transcribed and legal-first-move checked (55 entries).
+  // Full endgame solution is NOT inferred from a matching first move.
+  const igorVol4FirstMoveFixes={"44":"e4f3","60":"c2c1r","67":"d7d8q","69":"h7h8q","70":"b7b8q","71":"d7d8q","110":"e5f4","121":"e7f8","136":"e6f5","197":"f5f8","211":"h5h1","213":"a3a1","215":"e8g8","222":"e1c1","232":"g7g5","270":"e6e5","290":"e7e8q","291":"d7d8q","293":"f7f8q","302":"a6a7","316":"b3b1","320":"g2g1q","322":"b2b1q","324":"g2f1r","339":"e8f7","346":"d6c5","355":"h5e5","367":"b2b5","440":"h7h8q","441":"a7a8q","442":"d7d8q","447":"e3e2","451":"b7b8q","452":"h7h8q","453":"a7a8q","454":"a7a8q","455":"b7b8q","456":"d7d8q","467":"b6c7","469":"e5f4","494":"b2b1q","495":"g2g1q","496":"c2c1q","497":"b2b1q","498":"f2f1q","518":"g2g1q","558":"c2c1q","561":"h7h8q","563":"b7b8r","565":"a3a2","567":"g2g1q","583":"a4d1","588":"g2g1q","595":"b7b5","615":"g8f8"};
   // Chess Camp Volume 4: image-derived endgame positions, original answers retained.
   let igorVol4Loading=true;
   async function igorLoadVolumeFour(){
@@ -3180,14 +3183,22 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate"));
       const data=JSON.parse(await new Response(stream).text());
       if(!Array.isArray(data.rows)||data.rows.length!==618)throw Error("618 endgame positions expected");
-      igorProblems[4]=data.rows.map((row,i)=>({
-        id:i+1,book:4,page:7+Math.floor(i/6),
-        fen:row[0],task:data.instructions[row[1]],solution:row[2],
-        uci:row[3],answerType:row[4],
-        sourceTask:data.sourceInstructions[row[5]],
-        section:data.sections[row[6]],goal:row[7],
-        multiMove:row[4]!=="yes"&&row[4]!=="no"
-      }));
+      igorProblems[4]=data.rows.map((row,i)=>{
+        const id=i+1;
+        const entry={
+          id,book:4,page:7+Math.floor(i/6),
+          fen:row[0],task:data.instructions[row[1]],solution:row[2],
+          uci:igorVol4FirstMoveFixes[id]||row[3],
+          answerType:row[4],
+          sourceTask:data.sourceInstructions[row[5]],
+          section:data.sections[row[6]],goal:row[7],
+          multiMove:row[4]!=="yes"&&row[4]!=="no"
+        };
+        // Book prescribes castling, so initial FEN must retain corresponding right.
+        if(id===215) entry.fen=entry.fen.replace(" b - - "," b k - ");
+        if(id===222) entry.fen=entry.fen.replace(" w - - "," w Q - ");
+        return entry;
+      });
       igorVol4Loading=false;
       if(igorActive&&igorSave.book===4)igorLoad(4,igorSave.pos||1);
     }catch(e){
@@ -3661,5 +3672,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.7.3 · Mat balonu sarı, %40 daha yakın</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.7.4 · 4. kitap: 55 ilk hamle ve rok hakları düzeltildi</div></body>
 </html>
