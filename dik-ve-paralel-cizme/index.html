@@ -747,8 +747,7 @@
       return;
     }
     if(mode==="perp"){
-      if(stage===1){
-        instructionMain.textContent = t.perp_s1;
+      if(stage===1){        instructionMain.textContent = t.perp_s1;
         instructionSub.textContent = t.perp_ss1;
       }else if(stage===2){
         instructionMain.textContent = t.perp_s2;
@@ -998,6 +997,107 @@
       const n = normalFromAngle(line.angle);
       rulerState.x -= n.x * info.bestSigned;
       rulerState.y -= n.y * info.bestSigned;
+      parallelSnapped = true;
+      currentGuideOffset = info.bestOffset;
+      setRulerTransform();
+
+      if(currentGuideOffset === parallelTargetOffset){
+        stage = 2;
+        showDrawHintOnce();
+      }else{
+        stage = 1;
+      }
+
+      if(triggerBeep && beforeStage !== stage){
+        if(stage===2){
+          beep(1220,.10,.07);
+          setTimeout(()=>beep(1500,.12,.06),110);
+        }else{
+          beep(980,.06,.04);
+        }
+      }
+    }else{
+      stage = 1;
+    }
+  }
+
+  // Sağ tık = kamera kaydırma; iki parmak = pinch + kaydırma.
+  const stageEl = document.getElementById("stage");
+  stageEl.addEventListener("contextmenu", e => e.preventDefault());
+
+  function touchMetrics(){
+    const pts=[...touchPointers.values()].slice(0,2);
+    return {
+      mid:{x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2},
+      distance:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)
+    };
+  }
+  function beginTouchGesture(){
+    if(touchPointers.size<2)return;
+    // Daha önce başlayan tek-parmakla çizim/taşıma iptal edilir.
+    pointerMode=null;
+    pointerId=null;
+    drawing=null;
+    ruler.classList.remove("dragging");
+    const m=touchMetrics();
+    touchGesture={
+      startScale:camera.scale,
+      startDistance:Math.max(1,m.distance),
+      anchor:screenToWorld(m.mid.x,m.mid.y)
+    };
+    for(const id of touchPointers.keys()){
+      try{stageEl.setPointerCapture(id);}catch(_){}
+    }
+  }
+
+  stageEl.addEventListener("pointerdown",e=>{
+    if(e.pointerType==="touch"){
+      touchPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(touchPointers.size===2)beginTouchGesture();
+      return;
+    }
+    if(e.button!==2)return;
+    ensureAudio();
+    panPointerId=e.pointerId;
+    panStart={x:e.clientX,y:e.clientY};
+    panObjectsStart={x:camera.x,y:camera.y};
+    stageEl.setPointerCapture(e.pointerId);
+  });
+
+  stageEl.addEventListener("pointermove",e=>{
+    if(e.pointerType==="touch" && touchPointers.has(e.pointerId)){
+      touchPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(touchGesture && touchPointers.size>=2){
+        e.preventDefault();
+        const m=touchMetrics();
+        const next=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,
+          touchGesture.startScale*m.distance/touchGesture.startDistance));
+        camera.scale=next;
+        camera.x=m.mid.x-touchGesture.anchor.x*next;
+        camera.y=m.mid.y-touchGesture.anchor.y*next;
+        applyCamera();
+      }
+      return;
+    }
+    if(e.pointerId!==panPointerId || !panStart)return;
+    camera.x=panObjectsStart.x+(e.clientX-panStart.x);
+    camera.y=panObjectsStart.y+(e.clientY-panStart.y);
+    applyCamera();
+  });
+  function endPan(e){
+    if(e.pointerType==="touch"){
+      touchPointers.delete(e.pointerId);
+      if(touchPointers.size<2)touchGesture=null;
+      return;
+    }
+    if(e.pointerId!==panPointerId)return;
+    panPointerId=null;
+    panStart=null;
+    panObjectsStart=null;
+  }
+  stageEl.addEventListener("pointerup",endPan);
+  stageEl.addEventListener("pointercancel",endPan);
+
   ruler.addEventListener("pointerdown", e=>{
     if(e.button!==0 || panPointerId!==null) return;
     if(stage===4) return;
@@ -1396,8 +1496,7 @@
         ctx.restore();
         }
 
-        ctx.save();
-        ctx.globalAlpha=alpha;
+        ctx.save();        ctx.globalAlpha=alpha;
         ctx.shadowBlur=20;
         ctx.shadowColor="#ff3149";
         ctx.fillStyle="#ff3149";
