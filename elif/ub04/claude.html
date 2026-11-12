@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Übungsblatt #04 – Çözüm Sunumu</title>
+<style>
+:root{--bg:#f3f6f4;--grid:#d9e3df;--ink:#1d2b3a;--mute:#5b6b78;--hl:#ffe36e;--acc:#1f6f6b;--card:#fff;--line:#c5d3ce;--bad:#a33b3b}
+@media (prefers-color-scheme:dark){:root{--bg:#14202b;--grid:#1e2d3a;--ink:#e8eef2;--mute:#9db0bd;--hl:#6b5a10;--acc:#5fc4bd;--card:#1a2a37;--line:#2f4352;--bad:#e58a8a}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;color:var(--ink);font:18px/1.55 Georgia,"Times New Roman",serif;overflow:hidden}
+.slide{position:absolute;inset:0;padding:40px 6vw 90px;overflow-y:auto;display:none}
+.slide.on{display:block}
+h1{font-size:clamp(34px,6vw,64px);line-height:1.05;margin:12vh 0 16px;letter-spacing:-.02em}
+h2{font-size:clamp(24px,3.4vw,36px);margin:0 0 6px}
+.sub{color:var(--mute);margin:0 0 22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;max-width:1200px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:6px;padding:16px 20px}
+.card h3{margin:0 0 8px;font-size:20px;color:var(--acc)}
+.s{opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s;visibility:hidden}
+.s.show{opacity:1;transform:none;visibility:visible}
+.step{display:block;margin:7px 0;padding-left:14px;border-left:3px solid var(--line)}
+.step.show{border-left-color:var(--acc)}
+.hl{background:linear-gradient(var(--hl),var(--hl)) no-repeat 0 90%/0 55%;transition:background-size .8s .25s}
+.show .hl,.hl.show{background-size:100% 55%}
+.m{font-family:"Cambria Math",Cambria,Georgia,serif;font-style:italic}
+.ok{color:var(--acc);font-weight:bold}
+.no{color:var(--bad);font-weight:bold}
+.bar{position:fixed;left:0;bottom:0;height:5px;background:var(--acc);transition:width .4s;z-index:5}
+.nav{position:fixed;bottom:14px;right:18px;display:flex;gap:10px;align-items:center;z-index:5;font-size:15px;color:var(--mute)}
+.nav button{font:inherit;background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-radius:6px;padding:8px 16px;cursor:pointer}
+.nav button:focus-visible{outline:3px solid var(--acc)}
+.hint{color:var(--mute);font-size:16px}
+@media (prefers-reduced-motion:reduce){.s,.hl{transition:none}}
+</style>
+</head>
+<body>
+
+<section class="slide on">
+ <h1 class="s">Mathematik für Informatik 1<br>Übungsblatt #04</h1>
+ <p class="sub s" style="font-size:22px">Çözümler adım adım, animasyonlu anlatım</p>
+ <p class="hint s">İleri: <b>→</b>, <b>Boşluk</b> veya tıklama · Geri: <b>←</b> · Her tıklama bir adımı açar.</p>
+ <div class="card s" style="max-width:560px;margin-top:24px">
+  <b>Konular</b><br>
+  Aufgabe 1: Derecesi ≤ 4 olan polinomlar vektör uzayıdır, U altuzay<br>
+  Aufgabe 2: Kesişim, birleşim ve altuzaylar<br>
+  Aufgabe 3: V₁ × V₂ vektör uzayı<br>
+  Aufgabe 4: Doğru mu yanlış mı? (a)–(d)
+ </div>
+ <p class="hint s">Not: Ders notundaki Definition 2.12'nin aksiyomları standart sekiz aksiyom (+ işlemlerin iyi tanımlı olması) olarak yazıldı. Sıralaması dersinkinden farklı olabilir.</p>
+</section>
+
+<!-- A1 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 1: Polinomlar vektör uzayı</h2>
+ <p class="sub s"><span class="m">V = {ax⁴+bx³+cx²+dx+e | a,…,e ∈ ℝ}</span>, işlemler noktasal: <span class="m">(p+q)(x) = p(x)+q(x)</span>, <span class="m">(λp)(x) = λ·p(x)</span>. Fonksiyon eşitliği her x için kontrol edilir ve ℝ'nin kuralları kullanılır.</p>
+ <div class="grid">
+  <div class="card s"><h3>(a) İşlemler tanımlı mı? (kapalılık)</h3>
+   <span class="step s">p = (a,b,c,d,e), q = (a′,…,e′) olsun.</span>
+   <span class="step s"><span class="m">(p+q)(x) = (a+a′)x⁴ + (b+b′)x³ + (c+c′)x² + (d+d′)x + (e+e′)</span>: katsayılar reel, yani <span class="hl m">p+q ∈ V</span>.</span>
+   <span class="step s"><span class="m">(λp)(x) = (λa)x⁴ + … + (λe)</span>, yani <span class="hl m">λp ∈ V</span>.</span></div>
+  <div class="card s"><h3>(a) Toplama: (V,+) değişmeli grup</h3>
+   <span class="step s"><b>Birleşme:</b> <span class="m">((p+q)+r)(x) = (p(x)+q(x))+r(x) = p(x)+(q(x)+r(x)) = (p+(q+r))(x)</span> (ℝ'de birleşme).</span>
+   <span class="step s"><b>Değişme:</b> <span class="m">(p+q)(x) = p(x)+q(x) = q(x)+p(x) = (q+p)(x)</span>.</span>
+   <span class="step s"><b>Etkisiz eleman:</b> sıfır polinomu 0 (a=…=e=0 ∈ V), 0(x) = 0: <span class="m">(p+0)(x) = p(x)+0 = p(x)</span>.</span>
+   <span class="step s"><b>Ters eleman:</b> −p := (−a,−b,−c,−d,−e) ∈ V. <span class="m">(p+(−p))(x) = p(x) − p(x) = 0 = 0(x)</span>.</span></div>
+  <div class="card s"><h3>(a) Skaler çarpma aksiyomları</h3>
+   <span class="step s"><b>Karma birleşme:</b> <span class="m">((λμ)p)(x) = (λμ)p(x) = λ(μp(x)) = (λ(μp))(x)</span>.</span>
+   <span class="step s"><b>Birim:</b> <span class="m">(1·p)(x) = 1·p(x) = p(x)</span>.</span>
+   <span class="step s"><b>Dağılma 1:</b> <span class="m">(λ(p+q))(x) = λ(p(x)+q(x)) = λp(x)+λq(x) = (λp+λq)(x)</span>.</span>
+   <span class="step s"><b>Dağılma 2:</b> <span class="m">((λ+μ)p)(x) = (λ+μ)p(x) = λp(x)+μp(x) = (λp+μp)(x)</span>.</span>
+   <span class="step s ok">Tüm aksiyomlar sağlandı ⇒ V bir reel vektör uzayıdır. ∎</span></div>
+  <div class="card s"><h3>(b) U = {p ∈ V | p(3) = 0} altuzay</h3>
+   <span class="step s"><b>Boş değil:</b> sıfır polinomu için 0(3) = 0, yani <span class="m">0 ∈ U</span>.</span>
+   <span class="step s"><b>Toplama:</b> p, q ∈ U ⇒ <span class="m">(p+q)(3) = p(3)+q(3) = 0+0 = 0</span>, ayrıca p+q ∈ V. Yani <span class="hl m">p+q ∈ U</span>.</span>
+   <span class="step s"><b>Skaler:</b> p ∈ U, λ ∈ ℝ ⇒ <span class="m">(λp)(3) = λ·p(3) = λ·0 = 0</span>. Yani <span class="hl m">λp ∈ U</span>. ∎</span></div>
+ </div>
+</section>
+
+<!-- A2 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 2: Altuzaylar ve kesişim / birleşim</h2>
+ <p class="sub s">Altuzay kriteri: 0 ∈ U, toplamda ve skaler çarpmada kapalı. U, W ⊂ V altuzay.</p>
+ <div class="grid">
+  <div class="card s"><h3>(a) U ∩ W altuzay</h3>
+   <span class="step s"><b>0:</b> 0 ∈ U ve 0 ∈ W ⇒ <span class="m">0 ∈ U∩W</span>.</span>
+   <span class="step s"><b>Toplam:</b> x, y ∈ U∩W. x,y ∈ U ⇒ x+y ∈ U. x,y ∈ W ⇒ x+y ∈ W. Yani <span class="hl m">x+y ∈ U∩W</span>.</span>
+   <span class="step s"><b>Skaler:</b> x ∈ U∩W, λ ∈ K. λx ∈ U ve λx ∈ W ⇒ <span class="hl m">λx ∈ U∩W</span>. ∎</span></div>
+  <div class="card s"><h3>(b) U ∪ W altuzay olmayan örnek</h3>
+   <span class="step s"><span class="m">V = ℝ², U = {(t,0) | t ∈ ℝ}, W = {(0,t) | t ∈ ℝ}</span> (iki eksen). İkisi de altuzay.</span>
+   <span class="step s"><span class="m">(1,0) ∈ U</span> ve <span class="m">(0,1) ∈ W</span>, yani ikisi de U∪W'de.</span>
+   <span class="step s">Toplamları <span class="m">(1,1)</span>: ikinci koordinat ≠ 0 ⇒ ∉ U. Birinci koordinat ≠ 0 ⇒ ∉ W. <span class="hl">Toplam U∪W'de değil.</span></span></div>
+  <div class="card s"><h3>(c) U ∪ W ne zaman altuzay?</h3>
+   <span class="step s"><b>Cevap:</b> <span class="hl m">U ⊂ W veya W ⊂ U</span> ⇔ U∪W altuzay.</span>
+   <span class="step s"><b>⇐:</b> U ⊂ W ise U∪W = W altuzay. W ⊂ U ise U∪W = U altuzay.</span>
+   <span class="step s"><b>⇒ (çelişki):</b> U∪W altuzay, ama U ⊄ W ve W ⊄ U olsun. u ∈ U∖W ve w ∈ W∖U seç. u+w ∈ U∪W.</span>
+   <span class="step s">u+w ∈ U ise <span class="m">w = (u+w) − u ∈ U</span>: çelişki (w ∉ U).</span>
+   <span class="step s">u+w ∈ W ise <span class="m">u = (u+w) − w ∈ W</span>: çelişki (u ∉ W).</span>
+   <span class="step s ok">Her iki durumda çelişki, yani U ⊂ W veya W ⊂ U. ∎</span></div>
+ </div>
+</section>
+
+<!-- A3 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 3: V₁ × V₂ bir vektör uzayı</h2>
+ <p class="sub s">İşlemler bileşen bileşen. Her aksiyom V₁ ve V₂'deki aksiyomlara indirgenir.</p>
+ <div class="grid">
+  <div class="card s"><h3>Kapalılık ve grup aksiyomları</h3>
+   <span class="step s"><b>Kapalılık:</b> x₁+y₁ ∈ V₁, x₂+y₂ ∈ V₂ ve λx₁ ∈ V₁, λx₂ ∈ V₂. Sonuçlar V₁×V₂'de.</span>
+   <span class="step s"><b>Birleşme:</b> <span class="m">((x₁,x₂)+(y₁,y₂))+(z₁,z₂) = ((x₁+y₁)+z₁, (x₂+y₂)+z₂) = (x₁+(y₁+z₁), x₂+(y₂+z₂)) = (x₁,x₂)+((y₁,y₂)+(z₁,z₂))</span>.</span>
+   <span class="step s"><b>Değişme:</b> <span class="m">(x₁+y₁, x₂+y₂) = (y₁+x₁, y₂+x₂)</span>.</span>
+   <span class="step s"><b>Etkisiz eleman:</b> <span class="m">(0<sub>V₁</sub>, 0<sub>V₂</sub>)</span>. <span class="m">(x₁,x₂)+(0,0) = (x₁+0, x₂+0) = (x₁,x₂)</span>.</span>
+   <span class="step s"><b>Ters eleman:</b> <span class="m">(−x₁,−x₂)</span>. <span class="m">(x₁,x₂)+(−x₁,−x₂) = (0,0)</span>.</span></div>
+  <div class="card s"><h3>Skaler çarpma aksiyomları</h3>
+   <span class="step s"><b>Karma birleşme:</b> <span class="m">(λμ)(x₁,x₂) = ((λμ)x₁,(λμ)x₂) = (λ(μx₁), λ(μx₂)) = λ(μ(x₁,x₂))</span>.</span>
+   <span class="step s"><b>Birim:</b> <span class="m">1·(x₁,x₂) = (1·x₁, 1·x₂) = (x₁,x₂)</span>.</span>
+   <span class="step s"><b>Dağılma 1:</b> <span class="m">λ((x₁,x₂)+(y₁,y₂)) = (λ(x₁+y₁), λ(x₂+y₂)) = (λx₁+λy₁, λx₂+λy₂) = λ(x₁,x₂)+λ(y₁,y₂)</span>.</span>
+   <span class="step s"><b>Dağılma 2:</b> <span class="m">(λ+μ)(x₁,x₂) = ((λ+μ)x₁,(λ+μ)x₂) = (λx₁+μx₁, λx₂+μx₂) = λ(x₁,x₂)+μ(x₁,x₂)</span>.</span>
+   <span class="step s ok">Tüm aksiyomlar sağlandı ⇒ V₁ × V₂ bir K-vektör uzayıdır. ∎</span></div>
+ </div>
+</section>
+
+<!-- A4 -->
+<section class="slide">
+ <h2 class="s">Aufgabe 4: Doğru mu yanlış mı?</h2>
+ <div class="grid">
+  <div class="card s"><h3>(a) A = {a₁⁴ + a₂² = 0} <span class="ok">DOĞRU</span></h3>
+   <span class="step s">a₁⁴ ≥ 0 ve a₂² ≥ 0. İki negatif olmayan sayının toplamı 0 ise ikisi de 0'dır.</span>
+   <span class="step s">Yani <span class="hl m">A = {(0,0)}</span>.</span>
+   <span class="step s">Sıfır uzayı altuzaydır: 0 ∈ A, (0,0)+(0,0) = (0,0) ∈ A, λ(0,0) = (0,0) ∈ A. ∎</span></div>
+  <div class="card s"><h3>(b) B = {b₁ ≤ b₂ ≤ b₃} <span class="no">YANLIŞ</span></h3>
+   <span class="step s">Karşı örnek: <span class="m">b = (0,1,2) ∈ B</span> (0 ≤ 1 ≤ 2).</span>
+   <span class="step s"><span class="m">(−1)·b = (0,−1,−2)</span>. 0 ≤ −1 yanlış, yani <span class="hl m">(−1)·b ∉ B</span>.</span>
+   <span class="step s">Skaler çarpmada kapalı değil, B altuzay değil.</span></div>
+  <div class="card s"><h3>(c) C = {(c₁,c₂) ∈ ℂ² | c₂ = 0} <span class="ok">DOĞRU</span></h3>
+   <span class="step s">ℂ² bir ℂ-vektör uzayı olarak ele alınır. (ℝ-uzayı olarak da aynı ispat geçerli.)</span>
+   <span class="step s"><b>0:</b> (0,0) ∈ C. <b>Toplam:</b> (c₁,0)+(c₁′,0) = (c₁+c₁′, 0) ∈ C.</span>
+   <span class="step s"><b>Skaler:</b> λ ∈ ℂ için λ(c₁,0) = (λc₁, 0) ∈ C. ∎</span></div>
+  <div class="card s"><h3>(d) Dₙ = {d₁+…+dₙ = 0} <span class="ok">DOĞRU</span></h3>
+   <span class="step s"><b>0:</b> (0,…,0): toplam 0, yani 0 ∈ Dₙ.</span>
+   <span class="step s"><b>Toplam:</b> d, d′ ∈ Dₙ ⇒ <span class="m">Σ(dᵢ+dᵢ′) = Σdᵢ + Σdᵢ′ = 0+0 = 0</span>.</span>
+   <span class="step s"><b>Skaler:</b> <span class="m">Σ(λdᵢ) = λ·Σdᵢ = λ·0 = 0</span>. ∎</span>
+   <span class="step s">Bu her n için geçerli. n = 0 ise ℝ⁰ = {()} ve D₀ = ℝ⁰, yani trivial altuzay.</span></div>
+ </div>
+</section>
+
+<div class="bar" id="bar"></div>
+<div class="nav"><span id="pg"></span><button id="pv" aria-label="Geri">← Geri</button><button id="nx" aria-label="İleri">İleri →</button></div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+const steps=i=>[...slides[i].querySelectorAll('.s')];
+const shown=i=>steps(i).filter(e=>e.classList.contains('show'));
+function show(i){slides.forEach((s,k)=>s.classList.toggle('on',k===i));cur=i;ui()}
+function ui(){document.getElementById('pg').textContent=(cur+1)+' / '+slides.length;
+ document.getElementById('bar').style.width=((cur+1)/slides.length*100)+'%'}
+function next(){
+ const hid=steps(cur).find(e=>!e.classList.contains('show'));
+ if(hid){
+  hid.classList.add('show');
+  if(hid.classList.contains('card')){const f=hid.querySelector('.s');if(f)f.classList.add('show')}
+  hid.scrollIntoView({behavior:'smooth',block:'nearest'});
+ } else if(cur<slides.length-1){show(cur+1);steps(cur)[0]&&steps(cur)[0].classList.add('show')}
+}
+function prev(){
+ const sh=shown(cur);
+ if(sh.length>1){sh[sh.length-1].classList.remove('show')}
+ else if(cur>0){show(cur-1)}
+}
+document.getElementById('nx').onclick=e=>{e.stopPropagation();next()};
+document.getElementById('pv').onclick=e=>{e.stopPropagation();prev()};
+document.addEventListener('keydown',e=>{
+ if(['ArrowRight',' ','PageDown','Enter'].includes(e.key)){e.preventDefault();next()}
+ if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();prev()}
+});
+document.body.addEventListener('click',e=>{if(!e.target.closest('.nav'))next()});
+steps(0)[0].classList.add('show');ui();
+</script>
+</body>
+</html>
