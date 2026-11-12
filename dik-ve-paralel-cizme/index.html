@@ -384,7 +384,7 @@
 </div>
 
 <button id="resetBtn" class="actionBtn">Yeni soru</button>
-<div id="version">v1.5 — Zoom, dokunmatik kaydırma ve Çınar için başarı mesajı.</div>
+<div id="version">v1.7 — Çizim yönünü gösteren tek seferlik beyaz ok.</div>
 <div id="audioHint">Ses için sayfaya bir kez tıkla.</div>
 
 <div id="helpOverlay">
@@ -435,6 +435,16 @@
 
   let mode = "perp"; // "perp" | "parallel"
   let stage = 1;
+  // Tek seferlik çizim yönü gösterimi (her soru için yalnızca bir kez).
+  let drawHintStartedAt = 0;
+  let drawHintShown = false;
+  const DRAW_HINT_DURATION = 1700;
+
+  function showDrawHintOnce(){
+    if(drawHintShown)return;
+    drawHintShown=true;
+    drawHintStartedAt=performance.now();
+  }
   let finishTimer = null;
   let bubblePosition = -1;
   let bubbleTick = 0;
@@ -600,9 +610,18 @@
     g.arc(RULER_W/2, RULER_H-4, 5.5, 0, Math.PI*2);
     g.fill();
 
-    g.lineWidth = 2;
-    g.strokeStyle = "rgba(30,70,170,.76)";
-    g.strokeRect(RULER_W/2, RULER_H-28, 22, 22);
+    // Almanya'da yaygın kullanılan dik açı işareti:
+    // çeyrek daire yayı + ortasında küçük nokta
+    g.lineWidth = 2.2;
+    g.strokeStyle = "rgba(30,70,170,.82)";
+    g.beginPath();
+    g.arc(RULER_W/2 + 20, RULER_H - 24, 20, Math.PI, 1.5 * Math.PI, false);
+    g.stroke();
+
+    g.fillStyle = "rgba(30,70,170,.82)";
+    g.beginPath();
+    g.arc(RULER_W/2 + 9.5, RULER_H - 14.5, 2.6, 0, Math.PI * 2);
+    g.fill();
 
     return c.toDataURL("image/png");
   }
@@ -872,6 +891,8 @@
     drawing=null;
     drawnSegments=[];
     finishedLine=null;
+    drawHintStartedAt=0;
+    drawHintShown=false;
     currentGuideOffset=null;
     parallelSnapped=false;
   }
@@ -977,105 +998,6 @@
       const n = normalFromAngle(line.angle);
       rulerState.x -= n.x * info.bestSigned;
       rulerState.y -= n.y * info.bestSigned;
-      parallelSnapped = true;
-      currentGuideOffset = info.bestOffset;
-      setRulerTransform();
-
-      if(currentGuideOffset === parallelTargetOffset){
-        stage = 2;
-      }else{
-        stage = 1;
-      }
-
-      if(triggerBeep && beforeStage !== stage){
-        if(stage===2){
-          beep(1220,.10,.07);
-          setTimeout(()=>beep(1500,.12,.06),110);
-        }else{
-          beep(980,.06,.04);
-        }
-      }
-    }else{
-      stage = 1;
-    }  }
-
-  // Sağ tık = kamera kaydırma; iki parmak = pinch + kaydırma.
-  const stageEl = document.getElementById("stage");
-  stageEl.addEventListener("contextmenu", e => e.preventDefault());
-
-  function touchMetrics(){
-    const pts=[...touchPointers.values()].slice(0,2);
-    return {
-      mid:{x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2},
-      distance:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)
-    };
-  }
-  function beginTouchGesture(){
-    if(touchPointers.size<2)return;
-    // Daha önce başlayan tek-parmakla çizim/taşıma iptal edilir.
-    pointerMode=null;
-    pointerId=null;
-    drawing=null;
-    ruler.classList.remove("dragging");
-    const m=touchMetrics();
-    touchGesture={
-      startScale:camera.scale,
-      startDistance:Math.max(1,m.distance),
-      anchor:screenToWorld(m.mid.x,m.mid.y)
-    };
-    for(const id of touchPointers.keys()){
-      try{stageEl.setPointerCapture(id);}catch(_){}
-    }
-  }
-
-  stageEl.addEventListener("pointerdown",e=>{
-    if(e.pointerType==="touch"){
-      touchPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-      if(touchPointers.size===2)beginTouchGesture();
-      return;
-    }
-    if(e.button!==2)return;
-    ensureAudio();
-    panPointerId=e.pointerId;
-    panStart={x:e.clientX,y:e.clientY};
-    panObjectsStart={x:camera.x,y:camera.y};
-    stageEl.setPointerCapture(e.pointerId);
-  });
-
-  stageEl.addEventListener("pointermove",e=>{
-    if(e.pointerType==="touch" && touchPointers.has(e.pointerId)){
-      touchPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-      if(touchGesture && touchPointers.size>=2){
-        e.preventDefault();
-        const m=touchMetrics();
-        const next=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,
-          touchGesture.startScale*m.distance/touchGesture.startDistance));
-        camera.scale=next;
-        camera.x=m.mid.x-touchGesture.anchor.x*next;
-        camera.y=m.mid.y-touchGesture.anchor.y*next;
-        applyCamera();
-      }
-      return;
-    }
-    if(e.pointerId!==panPointerId || !panStart)return;
-    camera.x=panObjectsStart.x+(e.clientX-panStart.x);
-    camera.y=panObjectsStart.y+(e.clientY-panStart.y);
-    applyCamera();
-  });
-  function endPan(e){
-    if(e.pointerType==="touch"){
-      touchPointers.delete(e.pointerId);
-      if(touchPointers.size<2)touchGesture=null;
-      return;
-    }
-    if(e.pointerId!==panPointerId)return;
-    panPointerId=null;
-    panStart=null;
-    panObjectsStart=null;
-  }
-  stageEl.addEventListener("pointerup",endPan);
-  stageEl.addEventListener("pointercancel",endPan);
-
   ruler.addEventListener("pointerdown", e=>{
     if(e.button!==0 || panPointerId!==null) return;
     if(stage===4) return;
@@ -1165,6 +1087,7 @@
             rulerState.angle=candidate;
             setRulerTransform();
             stage=3;
+            showDrawHintOnce();
             pointerMode=null;
             beep(1220,.10,.07);
             setTimeout(()=>beep(1500,.12,.06),110);
@@ -1333,6 +1256,64 @@
     }
   }
 
+  // Uzun kenar üzerinde, bir kez görünen beyaz dolgulu yön oku.
+  // Başlangıç solda, bitiş sağdadır. Çizim alanını engellemez.
+  function drawOneTimeHint(now){
+    if(!drawHintStartedAt || stage===4)return;
+    const elapsed=now-drawHintStartedAt;
+    if(elapsed>=DRAW_HINT_DURATION){
+      drawHintStartedAt=0;
+      return;
+    }
+    if(drawing)return; // öğrenci çizmeye başladıysa oku sakla
+    const t=elapsed/DRAW_HINT_DURATION;
+    const fadeIn=Math.min(1,t/.10);
+    const fadeOut=Math.min(1,(1-t)/.22);
+    const alpha=Math.max(0,Math.min(fadeIn,fadeOut));
+    const u=vecFromAngle(rulerState.angle);
+    const n=normalFromAngle(rulerState.angle);
+    const dx=target.x-rulerState.x,dy=target.y-rulerState.y;
+    const center=mode==='parallel'
+      ? Math.max(-100,Math.min(100,dx*u.x+dy*u.y)) : 0;
+    const startS=center-105, endS=center+105;
+    const travel=Math.max(0,Math.min(1,(t-.10)/.62));
+    const tipS=startS+(endS-startS)*travel;
+    // Ok, cetvel kenarının biraz üzerinde ilerler.
+    const along=s=>({x:rulerState.x+s*u.x+n.x*13,
+                     y:rulerState.y+s*u.y+n.y*13});
+    const start=along(startS), tip=along(tipS), end=along(endS);
+    ctx.save();
+    ctx.globalAlpha=alpha;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    ctx.shadowColor='rgba(255,255,255,.80)';
+    ctx.shadowBlur=7;
+    ctx.strokeStyle='#283847';
+    ctx.fillStyle='#ffffff';
+    ctx.lineWidth=2.6;
+    // Başlangıç / bitiş işaretleri, oynayan okun başlangıcını ve hedefini gösterir.
+    for(const [pt,r] of [[start,5],[end,5]]){
+      ctx.beginPath();ctx.arc(pt.x,pt.y,r,0,Math.PI*2);
+      ctx.fill();ctx.stroke();
+    }
+    if(travel>.015){
+      const tail=along(startS);
+      // Beyaz dolgu ve koyu konturlu ok gövdesi.
+      const half=5.0, head=17;
+      const headBase=along(Math.max(startS,tipS-head));
+      ctx.beginPath();
+      ctx.moveTo(tail.x+n.x*half,tail.y+n.y*half);
+      ctx.lineTo(headBase.x+n.x*half,headBase.y+n.y*half);
+      ctx.lineTo(headBase.x+n.x*11,headBase.y+n.y*11);
+      ctx.lineTo(tip.x,tip.y);
+      ctx.lineTo(headBase.x-n.x*11,headBase.y-n.y*11);
+      ctx.lineTo(headBase.x-n.x*half,headBase.y-n.y*half);
+      ctx.lineTo(tail.x-n.x*half,tail.y-n.y*half);
+      ctx.closePath();ctx.fill();ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function drawCurrentStudentLine(){
     const u = vecFromAngle(rulerState.angle);
     const segmentDraw=(lo,hi)=>{
@@ -1462,6 +1443,7 @@
     }
 
     drawCurrentStudentLine();
+    drawOneTimeHint(now);
     soundFeedback(now);
   }
 
