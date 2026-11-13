@@ -384,7 +384,7 @@
 </div>
 
 <button id="resetBtn" class="actionBtn">Yeni soru</button>
-<div id="version">v1.9 — Gönye üzerindeki dik açı işareti kaldırıldı.</div>
+<div id="version">v2.0 — Uzun tebrik ve başarıdan sonra animasyonlu dik açı yayı.</div>
 <div id="audioHint">Ses için sayfaya bir kez tıkla.</div>
 
 <div id="helpOverlay">
@@ -446,6 +446,10 @@
     drawHintStartedAt=performance.now();
   }
   let finishTimer = null;
+  let rightAngleRevealAt = 0;
+  const SUCCESS_TEXT_MS = 2200;   // Önceki 1300 ms yerine 2200 ms
+  const RULER_FADE_MS = 1650;    // CSS'deki 1.65 saniyelik fade-out
+  const RIGHT_ANGLE_DRAW_MS = 900;
   let bubblePosition = -1;
   let bubbleTick = 0;
   let line = { x: 0, y: 0, angle: 0 };
@@ -724,7 +728,8 @@
   });
 
   function updateModeButtons(){
-    perpBtn.classList.toggle("active", mode==="perp");    parallelBtn.classList.toggle("active", mode==="parallel");
+    perpBtn.classList.toggle("active", mode==="perp");
+    parallelBtn.classList.toggle("active", mode==="parallel");
   }
 
   function updateInstruction(){
@@ -742,8 +747,7 @@
         instructionMain.textContent = t.perp_s2;
         instructionSub.textContent = t.perp_ss2;
       }else{
-        instructionMain.textContent = t.perp_s3;
-        instructionSub.textContent = t.perp_ss3;
+        instructionMain.textContent = t.perp_s3;        instructionSub.textContent = t.perp_ss3;
       }
     }else{
       if(stage===1){
@@ -879,6 +883,7 @@
     drawing=null;
     drawnSegments=[];
     finishedLine=null;
+    rightAngleRevealAt=0;
     drawHintStartedAt=0;
     drawHintShown=false;
     currentGuideOffset=null;
@@ -1439,6 +1444,38 @@
     }
   }
 
+  // Bu yay gönyenin üzerinde değil, çizilmiş iki doğrunun kesişiminde.
+  // Yalnızca DİK çizim tamamlanınca gösterilir.
+  function drawRightAngleProof(now){
+    if(mode!=="perp" || stage!==4 || !rightAngleRevealAt || now<rightAngleRevealAt) return;
+    const duration=RIGHT_ANGLE_DRAW_MS;
+    const p=Math.min(1,(now-rightAngleRevealAt)/duration);
+    // Yumuşak ilerleme: başlangıç ve bitiş ani değil.
+    const eased=p*p*(3-2*p);
+    const start=deg2rad(line.angle-90);
+    const radius=34;
+    const ox=target.x, oy=target.y;
+    ctx.save();
+    ctx.strokeStyle="#286ce8";
+    ctx.lineWidth=3.5;
+    ctx.lineCap="round";
+    ctx.shadowColor="#5c9aff";
+    ctx.shadowBlur=7*(1-p)+1;
+    ctx.beginPath();
+    ctx.arc(ox,oy,radius,start,start+Math.PI/2*eased,false);
+    ctx.stroke();
+    // Çeyrek yayın içindeki nokta, yay tamamlanınca görünür.
+    if(p>0.82){
+      const theta=start+Math.PI/4;
+      ctx.globalAlpha=Math.min(1,(p-0.82)/0.18);
+      ctx.fillStyle="#286ce8";
+      ctx.beginPath();
+      ctx.arc(ox+17*Math.cos(theta),oy+17*Math.sin(theta),3.3,0,2*Math.PI);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function draw(){
     const w=window.innerWidth,h=window.innerHeight;
     ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -1460,7 +1497,6 @@
       const proximity=Math.max(0,1-Math.min(1,difference/45));
       drawLineRays(proximity, now);
     }
-
     if(mode==="parallel" && stage!==4){
       const info = getParallelAlignmentInfo();
       const proximity = Math.max(0, 1 - Math.min(1, info.angleDiff/40)) * Math.max(0, 1 - Math.min(1, info.bestDist/40));
@@ -1474,6 +1510,7 @@
         const closeness=1-Math.min(1,d/260);
         const alpha=(!pointAnimEnabled || d<=POSITION_LOCK_DISTANCE) ? 1 : (.28+.72*(.5+.5*Math.sin(now*2*Math.PI/(1050-closeness*900))));
         if(pointAnimEnabled) drawBurstOnPoint(target.x,target.y,Math.max(0,closeness),now,"#ff3149");
+
         if(pointAnimEnabled){
         ctx.save();
         ctx.globalAlpha = 0.18 + 0.25*alpha;
@@ -1531,6 +1568,7 @@
     }
 
     drawCurrentStudentLine();
+    drawRightAngleProof(now);
     drawOneTimeHint(now);
     soundFeedback(now);
   }
@@ -1595,8 +1633,10 @@
       reward.classList.remove("show");
       instruction.classList.add("hidden-after-success");
       ruler.classList.add("fade-out");
+      // Yazı gittikten ve gönye tamamen kaybolduktan sonra yayı çiz.
+      if(mode==="perp") rightAngleRevealAt=performance.now()+RULER_FADE_MS;
       finishTimer=null;
-    },1300);
+    },SUCCESS_TEXT_MS);
   }
 
   function removeConfetti(){
