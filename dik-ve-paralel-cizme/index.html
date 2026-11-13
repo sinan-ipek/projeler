@@ -389,7 +389,7 @@
 </div>
 
 <button id="resetBtn" class="actionBtn">Yeni soru</button>
-<div id="version">v2.3 — Noktadan dik çizme modu eklendi.</div>
+<div id="version">v2.4 — Noktadan dik çizim tamamlanınca hedef nokta görünür kalır.</div>
 <div id="audioHint">Ses için sayfaya bir kez tıkla.</div>
 
 <div id="helpOverlay">
@@ -1744,6 +1744,23 @@
     }
 
     drawCurrentStudentLine();
+
+    // Noktadan dik çizme modunda başarıdan sonra P noktası görünür kalır.
+    // Yeşil çizginin üstüne sabit kırmızı hedefi çiziyoruz.
+    if(mode==="pointPerp" && stage===4){
+      ctx.save();
+      ctx.fillStyle="#ff3149";
+      ctx.strokeStyle="#ffffff";
+      ctx.lineWidth=2.5/camera.scale;
+      ctx.shadowColor="rgba(255,49,73,.35)";
+      ctx.shadowBlur=6/camera.scale;
+      ctx.beginPath();
+      ctx.arc(target.x,target.y,7.5/camera.scale,0,Math.PI*2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
     drawRightAngleProof(now);
     drawOneTimeHint(now);
     soundFeedback(now);
