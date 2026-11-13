@@ -369,6 +369,7 @@
     <button id="perpBtn" class="modeBtn active">Dik çiz</button>
     <button id="parallelBtn" class="modeBtn" disabled>Paralel çiz</button>
     <button id="pointPerpBtn" class="modeBtn">Noktadan dik çiz</button>
+    <button id="distanceBtn" class="modeBtn">Uzaklıkla paralel çiz</button>
   </div>
 </div>
 
@@ -389,7 +390,7 @@
 </div>
 
 <button id="resetBtn" class="actionBtn">Yeni soru</button>
-<div id="version">v2.4 — Noktadan dik çizim tamamlanınca hedef nokta görünür kalır.</div>
+<div id="version">v2.5 — Santimetre ölçeği ve uzaklıkla paralel çizim.</div>
 <div id="audioHint">Ses için sayfaya bir kez tıkla.</div>
 
 <div id="helpOverlay">
@@ -417,7 +418,9 @@
   const MIN_DRAW_LENGTH = 65;
   const PARALLEL_ANGLE_SNAP = 4.2;
   const PARALLEL_LINE_SNAP = 10;
-  const GUIDE_OFFSETS = [38, 74, 110]; // tabandan içeri doğru paralel yardımcı çizgiler
+  // Gönyede 1 cm = 34 px. Gerçek gönye ile aynı ölçek her iki eksende.
+  const CM_PX = 34;
+  const GUIDE_OFFSETS = [1,2,3,4,5,6].map(cm => cm * CM_PX);
 
   const board = document.getElementById("board");
   const ctx = board.getContext("2d");
@@ -433,13 +436,15 @@
   const perpBtn = document.getElementById("perpBtn");
   const parallelBtn = document.getElementById("parallelBtn");
   const pointPerpBtn = document.getElementById("pointPerpBtn");
+  const distanceBtn = document.getElementById("distanceBtn");
   const pointAnimBtn = document.getElementById("pointAnimBtn");
   let pointAnimEnabled = localStorage.getItem("geo-point-anim") !== "off";
   const resetBtn = document.getElementById("resetBtn");
 
   let dpr = Math.max(1, window.devicePixelRatio || 1);
 
-  let mode = "perp"; // perp | parallel | pointPerp
+  let mode = "perp"; // perp | parallel | pointPerp | distanceParallel
+  let requestedCm = 3;
   let thirdPhase = "place"; // place -> rotate -> slide -> draw
   const THIRD_PLACE_SNAP = 11, THIRD_SLIDE_SNAP = 8, THIRD_MIN_EACH_SIDE = 45;
   let stage = 1;
@@ -570,29 +575,53 @@
     g.stroke();
     g.restore();
 
-    // p çizgileri
-    const ys = [RULER_H-42, RULER_H-78, RULER_H-114];
-    ys.forEach((y) => {
-      const half = (RULER_W/2 - 10) * (1 - (RULER_H-y)/(RULER_H-10)) - 8;
-      const x1 = RULER_W/2 - Math.max(55, half);
-      const x2 = RULER_W/2 + Math.max(55, half);
-
-      g.lineWidth = 2;
-      g.strokeStyle = "rgba(8,120,90,.70)";
+    // Birbirinden tam 1 cm uzaklıkta 6 yeşil çizgi.
+    // Hipotenüsteki cm ölçeğiyle aynı gerçek ekran ölçeği kullanılır.
+    const baseY = RULER_H - 4;
+    const apexY = 8;
+    const centerX = RULER_W/2;
+    const halfBase = RULER_W/2 - 4;
+    function halfAtHeight(h){
+      return halfBase * (1 - h/(RULER_H-apexY-4));
+    }
+    for(let cm=1;cm<=6;cm++){
+      const rise=cm*CM_PX;
+      const yy=baseY-rise;
+      const half=halfAtHeight(rise)-3;
+      g.strokeStyle="rgba(0,135,100,.78)";
+      g.lineWidth=cm===3?2.3:1.8;
       g.beginPath();
-      g.moveTo(x1,y);
-      g.lineTo(x2,y);
+      g.moveTo(centerX-half,yy);
+      g.lineTo(centerX+half,yy);
       g.stroke();
-    });
+    }
+
+    // İçte iki dikey milimetre ölçeği: her 1 cm 10 bölme;
+    // 5. çizgi biraz, 10. çizgi daha uzun.
+    // Soldaki çentikler sağa; sağdakiler sola uzanır.
+    for (const side of [-1,1]){
+      const stripX=centerX+side*30;
+      for (let mm=0; mm<=60; mm++){
+        const rise=mm*CM_PX/10;
+        const yy=baseY-rise;
+        let len=7;
+        if(mm%10===0) len=24;
+        else if(mm%5===0) len=16;
+        g.strokeStyle="rgba(36,49,61,.68)";
+        g.lineWidth=mm%10===0?1.3:0.9;
+        g.beginPath();
+        g.moveTo(stripX,yy);
+        g.lineTo(stripX-side*len,yy);
+        g.stroke();
+      }
+    }
 
     // hipotenüs ölçeği
     g.lineWidth = 1.3;
     g.strokeStyle = "rgba(35,42,52,.70)";
     g.fillStyle = "rgba(35,42,52,.82)";
     g.font = "12px system-ui";
-    const centerX = RULER_W/2;
-    const baseY = RULER_H - 5;
-    const cmStep = 34;
+    const cmStep = CM_PX;
     const totalSide = 6;
 
     for(let side of [-1, 1]){
@@ -637,13 +666,18 @@
       perp:"Dik çiz",
       parallel:"Paralel çiz",
       pointPerp:"Noktadan dik çiz",
+      distanceMode:"Uzaklıkla paralel çiz",
+      distanceAsk:"Bu doğruya {cm} cm uzaklıkta bir paralel çizebilir misin?",
+      distanceHint:"Gönyedeki {cm} cm çizgisini doğruyla çakıştır.",
+      distanceDraw:"Çok iyi! Şimdi gönyenin uzun kenarından paralel çiz.",
+      distanceDrawHint:"Beyaz oku izle, sonra çizgiyi çiz.",
       pointOn:"Nokta ışığı: Açık", pointOff:"Nokta ışığı: Kapalı",
       reset:"Yeni soru",
       helpTitle:"Nasıl oynanır?",
       h1:"Dik çizimde önce kırmızı noktayı, sonra doğruyu hizala ve çiz.",
       h2:"Paralel çizimde önce içteki yeşil çizgilerden birini doğruyla üst üste getir.",
       h3:"Noktadan dik çizmede gönyeyi hizala, doğru boyunca kaydır ve kırmızı noktadan dik çiz.",
-      h4:"Yaklaştıkça ışıklar ve bip sesi hızlanır.",
+      h4:"Uzaklıkla paralel çizmede istenen santimetre çizgisini doğruyla çakıştır.",
       close:"Kapat",
       perp_s1:"Gönyenin sıfırını kırmızı noktanın üzerine getir.",
       perp_ss1:"Gönyeyi sürükleyebilirsin. Mavi döndürme tutamacı ile çevirebilirsin.",
@@ -663,13 +697,17 @@
       par_ss1:"İçteki yeşil çizgilerden biri doğru ile çakışsın.",
       par_s2:"Harika! Şimdi uzun kenardan çiz.",
       par_ss2:"Çizgin, kırmızı noktadan geçsin.",
-      done:"Bravo! Başardın Çınar!"
-    },
+      done:"Bravo! Başardın Çınar!"    },
     de:{
       lang:"DE ▾",
       perp:"Senkrecht",
       parallel:"Parallel",
       pointPerp:"Senkrecht durch Punkt",
+      distanceMode:"Parallel mit Abstand",
+      distanceAsk:"Kannst du eine Parallele im Abstand von {cm} cm zeichnen?",
+      distanceHint:"Lege die {cm}-cm-Linie des Geodreiecks auf die Gerade.",
+      distanceDraw:"Sehr gut! Zeichne jetzt an der langen Kante.",
+      distanceDrawHint:"Folge zuerst dem weißen Pfeil.",
       pointOn:"Punktlicht: An", pointOff:"Punktlicht: Aus",
       reset:"Neue Aufgabe",
       helpTitle:"Wie geht es?",
@@ -703,6 +741,11 @@
       perp:"Perpendicular",
       parallel:"Parallel",
       pointPerp:"Perpendicular through point",
+      distanceMode:"Parallel at a distance",
+      distanceAsk:"Can you draw a parallel line {cm} cm away?",
+      distanceHint:"Align the {cm} cm guide with the given line.",
+      distanceDraw:"Great! Draw along the long edge now.",
+      distanceDrawHint:"Watch the white arrow, then draw.",
       pointOn:"Point light: On", pointOff:"Point light: Off",
       reset:"New task",
       helpTitle:"How to play",
@@ -741,13 +784,15 @@
     perpBtn.textContent = t.perp;
     parallelBtn.textContent = t.parallel;
     pointPerpBtn.textContent = t.pointPerp;
+    distanceBtn.textContent = t.distanceMode;
     updatePointAnimButton();
     resetBtn.textContent = t.reset;
     document.getElementById("helpTitle").textContent = t.helpTitle;
     document.getElementById("helpP1").textContent = t.h1;
     document.getElementById("helpP2").textContent = t.h2;
     document.getElementById("helpP3").textContent = t.h3;
-    document.getElementById("helpP4").textContent = t.h4;    document.getElementById("helpClose").textContent = t.close;
+    document.getElementById("helpP4").textContent = t.h4;
+    document.getElementById("helpClose").textContent = t.close;
     updateInstruction();
     if(stage===4) rewardText.textContent = t.done;
   }
@@ -768,6 +813,7 @@
     perpBtn.classList.toggle("active", mode==="perp");
     parallelBtn.classList.toggle("active", mode==="parallel");
     pointPerpBtn.classList.toggle("active", mode==="pointPerp");
+    distanceBtn.classList.toggle("active", mode==="distanceParallel");
   }
 
   function updateInstruction(){
@@ -792,6 +838,10 @@
       const phaseNum=stage===1?1:stage===2?2:(thirdPhase==="slide"?3:4);
       instructionMain.textContent=t["third_s"+phaseNum];
       instructionSub.textContent=t["third_ss"+phaseNum];
+    }else if(mode==="distanceParallel"){
+      const fmt=key=>t[key].replaceAll("{cm}",String(requestedCm));
+      instructionMain.textContent=stage===1?fmt("distanceAsk"):t.distanceDraw;
+      instructionSub.textContent=stage===1?fmt("distanceHint"):t.distanceDrawHint;
     }else{
       if(stage===1){
         instructionMain.textContent = t.par_s1;
@@ -976,6 +1026,24 @@
         angle:angle-90+(Math.random()<.5?-1:1)*(20+Math.random()*25)
       };
       thirdPhase="place";
+    }else if(mode==="distanceParallel"){
+      requestedCm = 1 + Math.floor(Math.random()*6);
+      parallelTargetOffset = requestedCm * CM_PX;
+      const angle=-22 + Math.random()*44;
+      // Gönye alt kenarından 6 cm geriye kadar yer olmalı.
+      line={
+        x:Math.max(160,window.innerWidth/2),
+        y:Math.max(145,Math.min(window.innerHeight-100,window.innerHeight*.40)),
+        angle
+      };
+      target={x:line.x,y:line.y};
+      const n=normalFromAngle(angle);
+      const u=vecFromAngle(angle);
+      rulerState={
+        x:line.x+u.x*110+n.x*(parallelTargetOffset+55),
+        y:line.y+u.y*110+n.y*(parallelTargetOffset+55),
+        angle:angle+24
+      };
     }else{
       const margin=180;
       const angle=-26 + Math.random()*52;
@@ -1053,8 +1121,10 @@
       const snappedAngle = nearestEquivalentAngle(rulerState.angle, line.angle);
       rulerState.angle = snappedAngle;
       const n = normalFromAngle(line.angle);
-      rulerState.x -= n.x * info.bestSigned;
-      rulerState.y -= n.y * info.bestSigned;
+      const snappedGuide=pointOnGuide(info.bestOffset);
+      const correction=signedDistancePointToLine(snappedGuide,line,line.angle);
+      rulerState.x -= n.x * correction;
+      rulerState.y -= n.y * correction;
       parallelSnapped = true;
       currentGuideOffset = info.bestOffset;
       setRulerTransform();
@@ -1326,8 +1396,7 @@
         setRulerTransform();
       }else if(pointerMode==="rotate" && (stage===1 || stage===2)){
         const a=Math.atan2(pt.y-rulerState.y,pt.x-rulerState.x);
-        rulerState.angle=rulerAngleStart+rad2deg(a-rotateStartAngle);
-        if(stage===2 && angleDiffUndirected(rulerState.angle+90,line.angle)<=ANGLE_LOCK_TOLERANCE){
+        rulerState.angle=rulerAngleStart+rad2deg(a-rotateStartAngle);        if(stage===2 && angleDiffUndirected(rulerState.angle+90,line.angle)<=ANGLE_LOCK_TOLERANCE){
           rulerState.angle=nearestEquivalentAngle(rulerState.angle,line.angle-90);
           stage=3;
           thirdPhase="slide";
@@ -1415,8 +1484,11 @@
             success();
           }
         }
-      }else if(mode==="parallel" && stage===2){
-        if(drawing.maxS - drawing.minS >= MIN_DRAW_LENGTH){
+      }else if((mode==="parallel" || mode==="distanceParallel") && stage===2){
+        const physicalDistance=Math.abs(signedDistancePointToLine(rulerState,line,line.angle));
+        const correctDistance=mode!=="distanceParallel" ||
+          Math.abs(physicalDistance-requestedCm*CM_PX)<2.0;
+        if(correctDistance && drawing.maxS - drawing.minS >= MIN_DRAW_LENGTH){
           finishedLine={start:drawing.minS, end:drawing.maxS};
           stage=4;
           updateInstruction();
@@ -1496,7 +1568,8 @@
     if(phase<0.46){
       const progress=phase/0.46;
       const envelope=Math.sin(Math.PI*progress);
-      const opacity=Math.pow(envelope,1.5);      const rayLength=(7+22*proximity)*envelope;
+      const opacity=Math.pow(envelope,1.5);
+      const rayLength=(7+22*proximity)*envelope;
       if(opacity>0.005){
         const a=deg2rad(line.angle);
         const ux=Math.cos(a),uy=Math.sin(a);
@@ -1540,7 +1613,7 @@
     const u=vecFromAngle(rulerState.angle);
     const n=normalFromAngle(rulerState.angle);
     const dx=target.x-rulerState.x,dy=target.y-rulerState.y;
-    const center=(mode==='parallel'||mode==='pointPerp')
+    const center=(mode==='parallel'||mode==='pointPerp'||mode==='distanceParallel')
       ? Math.max(-100,Math.min(100,dx*u.x+dy*u.y)) : 0;
     const startS=center-105, endS=center+105;
     const travel=Math.max(0,Math.min(1,(t-.10)/.62));
@@ -1661,7 +1734,7 @@
       width:5,
       color:"#263648",
       alpha:1,
-      glow:stage>=3 || (mode==="parallel" && stage===2) ? 8 : 0,
+      glow:stage>=3 || ((mode==="parallel" || mode==="distanceParallel") && stage===2) ? 8 : 0,
       glowColor:"#4c8cff"
     });
 
@@ -1671,7 +1744,7 @@
       drawLineRays(proximity, now);
     }
 
-    if(mode==="parallel" && stage!==4){
+    if((mode==="parallel" || mode==="distanceParallel") && stage!==4){
       const info = getParallelAlignmentInfo();
       const proximity = Math.max(0, 1 - Math.min(1, info.angleDiff/40)) * Math.max(0, 1 - Math.min(1, info.bestDist/40));
       drawLineRays(proximity, now);
@@ -1714,7 +1787,7 @@
         ctx.fill();
         ctx.restore();
       }
-    }else if(stage!==4){
+    }else if(mode!=="distanceParallel" && stage!==4){
       let proximity = 0;
       if(mode==="pointPerp" && stage===3){
         proximity=Math.max(0,1-Math.min(1,distance(rulerState,thirdFoot())/150));
@@ -1745,8 +1818,8 @@
 
     drawCurrentStudentLine();
 
-    // Noktadan dik çizme modunda başarıdan sonra P noktası görünür kalır.
-    // Yeşil çizginin üstüne sabit kırmızı hedefi çiziyoruz.
+    // Noktadan dik çizme: başarıdan sonra P noktası kaybolmaz.
+    // Çizginin üstünde, sabit ve animasyonsuz görünür.
     if(mode==="pointPerp" && stage===4){
       ctx.save();
       ctx.fillStyle="#ff3149";
@@ -1877,6 +1950,7 @@
   perpBtn.onclick = () => { mode="perp"; updateModeButtons(); randomTask(); applyLanguage(); };
   parallelBtn.onclick = () => { mode="parallel"; updateModeButtons(); randomTask(); applyLanguage(); };
   pointPerpBtn.onclick = () => { mode="pointPerp"; updateModeButtons(); randomTask(); applyLanguage(); };
+  distanceBtn.onclick = () => { mode="distanceParallel"; updateModeButtons(); randomTask(); applyLanguage(); };
 
   resize();
   updateModeButtons();
@@ -1887,4 +1961,4 @@
 </script>
 
 </body>
-</html></html>
+</html>
