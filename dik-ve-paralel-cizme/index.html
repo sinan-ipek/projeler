@@ -94,6 +94,9 @@
   .point-anim-toggle[aria-pressed="false"]{background:#e9edf3;color:#657080}
   #modePanel{
     margin-left:auto;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    max-width:min(70vw,680px);
     display:flex;
     gap:8px;
     padding:6px;
@@ -103,7 +106,8 @@
     backdrop-filter:blur(6px);
   }
   .modeBtn{
-    padding:10px 18px;
+    padding:10px 13px;
+    font-size:13px;
     background:#eef2f7;
     color:#344050;
   }
@@ -364,6 +368,7 @@
   <div id="modePanel">
     <button id="perpBtn" class="modeBtn active">Dik çiz</button>
     <button id="parallelBtn" class="modeBtn" disabled>Paralel çiz</button>
+    <button id="pointPerpBtn" class="modeBtn">Noktadan dik çiz</button>
   </div>
 </div>
 
@@ -384,7 +389,7 @@
 </div>
 
 <button id="resetBtn" class="actionBtn">Yeni soru</button>
-<div id="version">v2.2 — Gönye tebrik yazısı bitmeden kaybolmaya başlar.</div>
+<div id="version">v2.3 — Noktadan dik çizme modu eklendi.</div>
 <div id="audioHint">Ses için sayfaya bir kez tıkla.</div>
 
 <div id="helpOverlay">
@@ -427,13 +432,16 @@
   const rewardText = document.getElementById("rewardText");
   const perpBtn = document.getElementById("perpBtn");
   const parallelBtn = document.getElementById("parallelBtn");
+  const pointPerpBtn = document.getElementById("pointPerpBtn");
   const pointAnimBtn = document.getElementById("pointAnimBtn");
   let pointAnimEnabled = localStorage.getItem("geo-point-anim") !== "off";
   const resetBtn = document.getElementById("resetBtn");
 
   let dpr = Math.max(1, window.devicePixelRatio || 1);
 
-  let mode = "perp"; // "perp" | "parallel"
+  let mode = "perp"; // perp | parallel | pointPerp
+  let thirdPhase = "place"; // place -> rotate -> slide -> draw
+  const THIRD_PLACE_SNAP = 11, THIRD_SLIDE_SNAP = 8, THIRD_MIN_EACH_SIDE = 45;
   let stage = 1;
   // Tek seferlik çizim yönü gösterimi (her soru için yalnızca bir kez).
   let drawHintStartedAt = 0;
@@ -628,12 +636,13 @@
       lang:"TR ▾",
       perp:"Dik çiz",
       parallel:"Paralel çiz",
+      pointPerp:"Noktadan dik çiz",
       pointOn:"Nokta ışığı: Açık", pointOff:"Nokta ışığı: Kapalı",
       reset:"Yeni soru",
       helpTitle:"Nasıl oynanır?",
       h1:"Dik çizimde önce kırmızı noktayı, sonra doğruyu hizala ve çiz.",
       h2:"Paralel çizimde önce içteki yeşil çizgilerden birini doğruyla üst üste getir.",
-      h3:"Sonra kırmızı noktadan geçen paralel çizgiyi çiz.",
+      h3:"Noktadan dik çizmede gönyeyi hizala, doğru boyunca kaydır ve kırmızı noktadan dik çiz.",
       h4:"Yaklaştıkça ışıklar ve bip sesi hızlanır.",
       close:"Kapat",
       perp_s1:"Gönyenin sıfırını kırmızı noktanın üzerine getir.",
@@ -642,6 +651,14 @@
       perp_ss2:"Yaklaştıkça mavi ışıklar ve ses daha hızlı olur.",
       perp_s3:"Güzel! Uzun kenar boyunca kırmızı noktanın iki tarafına da çiz.",
       perp_ss3:"Bir tarafa çizmek yetmez. İki tarafta da çizgi olmalı.",
+      third_s1:"Gönyenin sıfırını doğru üzerine getir.",
+      third_ss1:"Sıfır noktası doğruya yaklaşınca yerleşecek.",
+      third_s2:"Şimdi gönyeyi döndür. Mavi çizgi doğru ile çakışsın.",
+      third_ss2:"Yaklaştıkça ışıklar hızlanır.",
+      third_s3:"Gönyeyi doğru boyunca kaydır. Uzun kenar kırmızı noktaya gelsin.",
+      third_ss3:"Gönye artık dönmez, yalnızca doğru boyunca kayar.",
+      third_s4:"Çizgiyi kırmızı noktanın iki yanına çiz.",
+      third_ss4:"Uzun kenarı takip et.",
       par_s1:"Gönyeyi doğruyun üstüne getir.",
       par_ss1:"İçteki yeşil çizgilerden biri doğru ile çakışsın.",
       par_s2:"Harika! Şimdi uzun kenardan çiz.",
@@ -652,6 +669,7 @@
       lang:"DE ▾",
       perp:"Senkrecht",
       parallel:"Parallel",
+      pointPerp:"Senkrecht durch Punkt",
       pointOn:"Punktlicht: An", pointOff:"Punktlicht: Aus",
       reset:"Neue Aufgabe",
       helpTitle:"Wie geht es?",
@@ -666,6 +684,14 @@
       perp_ss2:"Je näher du kommst, desto schneller werden Licht und Ton.",
       perp_s3:"Gut! Zeichne an der langen Kante auf beiden Seiten des roten Punktes.",
       perp_ss3:"Nur eine Seite reicht nicht.",
+      third_s1:"Schiebe die Null des Geodreiecks auf die Linie.",
+      third_ss1:"Wenn du nah bist, rastet die Null auf der Linie ein.",
+      third_s2:"Drehe das Geodreieck. Die blaue Linie soll auf der Geraden liegen.",
+      third_ss2:"Das Licht wird schneller.",
+      third_s3:"Schiebe das Geodreieck auf der Linie, bis die lange Kante den roten Punkt trifft.",
+      third_ss3:"Jetzt nicht mehr drehen, nur schieben.",
+      third_s4:"Zeichne auf beiden Seiten des roten Punktes.",
+      third_ss4:"Zeichne an der langen Kante.",
       par_s1:"Lege das Geodreieck auf die Linie.",
       par_ss1:"Eine der grünen Hilfslinien soll genau auf der Linie liegen.",
       par_s2:"Super! Zeichne jetzt an der langen Kante.",
@@ -676,6 +702,7 @@
       lang:"EN ▾",
       perp:"Perpendicular",
       parallel:"Parallel",
+      pointPerp:"Perpendicular through point",
       pointOn:"Point light: On", pointOff:"Point light: Off",
       reset:"New task",
       helpTitle:"How to play",
@@ -690,6 +717,14 @@
       perp_ss2:"Lights and sound get faster when you get closer.",
       perp_s3:"Good! Draw on both sides of the red point along the long edge.",
       perp_ss3:"One side is not enough.",
+      third_s1:"Move the zero mark of the set square onto the line.",
+      third_ss1:"It will snap onto the line when you get close.",
+      third_s2:"Rotate the set square. Match the blue line with the given line.",
+      third_ss2:"The lights get faster as you get closer.",
+      third_s3:"Slide along the line until the long edge reaches the red point.",
+      third_ss3:"Now slide only. Do not rotate.",
+      third_s4:"Draw on both sides of the red point.",
+      third_ss4:"Follow the long edge.",
       par_s1:"Put the set square onto the line.",
       par_ss1:"One green guide line should lie exactly on the line.",
       par_s2:"Great! Now draw along the long edge.",
@@ -705,14 +740,14 @@
     document.getElementById("langBtn").textContent = t.lang;
     perpBtn.textContent = t.perp;
     parallelBtn.textContent = t.parallel;
+    pointPerpBtn.textContent = t.pointPerp;
     updatePointAnimButton();
     resetBtn.textContent = t.reset;
     document.getElementById("helpTitle").textContent = t.helpTitle;
     document.getElementById("helpP1").textContent = t.h1;
     document.getElementById("helpP2").textContent = t.h2;
     document.getElementById("helpP3").textContent = t.h3;
-    document.getElementById("helpP4").textContent = t.h4;
-    document.getElementById("helpClose").textContent = t.close;
+    document.getElementById("helpP4").textContent = t.h4;    document.getElementById("helpClose").textContent = t.close;
     updateInstruction();
     if(stage===4) rewardText.textContent = t.done;
   }
@@ -732,6 +767,7 @@
   function updateModeButtons(){
     perpBtn.classList.toggle("active", mode==="perp");
     parallelBtn.classList.toggle("active", mode==="parallel");
+    pointPerpBtn.classList.toggle("active", mode==="pointPerp");
   }
 
   function updateInstruction(){
@@ -747,10 +783,15 @@
         instructionSub.textContent = t.perp_ss1;
       }else if(stage===2){
         instructionMain.textContent = t.perp_s2;
-        instructionSub.textContent = t.perp_ss2;      }else{
+        instructionSub.textContent = t.perp_ss2;
+      }else{
         instructionMain.textContent = t.perp_s3;
         instructionSub.textContent = t.perp_ss3;
       }
+    }else if(mode==="pointPerp"){
+      const phaseNum=stage===1?1:stage===2?2:(thirdPhase==="slide"?3:4);
+      instructionMain.textContent=t["third_s"+phaseNum];
+      instructionSub.textContent=t["third_ss"+phaseNum];
     }else{
       if(stage===1){
         instructionMain.textContent = t.par_s1;
@@ -894,6 +935,7 @@
     drawHintShown=false;
     currentGuideOffset=null;
     parallelSnapped=false;
+    thirdPhase="place";
   }
 
   function randomTask(){
@@ -918,6 +960,22 @@
         y:Math.min(h-90,y + 120 + Math.random()*70),
         angle: -15 + Math.random()*30
       };
+    }else if(mode==="pointPerp"){
+      const angle=-25+Math.random()*50;
+      const n=normalFromAngle(angle);
+      const x=window.innerWidth/2+(Math.random()-.5)*Math.min(220,window.innerWidth*.22);
+      const y=Math.max(230,window.innerHeight*.52);
+      line={x,y,angle};
+      const signed=(Math.random()<.5?-1:1)*(95+Math.random()*70);
+      target={x:x+n.x*signed,y:y+n.y*signed};
+      const u=vecFromAngle(angle);
+      const shift=150+Math.random()*90;
+      rulerState={
+        x:x+u.x*shift+n.x*105,
+        y:y+u.y*shift+n.y*105,
+        angle:angle-90+(Math.random()<.5?-1:1)*(20+Math.random()*25)
+      };
+      thirdPhase="place";
     }else{
       const margin=180;
       const angle=-26 + Math.random()*52;
@@ -1098,6 +1156,30 @@
   stageEl.addEventListener("pointerup",endPan);
   stageEl.addEventListener("pointercancel",endPan);
 
+  function thirdFoot(){
+    const u=vecFromAngle(line.angle);
+    const t=(target.x-line.x)*u.x+(target.y-line.y)*u.y;
+    return {x:line.x+t*u.x,y:line.y+t*u.y};
+  }
+  function thirdPointOnLine(candidate){
+    const u=vecFromAngle(line.angle);
+    const t=(candidate.x-line.x)*u.x+(candidate.y-line.y)*u.y;
+    return {x:line.x+t*u.x,y:line.y+t*u.y};
+  }
+  function thirdAdvanceToDraw(){
+    const foot=thirdFoot();
+    rulerState.x=foot.x;
+    rulerState.y=foot.y;
+    rulerState.angle=nearestEquivalentAngle(rulerState.angle,line.angle-90);
+    thirdPhase="draw";
+    setRulerTransform();
+    showDrawHintOnce();
+    pointerMode=null;
+    beep(1220,.10,.06);
+    setTimeout(()=>beep(1500,.12,.05),110);
+    updateInstruction();
+  }
+
   ruler.addEventListener("pointerdown", e=>{
     if(e.button!==0 || panPointerId!==null) return;
     if(stage===4) return;
@@ -1131,6 +1213,32 @@
         pointerMode="rotate";
         rotateStartAngle=Math.atan2(pt.y-rulerState.y,pt.x-rulerState.x);
         rulerAngleStart=rulerState.angle;
+      }
+    }else if(mode==="pointPerp"){
+      if(stage===3 && thirdPhase==="draw"){
+        if(distanceToBase(pt)<18){
+          pointerMode="draw";
+          const p=projectToBase(pt);
+          drawing={a:p,b:p,minS:p.s,maxS:p.s};
+        }else pointerMode=null;
+      }else if(stage===2){
+        pointerMode="rotate";
+        rotateStartAngle=Math.atan2(pt.y-rulerState.y,pt.x-rulerState.x);
+        rulerAngleStart=rulerState.angle;
+      }else if(stage===3 && thirdPhase==="slide"){
+        pointerMode="slide";
+        pointerStart={...pt};
+        rulerStart={...rulerState};
+      }else if(stage===1){
+        if(e.target===rotateHandle){
+          pointerMode="rotate";
+          rotateStartAngle=Math.atan2(pt.y-rulerState.y,pt.x-rulerState.x);
+          rulerAngleStart=rulerState.angle;
+        }else{
+          pointerMode="move";
+          pointerStart={...pt};
+          rulerStart={...rulerState};
+        }
       }
     }else{
       if(stage===2 && parallelSnapped && currentGuideOffset===parallelTargetOffset && distanceToBase(pt) < 18){
@@ -1200,6 +1308,47 @@
         drawing.minS=Math.min(drawing.minS,drawing.b.s);
         drawing.maxS=Math.max(drawing.maxS,drawing.b.s);
       }
+    }else if(mode==="pointPerp"){
+      if(stage===1 && pointerMode==="move"){
+        rulerState.x=rulerStart.x+(pt.x-pointerStart.x);
+        rulerState.y=rulerStart.y+(pt.y-pointerStart.y);
+        const d=Math.abs(signedDistancePointToLine(rulerState,line,line.angle));
+        if(d<=THIRD_PLACE_SNAP){
+          const onLine=thirdPointOnLine(rulerState);
+          rulerState.x=onLine.x;
+          rulerState.y=onLine.y;
+          stage=2;
+          thirdPhase="rotate";
+          pointerMode=null;
+          beep(900,.08,.05);
+          updateInstruction();
+        }
+        setRulerTransform();
+      }else if(pointerMode==="rotate" && (stage===1 || stage===2)){
+        const a=Math.atan2(pt.y-rulerState.y,pt.x-rulerState.x);
+        rulerState.angle=rulerAngleStart+rad2deg(a-rotateStartAngle);
+        if(stage===2 && angleDiffUndirected(rulerState.angle+90,line.angle)<=ANGLE_LOCK_TOLERANCE){
+          rulerState.angle=nearestEquivalentAngle(rulerState.angle,line.angle-90);
+          stage=3;
+          thirdPhase="slide";
+          pointerMode=null;
+          beep(1100,.09,.05);
+          updateInstruction();
+        }
+        setRulerTransform();
+      }else if(stage===3 && pointerMode==="slide" && thirdPhase==="slide"){
+        const raw={x:rulerStart.x+pt.x-pointerStart.x,y:rulerStart.y+pt.y-pointerStart.y};
+        const onLine=thirdPointOnLine(raw);
+        rulerState.x=onLine.x;
+        rulerState.y=onLine.y;
+        rulerState.angle=nearestEquivalentAngle(rulerState.angle,line.angle-90);
+        if(distance(rulerState,thirdFoot())<=THIRD_SLIDE_SNAP) thirdAdvanceToDraw();
+        else setRulerTransform();
+      }else if(stage===3 && thirdPhase==="draw" && pointerMode==="draw"){
+        drawing.b=projectToBase(pt);
+        drawing.minS=Math.min(drawing.minS,drawing.b.s);
+        drawing.maxS=Math.max(drawing.maxS,drawing.b.s);
+      }
     }else{
       if(pointerMode==="move"){
         rulerState.x=rulerStart.x+(pt.x-pointerStart.x);
@@ -1242,6 +1391,25 @@
           drawnSegments=merged;
           const completed=drawnSegments.some(seg=> seg.start<=-MIN_DRAW_LENGTH && seg.end>=MIN_DRAW_LENGTH );
           if(completed){
+            stage=4;
+            updateInstruction();
+            success();
+          }
+        }
+      }else if(mode==="pointPerp" && stage===3 && thirdPhase==="draw"){
+        if(drawing.maxS-drawing.minS>=5){
+          drawnSegments.push({start:drawing.minS,end:drawing.maxS});
+          drawnSegments.sort((a,b)=>a.start-b.start);
+          const merged=[];
+          for(const seg of drawnSegments){
+            const last=merged[merged.length-1];
+            if(last && seg.start<=last.end+4) last.end=Math.max(last.end,seg.end);
+            else merged.push({...seg});
+          }
+          drawnSegments=merged;
+          const u=vecFromAngle(rulerState.angle);
+          const targetS=(target.x-rulerState.x)*u.x+(target.y-rulerState.y)*u.y;
+          if(drawnSegments.some(seg=>seg.start<=targetS-THIRD_MIN_EACH_SIDE && seg.end>=targetS+THIRD_MIN_EACH_SIDE)){
             stage=4;
             updateInstruction();
             success();
@@ -1328,8 +1496,7 @@
     if(phase<0.46){
       const progress=phase/0.46;
       const envelope=Math.sin(Math.PI*progress);
-      const opacity=Math.pow(envelope,1.5);
-      const rayLength=(7+22*proximity)*envelope;
+      const opacity=Math.pow(envelope,1.5);      const rayLength=(7+22*proximity)*envelope;
       if(opacity>0.005){
         const a=deg2rad(line.angle);
         const ux=Math.cos(a),uy=Math.sin(a);
@@ -1373,7 +1540,7 @@
     const u=vecFromAngle(rulerState.angle);
     const n=normalFromAngle(rulerState.angle);
     const dx=target.x-rulerState.x,dy=target.y-rulerState.y;
-    const center=mode==='parallel'
+    const center=(mode==='parallel'||mode==='pointPerp')
       ? Math.max(-100,Math.min(100,dx*u.x+dy*u.y)) : 0;
     const startS=center-105, endS=center+105;
     const travel=Math.max(0,Math.min(1,(t-.10)/.62));
@@ -1423,7 +1590,7 @@
       ctx.stroke();
     };
 
-    if(mode==="perp"){
+    if(mode==="perp" || mode==="pointPerp"){
       if(drawnSegments.length || drawing){
         ctx.save();
         ctx.lineWidth=6;
@@ -1453,14 +1620,14 @@
   // Bu yay gönyenin üzerinde değil, çizilmiş iki doğrunun kesişiminde.
   // Yalnızca DİK çizim tamamlanınca gösterilir.
   function drawRightAngleProof(now){
-    if(mode!=="perp" || stage!==4 || !rightAngleRevealAt || now<rightAngleRevealAt) return;
+    if((mode!=="perp" && mode!=="pointPerp") || stage!==4 || !rightAngleRevealAt || now<rightAngleRevealAt) return;
     const duration=RIGHT_ANGLE_DRAW_MS;
     const p=Math.min(1,(now-rightAngleRevealAt)/duration);
     // Yumuşak ilerleme: başlangıç ve bitiş ani değil.
     const eased=p*p*(3-2*p);
     const start=deg2rad(line.angle-90);
     const radius=34;
-    const ox=target.x, oy=target.y;
+    const ox=mode==="pointPerp"?rulerState.x:target.x, oy=mode==="pointPerp"?rulerState.y:target.y;
     ctx.save();
     ctx.strokeStyle="#286ce8";
     ctx.lineWidth=3.5;
@@ -1497,7 +1664,8 @@
       glow:stage>=3 || (mode==="parallel" && stage===2) ? 8 : 0,
       glowColor:"#4c8cff"
     });
-    if(mode==="perp" && stage===2){
+
+    if((mode==="perp" || mode==="pointPerp") && stage===2){
       const difference=angleDiffUndirected(rulerState.angle+90,line.angle);
       const proximity=Math.max(0,1-Math.min(1,difference/45));
       drawLineRays(proximity, now);
@@ -1548,7 +1716,9 @@
       }
     }else if(stage!==4){
       let proximity = 0;
-      if(parallelSnapped && currentGuideOffset!==null){
+      if(mode==="pointPerp" && stage===3){
+        proximity=Math.max(0,1-Math.min(1,distance(rulerState,thirdFoot())/150));
+      }else if(parallelSnapped && currentGuideOffset!==null){
         const distOffset = Math.abs(currentGuideOffset - parallelTargetOffset);
         proximity = Math.max(0, 1 - Math.min(1, distOffset/80));
       }
@@ -1604,6 +1774,15 @@
           }
         }
       }
+    }else if(mode==="pointPerp"){
+      let closeness=0;
+      if(stage===1) closeness=Math.max(0,1-Math.min(1,Math.abs(signedDistancePointToLine(rulerState,line,line.angle))/170));
+      else if(stage===2) closeness=Math.max(0,1-Math.min(1,angleDiffUndirected(rulerState.angle+90,line.angle)/45));
+      else if(stage===3 && thirdPhase==="slide") closeness=Math.max(0,1-Math.min(1,distance(rulerState,thirdFoot())/170));
+      if(closeness>.08 && now-lastBeep2>850-closeness*730){
+        beep(stage===2?1030:660,.032,.025);
+        lastBeep2=now;
+      }
     }else{
       const info = getParallelAlignmentInfo();
       const closeness = Math.max(0, 1 - Math.min(1, info.angleDiff/40)) * Math.max(0, 1 - Math.min(1, info.bestDist/40));
@@ -1639,7 +1818,7 @@
       ruler.classList.add("fade-out");
       // Diklik yayı, tebrik yazısı kaybolduktan VE gönye fade-out
       // animasyonu bittikten sonra ortaya çıkar.
-      if(mode==="perp"){
+      if(mode==="perp" || mode==="pointPerp"){
         rightAngleRevealAt=performance.now()+Math.max(RULER_FADE_MS, SUCCESS_TEXT_MS-RULER_FADE_START_MS);
       }
       fadeTimer=null;
@@ -1680,6 +1859,7 @@
   parallelBtn.disabled = false;
   perpBtn.onclick = () => { mode="perp"; updateModeButtons(); randomTask(); applyLanguage(); };
   parallelBtn.onclick = () => { mode="parallel"; updateModeButtons(); randomTask(); applyLanguage(); };
+  pointPerpBtn.onclick = () => { mode="pointPerp"; updateModeButtons(); randomTask(); applyLanguage(); };
 
   resize();
   updateModeButtons();
@@ -1690,4 +1870,4 @@
 </script>
 
 </body>
-</html>
+</html></html>
