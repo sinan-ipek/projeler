@@ -384,7 +384,7 @@
 </div>
 
 <button id="resetBtn" class="actionBtn">Yeni soru</button>
-<div id="version">v2.1 — Gönye daha hızlı kaybolur.</div>
+<div id="version">v2.2 — Gönye tebrik yazısı bitmeden kaybolmaya başlar.</div>
 <div id="audioHint">Ses için sayfaya bir kez tıkla.</div>
 
 <div id="helpOverlay">
@@ -446,8 +446,10 @@
     drawHintStartedAt=performance.now();
   }
   let finishTimer = null;
+  let fadeTimer = null;
   let rightAngleRevealAt = 0;
-  const SUCCESS_TEXT_MS = 2200;   // Önceki 1300 ms yerine 2200 ms
+  const SUCCESS_TEXT_MS = 2200;   // Tebrik yazısı süresi
+  const RULER_FADE_START_MS = 1600; // Tebrik devam ederken gönye kaybolmaya başlar
   const RULER_FADE_MS = 900;    // CSS'deki 0.9 saniyelik fade-out
   const RIGHT_ANGLE_DRAW_MS = 900;
   let bubblePosition = -1;
@@ -697,7 +699,8 @@
   };
   let lang = localStorage.getItem("geo-lang") || "tr";
 
-  function applyLanguage(){    const t = texts[lang];
+  function applyLanguage(){
+    const t = texts[lang];
     document.documentElement.lang = lang;
     document.getElementById("langBtn").textContent = t.lang;
     perpBtn.textContent = t.perp;
@@ -744,8 +747,7 @@
         instructionSub.textContent = t.perp_ss1;
       }else if(stage===2){
         instructionMain.textContent = t.perp_s2;
-        instructionSub.textContent = t.perp_ss2;
-      }else{
+        instructionSub.textContent = t.perp_ss2;      }else{
         instructionMain.textContent = t.perp_s3;
         instructionSub.textContent = t.perp_ss3;
       }
@@ -871,6 +873,10 @@
     if(finishTimer!==null){
       clearTimeout(finishTimer);
       finishTimer=null;
+    }
+    if(fadeTimer!==null){
+      clearTimeout(fadeTimer);
+      fadeTimer=null;
     }
     ruler.classList.remove("fade-out");
     instruction.classList.remove("hidden-after-success");
@@ -1396,7 +1402,8 @@
       const half=5.0, head=17;
       const headBase=along(Math.max(startS,tipS-head));
       ctx.beginPath();
-      ctx.moveTo(tail.x+n.x*half,tail.y+n.y*half);      ctx.lineTo(headBase.x+n.x*half,headBase.y+n.y*half);
+      ctx.moveTo(tail.x+n.x*half,tail.y+n.y*half);
+      ctx.lineTo(headBase.x+n.x*half,headBase.y+n.y*half);
       ctx.lineTo(headBase.x+n.x*11,headBase.y+n.y*11);
       ctx.lineTo(tip.x,tip.y);
       ctx.lineTo(headBase.x-n.x*11,headBase.y-n.y*11);
@@ -1490,7 +1497,6 @@
       glow:stage>=3 || (mode==="parallel" && stage===2) ? 8 : 0,
       glowColor:"#4c8cff"
     });
-
     if(mode==="perp" && stage===2){
       const difference=angleDiffUndirected(rulerState.angle+90,line.angle);
       const proximity=Math.max(0,1-Math.min(1,difference/45));
@@ -1629,12 +1635,19 @@
     setTimeout(()=>beep(1320,.15,.07),200);
     launchConfetti();
 
+    fadeTimer=setTimeout(()=>{
+      ruler.classList.add("fade-out");
+      // Diklik yayı, tebrik yazısı kaybolduktan VE gönye fade-out
+      // animasyonu bittikten sonra ortaya çıkar.
+      if(mode==="perp"){
+        rightAngleRevealAt=performance.now()+Math.max(RULER_FADE_MS, SUCCESS_TEXT_MS-RULER_FADE_START_MS);
+      }
+      fadeTimer=null;
+    },RULER_FADE_START_MS);
+
     finishTimer=setTimeout(()=>{
       reward.classList.remove("show");
       instruction.classList.add("hidden-after-success");
-      ruler.classList.add("fade-out");
-      // Yazı gittikten ve gönye tamamen kaybolduktan sonra yayı çiz.
-      if(mode==="perp") rightAngleRevealAt=performance.now()+RULER_FADE_MS;
       finishTimer=null;
     },SUCCESS_TEXT_MS);
   }
