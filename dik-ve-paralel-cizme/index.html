@@ -384,7 +384,7 @@
 </div>
 
 <button id="resetBtn" class="actionBtn">Yeni soru</button>
-<div id="version">v1.8 — Dik açı işareti tek çeyrek yay olarak düzeltildi.</div>
+<div id="version">v1.9 — Gönye üzerindeki dik açı işareti kaldırıldı.</div>
 <div id="audioHint">Ses için sayfaya bir kez tıkla.</div>
 
 <div id="helpOverlay">
@@ -610,30 +610,7 @@
     g.arc(RULER_W/2, RULER_H-4, 5.5, 0, Math.PI*2);
     g.fill();
 
-    // Almanya'da kullanılan dik açı işareti:
-    // merkez doğrudan O noktasıdır; tek çeyrek yay + içte küçük nokta
-    const ox = RULER_W/2;
-    const oy = RULER_H - 4;
-    const rightAngleR = 34;
-
-    g.lineWidth = 3.2;
-    g.strokeStyle = "rgba(30,70,220,.86)";
-    g.beginPath();
-    // Yukarı yön ile sağ yön arasındaki çeyrek yay
-    g.arc(ox, oy, rightAngleR, -Math.PI/2, 0, false);
-    g.stroke();
-
-    // İçte küçük nokta
-    g.fillStyle = "rgba(70,110,235,.92)";
-    g.beginPath();
-    g.arc(
-      ox + rightAngleR * 0.58 * Math.cos(-Math.PI/4),
-      oy + rightAngleR * 0.58 * Math.sin(-Math.PI/4),
-      4.4,
-      0,
-      Math.PI * 2
-    );
-    g.fill();
+    // Gönyede dik açı işareti gösterilmez.
 
     return c.toDataURL("image/png");
   }
