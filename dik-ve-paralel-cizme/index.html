@@ -193,7 +193,7 @@
     cursor:grab;
     filter:drop-shadow(0 10px 10px rgba(22,40,64,.22));
     opacity:1;
-    transition:opacity 1.65s ease-in-out;
+    transition:opacity 0.9s ease-in-out;
   }
   #ruler.fade-out{opacity:0;pointer-events:none}
   #instruction.hidden-after-success{opacity:0;pointer-events:none}
@@ -384,7 +384,7 @@
 </div>
 
 <button id="resetBtn" class="actionBtn">Yeni soru</button>
-<div id="version">v2.0 — Uzun tebrik ve başarıdan sonra animasyonlu dik açı yayı.</div>
+<div id="version">v2.1 — Gönye daha hızlı kaybolur.</div>
 <div id="audioHint">Ses için sayfaya bir kez tıkla.</div>
 
 <div id="helpOverlay">
@@ -448,7 +448,7 @@
   let finishTimer = null;
   let rightAngleRevealAt = 0;
   const SUCCESS_TEXT_MS = 2200;   // Önceki 1300 ms yerine 2200 ms
-  const RULER_FADE_MS = 1650;    // CSS'deki 1.65 saniyelik fade-out
+  const RULER_FADE_MS = 900;    // CSS'deki 0.9 saniyelik fade-out
   const RIGHT_ANGLE_DRAW_MS = 900;
   let bubblePosition = -1;
   let bubbleTick = 0;
@@ -697,8 +697,7 @@
   };
   let lang = localStorage.getItem("geo-lang") || "tr";
 
-  function applyLanguage(){
-    const t = texts[lang];
+  function applyLanguage(){    const t = texts[lang];
     document.documentElement.lang = lang;
     document.getElementById("langBtn").textContent = t.lang;
     perpBtn.textContent = t.perp;
@@ -747,7 +746,8 @@
         instructionMain.textContent = t.perp_s2;
         instructionSub.textContent = t.perp_ss2;
       }else{
-        instructionMain.textContent = t.perp_s3;        instructionSub.textContent = t.perp_ss3;
+        instructionMain.textContent = t.perp_s3;
+        instructionSub.textContent = t.perp_ss3;
       }
     }else{
       if(stage===1){
@@ -1396,8 +1396,7 @@
       const half=5.0, head=17;
       const headBase=along(Math.max(startS,tipS-head));
       ctx.beginPath();
-      ctx.moveTo(tail.x+n.x*half,tail.y+n.y*half);
-      ctx.lineTo(headBase.x+n.x*half,headBase.y+n.y*half);
+      ctx.moveTo(tail.x+n.x*half,tail.y+n.y*half);      ctx.lineTo(headBase.x+n.x*half,headBase.y+n.y*half);
       ctx.lineTo(headBase.x+n.x*11,headBase.y+n.y*11);
       ctx.lineTo(tip.x,tip.y);
       ctx.lineTo(headBase.x-n.x*11,headBase.y-n.y*11);
@@ -1497,6 +1496,7 @@
       const proximity=Math.max(0,1-Math.min(1,difference/45));
       drawLineRays(proximity, now);
     }
+
     if(mode==="parallel" && stage!==4){
       const info = getParallelAlignmentInfo();
       const proximity = Math.max(0, 1 - Math.min(1, info.angleDiff/40)) * Math.max(0, 1 - Math.min(1, info.bestDist/40));
