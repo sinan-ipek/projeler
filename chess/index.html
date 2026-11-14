@@ -663,14 +663,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 #igorShowSolution:focus-visible{outline:2px solid #b48b00;outline-offset:2px}
 #igorSolution{margin:9px 0 0;font-size:14px;line-height:1.45;color:#333;overflow-wrap:anywhere}
 </style>
-<style id="kidsPieceThemesV1">
-.piece-theme-menu{position:fixed;z-index:10040;display:grid;grid-template-columns:repeat(2,minmax(126px,1fr));gap:7px;width:min(328px,calc(100vw - 18px));padding:10px;border:1px solid #bbb;border-radius:12px;background:#fff;box-shadow:0 8px 28px #0003}
-.piece-theme-menu[hidden]{display:none!important}
-.piece-theme-menu button{display:flex;align-items:center;gap:9px;text-align:left;border:1px solid #ddd;border-radius:9px;padding:9px 10px;background:#f8f8f8;color:#222;cursor:pointer;font:500 13px system-ui,sans-serif}
-.piece-theme-menu button[aria-pressed="true"]{background:#fff2ad;border-color:#b99523}
-.piece-theme-menu .theme-symbol{font-size:24px;width:27px;text-align:center}
-#pieceThemeBtn{white-space:nowrap}
-</style>
+<style id="kidsPieceThemesV2">#pieceThemeBtn{white-space:nowrap}</style>
 </head>
 
 <body>
@@ -680,7 +673,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   <a class="homeLink" href="../index.html">← Home</a>
 </div>
 
-<div class="simpleNav"><button class="home" onclick="location.href='../index.html'">⌂</button><select id="simpleLang"><option value="tr">Türkçe</option><option value="de">Deutsch</option><option value="en">English</option></select><button id="simpleHelp">?</button><button id="simpleBoard">Tahta</button><button id="simpleAnalysis">Analiz</button><button id="boardColorBtn" type="button" title="Tahta rengini değiştir">🎨 Tahta Rengi</button><button id="pieceThemeBtn" type="button" aria-expanded="false" aria-controls="pieceThemeMenu" title="Taş tasarımını değiştir">♞ Tasarım</button><button id="simpleSave">Kaydet</button><button id="simpleLoad">Yükle</button><button id="simplePower">Rakip Motor Gücü</button></div><div id="pieceThemeMenu" class="piece-theme-menu" hidden aria-label="Satranç taşı tasarımları"></div><div id="simpleExtra" class="simpleExtra"></div><div class="wrap">
+<div class="simpleNav"><button class="home" onclick="location.href='../index.html'">⌂</button><select id="simpleLang"><option value="tr">Türkçe</option><option value="de">Deutsch</option><option value="en">English</option></select><button id="simpleHelp">?</button><button id="simpleBoard">Tahta</button><button id="simpleAnalysis">Analiz</button><button id="boardColorBtn" type="button" title="Tahta rengini değiştir">🎨 Tahta Rengi</button><button id="pieceThemeBtn" type="button" title="Taş tasarımını değiştir">♞ Tasarım</button><button id="simpleSave">Kaydet</button><button id="simpleLoad">Yükle</button><button id="simplePower">Rakip Motor Gücü</button></div><div id="simpleExtra" class="simpleExtra"></div><div class="wrap">
   <!-- BOARD + STATUS / CAPTURED / COACH -->
   <div class="card">
     <div class="body">
@@ -918,32 +911,24 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   }
   // Dedicated design menu; no game or chess engine state is changed.
   const themeButton=document.getElementById("pieceThemeBtn");
-  const themeMenu=document.getElementById("pieceThemeMenu");
   const themeLanguage=()=>document.getElementById("simpleLang")?.value||"tr";
-  function refreshThemeMenu(){
+  function refreshThemeButton(){
     const lang=themeLanguage();
-    themeButton.textContent="♞ "+(lang==="de"?"Design":lang==="en"?"Design":"Tasarım");
-    themeButton.title=lang==="de"?"Schachfiguren ändern":lang==="en"?"Change piece design":"Taş tasarımını değiştir";
-    themeMenu.innerHTML=PIECE_THEMES.map(t=>'<button type="button" data-theme="'+t.id+'" aria-pressed="'+(pieceTheme===t.id)+'"><span class="theme-symbol">'+t.icon+'</span><span>'+t[lang]+'</span></button>').join("");
+    const current=PIECE_THEMES.find(t=>t.id===pieceTheme)||PIECE_THEMES[0];
+    themeButton.textContent=current[lang];
+    themeButton.title=lang==="de"?"Klicken, um das Figurendesign zu wechseln":lang==="en"?"Click to switch the piece design":"Diğer taş tasarımına geçmek için tıkla";
+    themeButton.setAttribute("aria-label",themeButton.title+" — "+current[lang]);
   }
-  function moveThemeMenu(){
-    const box=themeButton.getBoundingClientRect(),w=Math.min(328,window.innerWidth-18);
-    themeMenu.style.top=Math.min(box.bottom+6,window.innerHeight-Math.min(themeMenu.offsetHeight||200,window.innerHeight-20)-8)+"px";
-    themeMenu.style.left=Math.max(9,Math.min(box.left,window.innerWidth-w-9))+"px";
-  }
-  themeButton.addEventListener("click",()=>{themeMenu.hidden=!themeMenu.hidden;themeButton.setAttribute("aria-expanded",String(!themeMenu.hidden));if(!themeMenu.hidden)moveThemeMenu();});
-  themeMenu.addEventListener("click",e=>{
-    const chosen=e.target.closest("button[data-theme]");if(!chosen)return;
-    pieceTheme=chosen.dataset.theme;
+  themeButton.addEventListener("click",()=>{
+    const index=PIECE_THEMES.findIndex(t=>t.id===pieceTheme);
+    pieceTheme=PIECE_THEMES[(index+1)%PIECE_THEMES.length].id;
     localStorage.setItem("chess_piece_theme",pieceTheme);
-    themeMenu.hidden=true;themeButton.setAttribute("aria-expanded","false");
-    refreshThemeMenu();render();
+    refreshThemeButton();
+    render();
     document.dispatchEvent(new CustomEvent("chess-piece-theme-changed",{detail:{theme:pieceTheme}}));
   });
-  document.addEventListener("click",e=>{if(!themeMenu.hidden&&!themeMenu.contains(e.target)&&e.target!==themeButton){themeMenu.hidden=true;themeButton.setAttribute("aria-expanded","false");}});
-  document.getElementById("simpleLang")?.addEventListener("change",refreshThemeMenu);
-  window.addEventListener("resize",()=>{if(!themeMenu.hidden)moveThemeMenu();});
-  refreshThemeMenu();
+  document.getElementById("simpleLang")?.addEventListener("change",refreshThemeButton);
+  refreshThemeButton();
   window.ChessPieceSVG=chessPieceHTML;
 
   const PIECE_VAL = { p:100, n:320, b:330, r:500, q:900, k:20000 };
@@ -3777,5 +3762,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.8.1 · Klasik, Chessnut ve Tatiana taş tasarımları</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.8.2 · Tasarım düğmesiyle tek tıkla taş değişimi</div></body>
 </html>
