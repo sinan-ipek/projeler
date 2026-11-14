@@ -244,15 +244,10 @@
     pointer-events:none;
   }
 
-  #resetBtn{
-    position:fixed;
-    z-index:25;
-    right:18px;
-    bottom:18px;
-    padding:11px 16px;
-    background:#fff;
-    color:#344050;
-  }
+  #bottomActions{position:fixed;right:18px;bottom:18px;z-index:25;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:96vw}
+  #bottomActions .actionBtn{padding:11px 14px;background:#fff;color:#344050;font-size:13px}
+  #fitBtn{border:2px solid #2176ff!important;color:#175ec4!important}
+  #resetBtn{border:2px solid transparent}
   #version{
     position:fixed;
     left:12px;
@@ -386,7 +381,8 @@
     }
     #instruction{font-size:13px;padding:10px 12px;max-width:min(290px,calc(100vw - 24px))}
     #instruction small{font-size:11px}
-    #resetBtn{right:10px;bottom:13px}
+    #bottomActions{right:10px;bottom:13px;gap:5px}
+    #bottomActions .actionBtn{padding:10px 9px;font-size:12px}
     #version{font-size:10px;max-width:58vw}
   }
   @media(max-width:360px){
@@ -442,8 +438,8 @@
   </div>
 </div>
 
-<button id="resetBtn" class="actionBtn">Yeni soru</button>
-<div id="version">v2.6 — Mobil uyumlu dört mod düğmesi.</div>
+<div id="bottomActions"><button id="fitBtn" class="actionBtn" type="button">Tümünü göster</button><button id="resetBtn" class="actionBtn">Yeni soru</button></div>
+<div id="version">v2.7 — Tümünü göster: çizimi ekrana sığdırma.</div>
 <div id="audioHint">Ses için sayfaya bir kez tıkla.</div>
 
 <div id="helpOverlay">
@@ -492,6 +488,7 @@
   const distanceBtn = document.getElementById("distanceBtn");
   const pointAnimEnabled = true; // Nokta uyarıları sürekli etkin; ayrı düğme yok.
   const resetBtn = document.getElementById("resetBtn");
+  const fitBtn = document.getElementById("fitBtn");
 
   let dpr = Math.max(1, window.devicePixelRatio || 1);
 
@@ -724,7 +721,7 @@
       distanceDraw:"Çok iyi! Şimdi gönyenin uzun kenarından paralel çiz.",
       distanceDrawHint:"Beyaz oku izle, sonra çizgiyi çiz.",
       pointOn:"Nokta ışığı: Açık", pointOff:"Nokta ışığı: Kapalı",
-      reset:"Yeni soru",
+      reset:"Yeni soru", fit:"Tümünü göster",
       helpTitle:"Nasıl oynanır?",
       h1:"Dik çizimde önce kırmızı noktayı, sonra doğruyu hizala ve çiz.",
       h2:"Paralel çizimde önce içteki yeşil çizgilerden birini doğruyla üst üste getir.",
@@ -762,7 +759,7 @@
       distanceDraw:"Sehr gut! Zeichne jetzt an der langen Kante.",
       distanceDrawHint:"Folge zuerst dem weißen Pfeil.",
       pointOn:"Punktlicht: An", pointOff:"Punktlicht: Aus",
-      reset:"Neue Aufgabe",
+      reset:"Neue Aufgabe", fit:"Alles zeigen",
       helpTitle:"Wie geht es?",
       h1:"Bei Senkrecht: erst den roten Punkt treffen, dann ausrichten und zeichnen.",
       h2:"Bei Parallel: eine grüne Hilfslinie auf die gegebene Linie legen.",
@@ -797,10 +794,10 @@
       distanceMode:"Parallel at a distance",
       distanceAsk:"Can you draw a parallel line {cm} cm away?",
       distanceHint:"Align the {cm} cm guide with the given line.",
-      distanceDraw:"Great! Draw along the long edge now.",      distanceDrawHint:"Watch the white arrow, then draw.",
+      distanceDraw:"Great! Draw along the long edge now.",
+      distanceDrawHint:"Watch the white arrow, then draw.",
       pointOn:"Point light: On", pointOff:"Point light: Off",
-      reset:"New task",
-      helpTitle:"How to play",
+      reset:"New task", fit:"Show all",      helpTitle:"How to play",
       h1:"For perpendicular: hit the red point, align, then draw.",
       h2:"For parallel: place one green guide line on the given line.",
       h3:"Then draw the parallel line through the red point.",
@@ -839,6 +836,7 @@
     distanceBtn.textContent = t.distanceMode;
 
     resetBtn.textContent = t.reset;
+    fitBtn.textContent = t.fit;
     document.getElementById("helpTitle").textContent = t.helpTitle;
     document.getElementById("helpP1").textContent = t.h1;
     document.getElementById("helpP2").textContent = t.h2;
@@ -1596,9 +1594,9 @@
           const x1=x + Math.cos(a)*14;
           const y1=y + Math.sin(a)*14;
           const x2=x + Math.cos(a)*(14+rayLength);
-          const y2=y + Math.sin(a)*(14+rayLength);          ctx.beginPath();
-          ctx.moveTo(x1,y1);
-          ctx.lineTo(x2,y2);
+          const y2=y + Math.sin(a)*(14+rayLength);
+          ctx.beginPath();
+          ctx.moveTo(x1,y1);          ctx.lineTo(x2,y2);
           ctx.stroke();
         }
         ctx.restore();
@@ -1989,6 +1987,48 @@
     }
   }
 
+  // Tümünü göster: kamera görünümünü, sonsuz doğru yerine çalışmanın
+  // anlamlı bölümünü (gönye, nokta ve çizilmiş çizgi) ekrana sığdırır.
+  function fitAll(){
+    const pts=[];
+    const push=(x,y)=>{if(Number.isFinite(x)&&Number.isFinite(y))pts.push({x,y});};
+    const u=vecFromAngle(line.angle);
+    for(const t of [-180,180])push(line.x+t*u.x,line.y+t*u.y);
+    push(target.x,target.y);
+    const ru=vecFromAngle(rulerState.angle);
+    const rn=normalFromAngle(rulerState.angle);
+    // Başarı tamamlandıktan sonra gizlenen gönyeyi sınıra katmayız.
+    if(stage!==4){
+      for(const [dx,dy] of [[-RULER_W/2,0],[RULER_W/2,0],[-RULER_W/2,RULER_H],[RULER_W/2,RULER_H]]){
+        push(rulerState.x+dx*ru.x+dy*rn.x,rulerState.y+dx*ru.y+dy*rn.y);
+      }
+    }
+    const addSpan=(a,b)=>{
+      for(const t of [a,b])push(rulerState.x+t*ru.x,rulerState.y+t*ru.y);
+    };
+    drawnSegments.forEach(seg=>addSpan(seg.start,seg.end));
+    if(finishedLine)addSpan(finishedLine.start,finishedLine.end);
+    if(drawing)addSpan(drawing.minS,drawing.maxS);
+    if(!pts.length)return;
+    const minX=Math.min(...pts.map(p=>p.x)),maxX=Math.max(...pts.map(p=>p.x));
+    const minY=Math.min(...pts.map(p=>p.y)),maxY=Math.max(...pts.map(p=>p.y));
+    const topbar=document.getElementById("topbar");
+    const actions=document.getElementById("bottomActions");
+    const top=topbar.getBoundingClientRect().bottom+18;
+    const bottom=actions.getBoundingClientRect().top-20;
+    const usableTop=Math.min(top,window.innerHeight-110);
+    const usableBottom=Math.max(usableTop+85,bottom);
+    const xPad=window.innerWidth<600?16:32;
+    const yPad=16;
+    const availableW=Math.max(80,window.innerWidth-2*xPad);
+    const availableH=Math.max(80,usableBottom-usableTop-2*yPad);
+    camera.scale=Math.max(MIN_ZOOM,Math.min(2.2,availableW/Math.max(1,maxX-minX),availableH/Math.max(1,maxY-minY)));
+    camera.x=window.innerWidth/2 - camera.scale*(minX+maxX)/2;
+    camera.y=(usableTop+usableBottom)/2 - camera.scale*(minY+maxY)/2;
+    applyCamera();
+  }
+  fitBtn.onclick = fitAll;
+
   resetBtn.onclick = randomTask;
   parallelBtn.disabled = false;
   perpBtn.onclick = () => { mode="perp"; updateModeButtons(); randomTask(); applyLanguage(); };
@@ -2004,6 +2044,5 @@
 })();
 </script>
 
-<script src="/projeler/analytics.js?v=20261114-auto"></script>
 </body>
 </html>
