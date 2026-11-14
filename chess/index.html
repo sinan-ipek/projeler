@@ -663,6 +663,14 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 #igorShowSolution:focus-visible{outline:2px solid #b48b00;outline-offset:2px}
 #igorSolution{margin:9px 0 0;font-size:14px;line-height:1.45;color:#333;overflow-wrap:anywhere}
 </style>
+<style id="kidsPieceThemesV1">
+.piece-theme-menu{position:fixed;z-index:10040;display:grid;grid-template-columns:repeat(2,minmax(126px,1fr));gap:7px;width:min(328px,calc(100vw - 18px));padding:10px;border:1px solid #bbb;border-radius:12px;background:#fff;box-shadow:0 8px 28px #0003}
+.piece-theme-menu[hidden]{display:none!important}
+.piece-theme-menu button{display:flex;align-items:center;gap:9px;text-align:left;border:1px solid #ddd;border-radius:9px;padding:9px 10px;background:#f8f8f8;color:#222;cursor:pointer;font:500 13px system-ui,sans-serif}
+.piece-theme-menu button[aria-pressed="true"]{background:#fff2ad;border-color:#b99523}
+.piece-theme-menu .theme-symbol{font-size:24px;width:27px;text-align:center}
+#pieceThemeBtn{white-space:nowrap}
+</style>
 </head>
 
 <body>
@@ -672,7 +680,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   <a class="homeLink" href="../index.html">← Home</a>
 </div>
 
-<div class="simpleNav"><button class="home" onclick="location.href='../index.html'">⌂</button><select id="simpleLang"><option value="tr">Türkçe</option><option value="de">Deutsch</option><option value="en">English</option></select><button id="simpleHelp">?</button><button id="simpleBoard">Tahta</button><button id="simpleAnalysis">Analiz</button><button id="boardColorBtn" type="button" title="Tahta rengini değiştir">🎨 Tahta Rengi</button><button id="simpleSave">Kaydet</button><button id="simpleLoad">Yükle</button><button id="simplePower">Rakip Motor Gücü</button></div><div id="simpleExtra" class="simpleExtra"></div><div class="wrap">
+<div class="simpleNav"><button class="home" onclick="location.href='../index.html'">⌂</button><select id="simpleLang"><option value="tr">Türkçe</option><option value="de">Deutsch</option><option value="en">English</option></select><button id="simpleHelp">?</button><button id="simpleBoard">Tahta</button><button id="simpleAnalysis">Analiz</button><button id="boardColorBtn" type="button" title="Tahta rengini değiştir">🎨 Tahta Rengi</button><button id="pieceThemeBtn" type="button" aria-expanded="false" aria-controls="pieceThemeMenu" title="Taş tasarımını değiştir">♞ Tasarım</button><button id="simpleSave">Kaydet</button><button id="simpleLoad">Yükle</button><button id="simplePower">Rakip Motor Gücü</button></div><div id="pieceThemeMenu" class="piece-theme-menu" hidden aria-label="Satranç taşı tasarımları"></div><div id="simpleExtra" class="simpleExtra"></div><div class="wrap">
   <!-- BOARD + STATUS / CAPTURED / COACH -->
   <div class="card">
     <div class="body">
@@ -886,17 +894,59 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   // The existing inline drawings remain as offline fallbacks.
   const localPieceBase="pieces/cburnett/";
   const upstreamPieceBase="https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/cburnett/";
+  // Five themed sets by NikAgs / ChessSkins (MIT License), with default Cburnett.
+  // Theme artwork: https://github.com/NikAgs/ChessSkins/tree/main/skins
+  const PIECE_THEMES=[
+    {id:"classic",icon:"♞",tr:"Klasik",de:"Klassisch",en:"Classic"},
+    {id:"dinos",icon:"🦕",tr:"Dinozor",de:"Dinosaurier",en:"Dinosaurs"},
+    {id:"robots",icon:"🤖",tr:"Robot",de:"Roboter",en:"Robots"},
+    {id:"high-seas",icon:"🏴‍☠️",tr:"Korsan",de:"Piraten",en:"Pirates"},
+    {id:"duckies",icon:"🦆",tr:"Ördek",de:"Enten",en:"Duckies"},
+    {id:"pixel",icon:"👾",tr:"Piksel",de:"Pixel",en:"Pixel"}
+  ];
+  let pieceTheme=localStorage.getItem("chess_piece_theme")||"classic";
+  if(!PIECE_THEMES.some(t=>t.id===pieceTheme))pieceTheme="classic";
+  const chessThemeBase="https://raw.githubusercontent.com/NikAgs/ChessSkins/main/skins/";
   function professionalPiece(p){
     if(!p)return "";
     const filename=(p===p.toUpperCase()?"w":"b")+p.toUpperCase()+".svg";
+    const classic=localPieceBase+filename;
+    const source=pieceTheme==="classic"?classic:chessThemeBase+pieceTheme+"/"+filename;
     const fallback=pieceSVG(p);
-    return '<img class="chess-piece-img" draggable="false" alt="" src="'+localPieceBase+filename+'" data-upstream="'+upstreamPieceBase+filename+'" style="width:86%;height:86%;object-fit:contain;display:block;pointer-events:none" onerror="if(!this.dataset.retry){this.dataset.retry=\'1\';this.src=this.dataset.upstream;}else{this.outerHTML=this.dataset.fallback;}">';
+    return '<img class="chess-piece-img" draggable="false" alt="" src="'+source+'" data-upstream="'+upstreamPieceBase+filename+'" data-classic="'+classic+'" style="width:86%;height:86%;object-fit:contain;display:block;pointer-events:none" onerror="if(!this.dataset.retry){this.dataset.retry=\'1\';this.src=this.dataset.classic;}else if(this.dataset.retry===\'1\'){this.dataset.retry=\'2\';this.src=this.dataset.upstream;}else{this.outerHTML=this.dataset.fallback;}">';
   }
-  // Escaped markup fallback is assigned after constructing each image element.
   function chessPieceHTML(p){
     const html=professionalPiece(p);
     return html.replace('data-upstream=', 'data-fallback="'+pieceSVG(p).replace(/&/g,"&amp;").replace(/"/g,"&quot;")+'" data-upstream=');
   }
+  // Dedicated design menu; no game or chess engine state is changed.
+  const themeButton=document.getElementById("pieceThemeBtn");
+  const themeMenu=document.getElementById("pieceThemeMenu");
+  const themeLanguage=()=>document.getElementById("simpleLang")?.value||"tr";
+  function refreshThemeMenu(){
+    const lang=themeLanguage();
+    themeButton.textContent="♞ "+(lang==="de"?"Design":lang==="en"?"Design":"Tasarım");
+    themeButton.title=lang==="de"?"Schachfiguren ändern":lang==="en"?"Change piece design":"Taş tasarımını değiştir";
+    themeMenu.innerHTML=PIECE_THEMES.map(t=>'<button type="button" data-theme="'+t.id+'" aria-pressed="'+(pieceTheme===t.id)+'"><span class="theme-symbol">'+t.icon+'</span><span>'+t[lang]+'</span></button>').join("");
+  }
+  function moveThemeMenu(){
+    const box=themeButton.getBoundingClientRect(),w=Math.min(328,window.innerWidth-18);
+    themeMenu.style.top=Math.min(box.bottom+6,window.innerHeight-Math.min(themeMenu.offsetHeight||200,window.innerHeight-20)-8)+"px";
+    themeMenu.style.left=Math.max(9,Math.min(box.left,window.innerWidth-w-9))+"px";
+  }
+  themeButton.addEventListener("click",()=>{themeMenu.hidden=!themeMenu.hidden;themeButton.setAttribute("aria-expanded",String(!themeMenu.hidden));if(!themeMenu.hidden)moveThemeMenu();});
+  themeMenu.addEventListener("click",e=>{
+    const chosen=e.target.closest("button[data-theme]");if(!chosen)return;
+    pieceTheme=chosen.dataset.theme;
+    localStorage.setItem("chess_piece_theme",pieceTheme);
+    themeMenu.hidden=true;themeButton.setAttribute("aria-expanded","false");
+    refreshThemeMenu();render();
+    document.dispatchEvent(new CustomEvent("chess-piece-theme-changed",{detail:{theme:pieceTheme}}));
+  });
+  document.addEventListener("click",e=>{if(!themeMenu.hidden&&!themeMenu.contains(e.target)&&e.target!==themeButton){themeMenu.hidden=true;themeButton.setAttribute("aria-expanded","false");}});
+  document.getElementById("simpleLang")?.addEventListener("change",refreshThemeMenu);
+  window.addEventListener("resize",()=>{if(!themeMenu.hidden)moveThemeMenu();});
+  refreshThemeMenu();
   window.ChessPieceSVG=chessPieceHTML;
 
   const PIECE_VAL = { p:100, n:320, b:330, r:500, q:900, k:20000 };
@@ -3730,5 +3780,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.7.5 · 10 yanlış sonrası soruya özel çözüm düğmesi</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.8.0 · Altı satranç taşı tasarımı</div></body>
 </html>
