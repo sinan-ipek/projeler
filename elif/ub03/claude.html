@@ -52,7 +52,7 @@ h2{font-size:clamp(24px,3.4vw,36px);margin:0 0 6px}
  <div class="card s" style="max-width:560px;margin-top:24px">
   <b>Konular</b><br>
   Soru 1: Denklik bağıntıları<br>
-  Soru 2: Toplam sıralama, E ve L<br>
+  Soru 2: tam sıralama bağıntısı, E ve L<br>
   Soru 3: Tümevarım<br>
   Soru 4: İspat teknikleri
  </div>
@@ -61,19 +61,19 @@ h2{font-size:clamp(24px,3.4vw,36px);margin:0 0 6px}
 <!-- A1 -->
 <section class="slide">
  <h2 class="s">Soru 1: Denklik bağıntısı (Äquivalenzrelation)</h2>
- <p class="sub s">Üç özellik: yansıma, simetri, geçişlilik. Hepsi her <span class="m">x ∈ X</span> için kontrol edilir.</p>
+ <p class="sub s">Üç özellik: yansıma, simetri ve geçişme. Hepsi her <span class="m">x ∈ X</span> için kontrol edilir.</p>
  <div class="grid">
   <div class="card s"><h3>(a) <span class="m">f ≃ g :⇔ ∀x: f(x) = g(x)</span></h3>
    <span class="step s"><b>Yansıma:</b> f(x) = f(x) her x için doğru, yani <span class="hl m">f ≃ f</span>.</span>
    <span class="step s"><b>Simetri:</b> f(x) = g(x) ise eşitlik simetrik olduğu için g(x) = f(x). Yani <span class="hl m">f ≃ g ⇒ g ≃ f</span>.</span>
-   <span class="step s"><b>Geçişlilik:</b> f(x) = g(x) ve g(x) = h(x) ise f(x) = h(x). Yani <span class="hl m">f ≃ g ∧ g ≃ h ⇒ f ≃ h</span>.</span>
+   <span class="step s"><b>geçişme:</b> f(x) = g(x) ve g(x) = h(x) ise f(x) = h(x). Yani <span class="hl m">f ≃ g ∧ g ≃ h ⇒ f ≃ h</span>.</span>
    <span class="step s ok">Sonuç: ≃ bir denklik bağıntısıdır. ∎</span>
   </div>
   <div class="card s"><h3>(b) <span class="m">R ≃<sub>r</sub> S</span>: kümeler eşit mi?</h3>
    <span class="step s">Her x için <span class="m">R<sub>x</sub> := {y | (x,y) ∈ R}</span> diyelim. Bağıntı: <span class="m">R<sub>x</sub> = S<sub>x</sub></span>.</span>
    <span class="step s"><b>Yansıma:</b> <span class="m">R<sub>x</sub> = R<sub>x</sub></span> (küme eşitliği yansımalıdır).</span>
    <span class="step s"><b>Simetri:</b> <span class="m">R<sub>x</sub> = S<sub>x</sub> ⇒ S<sub>x</sub> = R<sub>x</sub></span>.</span>
-   <span class="step s"><b>Geçişlilik:</b> <span class="m">R<sub>x</sub> = S<sub>x</sub> = T<sub>x</sub> ⇒ R<sub>x</sub> = T<sub>x</sub></span>.</span>
+   <span class="step s"><b>geçişme:</b> <span class="m">R<sub>x</sub> = S<sub>x</sub> = T<sub>x</sub> ⇒ R<sub>x</sub> = T<sub>x</sub></span>.</span>
    <span class="step s ok">Evet, ≃<sub>r</sub> de denklik bağıntısıdır. ∎</span>
    <span class="step s">Not: (a)'dan farkı yok. Eşitlik her seferinde "x'e karşılık gelen küme" üzerinden kullanılıyor.</span>
   </div>
@@ -83,7 +83,7 @@ h2{font-size:clamp(24px,3.4vw,36px);margin:0 0 6px}
 <!-- A2 -->
 <section class="slide">
  <h2 class="s">Soru 2: E ve L bağıntıları</h2>
- <p class="sub s">R bir toplam sıralama: yansıma, ters simetri (antisymmetrisch), geçişlilik ve her iki eleman karşılaştırılabilir.</p>
+ <p class="sub s">R bir tam sıralama bağıntısıdır: yansıma, ters simetri (antisimetriklik), geçişme ve her iki eleman karşılaştırılabilir.</p>
  <div class="grid">
   <div class="card s"><h3>(a) L = E olacak bir örnek</h3>
    <span class="step s"><span class="m">A = {1}, R = {(1,1)}</span></span>
@@ -96,15 +96,15 @@ h2{font-size:clamp(24px,3.4vw,36px);margin:0 0 6px}
    <span class="step s"><b>E:</b> 5 ≤ 0 yanlış, yani <span class="hl m">(1,5) E (2,0)</span> değil.</span>
    <span class="step s ok">Bu çift L'de var, E'de yok: L ≠ E.</span>
   </div>
-  <div class="card s"><h3>(c) E kısmi sıralamadır</h3>
+  <div class="card s"><h3>(c) E bir kısmi sıralama bağıntısıdır</h3>
    <span class="step s"><b>Yansıma:</b> aRa ve bRb (R yansımalı) ⇒ <span class="m">(a,b) E (a,b)</span>.</span>
    <span class="step s"><b>Ters simetri:</b> (a,b)E(a′,b′) ve (a′,b′)E(a,b) ise aRa′ ∧ a′Ra ⇒ a = a′; bRb′ ∧ b′Rb ⇒ b = b′. Yani <span class="m">(a,b) = (a′,b′)</span>.</span>
-   <span class="step s"><b>Geçişlilik:</b> aRa′, a′Ra″ ⇒ aRa″ ve bRb′, b′Rb″ ⇒ bRb″. Yani <span class="m">(a,b) E (a″,b″)</span>. ∎</span>
+   <span class="step s"><b>geçişme:</b> aRa′, a′Ra″ ⇒ aRa″ ve bRb′, b′Rb″ ⇒ bRb″. Yani <span class="m">(a,b) E (a″,b″)</span>. ∎</span>
   </div>
-  <div class="card s"><h3>(d) E her zaman toplam değil</h3>
+  <div class="card s"><h3>(d) E her zaman tam sıralama bağıntısı değildir</h3>
    <span class="step s"><span class="m">A = ℕ, R = ≤</span>. Çiftler <span class="m">(1,2)</span> ve <span class="m">(2,1)</span>.</span>
    <span class="step s"><span class="m">(1,2) E (2,1)</span>: 2 ≤ 1 yanlış. <span class="m">(2,1) E (1,2)</span>: 2 ≤ 1 yanlış.</span>
-   <span class="step s ok">İkisi de karşılaştırılamaz, E toplam sıralama değil. ∎</span>
+   <span class="step s ok">İkisi de karşılaştırılamaz, E tam sıralama bağıntısı değil. ∎</span>
   </div>
   <div class="card s"><h3>(e) L ters simetriktir</h3>
    <span class="step s">Varsayım: <span class="m">(a,b) L (a′,b′)</span> ve <span class="m">(a′,b′) L (a,b)</span>.</span>
@@ -118,26 +118,26 @@ h2{font-size:clamp(24px,3.4vw,36px);margin:0 0 6px}
 <!-- A3 -->
 <section class="slide">
  <h2 class="s">Soru 3: Tam tümevarım</h2>
- <p class="sub s">Her ispatta iki iş var: başlangıç (IA) ve adım (IS), adımda tümevarım hipotezi (IH) kullanılır.</p>
+ <p class="sub s">Her ispatta iki iş var: başlangıç (TB) ve adım (TA), adımda tümevarım hipotezi (TV) kullanılır.</p>
  <div class="grid">
   <div class="card s"><h3>(a) <span class="m">n ≥ 4 için n! ≥ 2ⁿ</span></h3>
-   <span class="step s"><b>IA (n = 4):</b> 4! = 24 ≥ 16 = 2⁴. ✓</span>
-   <span class="step s"><b>IH:</b> n! ≥ 2ⁿ bir n ≥ 4 için doğru.</span>
-   <span class="step s"><b>IS:</b> <span class="m">(n+1)! = (n+1)·n! ≥ (n+1)·2ⁿ</span> (IH).</span>
+   <span class="step s"><b>TB (n = 4):</b> 4! = 24 ≥ 16 = 2⁴. ✓</span>
+   <span class="step s"><b>TV:</b> n! ≥ 2ⁿ bir n ≥ 4 için doğru.</span>
+   <span class="step s"><b>TA:</b> <span class="m">(n+1)! = (n+1)·n! ≥ (n+1)·2ⁿ</span> (TV).</span>
    <span class="step s">n + 1 ≥ 5 ≥ 2 olduğundan <span class="hl m">(n+1)·2ⁿ ≥ 2·2ⁿ = 2ⁿ⁺¹</span>. ∎</span>
   </div>
-  <div class="card s"><h3>(b) f injektif ⇒ fᵏ injektif (k ≥ 1)</h3>
-   <span class="step s"><b>IA (k = 1):</b> f¹ = f injektif (varsayım).</span>
-   <span class="step s"><b>IH:</b> fᵏ injektif.</span>
-   <span class="step s"><b>IS:</b> <span class="m">fᵏ⁺¹ = fᵏ ∘ f</span>. Diyelim <span class="m">fᵏ(f(x)) = fᵏ(f(x′))</span>.</span>
-   <span class="step s">fᵏ injektif (IH) ⇒ <span class="m">f(x) = f(x′)</span>. f injektif ⇒ <span class="hl m">x = x′</span>. ∎</span>
+  <div class="card s"><h3>(b) f bire bir ⇒ fᵏ bire bir (k ≥ 1)</h3>
+   <span class="step s"><b>TB (k = 1):</b> f¹ = f bire bir (varsayım).</span>
+   <span class="step s"><b>TV:</b> fᵏ bire bir.</span>
+   <span class="step s"><b>TA:</b> <span class="m">fᵏ⁺¹ = fᵏ ∘ f</span>. Diyelim <span class="m">fᵏ(f(x)) = fᵏ(f(x′))</span>.</span>
+   <span class="step s">fᵏ bire bir (TV) ⇒ <span class="m">f(x) = f(x′)</span>. f bire bir ⇒ <span class="hl m">x = x′</span>. ∎</span>
   </div>
   <div class="card s"><h3>(c) <span class="m">(A₁∩…∩Aₙ) ∪ C = (A₁∪C)∩…∩(Aₙ∪C)</span></h3>
-   <span class="step s"><b>IA (n = 1):</b> iki tarafta da tek terim var: <span class="m">A₁ ∪ C = A₁ ∪ C</span>. ✓</span>
-   <span class="step s"><b>IH:</b> n için eşitlik doğru.</span>
-   <span class="step s"><b>IS:</b> <span class="m">(A₁∩…∩Aₙ∩Aₙ₊₁) ∪ C = ((A₁∩…∩Aₙ) ∩ Aₙ₊₁) ∪ C</span></span>
-   <span class="step s">Dağılma yasası (B = A₁∩…∩Aₙ): <span class="m">= ((A₁∩…∩Aₙ) ∪ C) ∩ (Aₙ₊₁ ∪ C)</span></span>
-   <span class="step s">IH'yi ilk çarpana uygula: <span class="hl m">= (A₁∪C)∩…∩(Aₙ∪C)∩(Aₙ₊₁∪C)</span>. ∎</span>
+   <span class="step s"><b>TB (n = 1):</b> iki tarafta da tek terim var: <span class="m">A₁ ∪ C = A₁ ∪ C</span>. ✓</span>
+   <span class="step s"><b>TV:</b> n için eşitlik doğru.</span>
+   <span class="step s"><b>TA:</b> <span class="m">(A₁∩…∩Aₙ∩Aₙ₊₁) ∪ C = ((A₁∩…∩Aₙ) ∩ Aₙ₊₁) ∪ C</span></span>
+   <span class="step s">Dağılma (dağılım) yasası (B = A₁∩…∩Aₙ): <span class="m">= ((A₁∩…∩Aₙ) ∪ C) ∩ (Aₙ₊₁ ∪ C)</span></span>
+   <span class="step s">TV'yi ilk çarpana uygula: <span class="hl m">= (A₁∪C)∩…∩(Aₙ∪C)∩(Aₙ₊₁∪C)</span>. ∎</span>
   </div>
  </div>
 </section>
@@ -145,23 +145,23 @@ h2{font-size:clamp(24px,3.4vw,36px);margin:0 0 6px}
 <!-- A4 -->
 <section class="slide">
  <h2 class="s">Soru 4: İspat teknikleri</h2>
- <p class="sub s">Her alt soruda istenen tekniği kullan: kontraposition, Ringschluss, çelişki.</p>
+ <p class="sub s">Her alt soruda istenen tekniği kullan: karşıt ters ile ispat, halkalı ispat, çelişki.</p>
  <div class="grid">
   <div class="card s"><h3>(a) A ∪ B = A ∩ B ⇒ A = B</h3>
-   <span class="step s"><b>Kontraposition:</b> A ≠ B ⇒ A ∪ B ≠ A ∩ B ispatlanır.</span>
-   <span class="step s">A ≠ B ise bir eleman iki kümeden birinde olup diğerinde yoktur. <b>Fall 1:</b> x ∈ A, x ∉ B. O zaman <span class="m">x ∈ A∪B</span> ama <span class="m">x ∉ A∩B</span>.</span>
-   <span class="step s"><b>Fall 2:</b> x ∈ B, x ∉ A. Aynı şekilde <span class="m">x ∈ A∪B</span>, <span class="m">x ∉ A∩B</span>.</span>
+   <span class="step s"><b>karşıt ters ile ispat:</b> A ≠ B ⇒ A ∪ B ≠ A ∩ B ispatlanır.</span>
+   <span class="step s">A ≠ B ise bir eleman iki kümeden birinde olup diğerinde yoktur. <b>Durum 1:</b> x ∈ A, x ∉ B. O zaman <span class="m">x ∈ A∪B</span> ama <span class="m">x ∉ A∩B</span>.</span>
+   <span class="step s"><b>Durum 2:</b> x ∈ B, x ∉ A. Aynı şekilde <span class="m">x ∈ A∪B</span>, <span class="m">x ∉ A∩B</span>.</span>
    <span class="step s">İki durumda da <span class="hl m">A∪B ≠ A∩B</span>. ∎</span>
   </div>
-  <div class="card s"><h3>(b) Ringschluss: (i) ⇒ (ii) ⇒ (iii) ⇒ (i)</h3>
-   <span class="step s"><b>(i) ⇒ (ii):</b> x ∈ f⁻¹(f(A)) ise f(x) ∈ f(A), yani bir a ∈ A için f(a) = f(x). f injektif ⇒ x = a ∈ A.</span>
+  <div class="card s"><h3>(b) halkalı ispat: (i) ⇒ (ii) ⇒ (iii) ⇒ (i)</h3>
+   <span class="step s"><b>(i) ⇒ (ii):</b> x ∈ f⁻¹(f(A)) ise f(x) ∈ f(A), yani bir a ∈ A için f(a) = f(x). f bire bir ⇒ x = a ∈ A.</span>
    <span class="step s"><b>(ii) ⇒ (iii):</b> A = {x} al: <span class="m">f⁻¹({f(x)}) ⊂ {x}</span>. Ters yön: f(x) ∈ {f(x)} olduğundan x ∈ f⁻¹({f(x)}). İkisi birleşince eşitlik.</span>
    <span class="step s"><b>(iii) ⇒ (i):</b> f(x) = f(x′) olsun. O zaman x′ ∈ f⁻¹({f(x)}) = {x}, yani <span class="hl m">x′ = x</span>. ∎</span>
   </div>
-  <div class="card s"><h3>(c) {1,2,3} → {1,2} injektif olamaz</h3>
-   <span class="step s"><b>Çelişki için varsayım:</b> f injektif olsun.</span>
-   <span class="step s"><b>Fall 1:</b> f(1) = 1. f(2) ≠ 1 olmalı, yani f(2) = 2. f(3) ∈ {1,2} ise f(3) = f(1) veya f(3) = f(2). Çelişki.</span>
-   <span class="step s"><b>Fall 2:</b> f(1) = 2. f(2) ≠ 2, yani f(2) = 1. f(3) yine f(1) veya f(2) ile çakışır. Çelişki.</span>
+  <div class="card s"><h3>(c) {1,2,3} → {1,2} bire bir olamaz</h3>
+   <span class="step s"><b>Çelişki için varsayım:</b> f bire bir olsun.</span>
+   <span class="step s"><b>Durum 1:</b> f(1) = 1. f(2) ≠ 1 olmalı, yani f(2) = 2. f(3) ∈ {1,2} ise f(3) = f(1) veya f(3) = f(2). Çelişki.</span>
+   <span class="step s"><b>Durum 2:</b> f(1) = 2. f(2) ≠ 2, yani f(2) = 1. f(3) yine f(1) veya f(2) ile çakışır. Çelişki.</span>
    <div class="dots s" aria-hidden="true">
     <svg width="220" height="110" viewBox="0 0 220 110">
      <g fill="var(--ink)"><circle cx="20" cy="15" r="7"/><circle cx="20" cy="55" r="7"/><circle cx="20" cy="95" r="7"/><circle cx="200" cy="35" r="7"/><circle cx="200" cy="75" r="7"/></g>
