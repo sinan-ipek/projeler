@@ -94,7 +94,7 @@ function show(){
  draw(values,[ymd(from),ymd(today)]);
  const rows=(dataset.pages||[]).map(page=>{
    const n=dates.reduce((sum,day)=>sum+Number(page.daily?.[day]||0),0);
-   return {path:page.path.replace(/\\/$/,''),name:page.title||page.path,number:n};
+   return {path:page.path.replace(/\/$/,''),name:page.title||page.path,number:n};
  });
  const known=new Set(rows.map(p=>p.path));
  for(const project of catalog){
