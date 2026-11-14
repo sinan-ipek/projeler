@@ -245,12 +245,32 @@ const trOverrides=new Map([
 ["Sarı sütunlar her satırda aynı ⇒ eşdeğer. ∎ (W = doğru, F = yanlış)","Sarı sütunlar her satırda aynı ⇒ eşdeğer. ∎ (D = doğru, Y = yanlış)"],
 ["İleri:","İleri:"]
 ]);
+function cleanTR(s){
+return s
+.replace(/eşdeğerlik bağıntısı/gi,"denklik bağıntısı")
+.replace(/eşdeğerlik/gi,"denklik")
+.replace(/refleksiflik/gi,"yansıma özelliği")
+.replace(/refleksif/gi,"yansımalı")
+.replace(/transitivite/gi,"geçişme özelliği")
+.replace(/transitif/gi,"geçişmeli")
+.replace(/geçişlilik/gi,"geçişme")
+.replace(/kısmi sıralama(?! bağıntısı)/gi,"kısmi sıralama bağıntısı")
+.replace(/injektiflik/gi,"bire birlik")
+.replace(/injektif/gi,"bire bir")
+.replace(/surjektiflik/gi,"örtenlik")
+.replace(/surjektif/gi,"örten")
+.replace(/bijektiflik/gi,"bire bir ve örten olma")
+.replace(/bijektif/gi,"bire bir ve örten")
+.replace(/kontraposition|kontrapozisyon/gi,"karşıt ters ile ispat")
+.replace(/\bFall (\d)\b/g,"Durum $1")
+.replace(/Aufgabe (\d)/g,"Soru $1");
+}
 const nodes=[];
 const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&& !['SCRIPT','STYLE','OPTION'].includes(n.parentElement.tagName)&&!n.parentElement.closest('.ub02-tools,.ub02-version')&&n.textContent.trim()?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
 while(walker.nextNode()){const node=walker.currentNode;nodes.push({node,original:node.textContent,trimmed:node.textContent.trim()});}
 let language=localStorage.getItem("elif-ub02-lang")||"tr";
-function update(){document.documentElement.lang=language;document.getElementById("ub02-language").value=language;document.getElementById("ub02-language-label").textContent=language==="de"?"Sprache":"Dil";document.getElementById("ub02-version").textContent=language==="de"?"v1.0 · Vollständig zweisprachige Lösungen":"v1.0 · Tam iki dilli çözümler";document.title=language==="de"?"Übungsblatt 02 – Animierte Lösungspräsentation":"Übungsblatt 02 – Animasyonlu çözüm sunumu";
- for(const entry of nodes){const original=entry.original;const token=entry.trimmed;const translated=language==="de"?(trToDe.get(token)||token):(trOverrides.get(token)||token);entry.node.textContent=original.replace(token,translated);}}
+function update(){document.documentElement.lang=language;document.getElementById("ub02-language").value=language;document.getElementById("ub02-language-label").textContent=language==="de"?"Sprache":"Dil";document.getElementById("ub02-version").textContent=language==="de"?"v1.0 · Vollständig zweisprachige Lösungen":"v1.3 · Matematik terimleri gözden geçirildi";document.title=language==="de"?"Übungsblatt 02 – Animierte Lösungspräsentation":"Übungsblatt 02 – Animasyonlu çözüm sunumu";
+ for(const entry of nodes){const original=entry.original;const token=entry.trimmed;const translated=language==="de"?(trToDe.get(token)||token):(trOverrides.get(token)||token);entry.node.textContent=original.replace(token,language==="tr"?cleanTR(translated):translated);}}
 document.getElementById("ub02-language").onchange=e=>{language=e.target.value;localStorage.setItem("elif-ub02-lang",language);update()};
 document.getElementById("ub02-home").onclick=()=>location.href="../../index.html";
 document.getElementById("ub02-help").onclick=()=>alert(language==="de"?"Diese Seite zeigt alle Aufgaben Schritt für Schritt. Mit Weiter oder der Leertaste erscheint der nächste Lösungsschritt.":"Bu sayfa bütün soruları adım adım gösterir. İleri ya da boşluk tuşuyla sonraki çözüm adımı açılır.");
