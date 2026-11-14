@@ -894,19 +894,16 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   // The existing inline drawings remain as offline fallbacks.
   const localPieceBase="pieces/cburnett/";
   const upstreamPieceBase="https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/cburnett/";
-  // Five themed sets by NikAgs / ChessSkins (MIT License), with default Cburnett.
-  // Theme artwork: https://github.com/NikAgs/ChessSkins/tree/main/skins
+  // Selectable recognizable chess piece sets from the Lichess piece collection.
+  // Source: https://github.com/lichess-org/lila/tree/master/public/piece
   const PIECE_THEMES=[
     {id:"classic",icon:"♞",tr:"Klasik",de:"Klassisch",en:"Classic"},
-    {id:"dinos",icon:"🦕",tr:"Dinozor",de:"Dinosaurier",en:"Dinosaurs"},
-    {id:"robots",icon:"🤖",tr:"Robot",de:"Roboter",en:"Robots"},
-    {id:"high-seas",icon:"🏴‍☠️",tr:"Korsan",de:"Piraten",en:"Pirates"},
-    {id:"duckies",icon:"🦆",tr:"Ördek",de:"Enten",en:"Duckies"},
-    {id:"pixel",icon:"👾",tr:"Piksel",de:"Pixel",en:"Pixel"}
+    {id:"chessnut",icon:"♘",tr:"Chessnut",de:"Chessnut",en:"Chessnut"},
+    {id:"tatiana",icon:"♙",tr:"Tatiana",de:"Tatiana",en:"Tatiana"}
   ];
   let pieceTheme=localStorage.getItem("chess_piece_theme")||"classic";
   if(!PIECE_THEMES.some(t=>t.id===pieceTheme))pieceTheme="classic";
-  const chessThemeBase="https://raw.githubusercontent.com/NikAgs/ChessSkins/main/skins/";
+  const chessThemeBase="https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/";
   function professionalPiece(p){
     if(!p)return "";
     const filename=(p===p.toUpperCase()?"w":"b")+p.toUpperCase()+".svg";
@@ -3780,5 +3777,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.8.0 · Altı satranç taşı tasarımı</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.8.1 · Klasik, Chessnut ve Tatiana taş tasarımları</div></body>
 </html>
