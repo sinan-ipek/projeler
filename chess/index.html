@@ -3682,10 +3682,14 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       document.getElementById("simpleExtra")?.classList.remove("open");
       igorStart();
     });
-    // Other modes take priority. Igor never remains active behind their panels.
+    // Appearance buttons do not change modes or reset the current puzzle.
+    // Only actual navigation / mode-action buttons may leave Igor.
     nav.addEventListener("click",e=>{
       if(!igorActive||e.target.closest("#simpleIgor"))return;
-      if(e.target.closest("button:not(.home)"))igorExit();
+      const button=e.target.closest("button");
+      if(!button||button.classList.contains("home"))return;
+      if(button.id==="boardColorBtn"||button.id==="pieceThemeBtn")return;
+      igorExit();
     },true);
     const panel=document.createElement("section");
     panel.id="igorPanel";panel.hidden=true;panel.className="igor-panel";
@@ -3762,5 +3766,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.8.2 · Tasarım düğmesiyle tek tıkla taş değişimi</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.8.3 · Görünüm değişirken aktif mod korunur</div></body>
 </html>
