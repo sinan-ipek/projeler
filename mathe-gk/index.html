@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mathe GK | Trigonometrie & Analysis</title>
+<meta name="description" content="Interaktive zweisprachige Mathe-GK-Präsentation mit Sinus, Kosinus, Tangenten, Stammfunktionen, Integralen und Abituraufgaben.">
+<style>
+:root{--bg:#0d1526;--panel:#182641;--panel2:#213552;--ink:#f5f8ff;--muted:#bac7dc;--accent:#58e2d7;--gold:#ffd175;--pink:#f58fc9;--line:#354563}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--ink);background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+button,select{font:inherit;color:inherit;cursor:pointer}button:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+header{display:flex;align-items:center;gap:10px;padding:10px 15px;background:#111d33;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.brand{font-weight:900;letter-spacing:.02em;white-space:nowrap}.brand span{color:var(--accent)}.spacer{flex:1}
+.control{border:1px solid #4a5a78;border-radius:11px;padding:9px 12px;background:#233553;text-decoration:none;white-space:nowrap}
+.control:hover{background:#334969}.home{background:#ffda60;color:#15191f;border-color:#e5b631;font-weight:800}
+.layout{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:calc(100vh - 63px)}
+aside{padding:18px 10px 25px;background:#111e34;border-right:1px solid var(--line);overflow-y:auto}
+.menulabel{color:var(--accent);font-size:11px;font-weight:900;letter-spacing:.12em;margin:0 10px 14px}
+.navitem{border:0;background:none;color:#bac8dd;display:flex;text-align:left;align-items:center;gap:9px;width:100%;padding:10px 9px;border-radius:10px;font-size:12px;line-height:1.25}
+.navitem:hover{background:#243753}.navitem.active{background:#224e60;color:#fff;font-weight:750}
+.navitem .nr{color:#65e5db;min-width:22px;font-variant-numeric:tabular-nums;font-weight:800}
+main{display:grid;place-items:center;padding:18px 16px 36px;min-width:0}
+.slide{width:min(1120px,100%);min-height:min(640px,calc(100vh - 116px));background:linear-gradient(130deg,#142139,#0d172a);border:1px solid #2b3e58;border-radius:23px;padding:clamp(20px,4vw,48px);box-shadow:0 28px 85px #03070ec9;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.slide::before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:var(--accent)}
+.tag{font-size:12px;font-weight:900;letter-spacing:.16em;color:var(--accent)}
+h1{font-size:clamp(30px,4.5vw,53px);margin:14px 0 6px;line-height:1.08;letter-spacing:-.035em}
+.sub{font-size:clamp(15px,2vw,19px);color:var(--muted);margin:7px 0 22px;line-height:1.5}
+.content{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(260px,.92fr);gap:22px;flex:1;align-items:stretch}
+.panel{background:var(--panel);border-radius:16px;border:1px solid #2b4261;padding:clamp(16px,2vw,25px);min-width:0;display:flex;flex-direction:column;justify-content:center}
+.formula{white-space:pre-line;font-size:clamp(17px,2vw,25px);line-height:1.72;color:var(--accent);font-weight:800;overflow-wrap:anywhere}
+.heading2{font-size:12px;font-weight:900;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin:0 0 11px}
+.explain{white-space:pre-line;font-size:clamp(15px,1.7vw,19px);line-height:1.7}
+.note{border-left:3px solid var(--gold);background:#33405a;padding:12px 15px;border-radius:7px;color:#ffe0a1;margin-top:15px;line-height:1.5;font-size:14px}
+.turkish{color:#e6d3f9;background:#25273f;border-left:3px solid var(--pink);padding:13px 17px;border-radius:8px;margin:5px 0 17px;line-height:1.55}
+.graph{width:100%;height:auto;max-height:300px;overflow:visible}
+.graph line{stroke:#526783;stroke-width:1}.graph .grid{stroke:#35475f;stroke-width:.75;opacity:.75}.graph text{font:12px system-ui;fill:#b8cbe3}.graph .line-a{stroke:var(--accent)}.graph .line-b{stroke:var(--gold)}.graph .line-c{stroke:var(--pink)}
+.graph path{stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}.graph .fill-area{fill:#58e2d747;stroke:none}
+.legend{font-size:13px;color:var(--muted);line-height:1.6}.legend b{color:var(--accent)}
+.bottom{display:flex;align-items:center;gap:15px;margin-top:22px;padding-top:17px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+.bottom .count{margin-left:auto;white-space:nowrap}.bottom button{background:#2d4260;border:1px solid #52677e;padding:10px 16px;border-radius:10px;font-weight:700}.bottom button:hover{background:#39607c}.bottom button:disabled{opacity:.34;cursor:default}
+.progress{height:4px;background:#3d5069;width:100%;margin-top:13px;border-radius:8px;overflow:hidden}.progress i{display:block;background:var(--accent);height:100%;transition:width .2s}
+body[data-lang="de"] .turkish{display:none}body[data-lang="tr"] .sub{display:none}
+body[data-lang="tr"] .explain.de-copy{display:none}body[data-lang="de"] .explain.tr-copy{display:none}
+body[data-lang="tr"] .panel .heading2.lang-de{display:none}body[data-lang="de"] .panel .heading2.lang-tr{display:none}
+@media(max-width:930px){.layout{grid-template-columns:1fr}aside{display:none}.slide{min-height:650px}.content{grid-template-columns:1fr}.panel{min-height:110px}.graph{max-height:240px}.control{padding:8px}header{flex-wrap:wrap}.brand{font-size:13px}}
+@media(max-width:500px){.slide{padding:22px 20px}.bottom{gap:7px;flex-wrap:wrap}.bottom button{padding:9px}.control{font-size:13px}h1{font-size:31px}}
+@media print{header,aside,.bottom button,.progress{display:none!important}.layout{display:block}main{display:block;padding:0}.slide{break-after:page;box-shadow:none;border-radius:0;min-height:96vh;width:100%;color:white;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{background:white}}
+</style></head>
+<body data-lang="both">
+<header>
+<a class="control home" href="../index.html" title="Projelere dön">⌂</a><div class="brand"><span>MATHE GK</span> · Präsentation</div>
+<div class="spacer"></div>
+<select class="control" id="lang" aria-label="Sprache"><option value="both">Deutsch + Türkçe</option><option value="de">Deutsch</option><option value="tr">Türkçe</option></select>
+<button class="control" id="full" title="Vollbild / Tam ekran">⛶</button>
+<button class="control" id="print" title="Als PDF drucken">⎙</button>
+</header>
+<div class="layout"><aside><div class="menulabel">KAPITEL · KONULAR</div><div id="navigation"></div></aside><main>
+<article class="slide" id="slide" aria-live="polite">
+<div class="tag" id="tag"></div><h1 id="title"></h1><div class="sub" id="sub"></div>
+<div class="turkish" id="turkish"></div>
+<div class="content"><div class="panel"><div class="heading2">FORMELN · FORMÜLLER</div><div class="formula" id="formula"></div></div>
+<div class="panel"><div id="graphwrap"></div><div class="heading2 lang-de">BEISPIEL / ERKLÄRUNG</div><div class="heading2 lang-tr">ÖRNEK / AÇIKLAMA</div><div class="explain de-copy" id="demo"></div><div class="note" id="note" hidden></div></div></div>
+<div class="bottom"><button id="prev">← Zurück / Geri</button><button id="next">Weiter / İleri →</button><span class="count" id="count"></span></div>
+<div class="progress"><i id="progress"></i></div>
+</article></main></div>
+<script>const slides=[{"tag":"START","title":"Mathe GK","de":"Trigonometrie · Ableitungen · Integrale","tr":"El yazısı ders notlarından düzenlenmiş, grafiklerle desteklenmiş Abitur hazırlık sunumu.","math":"MATHEMATIK · OBERSTUFE","demo":"Sinus · Kosinus · Tangente · Stammfunktion · Flächeninhalt"},{"tag":"ÜBERBLICK","title":"Die Themen","de":"Vom Dreieck bis zur Abituraufgabe","tr":"Dik üçgenden fonksiyonların türevi ve integral hesabına uzanan konu akışı.","math":"01  Trigonometrie\n02  Sinusfunktionen\n03  Ableitungen und Tangenten\n04  Funktionsscharen\n05  Stammfunktionen und Integrale\n06  Abituraufgaben","demo":"Die Formeln verstehen · Graphen lesen · Ergebnisse überprüfen"},{"tag":"TRIGONOMETRIE","title":"Sinus, Kosinus und Tangens","de":"Die Verhältnisse im rechtwinkligen Dreieck","tr":"Dik üçgende açıya göre karşı, komşu kenar ve hipotenüs oranları kullanılır.","math":"sin(α) = Gegenkathete / Hypotenuse\ncos(α) = Ankathete / Hypotenuse\ntan(α) = Gegenkathete / Ankathete","demo":"Beispiel: Gegenkathete=3, Ankathete=4, Hypotenuse=5.\nsin(α)=3/5, cos(α)=4/5, tan(α)=3/4.","note":"tan(α) = sin(α) / cos(α) für cos(α) ≠ 0."},{"tag":"TRIGONOMETRIE","title":"Gradmaß und Bogenmaß","de":"Für Ableitungen im Bogenmaß rechnen","tr":"Türev kuralları standart biçimde radyan ölçüsüyle geçerlidir.","math":"180° = π rad     360° = 2π rad\nα(rad) = α(°) · π / 180","demo":"30° = π/6  →  sin(30°) = 1/2\n60° = π/3  →  cos(60°) = 1/2","note":"Eine Zahl wie π bezeichnet hier Bogenmaß."},{"tag":"SINUSFUNKTION","title":"Sinus und Kosinus","de":"Zwei periodische Funktionen","tr":"Sinüs ve kosinüsün değerleri −1 ile 1 arasındadır. Her ikisi 2π aralıklarla tekrarlanır.","math":"sin(x + 2π) = sin(x)\ncos(x + 2π) = cos(x)","demo":"sin(0)=0   sin(π/2)=1   sin(π)=0\ncos(0)=1   cos(π)=−1","graph":"sin"},{"tag":"SINUSFUNKTION","title":"Verschiebungen","de":"Die Kurve verschieben","tr":"Yatay kaydırmada parantezin içindeki işaret yönü ters gösterir.","math":"sin(x − c)  →  nach rechts, c>0\nsin(x + c)  →  nach links, c>0\nsin(x) + d  →  nach oben, d>0","demo":"sin(x−π/2): Verschiebung um π/2 nach rechts.\nsin(x)+0,5: Verschiebung um 0,5 nach oben.","graph":"shift"},{"tag":"SINUSFUNKTION","title":"Amplitude und Periode","de":"Streckung und Stauchung","tr":"|a| genliği, |b| ise frekansı ve periyodu belirler. b büyüdükçe periyot kısalır.","math":"f(x) = a · sin(b(x−c)) + d\nAmplitude = |a|\nPeriode = 2π / |b|","demo":"0,5 sin(x): halbe Amplitude\nsin(2x): halbe Periode\n−sin(x): Spiegelung an der x-Achse","graph":"period"},{"tag":"ABLEITUNG","title":"Sinus und Kosinus ableiten","de":"Die wichtigsten Ableitungsregeln","tr":"Sinüsün türevi kosinüs; kosinüsün türevi eksi sinüstür.","math":"(sin x)′ = cos x\n(cos x)′ = −sin x\n(a · f(x))′ = a · f′(x)","demo":"f(x)=2sin(x)   →   f′(x)=2cos(x)\nf″(x)=−2sin(x)\ng(x)=−3cos(x)  →  g′(x)=3sin(x)","note":"Kettenregel: (sin(2x))′ = 2cos(2x)."},{"tag":"ABLEITUNG","title":"Die Tangente","de":"Die Steigung in einem Punkt","tr":"Belirli bir noktadaki teğetin eğimi, o noktadaki türev değeridir.","math":"m = f′(x₀)\nt(x) = f′(x₀) · (x−x₀) + f(x₀)","demo":"f(x)=sin(x), x₀=3π\nf(3π)=0, m=cos(3π)=−1\nt(x)=−x+3π","graph":"tangent"},{"tag":"ABLEITUNG","title":"Die Funktionsschar","de":"Der Parameter a bleibt beim Ableiten konstant","tr":"Bir fonksiyon ailesinde a parametredir; x’e göre türev alınırken sabit olarak değerlendirilir.","math":"fₐ(x)=x³−3ax²    (a ≠ 0)\nfₐ′(x)=3x²−6ax\nfₐ″(x)=6x−6a\nfₐ‴(x)=6","demo":"Stationäre Stellen:\n3x²−6ax = 3x(x−2a) = 0\nx=0 oder x=2a","graph":"family"},{"tag":"INTEGRAL","title":"Die Stammfunktion","de":"Ableitung rückwärts","tr":"F′(x)=f(x) ise F, f’nin ilkel fonksiyonudur. Belirsiz integralde +C eklenir.","math":"∫xⁿ dx = xⁿ⁺¹ / (n+1) + C\nn ≠ −1\n∫(2x−3)dx = x²−3x+C","demo":"∫x²dx = x³/3 + C\n∫(2x²−5)dx = (2/3)x³−5x+C\n∫(12x²−4x+3)dx = 4x³−2x²+3x+C","note":"Alle Stammfunktionen unterscheiden sich durch eine Konstante."},{"tag":"INTEGRAL","title":"Das bestimmte Integral","de":"Flächenbilanz zwischen zwei Grenzen","tr":"Belirli integral, üst sınırdaki ilkel fonksiyon değeri eksi alt sınırdaki değerdir.","math":"∫ₐᵇ f(x)dx = F(b) − F(a)","demo":"f(x)=x/2 auf [0,4]\nF(x)=x²/4\n∫₀⁴ (x/2)dx = 4 FE","graph":"area","note":"Unterhalb der x-Achse ist das Integral negativ. Flächeninhalte sind ≥ 0."},{"tag":"ABITUR 01","title":"Exponentialfunktion integrieren","de":"Gegeben: f(x)=½ e^(−3x+3)","tr":"Fotoğraftaki birinci Abitur örneğinde ilkel fonksiyon doğrulanır ve [1,3] aralığındaki alan hesaplanır.","math":"F(x)=−⅙ e^(−3x+3)\nF′(x)=½ e^(−3x+3)\nA = ∫₁³ f(x)dx\nA = (1−e⁻⁶)/6 ≈ 0,1663 FE","demo":"Zuerst ableiten und kontrollieren. Danach F(3)−F(1) berechnen.","graph":"exp"},{"tag":"ABITUR 02","title":"Nullstellen und Fläche","de":"Die korrekte Rechnung für f(x)=3x²−6x−3","tr":"El yazısı çözümünde kökler hesaplanırken sabit terim yanlış dönüştürülmüş. Doğru kökler aşağıdadır.","math":"f(x)=3x²−6x−3\nF(x)=x³−3x²−3x+C\nNullstellen: x=1±√2\nA=|∫₍₁₋√₂₎⁽¹⁺√²⁾ f(x)dx| = 8√2 ≈ 11,314 FE","demo":"Zuerst durch 3 teilen:\nx²−2x−1=0\n⇒ x = 1 ± √2","graph":"polynom"},{"tag":"WICHTIG","title":"Ein Fehler in den Notizen","de":"Drei unterschiedliche Funktionsterme","tr":"Aynı sorunun fotoğraflarında +3 ve −3 geçiyor; yazılı çözümde ise −9’a ait kökler ve alan kullanılmış.","math":"A: 3x²−6x+3  →  Nullstelle x=1 (doppelt)\nB: 3x²−6x−3  →  Nullstellen 1±√2\nC: 3x²−6x−9  →  Nullstellen −1 und 3","demo":"A=32 FE gilt nur bei Variante C:\n|∫₋₁³ (3x²−6x−9)dx| = 32 FE.\nBei Variante B beträgt der Flächeninhalt 8√2 FE.","note":"Merke: Immer prüfen, ob F′(x)=f(x) und die Nullstellen zur Funktion passen."},{"tag":"CHECKLISTE","title":"Vor der Abgabe prüfen","de":"Sechs typische Fehlerquellen","tr":"Sınavda bunlar en sık karıştırılan noktalardır.","math":"①  Gradmaß oder Bogenmaß?\n②  Kettenregel verwendet?\n③  Vorzeichen korrekt?\n④  +C oder Integrationsgrenzen vorhanden?\n⑤  Nullstellen überprüft?\n⑥  Flächeninhalt als Betrag?","demo":"Fläche ≠ vorzeichenbehaftetes Integral, wenn die Kurve unter der x-Achse liegt."},{"tag":"ÜBUNGEN","title":"Drei Übungsaufgaben","de":"Erst lösen, dann kontrollieren","tr":"Soruları önce kendin çöz. Cevapları son satırda karşılaştır.","math":"1) f(x)=3sin(2x)  →  f′(x)=?\n2) ∫₁³ 2x dx = ?\n3) sin(x−π/3): Welche Verschiebung?","demo":"Lösungen:\n1) 6cos(2x)\n2) 8\n3) π/3 nach rechts"}];
+const $=id=>document.getElementById(id); let idx=0;
+const names=['sin','shift','period','tangent','family','area','exp','polynom'];
+function samplePath(fn,minX,maxX,minY,maxY,W=520,H=250){let d='';for(let i=0;i<=320;i++){const x=minX+(maxX-minX)*i/320,y=fn(x);const px=20+i/320*(W-38),py=H-26-(y-minY)/(maxY-minY)*(H-45);d+=(i?'L':'M')+px.toFixed(2)+','+py.toFixed(2)}return d}
+function graph(type){if(!names.includes(type))return '';const pi=Math.PI;
+const ranges={sin:[0,2*pi,-1.5,1.5],shift:[0,2*pi,-1.75,1.75],period:[0,2*pi,-1.5,1.5],tangent:[2.4*pi,3.6*pi,-1.8,1.8],family:[-1.3,3.2,-5.5,8.5],area:[-.2,4.5,-.2,2.6],exp:[.5,3.3,-.1,2.4],polynom:[-1.7,3.7,-7,7]};
+const [xmin,xmax,ymin,ymax]=ranges[type],W=520,H=250,X=x=>20+(x-xmin)/(xmax-xmin)*(W-38),Y=y=>H-26-(y-ymin)/(ymax-ymin)*(H-45);
+let s='<svg class="graph" viewBox="0 0 520 250" role="img" aria-label="Funktionsgraph">';
+for(let k=0;k<=4;k++){let x=20+k*(W-38)/4,y=20+k*(H-45)/4;s+='<line class="grid" x1="'+x+'" y1="20" x2="'+x+'" y2="'+(H-26)+'"/><line class="grid" x1="20" y1="'+y+'" x2="'+(W-18)+'" y2="'+y+'"/>'}
+s+='<line x1="20" y1="'+Y(0)+'" x2="'+(W-18)+'" y2="'+Y(0)+'"/>';if(xmin<0&&xmax>0)s+='<line x1="'+X(0)+'" y1="20" x2="'+X(0)+'" y2="'+(H-26)+'"/>';
+let lines=[];
+if(type==='sin')lines=[['sin(x)',Math.sin,'line-a'],['cos(x)',Math.cos,'line-b']];
+if(type==='shift')lines=[['sin(x)',Math.sin,'line-a'],['sin(x−π/2)',x=>Math.sin(x-pi/2),'line-b'],['sin(x)+0,5',x=>Math.sin(x)+.5,'line-c']];
+if(type==='period')lines=[['sin(x)',Math.sin,'line-a'],['sin(2x)',x=>Math.sin(2*x),'line-b'],['0,5sin(x)',x=>.5*Math.sin(x),'line-c']];
+if(type==='tangent')lines=[['sin(x)',Math.sin,'line-a'],['t(x)=−x+3π',x=>-x+3*pi,'line-b']];
+if(type==='family')lines=[['a=1',x=>x*x*x-3*x*x,'line-a'],['a=0,5',x=>x*x*x-1.5*x*x,'line-b'],['a=−1',x=>x*x*x+3*x*x,'line-c']];
+if(type==='area')lines=[['f(x)=x/2',x=>x/2,'line-a']];
+if(type==='exp')lines=[['f(x)=½e^(−3x+3)',x=>.5*Math.exp(-3*x+3),'line-a']];
+if(type==='polynom')lines=[['3x²−6x−3',x=>3*x*x-6*x-3,'line-a']];
+if(['area','exp','polynom'].includes(type)){let a=0,b=4,fn=x=>x/2;if(type==='exp'){a=1;b=3;fn=x=>.5*Math.exp(-3*x+3)}if(type==='polynom'){a=1-Math.SQRT2;b=1+Math.SQRT2;fn=x=>3*x*x-6*x-3}let d='M'+X(a)+','+Y(0);for(let j=0;j<=200;j++){let x=a+(b-a)*j/200;d+='L'+X(x)+','+Y(fn(x))}d+='L'+X(b)+','+Y(0)+'Z';s+='<path class="fill-area" d="'+d+'"/>'}
+for(let j=0;j<lines.length;j++)s+='<path class="'+lines[j][2]+'" d="'+samplePath(lines[j][1],xmin,xmax,ymin,ymax)+'"/>';
+s+='</svg><div class="legend">'+lines.map((z,j)=>'<span style="color:'+['#58e2d7','#ffd175','#f58fc9'][j]+'">● '+z[0]+'</span>').join(' &nbsp; ')+'</div>';return s}
+function render(){let d=slides[idx];$('tag').textContent=d.tag;$('title').textContent=d.title;$('sub').textContent=d.de;$('turkish').textContent=d.tr;$('formula').textContent=d.math;$('demo').textContent=d.demo;$('graphwrap').innerHTML=d.graph?graph(d.graph):'';$('note').hidden=!d.note;$('note').textContent=d.note||'';$('count').textContent=(idx+1)+' / '+slides.length;$('progress').style.width=((idx+1)/slides.length*100)+'%';$('prev').disabled=idx===0;$('next').disabled=idx===slides.length-1;
+document.querySelectorAll('.navitem').forEach((el,i)=>el.classList.toggle('active',idx===i));history.replaceState(null,'','#'+(idx+1));document.title=d.title+' · Mathe GK';}
+const nav=$('navigation');nav.innerHTML=slides.map((d,i)=>'<button class="navitem" data-n="'+i+'"><span class="nr">'+String(i+1).padStart(2,'0')+'</span><span>'+d.title+'</span></button>').join('');
+nav.addEventListener('click',e=>{let b=e.target.closest('[data-n]');if(b){idx=+b.dataset.n;render()}});
+$('prev').onclick=()=>{idx=Math.max(0,idx-1);render()};$('next').onclick=()=>{idx=Math.min(slides.length-1,idx+1);render()};
+$('lang').value=localStorage.getItem('mathegk-lang')||'both';document.body.dataset.lang=$('lang').value;
+$('lang').onchange=()=>{document.body.dataset.lang=$('lang').value;localStorage.setItem('mathegk-lang',$('lang').value)};
+$('full').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else $('slide').requestFullscreen?.()};
+$('print').onclick=()=>window.print();
+document.addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' '].includes(e.key)&&!['SELECT','BUTTON'].includes(document.activeElement.tagName)){e.preventDefault();idx=Math.min(slides.length-1,idx+1);render()}if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();idx=Math.max(0,idx-1);render()}});
+const num=parseInt(location.hash.replace('#',''));if(num>0&&num<=slides.length)idx=num-1;render();
+</script></body></html>
