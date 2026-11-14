@@ -84,14 +84,6 @@
   }
   #langMenu button:hover{background:#f0f4f8}
 
-  .point-anim-toggle{
-    background:#fff;
-    color:#344050;
-    white-space:nowrap;
-    font-size:13px;
-    padding:10px 12px;
-  }
-  .point-anim-toggle[aria-pressed="false"]{background:#e9edf3;color:#657080}
   #modePanel{
     margin-left:auto;
     flex-wrap:wrap;
@@ -345,6 +337,69 @@
     font-size:11px;
     pointer-events:none;
   }
+
+  /* Küçük ekranlarda tüm 4 mod ekranda: yatay kaydırma yok. */
+  #topbar{height:auto;min-height:72px}
+  #modePanel{max-width:none}
+  @media(max-width:900px){
+    #topbar{
+      display:grid;
+      grid-template-columns:44px 76px 44px 1fr;
+      grid-template-rows:44px auto;
+      column-gap:8px;
+      row-gap:8px;
+      padding:8px 10px;
+      align-items:start;
+      background:rgba(244,247,251,.95);
+      box-shadow:0 2px 12px rgba(0,0,0,.09);
+    }
+    #homeBtn{grid-column:1;grid-row:1}
+    #langWrap{grid-column:2;grid-row:1}
+    #helpBtn{grid-column:3;grid-row:1}
+    .iconBtn{width:44px;height:44px;font-size:22px}
+    #langBtn{min-width:76px;width:76px;height:44px}
+    #modePanel{
+      grid-column:1/-1;
+      grid-row:2;
+      margin:0;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      width:100%;
+      gap:7px;
+      padding:0;
+      background:transparent;
+      box-shadow:none;
+      backdrop-filter:none;
+    }
+    #modePanel .modeBtn{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-width:0;
+      width:100%;
+      min-height:43px;
+      padding:8px 5px;
+      font-size:clamp(11px,2.7vw,14px);
+      line-height:1.2;
+      white-space:normal;
+      text-align:center;
+    }
+    #instruction{font-size:13px;padding:10px 12px;max-width:min(290px,calc(100vw - 24px))}
+    #instruction small{font-size:11px}
+    #resetBtn{right:10px;bottom:13px}
+    #version{font-size:10px;max-width:58vw}
+  }
+  @media(max-width:360px){
+    #modePanel .modeBtn{font-size:11px;min-height:46px}
+    #topbar{padding:7px 8px;column-gap:6px}
+  }
+  @media(max-height:520px) and (max-width:900px){
+    #topbar{grid-template-columns:40px 68px 40px 1fr;grid-template-rows:40px auto;row-gap:5px}
+    .iconBtn{height:40px;width:40px}
+    #langBtn{height:40px;width:68px;min-width:68px}
+    #modePanel .modeBtn{min-height:34px;padding:5px 4px}
+  }
+
 </style>
 </head>
 <body>
@@ -362,8 +417,6 @@
   </div>
 
   <button id="helpBtn" class="iconBtn" title="Help" aria-label="Help">?</button>
-  <button id="pointAnimBtn" class="modeBtn point-anim-toggle" type="button"
-    aria-pressed="true" title="Nokta animasyonunu kapat">Nokta ışığı: Açık</button>
 
   <div id="modePanel">
     <button id="perpBtn" class="modeBtn active">Dik çiz</button>
@@ -390,7 +443,7 @@
 </div>
 
 <button id="resetBtn" class="actionBtn">Yeni soru</button>
-<div id="version">v2.5 — Santimetre ölçeği ve uzaklıkla paralel çizim.</div>
+<div id="version">v2.6 — Mobil uyumlu dört mod düğmesi.</div>
 <div id="audioHint">Ses için sayfaya bir kez tıkla.</div>
 
 <div id="helpOverlay">
@@ -437,8 +490,7 @@
   const parallelBtn = document.getElementById("parallelBtn");
   const pointPerpBtn = document.getElementById("pointPerpBtn");
   const distanceBtn = document.getElementById("distanceBtn");
-  const pointAnimBtn = document.getElementById("pointAnimBtn");
-  let pointAnimEnabled = localStorage.getItem("geo-point-anim") !== "off";
+  const pointAnimEnabled = true; // Nokta uyarıları sürekli etkin; ayrı düğme yok.
   const resetBtn = document.getElementById("resetBtn");
 
   let dpr = Math.max(1, window.devicePixelRatio || 1);
@@ -697,7 +749,8 @@
       par_ss1:"İçteki yeşil çizgilerden biri doğru ile çakışsın.",
       par_s2:"Harika! Şimdi uzun kenardan çiz.",
       par_ss2:"Çizgin, kırmızı noktadan geçsin.",
-      done:"Bravo! Başardın Çınar!"    },
+      done:"Bravo! Başardın Çınar!"
+    },
     de:{
       lang:"DE ▾",
       perp:"Senkrecht",
@@ -744,8 +797,7 @@
       distanceMode:"Parallel at a distance",
       distanceAsk:"Can you draw a parallel line {cm} cm away?",
       distanceHint:"Align the {cm} cm guide with the given line.",
-      distanceDraw:"Great! Draw along the long edge now.",
-      distanceDrawHint:"Watch the white arrow, then draw.",
+      distanceDraw:"Great! Draw along the long edge now.",      distanceDrawHint:"Watch the white arrow, then draw.",
       pointOn:"Point light: On", pointOff:"Point light: Off",
       reset:"New task",
       helpTitle:"How to play",
@@ -785,7 +837,7 @@
     parallelBtn.textContent = t.parallel;
     pointPerpBtn.textContent = t.pointPerp;
     distanceBtn.textContent = t.distanceMode;
-    updatePointAnimButton();
+
     resetBtn.textContent = t.reset;
     document.getElementById("helpTitle").textContent = t.helpTitle;
     document.getElementById("helpP1").textContent = t.h1;
@@ -797,17 +849,6 @@
     if(stage===4) rewardText.textContent = t.done;
   }
 
-  function updatePointAnimButton(){
-    const t = texts[lang];
-    pointAnimBtn.textContent = pointAnimEnabled ? t.pointOn : t.pointOff;
-    pointAnimBtn.setAttribute("aria-pressed", String(pointAnimEnabled));
-    pointAnimBtn.title = pointAnimEnabled ? t.pointOff : t.pointOn;
-  }
-  pointAnimBtn.addEventListener("click",()=>{
-    pointAnimEnabled = !pointAnimEnabled;
-    localStorage.setItem("geo-point-anim", pointAnimEnabled ? "on" : "off");
-    updatePointAnimButton();
-  });
 
   function updateModeButtons(){
     perpBtn.classList.toggle("active", mode==="perp");
@@ -921,11 +962,14 @@
     const bw=Math.min(330,w-32);
     const bh=el.offsetHeight||96;
     const pad=16;
+    const menuBottom=document.getElementById("topbar").getBoundingClientRect().bottom;
+    const topY=Math.max(88,Math.ceil(menuBottom+12));
+    const bottomY=Math.max(topY,h-bh-66);
     const positions=[
-      {x:pad,y:88},
-      {x:w-bw-pad,y:88},
-      {x:pad,y:h-bh-66},
-      {x:w-bw-pad,y:h-bh-66}
+      {x:pad,y:topY},
+      {x:w-bw-pad,y:topY},
+      {x:pad,y:bottomY},
+      {x:w-bw-pad,y:bottomY}
     ];
     const r=ruler.getBoundingClientRect();
     const theta=deg2rad(line.angle);
@@ -1396,7 +1440,8 @@
         setRulerTransform();
       }else if(pointerMode==="rotate" && (stage===1 || stage===2)){
         const a=Math.atan2(pt.y-rulerState.y,pt.x-rulerState.x);
-        rulerState.angle=rulerAngleStart+rad2deg(a-rotateStartAngle);        if(stage===2 && angleDiffUndirected(rulerState.angle+90,line.angle)<=ANGLE_LOCK_TOLERANCE){
+        rulerState.angle=rulerAngleStart+rad2deg(a-rotateStartAngle);
+        if(stage===2 && angleDiffUndirected(rulerState.angle+90,line.angle)<=ANGLE_LOCK_TOLERANCE){
           rulerState.angle=nearestEquivalentAngle(rulerState.angle,line.angle-90);
           stage=3;
           thirdPhase="slide";
@@ -1551,8 +1596,7 @@
           const x1=x + Math.cos(a)*14;
           const y1=y + Math.sin(a)*14;
           const x2=x + Math.cos(a)*(14+rayLength);
-          const y2=y + Math.sin(a)*(14+rayLength);
-          ctx.beginPath();
+          const y2=y + Math.sin(a)*(14+rayLength);          ctx.beginPath();
           ctx.moveTo(x1,y1);
           ctx.lineTo(x2,y2);
           ctx.stroke();
@@ -1960,6 +2004,5 @@
 })();
 </script>
 
-<script src="/projeler/analytics.js?v=20261114-geodreieck"></script>
 </body>
 </html>
