@@ -698,7 +698,7 @@ const slides = [
 },
 {
   chip:"Aufgabe 1(a)",
-  title:"Fonksiyon eşitliği neden bir eşdeğerlik bağıntısıdır?",
+  title:"Fonksiyon eşitliği neden bir denklik bağıntısıdır?",
   de:`Die Relation \\(\\simeq\\) zwischen Funktionen \\(f,g:X\\to Y\\) ist definiert durch
       \\[f\\simeq g \\iff \\forall x\\in X:\\; f(x)=g(x).\\]
       Beweisen Sie, dass \\(\\simeq\\) eine Äquivalenzrelation ist.`,
@@ -706,15 +706,15 @@ const slides = [
   steps:[
     {
       title:"Ne kanıtlamalıyız?",
-      html:`Bir bağıntının eşdeğerlik bağıntısı olması için üç özellik gerekir:
-      <b>refleksif</b>, <b>simetrik</b>, <b>transitif</b>.
+      html:`Bir bağıntının denklik bağıntısı olması için üç özellik gerekir:
+      <b>yansımalı</b>, <b>simetrik</b>, <b>geçişmeli</b>.
       <div class="visual relation-row"><div class="node blue">f</div><div class="arrow flow"></div><div class="node green">g</div></div>`
     },
     {
-      title:"Refleksiflik",
+      title:"Yansıma özelliği",
       html:`Her fonksiyon kendi kendisine noktasal olarak eşittir.
       <div class="mathbox">\\[\\forall x\\in X:\\; f(x)=f(x)\\quad\\Longrightarrow\\quad f\\simeq f.\\]</div>
-      Burada özel bir şey yapmıyoruz: <span class="hi">eşitliğin refleksifliğini</span> kullanıyoruz.`
+      Burada özel bir şey yapmıyoruz: <span class="hi">eşitliğin yansıma özelliğini</span> kullanıyoruz.`
     },
     {
       title:"Simetri",
@@ -723,7 +723,7 @@ const slides = [
       <div class="mathbox">\\[f(x)=g(x)\\Rightarrow g(x)=f(x)\\Rightarrow g\\simeq f.\\]</div>`
     },
     {
-      title:"Transitivite",
+      title:"Geçişme özelliği",
       html:`\\(f\\simeq g\\) ve \\(g\\simeq h\\) olsun.
       Her \\(x\\) için
       <div class="mathbox">\\[f(x)=g(x)\\quad\\text{ve}\\quad g(x)=h(x)\\Rightarrow f(x)=h(x).\\]</div>
@@ -732,8 +732,8 @@ const slides = [
     {
       title:"Sonuç",
       html:`Üç özellik de sağlandı:
-      <p class="good">✓ reflexiv &nbsp; ✓ symmetrisch &nbsp; ✓ transitiv</p>
-      <div class="mathbox">\\[\\boxed{\\simeq\\text{ ist eine Äquivalenzrelation.}}\\]</div>`
+      <p class="good">✓ yansıma &nbsp; ✓ simetri &nbsp; ✓ geçişme</p>
+      <div class="mathbox">\\[\\boxed{\\simeq\\text{ bir denklik bağıntısıdır.}}\\]</div>`
     }
   ]
 },
@@ -744,16 +744,16 @@ const slides = [
       \\[R\\simeq_r S\\iff \\forall x\\in X:
       \\{y\\in Y\\mid(x,y)\\in R\\}=\\{y\\in Y\\mid(x,y)\\in S\\}.\\]
       Ist \\(\\simeq_r\\) eine Äquivalenzrelation?`,
-  goal:"Her x için oluşan Y-altkümelerini karşılaştırmak ve yine üç eşdeğerlik özelliğini göstermek.",
+  goal:"Her x için oluşan Y-altkümelerini karşılaştırmak ve yine üç denklik özelliğini göstermek.",
   steps:[
     {
       title:"Bir 'lif' düşün",
       html:`Sabit bir \\(x\\) seç. \\(R\\) bağıntısında bu \\(x\\)'e bağlı bütün \\(y\\)'leri topla:
       <div class="mathbox">\\[R_x:=\\{y\\in Y\\mid(x,y)\\in R\\}.\\]</div>
-      Tanım aslında şunu söylüyor: \\(R\\simeq_r S\\) iff her \\(x\\) için \\(R_x=S_x\\).`
+      Tanım aslında şunu söylüyor: \\(R\\simeq_r S\\) ancak ve ancak her \\(x\\) için \\(R_x=S_x\\).`
     },
     {
-      title:"Refleksiflik",
+      title:"Yansıma özelliği",
       html:`Her küme kendisine eşittir:
       <div class="mathbox">\\[\\forall x:\\;R_x=R_x\\Rightarrow R\\simeq_r R.\\]</div>`
     },
@@ -764,7 +764,7 @@ const slides = [
       <div class="mathbox">\\[R_x=S_x\\Rightarrow S_x=R_x\\Rightarrow S\\simeq_r R.\\]</div>`
     },
     {
-      title:"Transitivite",
+      title:"Geçişme özelliği",
       html:`\\(R\\simeq_r S\\) ve \\(S\\simeq_r T\\) ise:
       <div class="mathbox">\\[R_x=S_x,\\;S_x=T_x\\Rightarrow R_x=T_x.\\]</div>
       Bu her \\(x\\) için geçerli olduğundan \\(R\\simeq_r T\\).`
@@ -772,7 +772,7 @@ const slides = [
     {
       title:"Sonuç",
       html:`Burada da temel motor sadece <b>küme eşitliğinin</b> üç özelliğidir.
-      <div class="mathbox">\\[\\boxed{\\simeq_r\\text{ ist ebenfalls eine Äquivalenzrelation.}}\\]</div>`
+      <div class="mathbox">\\[\\boxed{\\simeq_r\\text{ de bir denklik bağıntısıdır.}}\\]</div>`
     }
   ]
 },
@@ -840,13 +840,13 @@ const slides = [
 },
 {
   chip:"Aufgabe 2(c)",
-  title:"E neden her zaman kısmi sıralamadır?",
+  title:"E neden her zaman kısmi sıralama bağıntısıdır?",
   de:`Beweisen Sie, dass \\(E\\) eine partielle Ordnung ist.`,
   goal:"Reflexivität + Antisymmetrie + Transitivität.",
   steps:[
     {
-      title:"Refleksiflik",
-      html:`R refleksif olduğundan \\(aRa\\) ve \\(bRb\\).
+      title:"Yansıma özelliği",
+      html:`R yansımalı olduğundan \\(aRa\\) ve \\(bRb\\).
       <div class="mathbox">\\[(a,b)E(a,b).\\]</div>`
     },
     {
@@ -862,7 +862,7 @@ const slides = [
       <div class="mathbox">\\[(a,b)=(a',b').\\]</div>`
     },
     {
-      title:"Transitivite",
+      title:"Geçişme özelliği",
       html:`\\((a,b)E(a',b')\\) ve \\((a',b')E(a'',b'')\\) ise:
       <div class="mathbox">\\[aRa',\\;a'Ra''\\Rightarrow aRa'',\\qquad bRb',\\;b'Rb''\\Rightarrow bRb''.\\]</div>
       Dolayısıyla \\((a,b)E(a'',b'')\\).`
@@ -870,7 +870,7 @@ const slides = [
     {
       title:"Sonuç",
       html:`Üç özellik sağlandı:
-      <div class="mathbox">\\[\\boxed{E\\text{ ist eine partielle Ordnung.}}\\]</div>`
+      <div class="mathbox">\\[\\boxed{E\\text{ bir kısmi sıralama bağıntısıdır.}}\\]</div>`
     }
   ]
 },
@@ -900,7 +900,7 @@ const slides = [
     {
       title:"Sonuç",
       html:`İki çiftin hiçbiri diğerinden E'ye göre küçük/eşit değil:
-      <div class="mathbox">\\[\\boxed{E\\text{ muss nicht total sein.}}\\]</div>`
+      <div class="mathbox">\\[\\boxed{E\\text{ her zaman tam sıralama bağıntısı değildir.}}\\]</div>`
     }
   ]
 },
@@ -923,7 +923,7 @@ const slides = [
     },
     {
       title:"L'nin parantezine geri dön",
-      html:`Artık \\(a=a'\\). R refleksif olduğu için \\(a'Ra\\) doğrudur.
+      html:`Artık \\(a=a'\\). R yansımalı olduğu için \\(a'Ra\\) doğrudur.
       Bu nedenle
       <div class="mathbox">\\[\\neg(a'Ra)\\]</div>
       kısmı <span class="bad">yanlıştır</span>. O halde L'nin doğru kalabilmesi için mutlaka \\(bRb'\\) gerekir.`
@@ -939,7 +939,7 @@ const slides = [
       html:`R antisimetri:
       <div class="mathbox">\\[bRb'\\land b'Rb\\Rightarrow b=b'.\\]</div>
       Dolayısıyla \\((a,b)=(a',b')\\).
-      <div class="mathbox">\\[\\boxed{L\\text{ ist antisymmetrisch.}}\\]</div>`
+      <div class="mathbox">\\[\\boxed{L\\text{ ters simetri özelliğine sahiptir.}}\\]</div>`
     }
   ]
 },
@@ -988,42 +988,42 @@ const slides = [
 },
 {
   chip:"Aufgabe 3(b)",
-  title:"İnjektif fonksiyonun her k-kat bileşkesi de injektiftir",
+  title:"Bire bir fonksiyonun her k-kat bileşkesi de bire birtir",
   de:`Sei \\(f:X\\to X\\) injektiv. Zeigen Sie durch vollständige Induktion:
-      \\[\\forall k\\ge1:\\;f^k\\text{ ist injektiv}.\\]
+      \\[\\forall k\\ge1:\\;f^k\\text{ bire birdir}.\\]
       Es gilt \\(f^1=f\\) und \\(f^{k+1}=f^k\\circ f\\).`,
   goal:"k+1. bileşkenin eşit çıktılarından eşit girdilere geri gitmek.",
   steps:[
     {
       title:"Başlangıç k=1",
-      html:`\\(f^1=f\\). f zaten injektif verildi.
-      <div class="mathbox">\\[f^1\\text{ ist injektiv}.\\]</div>`
+      html:`\\(f^1=f\\). f zaten bire bir verildi.
+      <div class="mathbox">\\[f^1\\text{ bire birdir}.\\]</div>`
     },
     {
       title:"İndüksiyon varsayımı",
-      html:`Bir \\(k\\ge1\\) için \\(f^k\\) injektif olsun.`
+      html:`Bir \\(k\\ge1\\) için \\(f^k\\) bire bir olsun.`
     },
     {
-      title:"İnjektiflik testi",
+      title:"Bire birlik testi",
       html:`\\(f^{k+1}(x)=f^{k+1}(y)\\) varsayalım.
       <div class="mathbox">\\[f^k(f(x))=f^k(f(y)).\\]</div>
       <div class="visual relation-row"><div class="node blue">x</div><div class="arrow flow"></div><div class="node">f(x)</div><div class="arrow flow"></div><div class="node green">fᵏ(f(x))</div></div>`
     },
     {
-      title:"Önce fᵏ injektif",
-      html:`İndüksiyon varsayımına göre \\(f^k\\) injektif:
+      title:"Önce fᵏ bire bir",
+      html:`İndüksiyon varsayımına göre \\(f^k\\) bire bir:
       <div class="mathbox">\\[f^k(f(x))=f^k(f(y))\\Rightarrow f(x)=f(y).\\]</div>`
     },
     {
-      title:"Sonra f injektif",
-      html:`f de injektif:
+      title:"Sonra f bire bir",
+      html:`f de bire bir:
       <div class="mathbox">\\[f(x)=f(y)\\Rightarrow x=y.\\]</div>
-      Böylece \\(f^{k+1}\\) injektiftir.`
+      Böylece \\(f^{k+1}\\) bire birtir.`
     },
     {
       title:"Sonuç",
       html:`İndüksiyonla:
-      <div class="mathbox">\\[\\boxed{\\forall k\\ge1:\\;f^k\\text{ ist injektiv}.}\\]</div>`
+      <div class="mathbox">\\[\\boxed{\\forall k\\ge1:\\;f^k\\text{ bire birdir}.}\\]</div>`
     }
   ]
 },
@@ -1069,17 +1069,17 @@ const slides = [
 },
 {
   chip:"Aufgabe 4(a)",
-  title:"Kontrapozisyon + durum ayrımı",
+  title:"Karşıt ters ile ispat + durum ayrımı",
   de:`Beweisen Sie:
       \\[A\\cup B=A\\cap B\\Rightarrow A=B.\\]
       Beweistechnik: Kontraposition und Fallunterscheidung.`,
   goal:"Doğrudan önermeyi değil, karşıt tersini ispatlamak.",
   steps:[
     {
-      title:"Kontrapozisyonu yaz",
+      title:"Karşıt ters ile ispatu yaz",
       html:`Orijinal:
       <div class="mathbox">\\[A\\cup B=A\\cap B\\Rightarrow A=B.\\]</div>
-      Kontrapozisyon:
+      Karşıt ters ile ispat:
       <div class="mathbox">\\[A\\neq B\\Rightarrow A\\cup B\\neq A\\cap B.\\]</div>`
     },
     {
@@ -1100,7 +1100,7 @@ const slides = [
     },
     {
       title:"Sonuç",
-      html:`Her iki durumda da kontrapozisyon doğru.
+      html:`Her iki durumda da karşıt ters ile ispat doğru.
       Dolayısıyla asıl önerme de doğrudur:
       <div class="mathbox">\\[\\boxed{A\\cup B=A\\cap B\\Rightarrow A=B.}\\]</div>`
     }
@@ -1108,15 +1108,15 @@ const slides = [
 },
 {
   chip:"Aufgabe 4(b)",
-  title:"Ringschluss: (i) ⇒ (ii) ⇒ (iii) ⇒ (i)",
+  title:"halkalı ispat: (i) ⇒ (ii) ⇒ (iii) ⇒ (i)",
   de:`Für \\(f:X\\to Y\\) sind äquivalent:
-      <br>(i) \\(f\\) ist injektiv.
+      <br>(i) \\(f\\) bire birdir.
       <br>(ii) \\(\\forall A\\subseteq X:\\;f^{-1}(f(A))\\subseteq A\\).
       <br>(iii) \\(\\forall x\\in X:\\;f^{-1}(\\{f(x)\\})=\\{x\\}\\).`,
   goal:"Üç önermeyi halka şeklinde birbirine bağlamak.",
   steps:[
     {
-      title:"Ringschluss planı",
+      title:"halkalı ispat planı",
       html:`Şu üç oku kanıtlamak yeterlidir:
       <div class="visual cycle"><div class="bubble">(i)<br>injektiv</div><div class="go">→</div><div class="bubble">(ii)<br>preimage</div><div class="go">→</div><div class="bubble">(iii)<br>fiber</div><div class="back">↘ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (iii) → (i) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↙</div></div>`
     },
@@ -1125,7 +1125,7 @@ const slides = [
       html:`\\(z\\in f^{-1}(f(A))\\) al.
       O zaman \\(f(z)\\in f(A)\\), yani bir \\(a\\in A\\) vardır ve
       \\(f(z)=f(a)\\).
-      f injektif olduğundan \\(z=a\\in A\\).
+      f bire bir olduğundan \\(z=a\\in A\\).
       <div class="mathbox">\\[f^{-1}(f(A))\\subseteq A.\\]</div>`
     },
     {
@@ -1148,7 +1148,7 @@ const slides = [
       O zaman \\(y\\in f^{-1}(\\{f(x)\\})\\).
       (iii)'e göre bu küme \\(\\{x\\}\\)'tir.
       Demek ki \\(y=x\\).
-      <div class="mathbox">\\[\\boxed{f\\text{ ist injektiv}.}\\]</div>`
+      <div class="mathbox">\\[\\boxed{f\\text{ bire birdir}.}\\]</div>`
     },
     {
       title:"Halka kapandı",
@@ -1160,20 +1160,20 @@ const slides = [
 },
 {
   chip:"Aufgabe 4(c)",
-  title:"Çelişki + durum ayrımı: 3 eleman 2 yere injektif gidemez",
+  title:"Çelişki + durum ayrımı: 3 eleman 2 yere bire bir gidemez",
   de:`Beweisen Sie, dass es keine injektive Abbildung
       \\[f:\\{1,2,3\\}\\to\\{1,2\\}\\]
       gibt. Beweistechnik: Widerspruch mit Fallunterscheidung.`,
-  goal:"İnjektif olduğunu varsayıp üçüncü elemanın gidecek yeri kalmadığını göstermek.",
+  goal:"Bire bir olduğunu varsayıp üçüncü elemanın gidecek yeri kalmadığını göstermek.",
   steps:[
     {
       title:"Çelişki varsayımı",
-      html:`Böyle bir injektif \\(f\\) varmış gibi düşünelim.
+      html:`Böyle bir bire bir \\(f\\) varmış gibi düşünelim.
       \\(f(1)\\) ya 1'dir ya 2'dir. Başka seçenek yok.`
     },
     {
       title:"1. durum: f(1)=1",
-      html:`İnjektiflik nedeniyle \\(f(2)\\neq1\\), dolayısıyla \\(f(2)=2\\).
+      html:`Bire birlik nedeniyle \\(f(2)\\neq1\\), dolayısıyla \\(f(2)=2\\).
       Şimdi \\(f(3)\\) ne olabilir?
       <div class="visual relation-row"><div class="node blue">1</div><div class="arrow flow"></div><div class="node green">1</div><div class="node blue">2</div><div class="arrow flow"></div><div class="node green">2</div><div class="node red">3 ?</div></div>`
     },
@@ -1182,17 +1182,17 @@ const slides = [
       html:`Kodomain yalnızca \\(\\{1,2\\}\\).
       \\(f(3)=1\\) olursa \\(f(1)=f(3)\\).
       \\(f(3)=2\\) olursa \\(f(2)=f(3)\\).
-      Her iki seçenek de injektifliğe aykırı.`
+      Her iki seçenek de bire bir olma koşuluna aykırı.`
     },
     {
       title:"2. durum: f(1)=2",
-      html:`Aynı mantıkla injektiflik \\(f(2)=1\\) zorlar.
+      html:`Aynı mantıkla bire birlik \\(f(2)=1\\) zorlar.
       Yine \\(f(3)\\) için 1 veya 2 dışında seçenek yok ve ikisi de çakışır.`
     },
     {
       title:"Çelişki",
       html:`Her iki durum da çelişki verdi.
-      <div class="mathbox">\\[\\boxed{\\text{Es gibt keine injektive Abbildung }f:\\{1,2,3\\}\\to\\{1,2\\}.}\\]</div>`
+      <div class="mathbox">\\[\\boxed{\\text{Bire bir fonksiyon yoktur: }f:\\{1,2,3\\}\\to\\{1,2\\}.}\\]</div>`
     }
   ]
 }
@@ -1206,11 +1206,11 @@ let lang = localStorage.getItem("elif-ub03-lang") || (location.pathname.endsWith
 const turkishData = slides.map(s=>({title:s.title, goal:s.goal, chip:s.chip, de:s.de, subtitle:s.subtitle, steps:s.steps?.map(st=>({title:st.title, html:st.html}))}));
 const turkishGoals = [
 null,
-"Yansıma, simetri ve geçişlilik özelliklerinin üçünü de göstermek.",
-"Her x için oluşan Y altkümelerini karşılaştırmak ve eşdeğerlik bağıntısının üç özelliğini göstermek.",
+"Yansıma, simetri ve geçişme özelliklerinin üçünü de göstermek.",
+"Her x için oluşan Y altkümelerini karşılaştırmak ve denklik bağıntısının üç özelliğini göstermek.",
 "En basit örneği seçmek: karşılaştırılacak farklı ikinci eleman bulunmasın.",
 "İlk koordinat kesin küçükse L ikinci koordinata bakmaz; E ise bakar.",
-"Yansıma + antisimetri + geçişlilik.",
+"Yansıma + antisimetri + geçişme.",
 "A² içinde E bağıntısına göre karşılaştırılamayan iki çift bulmak.",
 "Her iki yönde L doğruysa önce a=a′, sonra b=b′ olduğunu göstermek.",
 "İndüksiyon başlangıcı, indüksiyon varsayımı ve indüksiyon adımı.",
@@ -1223,13 +1223,13 @@ null,
 turkishData.forEach((s,i)=>{
  if(!i)return;
  s.goal=turkishGoals[i];
- s.title=s.title.replaceAll("Ringschluss","Halkalı ispat").replaceAll("injektif","bire bir").replaceAll("İnjektif","Bire bir").replaceAll("total değildir","tam sıralama değildir");
+ s.title=s.title.replaceAll("halkalı ispat","Halkalı ispat").replaceAll("bire bir","bire bir").replaceAll("Bire bir","Bire bir").replaceAll("total değildir","tam sıralama değildir");
  s.steps?.forEach(st=>{
-  st.title=st.title.replaceAll("Ringschluss","Halkalı ispat").replaceAll("Induktionsanfang","İndüksiyon başlangıcı").replaceAll("injektif","bire bir").replaceAll("İnjektif","Bire bir").replaceAll("Transitivite","Geçişlilik");
+  st.title=st.title.replaceAll("halkalı ispat","Halkalı ispat").replaceAll("Induktionsanfang","İndüksiyon başlangıcı").replaceAll("bire bir","bire bir").replaceAll("Bire bir","Bire bir").replaceAll("Geçişme özelliği","Geçişme");
  });
 });
 const germanStatements = slides.map(s=>s.de);
-const turkishStatements = [null,"Fonksiyonlar arasında \\(\\simeq\\) bağıntısı şöyle tanımlanıyor:\n\\[f\\simeq g\\iff\\forall x\\in X:\\;f(x)=g(x).\\]\nBu bağıntının bir <b>eşdeğerlik bağıntısı</b> olduğunu kanıtlayın.","\\(R,S\\subseteq X\\times Y\\) için şu bağıntı tanımlanıyor:\n\\[R\\simeq_r S\\iff\\forall x\\in X:\\;\\{y\\in Y\\mid(x,y)\\in R\\}=\\{y\\in Y\\mid(x,y)\\in S\\}.\\]\nBu da bir eşdeğerlik bağıntısı mıdır? Gerekçelendirin.","\\(R\\), \\(A\\) kümesi üzerinde tam sıralama olsun:\n\\[(a,b)E(a',b')\\iff aRa'\\land bRb',\\]\n\\[(a,b)L(a',b')\\iff aRa'\\land(\\neg(a'Ra)\\lor bRb').\\]\n\\(L=E\\) olacak bir \\(A\\) ve \\(R\\) örneği verin ve gerekçelendirin.","\\(R\\), \\(A\\) üzerinde tam sıralama olsun. \\(L\\neq E\\) olacak bir \\(A\\) ve \\(R\\) örneği verin; neden farklı olduklarını gösterin.","\\(E\\) bağıntısının bir <b>kısmi sıralama</b> olduğunu kanıtlayın.","Uygun bir karşı-örnek vererek \\(E\\) bağıntısının her zaman <b>tam sıralama</b> olmadığını gösterin.","\\(L\\) bağıntısının <b>antisimetri</b> özelliğini sağladığını kanıtlayın.","Tam tümevarım kullanarak \\(n\\ge4\\) olan bütün doğal sayılar için şu eşitsizliği kanıtlayın:\n\\[n!\\ge2^n.\\]","\\(f:X\\to X\\) bire bir (injektif) fonksiyon olsun. Tam tümevarımla bütün \\(k\\ge1\\) için şunu kanıtlayın:\n\\[f^k\\text{ bire birdir}.\\]\nBurada \\(f^1=f\\), \\(f^{k+1}=f^k\\circ f\\).","\\(A_1,A_2,\\ldots\\) ve \\(C\\) kümeleri verilsin. Bütün \\(n\\ge1\\) için tam tümevarımla şunu gösterin:\n\\[(A_1\\cap\\cdots\\cap A_n)\\cup C=(A_1\\cup C)\\cap\\cdots\\cap(A_n\\cup C).\\]","\\(A\\) ve \\(B\\) kümeleri için kanıtlayın:\n\\[A\\cup B=A\\cap B\\Rightarrow A=B.\\]\n<b>İstenen teknik:</b> Kontrapozisyon ve durumlara ayırma.","\\(f:X\\to Y\\) için şu üç önermenin eşdeğer olduğunu gösterin:\n<br>(i) \\(f\\) bire birdir.\n<br>(ii) Bütün \\(A\\subseteq X\\) için \\(f^{-1}(f(A))\\subseteq A\\).\n<br>(iii) Bütün \\(x\\in X\\) için \\(f^{-1}(\\{f(x)\\})=\\{x\\}\\).\n<br><b>İstenen teknik:</b> Halkalı ispat (Ringschluss).","Şu türde bire bir fonksiyon bulunmadığını kanıtlayın:\n\\[f:\\{1,2,3\\}\\to\\{1,2\\}.\\]\n<b>İstenen teknik:</b> Çelişkiyle ispat ve durumlara ayırma."];
+const turkishStatements = [null,"Fonksiyonlar arasında \\(\\simeq\\) bağıntısı şöyle tanımlanıyor:\n\\[f\\simeq g\\iff\\forall x\\in X:\\;f(x)=g(x).\\]\nBu bağıntının bir <b>denklik bağıntısı</b> olduğunu kanıtlayın.","\\(R,S\\subseteq X\\times Y\\) için şu bağıntı tanımlanıyor:\n\\[R\\simeq_r S\\iff\\forall x\\in X:\\;\\{y\\in Y\\mid(x,y)\\in R\\}=\\{y\\in Y\\mid(x,y)\\in S\\}.\\]\nBu da bir denklik bağıntısı mıdır? Gerekçelendirin.","\\(R\\), \\(A\\) kümesi üzerinde tam sıralama bağıntısı olsun:\n\\[(a,b)E(a',b')\\iff aRa'\\land bRb',\\]\n\\[(a,b)L(a',b')\\iff aRa'\\land(\\neg(a'Ra)\\lor bRb').\\]\n\\(L=E\\) olacak bir \\(A\\) ve \\(R\\) örneği verin ve gerekçelendirin.","\\(R\\), \\(A\\) üzerinde tam sıralama bağıntısı olsun. \\(L\\neq E\\) olacak bir \\(A\\) ve \\(R\\) örneği verin; neden farklı olduklarını gösterin.","\\(E\\) bağıntısının bir <b>kısmi sıralama bağıntısı</b> olduğunu kanıtlayın.","Uygun bir karşı-örnek vererek \\(E\\) bağıntısının her zaman <b>tam sıralama</b> olmadığını gösterin.","\\(L\\) bağıntısının <b>antisimetri</b> özelliğini sağladığını kanıtlayın.","Tam tümevarım kullanarak \\(n\\ge4\\) olan bütün doğal sayılar için şu eşitsizliği kanıtlayın:\n\\[n!\\ge2^n.\\]","\\(f:X\\to X\\) bire bir (bire bir) fonksiyon olsun. Tam tümevarımla bütün \\(k\\ge1\\) için şunu kanıtlayın:\n\\[f^k\\text{ bire birdir}.\\]\nBurada \\(f^1=f\\), \\(f^{k+1}=f^k\\circ f\\).","\\(A_1,A_2,\\ldots\\) ve \\(C\\) kümeleri verilsin. Bütün \\(n\\ge1\\) için tam tümevarımla şunu gösterin:\n\\[(A_1\\cap\\cdots\\cap A_n)\\cup C=(A_1\\cup C)\\cap\\cdots\\cap(A_n\\cup C).\\]","\\(A\\) ve \\(B\\) kümeleri için kanıtlayın:\n\\[A\\cup B=A\\cap B\\Rightarrow A=B.\\]\n<b>İstenen teknik:</b> Karşıt ters ile ispat ve durumlara ayırma.","\\(f:X\\to Y\\) için şu üç önermenin eşdeğer olduğunu gösterin:\n<br>(i) \\(f\\) bire birdir.\n<br>(ii) Bütün \\(A\\subseteq X\\) için \\(f^{-1}(f(A))\\subseteq A\\).\n<br>(iii) Bütün \\(x\\in X\\) için \\(f^{-1}(\\{f(x)\\})=\\{x\\}\\).\n<br><b>İstenen teknik:</b> Halkalı ispat (halkalı ispat).","Şu türde bire bir fonksiyon bulunmadığını kanıtlayın:\n\\[f:\\{1,2,3\\}\\to\\{1,2\\}.\\]\n<b>İstenen teknik:</b> Çelişkiyle ispat ve durumlara ayırma."];
 const footerEl = document.querySelector(".version");
 const brandSubEl = document.querySelector(".brand-sub");
 UI.tr.miniNote = "Önce soldaki soruyu oku. Sonra sağdaki çözümü adım adım aç. Her adım, ispatın nasıl ilerlediğini gösterir.";
