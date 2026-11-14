@@ -17,4 +17,5 @@ el('prev').disabled=current===0;
 }
 el('select').onchange=e=>{current=Number(e.target.value);shown=0;render()};el('lang').onchange=e=>{lang=e.target.value;localStorage.setItem('elif-koerper-lang',lang);render()};el('next').onclick=()=>{if(shown<3)shown++;else {current=(current+1)%topics.length;shown=0;}render()};el('all').onclick=()=>{shown=3;render()};el('prev').onclick=()=>{if(current>0){current--;shown=0;render()}};el('help').onclick=()=>alert((ui[lang]||ui.tr).help);
 document.addEventListener('keydown',e=>{if(['SELECT','BUTTON','INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return;if(e.key===' '||e.key==='ArrowRight'){e.preventDefault();el('next').click()}if(e.key==='ArrowLeft')el('prev').click()});render();
-</script></body></html>
+</script><script src="/projeler/analytics.js?v=20261114-auto"></script>
+</body></html>
