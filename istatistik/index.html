@@ -33,6 +33,7 @@ td:last-child{text-align:right;font-variant-numeric:tabular-nums}
 <h2>Sayfalar</h2><table><tbody id="pages"></tbody></table>
 <p id="status" role="status">İstatistikler yükleniyor…</p>
 </main>
+<div style="position:fixed;bottom:5px;left:8px;color:#888;font:10px system-ui">v1.2 · Tüm projeler ve sıfır ziyaret gösterimi</div>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
@@ -43,6 +44,21 @@ const dayDate=str=>new Date(str+'T12:00:00');
 const addDays=(d,n)=>{const a=new Date(d);a.setDate(a.getDate()+n);return a};
 const today=new Date();today.setHours(12,0,0,0);
 let dataset=null;
+let catalog=[];
+async function loadCatalog(){
+ try {
+  const response=await fetch('/projeler/index.html',{cache:'no-store'});
+  if(!response.ok)return;
+  const doc=new DOMParser().parseFromString(await response.text(),'text/html');
+  const seen=new Set();
+  catalog=Array.from(doc.querySelectorAll('.grid a[href]')).map(a=>{
+   const url=new URL(a.getAttribute('href'),location.origin+'/projeler/');
+   const path=url.pathname.replace(/\/(index|launch)\.html$/i,'').replace(/\/$/,'');
+   return {path,name:a.textContent.trim()};
+  }).filter(item=>{if(!item.path.startsWith('/projeler/')||seen.has(item.path))return false;seen.add(item.path);return true;});
+ } catch(e) { console.warn('Proje listesi alınamadı:',e); }
+ if(dataset)show();
+}
 function svgText(parent,x,y,value,anchor='end'){
  const t=document.createElementNS(ns,'text');
  t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('text-anchor',anchor);
@@ -78,8 +94,13 @@ function show(){
  draw(values,[ymd(from),ymd(today)]);
  const rows=(dataset.pages||[]).map(page=>{
    const n=dates.reduce((sum,day)=>sum+Number(page.daily?.[day]||0),0);
-   return {name:page.title||page.path,number:n};
- }).filter(p=>p.number>0).sort((a,b)=>b.number-a.number);
+   return {path:page.path.replace(/\\/$/,''),name:page.title||page.path,number:n};
+ });
+ const known=new Set(rows.map(p=>p.path));
+ for(const project of catalog){
+  if(!known.has(project.path))rows.push({...project,number:0});
+ }
+ rows.sort((a,b)=>b.number-a.number||a.name.localeCompare(b.name,'tr'));
  $('pages').replaceChildren();
  for(const item of rows){
   const tr=document.createElement('tr'),left=document.createElement('td'),right=document.createElement('td');
@@ -87,9 +108,10 @@ function show(){
  }
  const sum=dates.reduce((a,d)=>a+Number(dataset.total_daily?.[d]||0),0);
  $('total').textContent=fmt(sum);
- $('status').textContent='Son güncelleme: '+new Date(dataset.updated_at).toLocaleString('tr-TR');
+ $('status').textContent='Son güncelleme: '+new Date(dataset.updated_at).toLocaleString('tr-TR')+' · 0 görünen sayfalarda henüz ölçülmüş ziyaret yok.';
 }
 $('zoom').addEventListener('input',show);
+loadCatalog();
 fetch('./data.json?updated='+Date.now(),{cache:'no-store'}).then(async r=>{
  if(!r.ok)throw new Error('Henüz günlük veri dosyası oluşturulmadı.');
  const d=await r.json();
