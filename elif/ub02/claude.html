@@ -255,6 +255,9 @@ return s
 .replace(/transitif/gi,"geçişmeli")
 .replace(/geçişlilik/gi,"geçişme")
 .replace(/kısmi sıralama(?! bağıntısı)/gi,"kısmi sıralama bağıntısı")
+.replace(/injektiftir/gi,"bire birdir")
+.replace(/surjektiftir/gi,"örtendir")
+.replace(/bijektiftir/gi,"bire bir ve örtendir")
 .replace(/injektiflik/gi,"bire birlik")
 .replace(/injektif/gi,"bire bir")
 .replace(/surjektiflik/gi,"örtenlik")
@@ -263,7 +266,9 @@ return s
 .replace(/bijektif/gi,"bire bir ve örten")
 .replace(/kontraposition|kontrapozisyon/gi,"karşıt ters ile ispat")
 .replace(/\bFall (\d)\b/g,"Durum $1")
-.replace(/Aufgabe (\d)/g,"Soru $1");
+.replace(/Aufgabe (\d)/g,"Soru $1")
+.replace(/bire birtir/g,"bire birdir")
+ .replace(/örtentir/g,"örtendir");
 }
 const nodes=[];
 const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&& !['SCRIPT','STYLE','OPTION'].includes(n.parentElement.tagName)&&!n.parentElement.closest('.ub02-tools,.ub02-version')&&n.textContent.trim()?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
