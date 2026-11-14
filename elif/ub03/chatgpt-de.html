@@ -1242,8 +1242,41 @@ UI.tr.course = "Bilişim için Matematik 1";
 UI.de.course = "Mathematik für Informatik 1";
 UI.tr.brand = "Animasyonlu çözüm sunumu";
 UI.de.brand = "Animierte Lösungspräsentation";
-UI.tr.version = "v1.2 · Bütün sorular ve çözüm adımları Türkçe";
-UI.de.version = "v1.2 · Alle Aufgaben und Lösungsschritte auf Deutsch";
+UI.tr.version = "v1.4 · Terimler ve bütün ispat adımları Türkçeleştirildi";
+UI.de.version = "v1.4 · Alle Aufgaben und Lösungen auf Deutsch";
+function normalizeTurkishMath(s){
+ if(typeof s!=="string")return s;
+ return s
+  .replace(/eşdeğerlik bağıntısı/gi,"denklik bağıntısı")
+  .replace(/eşdeğerlik/gi,"denklik")
+  .replace(/eşitliğin refleksifliğini/gi,"eşitliğin yansıma özelliğini")
+  .replace(/refleksiflik/gi,"yansıma özelliği")
+  .replace(/refleksif/gi,"yansımalı")
+  .replace(/transitivite/gi,"geçişme özelliği")
+  .replace(/transitif/gi,"geçişmeli")
+  .replace(/geçişlilik/gi,"geçişme")
+  .replace(/kısmi sıralama(?! bağıntısı)/gi,"kısmi sıralama bağıntısı")
+  .replace(/total sıralama|toplam sıralama/gi,"tam sıralama bağıntısı")
+  .replace(/tam sıralama(?! bağıntısı)/gi,"tam sıralama bağıntısı")
+  .replace(/Ringschluss/gi,"halkalı ispat")
+  .replace(/kontraposition|kontrapozisyon/gi,"karşıt ters ile ispat")
+  .replace(/injektiflik/gi,"bire birlik")
+  .replace(/injektif/gi,"bire bir")
+  .replace(/surjektiflik/gi,"örtenlik")
+  .replace(/surjektif/gi,"örten")
+  .replace(/bijektiflik/gi,"bire bir ve örten olma")
+  .replace(/bijektif/gi,"bire bir ve örten")
+  .replace(/(?<!\\)\biff\b/gi,"ancak ve ancak")
+  .replace(/\\text\{\s*ist eine Äquivalenzrelation\.\}/gi,"\\text{ bir denklik bağıntısıdır.}")
+  .replace(/\\text\{\s*ist ebenfalls eine Äquivalenzrelation\.\}/gi,"\\text{ de bir denklik bağıntısıdır.}")
+  .replace(/\\text\{\s*ist eine partielle Ordnung\.\}/gi,"\\text{ bir kısmi sıralama bağıntısıdır.}")
+  .replace(/\\text\{\s*muss nicht total sein\.\}/gi,"\\text{ her zaman tam sıralama bağıntısı değildir.}")
+  .replace(/\\text\{\s*ist antisymmetrisch\.\}/gi,"\\text{ ters simetri özelliğini sağlar.}")
+  .replace(/\\text\{\s*ist injektiv\}/gi,"\\text{ bire birdir}")
+  .replace(/\\text\{\s*Es gibt keine injektive Abbildung\s*\}/gi,"\\text{Bire bir fonksiyon yoktur: }")
+  .replace(/✓ reflexiv &nbsp; ✓ symmetrisch &nbsp; ✓ transitiv/gi,"✓ yansıma &nbsp; ✓ simetri &nbsp; ✓ geçişme")
+  .replace(/Denklik bağıntısı bağıntısı/gi,"denklik bağıntısı");
+}
 function applyLanguage(chosen){
   if(chosen!=="tr" && chosen!=="de") chosen="tr";
   lang=chosen;
@@ -1273,7 +1306,19 @@ function applyLanguage(chosen){
       }
     });
   }
-  langBtn.setAttribute("aria-label",UI[lang].language);
+  if(chosen==="tr"){
+    slides.forEach((sl,i)=>{
+      if(!i)return;
+      sl.title=normalizeTurkishMath(sl.title);
+      sl.goal=normalizeTurkishMath(sl.goal);
+      sl.de=normalizeTurkishMath(sl.de);
+      sl.steps.forEach(st=>{
+        st.title=normalizeTurkishMath(st.title);
+        st.html=normalizeTurkishMath(st.html);
+      });
+    });
+  }
+    langBtn.setAttribute("aria-label",UI[lang].language);
   localStorage.setItem("elif-ub03-lang",lang);
   if(typeof updateJump==="function")updateJump();
   render();
