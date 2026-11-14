@@ -21,15 +21,15 @@ dialog::backdrop{background:#0005}
 <select class="utility" id="language" aria-label="Dil"><option value="tr">Türkçe</option><option value="de">Deutsch</option><option value="en">English</option></select>
 <button class="utility" onclick="document.querySelector('dialog').showModal()" aria-label="Help">?</button>
 </header>
-<main><div class="links"><a href="ub01/index.html">Übungsblatt 1</a><a href="ub02/index.html">Übungsblatt 2</a><a href="ub03/index.html">Übungsblatt 3</a><a href="ub04/index.html">Übungsblatt 4</a></div></main>
-<footer>v1.2 · Übungsblatt 1–4</footer>
+<main><div class="links"><a href="ub01/index.html">Übungsblatt 1</a><a href="ub02/index.html">Übungsblatt 2</a><a href="ub03/index.html">Übungsblatt 3</a><a href="ub04/index.html">Übungsblatt 4</a><a href="koerper/index.html">Körper · Cisimler</a></div></main>
+<footer>v1.3 · Übungsblatt 1–4 ve Körper</footer>
 <dialog><p id="helpText">Bir düğmeye bas. İlgili sayfa açılır.</p><button class="utility" onclick="this.closest('dialog').close()">OK</button></dialog>
 <script>
 const lang=document.querySelector('#language');
 lang.value=localStorage.getItem('elif-lang')||'tr';
 function tr(){let l=lang.value;document.documentElement.lang=l;
 document.querySelector('#helpText').textContent=({tr:'Bir düğmeye bas. İlgili sayfa açılır.',de:'Klicke auf einen Knopf. Die Seite öffnet sich.',en:'Click a button to open the page.'})[l];
-document.querySelector('#heading').textContent=({tr:'Elif',de:'Elif',en:'Elif'})[l];}
+const heading=document.querySelector('#heading');if(heading)heading.textContent='Elif';}
 lang.addEventListener('change',()=>{localStorage.setItem('elif-lang',lang.value);tr()});tr();
 </script><script src="/projeler/analytics.js?v=20261114-auto"></script>
 </body></html>
