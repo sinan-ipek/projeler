@@ -19,4 +19,5 @@ function render(){let d=ui[language],q=data[index];document.documentElement.lang
 function next(){if(shown<data[index][4].length)shown++;else{index=(index+1)%data.length;shown=0;}render();}
 function prev(){index=Math.max(0,index-1);shown=0;render();}
 const jumper=by('jump');data.forEach((q,i)=>{const op=document.createElement('option');op.value=String(i);op.textContent=q[0]+' · '+q[language==='tr'?1:2];jumper.appendChild(op)});function translateJump(){[...jumper.options].forEach((op,i)=>op.textContent=data[i][0]+' · '+data[i][language==='tr'?1:2]);}jumper.onchange=e=>{index=Number(e.target.value);shown=0;render()};by('next').onclick=next;by('prev').onclick=prev;by('help').onclick=()=>alert(ui[language].help);by('lang').onchange=e=>{language=e.target.value;localStorage.setItem('elif-ub01-lang',language);translateJump();render()};document.addEventListener('keydown',e=>{if(e.target.tagName==='SELECT')return;if(e.key===' '||e.key==='Enter'){e.preventDefault();next()}if(e.key==='ArrowRight'){index=Math.min(data.length-1,index+1);shown=0;render()}if(e.key==='ArrowLeft')prev()});render();
-</script></body></html>
+</script><script src="/projeler/analytics.js?v=20261114-auto"></script>
+</body></html>
