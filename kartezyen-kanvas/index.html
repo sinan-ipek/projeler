@@ -164,42 +164,6 @@ function render(){
  let entries=pairs().map(p=>"("+A[p.i]+", "+B[p.j]+")");
  $("result").textContent=currentName?(currentName+" = {"+entries.join(", ")+"}"+(mode==="function"?"\nHenüz tamamlanmadı.":"")):"Henüz seçim yok.";
 }
-function canWalk(x,y,excluded,margin){
- if(x<3||y<4||x>=cfg.gw-3||y>=cfg.gh-6)return false;
- for(const p of excluded){let dx=x*cfg.cell-p.x,dy=y*cfg.cell-p.y;if(dx*dx+dy*dy<margin*margin)return false}
- return true;
-}
-function route(p,q,excluded){
- const gap=Math.min(A.length>1?528/(A.length-1):160,B.length>1?305/(B.length-1):160);
- const obstacleRadius=Math.min(27,Math.max(4,gap*.29));
- const w=cfg.gw,h=cfg.gh,N=w*h;
- const sx=Math.round(p.x/cfg.cell),sy=Math.round(p.y/cfg.cell),tx=Math.round(q.x/cfg.cell),ty=Math.round(q.y/cfg.cell);
- const start=sy*w+sx,target=ty*w+tx;
- const blocked=new Uint8Array(N);
- for(const z of excluded){for(let yy=Math.max(0,Math.floor((z.y-obstacleRadius)/cfg.cell));yy<=Math.min(h-1,Math.ceil((z.y+obstacleRadius)/cfg.cell));yy++)for(let xx=Math.max(0,Math.floor((z.x-obstacleRadius)/cfg.cell));xx<=Math.min(w-1,Math.ceil((z.x+obstacleRadius)/cfg.cell));xx++){if(Math.hypot(xx*cfg.cell-z.x,yy*cfg.cell-z.y)<obstacleRadius)blocked[yy*w+xx]=1}}
- const dist=new Float64Array(N);dist.fill(Infinity);
- const prev=new Int32Array(N);prev.fill(-1);
- const closed=new Uint8Array(N),heap=[];
- function push(id,score){heap.push([score,id]);let k=heap.length-1;while(k>0){let up=(k-1)>>1;if(heap[up][0]<=heap[k][0])break;[heap[up],heap[k]]=[heap[k],heap[up]];k=up}}
- function pop(){const out=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let k=0;for(;;){let a=k*2+1,b=a+1,m=k;if(a<heap.length&&heap[a][0]<heap[m][0])m=a;if(b<heap.length&&heap[b][0]<heap[m][0])m=b;if(m===k)break;[heap[k],heap[m]]=[heap[m],heap[k]];k=m}}return out}
- dist[start]=0;push(start,Math.abs(sx-tx)+Math.abs(sy-ty));
- let found=false,tries=0;
- while(heap.length&&tries++<N*5){
-  const [score,id]=pop();if(closed[id])continue;closed[id]=1;
-  if(id===target){found=true;break}
-  const x=id%w,y=Math.floor(id/w);
-  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
-   const nx=x+dx,ny=y+dy;if(nx<3||ny<4||nx>=w-3||ny>=h-6||blocked[ny*w+nx])continue;
-   const nid=ny*w+nx;if(closed[nid])continue;
-   let cost=1;
-   // Keep the shortest clear path between selected islands.
-   const nd=dist[id]+cost;if(nd<dist[nid]){dist[nid]=nd;prev[nid]=id;push(nid,nd+Math.abs(nx-tx)+Math.abs(ny-ty))}
-  }
- }
- if(!found)return [];
- const path=[];let cur=target;while(cur!==-1){path.push([cur%w,Math.floor(cur/w)]);if(cur===start)break;cur=prev[cur]}
- return path;
-}
 function paintDisk(mask,x,y,r){
  const w=cfg.gw,h=cfg.gh,c=cfg.cell;
  let minx=Math.max(0,Math.floor((x-r)/c)),maxx=Math.min(w-1,Math.ceil((x+r)/c));
@@ -242,25 +206,6 @@ function contours(mask){
  return loops;
 }
 function polygonArea(p){let a=0;for(let i=0;i<p.length;i++){let q=p[(i+1)%p.length];a+=p[i][0]*q[1]-q[0]*p[i][1]}return a/2}
-function smoothPath(path){
- // Closed Catmull-Rom curve, converted to cubic Bézier segments.
- let pts=path.filter((_,i)=>i%2===0);
- for(let pass=0;pass<3;pass++){
-  pts=pts.map((p,i)=>{
-   const a=pts[(i-1+pts.length)%pts.length],b=pts[(i+1)%pts.length];
-   return [(a[0]+4*p[0]+b[0])/6,(a[1]+4*p[1]+b[1])/6];
-  });
- }
- if(pts.length<3)return "";
- let d="M"+pts[0][0].toFixed(1)+" "+pts[0][1].toFixed(1);
- for(let i=0;i<pts.length;i++){
-  const a=pts[(i-1+pts.length)%pts.length],b=pts[i],z=pts[(i+1)%pts.length],e=pts[(i+2)%pts.length];
-  const x1=b[0]+(z[0]-a[0])/6,y1=b[1]+(z[1]-a[1])/6;
-  const x2=z[0]-(e[0]-b[0])/6,y2=z[1]-(e[1]-b[1])/6;
-  d+=" C"+x1.toFixed(2)+" "+y1.toFixed(2)+" "+x2.toFixed(2)+" "+y2.toFixed(2)+" "+z[0].toFixed(2)+" "+z[1].toFixed(2);
- }
- return d+" Z";
-}
 function pointInPoly(x,y,poly){
  let inPoly=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){
   const a=poly[i],b=poly[j];
@@ -268,38 +213,6 @@ function pointInPoly(x,y,poly){
  }
  return inPoly;
 }
-
-function openInnerHoles(mask,selected){
- const w=cfg.gw,h=cfg.gh,N=w*h;
- for(let pass=0;pass<20;pass++){
-  const seen=new Uint8Array(N),queue=[];
-  for(let x=0;x<w;x++){for(const y of [0,h-1]){let z=y*w+x;if(!mask[z]&&!seen[z]){seen[z]=1;queue.push(z)}}}
-  for(let y=0;y<h;y++){for(const x of [0,w-1]){let z=y*w+x;if(!mask[z]&&!seen[z]){seen[z]=1;queue.push(z)}}}
-  for(let k=0;k<queue.length;k++){let u=queue[k],x=u%w,y=(u/w)|0;for(const v of [x?u-1:-1,x<w-1?u+1:-1,y?u-w:-1,y<h-1?u+w:-1])if(v>=0&&!mask[v]&&!seen[v]){seen[v]=1;queue.push(v)}}
-  let start=-1;for(let i=0;i<N;i++)if(!mask[i]&&!seen[i]){start=i;break}
-  if(start<0)return;
-  const dist=new Float64Array(N);dist.fill(Infinity);const prev=new Int32Array(N);prev.fill(-1);
-  const visited=new Uint8Array(N),heap=[];
-  function push(id,d){heap.push([d,id]);let k=heap.length-1;while(k){let u=(k-1)>>1;if(heap[u][0]<=heap[k][0])break;[heap[u],heap[k]]=[heap[k],heap[u]];k=u}}
-  function pop(){let r=heap[0],v=heap.pop();if(heap.length){heap[0]=v;let i=0;for(;;){let a=2*i+1,b=a+1,m=i;if(a<heap.length&&heap[a][0]<heap[m][0])m=a;if(b<heap.length&&heap[b][0]<heap[m][0])m=b;if(m===i)break;[heap[m],heap[i]]=[heap[i],heap[m]];i=m}}return r}
-  dist[start]=0;push(start,0);let end=-1;
-  while(heap.length){
-   const [d,u]=pop();if(visited[u])continue;visited[u]=1;if(seen[u]){end=u;break}
-   let x=u%w,y=(u/w)|0;
-   for(const v of [x?u-1:-1,x<w-1?u+1:-1,y?u-w:-1,y<h-1?u+w:-1]){
-    if(v<0||visited[v])continue;
-    const vx=(v%w+.5)*cfg.cell,vy=(((v/w)|0)+.5)*cfg.cell;
-    if(selected.some(p=>Math.hypot(p.x-vx,p.y-vy)<24))continue;
-    const nd=d+(mask[v]?1:0.01);
-    if(nd<dist[v]){dist[v]=nd;prev[v]=u;push(v,nd)}
-   }
-  }
-  if(end<0)return;
-  let cur=end;
-  while(cur!==-1){let x=cur%w,y=(cur/w)|0;paintDisk(mask,(x+.5)*cfg.cell,(y+.5)*cfg.cell,0);mask[cur]=0;if(cur===start)break;cur=prev[cur]}
- }
-}
-
 
 function traceSingleBlob(selected, excluded) {
   const w=cfg.gw,h=cfg.gh,N=w*h,step=cfg.cell;
