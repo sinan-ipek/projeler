@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kartezyen Kanvas v2.1.0 — Bağıntı & Fonksiyon Laboratuvarı</title>
+<title>Kartezyen Kanvas v2.2.0 — Bağıntı & Fonksiyon Laboratuvarı</title>
 <style>
 :root{color-scheme:light;--ink:#182637;--muted:#64748b;--line:#dce5ef;--paper:#f4f7fb;--blue:#2563eb;--red:#df3650}
 *{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--paper)}
@@ -28,7 +28,7 @@ footer{max-width:1530px;margin:0 auto 40px;padding:0 20px;color:#6b7a90;font-siz
 </style>
 </head>
 <body>
-<header><h1>Kartezyen Kanvas <small style="font-size:12px;opacity:.7">v2.1.0</small></h1><p>Kartezyen çarpımı, bağıntıları ve fonksiyonları çizerek keşfet.</p></header>
+<header><h1>Kartezyen Kanvas <small style="font-size:12px;opacity:.7">v2.2.0</small></h1><p>Kartezyen çarpımı, bağıntıları ve fonksiyonları çizerek keşfet.</p></header>
 <main>
 <section class="panel">
 <div class="stageHeader"><div><h2>A × B — Noktalar kanvası</h2><p class="subtitle">Her nokta bir (a,b) sıralı ikilisidir. Yatayda A, dikeyde B.</p></div><span id="modeChip" class="chip">Keşif modu</span></div>
@@ -61,7 +61,7 @@ footer{max-width:1530px;margin:0 auto 40px;padding:0 20px;color:#6b7a90;font-siz
 <p class="small"><b>Mavi β:</b> Herhangi bir bağıntı. <b>Kırmızı f:</b> A'nın her elemanına B'den tam bir eleman atayan fonksiyon.<br><br>Çizim modunda noktalara dokun. Fonksiyon çiziminde aynı A elemanına iki farklı B değeri seçilemez; bütün sütunlar tamamlanınca seçim kilitlenir.</p>
 </aside>
 </main>
-<footer>v2.1.0 · Birden fazla bağıntı ve fonksiyon aynı kanvasta tutulur. Bağıntılar yarı saydam blob; fonksiyonlar yalnızca noktaları bağlayan poligon veya yumuşak açık eğri olarak gösterilir.</footer>
+<footer>v2.2.0 · Birden fazla bağıntı ve fonksiyon aynı kanvasta tutulur. Bağıntı alanları seçili ve seçilmemiş noktalar arasındaki Voronoi uzaklık farkıyla oluşturulur; fonksiyonlar Poligon / Curve olarak gösterilir.</footer>
 <script>
 "use strict";
 const NS="http://www.w3.org/2000/svg";
@@ -236,14 +236,16 @@ function pointInPoly(x,y,poly){
 }
 
 
-/* v2.1.0: one consistent, hole-aware organic silhouette algorithm */
+/* v2.2.0: one consistent, hole-aware organic silhouette algorithm */
 
-/* v2.1.0: start with a FULL round convex envelope; cut only local exclusion notches. */
-function roundedHull(selected, radius){
+/* v2.2.0: start with a FULL round convex envelope; cut only local exclusion notches. */
+
+/* Voronoi-based relation fill. Distance field defines where selected points
+   dominate; an expanded convex hull keeps the shape a coherent, round blob. */
+function roundedHull(selected,radius){
  const list=[];
- for(const p of selected)for(let i=0;i<24;i++){
-  let t=Math.PI*2*i/24;
-  list.push([p.x+radius*Math.cos(t),p.y+radius*Math.sin(t)]);
+ for(const p of selected)for(let i=0;i<32;i++){
+  const t=Math.PI*2*i/32;list.push([p.x+radius*Math.cos(t),p.y+radius*Math.sin(t)]);
  }
  list.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
  const cross=(a,b,z)=>(b[0]-a[0])*(z[1]-a[1])-(b[1]-a[1])*(z[0]-a[0]);
@@ -252,103 +254,139 @@ function roundedHull(selected, radius){
  for(let i=list.length-1;i>=0;i--){const p=list[i];while(upper.length>1&&cross(upper[upper.length-2],upper[upper.length-1],p)<=0)upper.pop();upper.push(p)}
  lower.pop();upper.pop();return lower.concat(upper);
 }
-function rasterHull(selected, radius){
- const polygon=roundedHull(selected,radius);
- const w=cfg.gw,h=cfg.gh,c=cfg.cell,mask=new Uint8Array(w*h);
- for(let y=0;y<h;y++)for(let x=0;x<w;x++)
-  if(pointInPoly((x+.5)*c,(y+.5)*c,polygon))mask[y*w+x]=1;
- return mask;
-}
-function outsideFlood(mask){
- const w=cfg.gw,h=cfg.gh,seen=new Uint8Array(mask.length),queue=[];
- function add(i){if(!seen[i]&&!mask[i]){seen[i]=1;queue.push(i)}}
- for(let x=0;x<w;x++){add(x);add((h-1)*w+x)}
- for(let y=0;y<h;y++){add(y*w);add(y*w+w-1)}
- for(let k=0;k<queue.length;k++){
-  const i=queue[k],x=i%w,y=(i/w)|0;
-  if(x>0)add(i-1);if(x<w-1)add(i+1);
-  if(y>0)add(i-w);if(y<h-1)add(i+w);
- }
- return seen;
-}
 function pixelOf(p){
  const x=Math.max(0,Math.min(cfg.gw-1,Math.floor(p.x/cfg.cell)));
  const y=Math.max(0,Math.min(cfg.gh-1,Math.floor(p.y/cfg.cell)));
  return y*cfg.gw+x;
 }
-function carveLocalNotch(mask,target,selected,width){
- const w=cfg.gw,h=cfg.gh,c=cfg.cell,N=mask.length;
- const start=pixelOf(target),outside=outsideFlood(mask);
- if(outside[start])return true;
- const dist=new Float64Array(N),prev=new Int32Array(N),used=new Uint8Array(N);
- dist.fill(Infinity);prev.fill(-1);
- // Dijkstra, favor shortest cuts with space from all selected points.
- const heap=[];
- function push(id,val){heap.push([val,id]);let i=heap.length-1;while(i>0){let p=(i-1)>>1;if(heap[p][0]<=heap[i][0])break;[heap[p],heap[i]]=[heap[i],heap[p]];i=p}}
- function pop(){const out=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let i=0;for(;;){let l=2*i+1,r=l+1,m=i;if(l<heap.length&&heap[l][0]<heap[m][0])m=l;if(r<heap.length&&heap[r][0]<heap[m][0])m=r;if(i===m)break;[heap[i],heap[m]]=[heap[m],heap[i]];i=m}}return out}
- const safety=Math.max(8,width+5);
- const forbidden=new Uint8Array(N);
- for(const p of selected){
-  const x0=Math.max(0,Math.floor((p.x-safety)/c)),x1=Math.min(w-1,Math.ceil((p.x+safety)/c));
-  const y0=Math.max(0,Math.floor((p.y-safety)/c)),y1=Math.min(h-1,Math.ceil((p.y+safety)/c));
-  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)
-   if(Math.hypot((x+.5)*c-p.x,(y+.5)*c-p.y)<safety)forbidden[y*w+x]=1;
+function floodOutside(mask){
+ const w=cfg.gw,h=cfg.gh,seen=new Uint8Array(mask.length),queue=[];
+ function add(i){if(!seen[i]&&!mask[i]){seen[i]=1;queue.push(i)}}
+ for(let x=0;x<w;x++){add(x);add((h-1)*w+x)}
+ for(let y=0;y<h;y++){add(y*w);add(y*w+w-1)}
+ for(let k=0;k<queue.length;k++){
+  let i=queue[k],x=i%w,y=(i/w)|0;
+  if(x>0)add(i-1);if(x<w-1)add(i+1);
+  if(y>0)add(i-w);if(y<h-1)add(i+w);
  }
- if(forbidden[start])return false;
+ return seen;
+}
+function voronoiField(selected,excluded){
+ const w=cfg.gw,h=cfg.gh,c=cfg.cell,score=new Float32Array(w*h);
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+  const px=(x+.5)*c,py=(y+.5)*c;
+  let ds=Infinity,du=Infinity;
+  for(const p of selected){const d=(px-p.x)**2+(py-p.y)**2;if(d<ds)ds=d}
+  for(const p of excluded){const d=(px-p.x)**2+(py-p.y)**2;if(d<du)du=d}
+  score[y*w+x]=excluded.length?Math.sqrt(du)-Math.sqrt(ds):1e6;
+ }
+ return score;
+}
+function carvingCost(score,id,margin){
+ // Prefer carving where an unselected node dominates (negative score);
+ // strongly discourage cutting close to selected seeds.
+ const v=score[id];
+ return 1 + Math.max(0,(v+margin)/Math.max(1,margin))*3;
+}
+function carveVoronoiNotch(mask,source,score,selected,radius){
+ const w=cfg.gw,h=cfg.gh,c=cfg.cell,N=mask.length;
+ const start=pixelOf(source),outside=floodOutside(mask);
+ if(outside[start])return true;
+ const protectedMask=new Uint8Array(N);
+ const protect=Math.max(5,radius+3);
+ for(const p of selected){
+  const x0=Math.max(0,Math.floor((p.x-protect)/c)),x1=Math.min(w-1,Math.ceil((p.x+protect)/c));
+  const y0=Math.max(0,Math.floor((p.y-protect)/c)),y1=Math.min(h-1,Math.ceil((p.y+protect)/c));
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)
+   if(Math.hypot((x+.5)*c-p.x,(y+.5)*c-p.y)<protect)protectedMask[y*w+x]=1;
+ }
+ if(protectedMask[start])return false;
+ const dist=new Float64Array(N),prev=new Int32Array(N),done=new Uint8Array(N),heap=[];
+ dist.fill(Infinity);prev.fill(-1);
+ function push(i,v){heap.push([v,i]);let k=heap.length-1;while(k){let p=(k-1)>>1;if(heap[p][0]<=heap[k][0])break;[heap[p],heap[k]]=[heap[k],heap[p]];k=p}}
+ function pop(){const top=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let k=0;for(;;){
+  let l=k*2+1,r=l+1,m=k;if(l<heap.length&&heap[l][0]<heap[m][0])m=l;
+  if(r<heap.length&&heap[r][0]<heap[m][0])m=r;if(m===k)break;
+  [heap[k],heap[m]]=[heap[m],heap[k]];k=m;
+ }}return top}
  dist[start]=0;push(start,0);let goal=-1;
  while(heap.length){
-  const [,id]=pop();if(used[id])continue;used[id]=1;
+  const [,id]=pop();if(done[id])continue;done[id]=1;
   if(outside[id]){goal=id;break}
   const x=id%w,y=(id/w)|0;
-  for(const n of [x? id-1:-1,x<w-1?id+1:-1,y?id-w:-1,y<h-1?id+w:-1]){
-   if(n<0||used[n]||forbidden[n])continue;
-   const px=(n%w+.5)*c,py=(((n/w)|0)+.5)*c;
-   let near=Infinity;
-   for(const p of selected)near=Math.min(near,Math.hypot(px-p.x,py-p.y));
-   const cost=(mask[n]?1:0.1)+(near<safety*2?(safety*2-near)/safety:0);
-   const nd=dist[id]+cost;
-   if(nd<dist[n]){dist[n]=nd;prev[n]=id;push(n,nd)}
+  for(const ni of [x?id-1:-1,x<w-1?id+1:-1,y?id-w:-1,y<h-1?id+w:-1]){
+   if(ni<0||done[ni]||protectedMask[ni])continue;
+   const nd=dist[id]+carvingCost(score,ni,Math.max(8,radius*2));
+   if(nd<dist[ni]){dist[ni]=nd;prev[ni]=id;push(ni,nd)}
   }
  }
  if(goal<0)return false;
- const trail=[];
- for(let u=goal;u!==-1;u=prev[u]){trail.push(u);if(u===start)break}
- // Carve a small, smooth-opening slit, not a new skeleton for the entire figure.
- for(let k=0;k<trail.length;k++){
-  const id=trail[k],x=id%w,y=(id/w)|0;
-  const px=(x+.5)*c,py=(y+.5)*c;
-  const r=Math.max(c*1.15,width*(.75+.25*Math.sin(Math.PI*k/Math.max(1,trail.length-1))));
-  const x0=Math.max(0,Math.floor((px-r)/c)),x1=Math.min(w-1,Math.ceil((px+r)/c));
-  const y0=Math.max(0,Math.floor((py-r)/c)),y1=Math.min(h-1,Math.ceil((py+r)/c));
+ const route=[];
+ for(let i=goal;i>=0;i=prev[i]){route.push(i);if(i===start)break}
+ const clearRadius=Math.max(c*1.05,radius);
+ for(const id of route){
+  const x=id%w,y=(id/w)|0,px=(x+.5)*c,py=(y+.5)*c;
+  const x0=Math.max(0,Math.floor((px-clearRadius)/c)),x1=Math.min(w-1,Math.ceil((px+clearRadius)/c));
+  const y0=Math.max(0,Math.floor((py-clearRadius)/c)),y1=Math.min(h-1,Math.ceil((py+clearRadius)/c));
   for(let yy=y0;yy<=y1;yy++)for(let xx=x0;xx<=x1;xx++){
    const j=yy*w+xx;
-   if(!forbidden[j]&&Math.hypot((xx+.5)*c-px,(yy+.5)*c-py)<r)mask[j]=0;
+   if(!protectedMask[j]&&Math.hypot((xx+.5)*c-px,(yy+.5)*c-py)<clearRadius)mask[j]=0;
   }
  }
- // Protect the precise coordinate of the excluded point.
- mask[start]=0;return true;
+ mask[start]=0;
+ return true;
 }
-function buildSmoothBlob(selected,excluded,type){
- const spacing=Math.min(
-   A.length>1?(cfg.x1-cfg.x0)/(A.length-1):160,
-   B.length>1?(cfg.y1-cfg.y0)/(B.length-1):160
- );
- // Circle-expanded convex hull is ALWAYS the starting silhouette.
- const radius=Math.max(5,Math.min(44,spacing*.37));
- const mask=rasterHull(selected,radius);
- const slitWidth=Math.max(3,Math.min(10,spacing*.12));
- for(const p of excluded){
-  const outside=outsideFlood(mask);
-  if(!outside[pixelOf(p)])carveLocalNotch(mask,p,selected,slitWidth);
- }
+function validOutline(mask,selected,excluded){
  const loops=contours(mask).sort((a,b)=>Math.abs(polygonArea(b))-Math.abs(polygonArea(a)));
  if(!loops.length)return null;
- const outer=loops[0];
- // No mathematical misrepresentation: if geometry cannot satisfy the
- // containment condition, the caller won't draw a misleading outline.
- if(!selected.every(p=>pointInPoly(p.x,p.y,outer))||
-    excluded.some(p=>pointInPoly(p.x,p.y,outer)))return null;
- return {outer};
+ const boundary=loops[0];
+ return selected.every(p=>pointInPoly(p.x,p.y,boundary))&&
+        excluded.every(p=>!pointInPoly(p.x,p.y,boundary)) ? boundary:null;
+}
+function buildSmoothBlob(selected,excluded){
+ const w=cfg.gw,h=cfg.gh,c=cfg.cell,spacing=Math.min(
+  A.length>1?(cfg.x1-cfg.x0)/(A.length-1):160,
+  B.length>1?(cfg.y1-cfg.y0)/(B.length-1):160
+ );
+ const radius=Math.max(5,Math.min(43,spacing*.36));
+ const hull=roundedHull(selected,radius);
+ const base=new Uint8Array(w*h);
+ const score=voronoiField(selected,excluded);
+ const margin=Math.max(4,spacing*.15);
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+  const id=y*w+x,px=(x+.5)*c,py=(y+.5)*c;
+  if(pointInPoly(px,py,hull))base[id]=1;
+ }
+ // Nearest-neighbour dominance shapes the fill, not a network of tubes.
+ // Only trim a negative-score region when it is reachable from the outside.
+ const candidate=new Uint8Array(base);
+ const visited=new Uint8Array(base.length),queue=[];
+ function push(i){
+  if(i<0||i>=base.length||visited[i]||score[i]>=-margin)return;
+  visited[i]=1;queue.push(i);
+ }
+ for(let x=0;x<w;x++){push(x);push((h-1)*w+x)}
+ for(let y=0;y<h;y++){push(y*w);push(y*w+w-1)}
+ // Also seed score-negative cells directly adjacent to the convex shell.
+ for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+  const i=y*w+x;if(!base[i]){push(i);continue}
+  if(!base[i-1]||!base[i+1]||!base[i-w]||!base[i+w])push(i);
+ }
+ for(let k=0;k<queue.length;k++){
+  const i=queue[k],x=i%w,y=(i/w)|0;
+  if(base[i])candidate[i]=0;
+  if(x>0)push(i-1);if(x<w-1)push(i+1);
+  if(y>0)push(i-w);if(y<h-1)push(i+w);
+ }
+ // Preserve the underlying round hull if Voronoi trimming fragments it.
+ let mask=validOutline(candidate,selected,excluded)?candidate:base;
+ // The excluded points that remain inside get a local Voronoi-guided escape.
+ for(const p of excluded){
+  const outside=floodOutside(mask);
+  if(!outside[pixelOf(p)])carveVoronoiNotch(mask,p,score,selected,Math.max(4,spacing*.10));
+ }
+ const outer=validOutline(mask,selected,excluded);
+ return outer?{outer}:null;
 }
 function safeBezier(loop,inside,outside){
   function make(pass){
