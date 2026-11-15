@@ -377,16 +377,21 @@ function buildSmoothBlob(selected,excluded,type){
   const route=windingPath(a,b,excluded,clearance+neck+3);
   if(route)paintTube(mask,route,neck);
  }
- // Soft closing on every drawing, never switch to a different algorithm.
- let out=maskClose(mask,closeRadius);
- for(const p of selected)paintDisk(out,p.x,p.y,lobe);
- // A larger secondary closing rounds broad internal coves when they have room.
+ // Apply the same morphological treatment to every drawing. Each stage
+ // must keep the mathematical selection exact; unsafe stages are discarded.
+ function eligible(candidate){
+  const loops=contours(candidate).sort((a,b)=>Math.abs(polygonArea(b))-Math.abs(polygonArea(a)));
+  if(!loops.length)return false;
+  return selected.every(p=>pointInPoly(p.x,p.y,loops[0])) &&
+         excluded.every(p=>!pointInPoly(p.x,p.y,loops[0]));
+ }
+ let out=mask;
+ const candidate=maskClose(out,closeRadius);
+ for(const p of selected)paintDisk(candidate,p.x,p.y,lobe);
+ if(eligible(candidate))out=candidate;
  const rounded=maskClose(out,Math.min(54,spacing*.70));
- // Accept only changes that do not enclose unselected nodes.
- if(excluded.every(p=>{
-  const x=Math.max(0,Math.min(w-1,Math.floor(p.x/cfg.cell))),y=Math.max(0,Math.min(h-1,Math.floor(p.y/cfg.cell)));
-  return !rounded[y*w+x];
- }))out=rounded;
+ for(const p of selected)paintDisk(rounded,p.x,p.y,lobe);
+ if(eligible(rounded))out=rounded;
  // If a closed cavity has no excluded point, fill it. Otherwise keep a
  // passage to the exterior: a simple closed outline cannot leave a point
  // surrounded by selected ones outside without some opening.
@@ -411,9 +416,9 @@ function buildSmoothBlob(selected,excluded,type){
  const loops=contours(out).sort((a,b)=>Math.abs(polygonArea(b))-Math.abs(polygonArea(a)));
  if(!loops.length)return null;
  const outer=loops[0];
- if(!selected.every(p=>pointInPoly(p.x,p.y,outer)))return null;
- if(excluded.some(p=>pointInPoly(p.x,p.y,outer)))return {outer,invalid:true};
- return {outer,invalid:false};
+ if(!selected.every(p=>pointInPoly(p.x,p.y,outer)) ||
+    excluded.some(p=>pointInPoly(p.x,p.y,outer)))return null;
+ return {outer};
 }
 function safeBezier(loop,inside,outside){
   function make(pass){
