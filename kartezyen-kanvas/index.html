@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kartezyen Kanvas — Bağıntı & Fonksiyon Laboratuvarı</title>
+<title>Kartezyen Kanvas v2.0.0 — Bağıntı & Fonksiyon Laboratuvarı</title>
 <style>
 :root{color-scheme:light;--ink:#182637;--muted:#64748b;--line:#dce5ef;--paper:#f4f7fb;--blue:#2563eb;--red:#df3650}
 *{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--paper)}
@@ -28,7 +28,7 @@ footer{max-width:1530px;margin:0 auto 40px;padding:0 20px;color:#6b7a90;font-siz
 </style>
 </head>
 <body>
-<header><h1>Kartezyen Kanvas</h1><p>Kartezyen çarpımı, bağıntıları ve fonksiyonları çizerek keşfet.</p></header>
+<header><h1>Kartezyen Kanvas <small style="font-size:12px;opacity:.7">v2.0.0</small></h1><p>Kartezyen çarpımı, bağıntıları ve fonksiyonları çizerek keşfet.</p></header>
 <main>
 <section class="panel">
 <div class="stageHeader"><div><h2>A × B — Noktalar kanvası</h2><p class="subtitle">Her nokta bir (a,b) sıralı ikilisidir. Yatayda A, dikeyde B.</p></div><span id="modeChip" class="chip">Keşif modu</span></div>
@@ -42,7 +42,7 @@ footer{max-width:1530px;margin:0 auto 40px;padding:0 20px;color:#6b7a90;font-siz
 <button id="randomRelation" class="action blue">🎲 Rastgele bağıntı</button>
 <button id="drawRelation" class="action blue">✎ Bağıntı çiz</button>
 <button id="randomFunction" class="action red">🎲 Rastgele fonksiyon</button>
-<button id="drawFunction" class="action red">✎ Fonksiyon çiz</button>
+<button id="drawFunction" class="action red">✎ Fonksiyon çiz</button><button id="clearAll" class="action" style="grid-column:1/-1">Tüm bağıntıları ve fonksiyonları sil</button>
 </div>
 </section>
 <aside class="panel">
@@ -59,13 +59,23 @@ footer{max-width:1530px;margin:0 auto 40px;padding:0 20px;color:#6b7a90;font-siz
 <p class="small"><b>Mavi β:</b> Herhangi bir bağıntı. <b>Kırmızı f:</b> A'nın her elemanına B'den tam bir eleman atayan fonksiyon.<br><br>Çizim modunda noktalara dokun. Fonksiyon çiziminde aynı A elemanına iki farklı B değeri seçilemez; bütün sütunlar tamamlanınca seçim kilitlenir.</p>
 </aside>
 </main>
-<footer>Tek parça, deliksiz ve yarı saydam organik blob çizilir. Fonksiyonlarda bağlantılar A sırasını izler. Sıfır elemanlı bağıntı ∅ olarak gösterilir.</footer>
+<footer>v2.0.0 · Birden fazla bağıntı ve fonksiyon aynı kanvasta tutulur. Uygun seçimlerde körfezsiz yuvarlak dış kabuk çizilir.</footer>
 <script>
 "use strict";
 const NS="http://www.w3.org/2000/svg";
 const $=id=>document.getElementById(id);
 const cfg={W:900,H:560,x0:186,x1:714,y0:110,y1:415,cell:4,gw:225,gh:140};
 let A=[],B=[],points=[],chosen=new Set(),mode="idle",kind=null,relationCount=0,functionCount=0,currentName="";
+const drawings=[];
+const relationColors=["#2563eb","#0891b2","#6355cf","#0d9488","#385ab4","#4688c5"];
+const functionColors=["#e13d55","#d96c36","#bf3579","#d24646","#ae516d"];
+let currentColor="#2563eb";
+function syncDrawing(){
+ if(!currentName)return;
+ const record={name:currentName,kind,color:currentColor,keys:new Set(chosen)};
+ const i=drawings.findIndex(d=>d.name===currentName&&d.kind===kind);
+ if(i<0)drawings.push(record);else drawings[i]=record;
+}
 function svg(tag,attrs,parent){const n=document.createElementNS(NS,tag);for(const k in attrs)n.setAttribute(k,attrs[k]);parent.appendChild(n);return n}
 function clear(id){$(id).replaceChildren()}
 function tokens(s){
@@ -96,7 +106,7 @@ function state(text){$("status").textContent=text}
 function updateInputs(){
  let a,b;try{a=tokens($("setA").value);b=tokens($("setB").value)}catch(e){state(e.message);return}
  if(a.length===0||b.length===0){state("A ve B boş olamaz. Her ikisine de en az bir eleman gir.");return}
- A=a;B=b;chosen=new Set();mode="idle";kind=null;currentName="";
+ A=a;B=b;chosen=new Set();drawings.length=0;mode="idle";kind=null;currentName="";
  points=[];for(let i=0;i<A.length;i++)for(let j=0;j<B.length;j++){
  const x=cfg.x0+(A.length===1?(cfg.x1-cfg.x0)/2:i*(cfg.x1-cfg.x0)/(A.length-1));
  const y=cfg.y1-(B.length===1?(cfg.y1-cfg.y0)/2:j*(cfg.y1-cfg.y0)/(B.length-1));
@@ -108,12 +118,13 @@ function updateInputs(){
 function start(k,random){
  mode=random?"idle":k;kind=k;chosen=new Set();
  currentName=k==="relation"?"β"+sub(++relationCount):"f"+sub(++functionCount);
+ currentColor=k==="relation"?relationColors[(relationCount-1)%relationColors.length]:functionColors[(functionCount-1)%functionColors.length];
  if(random){
   if(k==="relation"){const probability=Math.min(.35,22/points.length);for(const p of points)if(Math.random()<probability)chosen.add(p.key);if(!chosen.size)chosen.add(points[Math.floor(Math.random()*points.length)].key)}
   else for(let i=0;i<A.length;i++){const j=Math.floor(Math.random()*B.length);chosen.add(i+":"+j)}
   state(currentName+" oluşturuldu. Yeni seçim için düğmeye tekrar bas.");
  }else state(k==="relation"?"Noktalara dokun; tamamlayınca Bitir'e bas.":"Her A sütunundan tam bir nokta seç. Tüm sütunlar tamamlanınca otomatik biter.");
- render();
+ syncDrawing();render();
 }
 function clickPoint(key){
  if(mode==="idle")return;
@@ -129,7 +140,7 @@ function clickPoint(key){
    mode="idle";state(currentName+" tamamlandı: Her A elemanının tam bir görüntüsü var. Seçim kilitlendi.");
   }else state("Fonksiyon oluşturuluyor: "+chosen.size+"/"+A.length+" sütun seçildi.");
  }
- render();
+ syncDrawing();render();
 }
 function render(){
  clear("axes");clear("dots");clear("enclosure");clear("labels");
@@ -151,18 +162,23 @@ function render(){
  tx(127,49,"B",{"font-weight":700,"font-size":19});
  A.forEach((s,i)=>{const p=points.find(p=>p.i===i);tx(p.x,505,s,{"font-size":Math.min(15,Math.max(8,190/A.length+5))})});
  B.forEach((s,j)=>{const p=points.find(p=>p.j===j);tx(97,p.y+4,s,{"font-size":Math.min(15,Math.max(8,190/B.length+5))})});
+ for(const item of drawings)drawEnclosure(item);
  for(const p of points){
-  const selected=chosen.has(p.key);
+  const members=drawings.filter(item=>item.keys.has(p.key));
+  const selected=members.length>0;
+  const pointColor=selected?members[members.length-1].color:"#8ca0b7";
   let g=svg("g",{tabindex:mode==="idle"?"-1":"0",role:"button","aria-label":"("+A[p.i]+", "+B[p.j]+")","aria-pressed":selected?"true":"false",style:mode==="idle"?"cursor:default":"cursor:pointer"},$("dots"));
   svg("circle",{cx:p.x,cy:p.y,r:Math.max(7,Math.min(20,Math.min(spacingX,spacingY)*.45)),fill:"transparent"},g);
-  svg("circle",{cx:p.x,cy:p.y,r:selected?dotRadius+1.8:dotRadius,fill:selected?(kind==="function"?"#df3650":"#2563eb"):"#fff",stroke:selected?"#fff":"#8ca0b7","stroke-width":selected?2:2.4},g);
-  if(selected)svg("circle",{cx:p.x,cy:p.y,r:dotRadius+4,fill:"none",stroke:kind==="function"?"#df3650":"#2563eb","stroke-width":1.4,opacity:.7},g);
+  svg("circle",{cx:p.x,cy:p.y,r:selected?dotRadius+1.8:dotRadius,fill:selected?pointColor:"#fff",stroke:selected?"#fff":"#8ca0b7","stroke-width":selected?2:2.4},g);
+  if(selected)svg("circle",{cx:p.x,cy:p.y,r:dotRadius+4,fill:"none",stroke:pointColor,"stroke-width":1.4,opacity:.7},g);
   g.addEventListener("click",()=>clickPoint(p.key));
   g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();clickPoint(p.key)}});
  }
- if(chosen.size)drawEnclosure();
- let entries=pairs().map(p=>"("+A[p.i]+", "+B[p.j]+")");
- $("result").textContent=currentName?(currentName+" = {"+entries.join(", ")+"}"+(mode==="function"?"\nHenüz tamamlanmadı.":"")):"Henüz seçim yok.";
+ const lines=drawings.map(item=>{
+   const tuples=points.filter(p=>item.keys.has(p.key)).map(p=>"("+A[p.i]+", "+B[p.j]+")");
+   return item.name+" = {"+tuples.join(", ")+"}"+(mode!=="idle"&&item.name===currentName?" (çiziliyor)":"");
+ });
+ $("result").textContent=lines.length?lines.join("\n\n"):"Henüz seçim yok.";
 }
 function paintDisk(mask,x,y,r){
  const w=cfg.gw,h=cfg.gh,c=cfg.cell;
@@ -214,7 +230,7 @@ function pointInPoly(x,y,poly){
  return inPoly;
 }
 
-function traceSingleBlob(selected, excluded) {
+function traceSingleBlob(selected, excluded, drawingKind) {
   const w=cfg.gw,h=cfg.gh,N=w*h,step=cfg.cell;
   const xSpacing=A.length>1?(cfg.x1-cfg.x0)/(A.length-1):160;
   const ySpacing=B.length>1?(cfg.y1-cfg.y0)/(B.length-1):160;
@@ -224,7 +240,7 @@ function traceSingleBlob(selected, excluded) {
   const clearance=Math.max(3,Math.min(13,spacing*.21));
   const mask=new Uint8Array(N);
   const center=(p)=>[Math.max(2,Math.min(w-3,Math.round(p.x/step))),Math.max(3,Math.min(h-4,Math.round(p.y/step)))];
-  const [first,...rest]=kind==="function"?
+  const [first,...rest]=drawingKind==="function"?
     [...selected].sort((a,b)=>a.i-b.i):
     [...selected].sort((a,b)=>a.x-b.x||a.y-b.y);
   paintDisk(mask,first.x,first.y,lobe);
@@ -287,7 +303,7 @@ function traceSingleBlob(selected, excluded) {
 
   while(remaining.length){
     let idx=0;
-    if(kind!=="function"){
+    if(drawingKind!=="function"){
       let shortest=Infinity;
       for(let i=0;i<remaining.length;i++)for(const q of connected){
         const d=(remaining[i].x-q.x)**2+(remaining[i].y-q.y)**2;
@@ -346,37 +362,48 @@ function safeBezier(loop,inside,outside){
   // Polygonal fallback when even a gentle cubic curve could change membership.
   return "M"+loop.map(p=>p[0]+" "+p[1]).join(" L")+" Z";
 }
-function drawEnclosure(){
-  const selected=pairs(),excluded=points.filter(p=>!chosen.has(p.key));
-  const geometry=traceSingleBlob(selected,excluded);
-  if(!geometry){
-    state("Bu seçimin bağlantısı hesaplanamadı. Başka bir nokta dizilimi dene.");
-    return;
+function convexBlob(selected,excluded){
+ const spacing=Math.min(A.length>1?528/(A.length-1):160,B.length>1?305/(B.length-1):160);
+ let pad=Math.max(6,Math.min(42,spacing*.39));
+ const cross=(a,b,p)=>(b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]);
+ function hull(pts){
+  pts.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  const lo=[],hi=[];
+  for(const p of pts){while(lo.length>1&&cross(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p)}
+  for(let i=pts.length-1;i>=0;i--){const p=pts[i];while(hi.length>1&&cross(hi[hi.length-2],hi[hi.length-1],p)<=0)hi.pop();hi.push(p)}
+  lo.pop();hi.pop();return lo.concat(hi);
+ }
+ for(let trial=0;trial<8;trial++,pad*=.76){
+  const samples=[];
+  for(const p of selected)for(let i=0;i<24;i++){
+   const angle=2*Math.PI*i/24;
+   samples.push([p.x+Math.cos(angle)*pad,p.y+Math.sin(angle)*pad]);
   }
-  const {outer}=geometry;
-  const color=kind==="function"?"#df3650":"#2563eb";
-  const d=safeBezier(outer,selected,excluded);
-  // One continuous pastel-filled blob; the blue/red contour contains exactly
-  // the selected dots. No separate white inner cutouts are created.
-  svg("path",{
-    d,fill:color,"fill-opacity":kind==="function"?".14":".16",
-    stroke:color,"stroke-width":"3","stroke-linejoin":"round",
-    "stroke-linecap":"round","pointer-events":"none"
-  },$("enclosure"));
-  // A restrained dashed overlay reinforces the mathematical enclosure.
-  svg("path",{
-    d,fill:"none",stroke:color,"stroke-width":"1.25",
-    "stroke-dasharray":"7 10","stroke-linecap":"round",opacity:".58",
-    "pointer-events":"none"
-  },$("enclosure"));
-  const minX=Math.min(...outer.map(p=>p[0])),maxX=Math.max(...outer.map(p=>p[0])),minY=Math.min(...outer.map(p=>p[1]));
-  let lx=Math.max(115,Math.min(807,(minX+maxX)/2)),ly=minY-18;
-  if(ly<52){lx=Math.min(825,maxX+28);ly=Math.max(70,minY+5)}
-  const label=svg("text",{
-    x:lx,y:ly,"text-anchor":"middle",fill:color,"font-size":"23",
-    "font-weight":"750","font-family":"system-ui","pointer-events":"none"
-  },$("labels"));
-  label.textContent=currentName;
+  const polygon=hull(samples);
+  if(selected.every(p=>pointInPoly(p.x,p.y,polygon))&&excluded.every(p=>!pointInPoly(p.x,p.y,polygon)))return polygon;
+ }
+ return null;
+}
+function drawEnclosure(item){
+ const selected=points.filter(p=>item.keys.has(p.key));
+ if(!selected.length)return;
+ const excluded=points.filter(p=>!item.keys.has(p.key));
+ const convex=convexBlob(selected,excluded);
+ const geometry=convex?null:traceSingleBlob(selected,excluded,item.kind);
+ if(!convex&&!geometry)return;
+ const outer=convex||geometry.outer,color=item.color;
+ const d=safeBezier(outer,selected,excluded);
+ svg("path",{
+  d,fill:color,"fill-opacity":".14",stroke:color,"stroke-width":"2.8",
+  "stroke-linecap":"round","stroke-linejoin":"round","pointer-events":"none"
+ },$("enclosure"));
+ const minX=Math.min(...outer.map(p=>p[0])),maxX=Math.max(...outer.map(p=>p[0])),minY=Math.min(...outer.map(p=>p[1]));
+ let lx=Math.max(115,Math.min(807,(minX+maxX)/2)),ly=minY-18;
+ if(ly<52){lx=Math.min(825,maxX+28);ly=Math.max(70,minY+5)}
+ const label=svg("text",{
+  x:lx,y:ly,"text-anchor":"middle",fill:color,"font-size":"22",
+  "font-weight":"750","font-family":"system-ui","pointer-events":"none"
+ },$("labels"));label.textContent=item.name;
 }
 $("setA").addEventListener("change",updateInputs);$("setB").addEventListener("change",updateInputs);
 $("setA").addEventListener("keydown",e=>{if(e.key==="Enter")updateInputs()});
@@ -385,6 +412,10 @@ $("randomRelation").addEventListener("click",()=>start("relation",true));
 $("randomFunction").addEventListener("click",()=>start("function",true));
 $("drawRelation").addEventListener("click",()=>{if(mode==="relation"){mode="idle";state(currentName+" tamamlandı.");render()}else start("relation",false)});
 $("drawFunction").addEventListener("click",()=>{if(mode!=="function")start("function",false)});
+$("clearAll").addEventListener("click",()=>{
+ drawings.length=0;chosen=new Set();mode="idle";kind=null;currentName="";
+ state("Bütün bağıntılar ve fonksiyonlar silindi.");render();
+});
 updateInputs();
 </script><script src="/projeler/analytics.js?v=20261114-auto"></script>
 </body></html>
