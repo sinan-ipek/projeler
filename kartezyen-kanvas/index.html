@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kartezyen Kanvas — Bağıntı & Fonksiyon Laboratuvarı</title>
+<style>
+:root{color-scheme:light;--ink:#182637;--muted:#64748b;--line:#dce5ef;--paper:#f4f7fb;--blue:#2563eb;--red:#df3650}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--paper)}
+header{padding:23px clamp(18px,4vw,52px) 18px;background:#172942;color:#fff}header h1{margin:0;font-size:clamp(22px,3vw,32px);letter-spacing:-.7px}header p{margin:4px 0 0;color:#c8d7e9}
+main{display:grid;grid-template-columns:minmax(0,1fr) 318px;gap:22px;max-width:1530px;margin:25px auto;padding:0 20px}
+.panel{background:white;border:1px solid #dce5ef;border-radius:19px;box-shadow:0 8px 30px #253f5b0a;overflow:hidden}
+.stageHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 23px 4px;flex-wrap:wrap}
+h2{margin:0;font-size:18px}.subtitle,.hint{color:var(--muted);font-size:13px}.stageHeader .subtitle{margin:2px 0}
+#canvas{width:100%;height:auto;display:block;touch-action:manipulation}
+.controls{padding:0 23px 22px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+button{font:inherit;cursor:pointer;transition:transform .12s,border-color .12s,background .12s}
+button:active{transform:translateY(1px)}.action{min-height:45px;padding:10px 12px;border-radius:11px;border:1px solid #ccd8e7;background:#fff;color:var(--ink);font-weight:650}
+.action:hover{border-color:#8fa7ce}.action.blue{background:#edf4ff;color:#174eb3;border-color:#bdd4ff}.action.red{background:#fff0f2;color:#bb2742;border-color:#ffbdc8}.action.active{box-shadow:inset 0 0 0 2px currentColor}
+aside{padding:21px;align-self:start}aside h2{margin-bottom:12px}label{display:block;margin:16px 0 6px;font-weight:700}input{width:100%;border:1px solid #c9d6e5;border-radius:10px;padding:11px 12px;font:inherit;background:#fff;color:var(--ink)}input:focus{outline:3px solid #bed8ff;border-color:#4777cd}
+.note{font-size:12px;color:#61728b;margin:6px 0 0}.chip{display:inline-block;background:#eef3fb;padding:5px 10px;border-radius:999px;font:600 13px ui-monospace,monospace;margin:12px 0}
+#status{min-height:47px;margin:13px 0 0;background:#f2f6fc;border-radius:11px;padding:12px;font-size:13px}
+.result{margin-top:16px;padding:13px;border-radius:12px;background:#f8fafc;border:1px solid #e3ebf3;overflow-wrap:anywhere}
+.result strong{display:block;margin-bottom:6px}.result pre{white-space:pre-wrap;margin:0;font:13px/1.75 ui-monospace,monospace}
+.small{font-size:12px;color:#67778d;margin-top:17px}
+footer{max-width:1530px;margin:0 auto 40px;padding:0 20px;color:#6b7a90;font-size:12px}
+@media(max-width:920px){main{grid-template-columns:1fr}aside{order:-1}.controls{padding:0 15px 17px}aside{padding:16px}}
+@media(max-width:480px){main{padding:0 10px;gap:12px}.controls{grid-template-columns:1fr}header{padding:18px}.stageHeader{padding:14px 15px 0}}
+</style>
+</head>
+<body>
+<header><h1>Kartezyen Kanvas</h1><p>Kartezyen çarpımı, bağıntıları ve fonksiyonları çizerek keşfet.</p></header>
+<main>
+<section class="panel">
+<div class="stageHeader"><div><h2>A × B — Noktalar kanvası</h2><p class="subtitle">Her nokta bir (a,b) sıralı ikilisidir. Yatayda A, dikeyde B.</p></div><span id="modeChip" class="chip">Keşif modu</span></div>
+<svg id="canvas" viewBox="0 0 900 650" role="img" aria-label="A çarpı B nokta kanvası">
+<defs><pattern id="bggrid" width="25" height="25" patternUnits="userSpaceOnUse"><path d="M25 0H0V25" fill="none" stroke="#dbe5ef" stroke-width=".7"/></pattern></defs>
+<rect x="55" y="30" width="790" height="550" rx="14" fill="#fbfdff"/>
+<rect x="55" y="30" width="790" height="550" fill="url(#bggrid)" opacity=".6"/>
+<g id="axes"></g><g id="enclosure"></g><g id="dots"></g><g id="labels"></g>
+</svg>
+<div class="controls">
+<button id="randomRelation" class="action blue">🎲 Rastgele bağıntı</button>
+<button id="drawRelation" class="action blue">✎ Bağıntı çiz</button>
+<button id="randomFunction" class="action red">🎲 Rastgele fonksiyon</button>
+<button id="drawFunction" class="action red">✎ Fonksiyon çiz</button>
+</div>
+</section>
+<aside class="panel">
+<h2>Kümeleri oluştur</h2>
+<label for="setA">A = […]</label>
+<input id="setA" value="1, 2, 3, 4" spellcheck="false" aria-describedby="noteA">
+<p id="noteA" class="note">Virgülle ayır. Örnek: 1, 2, 3, 4</p>
+<label for="setB">B = […]</label>
+<input id="setB" value="a, b, c, d" spellcheck="false">
+<p class="note">Örnek: a, b, c, d. Her küme en fazla 8 eleman içerir.</p>
+<div id="productSize" class="chip">|A × B| = 16</div>
+<div id="status" role="status" aria-live="polite">Dört moddan birini seçerek başla.</div>
+<div class="result"><strong>Seçilen bağıntı / fonksiyon</strong><pre id="result">Henüz seçim yok.</pre></div>
+<p class="small"><b>Mavi β:</b> Herhangi bir bağıntı. <b>Kırmızı f:</b> A'nın her elemanına B'den tam bir eleman atayan fonksiyon.<br><br>Çizim modunda noktalara dokun. Fonksiyon çiziminde aynı A elemanına iki farklı B değeri seçilemez; bütün sütunlar tamamlanınca seçim kilitlenir.</p>
+</aside>
+</main>
+<footer>Tek bir kapalı, kesikli ve yumuşatılmış sınır çizilir. Çok parçalı seçimler ince bağlantılarla birleştirilir; diğer noktalar içeride kalmaz. Sıfır elemanlı bağıntı ∅ olarak gösterilir.</footer>
+<script>
+"use strict";
+const NS="http://www.w3.org/2000/svg";
+const $=id=>document.getElementById(id);
+const cfg={W:900,H:650,x0:115,x1:790,y0:100,y1:535,cell:5,gw:180,gh:130};
+let A=[],B=[],points=[],chosen=new Set(),mode="idle",kind=null,relationCount=0,functionCount=0,currentName="";
+function svg(tag,attrs,parent){const n=document.createElementNS(NS,tag);for(const k in attrs)n.setAttribute(k,attrs[k]);parent.appendChild(n);return n}
+function clear(id){$(id).replaceChildren()}
+function tokens(s){return [...new Set(s.split(",").map(x=>x.trim()).filter(Boolean))].slice(0,8)}
+function sub(n){const s="₀₁₂₃₄₅₆₇₈₉";return String(n).replace(/\d/g,d=>s[+d])}
+function pairs(){return points.filter(p=>chosen.has(p.key))}
+function state(text){$("status").textContent=text}
+function updateInputs(){
+ const a=tokens($("setA").value),b=tokens($("setB").value);
+ if(a.length===0||b.length===0){state("A ve B boş olamaz. Her ikisine de en az bir eleman gir.");return}
+ A=a;B=b;chosen=new Set();mode="idle";kind=null;currentName="";
+ points=[];for(let i=0;i<A.length;i++)for(let j=0;j<B.length;j++){
+ const x=cfg.x0+(A.length===1?(cfg.x1-cfg.x0)/2:i*(cfg.x1-cfg.x0)/(A.length-1));
+ const y=cfg.y1-(B.length===1?(cfg.y1-cfg.y0)/2:j*(cfg.y1-cfg.y0)/(B.length-1));
+ points.push({i,j,x,y,key:i+":"+j});
+ }
+ $("productSize").textContent="|A × B| = "+(A.length*B.length);
+ state("Kümeler yenilendi. Bir çizim modu seç.");render();
+}
+function start(k,random){
+ mode=random?"idle":k;kind=k;chosen=new Set();
+ currentName=k==="relation"?"β"+sub(++relationCount):"f"+sub(++functionCount);
+ if(random){
+  if(k==="relation"){for(const p of points)if(Math.random()<.35)chosen.add(p.key)}
+  else for(let i=0;i<A.length;i++){const j=Math.floor(Math.random()*B.length);chosen.add(i+":"+j)}
+  state(currentName+" oluşturuldu. Yeni seçim için düğmeye tekrar bas.");
+ }else state(k==="relation"?"Noktalara dokun; tamamlayınca Bitir'e bas.":"Her A sütunundan tam bir nokta seç. Tüm sütunlar tamamlanınca otomatik biter.");
+ render();
+}
+function clickPoint(key){
+ if(mode==="idle")return;
+ if(mode==="relation"){
+  if(chosen.has(key))chosen.delete(key);else chosen.add(key);
+ }else{
+  const i=Number(key.split(":")[0]);
+  if(chosen.has(key)){chosen.delete(key)}
+  else if([...chosen].some(k=>Number(k.split(":")[0])===i)){
+   state("Bu A elemanının zaten bir görüntüsü var. Önce onu kaldır.");return;
+  }else chosen.add(key);
+  if(chosen.size===A.length){
+   mode="idle";state(currentName+" tamamlandı: Her A elemanının tam bir görüntüsü var. Seçim kilitlendi.");
+  }else state("Fonksiyon oluşturuluyor: "+chosen.size+"/"+A.length+" sütun seçildi.");
+ }
+ render();
+}
+function render(){
+ clear("axes");clear("dots");clear("enclosure");clear("labels");
+ $("drawRelation").textContent=mode==="relation"?"✓ Bitir":"✎ Bağıntı çiz";
+ $("drawFunction").textContent=mode==="function"?"Seçim sürüyor…":"✎ Fonksiyon çiz";
+ $("drawRelation").classList.toggle("active",mode==="relation");
+ $("drawFunction").classList.toggle("active",mode==="function");
+ $("modeChip").textContent=mode==="relation"?"Bağıntı seçimi":mode==="function"?"Fonksiyon seçimi":"Keşif modu";
+ const axes=$("axes");
+ svg("line",{x1:90,y1:565,x2:825,y2:565,stroke:"#8ba0b7","stroke-width":1.7},axes);
+ svg("path",{d:"M825 565 l-9 -5 v10 z",fill:"#8ba0b7"},axes);
+ svg("line",{x1:80,y1:555,x2:80,y2:53,stroke:"#8ba0b7","stroke-width":1.7},axes);
+ svg("path",{d:"M80 53 l-5 10 h10 z",fill:"#8ba0b7"},axes);
+ const tx=(x,y,s,attrs={})=>{let t=svg("text",{x,y,"text-anchor":"middle","font-family":"system-ui",fill:"#53657e",...attrs},$("labels"));t.textContent=s};
+ tx(844,572,"A",{"font-weight":700,"font-size":19});
+ tx(80,39,"B",{"font-weight":700,"font-size":19});
+ A.forEach((s,i)=>{const p=points.find(p=>p.i===i);tx(p.x,592,s,{"font-size":Math.min(16,Math.max(11,110/A.length+7))})});
+ B.forEach((s,j)=>{const p=points.find(p=>p.j===j);tx(49,p.y+5,s,{"font-size":15})});
+ for(const p of points){
+  const selected=chosen.has(p.key);
+  let g=svg("g",{tabindex:mode==="idle"?"-1":"0",role:"button","aria-label":"("+A[p.i]+", "+B[p.j]+")","aria-pressed":selected?"true":"false",style:mode==="idle"?"cursor:default":"cursor:pointer"},$("dots"));
+  svg("circle",{cx:p.x,cy:p.y,r:22,fill:"transparent"},g);
+  svg("circle",{cx:p.x,cy:p.y,r:selected?9:6,fill:selected?(kind==="function"?"#df3650":"#2563eb"):"#fff",stroke:selected?"#fff":"#8ca0b7","stroke-width":selected?2:2.4},g);
+  if(selected)svg("circle",{cx:p.x,cy:p.y,r:12,fill:"none",stroke:kind==="function"?"#df3650":"#2563eb","stroke-width":1.4,opacity:.7},g);
+  g.addEventListener("click",()=>clickPoint(p.key));
+  g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();clickPoint(p.key)}});
+ }
+ if(chosen.size)drawEnclosure();
+ let entries=pairs().map(p=>"("+A[p.i]+", "+B[p.j]+")");
+ $("result").textContent=currentName?(currentName+" = {"+entries.join(", ")+"}"+(mode==="function"?"\nHenüz tamamlanmadı.":"")):"Henüz seçim yok.";
+}
+function canWalk(x,y,excluded,margin){
+ if(x<3||y<4||x>=cfg.gw-3||y>=cfg.gh-6)return false;
+ for(const p of excluded){let dx=x*cfg.cell-p.x,dy=y*cfg.cell-p.y;if(dx*dx+dy*dy<margin*margin)return false}
+ return true;
+}
+function route(p,q,excluded){
+ const w=cfg.gw,h=cfg.gh,N=w*h;
+ const sx=Math.round(p.x/cfg.cell),sy=Math.round(p.y/cfg.cell),tx=Math.round(q.x/cfg.cell),ty=Math.round(q.y/cfg.cell);
+ const start=sy*w+sx,target=ty*w+tx;
+ const dist=new Float64Array(N);dist.fill(Infinity);
+ const prev=new Int32Array(N);prev.fill(-1);
+ const closed=new Uint8Array(N),heap=[];
+ function push(id,score){heap.push([score,id]);let k=heap.length-1;while(k>0){let up=(k-1)>>1;if(heap[up][0]<=heap[k][0])break;[heap[up],heap[k]]=[heap[k],heap[up]];k=up}}
+ function pop(){const out=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let k=0;for(;;){let a=k*2+1,b=a+1,m=k;if(a<heap.length&&heap[a][0]<heap[m][0])m=a;if(b<heap.length&&heap[b][0]<heap[m][0])m=b;if(m===k)break;[heap[k],heap[m]]=[heap[m],heap[k]];k=m}}return out}
+ dist[start]=0;push(start,Math.abs(sx-tx)+Math.abs(sy-ty));
+ let found=false,tries=0;
+ while(heap.length&&tries++<N*5){
+  const [score,id]=pop();if(closed[id])continue;closed[id]=1;
+  if(id===target){found=true;break}
+  const x=id%w,y=Math.floor(id/w);
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const nx=x+dx,ny=y+dy;if(!canWalk(nx,ny,excluded,27))continue;
+   const nid=ny*w+nx;if(closed[nid])continue;
+   let cost=1;
+   for(const z of excluded){const d=Math.hypot(nx*cfg.cell-z.x,ny*cfg.cell-z.y);if(d<40)cost+=1.8}
+   const nd=dist[id]+cost;if(nd<dist[nid]){dist[nid]=nd;prev[nid]=id;push(nid,nd+Math.abs(nx-tx)+Math.abs(ny-ty))}
+  }
+ }
+ if(!found)return [];
+ const path=[];let cur=target;while(cur!==-1){path.push([cur%w,Math.floor(cur/w)]);if(cur===start)break;cur=prev[cur]}
+ return path;
+}
+function paintDisk(mask,x,y,r){
+ const w=cfg.gw,h=cfg.gh,c=cfg.cell;
+ let minx=Math.max(0,Math.floor((x-r)/c)),maxx=Math.min(w-1,Math.ceil((x+r)/c));
+ let miny=Math.max(0,Math.floor((y-r)/c)),maxy=Math.min(h-1,Math.ceil((y+r)/c));
+ for(let j=miny;j<=maxy;j++)for(let i=minx;i<=maxx;i++){
+  const dx=(i+.5)*c-x,dy=(j+.5)*c-y;if(dx*dx+dy*dy<=r*r)mask[j*w+i]=1
+ }
+}
+function contours(mask){
+ const w=cfg.gw,h=cfg.gh,edges=[],adj=new Map();
+ function add(x1,y1,x2,y2){
+  const id=edges.length;edges.push({x1,y1,x2,y2});
+  const key=x1+","+y1;if(!adj.has(key))adj.set(key,[]);adj.get(key).push(id)
+ }
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+  if(!mask[y*w+x])continue;
+  if(y===0||!mask[(y-1)*w+x])add(x,y,x+1,y);
+  if(x===w-1||!mask[y*w+x+1])add(x+1,y,x+1,y+1);
+  if(y===h-1||!mask[(y+1)*w+x])add(x+1,y+1,x,y+1);
+  if(x===0||!mask[y*w+x-1])add(x,y+1,x,y);
+ }
+ let used=new Uint8Array(edges.length),loops=[];
+ for(let e=0;e<edges.length;e++){
+  if(used[e])continue;
+  const first=edges[e],start=first.x1+","+first.y1;let curr=e,path=[],count=0;
+  while(count++<edges.length+1){
+   if(used[curr])break;
+   used[curr]=1;const ed=edges[curr];path.push([ed.x1*cfg.cell,ed.y1*cfg.cell]);
+   const end=ed.x2+","+ed.y2;if(end===start)break;
+   const choices=(adj.get(end)||[]).filter(i=>!used[i]);if(!choices.length)break;
+   if(choices.length===1)curr=choices[0];
+   else{
+    const dx=ed.x2-ed.x1,dy=ed.y2-ed.y1;
+    choices.sort((a,b)=>{function rank(z){const d=edges[z],xx=d.x2-d.x1,yy=d.y2-d.y1;const cross=dx*yy-dy*xx,dot=dx*xx+dy*yy;return cross>0?0:dot>0?1:cross<0?2:3}return rank(a)-rank(b)});
+    curr=choices[0];
+   }
+  }
+  if(path.length>=3)loops.push(path)
+ }
+ return loops;
+}
+function polygonArea(p){let a=0;for(let i=0;i<p.length;i++){let q=p[(i+1)%p.length];a+=p[i][0]*q[1]-q[0]*p[i][1]}return a/2}
+function smoothPath(path){
+ const p=[];
+ for(let i=0;i<path.length;i++){
+  const prev=path[(i-1+path.length)%path.length],cur=path[i],next=path[(i+1)%path.length];
+  const vx=cur[0]-prev[0],vy=cur[1]-prev[1],wx=next[0]-cur[0],wy=next[1]-cur[1];
+  if(vx*wy-vy*wx!==0)p.push(cur)
+ }
+ if(p.length<3)return "";
+ let d="";
+ for(let i=0;i<p.length;i++){
+  const a=p[(i-1+p.length)%p.length],b=p[i],c=p[(i+1)%p.length];
+  const l1=Math.hypot(b[0]-a[0],b[1]-a[1]),l2=Math.hypot(c[0]-b[0],c[1]-b[1]);
+  const r=Math.min(3,l1/3,l2/3);
+  const x1=b[0]+(a[0]-b[0])*r/l1,y1=b[1]+(a[1]-b[1])*r/l1;
+  const x2=b[0]+(c[0]-b[0])*r/l2,y2=b[1]+(c[1]-b[1])*r/l2;
+  d+=(i===0?"M":"L")+x1.toFixed(2)+" "+y1.toFixed(2)+" Q"+b[0]+" "+b[1]+" "+x2.toFixed(2)+" "+y2.toFixed(2)+" ";
+ }
+ return d+"Z";
+}
+function pointInPoly(x,y,poly){
+ let inPoly=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+  const a=poly[i],b=poly[j];
+  if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])inPoly=!inPoly
+ }
+ return inPoly;
+}
+function drawEnclosure(){
+ const selected=pairs(),excluded=points.filter(p=>!chosen.has(p.key));
+ const mask=new Uint8Array(cfg.gw*cfg.gh);
+ for(const p of selected)paintDisk(mask,p.x,p.y,18);
+ const connected=[selected[0]],remaining=selected.slice(1);
+ while(remaining.length){
+  let best={d:Infinity,i:0,j:0};
+  for(let i=0;i<remaining.length;i++)for(let j=0;j<connected.length;j++){
+   const dx=remaining[i].x-connected[j].x,dy=remaining[i].y-connected[j].y,d=dx*dx+dy*dy;
+   if(d<best.d)best={d,i,j}
+  }
+  const p=remaining.splice(best.i,1)[0],q=connected[best.j];
+  const path=route(p,q,excluded);
+  if(!path.length){state("Bu yerleşimde sınır hesaplanamadı; kümeleri küçültmeyi dene.");return}
+  for(const [x,y] of path)paintDisk(mask,(x+.5)*cfg.cell,(y+.5)*cfg.cell,8.5);
+  connected.push(p);
+ }
+ const loops=contours(mask).sort((a,b)=>Math.abs(polygonArea(b))-Math.abs(polygonArea(a)));
+ if(!loops.length)return;
+ const primary=loops[0];
+ // In rare cases, a hole is generated by overlapping corridors: carve a gap and recalculate.
+ // The outer contour remains a single Jordan curve, with no nonselected nodes inside.
+ let path=smoothPath(primary);
+ const color=kind==="function"?"#df3650":"#2563eb";
+ svg("path",{d:path,fill:color,"fill-opacity":".055",stroke:color,"stroke-width":3.5,"stroke-dasharray":"10 8","stroke-linejoin":"round","stroke-linecap":"round","pointer-events":"none"},$("enclosure"));
+ const minX=Math.min(...primary.map(p=>p[0])),maxX=Math.max(...primary.map(p=>p[0]));
+ const minY=Math.min(...primary.map(p=>p[1]));
+ let lx=Math.max(110,Math.min(810,(minX+maxX)/2)),ly=minY-18;
+ if(ly<45){lx=Math.min(838,maxX+35);ly=Math.max(68,minY+4)}
+ const text=svg("text",{x:lx,y:ly,"text-anchor":"middle",fill:color,"font-size":"23","font-weight":"800","font-family":"system-ui","pointer-events":"none"},$("labels"));text.textContent=currentName;
+}
+$("setA").addEventListener("change",updateInputs);$("setB").addEventListener("change",updateInputs);
+$("setA").addEventListener("keydown",e=>{if(e.key==="Enter")updateInputs()});
+$("setB").addEventListener("keydown",e=>{if(e.key==="Enter")updateInputs()});
+$("randomRelation").addEventListener("click",()=>start("relation",true));
+$("randomFunction").addEventListener("click",()=>start("function",true));
+$("drawRelation").addEventListener("click",()=>{if(mode==="relation"){mode="idle";state(currentName+" tamamlandı.");render()}else start("relation",false)});
+$("drawFunction").addEventListener("click",()=>{if(mode!=="function")start("function",false)});
+updateInputs();
+</script></body></html>
