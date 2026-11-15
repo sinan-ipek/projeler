@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kartezyen Kanvas v2.0.1 — Bağıntı & Fonksiyon Laboratuvarı</title>
+<title>Kartezyen Kanvas v2.0.2 — Bağıntı & Fonksiyon Laboratuvarı</title>
 <style>
 :root{color-scheme:light;--ink:#182637;--muted:#64748b;--line:#dce5ef;--paper:#f4f7fb;--blue:#2563eb;--red:#df3650}
 *{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--paper)}
@@ -28,7 +28,7 @@ footer{max-width:1530px;margin:0 auto 40px;padding:0 20px;color:#6b7a90;font-siz
 </style>
 </head>
 <body>
-<header><h1>Kartezyen Kanvas <small style="font-size:12px;opacity:.7">v2.0.1</small></h1><p>Kartezyen çarpımı, bağıntıları ve fonksiyonları çizerek keşfet.</p></header>
+<header><h1>Kartezyen Kanvas <small style="font-size:12px;opacity:.7">v2.0.2</small></h1><p>Kartezyen çarpımı, bağıntıları ve fonksiyonları çizerek keşfet.</p></header>
 <main>
 <section class="panel">
 <div class="stageHeader"><div><h2>A × B — Noktalar kanvası</h2><p class="subtitle">Her nokta bir (a,b) sıralı ikilisidir. Yatayda A, dikeyde B.</p></div><span id="modeChip" class="chip">Keşif modu</span></div>
@@ -59,7 +59,7 @@ footer{max-width:1530px;margin:0 auto 40px;padding:0 20px;color:#6b7a90;font-siz
 <p class="small"><b>Mavi β:</b> Herhangi bir bağıntı. <b>Kırmızı f:</b> A'nın her elemanına B'den tam bir eleman atayan fonksiyon.<br><br>Çizim modunda noktalara dokun. Fonksiyon çiziminde aynı A elemanına iki farklı B değeri seçilemez; bütün sütunlar tamamlanınca seçim kilitlenir.</p>
 </aside>
 </main>
-<footer>v2.0.1 · Birden fazla bağıntı ve fonksiyon aynı kanvasta tutulur. Organik blob çizimi tek bir algoritmayla üretilir; körfezler yumuşatılır.</footer>
+<footer>v2.0.2 · Birden fazla bağıntı ve fonksiyon aynı kanvasta tutulur. Organik blob çizimi tek bir algoritmayla üretilir; körfezler yumuşatılır.</footer>
 <script>
 "use strict";
 const NS="http://www.w3.org/2000/svg";
@@ -231,7 +231,7 @@ function pointInPoly(x,y,poly){
 }
 
 
-/* v2.0.1: one consistent, hole-aware organic silhouette algorithm */
+/* v2.0.2: one consistent, hole-aware organic silhouette algorithm */
 function maskOffsets(radius){
  const cells=Math.ceil(radius/cfg.cell),list=[];
  for(let dy=-cells;dy<=cells;dy++)for(let dx=-cells;dx<=cells;dx++)
@@ -363,60 +363,119 @@ function paintTube(mask,route,radius){
   }
  }
 }
+
+function isPointInsideMask(mask,p){
+ const x=Math.max(0,Math.min(cfg.gw-1,Math.floor(p.x/cfg.cell)));
+ const y=Math.max(0,Math.min(cfg.gh-1,Math.floor(p.y/cfg.cell)));
+ return Boolean(mask[y*cfg.gw+x]);
+}
+function fillInteriorHoles(mask){
+ const outside=floodOutside(mask);
+ for(let i=0;i<mask.length;i++)if(!mask[i]&&!outside[i])mask[i]=1;
+}
+function carveEscapeCorridor(mask,startPoint,selected,clearRadius,lobeRadius){
+ const w=cfg.gw,h=cfg.gh,c=cfg.cell,N=w*h;
+ const sx=Math.max(1,Math.min(w-2,Math.floor(startPoint.x/c)));
+ const sy=Math.max(1,Math.min(h-2,Math.floor(startPoint.y/c)));
+ const start=sy*w+sx;
+ const protectedMask=new Uint8Array(N);
+ for(const p of selected){
+  const rr=Math.max(5,lobeRadius*.70);
+  const x0=Math.max(0,Math.floor((p.x-rr)/c)),x1=Math.min(w-1,Math.ceil((p.x+rr)/c));
+  const y0=Math.max(0,Math.floor((p.y-rr)/c)),y1=Math.min(h-1,Math.ceil((p.y+rr)/c));
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)
+   if(Math.hypot((x+.5)*c-p.x,(y+.5)*c-p.y)<rr)protectedMask[y*w+x]=1;
+ }
+ const dist=new Float64Array(N),prev=new Int32Array(N),used=new Uint8Array(N),heap=[];
+ dist.fill(Infinity);prev.fill(-1);
+ function push(id,score){
+  heap.push([score,id]);let i=heap.length-1;
+  while(i){let p=(i-1)>>1;if(heap[p][0]<=heap[i][0])break;[heap[p],heap[i]]=[heap[i],heap[p]];i=p}
+ }
+ function pop(){
+  const out=heap[0],last=heap.pop();
+  if(heap.length){heap[0]=last;let i=0;for(;;){
+   let l=2*i+1,r=l+1,m=i;if(l<heap.length&&heap[l][0]<heap[m][0])m=l;
+   if(r<heap.length&&heap[r][0]<heap[m][0])m=r;
+   if(m===i)break;[heap[i],heap[m]]=[heap[m],heap[i]];i=m;
+  }}return out;
+ }
+ function heur(x,y){return Math.min(x,y,w-1-x,h-1-y)}
+ dist[start]=0;push(start,heur(sx,sy));
+ let goal=-1;
+ while(heap.length){
+  const [,id]=pop();if(used[id])continue;used[id]=1;
+  const x=id%w,y=(id/w)|0;
+  // Stop when connected to the existing exterior, not necessarily the canvas edge.
+  if(!mask[id]&&id!==start){goal=id;break}
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const xx=x+dx,yy=y+dy;if(xx<0||xx>=w||yy<0||yy>=h)continue;
+   const nid=yy*w+xx;if(used[nid]||protectedMask[nid])continue;
+   const nd=dist[id]+(mask[nid]?1:2);
+   if(nd<dist[nid]){dist[nid]=nd;prev[nid]=id;push(nid,nd+heur(xx,yy)*.01)}
+  }
+ }
+ if(goal<0)return false;
+ const radius=Math.max(c*.8,clearRadius*.60);
+ for(let cur=goal;cur!==-1;cur=prev[cur]){
+  const x=cur%w,y=(cur/w)|0,px=(x+.5)*c,py=(y+.5)*c;
+  const x0=Math.max(0,Math.floor((px-radius)/c)),x1=Math.min(w-1,Math.ceil((px+radius)/c));
+  const y0=Math.max(0,Math.floor((py-radius)/c)),y1=Math.min(h-1,Math.ceil((py+radius)/c));
+  for(let yy=y0;yy<=y1;yy++)for(let xx=x0;xx<=x1;xx++){
+   const id=yy*w+xx;
+   if(!protectedMask[id]&&Math.hypot((xx+.5)*c-px,(yy+.5)*c-py)<radius)mask[id]=0;
+  }
+  if(cur===start)break;
+ }
+ return true;
+}
 function buildSmoothBlob(selected,excluded,type){
  const w=cfg.gw,h=cfg.gh,mask=new Uint8Array(w*h);
  const sx=A.length>1?(cfg.x1-cfg.x0)/(A.length-1):160;
  const sy=B.length>1?(cfg.y1-cfg.y0)/(B.length-1):160;
- const spacing=Math.min(sx,sy),lobe=Math.max(5,Math.min(42,spacing*.37));
+ const spacing=Math.min(sx,sy);
+ const lobe=Math.max(5,Math.min(42,spacing*.37));
  const neck=Math.max(3,Math.min(12,spacing*.12));
- const clearance=Math.max(3,Math.min(12,spacing*.20));
  const closeRadius=Math.max(4,Math.min(30,spacing*.37));
+ const clearRadius=Math.max(4,Math.min(13,spacing*.20));
  const edges=buildEdges(selected,type);
  for(const p of selected)paintDisk(mask,p.x,p.y,lobe);
- for(const [a,b] of edges){
-  const route=windingPath(a,b,excluded,clearance+neck+3);
+ for(const [p,q] of edges){
+  const route=windingPath(p,q,excluded,clearRadius+neck+3);
   if(route)paintTube(mask,route,neck);
  }
- // Apply the same morphological treatment to every drawing. Each stage
- // must keep the mathematical selection exact; unsafe stages are discarded.
- function eligible(candidate){
-  const loops=contours(candidate).sort((a,b)=>Math.abs(polygonArea(b))-Math.abs(polygonArea(a)));
-  if(!loops.length)return false;
-  return selected.every(p=>pointInPoly(p.x,p.y,loops[0])) &&
-         excluded.every(p=>!pointInPoly(p.x,p.y,loops[0]));
- }
- let out=mask;
- const candidate=maskClose(out,closeRadius);
- for(const p of selected)paintDisk(candidate,p.x,p.y,lobe);
- if(eligible(candidate))out=candidate;
- const rounded=maskClose(out,Math.min(54,spacing*.70));
- for(const p of selected)paintDisk(rounded,p.x,p.y,lobe);
- if(eligible(rounded))out=rounded;
- // If a closed cavity has no excluded point, fill it. Otherwise keep a
- // passage to the exterior: a simple closed outline cannot leave a point
- // surrounded by selected ones outside without some opening.
- const outside=floodOutside(out);
- const seen=new Uint8Array(out.length),queue=[];
+ let out=maskClose(mask,closeRadius);
+ for(const p of selected)paintDisk(out,p.x,p.y,lobe);
+ out=maskClose(out,Math.min(54,spacing*.70));
+ for(const p of selected)paintDisk(out,p.x,p.y,lobe);
+ // Fill cavities only when they do not hold any unselected point.
+ // Enclosing an unselected point requires an outside opening (topologically unavoidable).
+ const outside=floodOutside(out),visited=new Uint8Array(out.length);
  for(let i=0;i<out.length;i++){
-  if(out[i]||outside[i]||seen[i])continue;
-  let component=[],containsExcluded=false;queue.length=0;queue.push(i);seen[i]=1;
-  for(let k=0;k<queue.length;k++){
-   let id=queue[k],x=id%w,y=(id/w)|0;component.push(id);
-   const px=(x+.5)*cfg.cell,py=(y+.5)*cfg.cell;
-   if(excluded.some(p=>Math.hypot(p.x-px,p.y-py)<clearance+3))containsExcluded=true;
-   for(let n of [x?id-1:-1,x<w-1?id+1:-1,y?id-w:-1,y<h-1?id+w:-1]){
-    if(n>=0&&!seen[n]&&!out[n]){seen[n]=1;queue.push(n)}
+  if(out[i]||outside[i]||visited[i])continue;
+  const q=[i],component=[],seenExcluded=excluded.some(p=>{
+   const j=Math.floor(p.y/cfg.cell)*w+Math.floor(p.x/cfg.cell);return j===i;
+  });visited[i]=1;
+  let forbidden=seenExcluded;
+  for(let k=0;k<q.length;k++){
+   const id=q[k],x=id%w,y=(id/w)|0;component.push(id);
+   if(excluded.some(p=>Math.abs(p.x-(x+.5)*cfg.cell)<cfg.cell&&Math.abs(p.y-(y+.5)*cfg.cell)<cfg.cell))forbidden=true;
+   for(const j of [x?id-1:-1,x<w-1?id+1:-1,y?id-w:-1,y<h-1?id+w:-1]){
+    if(j>=0&&!visited[j]&&!out[j]){visited[j]=1;q.push(j)}
    }
   }
-  if(!containsExcluded)for(const id of component)out[id]=1;
+  if(!forbidden)for(const id of component)out[id]=1;
  }
- // For each excluded point still enclosed, open the smallest path to the exterior
- // rather than leaving a forbidden internal hole (and never overwrite selected disks).
- // Prefer the current shape when all excluded nodes lie outside.
- const loops=contours(out).sort((a,b)=>Math.abs(polygonArea(b))-Math.abs(polygonArea(a)));
+ // Small local escape notches for mistakenly enclosed unselected points.
+ for(const p of excluded)if(isPointInsideMask(out,p)){
+  carveEscapeCorridor(out,p,selected,clearRadius,lobe);
+ }
+ // Make selected centers robust without swallowing their neighbors.
+ for(const p of selected)paintDisk(out,p.x,p.y,Math.max(3,lobe*.58));
+ const loops=contours(out).sort((u,v)=>Math.abs(polygonArea(v))-Math.abs(polygonArea(u)));
  if(!loops.length)return null;
  const outer=loops[0];
- if(!selected.every(p=>pointInPoly(p.x,p.y,outer)) ||
+ if(!selected.every(p=>pointInPoly(p.x,p.y,outer))||
     excluded.some(p=>pointInPoly(p.x,p.y,outer)))return null;
  return {outer};
 }
