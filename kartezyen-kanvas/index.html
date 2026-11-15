@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kartezyen Kanvas v2.0.3 — Bağıntı & Fonksiyon Laboratuvarı</title>
+<title>Kartezyen Kanvas v2.1.0 — Bağıntı & Fonksiyon Laboratuvarı</title>
 <style>
 :root{color-scheme:light;--ink:#182637;--muted:#64748b;--line:#dce5ef;--paper:#f4f7fb;--blue:#2563eb;--red:#df3650}
 *{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--paper)}
@@ -28,7 +28,7 @@ footer{max-width:1530px;margin:0 auto 40px;padding:0 20px;color:#6b7a90;font-siz
 </style>
 </head>
 <body>
-<header><h1>Kartezyen Kanvas <small style="font-size:12px;opacity:.7">v2.0.3</small></h1><p>Kartezyen çarpımı, bağıntıları ve fonksiyonları çizerek keşfet.</p></header>
+<header><h1>Kartezyen Kanvas <small style="font-size:12px;opacity:.7">v2.1.0</small></h1><p>Kartezyen çarpımı, bağıntıları ve fonksiyonları çizerek keşfet.</p></header>
 <main>
 <section class="panel">
 <div class="stageHeader"><div><h2>A × B — Noktalar kanvası</h2><p class="subtitle">Her nokta bir (a,b) sıralı ikilisidir. Yatayda A, dikeyde B.</p></div><span id="modeChip" class="chip">Keşif modu</span></div>
@@ -42,7 +42,9 @@ footer{max-width:1530px;margin:0 auto 40px;padding:0 20px;color:#6b7a90;font-siz
 <button id="randomRelation" class="action blue">🎲 Rastgele bağıntı</button>
 <button id="drawRelation" class="action blue">✎ Bağıntı çiz</button>
 <button id="randomFunction" class="action red">🎲 Rastgele fonksiyon</button>
-<button id="drawFunction" class="action red">✎ Fonksiyon çiz</button><button id="clearAll" class="action" style="grid-column:1/-1">Tüm bağıntıları ve fonksiyonları sil</button>
+<button id="drawFunction" class="action red">✎ Fonksiyon çiz</button>
+<button id="functionStyle" class="action" style="grid-column:1/-1" aria-pressed="false" title="Fonksiyon çizimini poligon ile yumuşak eğri arasında değiştir">Poligon / Curve · Poligon</button>
+<button id="clearAll" class="action" style="grid-column:1/-1">Tüm bağıntıları ve fonksiyonları sil</button>
 </div>
 </section>
 <aside class="panel">
@@ -59,7 +61,7 @@ footer{max-width:1530px;margin:0 auto 40px;padding:0 20px;color:#6b7a90;font-siz
 <p class="small"><b>Mavi β:</b> Herhangi bir bağıntı. <b>Kırmızı f:</b> A'nın her elemanına B'den tam bir eleman atayan fonksiyon.<br><br>Çizim modunda noktalara dokun. Fonksiyon çiziminde aynı A elemanına iki farklı B değeri seçilemez; bütün sütunlar tamamlanınca seçim kilitlenir.</p>
 </aside>
 </main>
-<footer>v2.0.3 · Birden fazla bağıntı ve fonksiyon aynı kanvasta tutulur. Bloblar daima dolgun bir dış kabuktan üretilir; gerekirse yalnızca dışlanmış noktalarda yerel girinti açılır.</footer>
+<footer>v2.1.0 · Birden fazla bağıntı ve fonksiyon aynı kanvasta tutulur. Bağıntılar yarı saydam blob; fonksiyonlar yalnızca noktaları bağlayan poligon veya yumuşak açık eğri olarak gösterilir.</footer>
 <script>
 "use strict";
 const NS="http://www.w3.org/2000/svg";
@@ -70,6 +72,7 @@ const drawings=[];
 const relationColors=["#2563eb","#0891b2","#6355cf","#0d9488","#385ab4","#4688c5"];
 const functionColors=["#e13d55","#d96c36","#bf3579","#d24646","#ae516d"];
 let currentColor="#2563eb";
+let functionStyle="polygon";
 function syncDrawing(){
  if(!currentName)return;
  const record={name:currentName,kind,color:currentColor,keys:new Set(chosen)};
@@ -143,6 +146,8 @@ function clickPoint(key){
  syncDrawing();render();
 }
 function render(){
+ $("functionStyle").textContent="Poligon / Curve · "+(functionStyle==="polygon"?"Poligon":"Curve");
+ $("functionStyle").setAttribute("aria-pressed",String(functionStyle==="curve"));
  clear("axes");clear("dots");clear("enclosure");clear("labels");
  $("drawRelation").textContent=mode==="relation"?"✓ Bitir":"✎ Bağıntı çiz";
  $("drawFunction").textContent=mode==="function"?"Seçim sürüyor…":"✎ Fonksiyon çiz";
@@ -231,9 +236,9 @@ function pointInPoly(x,y,poly){
 }
 
 
-/* v2.0.3: one consistent, hole-aware organic silhouette algorithm */
+/* v2.1.0: one consistent, hole-aware organic silhouette algorithm */
 
-/* v2.0.3: start with a FULL round convex envelope; cut only local exclusion notches. */
+/* v2.1.0: start with a FULL round convex envelope; cut only local exclusion notches. */
 function roundedHull(selected, radius){
  const list=[];
  for(const p of selected)for(let i=0;i<24;i++){
@@ -379,9 +384,44 @@ function safeBezier(loop,inside,outside){
   // Polygonal fallback when even a gentle cubic curve could change membership.
   return "M"+loop.map(p=>p[0]+" "+p[1]).join(" L")+" Z";
 }
+function drawFunctionLine(item,selected){
+ const ordered=[...selected].sort((a,b)=>a.i-b.i);
+ if(!ordered.length)return;
+ let d="M"+ordered[0].x.toFixed(2)+" "+ordered[0].y.toFixed(2);
+ if(functionStyle==="polygon"){
+  for(let i=1;i<ordered.length;i++)d+=" L"+ordered[i].x.toFixed(2)+" "+ordered[i].y.toFixed(2);
+ }else{
+  // x-monotone cubic interpolation; each segment runs only between consecutive domain elements.
+  for(let i=0;i<ordered.length-1;i++){
+   const p=ordered[i],q=ordered[i+1];
+   const prev=ordered[Math.max(0,i-1)],next=ordered[Math.min(ordered.length-1,i+2)];
+   const dx=q.x-p.x;
+   const slope1=i===0?(q.y-p.y)/dx:(q.y-prev.y)/(q.x-prev.x);
+   const slope2=i===ordered.length-2?(q.y-p.y)/dx:(next.y-p.y)/(next.x-p.x);
+   const handle=dx/3;
+   d+=" C"+(p.x+handle).toFixed(2)+" "+(p.y+slope1*handle).toFixed(2)
+     +" "+(q.x-handle).toFixed(2)+" "+(q.y-slope2*handle).toFixed(2)
+     +" "+q.x.toFixed(2)+" "+q.y.toFixed(2);
+  }
+ }
+ if(ordered.length>1){
+  svg("path",{
+   d,fill:"none",stroke:item.color,"stroke-width":"3.5",
+   "stroke-linecap":"round","stroke-linejoin":"round","pointer-events":"none"
+  },$("enclosure"));
+ }
+ // Keep the name visually outside the graphic; do not enclose or fill a function.
+ const first=ordered[0],label=svg("text",{
+  x:Math.max(100,first.x-16),y:Math.max(66,first.y-18),
+  fill:item.color,"font-size":"22","font-weight":"750",
+  "text-anchor":"end","font-family":"system-ui","pointer-events":"none"
+ },$("labels"));
+ label.textContent=item.name;
+}
 function drawEnclosure(item){
  const selected=points.filter(p=>item.keys.has(p.key));
  if(!selected.length)return;
+ if(item.kind==="function"){drawFunctionLine(item,selected);return;}
  const excluded=points.filter(p=>!item.keys.has(p.key));
  const geometry=buildSmoothBlob(selected,excluded,item.kind);
  if(!geometry)return;
@@ -408,6 +448,10 @@ $("randomRelation").addEventListener("click",()=>start("relation",true));
 $("randomFunction").addEventListener("click",()=>start("function",true));
 $("drawRelation").addEventListener("click",()=>{if(mode==="relation"){mode="idle";state(currentName+" tamamlandı.");render()}else start("relation",false)});
 $("drawFunction").addEventListener("click",()=>{if(mode!=="function")start("function",false)});
+$("functionStyle").addEventListener("click",()=>{
+ functionStyle=functionStyle==="polygon"?"curve":"polygon";
+ render();
+});
 $("clearAll").addEventListener("click",()=>{
  drawings.length=0;chosen=new Set();mode="idle";kind=null;currentName="";
  state("Bütün bağıntılar ve fonksiyonlar silindi.");render();
