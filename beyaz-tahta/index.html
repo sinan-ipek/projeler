@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v19.01-deneme</title>
+<title>Beyaz Tahta v19.02-deneme</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1314,6 +1314,10 @@
         <span style="font-size:17px;width:22px;text-align:center">⌁</span>
         <span>Bézier'e dönüştür</span>
       </button>
+      <button id="convertBezierInkBtn" role="menuitem" style="display:none">
+        <span style="font-size:17px;width:22px;text-align:center">✎</span>
+        <span>Ink'e dönüştür</span>
+      </button>
       <button id="deleteContextBtn" role="menuitem">
         <span style="font-size:17px;width:22px;text-align:center">⌫</span>
         <span>Sil</span>
@@ -1338,7 +1342,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.01-deneme · Ink → Bézier denemesi · checkpoint: v19.00</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.02-deneme · Ink ↔ Bézier dönüşümü · checkpoint: v19.00</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1605,6 +1609,7 @@
   const groupMenuText = document.getElementById('groupMenuText');
   const dropContextBtn = document.getElementById('dropContextBtn');
   const convertInkBezierBtn = document.getElementById('convertInkBezierBtn');
+  const convertBezierInkBtn = document.getElementById('convertBezierInkBtn');
   const deleteContextBtn = document.getElementById('deleteContextBtn');
   const colorBtn = document.getElementById('colorBtn');
   const colorMenu = document.getElementById('colorMenu');
@@ -14939,6 +14944,15 @@
     convertInkBezierBtn.style.display=singleInkTarget ? '' : 'none';
     convertInkBezierBtn.disabled=!singleInkTarget;
 
+    const singleBezierTarget=
+      targets.length===1 &&
+      targets[0] &&
+      targets[0].kind==='bezier' &&
+      !targets[0].locked;
+
+    convertBezierInkBtn.style.display=singleBezierTarget ? '' : 'none';
+    convertBezierInkBtn.disabled=!singleBezierTarget;
+
     dropContextBtn.style.display=all3DTargets ? '' : 'none';
     dropContextBtn.disabled=
       !all3DTargets ||
@@ -15274,6 +15288,90 @@
     e.stopPropagation();
     if(dropContextBtn.disabled) return;
     dropContextTargetsToXZPlane();
+  });
+
+  function convertContextBezierToInk(){
+    const valid=expandGroupedIndices(contextTargetIndices)
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length);
+
+    if(valid.length!==1){
+      closeContextMenu();
+      return;
+    }
+
+    const idx=valid[0];
+    const o=objects[idx];
+
+    if(!o || o.kind!=='bezier' || o.locked){
+      closeContextMenu();
+      return;
+    }
+
+    const segCount=Math.max(1,bezierSegments(o).length);
+
+    // Eğri geometrisini yeterince sık örnekle; çok ağır stroke üretme.
+    const perSegment=Math.max(
+      10,
+      Math.min(28,Math.round(180/segCount))
+    );
+
+    let pts=bezierSamplePoints(o,perSegment)
+      .filter(finitePoint)
+      .map(p=>({
+        x:p.x,
+        y:p.y,
+        t:performance.now(),
+        pressure:null,
+        input:'mouse'
+      }));
+
+    if(o.closed && pts.length>2){
+      const first=pts[0];
+      const last=pts[pts.length-1];
+      if(dist(first,last)>.5/viewZoom){
+        pts.push({...first});
+      }
+    }
+
+    if(pts.length<2){
+      statusEl.textContent='Bézier Ink’e dönüştürülemedi';
+      closeContextMenu();
+      return;
+    }
+
+    const stroke={
+      id:makeObjectId(),
+      kind:'stroke',
+      points:pts,
+      style:cloneObject(o.style||strokeStyle()),
+      inkProfile:'dynamic',
+      inkEngine:'adaptive-v7',
+      source:'bezier-convert-experimental',
+      shapeName:'ink',
+      boxAngle:Number(o.boxAngle)||0
+    };
+
+    const removed=[{index:idx,object:cloneObject(o)}];
+    objects.splice(idx,1,stroke);
+
+    recordReplacedObjects(
+      removed,
+      [{index:idx,object:stroke}]
+    );
+
+    setSelection([idx]);
+    markBoardDirty();
+    closeContextMenu();
+    redraw();
+
+    statusEl.textContent=
+      'Deneme: Bézier → Ink · '+pts.length+' örnek nokta';
+  }
+
+  convertBezierInkBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(convertBezierInkBtn.disabled) return;
+    convertContextBezierToInk();
   });
 
   function convertContextInkToBezier(){
