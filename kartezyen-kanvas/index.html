@@ -59,7 +59,7 @@ footer{max-width:1530px;margin:0 auto 40px;padding:0 20px;color:#6b7a90;font-siz
 <p class="small"><b>Mavi β:</b> Herhangi bir bağıntı. <b>Kırmızı f:</b> A'nın her elemanına B'den tam bir eleman atayan fonksiyon.<br><br>Çizim modunda noktalara dokun. Fonksiyon çiziminde aynı A elemanına iki farklı B değeri seçilemez; bütün sütunlar tamamlanınca seçim kilitlenir.</p>
 </aside>
 </main>
-<footer>Düz dış kontur ve kesikli iç kontur ile organik bloblar çizilir. Fonksiyonlarda bağlantılar A sırasını izler. Sıfır elemanlı bağıntı ∅ olarak gösterilir.</footer>
+<footer>Tek parça, deliksiz ve yarı saydam organik blob çizilir. Fonksiyonlarda bağlantılar A sırasını izler. Sıfır elemanlı bağıntı ∅ olarak gösterilir.</footer>
 <script>
 "use strict";
 const NS="http://www.w3.org/2000/svg";
@@ -300,76 +300,170 @@ function openInnerHoles(mask,selected){
  }
 }
 
-function drawEnclosure(){
- const selected=pairs(),excluded=points.filter(p=>!chosen.has(p.key));
- const N=cfg.gw*cfg.gh;
- const core=new Uint8Array(N);
- const sx=A.length>1?528/(A.length-1):160,sy=B.length>1?305/(B.length-1):160;
- const spacing=Math.min(sx,sy);
- const innerRadius=Math.max(4,Math.min(34,spacing*.29));
- const outerRadius=Math.min(45,Math.max(7,spacing*.43));
- const neckRadius=Math.min(11,Math.max(3,spacing*.09));
- for(const p of selected)paintDisk(core,p.x,p.y,innerRadius);
- function connect(p,q){
-  if(p.key===q.key)return;
-  const path=route(p,q,excluded);if(!path.length)return;
-  for(let k=0;k<path.length;k++){
-   const [x,y]=path[k],t=path.length<=1?0:k/(path.length-1);
-   const shoulders=Math.pow(Math.abs(2*t-1),3);
-   const r=Math.min(innerRadius*.75,neckRadius*(1+1.05*shoulders));
-   paintDisk(core,x*cfg.cell,y*cfg.cell,r);
+
+function traceSingleBlob(selected, excluded) {
+  const w=cfg.gw,h=cfg.gh,N=w*h,step=cfg.cell;
+  const xSpacing=A.length>1?(cfg.x1-cfg.x0)/(A.length-1):160;
+  const ySpacing=B.length>1?(cfg.y1-cfg.y0)/(B.length-1):160;
+  const spacing=Math.min(xSpacing,ySpacing);
+  const lobe=Math.max(4,Math.min(43,spacing*.39));
+  const neck=Math.max(2.5,Math.min(9,spacing*.095));
+  const clearance=Math.max(3,Math.min(13,spacing*.21));
+  const mask=new Uint8Array(N);
+  const center=(p)=>[Math.max(2,Math.min(w-3,Math.round(p.x/step))),Math.max(3,Math.min(h-4,Math.round(p.y/step)))];
+  const [first,...rest]=kind==="function"?
+    [...selected].sort((a,b)=>a.i-b.i):
+    [...selected].sort((a,b)=>a.x-b.x||a.y-b.y);
+  paintDisk(mask,first.x,first.y,lobe);
+  const connected=[first],remaining=rest;
+
+  // Precompute the disallowed neighborhoods. The white dots remain *outside*
+  // the final geometry; we never punch holes or carve tunnels afterward.
+  const obstacles=new Uint8Array(N);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const px=(x+.5)*step,py=(y+.5)*step;
+    if(excluded.some(p=>Math.hypot(px-p.x,py-p.y)<clearance+neck+2))obstacles[y*w+x]=1;
   }
- }
- if(kind==="function"){
-  const order=[...selected].sort((a,b)=>a.i-b.i);
-  for(let i=1;i<order.length;i++)connect(order[i-1],order[i]);
- }else{
-  const connected=[selected[0]],remaining=selected.slice(1);
+
+  function findPath(p,unconnected){
+    const dist=new Float64Array(N),prev=new Int32Array(N),visited=new Uint8Array(N);
+    dist.fill(Infinity);prev.fill(-1);
+    const blocked=new Uint8Array(obstacles);
+    // Do not accidentally connect through other as-yet-unconnected islands.
+    for(const q of unconnected){
+      if(q.key===p.key)continue;
+      const r=lobe+neck+3,x0=Math.max(0,Math.floor((q.x-r)/step)),x1=Math.min(w-1,Math.ceil((q.x+r)/step));
+      const y0=Math.max(0,Math.floor((q.y-r)/step)),y1=Math.min(h-1,Math.ceil((q.y+r)/step));
+      for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)
+        if(Math.hypot((x+.5)*step-q.x,(y+.5)*step-q.y)<r)blocked[y*w+x]=1;
+    }
+    const [sx,sy]=center(p),start=sy*w+sx,heap=[];
+    function push(id,d){
+      heap.push([d,id]);let i=heap.length-1;
+      while(i>0){let k=(i-1)>>1;if(heap[k][0]<=heap[i][0])break;[heap[k],heap[i]]=[heap[i],heap[k]];i=k}
+    }
+    function pop(){
+      const ret=heap[0],last=heap.pop();
+      if(heap.length){heap[0]=last;let i=0;for(;;){
+        let a=i*2+1,b=a+1,k=i;
+        if(a<heap.length&&heap[a][0]<heap[k][0])k=a;
+        if(b<heap.length&&heap[b][0]<heap[k][0])k=b;
+        if(k===i)break;[heap[k],heap[i]]=[heap[i],heap[k]];i=k;
+      }}
+      return ret;
+    }
+    dist[start]=0;push(start,0);
+    let endpoint=-1;
+    while(heap.length){
+      const [d,u]=pop();if(visited[u])continue;visited[u]=1;
+      if(mask[u]){endpoint=u;break}
+      const x=u%w,y=(u/w)|0;
+      for(const v of [x>1?u-1:-1,x<w-2?u+1:-1,y>1?u-w:-1,y<h-2?u+w:-1]){
+        if(v<0||visited[v]||blocked[v]&&!mask[v])continue;
+        const nd=d+1;
+        if(nd<dist[v]){dist[v]=nd;prev[v]=u;push(v,nd)}
+      }
+    }
+    if(endpoint<0)return null;
+    const route=[];for(let u=endpoint;u!==-1;u=prev[u]){
+      route.push([(u%w+.5)*step,((u/w|0)+.5)*step]);
+      if(u===start)break;
+    }
+    return route.reverse();
+  }
+
   while(remaining.length){
-   let best={d:Infinity,i:0,j:0};
-   for(let i=0;i<remaining.length;i++)for(let j=0;j<connected.length;j++){
-    const p=remaining[i],q=connected[j],d=(p.x-q.x)**2+(p.y-q.y)**2;
-    if(d<best.d)best={d,i,j};
-   }
-   const p=remaining.splice(best.i,1)[0];connect(p,connected[best.j]);connected.push(p);
+    let idx=0;
+    if(kind!=="function"){
+      let shortest=Infinity;
+      for(let i=0;i<remaining.length;i++)for(const q of connected){
+        const d=(remaining[i].x-q.x)**2+(remaining[i].y-q.y)**2;
+        if(d<shortest){shortest=d;idx=i}
+      }
+    }
+    const p=remaining[idx],path=findPath(p,remaining);
+    if(!path)return null;
+    for(let i=0;i<path.length;i++){
+      const [x,y]=path[i],t=path.length<=1?0:i/(path.length-1);
+      // A slightly wider shoulder is blended into the rounded point lobes.
+      const r=neck*(1+.65*Math.pow(Math.abs(2*t-1),5));
+      paintDisk(mask,x,y,r);
+    }
+    paintDisk(mask,p.x,p.y,lobe);
+    connected.push(p);remaining.splice(idx,1);
   }
- }
- // Outer shell: enlarge the point lobes, keeping bridges narrow.
- const shell=new Uint8Array(core);
- for(const p of selected)paintDisk(shell,p.x,p.y,outerRadius);
- // Expand connector edges minimally, without inflating the entire network into a thick pipe.
- const grow=Math.max(1,Math.min(7,spacing*.065));
- const offsets=[];
- for(let y=-Math.ceil(grow/cfg.cell);y<=Math.ceil(grow/cfg.cell);y++)
- for(let x=-Math.ceil(grow/cfg.cell);x<=Math.ceil(grow/cfg.cell);x++)
- if(Math.hypot(x*cfg.cell,y*cfg.cell)<=grow)offsets.push([x,y]);
- for(let iy=0;iy<cfg.gh;iy++)for(let ix=0;ix<cfg.gw;ix++)if(core[iy*cfg.gw+ix]){
-  for(const [ox,oy] of offsets){let x=ix+ox,y=iy+oy;if(x>=0&&y>=0&&x<cfg.gw&&y<cfg.gh)shell[y*cfg.gw+x]=1}
- }
- // Exclude every unselected grid point from both outlines.
- const clearance=Math.max(3,Math.min(14,spacing*.21));
- for(const p of excluded){
-  const rr=clearance+2;
-  for(const mask of [core,shell]){
-   let x0=Math.max(0,Math.floor((p.x-rr)/cfg.cell)),x1=Math.min(cfg.gw-1,Math.ceil((p.x+rr)/cfg.cell));
-   let y0=Math.max(0,Math.floor((p.y-rr)/cfg.cell)),y1=Math.min(cfg.gh-1,Math.ceil((p.y+rr)/cfg.cell));
-   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)if(Math.hypot((x+.5)*cfg.cell-p.x,(y+.5)*cfg.cell-p.y)<rr)mask[y*cfg.gw+x]=0;
+
+  // Outer boundary is extracted directly from one simply connected region:
+  // no "white tunnels", no interior punched holes, no detached islands.
+  const loops=contours(mask).sort((a,b)=>Math.abs(polygonArea(b))-Math.abs(polygonArea(a)));
+  if(!loops.length)return null;
+  return {outer:loops[0],lobe,neck,mask};
+}
+function safeBezier(loop,inside,outside){
+  function make(pass){
+    const pts=loop.filter((_,i)=>i%2===0).map(p=>[p[0],p[1]]);
+    for(let n=0;n<pass;n++){
+      const old=pts.map(p=>p.slice());
+      for(let i=0;i<pts.length;i++){
+        const a=old[(i-1+old.length)%old.length],b=old[i],d=old[(i+1)%old.length];
+        pts[i]=[(a[0]+6*b[0]+d[0])/8,(a[1]+6*b[1]+d[1])/8];
+      }
+    }
+    const scale=.58;let d="M"+pts[0][0]+" "+pts[0][1];
+    const sample=[pts[0]],M=7;
+    for(let i=0;i<pts.length;i++){
+      const a=pts[(i-1+pts.length)%pts.length],b=pts[i],
+            z=pts[(i+1)%pts.length],e=pts[(i+2)%pts.length];
+      const c1=[b[0]+scale*(z[0]-a[0])/6,b[1]+scale*(z[1]-a[1])/6],
+            c2=[z[0]-scale*(e[0]-b[0])/6,z[1]-scale*(e[1]-b[1])/6];
+      d+=" C"+c1[0].toFixed(2)+" "+c1[1].toFixed(2)+" "+c2[0].toFixed(2)+" "+c2[1].toFixed(2)+" "+z[0].toFixed(2)+" "+z[1].toFixed(2);
+      for(let j=1;j<=M;j++){const t=j/M,u=1-t;
+        sample.push([
+          u*u*u*b[0]+3*u*u*t*c1[0]+3*u*t*t*c2[0]+t*t*t*z[0],
+          u*u*u*b[1]+3*u*u*t*c1[1]+3*u*t*t*c2[1]+t*t*t*z[1]
+        ]);
+      }
+    }
+    return {d:d+" Z",sample};
   }
- }
- openInnerHoles(core,selected);
- openInnerHoles(shell,selected);
- const outer=contours(shell).sort((a,b)=>Math.abs(polygonArea(b))-Math.abs(polygonArea(a)))[0];
- const inner=contours(core).sort((a,b)=>Math.abs(polygonArea(b))-Math.abs(polygonArea(a)))[0];
- if(!outer)return;
- const color=kind==="function"?"#dc3552":"#3265bb";
- const frame=$("enclosure");
- svg("path",{d:smoothPath(outer),fill:color,"fill-opacity":".075",stroke:color,"stroke-width":3.2,"stroke-linejoin":"round","stroke-linecap":"round","pointer-events":"none"},frame);
- if(inner)svg("path",{d:smoothPath(inner),fill:"none",stroke:color,"stroke-width":2.5,"stroke-dasharray":"10 8","stroke-linecap":"round","stroke-linejoin":"round",opacity:".68","pointer-events":"none"},frame);
- const minX=Math.min(...outer.map(p=>p[0])),maxX=Math.max(...outer.map(p=>p[0])),minY=Math.min(...outer.map(p=>p[1]));
- let lx=Math.max(115,Math.min(807,(minX+maxX)/2)),ly=minY-18;
- if(ly<52){lx=Math.min(825,maxX+28);ly=Math.max(70,minY+5)}
- let text=svg("text",{x:lx,y:ly,"text-anchor":"middle",fill:color,"font-size":"23","font-weight":"750","font-family":"system-ui","pointer-events":"none"},$("labels"));
- text.textContent=currentName;
+  for(const pass of [2,1,0]){
+    const candidate=make(pass);
+    if(inside.every(p=>pointInPoly(p.x,p.y,candidate.sample))&&outside.every(p=>!pointInPoly(p.x,p.y,candidate.sample)))return candidate.d;
+  }
+  // Polygonal fallback when even a gentle cubic curve could change membership.
+  return "M"+loop.map(p=>p[0]+" "+p[1]).join(" L")+" Z";
+}
+function drawEnclosure(){
+  const selected=pairs(),excluded=points.filter(p=>!chosen.has(p.key));
+  const geometry=traceSingleBlob(selected,excluded);
+  if(!geometry){
+    state("Bu seçimin bağlantısı hesaplanamadı. Başka bir nokta dizilimi dene.");
+    return;
+  }
+  const {outer}=geometry;
+  const color=kind==="function"?"#df3650":"#2563eb";
+  const d=safeBezier(outer,selected,excluded);
+  // One continuous pastel-filled blob; the blue/red contour contains exactly
+  // the selected dots. No separate white inner cutouts are created.
+  svg("path",{
+    d,fill:color,"fill-opacity":kind==="function"?".14":".16",
+    stroke:color,"stroke-width":"3","stroke-linejoin":"round",
+    "stroke-linecap":"round","pointer-events":"none"
+  },$("enclosure"));
+  // A restrained dashed overlay reinforces the mathematical enclosure.
+  svg("path",{
+    d,fill:"none",stroke:color,"stroke-width":"1.25",
+    "stroke-dasharray":"7 10","stroke-linecap":"round",opacity:".58",
+    "pointer-events":"none"
+  },$("enclosure"));
+  const minX=Math.min(...outer.map(p=>p[0])),maxX=Math.max(...outer.map(p=>p[0])),minY=Math.min(...outer.map(p=>p[1]));
+  let lx=Math.max(115,Math.min(807,(minX+maxX)/2)),ly=minY-18;
+  if(ly<52){lx=Math.min(825,maxX+28);ly=Math.max(70,minY+5)}
+  const label=svg("text",{
+    x:lx,y:ly,"text-anchor":"middle",fill:color,"font-size":"23",
+    "font-weight":"750","font-family":"system-ui","pointer-events":"none"
+  },$("labels"));
+  label.textContent=currentName;
 }
 $("setA").addEventListener("change",updateInputs);$("setB").addEventListener("change",updateInputs);
 $("setA").addEventListener("keydown",e=>{if(e.key==="Enter")updateInputs()});
