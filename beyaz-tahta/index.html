@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v18.99</title>
+<title>Beyaz Tahta v19.00</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1334,7 +1334,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v18.99 · Metin düzenleme kaybolma hatası düzeltildi</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.00 · Dengeli kalınlık ve varsayılan görünüm ölçeği</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1649,12 +1649,25 @@
   }
 
   // Infinite-surface camera. Objects always remain in world coordinates.
-  let viewX = 0;
-  let viewY = 0;
-  let viewZoom = 1;
-  let global3DGridVisible = false;
+  const DEFAULT_ZOOM = 0.90;
   const MIN_ZOOM = 0.12;
   const MAX_ZOOM = 8;
+
+  let viewX = 0;
+  let viewY = 0;
+  let viewZoom = DEFAULT_ZOOM;
+  let global3DGridVisible = false;
+
+  function resetDefaultView({redrawNow=true}={}){
+    viewX=0;
+    viewY=0;
+    viewZoom=DEFAULT_ZOOM;
+
+    if(redrawNow){
+      redraw();
+      if(textEditing) positionTextEditor();
+    }
+  }
 
   let isPanning = false;
   let panPointerId = null;
@@ -3434,7 +3447,7 @@
 
   function applyCanvasLineStyle(targetCtx,style){
     const lineStyle=normalizeLineStyle(style && style.lineStyle);
-    const width=Math.max(.75,Number(style && style.width)||1);
+    const width=visualStrokeWidth(style);
     targetCtx.lineCap='round';
 
     if(lineStyle==='dotted'){
@@ -3450,6 +3463,20 @@
     }else{
       targetCtx.setLineDash([]);
     }
+  }
+
+  function visualStrokeWidth(styleOrWidth){
+    const raw=(
+      typeof styleOrWidth==='number'
+        ? Number(styleOrWidth)
+        : Number(styleOrWidth && styleOrWidth.width)
+    );
+    const w=Math.max(1,Math.min(12,Number.isFinite(raw) ? raw : 1));
+
+    // UI'deki 1..12 değerlerini ekranda daha dengeli bir aralığa sıkıştır.
+    // 1 -> 2.0 dünya birimi, 4 -> 3.95, 12 -> 9.15.
+    // DEFAULT_ZOOM 0.90 ile yaklaşık 1.8px .. 8.2px görünür.
+    return 1.35 + 0.65*w;
   }
 
   function clamp01(v){
@@ -3483,7 +3510,7 @@
   function inkCenterSamples(pts,style,{live=false}={}){
     if(!pts || !pts.length) return [];
 
-    const baseWidth=Math.max(.75,Number(style && style.width)||1);
+    const baseWidth=visualStrokeWidth(style);
     const raw=pts.map((p,i)=>({
       x:Number(p.x)||0,
       y:Number(p.y)||0,
@@ -3616,7 +3643,7 @@
     ctx.lineCap='round';
     ctx.lineJoin='round';
 
-    const baseWidth=Math.max(.75,Number(style && style.width)||1);
+    const baseWidth=visualStrokeWidth(style);
     applyCanvasLineStyle(ctx,style);
 
     if(style && (style.lineStyle==='dotted' || style.lineStyle==='dashed')){
@@ -3756,7 +3783,7 @@
     };
     const control=adaptiveLerpPoint(straightMid,p1,curveStrength);
 
-    const base=Math.max(.75,Number(style&&style.width)||1);
+    const base=visualStrokeWidth(style);
     const color=(style&&style.color)||'#111111';
     const steps=5;
     let prev=null;
@@ -3821,7 +3848,7 @@
     if(!pts || !pts.length) return;
 
     const color=(style&&style.color)||'#111111';
-    const width=Math.max(.75,Number(style&&style.width)||1);
+    const width=visualStrokeWidth(style);
 
     targetCtx.save();
     targetCtx.strokeStyle=color;
@@ -3862,7 +3889,7 @@
       return;
     }
 
-    const base=Math.max(.75,Number(style&&style.width)||1);
+    const base=visualStrokeWidth(style);
     const color=(style&&style.color)||'#111111';
     let prev=null,last=null,rawLast=null;
 
@@ -5771,7 +5798,9 @@
     ctx.save();
     try{
       ctx.strokeStyle = ghost ? '#2563eb' : (o.style.color || '#111111');
-      ctx.lineWidth = ghost ? Math.max(2,Number(o.style.width)||2) : (Number(o.style.width)||2);
+      ctx.lineWidth = ghost
+        ? Math.max(2,visualStrokeWidth(o.style))
+        : visualStrokeWidth(o.style);
       ctx.lineCap='round';
       ctx.lineJoin='round';
       if(ghost){
@@ -19212,14 +19241,21 @@
   };
   clearBtn.onclick=()=>{
     if(textEditing) closeTextEditor(true);
-    if(!objects.length) return;
 
     const count=objects.length;
-    recordRemovedObjects(objects.map((object,index)=>({index,object})));
-    objects=[];
-    setSelection([]);
-    redraw();
-    statusEl.textContent=`${count} nesne silindi`;
+
+    if(count){
+      recordRemovedObjects(objects.map((object,index)=>({index,object})));
+      objects=[];
+      setSelection([]);
+      markBoardDirty();
+    }
+
+    resetDefaultView({redrawNow:true});
+
+    statusEl.textContent=count
+      ? `${count} nesne silindi · görünüm varsayılan ölçeğe döndü`
+      : 'Görünüm varsayılan ölçeğe döndü';
   };
 
 
@@ -19510,6 +19546,7 @@
     if(boardMode==='me') saveLocalBoard();
   },5000);
 
+  resetDefaultView({redrawNow:false});
   resize();
   updatePointSnapUI();
   updateBoardModeUI();
