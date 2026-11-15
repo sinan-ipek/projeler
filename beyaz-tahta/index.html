@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v19.00</title>
+<title>Beyaz Tahta v19.01-deneme</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1310,6 +1310,10 @@
         <span style="font-size:17px;width:22px;text-align:center">⇩</span>
         <span>Drop</span>
       </button>
+      <button id="convertInkBezierBtn" role="menuitem" style="display:none">
+        <span style="font-size:17px;width:22px;text-align:center">⌁</span>
+        <span>Bézier'e dönüştür</span>
+      </button>
       <button id="deleteContextBtn" role="menuitem">
         <span style="font-size:17px;width:22px;text-align:center">⌫</span>
         <span>Sil</span>
@@ -1334,7 +1338,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.00 · Dengeli kalınlık ve varsayılan görünüm ölçeği</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.01-deneme · Ink → Bézier denemesi · checkpoint: v19.00</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1600,6 +1604,7 @@
   const groupMenuIcon = document.getElementById('groupMenuIcon');
   const groupMenuText = document.getElementById('groupMenuText');
   const dropContextBtn = document.getElementById('dropContextBtn');
+  const convertInkBezierBtn = document.getElementById('convertInkBezierBtn');
   const deleteContextBtn = document.getElementById('deleteContextBtn');
   const colorBtn = document.getElementById('colorBtn');
   const colorMenu = document.getElementById('colorMenu');
@@ -5385,6 +5390,84 @@
     });
 
     return makeBezierShape(anchors,opts);
+  }
+
+  function optimalInkBezierModel(o){
+    if(!o || o.kind!=='stroke' || !Array.isArray(o.points) || o.points.length<2){
+      return null;
+    }
+
+    const raw=o.points.filter(finitePoint);
+    if(raw.length<2) return null;
+
+    const rs=resamplePolyline(raw,Math.min(160,Math.max(48,raw.length)));
+    if(rs.length<2) return null;
+
+    const b=bbox(rs);
+    const scale=Math.max(1,Math.hypot(b.w,b.h));
+
+    let pathLen=0;
+    for(let i=1;i<rs.length;i++) pathLen+=dist(rs[i-1],rs[i]);
+
+    let turnTotal=0;
+    const step=Math.max(2,Math.round(rs.length/36));
+    for(let i=step;i<rs.length-step;i++){
+      const a=rs[i-step],p=rs[i],c=rs[i+step];
+      const a1=Math.atan2(p.y-a.y,p.x-a.x);
+      const a2=Math.atan2(c.y-p.y,c.x-p.x);
+      turnTotal+=Math.abs(angleDiff(a2,a1));
+    }
+
+    // RDP, şeklin karakteristik kırılma/kıvrım noktalarını bulur.
+    // Epsilon tamamen şeklin kendi ölçeğine bağlıdır.
+    const eps=Math.max(scale*0.010,0.75/viewZoom);
+    let simplified=simplifyRDP(rs,eps).filter(finitePoint);
+
+    if(simplified.length<2){
+      simplified=[rs[0],rs[rs.length-1]];
+    }
+
+    const lengthComplexity=clamp01((pathLen/scale-1.0)/3.0);
+    const turnComplexity=clamp01(turnTotal/(Math.PI*5));
+    const rdpComplexity=clamp01((simplified.length-2)/18);
+
+    const complexity=
+      0.28*lengthComplexity+
+      0.44*turnComplexity+
+      0.28*rdpComplexity;
+
+    // Basit ink: 4-6 anchor.
+    // Karmaşık ink: en fazla 14 anchor.
+    const desired=Math.max(
+      4,
+      Math.min(14,Math.round(4+complexity*10))
+    );
+
+    // RDP çok fazla nokta bırakmışsa eşit aralıklı örnekleme ile sınırla.
+    if(simplified.length>desired*2){
+      simplified=resamplePolyline(simplified,desired*2);
+    }
+
+    const bezier=smoothBezierFromPoints(simplified,{
+      closed:false,
+      style:cloneObject(o.style||strokeStyle()),
+      shapeType:'ink-converted',
+      source:'ink-convert-experimental',
+      boxAngle:Number(o.boxAngle)||0,
+      maxAnchors:desired
+    });
+
+    if(!bezier) return null;
+
+    bezier.inkConversionMeta={
+      experimental:true,
+      sourcePointCount:raw.length,
+      simplifiedPointCount:simplified.length,
+      anchorCount:(bezier.anchors||[]).length,
+      complexity:Number(complexity.toFixed(3))
+    };
+
+    return bezier;
   }
 
   function threeAnchorFunctionBezier({
@@ -14847,6 +14930,15 @@
       hasTargets &&
       targets.every(o=>o.kind==='shape3d');
 
+    const singleInkTarget=
+      targets.length===1 &&
+      targets[0] &&
+      targets[0].kind==='stroke' &&
+      !targets[0].locked;
+
+    convertInkBezierBtn.style.display=singleInkTarget ? '' : 'none';
+    convertInkBezierBtn.disabled=!singleInkTarget;
+
     dropContextBtn.style.display=all3DTargets ? '' : 'none';
     dropContextBtn.disabled=
       !all3DTargets ||
@@ -14891,9 +14983,17 @@
 
     updateContextMenuState();
 
-    const menuW=190;
-    const menuH=dropContextBtn.style.display==='none' ? 344 : 386;
+    const menuW=210;
     const r=wrap.getBoundingClientRect();
+
+    // Menüde koşullu satırlar bulunduğu için yüksekliği gerçek içerikten al.
+    contextMenu.style.visibility='hidden';
+    contextMenu.classList.add('open');
+    const menuH=Math.max(120,contextMenu.scrollHeight);
+    contextMenu.classList.remove('open');
+    contextMenu.style.visibility='';
+
+
     const x=Math.max(6,Math.min(screenP.x,r.width-menuW-6));
     const y=Math.max(6,Math.min(screenP.y,r.height-menuH-6));
     contextMenu.style.left=x+'px';
@@ -15174,6 +15274,55 @@
     e.stopPropagation();
     if(dropContextBtn.disabled) return;
     dropContextTargetsToXZPlane();
+  });
+
+  function convertContextInkToBezier(){
+    const valid=expandGroupedIndices(contextTargetIndices)
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length);
+
+    if(valid.length!==1){
+      closeContextMenu();
+      return;
+    }
+
+    const idx=valid[0];
+    const o=objects[idx];
+
+    if(!o || o.kind!=='stroke' || o.locked){
+      closeContextMenu();
+      return;
+    }
+
+    const bezier=optimalInkBezierModel(o);
+    if(!bezier){
+      statusEl.textContent='Ink Bézier’e dönüştürülemedi';
+      closeContextMenu();
+      return;
+    }
+
+    const removed=[{index:idx,object:cloneObject(o)}];
+    objects.splice(idx,1,bezier);
+    ensureObjectId(bezier);
+
+    recordReplacedObjects(
+      removed,
+      [{index:idx,object:bezier}]
+    );
+
+    setSelection([idx]);
+    markBoardDirty();
+    closeContextMenu();
+    redraw();
+
+    const n=(bezier.anchors||[]).length;
+    statusEl.textContent=
+      'Deneme: Ink → Bézier · '+n+' anchor';
+  }
+
+  convertInkBezierBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(convertInkBezierBtn.disabled) return;
+    convertContextInkToBezier();
   });
 
   deleteContextBtn.addEventListener('click',e=>{
