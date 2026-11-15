@@ -240,6 +240,38 @@ function pointInPoly(x,y,poly){
  }
  return inPoly;
 }
+
+function openInnerHoles(mask,selected){
+ const w=cfg.gw,h=cfg.gh,N=w*h;
+ for(let pass=0;pass<20;pass++){
+  const seen=new Uint8Array(N),queue=[];
+  for(let x=0;x<w;x++){for(const y of [0,h-1]){let z=y*w+x;if(!mask[z]&&!seen[z]){seen[z]=1;queue.push(z)}}}
+  for(let y=0;y<h;y++){for(const x of [0,w-1]){let z=y*w+x;if(!mask[z]&&!seen[z]){seen[z]=1;queue.push(z)}}}
+  for(let k=0;k<queue.length;k++){let u=queue[k],x=u%w,y=(u/w)|0;for(const v of [x?u-1:-1,x<w-1?u+1:-1,y?u-w:-1,y<h-1?u+w:-1])if(v>=0&&!mask[v]&&!seen[v]){seen[v]=1;queue.push(v)}}
+  let start=-1;for(let i=0;i<N;i++)if(!mask[i]&&!seen[i]){start=i;break}
+  if(start<0)return;
+  const dist=new Float64Array(N);dist.fill(Infinity);const prev=new Int32Array(N);prev.fill(-1);
+  const visited=new Uint8Array(N),heap=[];
+  function push(id,d){heap.push([d,id]);let k=heap.length-1;while(k){let u=(k-1)>>1;if(heap[u][0]<=heap[k][0])break;[heap[u],heap[k]]=[heap[k],heap[u]];k=u}}
+  function pop(){let r=heap[0],v=heap.pop();if(heap.length){heap[0]=v;let i=0;for(;;){let a=2*i+1,b=a+1,m=i;if(a<heap.length&&heap[a][0]<heap[m][0])m=a;if(b<heap.length&&heap[b][0]<heap[m][0])m=b;if(m===i)break;[heap[m],heap[i]]=[heap[i],heap[m]];i=m}}return r}
+  dist[start]=0;push(start,0);let end=-1;
+  while(heap.length){
+   const [d,u]=pop();if(visited[u])continue;visited[u]=1;if(seen[u]){end=u;break}
+   let x=u%w,y=(u/w)|0;
+   for(const v of [x?u-1:-1,x<w-1?u+1:-1,y?u-w:-1,y<h-1?u+w:-1]){
+    if(v<0||visited[v])continue;
+    const vx=(v%w+.5)*cfg.cell,vy=(((v/w)|0)+.5)*cfg.cell;
+    if(selected.some(p=>Math.hypot(p.x-vx,p.y-vy)<24))continue;
+    const nd=d+(mask[v]?1:0.01);
+    if(nd<dist[v]){dist[v]=nd;prev[v]=u;push(v,nd)}
+   }
+  }
+  if(end<0)return;
+  let cur=end;
+  while(cur!==-1){let x=cur%w,y=(cur/w)|0;paintDisk(mask,(x+.5)*cfg.cell,(y+.5)*cfg.cell,0);mask[cur]=0;if(cur===start)break;cur=prev[cur]}
+ }
+}
+
 function drawEnclosure(){
  const selected=pairs(),excluded=points.filter(p=>!chosen.has(p.key));
  const mask=new Uint8Array(cfg.gw*cfg.gh);
@@ -257,6 +289,7 @@ function drawEnclosure(){
   for(const [x,y] of path)paintDisk(mask,(x+.5)*cfg.cell,(y+.5)*cfg.cell,8.5);
   connected.push(p);
  }
+ openInnerHoles(mask,selected);
  const loops=contours(mask).sort((a,b)=>Math.abs(polygonArea(b))-Math.abs(polygonArea(a)));
  if(!loops.length)return;
  const primary=loops[0];
