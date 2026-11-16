@@ -3588,8 +3588,12 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     document.getElementById("igorNumber").value=String(igorSave.pos);
     document.getElementById("igorTask").textContent=igorCurrent?igorCurrent.task:"Bu kitaptaki problemler henüz hazırlanmadı.";
     const list=igorList(),at=list.findIndex(p=>p.id===igorSave.pos);
-    document.getElementById("igorPrev").disabled=igorSave.pos<=1;
-    document.getElementById("igorNext").disabled=igorSave.book===1?igorSave.pos>=624:(igorSave.book===2||igorSave.book===3||igorSave.book===4||igorSave.book===5||igorSave.book===6||igorSave.book===7)?igorSave.pos>=618:igorSave.book===8?igorSave.pos>=1043:false;
+    document.getElementById("igorPrev").disabled=igorSave.book===8
+      ? window.IgorReading?.navTarget(-1,8,igorSave.pos)==null
+      : igorSave.pos<=1;
+    document.getElementById("igorNext").disabled=igorSave.book===8
+      ? window.IgorReading?.navTarget(1,8,igorSave.pos)==null
+      : igorSave.book===1?igorSave.pos>=624:(igorSave.book===2||igorSave.book===3||igorSave.book===4||igorSave.book===5||igorSave.book===6||igorSave.book===7)?igorSave.pos>=618:false;
     document.getElementById("igorNumber").disabled=false;
     document.getElementById("igorFlip").disabled=false;
     igorRenderChoices();
