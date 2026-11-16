@@ -66,9 +66,13 @@ const copy={
   de:{heading:"Gemeinsam lesen",chapter:"Kapitel",read:"Lesen",solve:"Selbst lösen",chapterSummary:"Kapitelüberblick",source:"Quelle",example:"Erklärtes Beispiel",challenge:"Selbstständige Aufgabe",examples:"Beispiele",challenges:"Aufgaben",goToExercises:"Zu den Aufgaben",goToExamples:"Beispiele lesen",pdf:"Original-PDF von meinem Gerät öffnen",pdfExplanation:"Die PDF bleibt auf deinem Gerät und wird nicht auf GitHub hochgeladen.",choosePdf:"PDF wählen",openNew:"Im neuen Tab öffnen",bookPage:"PDF-Seite",pdfUnavailable:"Wähle dein PDF, um den Originaltext hier zu lesen.",seek:"Seite öffnen",guide:"Lesehilfe",exampleText:"Dieses Diagramm gehört zur Erklärung des Autors. Lies zuerst den Text und untersuche dann die Stellung.",challengeText:"Suche die beste Idee wie in einer Partie. Wir verraten nicht im Voraus, welches taktische Motiv gesucht wird.",explore:"Am Brett testen",stopExplore:"Brett sperren",reset:"Stellung zurücksetzen",notReady:"Stellung oder Zugrecht nicht verifiziert; keine automatische Bewertung.",shatranj:"Historisches Schatrandsch hat andere Figurenregeln. Moderne Züge sind deaktiviert.",unknown:"Das Diagramm wurde noch nicht übertragen. Lies die Original-PDF weiter.",notVerified:"Die Varianten sind noch nicht geprüft. Ein legaler Zug gilt nicht automatisch als richtig.",thinking:"Mein Gedanke (freiwillig)",save:"Notiz speichern",saved:"Notiz lokal gespeichert.",reflect:"Warum wählte ich den Zug? Was ist die beste Antwort?",check:"Dein Zug gibt Schach. Prüfe alle legalen Antworten.",mate:"Die aktuelle Stellung ist matt. Vergleiche sie mit dem Buch.",capture:"Du hast eine Figur geschlagen. Das beweist die Kombination noch nicht.",neutral:"Zug ausgeführt. Suche jetzt die beste Antwort.",viewed:"Gesehene Diagramme",validation:"Quellenprüfung offen",finish:"Kapitel gelesen",done:"Kapitel gelesen",page:"Seite",nextPrompt:"Die Lösungen stehen im Buch; nicht geprüfte Varianten werden nicht bewertet.",noAuto:"Keine automatische Note",restore:"Weiterlesen"},
   en:{heading:"Read together",chapter:"Chapter",read:"Read",solve:"Solve myself",chapterSummary:"Chapter overview",source:"Source",example:"Annotated example",challenge:"Independent exercise",examples:"examples",challenges:"exercises",goToExercises:"Go to exercises",goToExamples:"Read examples",pdf:"Open my own original PDF",pdfExplanation:"Your PDF stays on your device and is not uploaded to GitHub.",choosePdf:"Choose PDF",openNew:"Open in a new tab",bookPage:"PDF page",pdfUnavailable:"Choose your PDF to read the original page here.",seek:"Go to page",guide:"Reading guide",exampleText:"This diagram belongs to the author's explanation. Read the text first, then inspect the position.",challengeText:"Treat the position as a real game: find the strongest idea without being told its tactical theme.",explore:"Try on board",stopExplore:"Lock board",reset:"Reset position",notReady:"The position or side to move is unverified; automatic grading is disabled.",shatranj:"These historic shatranj positions use different piece rules. Modern moves are disabled.",unknown:"This diagram has not been digitized. You can still read the original page.",notVerified:"The solution variations have not yet been checked. A legal move is not automatically correct.",thinking:"My reasoning (optional)",save:"Save note",saved:"Note saved locally.",reflect:"Why did I choose this? What is the opponent's best reply?",check:"Your move gives check. Consider every legal response.",mate:"The current position is checkmate. Compare with the book's variations.",capture:"You captured a piece, but a capture alone does not prove the combination.",neutral:"Move played. Find the opponent's strongest reply.",viewed:"Diagrams viewed",validation:"Source verification pending",finish:"Mark chapter read",done:"Chapter read",page:"page",nextPrompt:"The book contains the answers. Unverified lines are never graded automatically.",noAuto:"No automatic grading",restore:"Continue reading"}
 };
+// Optional factual micro-question after a move. This is NOT a solution verdict.
+Object.assign(copy.tr,{moveQuestion:"Bu hamleden sonra rakip şah çekiliyor mu?",yes:"Evet",no:"Hayır",factYes:"Evet, hamle şah çekiyor.",factNo:"Hayır, hamle şah çekmiyor.",factRight:"Doğru tespit.",factWrong:"Bu değerlendirme doğru değil."});
+Object.assign(copy.de,{moveQuestion:"Steht der gegnerische König nach diesem Zug im Schach?",yes:"Ja",no:"Nein",factYes:"Ja, der Zug gibt Schach.",factNo:"Nein, der Zug gibt kein Schach.",factRight:"Richtig erkannt.",factWrong:"Diese Einschätzung stimmt nicht."});
+Object.assign(copy.en,{moveQuestion:"Does this move give check to the opponent's king?",yes:"Yes",no:"No",factYes:"Yes, the move gives check.",factNo:"No, the move does not give check.",factRight:"Correct observation.",factWrong:"That observation is not correct."});
 const storeKey="igor8-reader-progress-v1";
 const saved=(function(){try{return JSON.parse(localStorage.getItem(storeKey)||"{}")||{};}catch(e){return {};}})();
-const state={mode:saved.mode==="solve"?"solve":"read",explore:false,notes:saved.notes&&typeof saved.notes==="object"?saved.notes:{},seen:saved.seen&&typeof saved.seen==="object"?saved.seen:{},done:saved.done&&typeof saved.done==="object"?saved.done:{},pdfUrl:null,chapter:1,currentId:0,scoreMessage:"",panel:null,api:null,lang:"tr",loadedNoteId:0,openChapter:0};
+const state={mode:saved.mode==="solve"?"solve":"read",explore:false,notes:saved.notes&&typeof saved.notes==="object"?saved.notes:{},seen:saved.seen&&typeof saved.seen==="object"?saved.seen:{},done:saved.done&&typeof saved.done==="object"?saved.done:{},pdfUrl:null,chapter:1,currentId:0,scoreMessage:"",lastMoveCheck:null,panel:null,api:null,lang:"tr",loadedNoteId:0,openChapter:0};
 function persist(){try{localStorage.setItem(storeKey,JSON.stringify({mode:state.mode,notes:state.notes,seen:state.seen,done:state.done}));}catch(e){}}
 function chapterOf(id){return chapters.find(c=>id>=c.from&&id<=c.to)||chapters[0];}
 function meta(id){const c=chapterOf(id);return {chapter:c.id,role:id<=c.examplesEnd?"example":"challenge",chapterTitle:c.title,chapterStart:c.from,firstExercise:c.examplesEnd+1,chapterEnd:c.to,shatranj:c.id===1};}
@@ -116,6 +120,7 @@ function mount(panel,api){
     "#igor8PdfFrame{width:100%;height:340px;border:1px solid #ddd;border-radius:6px;background:white}",
     "#igor8Note{width:100%;min-height:60px;max-height:140px;resize:vertical;font:inherit;font-size:13px;line-height:1.45;border:1px solid #ccc;border-radius:8px;padding:8px;background:white;color:#222}",
     "#igor8MoveFeedback{margin:8px 0;color:#365b4d;font-size:12px;line-height:1.5}",
+    "#igor8MicroQuiz{border-left:2px solid #ddbc6f;padding:7px 10px;margin:8px 0;background:#fffcf3;font-size:12px}",
     "#igor8Reader button:focus-visible,#igor8Reader select:focus-visible,#igor8Reader textarea:focus-visible{outline:2px solid #bb8500;outline-offset:2px}",
     "@media(max-width:540px){#igor8Reader{padding:9px}#igor8PdfFrame{height:270px}}"
   ].join("\n");
@@ -140,6 +145,9 @@ function mount(panel,api){
     '<button id="igor8Explore" type="button"></button>',
     '<button id="igor8Reset" type="button"></button></div>',
     '<p id="igor8MoveFeedback" role="status" aria-live="polite"></p>',
+    '<div id="igor8MicroQuiz" hidden><p id="igor8Question"></p><div class="igor8-actions">',
+    '<button type="button" id="igor8Yes"></button><button type="button" id="igor8No"></button></div>',
+    '<p class="igor8-dim" id="igor8QuizResult" aria-live="polite"></p></div>',
     '<label class="igor8-dim" for="igor8Note" id="igor8NoteLabel"></label>',
     '<textarea id="igor8Note" maxlength="1200"></textarea>',
     '<div class="igor8-actions"><button type="button" id="igor8SaveNote"></button>',
@@ -167,6 +175,13 @@ function mount(panel,api){
   el("igor8GoExamples").addEventListener("click",()=>{const c=chapters[state.chapter-1];state.mode="read";persist();api.jump(8,c.from);});
   el("igor8Explore").addEventListener("click",()=>{state.explore=!state.explore;renderCurrent();});
   el("igor8Reset").addEventListener("click",()=>api.jump(8,state.currentId));
+  const quizAnswer=value=>{
+    if(state.lastMoveCheck===null)return;
+    const correct=state.lastMoveCheck===value;
+    setText("igor8QuizResult",(correct?t("factRight"):t("factWrong"))+" "+t(state.lastMoveCheck?"factYes":"factNo"));
+  };
+  el("igor8Yes").addEventListener("click",()=>quizAnswer(true));
+  el("igor8No").addEventListener("click",()=>quizAnswer(false));
   el("igor8Note").addEventListener("input",e=>{if(!state.currentId)return;state.notes[state.currentId]=e.target.value;persist();});
   el("igor8SaveNote").addEventListener("click",()=>{persist();setText("igor8MoveFeedback",t("saved"));});
   el("igor8Done").addEventListener("click",()=>{state.done[state.chapter]=true;persist();renderCurrent();});
@@ -207,7 +222,7 @@ function render({book,p}){
   state.currentId=id;state.chapter=c.id;
   if(m.role==="example"&&state.mode==="solve"){state.mode="read";persist();}
   if(!state.seen[id]){state.seen[id]=true;persist();}
-  if(state.loadedNoteId!==id){el("igor8Note").value=state.notes[id]||"";state.loadedNoteId=id;state.scoreMessage="";state.explore=false;}
+  if(state.loadedNoteId!==id){el("igor8Note").value=state.notes[id]||"";state.loadedNoteId=id;state.scoreMessage="";state.lastMoveCheck=null;state.explore=false;}
   if(state.openChapter!==c.id){el("igor8Summary").open=true;state.openChapter=c.id;}
   el("igor8Chapter").value=String(c.id);
   setText("igor8Title",t("heading"));
@@ -236,6 +251,10 @@ function render({book,p}){
   el("igor8GoExamples").hidden=state.mode==="read";
   el("igor8Explore").disabled=!canExplore;
   setText("igor8MoveFeedback",state.scoreMessage);
+  el("igor8MicroQuiz").hidden=state.lastMoveCheck===null;
+  setText("igor8Question",t("moveQuestion"));
+  setText("igor8Yes",t("yes"));setText("igor8No",t("no"));
+  if(state.lastMoveCheck===null)setText("igor8QuizResult","");
   setText("igor8NoteLabel",t("thinking"));
   el("igor8Note").placeholder=t("reflect");
   setText("igor8SaveNote",t("save"));
@@ -273,8 +292,13 @@ function blockedMessage(p){
 }
 function onMove({check,mate,capture}){
   state.scoreMessage=mate?t("mate"):check?t("check"):capture?t("capture"):t("neutral");
+  state.lastMoveCheck=!!check;
   setText("igor8MoveFeedback",state.scoreMessage);
+  el("igor8MicroQuiz").hidden=false;
+  setText("igor8Question",t("moveQuestion"));
+  setText("igor8Yes",t("yes"));setText("igor8No",t("no"));
+  setText("igor8QuizResult","");
 }
-function onExit(){state.explore=false;state.scoreMessage="";}
+function onExit(){state.explore=false;state.scoreMessage="";state.lastMoveCheck=null;}
 window.IgorReading={meta,mount,render,navTarget,canMove,blockedMessage,onMove,onExit,setMode,chapters};
 })();
