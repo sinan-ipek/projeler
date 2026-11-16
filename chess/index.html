@@ -862,6 +862,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   </div>
 </div>
 
+<script src="igor-reading.js?v=1.0.0"></script>
 <script>
 (function(){
   // ===================== UTIL =====================
@@ -2474,11 +2475,8 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     ensureAudio();
     if (engineThinking || (igorActive && activeMoveAnimation) || (igorActive && (igorMate2Defending || igorMate2Locked))) return;
 
-    if(igorActive && igorCurrent?.book===8 && 
-       (!igorCurrent.fen || !igorCurrent.sideVerified || igorCurrent.shatranj)){
-      igorMessage(igorCurrent?.shatranj
-        ?"Bu Şatranç konumu özel kurallarla oynanır; hamleler henüz etkin değil."
-        :"Bu problemin hamle sırası veya konumu henüz doğrulanmadı.");
+    if(igorActive && igorCurrent?.book===8 && !window.IgorReading?.canMove(igorCurrent)){
+      igorMessage(window.IgorReading?.blockedMessage(igorCurrent)||"Bu konum henüz oynanabilir değil.");
       return;
     }
     if(igorActive && igorCurrent?.goal==="construction"){
@@ -3350,6 +3348,8 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   }
   // Chess Gems: 1043 numbered combinations, 990 diagram positions provisionally matched.
   // Flags are kept for later book-by-book visual review with the physical source.
+  // Comparison against original PDF captions: mismatches await visual verification.
+  const igor8SideNeedsReview=new Set([9,19,27,29,32,61,84,89,98,99,101,152,153,158,162,164,170,171,176,177,179,190,193,211,213,216,217,228,231,234,239,240,245,249,251,252,263,266,269,272,274,277,278,280,283,286,290,292,293,295,337,340,343,370,372,375,376,426,428,433,436,451,453,457,562,573,619,627,631,636,640,643,646,648,649,651,654,655,663,664,683,685,688,691,701,722,731,733,736,750,751,755,756,761,762,763,799,801,811,815,818,820,821,825,826,829,831,832,834,835,837,844,846,847,855,859,864,867,883,884,887,890,896,899,904,925,932,934,937,940,941,991,992,997,1000,1001,1004,1006,1010,1012,1013]);
   let igorVol8Loading=true;
   async function igorLoadVolumeEight(){
     try{
@@ -3363,15 +3363,20 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       if(!Array.isArray(rows)||rows.length!==1043)throw Error("1043 Chess Gems records expected");
       igorProblems[8]=rows.map(r=>{
         const flags=r.flags||[];
-        const prefix=r.side==="b"?"Siyah oynar.":r.side==="w"?"Beyaz oynar.":"Hamle sırası doğrulanmadı.";
+        const meta=window.IgorReading?.meta(r.id);
+        const sideVerified=!!r.side&&!igor8SideNeedsReview.has(r.id)&&!flags.includes("side-unverified");
+        const prefix=sideVerified?(r.side==="b"?"Siyah oynar.":"Beyaz oynar."):"Hamle sırası henüz doğrulanmadı.";
+        const role=meta?.role||"challenge";
         return {
-          id:r.id,book:8,fen:r.fen,sideVerified:!!r.side,
-          page:r.page,section:r.name,
-          task:r.fen?(prefix+" Kombinasyonu bul."):"Bu problemin tahta konumu henüz doğrulanmadı.",
+          id:r.id,book:8,fen:r.fen,sideVerified,
+          page:r.page,section:r.name,chapter:meta?.chapter,readingRole:role,
+          task:r.fen?(role==="example"?"Açıklamalı örnek. Kitaptaki metni okuyup konumu incele.":prefix+" Kombinasyonu bul."):"Bu diyagram henüz aktarılamadı; kitaptaki özgün sayfayı aç.",
           solution:r.sourceAnswer,flags,
           goal:"historic-tactic",answerType:"historic-tactic",
-          shatranj:flags.includes("shatranj-rules"),
-          verification:"needs-manual-check"
+          shatranj:flags.includes("shatranj-rules")||meta?.shatranj===true,
+          verification:"needs-manual-check",
+          // Future verified solution graphs must be explicit; raw PDF text is not a move tree.
+          verifiedSolutionTree:null
         };
       });
       igorVol8Loading=false;
@@ -3446,9 +3451,14 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       if(!igorActive || igorFeedbackSequence!==sequence ||
          igorSave.book!==pending.book || igorSave.pos!==pending.pos ||
          game.history[game.history.length-1]!==move)return;
-      if(pending.book===6||pending.book===7||pending.book===8){
+      if(pending.book===8){
+        // Book 8 is a guided reader. Explain factual consequences, not a fictitious score.
+        igorMessage("Hamle oynandı. Kitaptaki varyantla karşılaştır.");
+        window.IgorReading?.onMove({
+          mate:!!pending.mate,check:game.inCheck(game.turn),capture:!!pending.capture
+        });
+      }else if(pending.book===6||pending.book===7){
         // A legal move is not equivalent to solving a tactical objective.
-        // Don't award a solved badge before the whole tactic is verified.
         igorMessage("Hamle oynandı. Çözüm henüz doğrulanmadı.");
       }else if(pending.book===5){
         if(!pending.correct){
@@ -3584,6 +3594,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     document.getElementById("igorFlip").disabled=false;
     igorRenderChoices();
     igorUpdateAssistance();
+    window.IgorReading?.render({book:igorSave.book,p:igorCurrent});
   }
   function igorLoad(book,no){
     igorSave.book=book;
@@ -3631,6 +3642,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     igorLoad(igorSave.book,igorSave.last[igorSave.book]||igorSave.pos||1);
   }
   function igorExit(){
+    window.IgorReading?.onExit();
     igorWrongCount=0;igorAttemptKey="";igorShowAnswer=false;
     igorMate2Stage=0;igorMate2Defending=false;igorMate2Locked=false;
     igorPendingFeedback=null;
@@ -3671,7 +3683,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     // Game state has already changed, but the visible piece may still be travelling.
     igorPendingFeedback={move:last,book:igorSave.book,pos:igorSave.pos,
       correct:(igorCurrent.book===6||igorCurrent.book===7||igorCurrent.book===8)?false:(igorCurrent.book===4?expected:(igorCurrent.goal==="mate1"?mate:(mate||capture||expected||alternativeCapture||alternativeEP||alternativeCastle||alternativeCheck))),
-      mate,multiMove:!!igorCurrent.multiMove};
+      mate,capture:!!undo.toP,multiMove:!!igorCurrent.multiMove};
     if(!activeMoveAnimation)igorFinishFeedback(last);
   }
   function igorBuild(){
@@ -3710,6 +3722,10 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       '</form>'+
       '<button id="igorFlip" type="button">↻ Tahtayı Çevir</button>';
     document.querySelector(".sideInfo").prepend(panel);
+    window.IgorReading?.mount(panel,{
+      jump:(book,no)=>igorLoad(book,no),
+      getProblem:()=>igorCurrent
+    });
     document.getElementById("igorShowSolution").addEventListener("click",()=>{
       if(igorWrongCount<10||!igorCurrent)return;
       igorShowAnswer=!igorShowAnswer;
@@ -3719,7 +3735,9 @@ body.igor-mode #chessPlaybackControls{display:none!important}
       const b=Number(e.target.value);igorLoad(b,igorSave.last[b]||1);
     });
     const step=d=>{
-      const n=igorSave.pos+d;
+      const target=window.IgorReading?.navTarget(d,igorSave.book,igorSave.pos);
+      const n=igorSave.book===8?target:igorSave.pos+d;
+      if(n==null)return;
       if(n<1||(igorSave.book===1&&n>624)||((igorSave.book===2||igorSave.book===3||igorSave.book===4||igorSave.book===5||igorSave.book===6||igorSave.book===7)&&n>618)||(igorSave.book===8&&n>1043))return;
       igorLoad(igorSave.book,n);
     };
@@ -3768,5 +3786,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.8.4 · Kitap seçim alanına yumuşak gölge</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.9.0 · Chess Gems birlikte okuma, bölüm ve özel PDF</div></body>
 </html>
