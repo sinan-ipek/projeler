@@ -179,6 +179,7 @@ function mount(panel,api){
     setText("igor8PdfEmpty","");
   });
   el("igor8PdfGo").addEventListener("click",()=>showPdf(el("igor8PdfPage").value));
+  el("igor8Pdf").addEventListener("toggle",()=>{if(el("igor8Pdf").open&&state.pdfUrl)showPdf(el("igor8PdfPage").value);});
   document.getElementById("simpleLang")?.addEventListener("change",()=>renderCurrent());
 }
 function setMode(mode){
@@ -186,7 +187,7 @@ function setMode(mode){
   state.explore=false;state.scoreMessage="";
   persist();
   const m=meta(state.currentId||1);
-  if(state.mode==="solve"&&m.role==="example"){state.api.jump(8,m.firstExercise);return;}
+  if(state.mode==="solve"&&m.role==="example"&&state.api){state.api.jump(8,m.firstExercise);return;}
   if(state.api&&state.currentId){state.api.jump(8,state.currentId);return;}
   renderCurrent();
 }
@@ -204,6 +205,7 @@ function render({book,p}){
   if(!p){setText("igor8Title",t("heading"));return;}
   const id=Number(p.id),m=meta(id),c=chapters[m.chapter-1];
   state.currentId=id;state.chapter=c.id;
+  if(m.role==="example"&&state.mode==="solve"){state.mode="read";persist();}
   if(!state.seen[id]){state.seen[id]=true;persist();}
   if(state.loadedNoteId!==id){el("igor8Note").value=state.notes[id]||"";state.loadedNoteId=id;state.scoreMessage="";state.explore=false;}
   if(state.openChapter!==c.id){el("igor8Summary").open=true;state.openChapter=c.id;}
