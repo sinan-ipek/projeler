@@ -48,6 +48,8 @@ function instrument(source){
  html=html.replace("else if(o.kind==='shape3d') drawShape3D(o);","else if(o.kind==='shape3d'){if(!window.__WBVR_ACTIVE__)drawShape3D(o);}");
  html=html.replace('      drawSelection();', "      if(!window.__WBVR_ACTIVE__ || selectedIndices.some(i=>objects[i]?.kind!=='shape3d'))drawSelection();");
  html=html.replace('      drawShape3DSnapCue();','      if(!window.__WBVR_ACTIVE__)drawShape3DSnapCue();');
+ // Synthetic VR pointers do not own the browser's physical pointer stream.
+ html=html.replaceAll('canvas.setPointerCapture(e.pointerId);','try{canvas.setPointerCapture(e.pointerId);}catch(_){}');
  const base='<base href="'+new URL('../beyaz-tahta/',location.href).href+'">';
  return html.replace('<head>','<head>'+base);
 }
@@ -187,6 +189,8 @@ function createRenderer(){
   controller.addEventListener('disconnected',()=>{source.hand='';source.input=null;});
   controller.addEventListener('selectstart',()=>{if(source.hand==='right')onDown()});
   controller.addEventListener('selectend',()=>{if(source.hand==='right')onUp()});
+  controller.addEventListener('squeezestart',()=>{if(source.hand==='right')gripDown()});
+  controller.addEventListener('squeezeend',()=>{if(source.hand==='right')gripUp()});
  }
  W.dot=new THREE.Mesh(new THREE.SphereGeometry(.012,10,8),new THREE.MeshBasicMaterial({color:0xffc92b,depthTest:false}));
  W.dot.renderOrder=20;W.scene.add(W.dot);rebuildMenu();
@@ -257,12 +261,24 @@ function pointer(type,uv){
  // then uses its own world coordinates, as with mouse input.
  const x=rect.left+uv.u*rect.width,y=rect.top+uv.v*rect.height;
  const ctor=W.frame.PointerEvent||W.frame.MouseEvent;
- const evt=new ctor(type,{bubbles:true,cancelable:true,pointerType:'mouse',pointerId:21,isPrimary:true,
-  clientX:x,clientY:y,screenX:x,screenY:y,button:type==='pointermove'?-1:0,buttons:type==='pointerup'?0:1,pressure:type==='pointerup'?0:.5});
+ const evt=new ctor(type,{bubbles:true,cancelable:true,pointerType:'mouse',pointerId:W.gripPressed?22:21,isPrimary:true,
+  clientX:x,clientY:y,screenX:x,screenY:y,button:type==='pointermove'?-1:W.gripPressed?2:0,buttons:type==='pointerup'?0:W.gripPressed?2:1,pressure:type==='pointerup'?0:.5});
  canvas.dispatchEvent(evt);
 }
 
 
+
+function gripDown(){
+ if(W.drag||W.gripPressed)return;
+ const hit=getAim();if(hit?.type!=='board')return;
+ W.gripPressed=true;W.gripUV=hit.uv;
+ pointer('pointerdown',W.gripUV);
+}
+function gripUp(){
+ if(!W.gripPressed)return;
+ pointer('pointerup',W.gripUV);
+ W.gripPressed=false;W.gripUV=null;
+}
 function onDown(){
  const a=getAim();if(!a)return;
  if(a.type==='menu'){invoke(a.hit.object.userData.action);return;}
@@ -478,6 +494,7 @@ function drawFrame(){
 function cleanup(){
  if(!W.active&&!W.renderer)return;
  if(W.drag)onUp();
+ if(W.gripPressed)gripUp();
  W.active=false;
  if(W.frame?.__WBVR_API__){W.frame.__WBVR_ACTIVE__=false;W.api.redraw();}
  W.renderer?.setAnimationLoop(null);
