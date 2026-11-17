@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v19.04-deneme</title>
+<title>Beyaz Tahta v19.05-deneme</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1346,7 +1346,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.04-deneme · İçbükey 3D yüz boyama düzeltmesi · checkpoint: v19.00</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.05-deneme · Metin düzenlerken silinme hatası düzeltildi · checkpoint: v19.00</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -19931,7 +19931,12 @@
       return;
     }
 
-    if(mode==='select' && selectedIndices.length && (e.key==='Delete' || e.key==='Backspace')){
+    if(
+      !typingTarget &&
+      mode==='select' &&
+      selectedIndices.length &&
+      (e.key==='Delete' || e.key==='Backspace')
+    ){
       e.preventDefault();
 
       const deletable=selectedIndices
