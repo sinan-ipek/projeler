@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v19.02-deneme</title>
+<title>Beyaz Tahta v19.03-deneme</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1318,6 +1318,10 @@
         <span style="font-size:17px;width:22px;text-align:center">✎</span>
         <span>Ink'e dönüştür</span>
       </button>
+      <button id="convert2D3DBtn" role="menuitem" style="display:none">
+        <span style="font-size:17px;width:22px;text-align:center">◫</span>
+        <span>3D nesneye dönüştür</span>
+      </button>
       <button id="deleteContextBtn" role="menuitem">
         <span style="font-size:17px;width:22px;text-align:center">⌫</span>
         <span>Sil</span>
@@ -1342,7 +1346,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.02-deneme · Ink ↔ Bézier dönüşümü · checkpoint: v19.00</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.03-deneme · 2D → 3D custom nesne · checkpoint: v19.00</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1610,6 +1614,7 @@
   const dropContextBtn = document.getElementById('dropContextBtn');
   const convertInkBezierBtn = document.getElementById('convertInkBezierBtn');
   const convertBezierInkBtn = document.getElementById('convertBezierInkBtn');
+  const convert2D3DBtn = document.getElementById('convert2D3DBtn');
   const deleteContextBtn = document.getElementById('deleteContextBtn');
   const colorBtn = document.getElementById('colorBtn');
   const colorMenu = document.getElementById('colorMenu');
@@ -6579,8 +6584,103 @@
     return pts;
   }
 
+  function custom2DPathsGeometry(o){
+    const paths=Array.isArray(o.customPaths) ? o.customPaths : [];
+    const sizeX=Math.max(.001,Math.abs(Number(o.sizeX)||0));
+    const sizeY=Math.max(.001,Math.abs(Number(o.sizeY)||0));
+    const thickness=Math.max(0,Math.abs(Number(o.sizeZ)||0));
+    const hz=thickness/2;
+
+    const points=[];
+    const edges=[];
+    const faces=[];
+
+    for(const path of paths){
+      const src=(path && Array.isArray(path.points) ? path.points : [])
+        .filter(p=>Number.isFinite(Number(p.x)) && Number.isFinite(Number(p.y)));
+
+      if(src.length<2) continue;
+
+      const closed=!!path.closed;
+      const frontStart=points.length;
+
+      for(const p of src){
+        points.push({
+          x:Number(p.x)*sizeX,
+          y:Number(p.y)*sizeY,
+          z:0
+        });
+      }
+
+      const segCount=closed ? src.length : src.length-1;
+      for(let i=0;i<segCount;i++){
+        const j=(i+1)%src.length;
+        edges.push([frontStart+i,frontStart+j]);
+      }
+
+      // Sıfır kalınlık: gerçek 2D kontur, çift çizim yok.
+      if(thickness<=1e-6) continue;
+
+      // Front contour moves to -Z/2.
+      for(let i=0;i<src.length;i++){
+        points[frontStart+i].z=-hz;
+      }
+
+      const backStart=points.length;
+      for(const p of src){
+        points.push({
+          x:Number(p.x)*sizeX,
+          y:Number(p.y)*sizeY,
+          z:hz
+        });
+      }
+
+      for(let i=0;i<segCount;i++){
+        const j=(i+1)%src.length;
+        edges.push([backStart+i,backStart+j]);
+        faces.push([
+          frontStart+i,
+          frontStart+j,
+          backStart+j,
+          backStart+i
+        ]);
+      }
+
+      if(closed){
+        // Front/back caps. Reverse one winding so outward normals oppose.
+        faces.push(
+          Array.from({length:src.length},(_,i)=>frontStart+(src.length-1-i))
+        );
+        faces.push(
+          Array.from({length:src.length},(_,i)=>backStart+i)
+        );
+
+        // Sparse connecting edges keep depth readable without making curved
+        // paths look like a cage.
+        const stride=Math.max(1,Math.floor(src.length/12));
+        for(let i=0;i<src.length;i+=stride){
+          edges.push([frontStart+i,backStart+i]);
+        }
+      }else{
+        // Open path becomes a ribbon surface when extruded.
+        edges.push([frontStart,backStart]);
+        edges.push([
+          frontStart+src.length-1,
+          backStart+src.length-1
+        ]);
+      }
+    }
+
+    return {points,edges,faces,curves:[]};
+  }
+
   function shape3DGeometry(o){
     if(!o || o.kind!=='shape3d') return {points:[],edges:[],faces:[],curves:[]};
+
+    if(o.shape3dType==='custom2d'){
+      return custom2DPathsGeometry(o);
+    }
+
     const sx=Math.max(8,Number(o.sizeX)||120)/2;
     const sy=Math.max(8,Number(o.sizeY)||120)/2;
     const sz=Math.max(8,Number(o.sizeZ)||120)/2;
@@ -7746,7 +7846,7 @@
 
     ctx.save();
     ctx.strokeStyle=(o.style&&o.style.color)||'#111111';
-    ctx.lineWidth=(o.style&&Number(o.style.width))||2;
+    ctx.lineWidth=visualStrokeWidth(o.style||{});
     ctx.lineCap='round';
     ctx.lineJoin='round';
     ctx.globalAlpha=1;
@@ -7979,6 +8079,145 @@
       rotationY:0,
       rotationZ:0
     };
+  }
+
+  function sample2DObjectPathsFor3D(o){
+    if(!o || o.kind==='stroke' || o.kind==='shape3d' || o.kind==='image' || o.kind==='text'){
+      return [];
+    }
+
+    if(o.kind==='bezier'){
+      const pts=bezierSamplePoints(o,18).map(p=>({x:p.x,y:p.y}));
+      return pts.length>=2 ? [{points:pts,closed:!!o.closed}] : [];
+    }
+
+    if(o.kind==='line'){
+      return [{points:[{...o.a},{...o.b}],closed:false}];
+    }
+
+    if(o.kind==='arc'){
+      const pts=arcSamplePoints(o,72).map(p=>({x:p.x,y:p.y}));
+      return pts.length>=2 ? [{points:pts,closed:false}] : [];
+    }
+
+    if(o.kind==='sector'){
+      const arc=arcSamplePoints(o,72).map(p=>({x:p.x,y:p.y}));
+      const pts=[{...o.center},...arc];
+      return pts.length>=3 ? [{points:pts,closed:true}] : [];
+    }
+
+    if(o.kind==='ellipse'){
+      const pts=[];
+      const count=96;
+      for(let i=0;i<count;i++){
+        const t=i*Math.PI*2/count;
+        const local={
+          x:o.center.x+Math.cos(t)*Math.abs(Number(o.rx)||1),
+          y:o.center.y+Math.sin(t)*Math.abs(Number(o.ry)||1)
+        };
+        pts.push(rotatePoint(local,o.center,Number(o.angle)||0));
+      }
+      return [{points:pts,closed:true}];
+    }
+
+    if(o.kind==='rect'){
+      return [{points:rectWorldVertices(o),closed:true}];
+    }
+
+    if(o.kind==='polygon'){
+      return [{points:polygonWorldVertices(o),closed:true}];
+    }
+
+    if(o.kind==='parabola'){
+      const pts=[];
+      const a=Number(o.angle)||0;
+      for(let i=0;i<=72;i++){
+        const u=-1+2*i/72;
+        const q={
+          x:o.center.x+u*(o.w/2),
+          y:o.center.y+(o.mirrorY?-1:1)*(o.h/2-u*u*o.h)
+        };
+        pts.push(rotatePoint(q,o.center,a));
+      }
+      return [{points:pts,closed:false}];
+    }
+
+    if(o.kind==='axes'){
+      const a=Number(o.angle)||0;
+      const hw=Math.abs(Number(o.w)||120)/2;
+      const hh=Math.abs(Number(o.h)||90)/2;
+      const h1=rotatePoint({x:o.center.x-hw,y:o.center.y},o.center,a);
+      const h2=rotatePoint({x:o.center.x+hw,y:o.center.y},o.center,a);
+      const v1=rotatePoint({x:o.center.x,y:o.center.y-hh},o.center,a);
+      const v2=rotatePoint({x:o.center.x,y:o.center.y+hh},o.center,a);
+      return [
+        {points:[h1,h2],closed:false},
+        {points:[v1,v2],closed:false}
+      ];
+    }
+
+    if(o.kind==='symbol'){
+      const pts=symbolWorldPoints(o).map(p=>({x:p.x,y:p.y}));
+      return pts.length>=2 ? [{points:pts,closed:false}] : [];
+    }
+
+    return [];
+  }
+
+  function makeCustom3DFrom2D(o){
+    const paths=sample2DObjectPathsFor3D(o);
+    const all=paths.flatMap(path=>path.points||[]).filter(finitePoint);
+    if(!all.length) return null;
+
+    const b=bbox(all);
+    const cx=b.cx;
+    const cy=b.cy;
+    const sizeX=Math.max(1,b.w);
+    const sizeY=Math.max(1,b.h);
+
+    const customPaths=paths.map(path=>({
+      closed:!!path.closed,
+      points:(path.points||[]).filter(finitePoint).map(p=>({
+        x:(p.x-cx)/sizeX,
+        y:(p.y-cy)/sizeY
+      }))
+    })).filter(path=>path.points.length>=2);
+
+    if(!customPaths.length) return null;
+
+    ensureGlobal3DCameraTarget();
+
+    return {
+      id:makeObjectId(),
+      kind:'shape3d',
+      shape3dType:'custom2d',
+      shapeName:(o.shapeName||o.shapeType||o.kind)+' 3D',
+      center:{x:cx,y:cy},
+      centerZ:0,
+      sizeX,
+      sizeY,
+      sizeZ:0,
+      rotationX:0,
+      rotationY:0,
+      rotationZ:0,
+      rotationQuat:quatFromEuler(0,0,0),
+      perspective:520,
+      cameraDistance:520,
+      style:cloneObject(o.style||strokeStyle()),
+      source:'2d-convert-experimental',
+      source2DKind:o.kind,
+      source2DClosed:customPaths.some(path=>path.closed),
+      customPaths,
+      fillColor3D:o.fillColor || null,
+      fillOpacity:Number.isFinite(Number(o.fillOpacity)) ? Number(o.fillOpacity) : 0,
+      boxAngle:0
+    };
+  }
+
+  function isConvertible2DTo3D(o){
+    if(!o || o.locked) return false;
+    if(o.kind==='stroke' || o.kind==='shape3d' || o.kind==='image' || o.kind==='text') return false;
+    return sample2DObjectPathsFor3D(o).length>0;
   }
 
   function makeShape3D(type,cx,cy,scale,style){
@@ -10492,9 +10731,15 @@
 
     if(o.kind==='shape3d'){
       o.center=scalePt(o.center);
-      o.sizeX=Math.max(12,(o.sizeX||120)*s);
-      o.sizeY=Math.max(12,(o.sizeY||120)*s);
-      o.sizeZ=Math.max(12,(o.sizeZ||120)*s);
+      if(o.shape3dType==='custom2d'){
+        o.sizeX=Math.max(.5,(Number(o.sizeX)||1)*s);
+        o.sizeY=Math.max(.5,(Number(o.sizeY)||1)*s);
+        o.sizeZ=Math.max(0,(Number(o.sizeZ)||0)*s);
+      }else{
+        o.sizeX=Math.max(12,(o.sizeX||120)*s);
+        o.sizeY=Math.max(12,(o.sizeY||120)*s);
+        o.sizeZ=Math.max(12,(o.sizeZ||120)*s);
+      }
       return;
     }
 
@@ -10825,9 +11070,15 @@
 
     if(o.kind==='shape3d'){
       const ss=Math.max(.06,Math.sqrt(Math.abs(sx*sy)));
-      o.sizeX=Math.max(12,(o.sizeX||120)*ss);
-      o.sizeY=Math.max(12,(o.sizeY||120)*ss);
-      o.sizeZ=Math.max(12,(o.sizeZ||120)*ss);
+      if(o.shape3dType==='custom2d'){
+        o.sizeX=Math.max(.5,(Number(o.sizeX)||1)*ss);
+        o.sizeY=Math.max(.5,(Number(o.sizeY)||1)*ss);
+        o.sizeZ=Math.max(0,(Number(o.sizeZ)||0)*ss);
+      }else{
+        o.sizeX=Math.max(12,(o.sizeX||120)*ss);
+        o.sizeY=Math.max(12,(o.sizeY||120)*ss);
+        o.sizeZ=Math.max(12,(o.sizeZ||120)*ss);
+      }
       return;
     }
 
@@ -12002,17 +12253,30 @@
       const dx=p.x-h.x;
       const dy=p.y-h.y;
       const delta=dx*h.dir.x+dy*h.dir.y;
-      const minSize=24/viewZoom;
+      const isCustom2D=snap.shape3dType==='custom2d';
+      const minSize=isCustom2D ? Math.max(.5,2/viewZoom) : 24/viewZoom;
 
       if(handle==='3d-x'){
-        o.sizeX=Math.max(minSize,(snap.sizeX||120)+delta*2);
+        const start=Number.isFinite(Number(snap.sizeX)) ? Number(snap.sizeX) : 120;
+        o.sizeX=Math.max(minSize,start+delta*2);
         statusEl.textContent='X boyutu değiştiriliyor';
       }else if(handle==='3d-y'){
-        o.sizeY=Math.max(minSize,(snap.sizeY||120)+delta*2);
+        const start=Number.isFinite(Number(snap.sizeY)) ? Number(snap.sizeY) : 120;
+        o.sizeY=Math.max(minSize,start+delta*2);
         statusEl.textContent='Y boyutu değiştiriliyor';
       }else if(handle==='3d-z'){
-        o.sizeZ=Math.max(minSize,(snap.sizeZ||120)+delta*2);
-        statusEl.textContent='Z boyutu değiştiriliyor';
+        if(isCustom2D){
+          const start=Math.max(0,Number(snap.sizeZ)||0);
+          o.sizeZ=start<=1e-6
+            ? Math.max(0,Math.abs(delta)*2)
+            : Math.max(0,start+delta*2);
+          statusEl.textContent=o.sizeZ<=1e-6
+            ? 'Z kalınlığı 0'
+            : 'Z kalınlığı değiştiriliyor';
+        }else{
+          o.sizeZ=Math.max(minSize,(snap.sizeZ||120)+delta*2);
+          statusEl.textContent='Z boyutu değiştiriliyor';
+        }
       }else{
         return false;
       }
@@ -12387,9 +12651,15 @@
       };
       o.centerZ=Number(snap.centerZ)||0;
 
-      o.sizeX=Math.max(12,(snap.sizeX||120)*scale);
-      o.sizeY=Math.max(12,(snap.sizeY||120)*scale);
-      o.sizeZ=Math.max(12,(snap.sizeZ||120)*scale);
+      if(snap.shape3dType==='custom2d'){
+        o.sizeX=Math.max(.5,(Number(snap.sizeX)||1)*scale);
+        o.sizeY=Math.max(.5,(Number(snap.sizeY)||1)*scale);
+        o.sizeZ=Math.max(0,(Number(snap.sizeZ)||0)*scale);
+      }else{
+        o.sizeX=Math.max(12,(snap.sizeX||120)*scale);
+        o.sizeY=Math.max(12,(snap.sizeY||120)*scale);
+        o.sizeZ=Math.max(12,(snap.sizeZ||120)*scale);
+      }
 
       o.rotationX=Number(snap.rotationX)||0;
       o.rotationY=Number(snap.rotationY)||0;
@@ -14953,6 +15223,13 @@
     convertBezierInkBtn.style.display=singleBezierTarget ? '' : 'none';
     convertBezierInkBtn.disabled=!singleBezierTarget;
 
+    const single2D3DTarget=
+      targets.length===1 &&
+      isConvertible2DTo3D(targets[0]);
+
+    convert2D3DBtn.style.display=single2D3DTarget ? '' : 'none';
+    convert2D3DBtn.disabled=!single2D3DTarget;
+
     dropContextBtn.style.display=all3DTargets ? '' : 'none';
     dropContextBtn.disabled=
       !all3DTargets ||
@@ -15288,6 +15565,53 @@
     e.stopPropagation();
     if(dropContextBtn.disabled) return;
     dropContextTargetsToXZPlane();
+  });
+
+  function convertContext2DTo3D(){
+    const valid=expandGroupedIndices(contextTargetIndices)
+      .filter(i=>Number.isInteger(i) && i>=0 && i<objects.length);
+
+    if(valid.length!==1){
+      closeContextMenu();
+      return;
+    }
+
+    const idx=valid[0];
+    const o=objects[idx];
+
+    if(!isConvertible2DTo3D(o)){
+      closeContextMenu();
+      return;
+    }
+
+    const obj3d=makeCustom3DFrom2D(o);
+    if(!obj3d){
+      statusEl.textContent='2D nesne 3D’ye dönüştürülemedi';
+      closeContextMenu();
+      return;
+    }
+
+    const removed=[{index:idx,object:cloneObject(o)}];
+    objects.splice(idx,1,obj3d);
+
+    recordReplacedObjects(
+      removed,
+      [{index:idx,object:obj3d}]
+    );
+
+    setSelection([idx]);
+    markBoardDirty();
+    closeContextMenu();
+    redraw();
+
+    statusEl.textContent=
+      'Deneme: 2D → 3D · Z kalınlığı 0 · Z scale ile hacim ver';
+  }
+
+  convert2D3DBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(convert2D3DBtn.disabled) return;
+    convertContext2DTo3D();
   });
 
   function convertContextBezierToInk(){
