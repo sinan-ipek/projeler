@@ -18,6 +18,7 @@ const bridgeLines=[
 '    camera:()=>shape3DCamera(),',
 '    panTo:(wx,wy)=>{viewX=canvas.clientWidth/2-wx*viewZoom;viewY=canvas.clientHeight/2-wy*viewZoom;redraw();},',
 '    cameraState:()=>({viewX,viewY,viewZoom}),',
+'    view:()=>({width:canvas.clientWidth,height:canvas.clientHeight,viewX,viewY,viewZoom}),',
 '    snapshot:()=>({width:canvas.clientWidth,height:canvas.clientHeight,viewX,viewY,viewZoom,',
 '      models:objects.map((o,i)=>o?.kind==="shape3d"?{index:i,record:JSON.parse(JSON.stringify(o))}:null).filter(Boolean)}),',
 '    geometry:(index)=>{const o=objects[index];return o?.kind==="shape3d"?{geo:shape3DGeometry(o),points:shape3DViewPoints(o)}:null;},',
@@ -41,6 +42,7 @@ function instrument(source){
  const token='  resetDefaultView({redrawNow:false});';
  if(!source.includes(token))throw Error('Beyaz Tahta sürümünde ortak motor bağlantısı bulunamadı.');
  let html=source.replace(token,bridgeLines+'\n'+token);
+ html=html.replace('    drawAdaptiveGrid();','    if(!window.__WBVR_ACTIVE__)drawAdaptiveGrid();');
  html=html.replace('    drawUniversal3DXZGrid();','    if(!window.__WBVR_ACTIVE__)drawUniversal3DXZGrid();');
  html=html.replace('    drawAllShape3DShadows();','    if(!window.__WBVR_ACTIVE__)drawAllShape3DShadows();');
  html=html.replace("else if(o.kind==='shape3d') drawShape3D(o);","else if(o.kind==='shape3d'){if(!window.__WBVR_ACTIVE__)drawShape3D(o);}");
@@ -127,7 +129,7 @@ function invoke(action){
 }
 
 function alignCamera(){
- const s=W.api.snapshot(),cam=W.api.camera();
+ const s=W.api.view(),cam=W.api.camera();
  if(!cam?.position||!W.board)return;
  const pixelScale=W.board.geometry.parameters.width*s.viewZoom/Math.max(1,s.width);
  const x=(cam.position.x*s.viewZoom+s.viewX)/s.width-.5;
@@ -152,8 +154,8 @@ function createRenderer(){
  W.renderer.outputColorSpace=THREE.SRGBColorSpace;
  W.renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));W.renderer.setSize(innerWidth,innerHeight);
  layer.appendChild(W.renderer.domElement);
- const s=W.api.snapshot();
- const boardWidth=s.width/W.api.snapshot().viewZoom*W.worldUnit,boardHeight=s.height/W.api.snapshot().viewZoom*W.worldUnit;
+ const s=W.api.view();
+ const boardWidth=s.width/s.viewZoom*W.worldUnit,boardHeight=s.height/s.viewZoom*W.worldUnit;
  W.originX=-((s.width/2-s.viewX)/s.viewZoom)*W.worldUnit;
  W.originY=1.6+((s.height/2-s.viewY)/s.viewZoom)*W.worldUnit;
  W.texture=new THREE.CanvasTexture(W.api.canvas());
@@ -161,6 +163,10 @@ function createRenderer(){
  W.texture.anisotropy=Math.min(4,W.renderer.capabilities.getMaxAnisotropy());
  W.board=new THREE.Mesh(new THREE.PlaneGeometry(boardWidth,boardHeight),new THREE.MeshBasicMaterial({map:W.texture,side:THREE.DoubleSide,transparent:true,depthWrite:false}));
  W.board.position.set(0,1.6,-2.3);W.board.renderOrder=3;W.scene.add(W.board);
+ // Infinite vertical XY grid; finite canvas is only a transparent moving texture window.
+ const xyGrid=new THREE.GridHelper(60,600,'#d1dae6','#edf0f5');
+ xyGrid.rotation.x=Math.PI/2;xyGrid.position.set(0,1.6,-2.345);
+ xyGrid.material.transparent=true;xyGrid.material.opacity=.64;W.scene.add(xyGrid);
  for(let i=0;i<2;i++){
   const controller=W.renderer.xr.getController(i);
   const source={hand:'',controller,input:null,laser:null};W.controllers.push(source);W.rig.add(controller);
@@ -181,7 +187,7 @@ function worldRay(controller){
 
 function frameLayout(){
  if(!W.board||!W.api)return;
- const s=W.api.snapshot();
+ const s=W.api.view();
  if(!s.width||!s.height||!s.viewZoom)return;
  const w=s.width/s.viewZoom*W.worldUnit,h=s.height/s.viewZoom*W.worldUnit;
  const old=W.board.geometry.parameters;
@@ -195,7 +201,7 @@ function frameLayout(){
 function planeHit(ray){
  const p=ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,0,1),-W.board.position.z),new THREE.Vector3());
  if(!p)return null;
- const s=W.api.snapshot();
+ const s=W.api.view();
  const wx=(p.x-W.originX)/W.worldUnit,wy=(W.originY-p.y)/W.worldUnit;
  const x=wx*s.viewZoom+s.viewX,y=wy*s.viewZoom+s.viewY;
  return {p,worldX:wx,worldY:wy,screenX:x,screenY:y,
@@ -203,7 +209,7 @@ function planeHit(ray){
 }
 function ensureViewport(hit){
  if(!hit||W.drag||!W.api)return;
- const s=W.api.snapshot();
+ const s=W.api.view();
  const padX=s.width*.12,padY=s.height*.12;
  if(hit.screenX>padX&&hit.screenX<s.width-padX&&hit.screenY>padY&&hit.screenY<s.height-padY)return;
  const now=performance.now();if(now-W.lastPan<280)return;
@@ -222,7 +228,7 @@ function getAim(){
  if(controls[0])return {type:'gizmo',hit:controls[0],ray};
  const modelHits=W.raycaster.intersectObjects(W.models,false);
  const flat=planeHit(ray);
- if(modelHits[0]&&(!flat||modelHits[0].distance<flat.p.distanceTo(ray.origin)+.06)&&!W.drag)return {type:'model',hit:modelHits[0],ray};
+ if(modelHits[0]&&(!flat||modelHits[0].distance<flat.p.distanceTo(ray.origin)+.35)&&!W.drag)return {type:'model',hit:modelHits[0],ray};
  if(flat){
   if(!W.drag)ensureViewport(flat);
   // Distinct from the finite texture. Selection works on the infinite XY plane.
@@ -316,6 +322,10 @@ function moveViewer(dt){
  const ahead=new THREE.Vector3(0,0,-1).applyQuaternion(q);ahead.y=0;ahead.normalize();
  const side=new THREE.Vector3().crossVectors(ahead,new THREE.Vector3(0,1,0)).normalize();
  W.rig.position.addScaledVector(ahead,-ry*dt*1.6).addScaledVector(side,rx*dt*1.6);
+ // Quest A/B buttons allow vertical movement, independent of head pose.
+ const rb=r?.input?.gamepad?.buttons||[];
+ if(rb[4]?.pressed)W.rig.position.y+=dt*1.2;
+ if(rb[5]?.pressed)W.rig.position.y-=dt*1.2;
 }
 
 function clearGizmo(){
