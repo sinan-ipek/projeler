@@ -178,66 +178,126 @@ function worldRay(controller){
  controller.updateWorldMatrix(true,false);
  return new THREE.Ray(controller.getWorldPosition(new THREE.Vector3()),new THREE.Vector3(0,0,-1).applyQuaternion(controller.getWorldQuaternion(new THREE.Quaternion())).normalize());
 }
+
+function frameLayout(){
+ if(!W.board||!W.api)return;
+ const s=W.api.snapshot();
+ if(!s.width||!s.height||!s.viewZoom)return;
+ const w=s.width/s.viewZoom*W.worldUnit,h=s.height/s.viewZoom*W.worldUnit;
+ const old=W.board.geometry.parameters;
+ if(Math.abs(old.width-w)>.001||Math.abs(old.height-h)>.001){
+  W.board.geometry.dispose();W.board.geometry=new THREE.PlaneGeometry(w,h);
+ }
+ W.board.position.x=W.originX+((s.width/2-s.viewX)/s.viewZoom)*W.worldUnit;
+ W.board.position.y=W.originY-((s.height/2-s.viewY)/s.viewZoom)*W.worldUnit;
+ W.board.updateMatrixWorld(true);
+}
+function planeHit(ray){
+ const p=ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,0,1),-W.board.position.z),new THREE.Vector3());
+ if(!p)return null;
+ const s=W.api.snapshot();
+ const wx=(p.x-W.originX)/W.worldUnit,wy=(W.originY-p.y)/W.worldUnit;
+ const x=wx*s.viewZoom+s.viewX,y=wy*s.viewZoom+s.viewY;
+ return {p,worldX:wx,worldY:wy,screenX:x,screenY:y,
+   uv:{u:x/s.width,v:y/s.height},inside:x>=0&&x<=s.width&&y>=0&&y<=s.height};
+}
+function ensureViewport(hit){
+ if(!hit||W.drag||!W.api)return;
+ const s=W.api.snapshot();
+ const padX=s.width*.12,padY=s.height*.12;
+ if(hit.screenX>padX&&hit.screenX<s.width-padX&&hit.screenY>padY&&hit.screenY<s.height-padY)return;
+ const now=performance.now();if(now-W.lastPan<280)return;
+ W.lastPan=now;
+ W.api.panTo(hit.worldX,hit.worldY);
+ frameLayout();
+ W.texture.needsUpdate=true;
+}
 function getAim(){
- const rc=right()?.controller;if(!rc)return null;
+ const rc=right()?.controller;if(!rc||!W.board)return null;
  W.scene.updateMatrixWorld(true);
- const ray=worldRay(rc);W.raycaster.ray.copy(ray);W.raycaster.near=.01;W.raycaster.far=30;
+ const ray=worldRay(rc);W.raycaster.ray.copy(ray);W.raycaster.near=.01;W.raycaster.far=100;
  const menu=W.menu?.visible?W.raycaster.intersectObjects(W.menuTargets,false):[];
  if(menu[0])return {type:'menu',hit:menu[0],ray};
- const board=W.raycaster.intersectObject(W.board,false)[0];
- const models=W.raycaster.intersectObjects(W.models,false);
- if(models[0]&&(!board||models[0].distance<board.distance)&&!W.drag)return {type:'model',hit:models[0],ray};
- if(board){
-  const p=W.board.worldToLocal(board.point.clone()),params=W.board.geometry.parameters;
-  return {type:'board',hit:board,ray,uv:{u:Math.max(0,Math.min(1,p.x/params.width+.5)),v:Math.max(0,Math.min(1,.5-p.y/params.height))}};
+ const controls=W.gizmoHits.length?W.raycaster.intersectObjects(W.gizmoHits,false):[];
+ if(controls[0])return {type:'gizmo',hit:controls[0],ray};
+ const modelHits=W.raycaster.intersectObjects(W.models,false);
+ const flat=planeHit(ray);
+ if(modelHits[0]&&(!flat||modelHits[0].distance<flat.p.distanceTo(ray.origin)+.06)&&!W.drag)return {type:'model',hit:modelHits[0],ray};
+ if(flat){
+  if(!W.drag)ensureViewport(flat);
+  // Distinct from the finite texture. Selection works on the infinite XY plane.
+  const update=planeHit(ray)||flat;
+  return {type:'board',hit:{point:update.p,distance:update.p.distanceTo(ray.origin)},ray,uv:update.uv};
  }
- return {type:'empty',hit:models[0],ray};
+ return {type:'empty',hit:modelHits[0],ray};
 }
+
+
 function pointer(type,uv){
- if(!uv)return;
+ if(!uv||!W.api)return;
  const canvas=W.api.canvas(),rect=canvas.getBoundingClientRect();
+ // Preserve out-of-bounds coordinates during a drag. Original hit-testing
+ // then uses its own world coordinates, as with mouse input.
  const x=rect.left+uv.u*rect.width,y=rect.top+uv.v*rect.height;
- const evt=new W.frame.PointerEvent(type,{bubbles:true,cancelable:true,pointerType:'mouse',pointerId:21,isPrimary:true,
+ const ctor=W.frame.PointerEvent||W.frame.MouseEvent;
+ const evt=new ctor(type,{bubbles:true,cancelable:true,pointerType:'mouse',pointerId:21,isPrimary:true,
   clientX:x,clientY:y,screenX:x,screenY:y,button:type==='pointermove'?-1:0,buttons:type==='pointerup'?0:1,pressure:type==='pointerup'?0:.5});
  canvas.dispatchEvent(evt);
 }
+
+
 function onDown(){
  const a=getAim();if(!a)return;
- if(a.type==='menu'){invoke(a.hit.object.userData.action);return}
- if(a.type==='board'){W.drag=true;W.lastUV=a.uv;pointer('pointerdown',a.uv);return}
+ if(a.type==='menu'){invoke(a.hit.object.userData.action);return;}
+ if(a.type==='gizmo'){
+  const handle=a.hit.object.userData.handle;
+  const record=W.api.snapshot().models.find(m=>m.index===W.selected3D)?.record;
+  if(!handle||!record)return;
+  const begin=W.api.beginModel(W.selected3D);
+  if(!begin)return;
+  W.editGizmo={handle,begin,record,startPoint:a.hit.point.clone(),startRay:worldRay(right().controller)};
+  W.drag=true;return;
+ }
  if(a.type==='model'){
   const index=a.hit.object.userData.modelIndex,start=W.api.beginModel(index);
-  if(start){W.editModel={index,start,position:a.hit.point.clone()};W.drag=true}
+  if(start){W.selected3D=index;rebuildGizmo();W.editModel={index,start,position:a.hit.point.clone()};W.drag=true;}
+  return;
+ }
+ if(a.type==='board'){
+  W.selected3D=-1;rebuildGizmo();
+  W.drag=true;W.lastUV=a.uv;pointer('pointerdown',a.uv);
  }
 }
+
+
 function onUp(){
- if(W.drag&&!W.editModel)pointer('pointerup',W.lastUV);
- W.drag=false;W.lastUV=null;W.editModel=null;
+ if(W.drag&&!W.editModel&&!W.editGizmo)pointer('pointerup',W.lastUV);
+ W.drag=false;W.lastUV=null;W.editModel=null;W.editGizmo=null;
 }
+
+
 function moveModel(ray){
- const edit=W.editModel;if(!edit)return;
- const p=ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,0,1),-edit.position.z),new THREE.Vector3());
+ const e=W.editModel;if(!e)return;
+ const p=ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,0,1),-e.position.z),new THREE.Vector3());
  if(!p)return;
- const s=W.api.snapshot(),scale=W.board.geometry.parameters.width*s.viewZoom/Math.max(1,s.width);
- const dx=(p.x-edit.position.x)/scale,dy=-(p.y-edit.position.y)/scale;
- W.api.moveModel(edit.index,{x:edit.start.x+dx,y:edit.start.y+dy,z:edit.start.z});
+ const unit=W.worldUnit;
+ W.api.moveModel(e.index,{x:e.start.x+(p.x-e.position.x)/unit,y:e.start.y-(p.y-e.position.y)/unit,z:e.start.z});
 }
+
 function updateAim(){
- const a=getAim(),rightC=right();if(!rightC)return;
- rightC.laser.scale.z=Math.min(15,a?.hit?.distance||2.3);
- W.dot.visible=!!a?.hit;
- if(a?.hit)W.dot.position.copy(a.hit.point);
+ const a=getAim(),controller=right();if(!controller)return;
+ const ray=worldRay(controller.controller);
+ controller.laser.scale.z=Math.min(40,a?.hit?.distance||3.2);
+ W.dot.visible=!!a?.hit;if(a?.hit)W.dot.position.copy(a.hit.point);
  if(!W.drag)return;
- if(W.editModel){moveModel(worldRay(rightC.controller));return;}
- // Once a drag starts, tracking stays on the drawing plane even when
- // the pointer crosses an object, UI panel, or empty space.
- const ray=worldRay(rightC.controller);
- const plane=new THREE.Plane(new THREE.Vector3(0,0,1),-W.board.position.z);
- const p=ray.intersectPlane(plane,new THREE.Vector3());if(!p)return;
- const local=W.board.worldToLocal(p),geom=W.board.geometry.parameters;
- const uv={u:Math.max(0,Math.min(1,.5+local.x/geom.width)),v:Math.max(0,Math.min(1,.5-local.y/geom.height))};
- W.lastUV=uv;pointer('pointermove',uv);
+ if(W.editGizmo){dragGizmo(ray);return;}
+ if(W.editModel){moveModel(ray);return;}
+ const hit=planeHit(ray);
+ if(!hit)return;
+ W.lastUV=hit.uv;
+ pointer('pointermove',hit.uv);
 }
+
 function sticks(input){
  const axes=input?.gamepad?.axes||[];
  const x=axes.length>=4?axes[2]:(axes[0]||0);
@@ -260,7 +320,7 @@ function moveViewer(dt){
 function modelMesh(entry,s){
  const gdata=W.api.geometry(entry.index);if(!gdata)return null;
  const record=entry.record,base=gdata.points||[],faces=gdata.geo.faces||[];
- const meter=W.board.geometry.parameters.width*s.viewZoom/Math.max(1,s.width);
+ const meter=W.worldUnit;
  const pos=[];
  for(const face of faces)for(let i=1;i<face.length-1;i++){
   const a=base[face[0]],b=base[face[i]],c=base[face[i+1]];
@@ -282,15 +342,16 @@ function modelMesh(entry,s){
   mesh=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:record.fillColor3D||'#8cb9df',side:THREE.DoubleSide}));
   mesh.scale.set(sx,sy,sz);
  }
- const x=(Number(record.center?.x)||0)*s.viewZoom+s.viewX;
- const y=(Number(record.center?.y)||0)*s.viewZoom+s.viewY;
- const gw=W.board.geometry.parameters.width,gh=W.board.geometry.parameters.height;
- mesh.position.set((x/s.width-.5)*gw,W.board.position.y+(.5-y/s.height)*gh,W.board.position.z+(Number(record.centerZ)||0)*meter);
+ mesh.position.set(
+  W.originX+(Number(record.center?.x)||0)*W.worldUnit,
+  W.originY-(Number(record.center?.y)||0)*W.worldUnit,
+  W.board.position.z+(Number(record.centerZ)||0)*meter
+ );
  mesh.userData.modelIndex=entry.index;return mesh;
 }
 function syncModels(now){
  if(now-W.lastModels<200)return;W.lastModels=now;
- const s=W.api.snapshot(),sig=JSON.stringify(s.models)+[s.viewX,s.viewY,s.viewZoom].join(':');
+ const s=W.api.snapshot(),sig=JSON.stringify(s.models);
  if(sig===W.modelSignature)return;
  W.modelSignature=sig;
  for(const m of W.models){W.scene.remove(m);dispose(m);}W.models=[];
@@ -298,6 +359,7 @@ function syncModels(now){
   const mesh=modelMesh(entry,s);
   if(mesh){W.models.push(mesh);W.scene.add(mesh);}
  }catch(e){console.warn('3D nesne dönüştürülemedi',e);}
+ rebuildGizmo();
 }
 function drawFrame(){
  if(!W.active)return;
