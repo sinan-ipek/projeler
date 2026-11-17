@@ -255,7 +255,7 @@ function onDown(){
   if(!handle||!record)return;
   const begin=W.api.beginModel(W.selected3D);
   if(!begin)return;
-  W.editGizmo={handle,begin,record,startPoint:a.hit.point.clone(),startRay:worldRay(right().controller)};
+  W.editGizmo={handle,begin,record,startPoint:a.hit.point.clone(),controllerStart:right().controller.getWorldPosition(new THREE.Vector3())};
   W.drag=true;return;
  }
  if(a.type==='model'){
@@ -317,6 +317,88 @@ function moveViewer(dt){
  const side=new THREE.Vector3().crossVectors(ahead,new THREE.Vector3(0,1,0)).normalize();
  W.rig.position.addScaledVector(ahead,-ry*dt*1.6).addScaledVector(side,rx*dt*1.6);
 }
+
+function clearGizmo(){
+ if(W.gizmo){W.scene.remove(W.gizmo);dispose(W.gizmo);W.gizmo=null;}
+ W.gizmoHits=[];
+}
+function rebuildGizmo(){
+ clearGizmo();
+ if(W.selected3D<0)return;
+ const model=W.models.find(m=>m.userData.modelIndex===W.selected3D);
+ if(!model)return;
+ const g=new THREE.Group();W.gizmo=g;W.scene.add(g);
+ const color={x:0xe44b56,y:0x38b26e,z:0x3c88e7};
+ const v={x:new THREE.Vector3(1,0,0),y:new THREE.Vector3(0,1,0),z:new THREE.Vector3(0,0,1)};
+ const ghost=()=>new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide});
+ function addHit(mesh,type,axis){
+  mesh.userData.handle={type,axis};
+  g.add(mesh);W.gizmoHits.push(mesh);
+ }
+ for(const axis of ['x','y','z']){
+  const direction=v[axis],col=color[axis],len=.2;
+  const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.005,.005,len,8),new THREE.MeshBasicMaterial({color:col,depthTest:false,depthWrite:false}));
+  shaft.position.copy(direction).multiplyScalar(len/2);
+  shaft.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction);
+  g.add(shaft);
+  const cone=new THREE.Mesh(new THREE.ConeGeometry(.023,.057,12),new THREE.MeshBasicMaterial({color:col,depthTest:false,depthWrite:false}));
+  cone.position.copy(direction).multiplyScalar(len);
+  cone.quaternion.copy(shaft.quaternion);g.add(cone);
+  const hitMove=new THREE.Mesh(new THREE.CylinderGeometry(.052,.052,.27,12),ghost());
+  hitMove.position.copy(direction).multiplyScalar(.13);
+  hitMove.quaternion.copy(shaft.quaternion);addHit(hitMove,'move',axis);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.305,.007,8,64),new THREE.MeshBasicMaterial({color:col,depthTest:false,depthWrite:false}));
+  ring.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),direction);g.add(ring);
+  const ringHit=new THREE.Mesh(new THREE.TorusGeometry(.305,.045,8,64),ghost());
+  ringHit.quaternion.copy(ring.quaternion);addHit(ringHit,'rotate',axis);
+  const cube=new THREE.Mesh(new THREE.BoxGeometry(.048,.048,.048),new THREE.MeshBasicMaterial({color:col,depthTest:false,depthWrite:false}));
+  cube.position.copy(direction).multiplyScalar(-.235);g.add(cube);
+  const scaleHit=new THREE.Mesh(new THREE.BoxGeometry(.112,.112,.112),ghost());
+  scaleHit.position.copy(cube.position);addHit(scaleHit,'scale',axis);
+ }
+ const all=new THREE.Mesh(new THREE.BoxGeometry(.076,.076,.076),new THREE.MeshBasicMaterial({color:'#fff1af',depthTest:false,depthWrite:false}));
+ g.add(all);
+ addHit(new THREE.Mesh(new THREE.BoxGeometry(.13,.13,.13),ghost()),'uniformScale','all');
+ syncGizmo();
+}
+function syncGizmo(){
+ if(!W.gizmo)return;
+ const model=W.models.find(m=>m.userData.modelIndex===W.selected3D);
+ if(!model){clearGizmo();return;}
+ W.gizmo.position.copy(model.position);
+ const head=W.renderer?.xr?.getCamera(W.camera);
+ const location=new THREE.Vector3();head?.getWorldPosition(location);
+ W.gizmo.scale.setScalar(Math.max(.6,Math.min(1.75,location.distanceTo(model.position)*.48)));
+ W.gizmo.updateMatrixWorld(true);
+}
+function dragGizmo(ray){
+ const e=W.editGizmo;if(!e)return;
+ const axis=e.handle.axis;
+ const axisWorld={x:new THREE.Vector3(1,0,0),y:new THREE.Vector3(0,1,0),z:new THREE.Vector3(0,0,1)}[axis];
+ const now=right()?.controller?.getWorldPosition(new THREE.Vector3());
+ if(!now)return;
+ const travel=now.sub(e.controllerStart);
+ const pos={...e.begin};
+ const props={};
+ const raw=(axisWorld?travel.dot(axisWorld):travel.x+travel.y);
+ if(e.handle.type==='move'){
+  const units=raw/W.worldUnit;
+  if(axis==='x')pos.x+=units;
+  if(axis==='y')pos.y-=units;
+  if(axis==='z')pos.z+=units;
+  W.api.moveModel(W.selected3D,pos);
+ }else if(e.handle.type==='rotate'){
+  const angle=(travel.x+travel.y+travel.z)*2.25;
+  props['rotation'+axis.toUpperCase()]=(Number(e.record['rotation'+axis.toUpperCase()])||0)+angle;
+  W.api.transformModel(W.selected3D,props);
+ }else{
+  const f=Math.max(.08,1+raw*2.4);
+  const keys=e.handle.type==='uniformScale'?['sizeX','sizeY','sizeZ']:['size'+axis.toUpperCase()];
+  for(const key of keys)props[key]=Math.max(8,(Number(e.record[key])||120)*f);
+  W.api.transformModel(W.selected3D,props);
+ }
+}
+
 function modelMesh(entry,s){
  const gdata=W.api.geometry(entry.index);if(!gdata)return null;
  const record=entry.record,base=gdata.points||[],faces=gdata.geo.faces||[];
@@ -364,6 +446,8 @@ function syncModels(now){
 function drawFrame(){
  if(!W.active)return;
  moveViewer(Math.min(.05,W.clock.getDelta()));
+ frameLayout();
+ syncGizmo();
  updateAim();
  const now=performance.now();
  if(now-W.lastTexture>80){W.texture.needsUpdate=true;W.lastTexture=now;}
@@ -381,7 +465,7 @@ function cleanup(){
  layer.replaceChildren();layer.style.display='none';
  W.renderer=null;W.scene=null;W.session=null;W.models=[];W.controllers=[];
  W.texture=null;W.menu=null;W.board=null;W.drag=false;W.editModel=null;
- W.modelSignature='';W.lastModels=0;W.lastTexture=0;
+ W.modelSignature='';W.lastModels=0;W.lastTexture=0;W.selected3D=-1;W.gizmo=null;W.gizmoHits=[];W.editGizmo=null;
 }
 async function enter(){
  if(!W.api||W.active)return;
