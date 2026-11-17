@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v19.03-deneme</title>
+<title>Beyaz Tahta v19.04-deneme</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1346,7 +1346,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.03-deneme · 2D → 3D custom nesne · checkpoint: v19.00</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.04-deneme · İçbükey 3D yüz boyama düzeltmesi · checkpoint: v19.00</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -7626,6 +7626,16 @@
     return shape3DNormalize(n);
   }
 
+  function shape3DFaceRawNormal(viewPts,face){
+    if(!face || face.length<3) return {x:0,y:0,z:1};
+    const a=viewPts[face[0]],b=viewPts[face[1]],c=viewPts[face[2]];
+    if(!a||!b||!c) return {x:0,y:0,z:1};
+
+    const ab={x:b.x-a.x,y:b.y-a.y,z:b.z-a.z};
+    const ac={x:c.x-a.x,y:c.y-a.y,z:c.z-a.z};
+    return shape3DNormalize(shape3DCross(ab,ac));
+  }
+
   function shape3DFillPolygon(points,fillStyle,alpha=1){
     if(!points || points.length<3) return;
 
@@ -7643,14 +7653,31 @@
   }
 
   function drawShape3DPolyMaterial(o,g,viewPts,pts){
-    const visible=shape3DFaceVisibility(o,g,viewPts);
+    const isCustom2D=o && o.shape3dType==='custom2d';
+    const visible=isCustom2D
+      ? null
+      : shape3DFaceVisibility(o,g,viewPts);
     const alpha=shape3DMaterialAlpha(o);
+
     const faces=(g.faces||[])
       .map((face,fi)=>{
         const projected=face.map(i=>pts[i]).filter(Boolean);
-        if(projected.length<3 || !visible[fi]) return null;
-        const normal=shape3DFaceOutwardNormal(viewPts,face);
-        const depth=projected.reduce((sum,p)=>sum+(Number(p.z)||0),0)/projected.length;
+        if(projected.length<3) return null;
+
+        // Convex hazır cisimlerde klasik back-face culling devam eder.
+        // 2D'den ekstrüde edilen içbükey konturlarda ise merkez tabanlı
+        // normal testi güvenilir değildir; tüm yüzleri depth-sort ile boya.
+        if(!isCustom2D && !visible[fi]) return null;
+
+        const normal=isCustom2D
+          ? shape3DFaceRawNormal(viewPts,face)
+          : shape3DFaceOutwardNormal(viewPts,face);
+
+        const depth=projected.reduce(
+          (sum,p)=>sum+(Number(p.z)||0),
+          0
+        )/projected.length;
+
         return {projected,normal,depth};
       })
       .filter(Boolean)
@@ -7659,7 +7686,11 @@
     for(const face of faces){
       shape3DFillPolygon(
         face.projected,
-        shape3DShadedCss(o.fillColor3D,shape3DMaterialLight(face.normal),1),
+        shape3DShadedCss(
+          o.fillColor3D,
+          shape3DMaterialLight(face.normal),
+          1
+        ),
         alpha
       );
     }
