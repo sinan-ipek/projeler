@@ -7,14 +7,15 @@ const layer=document.getElementById('vrLayer');
 const W={frame:null,api:null,active:false,renderer:null,scene:null,rig:null,camera:null,board:null,texture:null,session:null,controllers:[],menu:null,menuTargets:[],menuPage:'tools',menuVisible:true,raycaster:new THREE.Raycaster(),dot:null,drag:false,lastUV:null,move3d:null,models:[],modelSignature:'',xLast:false,lang:'tr',lastTexture:0,lastModels:0,lastStatus:'',clock:new THREE.Clock()};
 function info(s){hint.textContent=s;hint.style.display='block';clearTimeout(info.timeout);info.timeout=setTimeout(()=>hint.style.display='none',6000)}
 const translations={
-tr:{tools:'Araç',forms:'Şekil',more:'Diğer',select:'Seç',pen:'Bézier',eraser:'Silgi',undo:'Geri',redo:'İleri',snap:'Snap',line:'Çizgi',rect:'Dikdörtgen',ellipse:'Elips',triangle:'Üçgen',pentagon:'Beşgen',hexagon:'Altıgen',cube:'Küp',sphere:'Küre',cylinder:'Silindir',cone:'Koni',pyramid:'Piramit',hexprism:'6gen Prizma',me:'Ben',everyone:'Herkes',grid:'3D Grid',lang:'Dil',help:'?',home:'Home',exit:'Çıkış'},
-de:{tools:'Werkz.',forms:'Formen',more:'Mehr',select:'Wählen',pen:'Bézier',eraser:'Radierer',undo:'Zurück',redo:'Vor',snap:'Snap',line:'Linie',rect:'Rechteck',ellipse:'Ellipse',triangle:'Dreieck',pentagon:'Fünfeck',hexagon:'Sechseck',cube:'Würfel',sphere:'Kugel',cylinder:'Zylinder',cone:'Kegel',pyramid:'Pyramide',hexprism:'Hexprisma',me:'Ich',everyone:'Alle',grid:'3D Raster',lang:'Sprache',help:'?',home:'Home',exit:'Ende'},
-en:{tools:'Tools',forms:'Shapes',more:'More',select:'Select',pen:'Bézier',eraser:'Eraser',undo:'Undo',redo:'Redo',snap:'Snap',line:'Line',rect:'Rectangle',ellipse:'Ellipse',triangle:'Triangle',pentagon:'Pentagon',hexagon:'Hexagon',cube:'Cube',sphere:'Sphere',cylinder:'Cylinder',cone:'Cone',pyramid:'Pyramid',hexprism:'Hex prism',me:'Mine',everyone:'Everyone',grid:'3D Grid',lang:'Language',help:'?',home:'Home',exit:'Exit'}};
+tr:{tools:'Araç',forms:'Şekil',more:'Diğer',select:'Seç',pen:'Bézier',eraser:'Silgi',undo:'Geri',redo:'İleri',snap:'Snap',line:'Çizgi',rect:'Dikdörtgen',ellipse:'Elips',triangle:'Üçgen',pentagon:'Beşgen',hexagon:'Altıgen',cube:'Küp',sphere:'Küre',cylinder:'Silindir',cone:'Koni',pyramid:'Piramit',hexprism:'6gen Prizma',me:'Ben',everyone:'Herkes',grid:'3D Grid',lang:'Dil',help:'?',home:'Home',camera:'Kamera',exit:'Çıkış'},
+de:{tools:'Werkz.',forms:'Formen',more:'Mehr',select:'Wählen',pen:'Bézier',eraser:'Radierer',undo:'Zurück',redo:'Vor',snap:'Snap',line:'Linie',rect:'Rechteck',ellipse:'Ellipse',triangle:'Dreieck',pentagon:'Fünfeck',hexagon:'Sechseck',cube:'Würfel',sphere:'Kugel',cylinder:'Zylinder',cone:'Kegel',pyramid:'Pyramide',hexprism:'Hexprisma',me:'Ich',everyone:'Alle',grid:'3D Raster',lang:'Sprache',help:'?',home:'Home',camera:'Kamera',exit:'Ende'},
+en:{tools:'Tools',forms:'Shapes',more:'More',select:'Select',pen:'Bézier',eraser:'Eraser',undo:'Undo',redo:'Redo',snap:'Snap',line:'Line',rect:'Rectangle',ellipse:'Ellipse',triangle:'Triangle',pentagon:'Pentagon',hexagon:'Hexagon',cube:'Cube',sphere:'Sphere',cylinder:'Cylinder',cone:'Cone',pyramid:'Pyramid',hexprism:'Hex prism',me:'Mine',everyone:'Everyone',grid:'3D Grid',lang:'Language',help:'?',home:'Home',camera:'Camera',exit:'Exit'}};
 function tr(s){return translations[W.lang]?.[s]||s}
 const bridgeLines=[
 '  window.__WBVR_API__={',
 '    canvas:()=>canvas,',
 '    redraw:()=>redraw(),',
+'    camera:()=>shape3DCamera(),',
 '    snapshot:()=>({width:canvas.clientWidth,height:canvas.clientHeight,viewX,viewY,viewZoom,',
 '      models:objects.map((o,i)=>o?.kind==="shape3d"?{index:i,record:JSON.parse(JSON.stringify(o))}:null).filter(Boolean)}),',
 '    geometry:(index)=>{const o=objects[index];return o?.kind==="shape3d"?{geo:shape3DGeometry(o),points:shape3DViewPoints(o)}:null;},',
@@ -88,13 +89,13 @@ function rebuildMenu(){
  ['cube','shape:cube3d'],['sphere','shape:sphere3d'],['cylinder','shape:cylinder3d'],
  ['cone','shape:cone3d'],['pyramid','shape:pyramid3d'],['hexprism','shape:hexprism3d']];
  else entries=[['me','click:scopeMeBtn'],['everyone','click:scopeEveryoneBtn'],['grid','click:grid3DBtn'],
- ['lang','language'],['help','help'],['home','home'],['exit','exit']];
+ ['lang','language'],['camera','camera'],['help','help'],['home','home'],['exit','exit']];
  entries.forEach(([name,action],i)=>{
-  const m=label(tr(name),.208,.084);
+  const m=label(name==='home'?'⌂':tr(name),name==='home'?.085:.208,.084,name==='home'?'#ffd51c':'#eef3f9');
   m.position.set(-.225+(i%3)*.225,.183-Math.floor(i/3)*.103,.009);
   m.userData.action=action;group.add(m);W.menuTargets.push(m);
  });
- const footer=label('v1.0.0',.15,.033,'#fff');footer.position.set(.21,-.326,.012);group.add(footer);
+ const footer=label('v1.0.0',.15,.033,'#fff');footer.position.set(-.23,-.326,.012);group.add(footer);
  const lc=left();if(lc?.controller)lc.controller.add(group);else W.scene.add(group);
  group.position.set(.145,.12,-.40);group.rotation.set(-.28,0,0);group.scale.setScalar(.82);group.visible=W.menuVisible;
 }
@@ -109,8 +110,22 @@ function invoke(action){
  }
  if(action==='language'){W.lang=W.lang==='tr'?'de':W.lang==='de'?'en':'tr';rebuildMenu();return;}
  if(action==='home'){W.session?.end();location.href='../';return;}
+ if(action==='camera'){alignCamera();return;}
  if(action==='help'){info('Sağ tetik: seç ve sürükle. Bézier noktalarını ve kollarını ışınla taşı. Sol X: menü. Sağ joystick: yürü. Sol joystick: dön.');return;}
  if(action==='exit')W.session?.end();
+}
+
+function alignCamera(){
+ const s=W.api.snapshot(),cam=W.api.camera();
+ if(!cam?.position||!W.board)return;
+ const pixelScale=W.board.geometry.parameters.width*s.viewZoom/Math.max(1,s.width);
+ const x=(cam.position.x*s.viewZoom+s.viewX)/s.width-.5;
+ const y=.5-(cam.position.y*s.viewZoom+s.viewY)/s.height;
+ W.rig.position.x=x*W.board.geometry.parameters.width;
+ W.rig.position.y=W.board.position.y+y*W.board.geometry.parameters.height-1.6;
+ W.rig.position.z=W.board.position.z+cam.position.z*pixelScale;
+ W.rig.rotation.y=0;
+ info('Orijinal 3D kamera konumu uygulandı; Quest başlık yönü değişmedi.');
 }
 function createRenderer(){
  W.scene=new THREE.Scene();W.scene.background=new THREE.Color('#f9fbfe');
@@ -152,6 +167,7 @@ function worldRay(controller){
 }
 function getAim(){
  const rc=right()?.controller;if(!rc)return null;
+ W.scene.updateMatrixWorld(true);
  const ray=worldRay(rc);W.raycaster.ray.copy(ray);W.raycaster.near=.01;W.raycaster.far=30;
  const menu=W.menu?.visible?W.raycaster.intersectObjects(W.menuTargets,false):[];
  if(menu[0])return {type:'menu',hit:menu[0],ray};
