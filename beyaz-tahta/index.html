@@ -12744,8 +12744,10 @@
       dpr*viewX,dpr*viewY
     );
 
-    drawAdaptiveGrid();
-    drawUniversal3DXZGrid();
+    if(!window.__WHITEBOARD_VR_CAPTURE_TRANSPARENT__){
+      drawAdaptiveGrid();
+      drawUniversal3DXZGrid();
+    }
     if(!window.__WHITEBOARD_VR_HIDE_3D__)drawAllShape3DShadows();
 
     const viewportWorld=currentViewportWorldBounds(96);
@@ -12791,7 +12793,7 @@
       }
     }
 
-    if(drawing && points.length){
+    if(!window.__WHITEBOARD_VR_CAPTURE_TRANSPARENT__ && drawing && points.length){
       if(lockedShape){
         // Otomatik şekil aktifleştiğinde ham ink yerine canlı geometrik öneriyi göster.
         drawShape(lockedShape,true);
@@ -12799,7 +12801,9 @@
         if(previewRecognized) drawShape(previewRecognized,true);
       }
     }
-    if(mode==='select'){
+    if(window.__WHITEBOARD_VR_CAPTURE_TRANSPARENT__){
+      // Export only real 2D objects, without grid and selection decoration.
+    }else if(mode==='select'){
       drawSelection();
       if(selectAction==='marquee') drawMarquee();
       drawShape3DSnapCue();
@@ -19798,14 +19802,17 @@
   window.__WHITEBOARD_VR_BRIDGE__={
     snapshot(){
       const previous=!!window.__WHITEBOARD_VR_HIDE_3D__;
+      const oldCapture=!!window.__WHITEBOARD_VR_CAPTURE_TRANSPARENT__;
       const copy=document.createElement('canvas');
       copy.width=canvas.width;copy.height=canvas.height;
       try{
         window.__WHITEBOARD_VR_HIDE_3D__=true;
+        window.__WHITEBOARD_VR_CAPTURE_TRANSPARENT__=true;
         redraw();
         copy.getContext('2d').drawImage(canvas,0,0);
       }finally{
         window.__WHITEBOARD_VR_HIDE_3D__=previous;
+        window.__WHITEBOARD_VR_CAPTURE_TRANSPARENT__=oldCapture;
         redraw();
       }
       return {
