@@ -7,9 +7,9 @@ const layer=document.getElementById('vrLayer');
 const W={frame:null,api:null,active:false,renderer:null,scene:null,rig:null,camera:null,board:null,texture:null,session:null,controllers:[],menu:null,menuTargets:[],menuPage:'tools',menuVisible:true,raycaster:new THREE.Raycaster(),dot:null,drag:false,lastUV:null,move3d:null,models:[],modelSignature:'',xLast:false,lang:'tr',lastTexture:0,lastModels:0,lastStatus:'',clock:new THREE.Clock(),selected3D:-1,gizmo:null,gizmoHits:[],editGizmo:null,worldUnit:.0045,originX:0,originY:1.6,lastPan:0};
 function info(s){hint.textContent=s;hint.style.display='block';clearTimeout(info.timeout);info.timeout=setTimeout(()=>hint.style.display='none',6000)}
 const translations={
-tr:{tools:'Araç',forms:'Şekil',more:'Diğer',select:'Seç',pen:'Bézier',eraser:'Silgi',undo:'Geri',redo:'İleri',snap:'Snap',line:'Çizgi',rect:'Dikdörtgen',ellipse:'Elips',triangle:'Üçgen',pentagon:'Beşgen',hexagon:'Altıgen',cube:'Küp',sphere:'Küre',cylinder:'Silindir',cone:'Koni',pyramid:'Piramit',hexprism:'6gen Prizma',me:'Ben',everyone:'Herkes',grid:'3D Grid',lang:'Dil',help:'?',home:'Home',camera:'Kamera',exit:'Çıkış'},
-de:{tools:'Werkz.',forms:'Formen',more:'Mehr',select:'Wählen',pen:'Bézier',eraser:'Radierer',undo:'Zurück',redo:'Vor',snap:'Snap',line:'Linie',rect:'Rechteck',ellipse:'Ellipse',triangle:'Dreieck',pentagon:'Fünfeck',hexagon:'Sechseck',cube:'Würfel',sphere:'Kugel',cylinder:'Zylinder',cone:'Kegel',pyramid:'Pyramide',hexprism:'Hexprisma',me:'Ich',everyone:'Alle',grid:'3D Raster',lang:'Sprache',help:'?',home:'Home',camera:'Kamera',exit:'Ende'},
-en:{tools:'Tools',forms:'Shapes',more:'More',select:'Select',pen:'Bézier',eraser:'Eraser',undo:'Undo',redo:'Redo',snap:'Snap',line:'Line',rect:'Rectangle',ellipse:'Ellipse',triangle:'Triangle',pentagon:'Pentagon',hexagon:'Hexagon',cube:'Cube',sphere:'Sphere',cylinder:'Cylinder',cone:'Cone',pyramid:'Pyramid',hexprism:'Hex prism',me:'Mine',everyone:'Everyone',grid:'3D Grid',lang:'Language',help:'?',home:'Home',camera:'Camera',exit:'Exit'}};
+tr:{tools:'Araç',forms:'Şekil',more:'Diğer',select:'Seç',pen:'Bézier',eraser:'Silgi',undo:'Geri',redo:'İleri',snap:'Snap',line:'Çizgi',rect:'Dikdörtgen',ellipse:'Elips',triangle:'Üçgen',pentagon:'Beşgen',hexagon:'Altıgen',cube:'Küp',sphere:'Küre',cylinder:'Silindir',cone:'Koni',pyramid:'Piramit',hexprism:'6gen Prizma',me:'Ben',everyone:'Herkes',grid:'3D Grid',lang:'Dil',help:'?',home:'Home',camera:'Kamera',copy:'Kopyala',paste:'Yapıştır',delete:'Sil',fill:'Dolgu',color:'Renk',style:'Çizgi türü',ink:'Kalem',text:'Metin',group:'Grupla',fit:'Sığdır',bring:'Öne',send:'Arkaya',edit:'Düzenle',exit:'VR’den Çık'},
+de:{tools:'Werkz.',forms:'Formen',more:'Mehr',select:'Wählen',pen:'Bézier',eraser:'Radierer',undo:'Zurück',redo:'Vor',snap:'Snap',line:'Linie',rect:'Rechteck',ellipse:'Ellipse',triangle:'Dreieck',pentagon:'Fünfeck',hexagon:'Sechseck',cube:'Würfel',sphere:'Kugel',cylinder:'Zylinder',cone:'Kegel',pyramid:'Pyramide',hexprism:'Hexprisma',me:'Ich',everyone:'Alle',grid:'3D Raster',lang:'Sprache',help:'?',home:'Home',camera:'Kamera',copy:'Kopieren',paste:'Einfügen',delete:'Löschen',fill:'Füllen',color:'Farbe',style:'Linienstil',ink:'Stift',text:'Text',group:'Grupp.',fit:'Einpassen',bring:'Nach vorn',send:'Nach hinten',edit:'Edit.',exit:'VR beenden'},
+en:{tools:'Tools',forms:'Shapes',more:'More',select:'Select',pen:'Bézier',eraser:'Eraser',undo:'Undo',redo:'Redo',snap:'Snap',line:'Line',rect:'Rectangle',ellipse:'Ellipse',triangle:'Triangle',pentagon:'Pentagon',hexagon:'Hexagon',cube:'Cube',sphere:'Sphere',cylinder:'Cylinder',cone:'Cone',pyramid:'Pyramid',hexprism:'Hex prism',me:'Mine',everyone:'Everyone',grid:'3D Grid',lang:'Language',help:'?',home:'Home',camera:'Camera',copy:'Copy',paste:'Paste',delete:'Delete',fill:'Fill',color:'Color',style:'Line style',ink:'Ink',text:'Text',group:'Group',fit:'Fit',bring:'Forward',send:'Backward',edit:'Edit',exit:'Exit VR'}};
 function tr(s){return translations[W.lang]?.[s]||s}
 const bridgeLines=[
 '  window.__WBVR_API__={',
@@ -46,6 +46,8 @@ function instrument(source){
  html=html.replace('    drawUniversal3DXZGrid();','    if(!window.__WBVR_ACTIVE__)drawUniversal3DXZGrid();');
  html=html.replace('    drawAllShape3DShadows();','    if(!window.__WBVR_ACTIVE__)drawAllShape3DShadows();');
  html=html.replace("else if(o.kind==='shape3d') drawShape3D(o);","else if(o.kind==='shape3d'){if(!window.__WBVR_ACTIVE__)drawShape3D(o);}");
+ html=html.replace('      drawSelection();', "      if(!window.__WBVR_ACTIVE__ || selectedIndices.some(i=>objects[i]?.kind!=='shape3d'))drawSelection();");
+ html=html.replace('      drawShape3DSnapCue();','      if(!window.__WBVR_ACTIVE__)drawShape3DSnapCue();');
  const base='<base href="'+new URL('../beyaz-tahta/',location.href).href+'">';
  return html.replace('<head>','<head>'+base);
 }
@@ -86,12 +88,12 @@ function rebuildMenu(){
  const old=W.menu;if(old){old.parent?.remove(old);dispose(old)}
  W.menuTargets=[];
  const group=new THREE.Group();W.menu=group;
- const bg=new THREE.Mesh(new THREE.PlaneGeometry(.68,.72),new THREE.MeshBasicMaterial({color:'#ffffff',side:THREE.DoubleSide,depthTest:false,depthWrite:false}));
+ const bg=new THREE.Mesh(new THREE.PlaneGeometry(.69,.85),new THREE.MeshBasicMaterial({color:'#ffffff',side:THREE.DoubleSide,depthTest:false,depthWrite:false}));
  bg.position.z=-.01;group.add(bg);
- const pages=['tools','forms','more'];
+ const pages=['tools','forms','edit','more'];
  pages.forEach((name,i)=>{
-  const m=label(tr(name),.212,.084,name===W.menuPage?'#ffe07a':'#e9eff5');
-  m.position.set(-.225+i*.225,.291,.008);m.userData.action='page:'+name;
+  const m=label(tr(name),.157,.084,name===W.menuPage?'#ffe07a':'#e9eff5');
+  m.position.set(-.245+i*.164,.324,.008);m.userData.action='page:'+name;
   group.add(m);W.menuTargets.push(m);
  });
  let entries;
@@ -101,6 +103,11 @@ function rebuildMenu(){
  ['triangle','shape:triangle'],['pentagon','shape:pentagon'],['hexagon','shape:hexagon'],
  ['cube','shape:cube3d'],['sphere','shape:sphere3d'],['cylinder','shape:cylinder3d'],
  ['cone','shape:cone3d'],['pyramid','shape:pyramid3d'],['hexprism','shape:hexprism3d']];
+ else if(W.menuPage==='edit')entries=[
+ ['copy','click:copyContextBtn'],['paste','click:pasteContextBtn'],['delete','click:deleteContextBtn'],
+ ['fill','click:fillBtn'],['color','click:colorBtn'],['style','click:lineStyleBtn'],
+ ['ink','click:inkBtn'],['text','click:textBtn'],['group','click:groupToggleBtn'],
+ ['fit','click:fitAllBtn'],['bring','click:bringFrontBtn'],['send','click:sendBackBtn']];
  else entries=[['me','click:scopeMeBtn'],['everyone','click:scopeEveryoneBtn'],['grid','click:grid3DBtn'],
  ['lang','language'],['camera','camera'],['help','help'],['home','home'],['exit','exit']];
  entries.forEach(([name,action],i)=>{
@@ -108,7 +115,11 @@ function rebuildMenu(){
   m.position.set(-.225+(i%3)*.225,.183-Math.floor(i/3)*.103,.009);
   m.userData.action=action;group.add(m);W.menuTargets.push(m);
  });
- const footer=label('v1.1.0',.15,.033,'#fff');footer.position.set(-.23,-.326,.012);group.add(footer);
+ // Exit VR is visible on every page, never hidden inside a submenu.
+ const exit=label(tr('exit'),.22,.075,'#f7ceca');
+ exit.position.set(.205,-.358,.012);exit.userData.action='exit';
+ group.add(exit);W.menuTargets.push(exit);
+ const footer=label('v1.1.0',.15,.033,'#fff');footer.position.set(-.24,-.386,.012);group.add(footer);
  const lc=left();if(lc?.controller)lc.controller.add(group);else W.rig.add(group);
  group.position.set(.145,.12,-.40);group.rotation.set(-.28,0,0);group.scale.setScalar(.82);group.visible=W.menuVisible;
 }
