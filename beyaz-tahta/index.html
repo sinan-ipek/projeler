@@ -857,6 +857,7 @@
       </svg>
     </button>
 
+    <button id="vrPreviewBtn" class="iconBtn vr-preview-launch" type="button" title="VR Önizleme: Tahtayı VR ortamında gez" aria-label="VR Önizleme" style="font-weight:800;letter-spacing:.04em;min-width:48px;background:#e7efff;border:1px solid #829bde;color:#1c3d82">VR</button>
     <div class="fileWrap">
       <button id="fileBtn" class="iconBtn" title="Dosya" aria-label="Dosya">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -12745,7 +12746,7 @@
 
     drawAdaptiveGrid();
     drawUniversal3DXZGrid();
-    drawAllShape3DShadows();
+    if(!window.__WHITEBOARD_VR_HIDE_3D__)drawAllShape3DShadows();
 
     const viewportWorld=currentViewportWorldBounds(96);
 
@@ -12772,7 +12773,7 @@
         }
       }else if(o.kind==='image') drawImageObject(o);
       else if(o.kind==='text') drawTextObject(o);
-      else if(o.kind==='shape3d') drawShape3D(o);
+      else if(o.kind==='shape3d'){if(!window.__WHITEBOARD_VR_HIDE_3D__)drawShape3D(o);}
       else drawShape(o);
     }
     for(const item of remoteLiveInk.values()){
@@ -19793,6 +19794,29 @@
     if(boardMode==='me') saveLocalBoard();
   },5000);
 
+  // VR preview bridge: exports a read-only snapshot, never modifies stored objects.
+  window.__WHITEBOARD_VR_BRIDGE__={
+    snapshot(){
+      const previous=!!window.__WHITEBOARD_VR_HIDE_3D__;
+      const copy=document.createElement('canvas');
+      copy.width=canvas.width;copy.height=canvas.height;
+      try{
+        window.__WHITEBOARD_VR_HIDE_3D__=true;
+        redraw();
+        copy.getContext('2d').drawImage(canvas,0,0);
+      }finally{
+        window.__WHITEBOARD_VR_HIDE_3D__=previous;
+        redraw();
+      }
+      return {
+        canvas:copy,
+        objects:objects.map(o=>o&&o.kind==='shape3d'?JSON.parse(JSON.stringify(o)):null).filter(Boolean),
+        cssWidth:Math.max(1,canvas.width/dpr),
+        cssHeight:Math.max(1,canvas.height/dpr),
+        zoom:viewZoom,offsetX:viewX,offsetY:viewY
+      };
+    }
+  };
   resetDefaultView({redrawNow:false});
   resize();
   updatePointSnapUI();
@@ -19800,6 +19824,6 @@
   switchBoardMode(boardMode,{initial:true});
 })();
 </script>
-
+<script type="module" src="./vr-preview.js"></script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>\n</body>
 </html>
