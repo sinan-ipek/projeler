@@ -1,4 +1,4 @@
-// Beyaz Tahta — VR Önizleme v0.1.0
+// Beyaz Tahta — VR Önizleme v0.2.0 · transparent XY plane
 // Read-only spatial preview of the existing 2D board and 3D models.
 // The ordinary board, its object data, and collaboration system are unchanged.
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.181.2/build/three.module.js';
@@ -45,7 +45,7 @@ function buildShape(record,map,scene){
    line.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),span.normalize());
    const group=new THREE.Group();group.add(line);
    putAtBoard(group,record,map);
-   group.position.y+=.16;
+   // Local line coordinates share the same XY axes as the desktop board.
    scene.add(group);return;
   }
   default:geometry=new THREE.BoxGeometry(1,1,1);break;
@@ -57,7 +57,8 @@ function buildShape(record,map,scene){
  obj.scale.set(width,height,depth);
  const parent=new THREE.Group();parent.add(obj);
  putAtBoard(parent,record,map);
- obj.position.y=height/2;
+ // Desktop 3D centers already specify XY positions; do not place them on the VR floor.
+ obj.position.set(0,0,0);
  if(record.rotationQuat){
   const q=record.rotationQuat;
   if(Array.isArray(q)&&q.length===4)obj.quaternion.set(q[0],q[1],q[2],q[3]);
@@ -72,7 +73,13 @@ function putAtBoard(object,record,map){
  const center=record.center||{x:0,y:0};
  const sx=(Number(center.x)||0)*map.zoom+map.offsetX;
  const sy=(Number(center.y)||0)*map.zoom+map.offsetY;
- object.position.set((sx/map.screenWidth-.5)*map.boardWidth,.04,map.boardZ+(sy/map.screenHeight-.5)*map.boardHeight);
+ // The original whiteboard is XY. Screen Y increases downward, so invert it in 3D.
+ // Positive depth moves toward the viewer; this gives 3D shapes physical volume.
+ object.position.set(
+   (sx/map.screenWidth-.5)*map.boardWidth,
+   map.boardY+(.5-sy/map.screenHeight)*map.boardHeight,
+   map.boardZ+(Number(record.centerZ)||0)*map.unit
+ );
 }
 function makeScene(snapshot){
  const scene=new THREE.Scene();scene.background=new THREE.Color('#f8fbff');
@@ -80,21 +87,27 @@ function makeScene(snapshot){
  const player=new THREE.Group();scene.add(player);player.add(camera);
  const ambient=new THREE.HemisphereLight(0xffffff,0xc4d2e2,2.2);scene.add(ambient);
  const light=new THREE.DirectionalLight(0xffffff,2.5);light.position.set(3,6,4);scene.add(light);
- const boardWidth=5.2,boardHeight=boardWidth*snapshot.canvas.height/snapshot.canvas.width,boardZ=-2.2;
- const texture=new THREE.CanvasTexture(snapshot.canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=8;
- const board=new THREE.Mesh(new THREE.PlaneGeometry(boardWidth,boardHeight),new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide}));
- board.rotation.x=-Math.PI/2;board.position.set(0,.018,boardZ);scene.add(board);
+ const boardWidth=5.2,boardHeight=boardWidth*snapshot.cssHeight/snapshot.cssWidth,boardZ=-2.35,boardY=1.7;
+ const texture=new THREE.CanvasTexture(snapshot.canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=8;texture.magFilter=THREE.LinearFilter;
+ // The board is a fully transparent XY plane. No opaque backing or black rectangle.
+ const board=new THREE.Mesh(
+  new THREE.PlaneGeometry(boardWidth,boardHeight),
+  new THREE.MeshBasicMaterial({map:texture,transparent:true,alphaTest:.005,depthWrite:false,side:THREE.DoubleSide})
+ );
+ board.position.set(0,boardY,boardZ);
+ board.renderOrder=5;
+ scene.add(board);
  const grid=new THREE.GridHelper(60,60,0xd8dee8,0xe9edf3);grid.position.y=-.004;scene.add(grid);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(60,60),new THREE.MeshStandardMaterial({color:0xfafcff,roughness:1}));
  floor.rotation.x=-Math.PI/2;floor.position.y=-.007;scene.add(floor);
- const map={boardWidth,boardHeight,boardZ,screenWidth:snapshot.cssWidth,screenHeight:snapshot.cssHeight,zoom:snapshot.zoom,offsetX:snapshot.offsetX,offsetY:snapshot.offsetY,unit:boardWidth*snapshot.zoom/snapshot.cssWidth};
+ const map={boardWidth,boardHeight,boardZ,boardY,screenWidth:snapshot.cssWidth,screenHeight:snapshot.cssHeight,zoom:snapshot.zoom,offsetX:snapshot.offsetX,offsetY:snapshot.offsetY,unit:boardWidth*snapshot.zoom/snapshot.cssWidth};
  for(const o of snapshot.objects){
   if(o?.kind==='shape3d'){
    try{buildShape(o,map,scene);}catch(e){console.warn('3D preview item skipped',e);}
   }
  }
  const hint=createText('Sag joystick: yuru   •   Sol joystick: don   •   Cikis: Quest menu');
- hint.position.set(0,2.15,-2.8);scene.add(hint);
+ hint.position.set(0,Math.max(2.3,boardY+boardHeight/2+.3),boardZ-.05);scene.add(hint);
  return {scene,camera,player,texture};
 }
 function stick(src){
