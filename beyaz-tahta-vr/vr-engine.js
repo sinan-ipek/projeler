@@ -121,9 +121,31 @@ function rebuildMenu(){
  const exit=label(tr('exit'),.22,.075,'#f7ceca');
  exit.position.set(.205,-.358,.012);exit.userData.action='exit';
  group.add(exit);W.menuTargets.push(exit);
- const footer=label('v1.1.0',.15,.033,'#fff');footer.position.set(-.24,-.386,.012);group.add(footer);
+ const footer=label('v1.1.0 · XY + 3D',.18,.033,'#fff');footer.position.set(-.24,-.386,.012);group.add(footer);
  const lc=left();if(lc?.controller)lc.controller.add(group);else W.rig.add(group);
  group.position.set(.145,.12,-.40);group.rotation.set(-.28,0,0);group.scale.setScalar(.82);group.visible=W.menuVisible;
+}
+
+function showVRHelp(){
+ if(W.helpPanel){
+  W.helpPanel.parent?.remove(W.helpPanel);dispose(W.helpPanel);W.helpPanel=null;
+  return;
+ }
+ const sentences={
+  tr:['Sağ ışın: Nesne seç.','Tetik: Tut ve taşı.','Sol el: Menü.  X: Aç / Kapat.','A/B: Yukarı / aşağı.'],
+  de:['Rechter Strahl: Objekt wählen.','Trigger: Halten und bewegen.','Linke Hand: Menü. X: Ein / Aus.','A/B: Hoch / runter.'],
+  en:['Right ray: Select an object.','Trigger: Hold and move.','Left hand: Menu. X: Show / hide.','A/B: Up / down.']
+ };
+ const panel=new THREE.Group();W.helpPanel=panel;
+ const background=new THREE.Mesh(new THREE.PlaneGeometry(.81,.35),new THREE.MeshBasicMaterial({color:'#ffffff',side:THREE.DoubleSide,depthTest:false,depthWrite:false}));
+ panel.add(background);
+ (sentences[W.lang]||sentences.tr).forEach((line,i)=>{
+  const txt=label(line,.76,.068,'#f4f7fc');
+  txt.position.set(0,.12-i*.082,.012);panel.add(txt);
+ });
+ const l=left();if(l?.controller)l.controller.add(panel);else W.rig.add(panel);
+ panel.position.set(.15,-.28,-.40);
+ panel.rotation.set(-.28,0,0);panel.scale.setScalar(.82);
 }
 function invoke(action){
  const doc=W.frame.document;
@@ -137,7 +159,7 @@ function invoke(action){
  if(action==='language'){W.lang=W.lang==='tr'?'de':W.lang==='de'?'en':'tr';rebuildMenu();return;}
  if(action==='home'){W.session?.end();location.href='../';return;}
  if(action==='camera'){alignCamera();return;}
- if(action==='help'){info('Sağ tetik: seç ve sürükle. Bézier noktalarını ve kollarını ışınla taşı. Sol X: menü. Sağ joystick: yürü. Sol joystick: dön.');return;}
+ if(action==='help'){showVRHelp();return;}
  if(action==='exit')W.session?.end();
 }
 
@@ -502,7 +524,7 @@ function cleanup(){
  W.renderer?.dispose();
  layer.replaceChildren();layer.style.display='none';
  W.renderer=null;W.scene=null;W.session=null;W.models=[];W.controllers=[];
- W.texture=null;W.menu=null;W.board=null;W.drag=false;W.editModel=null;
+ W.texture=null;W.menu=null;W.board=null;W.drag=false;W.editModel=null;W.helpPanel=null;
  W.modelSignature='';W.lastModels=0;W.lastTexture=0;W.selected3D=-1;W.gizmo=null;W.gizmoHits=[];W.editGizmo=null;
 }
 async function enter(){
