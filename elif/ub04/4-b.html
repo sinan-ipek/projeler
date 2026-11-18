@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ringschluss: soru/cevap hikâyesi</title>
+<style>
+:root{--bg:#fafaf7;--fg:#1d1d1b;--mut:#6b6b66;--card:#fff;--bd:#d9d8d0;--acc:#2a5db0;--ok:#1f7a45;--bad:#b3261e;--hl:#fff3c4;
+box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16171a;--fg:#e8e8e3;--mut:#9a9a94;--card:#202226;--bd:#383a40;--acc:#7aa7ee;--ok:#5cc88a;--bad:#f08a82;--hl:#4a4020}}
+:root[data-theme="dark"]{--bg:#16171a;--fg:#e8e8e3;--mut:#9a9a94;--card:#202226;--bd:#383a40;--acc:#7aa7ee;--ok:#5cc88a;--bad:#f08a82;--hl:#4a4020}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:.2em 0}h2{font-size:1.1rem;margin:1.4em 0 .4em}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin:10px 0}
+.mut{color:var(--mut);font-size:.92rem}
+button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:8px;padding:6px 12px;margin:2px;cursor:pointer}
+button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.chip{display:inline-block;border:1px solid var(--bd);border-radius:6px;padding:2px 8px;margin:2px;font-family:ui-monospace,monospace;font-size:.9rem}
+.leak{background:var(--hl);border-color:var(--bad)}
+.ok{color:var(--ok);font-weight:600}.bad{color:var(--bad);font-weight:600}
+.step{border-left:4px solid var(--acc);padding:4px 10px;margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.story{color:var(--mut)}.formal{font-family:ui-monospace,monospace;font-size:.93rem}
+label{margin-right:10px;white-space:nowrap}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<main>
+<h1>Ringschluss: (i) ⇒ (ii) ⇒ (iii) ⇒ (i)</h1>
+<p class="mut">Soru/cevap hikâyesiyle. Önce küçük bir örnekte hikâyeyi canlı görün, sonra her halkanın ispatını adım adım açın.</p>
+
+<h2>1. Sahne</h2>
+<div class="card">
+<div>X : sorular</div>
+<div>Y : cevaplar</div>
+<div>f(x) : x sorusunun cevabı</div>
+<div>A ⊂ X : bir sınav</div>
+<div>f(A) : sınavın cevap anahtarı</div>
+<div>f⁻¹(B) : cevabı B’de geçen bütün sorular (tüm soru bankasında aranır)</div>
+<div style="margin-top:8px">Cevaplama kuralı f:
+<button id="p0">Farklı sorular farklı cevaplı</button>
+<button id="p1">İki soru aynı cevaplı</button></div>
+<div id="fmap" class="mut" style="margin-top:6px"></div>
+</div>
+
+<h2>2. Sınavı seç</h2>
+<div class="card">
+<div id="exam"></div>
+<div style="margin-top:8px">A (sınav): <span id="A"></span></div>
+<div>f(A) (anahtar): <span id="fA"></span></div>
+<div>f⁻¹(f(A)) (anahtara uyan tüm sorular): <span id="pre"></span></div>
+<div id="leakmsg" style="margin-top:6px"></div>
+</div>
+
+<h2>3. Üç önerme bu örnekte</h2>
+<div class="card" id="checks"></div>
+<p class="mut">Program 4 sorunun tüm 16 sınavını tek tek dener. Hangi f seçilirse seçilsin üç satır hep aynı rengi gösterir: üçü birlikte doğru ya da birlikte yanlıştır. Ringschluss’un söylediği budur.</p>
+
+<h2>4. İspat, adım adım</h2>
+<div id="rings"></div>
+<div><button id="all">Hepsini göster</button><button id="reset">Sıfırla</button></div>
+</main>
+
+<script>
+var Q=["q1","q2","q3","q4"];
+var TEXT={q1:"2+2",q2:"√16",q3:"3+3",q4:"5−1"};
+var PRESETS=[{q1:4,q2:6,q3:9,q4:10},{q1:4,q2:4,q3:6,q4:9}];
+var cur=0, sel={q1:true,q2:false,q3:false,q4:false};
+
+var RINGS=[
+{t:"Halka 1: (i) ⇒ (ii)",steps:[
+["Varsayım (i): aynı cevaplı iki soru aynı sorudur.","(i) f(a) = f(b) ⇒ a = b"],
+["Hedef: bir sınava sızan soru olmadığını göstermek. A ⊂ X keyfi, bankadan bir x sorusu alalım, cevabı anahtarda olsun.","A ⊂ X keyfi; x ∈ f⁻¹(f(A)) olsun. Gösterilecek: x ∈ A"],
+["Cevabı anahtarda geçiyor: bu, ön görüntünün tanımı.","x ∈ f⁻¹(f(A)) ⇔ f(x) ∈ f(A)"],
+["Anahtar sınavdaki cevapların kümesi. O hâlde sınavda tam bu cevaplı bir soru var.","f(x) ∈ f(A) ⇒ ∃ a ∈ A : f(a) = f(x)"],
+["Köprü: x ve a aynı cevaplı. (i) der ki aynı sorudur.","(i) ile: x = a"],
+["a sınavdaydı, x de a’dır. Yani x sınavda; sızan yok.","a ∈ A ve x = a ⇒ x ∈ A. Dolayısıyla f⁻¹(f(A)) ⊂ A  ∎"]]},
+{t:"Halka 2: (ii) ⇒ (iii)",steps:[
+["Varsayım (ii): hiçbir sınava kaçak soru sızmaz.","(ii) ∀ A ⊂ X : f⁻¹(f(A)) ⊂ A"],
+["Bir x sorusu seç. Cevabı f(x) olan tüm soruların yalnız x olduğunu göstereceğiz. Küme eşitliği için iki kapsama.","x ∈ X keyfi. Gösterilecek: f⁻¹({f(x)}) = {x}"],
+["⊃ yarısı (varsayım gerekmez): x’in cevabı f(x), o yüzden x bu cevaplı sorular arasında.","f(x) ∈ {f(x)} ⇒ x ∈ f⁻¹({f(x)}) ⇒ {x} ⊂ f⁻¹({f(x)})"],
+["⊂ yarısı: (ii) “her sınav için” diyor. Tek soruluk sınav hazırla.","(ii)’yi A := {x} için uygula"],
+["Tek soruluk sınavın anahtarı tek cevaplık anahtardır. (Çantadaki 1. alet.)","f({x}) = {f(x)}, böylece f⁻¹({f(x)}) = f⁻¹(f({x})) ⊂ {x}"],
+["İki kapsama birleşti. x keyfi olduğundan (iii) her soru için geçerli.","f⁻¹({f(x)}) = {x}  ∎"]]},
+{t:"Halka 3: (iii) ⇒ (i)",steps:[
+["Varsayım (iii): bir cevabı taşıyan tek soru, o sorunun kendisi.","(iii) ∀ x ∈ X : f⁻¹({f(x)}) = {x}"],
+["Hedef injektiflik: iki soru aynı cevaplıysa aynı sorudur. Tanımın ilk cümlesi hazır.","x₁, x₂ ∈ X ve f(x₁) = f(x₂) olsun. Gösterilecek: x₁ = x₂"],
+["x₂ de “cevabı f(x₁) olan sorular” arasında. (Çantadaki 2. alet.)","f(x₂) ∈ {f(x₁)} ⇒ x₂ ∈ f⁻¹({f(x₁)})"],
+["(iii)’ü x = x₁ için uygula: bu kümede yalnız x₁ var.","f⁻¹({f(x₁)}) = {x₁}, yani x₂ ∈ {x₁}"],
+["Tek elemanlı kümenin elemanı o elemandır.","x₂ = x₁  ∎"]]}
+];
+var shown=[0,0,0];
+
+function sub(m){var r=[];for(var i=0;i<Q.length;i++)if(m>>i&1)r.push(Q[i]);return r}
+function f(q){return PRESETS[cur][q]}
+function img(A){var s=[];A.forEach(function(q){if(s.indexOf(f(q))<0)s.push(f(q))});return s}
+function pre(B){return Q.filter(function(q){return B.indexOf(f(q))>=0})}
+function inc(a,b){return a.every(function(x){return b.indexOf(x)>=0})}
+function chips(a,cls){return a.length?a.map(function(x){return '<span class="chip '+((cls&&cls.indexOf(x)>=0)?'leak':'')+'">'+x+'</span>'}).join(''):'<span class="mut">∅</span>'}
+function chipsAns(a){return a.length?a.map(function(x){return '<span class="chip">'+x+'</span>'}).join(''):'<span class="mut">∅</span>'}
+
+function render(){
+ document.getElementById("p0").className=cur==0?"on":"";
+ document.getElementById("p1").className=cur==1?"on":"";
+ document.getElementById("fmap").innerHTML=Q.map(function(q){return q+" ("+TEXT[q]+") → "+f(q)}).join(" &nbsp;·&nbsp; ");
+ document.getElementById("exam").innerHTML=Q.map(function(q){return '<label><input type="checkbox" data-q="'+q+'"'+(sel[q]?" checked":"")+'> '+q+' ('+TEXT[q]+')</label>'}).join("");
+ var A=Q.filter(function(q){return sel[q]}), key=img(A), P=pre(key), leaks=P.filter(function(q){return A.indexOf(q)<0});
+ document.getElementById("A").innerHTML=chips(A);
+ document.getElementById("fA").innerHTML=chipsAns(key);
+ document.getElementById("pre").innerHTML=chips(P,leaks);
+ document.getElementById("leakmsg").innerHTML=leaks.length?'<span class="bad">Sızan soru var: '+leaks.join(", ")+'.</span> Sınavda değil ama cevabı anahtarda. Bu sınav için (ii) bozuldu.':'<span class="ok">Sızan soru yok.</span> f⁻¹(f(A)) ⊂ A.';
+ // checks over all subsets
+ var i1=true,i2=true,i3=true,bad1="",bad2="";
+ Q.forEach(function(a){Q.forEach(function(b){if(f(a)==f(b)&&a!=b){i1=false;bad1=a+" ve "+b+" aynı cevaplı ("+f(a)+")"}})});
+ for(var m=0;m<16;m++){var S=sub(m);if(!inc(pre(img(S)),S)){i2=false;bad2="A={"+S.join(",")+"} sınavına sızan var"}}
+ Q.forEach(function(x){var s=pre([f(x)]);if(!(s.length==1&&s[0]==x))i3=false});
+ function row(n,txt,v,why){return '<div><b>'+n+'</b> '+txt+' → '+(v?'<span class="ok">doğru</span>':'<span class="bad">yanlış</span> <span class="mut">('+why+')</span>')+'</div>'}
+ document.getElementById("checks").innerHTML=
+  row("(i)","farklı sorular farklı cevaplı",i1,bad1)+
+  row("(ii)","hiçbir sınava soru sızmaz (16 sınavın hepsi denendi)",i2,bad2)+
+  row("(iii)","her cevabı tek soru taşır, o da kendisi",i3,"bir cevabı birden çok soru taşıyor");
+ // rings
+ var h="";
+ RINGS.forEach(function(r,ri){
+  h+='<div class="card"><b>'+r.t+'</b>';
+  for(var k=0;k<shown[ri];k++)h+='<div class="step"><div class="story">Hikâye: '+r.steps[k][0]+'</div><div class="formal">'+r.steps[k][1]+'</div></div>';
+  if(shown[ri]<r.steps.length)h+='<div><button data-next="'+ri+'">Sonraki adım ('+(shown[ri]+1)+'/'+r.steps.length+')</button></div>';
+  else h+='<div class="ok">Halka tamam.</div>';
+  h+='</div>'});
+ document.getElementById("rings").innerHTML=h;
+}
+document.addEventListener("click",function(e){
+ var t=e.target;
+ if(t.id=="p0"){cur=0;render()}
+ else if(t.id=="p1"){cur=1;render()}
+ else if(t.id=="all"){shown=RINGS.map(function(r){return r.steps.length});render()}
+ else if(t.id=="reset"){shown=[0,0,0];render()}
+ else if(t.dataset&&t.dataset.next!==undefined){shown[+t.dataset.next]++;render()}
+});
+document.addEventListener("change",function(e){var q=e.target.dataset&&e.target.dataset.q;if(q){sel[q]=e.target.checked;render()}});
+render();
+</script>
+</body>
+</html>
