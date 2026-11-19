@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v19.12-deneme</title>
+<title>Beyaz Tahta v19.13-deneme</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1109,7 +1109,7 @@
         <option value="hexpyramid3d">Altıgen piramit 3D</option>
         <option value="hexprism3d">Altıgen prizma 3D</option>
         <option value="sphere3d">Küre 3D</option>
-        <option value="car3d">Araba (Bézier)</option>
+        <option value="car3d">Araba 3D</option>
       </optgroup>
     </select>
 
@@ -1347,7 +1347,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.12-deneme · Bézier tabanlı stilize araba · checkpoint: v19.00</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.13-deneme · Baştan tasarlanmış gerçek 3D otomobil · checkpoint: v19.00</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6707,6 +6707,183 @@
     return {points,edges,faces,curves:[]};
   }
 
+
+  function designedCarGeometry(o){
+    // v19.13 — Beyaz Tahta için sıfırdan tasarlanmış düşük poligonlu otomobil.
+    // Amaç: az yüzlü, temiz, oranları gerçek bir kompakt coupe/sedan gibi okunan
+    // ve mevcut 3D döndürme/ölçekleme sistemiyle çalışan tek bir shape3d nesnesi.
+    const sx=Math.max(8,Number(o.sizeX)||300);
+    const sy=Math.max(8,Number(o.sizeY)||118);
+    const sz=Math.max(8,Number(o.sizeZ)||142);
+
+    const X=v=>v*sx;
+    const Y=v=>v*sy;
+    const Z=v=>v*sz;
+
+    const points=[];
+    const faces=[];
+    const faceColors=[];
+    const edges=[];
+    const edgeSet=new Set();
+
+    const bodyColor=o.fillColor3D||'#3b82f6';
+    const bodyDark='#2563a8';
+    const bodyLight='#67aef7';
+    const glass='#9fc9e8';
+    const glassDark='#6fa7cf';
+    const tire='#222a31';
+    const rim='#c7d2da';
+    const lamp='#fff1a8';
+    const rearLamp='#ef6b63';
+
+    function addPoint(x,y,z){
+      points.push({x:X(x),y:Y(y),z:Z(z)});
+      return points.length-1;
+    }
+    function addFace(indices,color=bodyColor){
+      faces.push(indices);
+      faceColors.push(color);
+      return faces.length-1;
+    }
+    function addEdge(a,b){
+      const lo=Math.min(a,b), hi=Math.max(a,b);
+      const key=lo+':'+hi;
+      if(edgeSet.has(key)) return;
+      edgeSet.add(key);
+      edges.push([a,b]);
+    }
+    function ring(x,top,bottom,halfWidth){
+      return [
+        addPoint(x,top,-halfWidth),
+        addPoint(x,top, halfWidth),
+        addPoint(x,bottom, halfWidth),
+        addPoint(x,bottom,-halfWidth)
+      ];
+    }
+    function connectRings(a,b,colors=[bodyLight,bodyColor,bodyDark,bodyColor]){
+      addFace([a[0],b[0],b[1],a[1]],colors[0]); // top
+      addFace([a[1],b[1],b[2],a[2]],colors[1]); // near side
+      addFace([a[2],b[2],b[3],a[3]],colors[2]); // bottom
+      addFace([a[3],b[3],b[0],a[0]],colors[3]); // far side
+    }
+
+    // Ana gövde loft'u: arka -> ön.
+    // y negatif = yukarı, y pozitif = aşağı.
+    const bodyRings=[
+      ring(-.49,-.02,.29,.34),
+      ring(-.43,-.12,.31,.43),
+      ring(-.28,-.20,.32,.48),
+      ring( .18,-.22,.32,.50),
+      ring( .38,-.18,.29,.46),
+      ring( .49,-.08,.22,.34)
+    ];
+
+    for(let i=0;i<bodyRings.length-1;i++) connectRings(bodyRings[i],bodyRings[i+1]);
+    addFace([bodyRings[0][0],bodyRings[0][1],bodyRings[0][2],bodyRings[0][3]],bodyDark);
+    addFace([bodyRings.at(-1)[3],bodyRings.at(-1)[2],bodyRings.at(-1)[1],bodyRings.at(-1)[0]],bodyLight);
+
+    // Gövde üzerinde yalnız okunması gereken ana hatlar.
+    for(const r of bodyRings){
+      addEdge(r[0],r[1]);
+      addEdge(r[1],r[2]);
+    }
+    for(let i=0;i<bodyRings.length-1;i++){
+      addEdge(bodyRings[i][1],bodyRings[i+1][1]);
+      addEdge(bodyRings[i][0],bodyRings[i+1][0]);
+    }
+
+    // Kabin: ayrı trapezoidal/loft yapı.
+    const cabRings=[
+      ring(-.24,-.22,-.19,.39),
+      ring(-.15,-.48,-.18,.34),
+      ring( .13,-.50,-.19,.33),
+      ring( .27,-.24,-.20,.40)
+    ];
+    connectRings(cabRings[0],cabRings[1],[glassDark,glass,bodyColor,bodyColor]);
+    connectRings(cabRings[1],cabRings[2],[bodyLight,glass,bodyColor,bodyColor]);
+    connectRings(cabRings[2],cabRings[3],[glassDark,glass,bodyColor,bodyColor]);
+
+    // Ön/arka kabin kapama yüzleri.
+    addFace([cabRings[0][0],cabRings[0][1],cabRings[0][2],cabRings[0][3]],glassDark);
+    addFace([cabRings[3][3],cabRings[3][2],cabRings[3][1],cabRings[3][0]],glassDark);
+
+    // Cam çerçevesi için az sayıda gerçek kenar.
+    for(const r of cabRings){
+      addEdge(r[0],r[1]);
+      addEdge(r[1],r[2]);
+    }
+    for(let i=0;i<cabRings.length-1;i++){
+      addEdge(cabRings[i][1],cabRings[i+1][1]);
+      addEdge(cabRings[i][0],cabRings[i+1][0]);
+    }
+
+    // Tekerlekler: z ekseni boyunca 12 kenarlı kısa silindirler.
+    function addWheel(cx,cz){
+      const n=12;
+      const radiusX=.105;
+      const radiusY=.23;
+      const halfDepth=.055;
+      const front=[];
+      const back=[];
+      for(let i=0;i<n;i++){
+        const a=Math.PI*2*i/n;
+        front.push(addPoint(
+          cx+Math.cos(a)*radiusX,
+          .29+Math.sin(a)*radiusY,
+          cz+halfDepth
+        ));
+        back.push(addPoint(
+          cx+Math.cos(a)*radiusX,
+          .29+Math.sin(a)*radiusY,
+          cz-halfDepth
+        ));
+      }
+
+      addFace([...front].reverse(),tire);
+      addFace([...back],tire);
+      for(let i=0;i<n;i++){
+        const j=(i+1)%n;
+        addFace([front[i],front[j],back[j],back[i]],tire);
+        addEdge(front[i],front[j]);
+      }
+
+      // Jant diski, yalnız dış yüzde.
+      const hub=[];
+      for(let i=0;i<n;i++){
+        const a=Math.PI*2*i/n;
+        hub.push(addPoint(
+          cx+Math.cos(a)*radiusX*.56,
+          .29+Math.sin(a)*radiusY*.56,
+          cz+halfDepth+.004
+        ));
+      }
+      addFace([...hub].reverse(),rim);
+      for(let i=0;i<n;i++) addEdge(hub[i],hub[(i+1)%n]);
+    }
+
+    // Dört teker.
+    addWheel(-.30, .43);
+    addWheel( .31, .43);
+    addWheel(-.30,-.43);
+    addWheel( .31,-.43);
+
+    // Ön farlar: küçük yüzey plakaları.
+    function plate(x,y,z,w,h,color){
+      const a=addPoint(x,y-h/2,z-w/2);
+      const b=addPoint(x,y-h/2,z+w/2);
+      const c=addPoint(x,y+h/2,z+w/2);
+      const d=addPoint(x,y+h/2,z-w/2);
+      addFace([a,b,c,d],color);
+      addEdge(a,b); addEdge(b,c); addEdge(c,d); addEdge(d,a);
+    }
+    plate(.492,-.075,.23,.12,.055,lamp);
+    plate(.492,-.075,-.23,.12,.055,lamp);
+    plate(-.492,-.045,.23,.10,.05,rearLamp);
+    plate(-.492,-.045,-.23,.10,.05,rearLamp);
+
+    return {points,edges,faces,faceColors,curves:[]};
+  }
+
   function shape3DGeometry(o){
     if(!o || o.kind!=='shape3d') return {points:[],edges:[],faces:[],curves:[]};
 
@@ -6816,7 +6993,7 @@
     }
 
     if(t==='car'){
-      return basicCarGeometry(o);
+      return designedCarGeometry(o);
     }
 
     const points=[
@@ -7714,7 +7891,12 @@
           0
         )/projected.length;
 
-        return {projected,normal,depth};
+        return {
+          projected,
+          normal,
+          depth,
+          color:(g.faceColors&&g.faceColors[fi]) || o.fillColor3D
+        };
       })
       .filter(Boolean)
       .sort((a,b)=>b.depth-a.depth);
@@ -7723,7 +7905,7 @@
       shape3DFillPolygon(
         face.projected,
         shape3DShadedCss(
-          o.fillColor3D,
+          face.color,
           shape3DMaterialLight(face.normal),
           1
         ),
@@ -8007,13 +8189,6 @@
     // Material first, existing educational edge/hidden-line drawing on top.
     drawShape3DMaterial(o,g,viewPts,pts);
 
-    // v19.11 — Araba artık tel-kafes gibi çizilmez.
-    // Yüzeyler gerçek BasicCar geometrisinden gelir; üstüne yalnız dış kontur eklenir.
-    if(o.shape3dType==='car'){
-      drawCarOuterContour(o,g,viewPts,pts);
-      ctx.restore();
-      return;
-    }
 
     if(o.shape3dType==='cylinder'){
       const curves=g.curves||[];
@@ -8456,11 +8631,14 @@
     }else if(type==='car3d'){
       base.shape3dType='car';
       base.shapeName='car 3D';
-      base.sizeX=260*scale;
-      base.sizeY=120*scale;
-      base.sizeZ=135*scale;
+      base.sizeX=320*scale;
+      base.sizeY=125*scale;
+      base.sizeZ=150*scale;
       base.fillColor3D='#3b82f6';
       base.fillOpacity=0;
+      base.rotationY=-0.34;
+      base.rotationX=0.03;
+      base.rotationQuat=quatFromEuler(base.rotationX,base.rotationY,0);
     }else{
       return null;
     }
@@ -20130,14 +20308,9 @@
         boxAngle:0
       }));
     }
-    if(t==='car3d'){
-      const carParts=makeBezierCarGroup(cx,cy,insertionScale,style);
-      objects.push(...carParts);
-    }
-
     if([
       'line3d','cube3d','pyramid3d','cylinder3d','cone3d',
-      'hexpyramid3d','hexprism3d','sphere3d'
+      'hexpyramid3d','hexprism3d','sphere3d','car3d'
     ].includes(t)){
       const obj=makeShape3D(t,cx,cy,insertionScale,style);
       if(obj) objects.push(obj);
