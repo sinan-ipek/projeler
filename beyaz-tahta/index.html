@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v19.09-deneme</title>
+<title>Beyaz Tahta v19.10-deneme</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1347,7 +1347,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.09-deneme · Quaternius CC0 BasicCar modeli · checkpoint: v19.00</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.10-deneme · BasicCar temiz silüet + belirgin kenarlar · checkpoint: v19.00</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -7906,6 +7906,96 @@
     drawShape3DPolyMaterial(o,g,viewPts,pts);
   }
 
+  function carFeatureEdges(o,g,viewPts,pts,visibleFaces){
+    // v19.10-deneme
+    // BasicCar'ın gerçek geometrisi korunur; ancak bütün polygon/mesh kenarlarını
+    // çizmek yerine yalnızca okunabilir otomobil formunu oluşturan kenarlar kalır:
+    // 1) açık sınır kenarları,
+    // 2) silüet kenarları,
+    // 3) iki yüz arasında çok belirgin bir kırılma oluşturan kenarlar.
+    //
+    // Böylece tekerleklerin ve gövdenin yüzlerce küçük segmenti "tel kafes"
+    // görünümü üretmez. Yüzeyler yine orijinal BasicCar yüzlerinden gölgelenir.
+    const faces=g.faces||[];
+    const edgeFaces=new Map();
+
+    for(let fi=0;fi<faces.length;fi++){
+      const face=faces[fi];
+      if(!face || face.length<2) continue;
+
+      for(let i=0;i<face.length;i++){
+        const a=face[i];
+        const b=face[(i+1)%face.length];
+        if(!Number.isInteger(a)||!Number.isInteger(b)||a===b) continue;
+        const lo=Math.min(a,b), hi=Math.max(a,b);
+        const key=lo+':'+hi;
+        let item=edgeFaces.get(key);
+        if(!item){
+          item={a:lo,b:hi,faces:[]};
+          edgeFaces.set(key,item);
+        }
+        item.faces.push(fi);
+      }
+    }
+
+    const normals=faces.map(face=>shape3DFaceOutwardNormal(viewPts,face));
+    const creaseCos=Math.cos(55*Math.PI/180);
+    const out=[];
+
+    for(const [ia,ib] of (g.edges||[])){
+      const a=Math.min(ia,ib), b=Math.max(ia,ib);
+      const item=edgeFaces.get(a+':'+b);
+      const adjacent=item ? item.faces : [];
+
+      // Modelde yüz kaydı bulunmayan gerçek kenarı güvenli tarafta tut.
+      if(!adjacent.length){
+        if(pts[ia]&&pts[ib]){
+          out.push({
+            a:pts[ia],b:pts[ib],hidden:false,
+            depth:(((viewPts[ia]&&viewPts[ia].z)||0)+((viewPts[ib]&&viewPts[ib].z)||0))/2
+          });
+        }
+        continue;
+      }
+
+      const front=adjacent.filter(fi=>visibleFaces[fi]);
+      if(!front.length) continue;
+
+      const boundary=adjacent.length===1;
+      const silhouette=front.length!==adjacent.length;
+
+      let strongCrease=false;
+      if(adjacent.length>=2){
+        outer:
+        for(let i=0;i<adjacent.length;i++){
+          for(let j=i+1;j<adjacent.length;j++){
+            const n1=normals[adjacent[i]];
+            const n2=normals[adjacent[j]];
+            if(shape3DDot(n1,n2)<creaseCos){
+              strongCrease=true;
+              break outer;
+            }
+          }
+        }
+      }
+
+      if(!(boundary||silhouette||strongCrease)) continue;
+      if(!pts[ia]||!pts[ib]) continue;
+
+      out.push({
+        a:pts[ia],
+        b:pts[ib],
+        hidden:false,
+        depth:(
+          ((viewPts[ia]&&viewPts[ia].z)||0)+
+          ((viewPts[ib]&&viewPts[ib].z)||0)
+        )/2
+      });
+    }
+
+    return out.sort((u,v)=>v.depth-u.depth);
+  }
+
   function drawShape3D(o){
     const g=shape3DGeometry(o);
     const viewPts=shape3DViewPoints(o);
@@ -8086,33 +8176,36 @@
 
     const visibleFaces=shape3DFaceVisibility(o,g,viewPts);
 
-    const edges=(g.edges||[]).map(([ia,ib])=>{
-      const adjacent=[];
-      (g.faces||[]).forEach((face,fi)=>{
-        if(face.includes(ia)&&face.includes(ib)) adjacent.push(fi);
-      });
+    const edges=o.shape3dType==='car'
+      ? carFeatureEdges(o,g,viewPts,pts,visibleFaces)
+      : (g.edges||[]).map(([ia,ib])=>{
+          const adjacent=[];
+          (g.faces||[]).forEach((face,fi)=>{
+            if(face.includes(ia)&&face.includes(ib)) adjacent.push(fi);
+          });
 
-      const hidden=adjacent.length>0 && !adjacent.some(fi=>visibleFaces[fi]);
+          const hidden=adjacent.length>0 && !adjacent.some(fi=>visibleFaces[fi]);
 
-      return {
-        a:pts[ia],
-        b:pts[ib],
-        hidden,
-        depth:(
-          ((viewPts[ia]&&viewPts[ia].z)||0)+
-          ((viewPts[ib]&&viewPts[ib].z)||0)
-        )/2
-      };
-    }).filter(e=>e.a&&e.b).sort((u,v)=>{
-      if(u.hidden!==v.hidden) return u.hidden?-1:1;
-      return v.depth-u.depth;
-    });
+          return {
+            a:pts[ia],
+            b:pts[ib],
+            hidden,
+            depth:(
+              ((viewPts[ia]&&viewPts[ia].z)||0)+
+              ((viewPts[ib]&&viewPts[ib].z)||0)
+            )/2
+          };
+        }).filter(e=>e.a&&e.b).sort((u,v)=>{
+          if(u.hidden!==v.hidden) return u.hidden?-1:1;
+          return v.depth-u.depth;
+        });
+
+    if(o.shape3dType==='car'){
+      // Araba için daha temiz, teknik çizim benzeri kontur.
+      ctx.lineWidth=Math.max(.75/viewZoom,visualStrokeWidth(o.style||{})*.82);
+    }
 
     for(const e of edges){
-      // Araba modelinde görünmeyen kenarları eğitim amaçlı kesik çizgiyle
-      // göstermiyoruz; gerçek nesne görünümüne daha yakın olsun.
-      if(o.shape3dType==='car' && e.hidden) continue;
-
       ctx.beginPath();
       const hiddenStyle=hidden3DStyle();
       ctx.globalAlpha=e.hidden?hiddenStyle.alpha:1;
