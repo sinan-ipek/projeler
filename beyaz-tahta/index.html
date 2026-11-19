@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v19.05-deneme</title>
+<title>Beyaz Tahta v19.06-deneme</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1109,6 +1109,7 @@
         <option value="hexpyramid3d">Altıgen piramit 3D</option>
         <option value="hexprism3d">Altıgen prizma 3D</option>
         <option value="sphere3d">Küre 3D</option>
+        <option value="car3d">Araba 3D</option>
       </optgroup>
     </select>
 
@@ -1346,7 +1347,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.05-deneme · Metin düzenlerken silinme hatası düzeltildi · checkpoint: v19.00</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.06-deneme · Low-poly 3D araba eklendi · checkpoint: v19.00</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1387,6 +1388,7 @@
             <h3>Hazır nesneler</h3>
             <ul>
               <li>Çizgi, yay, dikdörtgen, elips, üçgen, beşgen, altıgen.</li>
+              <li>3D hazır nesnelerde küp, piramit, silindir, koni, küre ve low-poly araba bulunur.</li>
               <li>Parabol, sin x, tan x, eˣ ve x-y eksenleri.</li>
               <li>Metin kutusu, karekök ve integral sembolü.</li>
               <li>Matematik klavyesinden harf, Yunan harfi, rakam ve işlem sembolü ekle.</li>
@@ -6782,6 +6784,122 @@
       };
     }
 
+    if(t==='car'){
+      const points=[];
+      const edges=[];
+      const faces=[];
+
+      const addPrism=(profile,z0,z1)=>{
+        const start=points.length;
+        const n=profile.length;
+
+        for(const p of profile) points.push({x:p.x,y:p.y,z:z0});
+        for(const p of profile) points.push({x:p.x,y:p.y,z:z1});
+
+        for(let i=0;i<n;i++){
+          const j=(i+1)%n;
+          edges.push([start+i,start+j]);
+          edges.push([start+n+i,start+n+j]);
+          edges.push([start+i,start+n+i]);
+          faces.push([start+i,start+j,start+n+j,start+n+i]);
+        }
+
+        faces.push(
+          Array.from({length:n},(_,i)=>start+(n-1-i)),
+          Array.from({length:n},(_,i)=>start+n+i)
+        );
+      };
+
+      const addWheel=(cx,cy,cz,r,width)=>{
+        const n=10;
+        const z0=cz-width/2;
+        const z1=cz+width/2;
+        const start=points.length;
+
+        for(let k=0;k<n;k++){
+          const a=Math.PI*2*k/n;
+          points.push({
+            x:cx+Math.cos(a)*r,
+            y:cy+Math.sin(a)*r,
+            z:z0
+          });
+        }
+        for(let k=0;k<n;k++){
+          const a=Math.PI*2*k/n;
+          points.push({
+            x:cx+Math.cos(a)*r,
+            y:cy+Math.sin(a)*r,
+            z:z1
+          });
+        }
+
+        for(let k=0;k<n;k++){
+          const j=(k+1)%n;
+          edges.push([start+k,start+j]);
+          edges.push([start+n+k,start+n+j]);
+          faces.push([start+k,start+j,start+n+j,start+n+k]);
+        }
+
+        faces.push(
+          Array.from({length:n},(_,i)=>start+(n-1-i)),
+          Array.from({length:n},(_,i)=>start+n+i)
+        );
+
+        // Hub circles are approximated by a smaller decagon on both outer sides.
+        const hubR=r*.42;
+        for(const sideZ of [z0-.4,z1+.4]){
+          const hubStart=points.length;
+          for(let k=0;k<n;k++){
+            const a=Math.PI*2*k/n;
+            points.push({
+              x:cx+Math.cos(a)*hubR,
+              y:cy+Math.sin(a)*hubR,
+              z:sideZ
+            });
+          }
+          for(let k=0;k<n;k++){
+            edges.push([hubStart+k,hubStart+(k+1)%n]);
+          }
+        }
+      };
+
+      // Main body: a soft wedge silhouette extruded across the car width.
+      const bodyProfile=[
+        {x:-sx*.98,y: sy*.38},
+        {x:-sx*.98,y:-sy*.02},
+        {x:-sx*.78,y:-sy*.18},
+        {x:-sx*.42,y:-sy*.22},
+        {x:-sx*.18,y:-sy*.68},
+        {x: sx*.35,y:-sy*.68},
+        {x: sx*.60,y:-sy*.22},
+        {x: sx*.93,y:-sy*.10},
+        {x: sx*.98,y: sy*.36}
+      ];
+      addPrism(bodyProfile,-sz*.68,sz*.68);
+
+      // Slightly inset cabin gives the roof and window line more character.
+      const cabinProfile=[
+        {x:-sx*.32,y:-sy*.23},
+        {x:-sx*.10,y:-sy*.62},
+        {x: sx*.28,y:-sy*.62},
+        {x: sx*.50,y:-sy*.23}
+      ];
+      addPrism(cabinProfile,-sz*.56,sz*.56);
+
+      const wheelR=Math.min(sy*.30,sx*.14);
+      const wheelY=sy*.40;
+      const wheelX=sx*.62;
+      const wheelWidth=Math.max(sz*.18,8);
+
+      // Four wheels: front/rear × left/right.
+      for(const wx of [-wheelX,wheelX]){
+        addWheel(wx,wheelY,-sz*.73,wheelR,wheelWidth);
+        addWheel(wx,wheelY, sz*.73,wheelR,wheelWidth);
+      }
+
+      return {points,edges,faces,curves:[]};
+    }
+
 
     const points=[
       {x:-sx,y:-sy,z:-sz},{x:sx,y:-sy,z:-sz},
@@ -8324,6 +8442,14 @@
       base.sizeX=170*scale;
       base.sizeY=170*scale;
       base.sizeZ=170*scale;
+    }else if(type==='car3d'){
+      base.shape3dType='car';
+      base.shapeName='car 3D';
+      base.sizeX=260*scale;
+      base.sizeY=120*scale;
+      base.sizeZ=135*scale;
+      base.fillColor3D='#3b82f6';
+      base.fillOpacity=0;
     }else{
       return null;
     }
@@ -19797,7 +19923,7 @@
     }
     if([
       'line3d','cube3d','pyramid3d','cylinder3d','cone3d',
-      'hexpyramid3d','hexprism3d','sphere3d'
+      'hexpyramid3d','hexprism3d','sphere3d','car3d'
     ].includes(t)){
       const obj=makeShape3D(t,cx,cy,insertionScale,style);
       if(obj) objects.push(obj);
