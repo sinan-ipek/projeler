@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v19.07-deneme</title>
+<title>Beyaz Tahta v19.08-deneme</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1347,7 +1347,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.07-deneme · 3D arabada görünmeyen çizgiler gizlendi · checkpoint: v19.00</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.08-deneme · Daha doğal low-poly 3D araba · checkpoint: v19.00</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6810,8 +6810,18 @@
         );
       };
 
+      const addEdge=(a,b)=>{
+        const i=points.length;
+        points.push(a,b);
+        edges.push([i,i+1]);
+      };
+
+      const addPolyline=(pts)=>{
+        for(let i=0;i<pts.length-1;i++) addEdge(pts[i],pts[i+1]);
+      };
+
       const addWheel=(cx,cy,cz,r,width)=>{
-        const n=10;
+        const n=12;
         const z0=cz-width/2;
         const z1=cz+width/2;
         const start=points.length;
@@ -6845,9 +6855,8 @@
           Array.from({length:n},(_,i)=>start+n+i)
         );
 
-        // Hub circles are approximated by a smaller decagon on both outer sides.
-        const hubR=r*.42;
-        for(const sideZ of [z0-.4,z1+.4]){
+        const hubR=r*.40;
+        for(const sideZ of [z0-.7,z1+.7]){
           const hubStart=points.length;
           for(let k=0;k<n;k++){
             const a=Math.PI*2*k/n;
@@ -6863,43 +6872,114 @@
         }
       };
 
-      // Main body: a soft wedge silhouette extruded across the car width.
+      // +X arabanın önü. Tek gövde profili sayesinde kaput, camlar,
+      // tavan ve bagaj birbirine daha doğal bağlanır.
       const bodyProfile=[
-        {x:-sx*.98,y: sy*.38},
-        {x:-sx*.98,y:-sy*.02},
-        {x:-sx*.78,y:-sy*.18},
-        {x:-sx*.42,y:-sy*.22},
-        {x:-sx*.18,y:-sy*.68},
-        {x: sx*.35,y:-sy*.68},
-        {x: sx*.60,y:-sy*.22},
-        {x: sx*.93,y:-sy*.10},
-        {x: sx*.98,y: sy*.36}
+        {x:-sx*.98,y: sy*.28}, // rear lower bumper
+        {x:-sx*.97,y: sy*.02}, // rear face
+        {x:-sx*.84,y:-sy*.08}, // trunk edge
+        {x:-sx*.62,y:-sy*.11}, // rear deck
+        {x:-sx*.43,y:-sy*.28}, // rear window base
+        {x:-sx*.25,y:-sy*.62}, // rear roof rise
+        {x:-sx*.08,y:-sy*.72}, // roof rear
+        {x: sx*.25,y:-sy*.72}, // roof front
+        {x: sx*.43,y:-sy*.58}, // windscreen top
+        {x: sx*.59,y:-sy*.22}, // windscreen base
+        {x: sx*.82,y:-sy*.15}, // hood
+        {x: sx*.97,y:-sy*.03}, // nose upper
+        {x: sx*.99,y: sy*.25}, // front bumper
+        {x: sx*.82,y: sy*.34}, // front lower sill
+        {x:-sx*.82,y: sy*.34}  // rear lower sill
       ];
-      addPrism(bodyProfile,-sz*.68,sz*.68);
 
-      // Slightly inset cabin gives the roof and window line more character.
+      addPrism(bodyProfile,-sz*.64,sz*.64);
+
+      // Slightly narrower glass-house volume: adds real windshield/rear-window
+      // slopes instead of a simple box on top.
       const cabinProfile=[
-        {x:-sx*.32,y:-sy*.23},
-        {x:-sx*.10,y:-sy*.62},
-        {x: sx*.28,y:-sy*.62},
-        {x: sx*.50,y:-sy*.23}
+        {x:-sx*.44,y:-sy*.27},
+        {x:-sx*.23,y:-sy*.63},
+        {x:-sx*.07,y:-sy*.70},
+        {x: sx*.24,y:-sy*.70},
+        {x: sx*.41,y:-sy*.56},
+        {x: sx*.57,y:-sy*.24}
       ];
-      addPrism(cabinProfile,-sz*.56,sz*.56);
+      addPrism(cabinProfile,-sz*.54,sz*.54);
 
-      const wheelR=Math.min(sy*.30,sx*.14);
-      const wheelY=sy*.40;
-      const wheelX=sx*.62;
-      const wheelWidth=Math.max(sz*.18,8);
+      const wheelR=Math.min(sy*.30,sx*.135);
+      const wheelY=sy*.34;
+      const rearWheelX=-sx*.62;
+      const frontWheelX=sx*.62;
+      const wheelWidth=Math.max(sz*.20,9);
 
-      // Four wheels: front/rear × left/right.
-      for(const wx of [-wheelX,wheelX]){
-        addWheel(wx,wheelY,-sz*.73,wheelR,wheelWidth);
-        addWheel(wx,wheelY, sz*.73,wheelR,wheelWidth);
+      for(const wx of [rearWheelX,frontWheelX]){
+        addWheel(wx,wheelY,-sz*.72,wheelR,wheelWidth);
+        addWheel(wx,wheelY, sz*.72,wheelR,wheelWidth);
       }
+
+      // Side detail lines on both visible sides: windows, B-pillar,
+      // belt line, door split and rocker line.
+      for(const sideZ of [-sz*.655,sz*.655]){
+        const glassTopY=-sy*.60;
+        const glassBaseY=-sy*.27;
+
+        addPolyline([
+          {x:-sx*.39,y:glassBaseY,z:sideZ},
+          {x:-sx*.21,y:glassTopY,z:sideZ},
+          {x: sx*.22,y:glassTopY,z:sideZ},
+          {x: sx*.52,y:glassBaseY,z:sideZ}
+        ]);
+
+        addEdge(
+          {x:sx*.04,y:glassTopY,z:sideZ},
+          {x:sx*.04,y:glassBaseY,z:sideZ}
+        );
+
+        addEdge(
+          {x:-sx*.70,y:-sy*.08,z:sideZ},
+          {x: sx*.72,y:-sy*.08,z:sideZ}
+        );
+
+        addEdge(
+          {x:sx*.04,y:glassBaseY,z:sideZ},
+          {x:sx*.04,y:sy*.24,z:sideZ}
+        );
+
+        addEdge(
+          {x:-sx*.79,y:sy*.27,z:sideZ},
+          {x: sx*.79,y:sy*.27,z:sideZ}
+        );
+      }
+
+      // Front face: grille + two simple headlights.
+      const frontX=sx*.995;
+      const frontZ=sz*.40;
+      addPolyline([
+        {x:frontX,y:sy*.05,z:-frontZ},
+        {x:frontX,y:sy*.05,z: frontZ},
+        {x:frontX,y:sy*.20,z: frontZ},
+        {x:frontX,y:sy*.20,z:-frontZ},
+        {x:frontX,y:sy*.05,z:-frontZ}
+      ]);
+
+      for(const zc of [-sz*.48,sz*.48]){
+        addPolyline([
+          {x:frontX+.5,y:-sy*.01,z:zc-sz*.09},
+          {x:frontX+.5,y:-sy*.01,z:zc+sz*.09},
+          {x:frontX+.5,y: sy*.08,z:zc+sz*.09},
+          {x:frontX+.5,y: sy*.08,z:zc-sz*.09},
+          {x:frontX+.5,y:-sy*.01,z:zc-sz*.09}
+        ]);
+      }
+
+      // Rear face detail: hatch/trunk seam.
+      addEdge(
+        {x:-sx*.975,y:-sy*.02,z:-sz*.45},
+        {x:-sx*.975,y:-sy*.02,z: sz*.45}
+      );
 
       return {points,edges,faces,curves:[]};
     }
-
 
     const points=[
       {x:-sx,y:-sy,z:-sz},{x:sx,y:-sy,z:-sz},
