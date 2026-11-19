@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v19.06-deneme</title>
+<title>Beyaz Tahta v19.07-deneme</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1347,7 +1347,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.06-deneme · Low-poly 3D araba eklendi · checkpoint: v19.00</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.07-deneme · 3D arabada görünmeyen çizgiler gizlendi · checkpoint: v19.00</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -8191,6 +8191,10 @@
     });
 
     for(const e of edges){
+      // Araba modelinde görünmeyen kenarları eğitim amaçlı kesik çizgiyle
+      // göstermiyoruz; gerçek nesne görünümüne daha yakın olsun.
+      if(o.shape3dType==='car' && e.hidden) continue;
+
       ctx.beginPath();
       const hiddenStyle=hidden3DStyle();
       ctx.globalAlpha=e.hidden?hiddenStyle.alpha:1;
