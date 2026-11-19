@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v19.11-deneme</title>
+<title>Beyaz Tahta v19.12-deneme</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1109,7 +1109,7 @@
         <option value="hexpyramid3d">Altıgen piramit 3D</option>
         <option value="hexprism3d">Altıgen prizma 3D</option>
         <option value="sphere3d">Küre 3D</option>
-        <option value="car3d">Araba 3D</option>
+        <option value="car3d">Araba (Bézier)</option>
       </optgroup>
     </select>
 
@@ -1347,7 +1347,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.11-deneme · BasicCar sade dış kontur · checkpoint: v19.00</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.12-deneme · Bézier tabanlı stilize araba · checkpoint: v19.00</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -19784,6 +19784,204 @@
     return null;
   }
 
+
+  function makeBezierCarGroup(cx,cy,scale,baseStyle){
+    // v19.12-deneme — tamamen Bézier tabanlı araba.
+    // Mesh yok, gizli çizgi yok, convex-hull dış konturu yok.
+    // Bütün parçalar aynı groupId ile tek nesne gibi taşınır/ölçeklenir.
+    const gid=makeGroupId();
+    const S=Math.max(.01,Number(scale)||1);
+
+    const world=(x,y)=>({x:cx+x*S,y:cy+y*S});
+    const style=(color,width=2)=>({
+      ...cloneObject(baseStyle||strokeStyle()),
+      color,
+      width:width*S
+    });
+
+    function anchor(x,y,inDx=0,inDy=0,outDx=0,outDy=0,broken=false){
+      const p=world(x,y);
+      return {
+        x:p.x,
+        y:p.y,
+        in:world(x+inDx,y+inDy),
+        out:world(x+outDx,y+outDy),
+        broken
+      };
+    }
+
+    function bezier(anchors,{
+      fill=null,
+      stroke='#263238',
+      width=2,
+      name='car part',
+      opacity=0
+    }={}){
+      const o=makeBezierShape(anchors,{
+        closed:true,
+        style:style(stroke,width),
+        shapeType:name,
+        source:'menu',
+        boxAngle:0,
+        fillColor:fill,
+        fillOpacity:opacity
+      });
+      o.groupId=gid;
+      o.carPart=name;
+      return o;
+    }
+
+    function ellipse(x,y,rx,ry,{
+      fill=null,
+      stroke='#263238',
+      width=2,
+      name='car ellipse',
+      opacity=0
+    }={}){
+      const o=ellipseBezier(
+        world(x,y),
+        rx*S,
+        ry*S,
+        0,
+        style(stroke,width),
+        name,
+        'menu'
+      );
+      if(fill) o.fillColor=fill;
+      o.fillOpacity=opacity;
+      o.groupId=gid;
+      o.carPart=name;
+      return o;
+    }
+
+    const blue='#4b98f5';
+    const blueDark='#3278cf';
+    const blueLight='#72b5ff';
+    const glass='#d7ecff';
+    const glassDark='#a8d2f2';
+    const tire='#263238';
+    const rim='#d9e2e8';
+    const line='#263238';
+
+    const parts=[];
+
+    // 1 — Ana gövde. Teker boşlukları ayrı koyu lastiklerle kapatılır;
+    // dış silüet tek, temiz Bézier eğrisi olarak kalır.
+    parts.push(bezier([
+      anchor(-150, 18,   0,0,  18,-22,true),
+      anchor(-126,-26, -18,12,  12,-18,true),
+      anchor(-86,-78,  -18,22,  18,-8,true),
+      anchor(-10,-91,  -26,0,   25,0,false),
+      anchor(62,-88,   -24,-2,  24,3,false),
+      anchor(112,-65,  -22,-8,  18,12,true),
+      anchor(150,-31,  -12,-18, 8,14,true),
+      anchor(160,  8,   0,-18,  0,18,true),
+      anchor(145, 38,   8,-8,  -20,8,true),
+      anchor(92, 54,   22,0,  -20,2,false),
+      anchor(35, 58,   20,0,  -18,0,false),
+      anchor(-30,58,   20,0,  -18,0,false),
+      anchor(-92,53,   20,0,  -18,-2,false),
+      anchor(-140,39,  18,6,  -10,-8,true)
+    ],{fill:blue,stroke:line,width:2.2,name:'car body'}));
+
+    // 2 — Tavan/cam kabini.
+    parts.push(bezier([
+      anchor(-87,-72,   0,0,  22,-9,true),
+      anchor(-12,-87, -25,0,  26,0,false),
+      anchor(57,-83,  -24,-1, 20,9,true),
+      anchor(93,-39,  -13,-19, 6,14,true),
+      anchor(-52,-38, 18,0, -15,-12,true)
+    ],{fill:blueDark,stroke:line,width:1.8,name:'car cabin'}));
+
+    // 3 — Sol/ön cam.
+    parts.push(bezier([
+      anchor(-70,-69, 0,0, 15,-6,true),
+      anchor(-18,-79,-18,0, 8,9,true),
+      anchor(-5,-43, -5,-12, -16,0,true),
+      anchor(-55,-42, 16,0,-8,-10,true)
+    ],{fill:glassDark,stroke:line,width:1.45,name:'car window left'}));
+
+    // 4 — Sağ/ön cam.
+    parts.push(bezier([
+      anchor(-12,-79, 0,0, 20,0,true),
+      anchor(48,-76,-18,0, 12,10,true),
+      anchor(78,-43,-8,-12,-16,2,true),
+      anchor(2,-43, 18,0,-6,-12,true)
+    ],{fill:glass,stroke:line,width:1.45,name:'car window right'}));
+
+    // 5 — Kaput yüzeyi.
+    parts.push(bezier([
+      anchor(79,-39,0,0,22,4,true),
+      anchor(132,-23,-16,-8,10,8,true),
+      anchor(145,-3,0,-8,-18,5,true),
+      anchor(65,6,22,0,-12,-11,true),
+      anchor(22,-24,-8,10,18,-4,true)
+    ],{fill:blueLight,stroke:line,width:1.35,name:'car hood'}));
+
+    // 6 — Ön tampon / burun.
+    parts.push(bezier([
+      anchor(143,-4,0,0, 8,8,true),
+      anchor(154,11,0,-7,0,9,true),
+      anchor(143,29,8,-5,-16,5,true),
+      anchor(100,40,15,0,-10,-10,true),
+      anchor(91,14,5,8,15,-3,true)
+    ],{fill:blueDark,stroke:line,width:1.35,name:'car front'}));
+
+    // 7 — Kapı ayırımı; kapalı, çok ince ve gövdeye yakın tonda.
+    parts.push(bezier([
+      anchor(-45,-35,0,0,1,18,true),
+      anchor(-44,37,0,-20,4,5,true),
+      anchor(-38,43,-3,-2,8,0,true),
+      anchor(-31,39,-7,2,0,-18,true),
+      anchor(-32,-35,0,18,-5,0,true)
+    ],{fill:'#438ee6',stroke:'#397fcf',width:.8,name:'car door seam'}));
+
+    // 8 — Arka teker.
+    parts.push(ellipse(-99,43,27,31,{
+      fill:tire,stroke:line,width:1.8,name:'car rear tire'
+    }));
+    parts.push(ellipse(-99,43,14,17,{
+      fill:rim,stroke:'#607d8b',width:1.2,name:'car rear rim'
+    }));
+    parts.push(ellipse(-99,43,5.5,7,{
+      fill:'#78909c',stroke:'#607d8b',width:.8,name:'car rear hub'
+    }));
+
+    // 9 — Ön teker.
+    parts.push(ellipse(70,49,30,34,{
+      fill:tire,stroke:line,width:1.8,name:'car front tire'
+    }));
+    parts.push(ellipse(70,49,15,18,{
+      fill:rim,stroke:'#607d8b',width:1.2,name:'car front rim'
+    }));
+    parts.push(ellipse(70,49,6,7,{
+      fill:'#78909c',stroke:'#607d8b',width:.8,name:'car front hub'
+    }));
+
+    // 10 — Farlar.
+    parts.push(ellipse(135,-1,7,5,{
+      fill:'#fff7c2',stroke:'#53606a',width:.9,name:'car headlight'
+    }));
+
+    // 11 — Kapı kolu.
+    parts.push(bezier([
+      anchor(-69,-5,0,0,7,-1,true),
+      anchor(-50,-6,-6,0,1,3,true),
+      anchor(-51,-1,1,-2,-7,1,true),
+      anchor(-68,0,6,0,-1,-3,true)
+    ],{fill:'#dce9f5',stroke:'#42627a',width:.8,name:'car door handle'}));
+
+    // 12 — Kaput üzerinde sade bir highlight.
+    parts.push(bezier([
+      anchor(47,-24,0,0,12,-2,true),
+      anchor(96,-18,-14,-2,7,4,true),
+      anchor(102,-12,-5,-2,-12,1,true),
+      anchor(55,-16,14,0,-8,-4,true)
+    ],{fill:'#93c6ff',stroke:'#93c6ff',width:.4,name:'car hood highlight'}));
+
+    return parts;
+  }
+
   addShapeBtn.onclick=()=>{
     const beforeCount=objects.length;
     const r=canvas.getBoundingClientRect();
@@ -19932,9 +20130,14 @@
         boxAngle:0
       }));
     }
+    if(t==='car3d'){
+      const carParts=makeBezierCarGroup(cx,cy,insertionScale,style);
+      objects.push(...carParts);
+    }
+
     if([
       'line3d','cube3d','pyramid3d','cylinder3d','cone3d',
-      'hexpyramid3d','hexprism3d','sphere3d','car3d'
+      'hexpyramid3d','hexprism3d','sphere3d'
     ].includes(t)){
       const obj=makeShape3D(t,cx,cy,insertionScale,style);
       if(obj) objects.push(obj);
