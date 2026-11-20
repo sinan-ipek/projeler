@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v19.14-deneme</title>
+<title>Beyaz Tahta v19.15-deneme</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1347,7 +1347,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.14-deneme · 3D araba gerçek gizli-kenar kaldırma · checkpoint: v19.00</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.15-deneme · 3D araba yakın-teker görünürlüğü · checkpoint: v19.00</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -6861,11 +6861,16 @@
       for(let i=0;i<n;i++) addEdge(hub[i],hub[(i+1)%n]);
     }
 
-    // Dört teker.
-    addWheel(-.30, .43);
-    addWheel( .31, .43);
-    addWheel(-.30,-.43);
-    addWheel( .31,-.43);
+    // v19.15 — Karşı taraftaki tekerlekleri aynı anda çizmek,
+    // gövdenin altından ve yakın tekerleğin çevresinden "taşma" üretiyordu.
+    // Kameraya hangi Z tarafı daha yakınsa yalnız o tarafın iki tekerleğini
+    // gerçek geometriye ekliyoruz. Araba 180° döndüğünde taraf otomatik değişir.
+    const probePlus=shape3DProjectLocalPoint(o,{x:0,y:0,z:1});
+    const probeMinus=shape3DProjectLocalPoint(o,{x:0,y:0,z:-1});
+    const nearZ=(probePlus.z<=probeMinus.z) ? .43 : -.43;
+
+    addWheel(-.30,nearZ);
+    addWheel( .31,nearZ);
 
     // Ön farlar: küçük yüzey plakaları.
     function plate(x,y,z,w,h,color){
@@ -8331,7 +8336,7 @@
 
     ctx.save();
     ctx.strokeStyle=(o.style&&o.style.color)||'#111111';
-    ctx.lineWidth=Math.max(.75/viewZoom,visualStrokeWidth(o.style||{})*.78);
+    ctx.lineWidth=Math.max(.65/viewZoom,visualStrokeWidth(o.style||{})*.62);
     ctx.lineCap='round';
     ctx.lineJoin='round';
     ctx.globalAlpha=1;
