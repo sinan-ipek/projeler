@@ -1,37 +1,17 @@
-# Check liste — çoklu soru çalışma platformu
+# Check Liste
 
-Bu klasör, yeni öğrenciler ve yeni kitap/checklist'ler eklendikçe aynı arayüz ve aynı beyaz tahta motorunu yeniden kullanmak için hazırlanmıştır.
+GitHub / projeler içindeki Çetin çalışma listesi.
 
-## Hedef yapı
+## GitHub'da bulunanlar (20 Kasım 2026)
 
-```text
-check-liste/
-  index.html                      # Ortak uygulama
-  style.css                       # Arayüz
-  engine.js                       # Soru gezinme + beyaz tahta
-  catalog.js                      # Paketler listesi
-  sets/
-    cetin-2026/
-      data.js                     # 41 sorunun metin ve görselleri
-    yeni-ogrenci-2027/
-      data.js
-```
+- `index.html`: Çetin için açılan çalışma arayüzü
+- `app.js`: Sayfa/soru menüsü, ilerleme durumu, kalem/silgi ve beyaz tahta işlevleri
+- `sets/cetin-2026/data.js`: 13 sayfadan 41 Almanca–Türkçe soru
+- Projeler ana sayfasında **Check Liste** bağlantısı
 
-Her pakette `id`, `title`, `questions` bulunur. Her soruda `id`, `page`, `number`, `german`, `turkish`, isteğe bağlı `star`, `plus`, `sourceImage`, `figureImage` alanları vardır.
+**Görsel durumu:** Daha önce sohbet içinde üretilmiş tek dosyalı son sürümdeki bütün kırpılmış orijinal kitap görselleri bu GitHub aktarımında henüz bulunmuyor. Bu GitHub sürümünün birebir aynı sürüm olduğu iddia edilmemelidir.
 
-## Yeni liste ekleme
+## Daha sonra yeni checklist
 
-1. `sets/<benzersiz-kod>/data.js` oluştur.
-2. `catalog.js` dosyasına paket kimliğini ve veri yolunu ekle.
-3. Uygulama URL'sini `?set=<benzersiz-kod>` olarak kullan. Aynı listeye ayrı öğrencilerin girmesi için `?profile=<ogrenci-kodu>` kullanılabilir.
+Her öğrenci için ayrı veri dosyası ve benzersiz liste kimliği kullanın. Şablonun beyaz tahta işlevlerini sabit tutun; Almanca/Türkçe soru metinleri ve kitap görsellerini kontrol ederek ekleyin. Tamamlandı işaretlerini ve çizimleri liste kimliği + öğrenci profili + soru numarasına göre saklayın.
 
-`localStorage` anahtarları `checklist-id + profile-id + question-id` ile ayrılır; başka soru listesi mevcut tamamlanma veya çözüm çizimlerini silmez.
-
-**Yükleme durumu:** Bu repo klasöründe mimari taslak bulunmaktadır. Tam çalışır çoklu-checklist paketi (kesilmiş kitap görselleri dahil), sohbetten verilen `check-liste-multi.zip` arşivindedir. Arşivdeki dosyalar bu klasöre yüklenmeden `index.html` GitHub Pages üzerinde çalışır kabul edilmemelidir.
-
-## Uzun vadeli iyileştirmeler
-
-- Büyük base64 görselleri ilgili paket içinde `assets/` dosyalarına ayırmak
-- Tamamlandı ve çizimleri JSON dışa/içe aktarmak
-- Farklı cihazlar arasında senkronizasyon için oturum açılan veri saklama hizmeti eklemek
-- Beyaz Tahta motorunu tek bağımsız kütüphane olarak paylaşmak
