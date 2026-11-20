@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Beyaz Tahta · Three.js Mimari Testi v20.02</title>
+<title>Beyaz Tahta · Three.js Mimari Testi v20.03</title>
 <style>
 :root{
   --bg:#f6f8fb;--panel:#ffffffee;--line:#d8dee9;--text:#1f2937;
@@ -38,6 +38,14 @@ button.active{background:#dbeafe;border-color:#93b4ff;color:#1747a6;font-weight:
   position:absolute;left:12px;bottom:9px;z-index:20;color:#808895;font-size:11px;
   background:#ffffffc9;border:1px solid #e1e6ee;border-radius:8px;padding:6px 8px
 }
+.props{
+  position:absolute;right:14px;bottom:14px;z-index:22;width:270px;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  box-shadow:0 8px 24px #00000014;padding:10px 12px;font-size:12px;line-height:1.45
+}
+.props h3{margin:0 0 7px;font-size:13px}
+.propsGrid{display:grid;grid-template-columns:58px 1fr;gap:4px 8px}
+.props code{font-family:ui-monospace,Consolas,monospace;font-size:11px}
 #helpModal{
   position:absolute;inset:0;z-index:40;display:none;align-items:center;justify-content:center;background:#0005
 }
@@ -72,6 +80,15 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
     <button id="carBtn">3D Araba</button>
     <button id="select3DBtn">3D Seç</button>
     <button id="axisModeBtn">World</button>
+    <button id="snapBtn">Snap: Kapalı</button>
+    <select id="axisLock" title="Eksen kilidi">
+      <option value="free">Serbest</option>
+      <option value="x">X</option>
+      <option value="y">Y</option>
+      <option value="z">Z</option>
+    </select>
+    <button id="wireBtn">Wireframe: Kapalı</button>
+    <button id="visibilityBtn">Gizle/Göster</button>
     <button id="duplicateBtn">Kopyala</button>
     <button id="delete3DBtn">Sil</button>
     <button id="dropBtn">XY'ye İndir</button>
@@ -88,7 +105,18 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
     Seçili nesne sarı kutu ve XYZ eksenleriyle gösterilir.
   </div>
 
-  <div class="version">v20.02-three-test · kalıcı seçim + ölçek/kopyala/sil/drop + World/Local + gölge · checkpoint: v19.15</div>
+  <div class="props" id="propsPanel">
+    <h3>Seçili 3D nesne</h3>
+    <div id="propsEmpty">Nesne seçilmedi.</div>
+    <div class="propsGrid" id="propsGrid" style="display:none">
+      <div>Konum</div><code id="propPos">-</code>
+      <div>Dönüş</div><code id="propRot">-</code>
+      <div>Ölçek</div><code id="propScale">-</code>
+      <div>Mod</div><code id="propMode">-</code>
+    </div>
+  </div>
+
+  <div class="version">v20.03-three-test · snap + eksen kilidi + wireframe + görünürlük + özellik paneli · checkpoint: v19.15</div>
 
   <div id="helpModal">
     <div class="card">
@@ -119,6 +147,16 @@ const axisModeBtn=document.getElementById('axisModeBtn');
 const duplicateBtn=document.getElementById('duplicateBtn');
 const delete3DBtn=document.getElementById('delete3DBtn');
 const dropBtn=document.getElementById('dropBtn');
+const snapBtn=document.getElementById('snapBtn');
+const axisLock=document.getElementById('axisLock');
+const wireBtn=document.getElementById('wireBtn');
+const visibilityBtn=document.getElementById('visibilityBtn');
+const propsEmpty=document.getElementById('propsEmpty');
+const propsGrid=document.getElementById('propsGrid');
+const propPos=document.getElementById('propPos');
+const propRot=document.getElementById('propRot');
+const propScale=document.getElementById('propScale');
+const propMode=document.getElementById('propMode');
 const helpBtn=document.getElementById('helpBtn');
 const helpModal=document.getElementById('helpModal');
 const closeHelp=document.getElementById('closeHelp');
@@ -237,18 +275,64 @@ let selectedStartQuat=null;
 let selectedStartZ=0;
 let selectedStartScale=null;
 let transformSpace='world';
+let snapEnabled=false;
+let wireframeEnabled=false;
 let selectionBox=null;
 let selectionAxes=null;
 const raycaster=new THREE.Raycaster();
 const pointerNDC=new THREE.Vector2();
 
+
+function snapValue(v,step){
+ return snapEnabled ? Math.round(v/step)*step : v;
+}
+function applyWireframeState(root,enabled){
+ if(!root)return;
+ root.traverse?.(c=>{
+   if(c.isMesh && c.material){
+     const mats=Array.isArray(c.material)?c.material:[c.material];
+     mats.forEach(m=>{ if('wireframe' in m)m.wireframe=enabled; });
+   }
+ });
+}
+function updatePropsPanel(){
+ if(!selected3D){
+   propsEmpty.style.display='';
+   propsGrid.style.display='none';
+   return;
+ }
+ propsEmpty.style.display='none';
+ propsGrid.style.display='grid';
+ const p=selected3D.position,r=selected3D.rotation,sc=selected3D.scale;
+ propPos.textContent=`x:${p.x.toFixed(1)} y:${p.y.toFixed(1)} z:${p.z.toFixed(1)}`;
+ propRot.textContent=`x:${THREE.MathUtils.radToDeg(r.x).toFixed(1)}° y:${THREE.MathUtils.radToDeg(r.y).toFixed(1)}° z:${THREE.MathUtils.radToDeg(r.z).toFixed(1)}°`;
+ propScale.textContent=`x:${sc.x.toFixed(2)} y:${sc.y.toFixed(2)} z:${sc.z.toFixed(2)}`;
+ propMode.textContent=`${transformSpace} · ${axisLock.value==='free'?'serbest':axisLock.value.toUpperCase()} · snap ${snapEnabled?'açık':'kapalı'}`;
+}
+snapBtn.onclick=()=>{
+ snapEnabled=!snapEnabled;
+ snapBtn.textContent='Snap: '+(snapEnabled?'Açık':'Kapalı');
+ updatePropsPanel();
+};
+wireBtn.onclick=()=>{
+ wireframeEnabled=!wireframeEnabled;
+ wireBtn.textContent='Wireframe: '+(wireframeEnabled?'Açık':'Kapalı');
+ for(const o of objects3D)applyWireframeState(o,wireframeEnabled);
+};
+visibilityBtn.onclick=()=>{
+ if(!selected3D)return;
+ selected3D.visible=!selected3D.visible;
+ refreshSelectionVisuals();
+ updatePropsPanel();
+};
+axisLock.onchange=updatePropsPanel;
 function clearSelectionVisuals(){
  if(selectionBox){scene.remove(selectionBox);selectionBox.geometry?.dispose();selectionBox.material?.dispose();selectionBox=null}
  if(selectionAxes){scene.remove(selectionAxes);selectionAxes.dispose?.();selectionAxes=null}
 }
 function refreshSelectionVisuals(){
  clearSelectionVisuals();
- if(!selected3D)return;
+ if(!selected3D){updatePropsPanel();return;}
  selectionBox=new THREE.BoxHelper(selected3D,0xffbf00);
  scene.add(selectionBox);
  selectionAxes=new THREE.AxesHelper(105);
@@ -256,6 +340,7 @@ function refreshSelectionVisuals(){
  if(transformSpace==='local')selectionAxes.quaternion.copy(selected3D.quaternion);
  selectionAxes.renderOrder=999;
  scene.add(selectionAxes);
+ updatePropsPanel();
 }
 function select3DObject(o){
  selected3D=o||null;
@@ -283,6 +368,7 @@ function duplicateSelected(){
  });
  clone.userData.selectRoot=true;
  addObject(clone);
+ applyWireframeState(clone,wireframeEnabled);
  select3DObject(clone);
 }
 function dropSelectedToXY(){
@@ -297,6 +383,7 @@ axisModeBtn.onclick=()=>{
  transformSpace=transformSpace==='world'?'local':'world';
  axisModeBtn.textContent=transformSpace==='world'?'World':'Local';
  refreshSelectionVisuals();
+ updatePropsPanel();
 };
 duplicateBtn.onclick=duplicateSelected;
 delete3DBtn.onclick=()=>remove3DObject(selected3D);
@@ -352,24 +439,54 @@ drawCanvas.onpointermove=e=>{
    if(!drag3D)return;
    const dx=p.x-selectedStart.x,dy=p.y-selectedStart.y;
    if(e.ctrlKey||e.metaKey){
-     const k=Math.max(.12,Math.min(6,Math.exp(-dy*.008)));
-     drag3D.scale.copy(selectedStartScale).multiplyScalar(k);
+     let k=Math.max(.12,Math.min(6,Math.exp(-dy*.008)));
+     if(snapEnabled)k=Math.round(k/.1)*.1;
+     if(axisLock.value==='free'){
+       drag3D.scale.copy(selectedStartScale).multiplyScalar(k);
+     }else{
+       drag3D.scale.copy(selectedStartScale);
+       drag3D.scale[axisLock.value]=selectedStartScale[axisLock.value]*k;
+     }
    }else if(e.altKey){
      const qy=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dx*.008);
      const qx=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),dy*.008);
-     if(transformSpace==='local'){
-       drag3D.quaternion.copy(selectedStartQuat).multiply(qy).multiply(qx);
+     let q;
+     if(axisLock.value==='x'){
+       q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),dy*.008);
+     }else if(axisLock.value==='y'){
+       q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dx*.008);
+     }else if(axisLock.value==='z'){
+       q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),dx*.008);
      }else{
-       drag3D.quaternion.copy(selectedStartQuat).premultiply(qy).premultiply(qx);
+       q=qy.clone().multiply(qx);
+     }
+     if(snapEnabled){
+       const eul=new THREE.Euler().setFromQuaternion(q,'XYZ');
+       const step=THREE.MathUtils.degToRad(15);
+       eul.x=Math.round(eul.x/step)*step;
+       eul.y=Math.round(eul.y/step)*step;
+       eul.z=Math.round(eul.z/step)*step;
+       q.setFromEuler(eul);
+     }
+     if(transformSpace==='local'){
+       drag3D.quaternion.copy(selectedStartQuat).multiply(q);
+     }else{
+       drag3D.quaternion.copy(selectedStartQuat).premultiply(q);
      }
    }else if(e.shiftKey){
-     drag3D.position.z=selectedStartZ-dy/pixelsPerWorld();
+     let z=selectedStartZ-dy/pixelsPerWorld();
+     if(axisLock.value==='free'||axisLock.value==='z') drag3D.position.z=snapValue(z,25);
    }else{
      const s=pixelsPerWorld();
-     drag3D.position.x=selectedStartPos.x+dx/s;
-     drag3D.position.y=selectedStartPos.y-dy/s;
+     let nx=selectedStartPos.x+dx/s;
+     let ny=selectedStartPos.y-dy/s;
+     nx=snapValue(nx,25);
+     ny=snapValue(ny,25);
+     if(axisLock.value==='free'||axisLock.value==='x') drag3D.position.x=nx;
+     if(axisLock.value==='free'||axisLock.value==='y') drag3D.position.y=ny;
    }
    refreshSelectionVisuals();
+   updatePropsPanel();
  }else{
    const s=pixelsPerWorld();
    view.x=startView.x-(p.x-startScreen.x)/s;
@@ -391,7 +508,7 @@ drawCanvas.addEventListener('wheel',e=>{
 const objects3D=[];
 function addObject(o){
  o.traverse?.(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true}});
- scene.add(o);objects3D.push(o)
+ scene.add(o);objects3D.push(o);applyWireframeState(o,wireframeEnabled)
 }
 function material(color,rough=.68,metal=.08){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal,flatShading:false})}
 
@@ -485,6 +602,7 @@ clearBtn.onclick=()=>{
  for(const o of objects3D){scene.remove(o);o.traverse(c=>{c.geometry?.dispose();if(c.material){if(Array.isArray(c.material))c.material.forEach(m=>m.dispose());else c.material.dispose()}})}
  objects3D.length=0;
  select3DObject(null);
+ updatePropsPanel();
 };
 
 
@@ -494,6 +612,9 @@ window.addEventListener('keydown',e=>{
    if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();remove3DObject(selected3D);return}
    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'){e.preventDefault();duplicateSelected();return}
    if(e.key.toLowerCase()==='g'){e.preventDefault();dropSelectedToXY();return}
+   if(e.key.toLowerCase()==='h'){e.preventDefault();visibilityBtn.click();return}
+   if(e.key.toLowerCase()==='w'){e.preventDefault();wireBtn.click();return}
+   if(e.key.toLowerCase()==='s'){e.preventDefault();snapBtn.click();return}
  }
 });
 function draw2D(){
@@ -526,9 +647,9 @@ function frame(){
    if(transformSpace==='local')selectionAxes.quaternion.copy(selected3D.quaternion);
    else selectionAxes.quaternion.identity();
  }
- renderer.render(scene,camera);draw2D();
+ renderer.render(scene,camera);draw2D();updatePropsPanel();
 }
-applyLang();rebuild3DGrid();resize();setMode('pan');addCar();addCube();frame();
+applyLang();rebuild3DGrid();resize();setMode('pan');snapBtn.textContent='Snap: Kapalı';wireBtn.textContent='Wireframe: Kapalı';updatePropsPanel();addCar();addCube();frame();
 </script>
 <script src="/projeler/analytics.js?v=20261114-auto"></script>
 </body>
