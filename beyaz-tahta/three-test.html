@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Beyaz Tahta · Three.js Mimari Testi v20.05</title>
+<title>Beyaz Tahta · Three.js Mimari Testi v20.06</title>
 <style>
 :root{
   --bg:#f6f8fb;--panel:#ffffffee;--line:#d8dee9;--text:#1f2937;
@@ -84,8 +84,10 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
     <button id="penBtn" title="Kalem">✎</button>
     <button id="panBtn" title="Pan">✥</button>
 
-    <input id="strokeColor" class="colorInput" type="color" value="#111111" title="Renk">
+    <input id="strokeColor" class="colorInput" type="color" value="#111111" title="Çizgi rengi">
     <input id="strokeWidth" class="widthInput" type="range" min="1" max="12" step="1" value="3" title="Çizgi kalınlığı">
+    <input id="fillColor" class="colorInput" type="color" value="#60a5fa" title="Dolgu rengi">
+    <input id="fillOpacity" class="widthInput" type="range" min="0" max="100" step="1" value="70" title="Dolgu opaklığı">
 
     <div class="sep"></div>
 
@@ -93,6 +95,8 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
       <option value="line">Çizgi</option>
       <option value="rect">Dikdörtgen</option>
       <option value="ellipse">Elips</option>
+      <option value="arc">Yay</option>
+      <option value="sector">Daire dilimi</option>
       <option value="triangle">Üçgen</option>
       <option value="pentagon">Beşgen</option>
       <option value="hexagon">Altıgen</option>
@@ -141,7 +145,7 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
     </div>
   </div>
 
-  <div class="version">v20.05-three-test · Beyaz Tahta yakınsaması: erişilebilir toolbar + daha fazla 2D şekil + kopyala/yapıştır · checkpoint: v19.15</div>
+  <div class="version">v20.06-three-test · Seç düzeltmesi + yeni araba + dolgu/saydamlık + yay/dilim · checkpoint: v19.15</div>
 
   <div id="helpModal">
     <div class="card">
@@ -167,6 +171,8 @@ const shapeType=document.getElementById('shapeType');
 const addShapeBtn=document.getElementById('addShapeBtn');
 const strokeColor=document.getElementById('strokeColor');
 const strokeWidth=document.getElementById('strokeWidth');
+const fillColor=document.getElementById('fillColor');
+const fillOpacity=document.getElementById('fillOpacity');
 const undoBtn=document.getElementById('undoBtn');
 const redoBtn=document.getElementById('redoBtn');
 const statusEl=document.getElementById('status');
@@ -205,7 +211,7 @@ const text={
  tr:{
   pan:'Pan',pen:'2D Kalem',cube:'3D Küp',car:'3D Araba',select3d:'Seç',axis:'World',dup:'Kopyala',del:'Sil',drop:"XY'ye İndir",reset:'Görünümü Sıfırla',clear:'Temizle',
   info:'<b>Three.js mimari testi</b><br>XY düzlemi = 2D çizim düzlemi.<br>X: ekran sağ/sol · Y: ekran yukarı/aşağı · Z: kullanıcıya doğru/uzak.<br>Kamera yalnız X/Y yönünde hareket eder; dönmez.',
-  ht:'Yardım',hb:"Bu test, mevcut Beyaz Tahta'nın sadık klonuna yaklaşır. 2D çizim ve şekiller normal canvas sisteminde kalır. Three.js yalnız 3D nesneler için kullanılır. XY düzlemi 2D çizim düzlemidir; kamera dönmez."
+  ht:'Yardım',hb:"Bu test, mevcut Beyaz Tahta'nın sadık klonuna yaklaşır. 2D çizim ve şekiller normal canvas sisteminde kalır. Three.js yalnız 3D nesneler için kullanılır. Seç ile 2D veya 3D nesne seçilir. XY düzlemi 2D çizim düzlemidir; kamera dönmez."
  },
  de:{
   pan:'Verschieben',pen:'2D Stift',cube:'3D Würfel',car:'3D Auto',select3d:'Auswahl',axis:'World',dup:'Kopieren',del:'Löschen',drop:'Auf XY',reset:'Ansicht zurücksetzen',clear:'Löschen',
@@ -320,12 +326,16 @@ function add2DShape(type){
    id:'d'+Math.random().toString(36).slice(2),
    type,
    color:strokeColor.value,
-   width:Number(strokeWidth.value)||3
+   width:Number(strokeWidth.value)||3,
+   fill:fillColor.value,
+   fillOpacity:(Number(fillOpacity.value)||0)/100
  };
  let o;
  if(type==='line')o={...common,a:{x:cx-90,y:cy},b:{x:cx+90,y:cy}};
  else if(type==='rect')o={...common,x:cx-90,y:cy-55,w:180,h:110};
  else if(type==='ellipse')o={...common,cx,cy,rx:90,ry:55};
+ else if(type==='arc')o={...common,cx,cy,r:85,start:-Math.PI*.85,end:Math.PI*.45};
+ else if(type==='sector')o={...common,cx,cy,r:85,start:-Math.PI*.2,end:Math.PI*.7};
  else if(['triangle','pentagon','hexagon'].includes(type)){
    const sides=type==='triangle'?3:(type==='pentagon'?5:6);
    const r=85;
@@ -352,6 +362,10 @@ function pointIn2DObject(o,w){
  if(o.type==='ellipse'){
    const dx=(w.x-o.cx)/(o.rx+tol),dy=(w.y-o.cy)/(o.ry+tol);
    return dx*dx+dy*dy<=1;
+ }
+ if(o.type==='arc'||o.type==='sector'){
+   const d=Math.hypot(w.x-o.cx,w.y-o.cy);
+   return o.type==='sector' ? d<=o.r+tol : Math.abs(d-o.r)<=tol*1.5;
  }
  if(['triangle','pentagon','hexagon'].includes(o.type)){
    let inside=false;
@@ -381,10 +395,23 @@ function pick2DAt(w){
 function move2DObject(o,dx,dy){
  if(o.type==='line'){o.a.x+=dx;o.a.y+=dy;o.b.x+=dx;o.b.y+=dy}
  else if(o.type==='rect'){o.x+=dx;o.y+=dy}
- else if(o.type==='ellipse'){o.cx+=dx;o.cy+=dy}
+ else if(o.type==='ellipse'||o.type==='arc'||o.type==='sector'){o.cx+=dx;o.cy+=dy}
  else if(['triangle','pentagon','hexagon'].includes(o.type)){for(const p of o.points){p.x+=dx;p.y+=dy}}
  else if(o.type==='axes'){o.cx+=dx;o.cy+=dy}
 }
+
+
+function applyCurrentStyleToSelected2D(){
+ if(!selected2D)return;
+ selected2D.color=strokeColor.value;
+ selected2D.width=Number(strokeWidth.value)||3;
+ selected2D.fill=fillColor.value;
+ selected2D.fillOpacity=(Number(fillOpacity.value)||0)/100;
+}
+strokeColor.addEventListener('input',applyCurrentStyleToSelected2D);
+strokeWidth.addEventListener('input',applyCurrentStyleToSelected2D);
+fillColor.addEventListener('input',applyCurrentStyleToSelected2D);
+fillOpacity.addEventListener('input',applyCurrentStyleToSelected2D);
 
 let mode='pan',dragging=false,startScreen=null,startView=null;
 let selected3D=null;
@@ -537,7 +564,7 @@ drawCanvas.onpointerdown=e=>{
  drawCanvas.setPointerCapture(e.pointerId);dragging=true;startScreen=screenPoint(e);startView={...view};
  if(mode==='pen'){
    activeStroke={id:'s'+Math.random().toString(36).slice(2),points:[screenToWorld(startScreen)],color:strokeColor.value,width:Number(strokeWidth.value)||3};strokes.push(activeStroke);
- }else if(mode==='select3d'){
+ }else if(mode==='select'){
    drag3D=pick3DAt(startScreen);
    select3DObject(drag3D);
    if(drag3D){
@@ -551,9 +578,14 @@ drawCanvas.onpointerdown=e=>{
      selected2D=pick2DAt(w);
      select3DObject(null);
      if(selected2D){
+       strokeColor.value=selected2D.color||'#111111';
+       strokeWidth.value=String(selected2D.width||3);
+       fillColor.value=selected2D.fill||'#60a5fa';
+       fillOpacity.value=String(Math.round((selected2D.fillOpacity||0)*100));
        selected2DStart=w;
        selected2DOriginal=clone2D(selected2D);
-     }
+       setStatus('2D nesne seçildi');
+     }else setStatus('Seçim yok');
    }
  }else drawCanvas.style.cursor='grabbing';
 };
@@ -563,7 +595,7 @@ drawCanvas.onpointermove=e=>{
  if(mode==='pen'){
    const w=screenToWorld(p),pts=activeStroke.points,last=pts[pts.length-1];
    if(Math.hypot(w.x-last.x,w.y-last.y)>.8)pts.push(w);
- }else if(mode==='select3d'){
+ }else if(mode==='select'){
    if(!drag3D)return;
    const dx=p.x-selectedStart.x,dy=p.y-selectedStart.y;
    if(e.ctrlKey||e.metaKey){
@@ -669,66 +701,101 @@ function wheel(){
 }
 function addCar(){
  const g=new THREE.Group();
- const blue=material(0x4b91e8,.48,.14);
- const blueDark=material(0x2e68b8,.58,.10);
- const blueLight=material(0x6eb6ff,.42,.12);
- const glass=new THREE.MeshStandardMaterial({color:0xa7d5f2,roughness:.16,metalness:.03,transparent:true,opacity:.88,side:THREE.DoubleSide});
- const black=material(0x20262d,.92,0);
- const rimMat=material(0xcbd3da,.28,.5);
- const trim=material(0x31363d,.72,.05);
- const lightMat=new THREE.MeshStandardMaterial({color:0xffed9a,emissive:0x665000,emissiveIntensity:.55,roughness:.35});
- const rearMat=new THREE.MeshStandardMaterial({color:0xff6f61,emissive:0x5a0906,emissiveIntensity:.35,roughness:.45});
 
- function box(w,h,d,mat,x,y,z,rz=0){
-   const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
-   m.position.set(x,y,z);m.rotation.z=rz;g.add(m);return m;
+ const bodyMat=material(0x2f80ed,.42,.18);
+ const bodyDark=material(0x1f5fae,.58,.12);
+ const bodyLight=material(0x69b7ff,.38,.14);
+ const glassMat=new THREE.MeshStandardMaterial({
+   color:0x8fd0f4,roughness:.12,metalness:.04,
+   transparent:true,opacity:.82,side:THREE.DoubleSide
+ });
+ const tireMat=material(0x171b20,.94,0);
+ const rimMat=material(0xd6dde3,.24,.62);
+ const trimMat=material(0x252a31,.65,.10);
+ const lampMat=new THREE.MeshStandardMaterial({color:0xfff2a8,emissive:0x665500,emissiveIntensity:.6,roughness:.3});
+ const tailMat=new THREE.MeshStandardMaterial({color:0xff5b4d,emissive:0x650a05,emissiveIntensity:.45,roughness:.4});
+
+ function meshFromPrism(profile,halfZ,mat){
+   const verts=[];
+   for(const p of profile)verts.push(p[0],p[1],-halfZ);
+   for(const p of profile)verts.push(p[0],p[1], halfZ);
+   const n=profile.length,idx=[];
+   // caps
+   for(let i=1;i<n-1;i++)idx.push(0,i+1,i);
+   for(let i=1;i<n-1;i++)idx.push(n,n+i,n+i+1);
+   // sides
+   for(let i=0;i<n;i++){
+     const j=(i+1)%n;
+     idx.push(i,j,n+j, i,n+j,n+i);
+   }
+   const geo=new THREE.BufferGeometry();
+   geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+   geo.setIndex(idx);geo.computeVertexNormals();
+   return new THREE.Mesh(geo,mat);
  }
 
- // Ana gövde: daha alçak ve uzun.
- box(340,74,152,blue,0,-6,0);
- box(142,26,148,blueLight,92,43,0,-.06);
- box(80,24,146,blueDark,-128,35,0,.03);
+ // Cleaner single-piece lower body silhouette.
+ const lower=meshFromPrism([
+   [-178,-38],[-174,18],[-145,38],[-92,47],[82,47],[143,34],[178,10],[176,-38]
+ ],76,bodyMat);
+ g.add(lower);
 
- // Kabin ve eğimli ön/arka cam blokları.
- box(156,60,132,glass,-24,82,0);
- box(54,64,134,glass,59,76,0,-.42);
- box(50,62,134,blueDark,-103,72,0,.40);
+ // Hood and trunk wedges.
+ const hood=meshFromPrism([[48,47],[143,34],[177,10],[80,20]],72,bodyLight);g.add(hood);
+ const trunk=meshFromPrism([[-176,18],[-145,38],[-100,45],[-118,18]],72,bodyDark);g.add(trunk);
 
- // İnce tavan ve alt eşik.
- box(142,10,134,trim,-22,116,0);
- box(330,12,154,blueDark,0,-47,0);
+ // Cabin as one trapezoid prism, not stacked boxes.
+ const cabin=meshFromPrism([
+   [-102,47],[-60,116],[38,116],[82,48]
+ ],66,glassMat);
+ g.add(cabin);
 
- // Ön ve arka yüz.
- box(20,62,148,blueDark,170,-5,0);
- box(18,60,148,blueDark,-170,-8,0);
+ // Roof strip and pillars.
+ const roof=new THREE.Mesh(new THREE.BoxGeometry(102,8,136),trimMat);
+ roof.position.set(-12,118,0);g.add(roof);
+
+ function pillar(x,y,h,angle){
+   const p=new THREE.Mesh(new THREE.BoxGeometry(10,h,136),trimMat);
+   p.position.set(x,y,0);p.rotation.z=angle;g.add(p);
+ }
+ pillar(-82,81,78,-.52);
+ pillar(60,82,78,.52);
+
+ // Door seam / rocker trim, subtle.
+ const rocker=new THREE.Mesh(new THREE.BoxGeometry(248,8,154),bodyDark);
+ rocker.position.set(0,-40,0);g.add(rocker);
 
  function makeWheel(){
    const wg=new THREE.Group();
-   const tire=new THREE.Mesh(new THREE.CylinderGeometry(34,34,24,28),black);
+   const tire=new THREE.Mesh(new THREE.CylinderGeometry(36,36,26,32),tireMat);
    tire.rotation.x=Math.PI/2;wg.add(tire);
-   const rim=new THREE.Mesh(new THREE.CylinderGeometry(19,19,25,24),rimMat);
+   const rim=new THREE.Mesh(new THREE.CylinderGeometry(20,20,27,28),rimMat);
    rim.rotation.x=Math.PI/2;wg.add(rim);
-   const hub=new THREE.Mesh(new THREE.CylinderGeometry(7,7,26,20),trim);
+   const hub=new THREE.Mesh(new THREE.CylinderGeometry(6,6,29,20),trimMat);
    hub.rotation.x=Math.PI/2;wg.add(hub);
+   // five spokes on outer face
+   for(let i=0;i<5;i++){
+     const spoke=new THREE.Mesh(new THREE.BoxGeometry(4,17,3),trimMat);
+     spoke.position.z=14.5;spoke.rotation.z=i*Math.PI*2/5;wg.add(spoke);
+   }
    return wg;
  }
- for(const x of [-105,105]){
-   for(const z of [-79,79]){
-     const w=makeWheel();w.position.set(x,-50,z);g.add(w);
+ for(const x of [-112,110]){
+   for(const z of [-80,80]){
+     const w=makeWheel();w.position.set(x,-40,z);g.add(w);
    }
  }
 
- // Farlar.
- for(const z of [-47,47]){
-   box(9,12,22,lightMat,179,13,z);
-   box(8,11,20,rearMat,-179,8,z);
+ // Lights and bumpers
+ for(const z of [-48,48]){
+   const head=new THREE.Mesh(new THREE.BoxGeometry(8,13,24),lampMat);head.position.set(179,12,z);g.add(head);
+   const tail=new THREE.Mesh(new THREE.BoxGeometry(8,13,22),tailMat);tail.position.set(-179,12,z);g.add(tail);
  }
+ const frontBumper=new THREE.Mesh(new THREE.BoxGeometry(8,14,116),trimMat);frontBumper.position.set(180,-22,0);g.add(frontBumper);
+ const rearBumper=new THREE.Mesh(new THREE.BoxGeometry(8,12,112),trimMat);rearBumper.position.set(-180,-24,0);g.add(rearBumper);
 
- // Tampon/grill detayı.
- box(8,22,58,trim,181,-17,0);
-
- g.position.set(view.x,view.y,86);
- g.rotation.set(.02,-.44,0);
+ g.position.set(view.x,view.y,78);
+ g.rotation.set(0,-.38,0);
  g.userData.selectRoot=true;
  addObject(g);
  select3DObject(g);
@@ -801,7 +868,7 @@ window.addEventListener('keydown',e=>{
    pushUndo({type:'add2d',id:obj.id});
    setStatus('2D nesne yapıştırıldı');return;
  }
- if(mode==='select3d' && selected3D){
+ if(mode==='select' && selected3D){
    if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();remove3DObject(selected3D);return}
    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'){e.preventDefault();duplicateSelected();return}
    if(e.key.toLowerCase()==='g'){e.preventDefault();dropSelectedToXY();return}
@@ -818,6 +885,8 @@ function draw2D(){
    ctx.save();
    ctx.strokeStyle=o.color||'#111';
    ctx.lineWidth=o.width||3;
+   ctx.fillStyle=o.fill||'#60a5fa';
+   ctx.globalAlpha=1;
    ctx.beginPath();
    if(o.type==='line'){
      const a=worldToScreen(o.a),b=worldToScreen(o.b);
@@ -829,6 +898,14 @@ function draw2D(){
    }else if(o.type==='ellipse'){
      const c=worldToScreen({x:o.cx,y:o.cy});
      ctx.ellipse(c.x,c.y,o.rx*pixelsPerWorld(),o.ry*pixelsPerWorld(),0,0,Math.PI*2);
+   }else if(o.type==='arc'){
+     const c=worldToScreen({x:o.cx,y:o.cy});
+     ctx.arc(c.x,c.y,o.r*pixelsPerWorld(),-o.end,-o.start,false);
+   }else if(o.type==='sector'){
+     const c=worldToScreen({x:o.cx,y:o.cy});
+     ctx.moveTo(c.x,c.y);
+     ctx.arc(c.x,c.y,o.r*pixelsPerWorld(),-o.end,-o.start,false);
+     ctx.closePath();
    }else if(['triangle','pentagon','hexagon'].includes(o.type)){
      const pts=o.points||[];
      if(pts.length){
@@ -843,7 +920,10 @@ function draw2D(){
      const t=worldToScreen({x:o.cx,y:o.cy+o.h/2});
      ctx.moveTo(l.x,l.y);ctx.lineTo(r.x,r.y);ctx.moveTo(b.x,b.y);ctx.lineTo(t.x,t.y);
    }
-   ctx.stroke();
+   if(['rect','ellipse','triangle','pentagon','hexagon','sector'].includes(o.type) && (o.fillOpacity||0)>0){
+     ctx.save();ctx.globalAlpha=o.fillOpacity||0;ctx.fill();ctx.restore();
+   }
+   ctx.globalAlpha=1;ctx.stroke();
    if(selected2D===o){
      ctx.setLineDash([6,4]);ctx.strokeStyle='#f59e0b';ctx.lineWidth=1.5;
      if(o.type==='rect'){
@@ -856,6 +936,7 @@ function draw2D(){
        let xs=[],ys=[];
        if(o.type==='line'){xs=[o.a.x,o.b.x];ys=[o.a.y,o.b.y]}
        else if(['triangle','pentagon','hexagon'].includes(o.type)){xs=o.points.map(p=>p.x);ys=o.points.map(p=>p.y)}
+       else if(o.type==='arc'||o.type==='sector'){xs=[o.cx-o.r,o.cx+o.r];ys=[o.cy-o.r,o.cy+o.r]}
        else if(o.type==='axes'){xs=[o.cx-o.w/2,o.cx+o.w/2];ys=[o.cy-o.h/2,o.cy+o.h/2]}
        if(xs.length){
          const p1=worldToScreen({x:Math.min(...xs),y:Math.max(...ys)});
