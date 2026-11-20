@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Beyaz Tahta · Three.js Mimari Testi v20.03</title>
+<title>Beyaz Tahta · Three.js Mimari Testi v20.04</title>
 <style>
 :root{
   --bg:#f6f8fb;--panel:#ffffffee;--line:#d8dee9;--text:#1f2937;
@@ -38,6 +38,11 @@ button.active{background:#dbeafe;border-color:#93b4ff;color:#1747a6;font-weight:
   position:absolute;left:12px;bottom:9px;z-index:20;color:#808895;font-size:11px;
   background:#ffffffc9;border:1px solid #e1e6ee;border-radius:8px;padding:6px 8px
 }
+.status{
+  min-width:110px;color:#475569;font-size:12px;padding:0 6px;white-space:nowrap
+}
+.colorInput{width:38px;padding:2px}
+.widthInput{width:78px}
 .props{
   position:absolute;right:14px;bottom:14px;z-index:22;width:270px;
   background:var(--panel);border:1px solid var(--line);border-radius:12px;
@@ -72,13 +77,37 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
       <option value="en">English</option>
     </select>
     <button id="helpBtn" title="Help">?</button>
+
     <div class="sep"></div>
-    <button id="panBtn" class="active">Pan</button>
-    <button id="penBtn">2D Kalem</button>
+
+    <button id="select3DBtn" class="active" title="Seç">↗</button>
+    <button id="penBtn" title="Kalem">✎</button>
+    <button id="panBtn" title="Pan">✥</button>
+
+    <input id="strokeColor" class="colorInput" type="color" value="#111111" title="Renk">
+    <input id="strokeWidth" class="widthInput" type="range" min="1" max="12" step="1" value="3" title="Çizgi kalınlığı">
+
     <div class="sep"></div>
-    <button id="cubeBtn">3D Küp</button>
-    <button id="carBtn">3D Araba</button>
-    <button id="select3DBtn">3D Seç</button>
+
+    <select id="shapeType" title="Şekil">
+      <option value="line">Çizgi</option>
+      <option value="rect">Dikdörtgen</option>
+      <option value="ellipse">Elips</option>
+      <optgroup label="3D">
+        <option value="cube3d">Küp 3D</option>
+        <option value="car3d">Araba 3D</option>
+      </optgroup>
+    </select>
+    <button id="addShapeBtn" title="Ekle">＋</button>
+
+    <div class="sep"></div>
+
+    <button id="undoBtn" title="Geri">↶</button>
+    <button id="redoBtn" title="İleri">↷</button>
+    <button id="clearBtn" title="Tümünü temizle">⌫</button>
+
+    <div class="sep"></div>
+
     <button id="axisModeBtn">World</button>
     <button id="snapBtn">Snap: Kapalı</button>
     <select id="axisLock" title="Eksen kilidi">
@@ -87,22 +116,20 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
       <option value="y">Y</option>
       <option value="z">Z</option>
     </select>
-    <button id="wireBtn">Wireframe: Kapalı</button>
+    <button id="wireBtn">Wireframe</button>
     <button id="visibilityBtn">Gizle/Göster</button>
     <button id="duplicateBtn">Kopyala</button>
     <button id="delete3DBtn">Sil</button>
     <button id="dropBtn">XY'ye İndir</button>
     <button id="resetBtn">Görünümü Sıfırla</button>
-    <button id="clearBtn">Temizle</button>
+
+    <div id="status" class="status">Hazır</div>
   </div>
 
   <div class="info" id="info">
-    <b>Three.js mimari testi</b><br>
-    XY düzlemi = 2D çizim düzlemi.<br>
-    X: ekran sağ/sol · Y: ekran yukarı/aşağı · Z: kullanıcıya doğru/uzak.<br>
-    Kamera yalnız X/Y yönünde hareket eder; dönmez.<br>
-    <b>3D Seç</b>: tıkla · sürükle = X/Y · Shift+sürükle = Z · Alt+sürükle = döndür · Ctrl+sürükle = ölçek.<br>
-    Seçili nesne sarı kutu ve XYZ eksenleriyle gösterilir.
+    <b>Beyaz Tahta → Three.js yakınsama testi</b><br>
+    Kalem, Seç, Pan ve ortak Şekil menüsü artık Beyaz Tahta düzenine yaklaşıyor.<br>
+    XY düzlemi 2D çizim düzlemidir; 3D nesneler aynı koordinat sistemini kullanır.
   </div>
 
   <div class="props" id="propsPanel">
@@ -116,7 +143,7 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
     </div>
   </div>
 
-  <div class="version">v20.03-three-test · snap + eksen kilidi + wireframe + görünürlük + özellik paneli · checkpoint: v19.15</div>
+  <div class="version">v20.04-three-test · Beyaz Tahta araç çubuğu + ortak 2D/3D şekiller + Undo/Redo · checkpoint: v19.15</div>
 
   <div id="helpModal">
     <div class="card">
@@ -138,8 +165,13 @@ const ctx=drawCanvas.getContext('2d');
 
 const panBtn=document.getElementById('panBtn');
 const penBtn=document.getElementById('penBtn');
-const cubeBtn=document.getElementById('cubeBtn');
-const carBtn=document.getElementById('carBtn');
+const shapeType=document.getElementById('shapeType');
+const addShapeBtn=document.getElementById('addShapeBtn');
+const strokeColor=document.getElementById('strokeColor');
+const strokeWidth=document.getElementById('strokeWidth');
+const undoBtn=document.getElementById('undoBtn');
+const redoBtn=document.getElementById('redoBtn');
+const statusEl=document.getElementById('status');
 const resetBtn=document.getElementById('resetBtn');
 const clearBtn=document.getElementById('clearBtn');
 const select3DBtn=document.getElementById('select3DBtn');
@@ -173,24 +205,24 @@ helpModal.onpointerdown=e=>{if(e.target===helpModal)helpModal.classList.remove('
 
 const text={
  tr:{
-  pan:'Pan',pen:'2D Kalem',cube:'3D Küp',car:'3D Araba',select3d:'3D Seç',axis:'World',dup:'Kopyala',del:'Sil',drop:"XY'ye İndir",reset:'Görünümü Sıfırla',clear:'Temizle',
+  pan:'Pan',pen:'2D Kalem',cube:'3D Küp',car:'3D Araba',select3d:'Seç',axis:'World',dup:'Kopyala',del:'Sil',drop:"XY'ye İndir",reset:'Görünümü Sıfırla',clear:'Temizle',
   info:'<b>Three.js mimari testi</b><br>XY düzlemi = 2D çizim düzlemi.<br>X: ekran sağ/sol · Y: ekran yukarı/aşağı · Z: kullanıcıya doğru/uzak.<br>Kamera yalnız X/Y yönünde hareket eder; dönmez.',
   ht:'Yardım',hb:'Bu sayfa sadece yeni 3D mimariyi dener. 2D çizim XY düzlemindedir. Three.js nesneleri aynı koordinat sisteminde gösterir. Kamera dönmez; sadece sağ-sol ve yukarı-aşağı taşınır.'
  },
  de:{
-  pan:'Verschieben',pen:'2D Stift',cube:'3D Würfel',car:'3D Auto',select3d:'3D wählen',axis:'World',dup:'Kopieren',del:'Löschen',drop:'Auf XY',reset:'Ansicht zurücksetzen',clear:'Löschen',
+  pan:'Verschieben',pen:'2D Stift',cube:'3D Würfel',car:'3D Auto',select3d:'Auswahl',axis:'World',dup:'Kopieren',del:'Löschen',drop:'Auf XY',reset:'Ansicht zurücksetzen',clear:'Löschen',
   info:'<b>Three.js Architekturtest</b><br>XY-Ebene = 2D-Zeichenebene.<br>X: Bildschirm rechts/links · Y: oben/unten · Z: zum Nutzer/vom Nutzer weg.<br>Die Kamera bewegt sich nur in X/Y und dreht sich nicht.',
   ht:'Hilfe',hb:'Diese Seite testet nur die neue 3D-Architektur. Die 2D-Zeichnung liegt in der XY-Ebene. Three.js benutzt dasselbe Koordinatensystem. Die Kamera dreht sich nicht.'
  },
  en:{
-  pan:'Pan',pen:'2D Pen',cube:'3D Cube',car:'3D Car',select3d:'3D Select',axis:'World',dup:'Duplicate',del:'Delete',drop:'Drop to XY',reset:'Reset View',clear:'Clear',
+  pan:'Pan',pen:'2D Pen',cube:'3D Cube',car:'3D Car',select3d:'Select',axis:'World',dup:'Duplicate',del:'Delete',drop:'Drop to XY',reset:'Reset View',clear:'Clear',
   info:'<b>Three.js architecture test</b><br>XY plane = 2D drawing plane.<br>X: screen left/right · Y: up/down · Z: toward/away from user.<br>The camera moves only in X/Y and never rotates.',
   ht:'Help',hb:'This page only tests the new 3D architecture. 2D drawing lives on the XY plane. Three.js uses the same coordinate system. The camera never rotates.'
  }
 };
 function applyLang(){
  const t=text[lang.value]||text.tr;
- panBtn.textContent=t.pan;penBtn.textContent=t.pen;cubeBtn.textContent=t.cube;carBtn.textContent=t.car;select3DBtn.textContent=t.select3d;
+ panBtn.textContent=t.pan;penBtn.textContent=t.pen;select3DBtn.textContent=t.select3d;
  duplicateBtn.textContent=t.dup;delete3DBtn.textContent=t.del;dropBtn.textContent=t.drop;
  axisModeBtn.textContent=transformSpace==='world'?'World':'Local';
  resetBtn.textContent=t.reset;clearBtn.textContent=t.clear;info.innerHTML=t.info;helpTitle.textContent=t.ht;helpText.textContent=t.hb;
@@ -265,7 +297,68 @@ function screenToWorld(p){
 }
 
 const strokes=[];
+const objects2D=[];
+const undoStack=[];
+const redoStack=[];
 let activeStroke=null;
+let selected2D=null;
+let selected2DStart=null;
+let selected2DOriginal=null;
+
+function setStatus(msg){statusEl.textContent=msg}
+
+function pushUndo(action){
+ undoStack.push(action);
+ redoStack.length=0;
+ if(undoStack.length>100)undoStack.shift();
+}
+
+function clone2D(o){return JSON.parse(JSON.stringify(o))}
+
+function add2DShape(type){
+ const cx=view.x,cy=view.y;
+ const common={
+   id:'d'+Math.random().toString(36).slice(2),
+   type,
+   color:strokeColor.value,
+   width:Number(strokeWidth.value)||3
+ };
+ let o;
+ if(type==='line')o={...common,a:{x:cx-90,y:cy},b:{x:cx+90,y:cy}};
+ else if(type==='rect')o={...common,x:cx-90,y:cy-55,w:180,h:110};
+ else if(type==='ellipse')o={...common,cx,cy,rx:90,ry:55};
+ if(!o)return;
+ objects2D.push(o);
+ pushUndo({type:'add2d',id:o.id});
+ selected2D=o;select3DObject(null);
+ setStatus('2D şekil eklendi');
+}
+
+function pointIn2DObject(o,w){
+ const tol=10/pixelsPerWorld();
+ if(o.type==='rect')return w.x>=o.x-tol&&w.x<=o.x+o.w+tol&&w.y>=o.y-tol&&w.y<=o.y+o.h+tol;
+ if(o.type==='ellipse'){
+   const dx=(w.x-o.cx)/(o.rx+tol),dy=(w.y-o.cy)/(o.ry+tol);
+   return dx*dx+dy*dy<=1;
+ }
+ if(o.type==='line'){
+   const ax=o.a.x,ay=o.a.y,bx=o.b.x,by=o.b.y;
+   const vx=bx-ax,vy=by-ay,wx=w.x-ax,wy=w.y-ay;
+   const c=Math.max(0,Math.min(1,(wx*vx+wy*vy)/(vx*vx+vy*vy||1)));
+   return Math.hypot(w.x-(ax+c*vx),w.y-(ay+c*vy))<=tol;
+ }
+ return false;
+}
+function pick2DAt(w){
+ for(let i=objects2D.length-1;i>=0;i--)if(pointIn2DObject(objects2D[i],w))return objects2D[i];
+ return null;
+}
+function move2DObject(o,dx,dy){
+ if(o.type==='line'){o.a.x+=dx;o.a.y+=dy;o.b.x+=dx;o.b.y+=dy}
+ else if(o.type==='rect'){o.x+=dx;o.y+=dy}
+ else if(o.type==='ellipse'){o.cx+=dx;o.cy+=dy}
+}
+
 let mode='pan',dragging=false,startScreen=null,startView=null;
 let selected3D=null;
 let drag3D=null;
@@ -392,12 +485,12 @@ function setMode(m){
  mode=m;
  panBtn.classList.toggle('active',m==='pan');
  penBtn.classList.toggle('active',m==='pen');
- select3DBtn.classList.toggle('active',m==='select3d');
+ select3DBtn.classList.toggle('active',m==='select');
  drawCanvas.style.cursor=m==='pan'?'grab':(m==='pen'?'crosshair':'default');
 }
 panBtn.onclick=()=>setMode('pan');
 penBtn.onclick=()=>setMode('pen');
-select3DBtn.onclick=()=>setMode('select3d');
+select3DBtn.onclick=()=>setMode('select');
 
 function screenPoint(e){
  const r=drawCanvas.getBoundingClientRect();
@@ -416,7 +509,7 @@ function pick3DAt(p){
 drawCanvas.onpointerdown=e=>{
  drawCanvas.setPointerCapture(e.pointerId);dragging=true;startScreen=screenPoint(e);startView={...view};
  if(mode==='pen'){
-   activeStroke=[screenToWorld(startScreen)];strokes.push(activeStroke);
+   activeStroke={id:'s'+Math.random().toString(36).slice(2),points:[screenToWorld(startScreen)],color:strokeColor.value,width:Number(strokeWidth.value)||3};strokes.push(activeStroke);
  }else if(mode==='select3d'){
    drag3D=pick3DAt(startScreen);
    select3DObject(drag3D);
@@ -426,6 +519,14 @@ drawCanvas.onpointerdown=e=>{
      selectedStartQuat=drag3D.quaternion.clone();
      selectedStartZ=drag3D.position.z;
      selectedStartScale=drag3D.scale.clone();
+   }else{
+     const w=screenToWorld(startScreen);
+     selected2D=pick2DAt(w);
+     select3DObject(null);
+     if(selected2D){
+       selected2DStart=w;
+       selected2DOriginal=clone2D(selected2D);
+     }
    }
  }else drawCanvas.style.cursor='grabbing';
 };
@@ -433,8 +534,8 @@ drawCanvas.onpointermove=e=>{
  if(!dragging)return;
  const p=screenPoint(e);
  if(mode==='pen'){
-   const w=screenToWorld(p),last=activeStroke[activeStroke.length-1];
-   if(Math.hypot(w.x-last.x,w.y-last.y)>.8)activeStroke.push(w);
+   const w=screenToWorld(p),pts=activeStroke.points,last=pts[pts.length-1];
+   if(Math.hypot(w.x-last.x,w.y-last.y)>.8)pts.push(w);
  }else if(mode==='select3d'){
    if(!drag3D)return;
    const dx=p.x-selectedStart.x,dy=p.y-selectedStart.y;
@@ -494,6 +595,16 @@ drawCanvas.onpointermove=e=>{
  }
 };
 function endPointer(e){
+ if(activeStroke && activeStroke.points && activeStroke.points.length>1){
+   pushUndo({type:'stroke',id:activeStroke.id});
+ }
+ if(selected2D&&selected2DOriginal){
+   const after=clone2D(selected2D);
+   if(JSON.stringify(after)!==JSON.stringify(selected2DOriginal)){
+     pushUndo({type:'move2d',id:selected2D.id,before:selected2DOriginal,after});
+   }
+ }
+ selected2DStart=null;selected2DOriginal=null;
  dragging=false;activeStroke=null;drag3D=null;drawCanvas.style.cursor=mode==='pan'?'grab':(mode==='pen'?'crosshair':'default');
  try{drawCanvas.releasePointerCapture(e.pointerId)}catch(_){}
 }
@@ -595,10 +706,36 @@ function addCar(){
  addObject(g);
  select3DObject(g);
 }
-cubeBtn.onclick=addCube;carBtn.onclick=addCar;
+addShapeBtn.onclick=()=>{
+ const t=shapeType.value;
+ if(t==='cube3d'){addCube();pushUndo({type:'add3d',object:objects3D[objects3D.length-1]});setStatus('Küp 3D eklendi')}
+ else if(t==='car3d'){addCar();pushUndo({type:'add3d',object:objects3D[objects3D.length-1]});setStatus('Araba 3D eklendi')}
+ else add2DShape(t);
+};
+undoBtn.onclick=()=>{
+ const a=undoStack.pop();if(!a)return;
+ if(a.type==='stroke'){
+   const i=strokes.findIndex(x=>x.id===a.id);if(i>=0){const [obj]=strokes.splice(i,1);redoStack.push({...a,obj})}
+ }else if(a.type==='add2d'){
+   const i=objects2D.findIndex(x=>x.id===a.id);if(i>=0){const [obj]=objects2D.splice(i,1);redoStack.push({...a,obj})}
+ }else if(a.type==='move2d'){
+   const o=objects2D.find(x=>x.id===a.id);if(o)Object.assign(o,clone2D(a.before));redoStack.push(a);
+ }else if(a.type==='add3d'){
+   const i=objects3D.indexOf(a.object);if(i>=0){scene.remove(a.object);objects3D.splice(i,1);redoStack.push(a)}
+ }
+ setStatus('Geri alındı');
+};
+redoBtn.onclick=()=>{
+ const a=redoStack.pop();if(!a)return;
+ if(a.type==='stroke'&&a.obj){strokes.push(a.obj);undoStack.push({type:'stroke',id:a.obj.id})}
+ else if(a.type==='add2d'&&a.obj){objects2D.push(a.obj);undoStack.push({type:'add2d',id:a.obj.id})}
+ else if(a.type==='move2d'){const o=objects2D.find(x=>x.id===a.id);if(o)Object.assign(o,clone2D(a.after));undoStack.push(a)}
+ else if(a.type==='add3d'){scene.add(a.object);objects3D.push(a.object);undoStack.push(a)}
+ setStatus('İleri alındı');
+};
 resetBtn.onclick=()=>{view.x=0;view.y=0;view.zoom=1};
 clearBtn.onclick=()=>{
- strokes.length=0;
+ strokes.length=0;objects2D.length=0;undoStack.length=0;redoStack.length=0;selected2D=null;
  for(const o of objects3D){scene.remove(o);o.traverse(c=>{c.geometry?.dispose();if(c.material){if(Array.isArray(c.material))c.material.forEach(m=>m.dispose());else c.material.dispose()}})}
  objects3D.length=0;
  select3DObject(null);
@@ -620,11 +757,43 @@ window.addEventListener('keydown',e=>{
 function draw2D(){
  ctx.clearRect(0,0,cssW,cssH);
  ctx.lineCap='round';ctx.lineJoin='round';
+
+ for(const o of objects2D){
+   ctx.save();
+   ctx.strokeStyle=o.color||'#111';
+   ctx.lineWidth=o.width||3;
+   ctx.beginPath();
+   if(o.type==='line'){
+     const a=worldToScreen(o.a),b=worldToScreen(o.b);
+     ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+   }else if(o.type==='rect'){
+     const p=worldToScreen({x:o.x,y:o.y+o.h});
+     const p2=worldToScreen({x:o.x+o.w,y:o.y});
+     ctx.rect(p.x,p.y,p2.x-p.x,p2.y-p.y);
+   }else if(o.type==='ellipse'){
+     const c=worldToScreen({x:o.cx,y:o.cy});
+     ctx.ellipse(c.x,c.y,o.rx*pixelsPerWorld(),o.ry*pixelsPerWorld(),0,0,Math.PI*2);
+   }
+   ctx.stroke();
+   if(selected2D===o){
+     ctx.setLineDash([6,4]);ctx.strokeStyle='#f59e0b';ctx.lineWidth=1.5;
+     if(o.type==='rect'){
+       const p=worldToScreen({x:o.x,y:o.y+o.h}),p2=worldToScreen({x:o.x+o.w,y:o.y});
+       ctx.strokeRect(p.x-4,p.y-4,p2.x-p.x+8,p2.y-p.y+8);
+     }else if(o.type==='ellipse'){
+       const c=worldToScreen({x:o.cx,y:o.cy});
+       ctx.strokeRect(c.x-o.rx*pixelsPerWorld()-4,c.y-o.ry*pixelsPerWorld()-4,2*o.rx*pixelsPerWorld()+8,2*o.ry*pixelsPerWorld()+8);
+     }
+   }
+   ctx.restore();
+ }
+
  for(const s of strokes){
-   if(s.length<2)continue;
-   ctx.beginPath();const p0=worldToScreen(s[0]);ctx.moveTo(p0.x,p0.y);
-   for(let i=1;i<s.length;i++){const p=worldToScreen(s[i]);ctx.lineTo(p.x,p.y)}
-   ctx.strokeStyle='#1f4fbf';ctx.lineWidth=2.4;ctx.stroke();
+   const pts=s.points||[];
+   if(pts.length<2)continue;
+   ctx.beginPath();const p0=worldToScreen(pts[0]);ctx.moveTo(p0.x,p0.y);
+   for(let i=1;i<pts.length;i++){const p=worldToScreen(pts[i]);ctx.lineTo(p.x,p.y)}
+   ctx.strokeStyle=s.color||'#111';ctx.lineWidth=s.width||3;ctx.stroke();
  }
 }
 
@@ -649,7 +818,7 @@ function frame(){
  }
  renderer.render(scene,camera);draw2D();updatePropsPanel();
 }
-applyLang();rebuild3DGrid();resize();setMode('pan');snapBtn.textContent='Snap: Kapalı';wireBtn.textContent='Wireframe: Kapalı';updatePropsPanel();addCar();addCube();frame();
+applyLang();rebuild3DGrid();resize();setMode('select');snapBtn.textContent='Snap: Kapalı';wireBtn.textContent='Wireframe';updatePropsPanel();setStatus('Hazır');frame();
 </script>
 <script src="/projeler/analytics.js?v=20261114-auto"></script>
 </body>
