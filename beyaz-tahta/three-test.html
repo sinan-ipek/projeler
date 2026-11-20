@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Beyaz Tahta · Three.js Mimari Testi v20.04</title>
+<title>Beyaz Tahta · Three.js Mimari Testi v20.05</title>
 <style>
 :root{
   --bg:#f6f8fb;--panel:#ffffffee;--line:#d8dee9;--text:#1f2937;
@@ -17,10 +17,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans
 #threeCanvas{pointer-events:none}
 #drawCanvas{touch-action:none}
 .toolbar{
-  position:absolute;left:14px;top:14px;z-index:20;display:flex;gap:8px;align-items:center;
-  padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:var(--panel);
-  box-shadow:0 8px 24px #00000018
+  position:absolute;left:10px;right:10px;top:10px;z-index:30;
+  display:flex;gap:7px;align-items:center;flex-wrap:nowrap;
+  padding:8px 9px;border:1px solid var(--line);border-radius:12px;background:var(--panel);
+  box-shadow:0 8px 24px #00000018;
+  overflow-x:auto;overflow-y:hidden;white-space:nowrap;
+  scrollbar-width:thin
 }
+.toolbar>*{flex:0 0 auto}
 button,select{height:38px;border:1px solid #cfd7e3;border-radius:9px;background:#fff;padding:0 11px;font-size:14px;cursor:pointer}
 button.active{background:#dbeafe;border-color:#93b4ff;color:#1747a6;font-weight:700}
 #homeBtn{
@@ -29,11 +33,7 @@ button.active{background:#dbeafe;border-color:#93b4ff;color:#1747a6;font-weight:
 }
 #helpBtn{width:40px;min-width:40px;font-size:20px;font-weight:700}
 .sep{width:1px;height:27px;background:#dfe5ee;margin:0 2px}
-.info{
-  position:absolute;right:14px;top:14px;z-index:20;max-width:390px;
-  padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);
-  box-shadow:0 8px 24px #00000014;font-size:13px;line-height:1.45
-}
+.info{display:none}
 .version{
   position:absolute;left:12px;bottom:9px;z-index:20;color:#808895;font-size:11px;
   background:#ffffffc9;border:1px solid #e1e6ee;border-radius:8px;padding:6px 8px
@@ -44,7 +44,7 @@ button.active{background:#dbeafe;border-color:#93b4ff;color:#1747a6;font-weight:
 .colorInput{width:38px;padding:2px}
 .widthInput{width:78px}
 .props{
-  position:absolute;right:14px;bottom:14px;z-index:22;width:270px;
+  position:absolute;right:12px;bottom:12px;z-index:18;width:250px;max-height:170px;overflow:auto;
   background:var(--panel);border:1px solid var(--line);border-radius:12px;
   box-shadow:0 8px 24px #00000014;padding:10px 12px;font-size:12px;line-height:1.45
 }
@@ -93,6 +93,10 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
       <option value="line">Çizgi</option>
       <option value="rect">Dikdörtgen</option>
       <option value="ellipse">Elips</option>
+      <option value="triangle">Üçgen</option>
+      <option value="pentagon">Beşgen</option>
+      <option value="hexagon">Altıgen</option>
+      <option value="axes">x-y</option>
       <optgroup label="3D">
         <option value="cube3d">Küp 3D</option>
         <option value="car3d">Araba 3D</option>
@@ -126,12 +130,6 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
     <div id="status" class="status">Hazır</div>
   </div>
 
-  <div class="info" id="info">
-    <b>Beyaz Tahta → Three.js yakınsama testi</b><br>
-    Kalem, Seç, Pan ve ortak Şekil menüsü artık Beyaz Tahta düzenine yaklaşıyor.<br>
-    XY düzlemi 2D çizim düzlemidir; 3D nesneler aynı koordinat sistemini kullanır.
-  </div>
-
   <div class="props" id="propsPanel">
     <h3>Seçili 3D nesne</h3>
     <div id="propsEmpty">Nesne seçilmedi.</div>
@@ -143,12 +141,12 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
     </div>
   </div>
 
-  <div class="version">v20.04-three-test · Beyaz Tahta araç çubuğu + ortak 2D/3D şekiller + Undo/Redo · checkpoint: v19.15</div>
+  <div class="version">v20.05-three-test · Beyaz Tahta yakınsaması: erişilebilir toolbar + daha fazla 2D şekil + kopyala/yapıştır · checkpoint: v19.15</div>
 
   <div id="helpModal">
     <div class="card">
       <h2 id="helpTitle">Yardım</h2>
-      <p id="helpText">Bu sayfa sadece yeni 3D mimariyi dener. 2D çizim XY düzlemindedir. Three.js nesneleri aynı koordinat sisteminde gösterir. Kamera dönmez; sadece sağ-sol ve yukarı-aşağı taşınır.</p>
+      <p id="helpText">Bu sayfa mevcut Beyaz Tahta'nın sadık klonuna yaklaşan test sürümüdür. 2D araçlar normal canvas mantığında kalır. Three.js yalnız 3D nesneleri çizer. XY düzlemi 2D çizim düzlemidir. Kamera dönmez; yalnız X/Y yönünde hareket eder.</p>
       <p><kbd>Fare tekeri</kbd> yakınlaştırır. Pan modunda sürüklemek görünümü taşır.</p>
       <div class="closeRow"><button id="closeHelp">Kapat</button></div>
     </div>
@@ -207,7 +205,7 @@ const text={
  tr:{
   pan:'Pan',pen:'2D Kalem',cube:'3D Küp',car:'3D Araba',select3d:'Seç',axis:'World',dup:'Kopyala',del:'Sil',drop:"XY'ye İndir",reset:'Görünümü Sıfırla',clear:'Temizle',
   info:'<b>Three.js mimari testi</b><br>XY düzlemi = 2D çizim düzlemi.<br>X: ekran sağ/sol · Y: ekran yukarı/aşağı · Z: kullanıcıya doğru/uzak.<br>Kamera yalnız X/Y yönünde hareket eder; dönmez.',
-  ht:'Yardım',hb:'Bu sayfa sadece yeni 3D mimariyi dener. 2D çizim XY düzlemindedir. Three.js nesneleri aynı koordinat sisteminde gösterir. Kamera dönmez; sadece sağ-sol ve yukarı-aşağı taşınır.'
+  ht:'Yardım',hb:"Bu test, mevcut Beyaz Tahta'nın sadık klonuna yaklaşır. 2D çizim ve şekiller normal canvas sisteminde kalır. Three.js yalnız 3D nesneler için kullanılır. XY düzlemi 2D çizim düzlemidir; kamera dönmez."
  },
  de:{
   pan:'Verschieben',pen:'2D Stift',cube:'3D Würfel',car:'3D Auto',select3d:'Auswahl',axis:'World',dup:'Kopieren',del:'Löschen',drop:'Auf XY',reset:'Ansicht zurücksetzen',clear:'Löschen',
@@ -225,7 +223,7 @@ function applyLang(){
  panBtn.textContent=t.pan;penBtn.textContent=t.pen;select3DBtn.textContent=t.select3d;
  duplicateBtn.textContent=t.dup;delete3DBtn.textContent=t.del;dropBtn.textContent=t.drop;
  axisModeBtn.textContent=transformSpace==='world'?'World':'Local';
- resetBtn.textContent=t.reset;clearBtn.textContent=t.clear;info.innerHTML=t.info;helpTitle.textContent=t.ht;helpText.textContent=t.hb;
+ resetBtn.textContent=t.reset;clearBtn.textContent=t.clear;if(info)info.innerHTML=t.info;helpTitle.textContent=t.ht;helpText.textContent=t.hb;
 }
 lang.onchange=applyLang;
 
@@ -304,6 +302,7 @@ let activeStroke=null;
 let selected2D=null;
 let selected2DStart=null;
 let selected2DOriginal=null;
+let clipboard2D=null;
 
 function setStatus(msg){statusEl.textContent=msg}
 
@@ -327,6 +326,19 @@ function add2DShape(type){
  if(type==='line')o={...common,a:{x:cx-90,y:cy},b:{x:cx+90,y:cy}};
  else if(type==='rect')o={...common,x:cx-90,y:cy-55,w:180,h:110};
  else if(type==='ellipse')o={...common,cx,cy,rx:90,ry:55};
+ else if(['triangle','pentagon','hexagon'].includes(type)){
+   const sides=type==='triangle'?3:(type==='pentagon'?5:6);
+   const r=85;
+   const pts=[];
+   const phase=type==='triangle'?-Math.PI/2:0;
+   for(let i=0;i<sides;i++){
+     const a=phase+i*Math.PI*2/sides;
+     pts.push({x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r});
+   }
+   o={...common,points:pts};
+ }else if(type==='axes'){
+   o={...common,cx,cy,w:220,h:160};
+ }
  if(!o)return;
  objects2D.push(o);
  pushUndo({type:'add2d',id:o.id});
@@ -340,6 +352,19 @@ function pointIn2DObject(o,w){
  if(o.type==='ellipse'){
    const dx=(w.x-o.cx)/(o.rx+tol),dy=(w.y-o.cy)/(o.ry+tol);
    return dx*dx+dy*dy<=1;
+ }
+ if(['triangle','pentagon','hexagon'].includes(o.type)){
+   let inside=false;
+   const pts=o.points||[];
+   for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+     const xi=pts[i].x,yi=pts[i].y,xj=pts[j].x,yj=pts[j].y;
+     const intersect=((yi>w.y)!==(yj>w.y))&&(w.x<(xj-xi)*(w.y-yi)/(yj-yi||1e-9)+xi);
+     if(intersect)inside=!inside;
+   }
+   return inside;
+ }
+ if(o.type==='axes'){
+   return Math.abs(w.x-o.cx)<=o.w/2+tol && Math.abs(w.y-o.cy)<=o.h/2+tol;
  }
  if(o.type==='line'){
    const ax=o.a.x,ay=o.a.y,bx=o.b.x,by=o.b.y;
@@ -357,6 +382,8 @@ function move2DObject(o,dx,dy){
  if(o.type==='line'){o.a.x+=dx;o.a.y+=dy;o.b.x+=dx;o.b.y+=dy}
  else if(o.type==='rect'){o.x+=dx;o.y+=dy}
  else if(o.type==='ellipse'){o.cx+=dx;o.cy+=dy}
+ else if(['triangle','pentagon','hexagon'].includes(o.type)){for(const p of o.points){p.x+=dx;p.y+=dy}}
+ else if(o.type==='axes'){o.cx+=dx;o.cy+=dy}
 }
 
 let mode='pan',dragging=false,startScreen=null,startView=null;
@@ -720,6 +747,8 @@ undoBtn.onclick=()=>{
    const i=objects2D.findIndex(x=>x.id===a.id);if(i>=0){const [obj]=objects2D.splice(i,1);redoStack.push({...a,obj})}
  }else if(a.type==='move2d'){
    const o=objects2D.find(x=>x.id===a.id);if(o)Object.assign(o,clone2D(a.before));redoStack.push(a);
+ }else if(a.type==='delete2d'){
+   objects2D.splice(Math.min(a.index,objects2D.length),0,clone2D(a.obj));redoStack.push(a);
  }else if(a.type==='add3d'){
    const i=objects3D.indexOf(a.object);if(i>=0){scene.remove(a.object);objects3D.splice(i,1);redoStack.push(a)}
  }
@@ -730,6 +759,9 @@ redoBtn.onclick=()=>{
  if(a.type==='stroke'&&a.obj){strokes.push(a.obj);undoStack.push({type:'stroke',id:a.obj.id})}
  else if(a.type==='add2d'&&a.obj){objects2D.push(a.obj);undoStack.push({type:'add2d',id:a.obj.id})}
  else if(a.type==='move2d'){const o=objects2D.find(x=>x.id===a.id);if(o)Object.assign(o,clone2D(a.after));undoStack.push(a)}
+ else if(a.type==='delete2d'){
+   const i=objects2D.findIndex(x=>x.id===a.obj.id);if(i>=0)objects2D.splice(i,1);undoStack.push(a)
+ }
  else if(a.type==='add3d'){scene.add(a.object);objects3D.push(a.object);undoStack.push(a)}
  setStatus('İleri alındı');
 };
@@ -745,6 +777,30 @@ clearBtn.onclick=()=>{
 
 window.addEventListener('keydown',e=>{
  if(e.target && ['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
+ if(mode==='select' && selected2D){
+   if(e.key==='Delete'||e.key==='Backspace'){
+     e.preventDefault();
+     const i=objects2D.indexOf(selected2D);
+     if(i>=0){
+       const obj=objects2D.splice(i,1)[0];
+       pushUndo({type:'delete2d',obj:clone2D(obj),index:i});
+       selected2D=null;setStatus('2D nesne silindi');
+     }
+     return;
+   }
+   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='c'){
+     e.preventDefault();clipboard2D=clone2D(selected2D);setStatus('2D nesne kopyalandı');return;
+   }
+ }
+ if(mode==='select' && clipboard2D && (e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='v'){
+   e.preventDefault();
+   const obj=clone2D(clipboard2D);
+   obj.id='d'+Math.random().toString(36).slice(2);
+   move2DObject(obj,30,-30);
+   objects2D.push(obj);selected2D=obj;select3DObject(null);
+   pushUndo({type:'add2d',id:obj.id});
+   setStatus('2D nesne yapıştırıldı');return;
+ }
  if(mode==='select3d' && selected3D){
    if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();remove3DObject(selected3D);return}
    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'){e.preventDefault();duplicateSelected();return}
@@ -773,6 +829,19 @@ function draw2D(){
    }else if(o.type==='ellipse'){
      const c=worldToScreen({x:o.cx,y:o.cy});
      ctx.ellipse(c.x,c.y,o.rx*pixelsPerWorld(),o.ry*pixelsPerWorld(),0,0,Math.PI*2);
+   }else if(['triangle','pentagon','hexagon'].includes(o.type)){
+     const pts=o.points||[];
+     if(pts.length){
+       const p0=worldToScreen(pts[0]);ctx.moveTo(p0.x,p0.y);
+       for(let i=1;i<pts.length;i++){const p=worldToScreen(pts[i]);ctx.lineTo(p.x,p.y)}
+       ctx.closePath();
+     }
+   }else if(o.type==='axes'){
+     const l=worldToScreen({x:o.cx-o.w/2,y:o.cy});
+     const r=worldToScreen({x:o.cx+o.w/2,y:o.cy});
+     const b=worldToScreen({x:o.cx,y:o.cy-o.h/2});
+     const t=worldToScreen({x:o.cx,y:o.cy+o.h/2});
+     ctx.moveTo(l.x,l.y);ctx.lineTo(r.x,r.y);ctx.moveTo(b.x,b.y);ctx.lineTo(t.x,t.y);
    }
    ctx.stroke();
    if(selected2D===o){
@@ -783,6 +852,16 @@ function draw2D(){
      }else if(o.type==='ellipse'){
        const c=worldToScreen({x:o.cx,y:o.cy});
        ctx.strokeRect(c.x-o.rx*pixelsPerWorld()-4,c.y-o.ry*pixelsPerWorld()-4,2*o.rx*pixelsPerWorld()+8,2*o.ry*pixelsPerWorld()+8);
+     }else{
+       let xs=[],ys=[];
+       if(o.type==='line'){xs=[o.a.x,o.b.x];ys=[o.a.y,o.b.y]}
+       else if(['triangle','pentagon','hexagon'].includes(o.type)){xs=o.points.map(p=>p.x);ys=o.points.map(p=>p.y)}
+       else if(o.type==='axes'){xs=[o.cx-o.w/2,o.cx+o.w/2];ys=[o.cy-o.h/2,o.cy+o.h/2]}
+       if(xs.length){
+         const p1=worldToScreen({x:Math.min(...xs),y:Math.max(...ys)});
+         const p2=worldToScreen({x:Math.max(...xs),y:Math.min(...ys)});
+         ctx.strokeRect(p1.x-4,p1.y-4,p2.x-p1.x+8,p2.y-p1.y+8);
+       }
      }
    }
    ctx.restore();
