@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v21.00-three-clone</title>
+<title>Beyaz Tahta v22.00-three-clone</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1347,7 +1347,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v21.00-three-clone · Beyaz Tahta bire bir + Three.js araba · checkpoint: v19.15</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v22.00-three-clone · Beyaz Tahta bire bir + tüm 3D nesneler Three.js · checkpoint: v19.15</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1542,9 +1542,9 @@
   const inkOverlayCtx = inkOverlay.getContext('2d',{alpha:true});
   const wrap = document.getElementById('stageWrap');
   // ============================================================
-  // v21.00 — THREE.JS BRIDGE
-  // Beyaz Tahta'nın 2D kodu aynen korunur. Three.js yalnız 3D
-  // render için kullanılır. İlk geçiş: car3d.
+  // v22.00 — THREE.JS 3D ENGINE
+  // Beyaz Tahta'nın 2D kodu ve UI'si aynen korunur.
+  // Tüm 3D nesneler Three.js tarafından render edilir.
   // ============================================================
   const threeBridge={
     THREE:null,
@@ -1625,6 +1625,227 @@
     geo.computeVertexNormals();
 
     return new THREE.Mesh(geo,material);
+  }
+
+
+  function threeBasicMaterialForObject(o,opts={}){
+    const THREE=threeBridge.THREE;
+    const base=(o&&o.fillColor3D)||'#3b82f6';
+    const opacity=Math.max(0,Math.min(1,1-(Number(o&&o.fillOpacity)||0)/100));
+    return new THREE.MeshStandardMaterial({
+      color:new THREE.Color(base),
+      roughness:.62,
+      metalness:.06,
+      transparent:opacity<.999,
+      opacity,
+      side:THREE.DoubleSide,
+      flatShading:false,
+      ...opts
+    });
+  }
+
+  function threeLineMaterialForObject(o){
+    const THREE=threeBridge.THREE;
+    return new THREE.LineBasicMaterial({
+      color:new THREE.Color((o.style&&o.style.color)||'#111111'),
+      transparent:false,
+      opacity:1
+    });
+  }
+
+  function buildThreeGenericMesh(o){
+    const THREE=threeBridge.THREE;
+    const type=o.shape3dType;
+    const sx=Math.max(8,Number(o.sizeX)||120);
+    const sy=Math.max(8,Number(o.sizeY)||120);
+    const sz=Math.max(8,Number(o.sizeZ)||120);
+    const group=new THREE.Group();
+    const mat=threeBasicMaterialForObject(o);
+    const edgeMat=threeLineMaterialForObject(o);
+
+    function addMesh(mesh,withEdges=true){
+      group.add(mesh);
+      if(withEdges && mesh.geometry){
+        const eg=new THREE.EdgesGeometry(mesh.geometry,25);
+        const lines=new THREE.LineSegments(eg,edgeMat.clone());
+        lines.renderOrder=5;
+        mesh.add(lines);
+      }
+      return mesh;
+    }
+
+    if(type==='line3d'){
+      const a=o.lineLocalA||{x:-90,y:0,z:0};
+      const b=o.lineLocalB||{x:90,y:0,z:0};
+      const geo=new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(Number(a.x)||0,-(Number(a.y)||0),Number(a.z)||0),
+        new THREE.Vector3(Number(b.x)||0,-(Number(b.y)||0),Number(b.z)||0)
+      ]);
+      group.add(new THREE.Line(geo,edgeMat));
+      return group;
+    }
+
+    if(type==='cube'){
+      addMesh(new THREE.Mesh(
+        new THREE.BoxGeometry(sx,sy,sz),
+        mat
+      ));
+      return group;
+    }
+
+    if(type==='pyramid'){
+      // Four-sided pyramid, Y axis vertical.
+      const geo=new THREE.ConeGeometry(
+        Math.max(4,Math.min(sx,sz)*.70),
+        sy,
+        4,
+        1,
+        false
+      );
+      const mesh=new THREE.Mesh(geo,mat);
+      mesh.rotation.y=Math.PI/4;
+      addMesh(mesh);
+      return group;
+    }
+
+    if(type==='hexpyramid'){
+      addMesh(new THREE.Mesh(
+        new THREE.ConeGeometry(
+          Math.max(4,Math.min(sx,sz)*.5),
+          sy,
+          6,
+          1,
+          false
+        ),
+        mat
+      ));
+      return group;
+    }
+
+    if(type==='hexprism'){
+      addMesh(new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          Math.max(4,Math.min(sx,sz)*.5),
+          Math.max(4,Math.min(sx,sz)*.5),
+          sy,
+          6,
+          1,
+          false
+        ),
+        mat
+      ));
+      return group;
+    }
+
+    if(type==='cylinder'){
+      addMesh(new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          Math.max(4,Math.min(sx,sz)*.5),
+          Math.max(4,Math.min(sx,sz)*.5),
+          sy,
+          64,
+          1,
+          false
+        ),
+        mat
+      ));
+      return group;
+    }
+
+    if(type==='cone'){
+      addMesh(new THREE.Mesh(
+        new THREE.ConeGeometry(
+          Math.max(4,Math.min(sx,sz)*.5),
+          sy,
+          64,
+          1,
+          false
+        ),
+        mat
+      ));
+      return group;
+    }
+
+    if(type==='sphere'){
+      addMesh(new THREE.Mesh(
+        new THREE.SphereGeometry(
+          Math.max(4,Math.min(sx,sy,sz)*.5),
+          48,
+          32
+        ),
+        mat
+      ));
+      return group;
+    }
+
+    if(type==='custom2d'){
+      // Use existing Whiteboard geometry as a fallback mesh source.
+      const g=shape3DGeometry(o);
+      if(g.points&&g.points.length&&g.faces&&g.faces.length){
+        const positions=[];
+        for(const face of g.faces){
+          if(!face||face.length<3)continue;
+          for(let k=1;k<face.length-1;k++){
+            for(const idx of [face[0],face[k],face[k+1]]){
+              const p=g.points[idx];
+              positions.push(p.x,-p.y,p.z);
+            }
+          }
+        }
+        if(positions.length){
+          const geo=new THREE.BufferGeometry();
+          geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+          geo.computeVertexNormals();
+          addMesh(new THREE.Mesh(geo,mat));
+          return group;
+        }
+      }
+    }
+
+    // Generic fallback from the existing geometry model.
+    const g=shape3DGeometry(o);
+    if(g.points&&g.points.length&&g.faces&&g.faces.length){
+      const positions=[];
+      for(const face of g.faces){
+        if(!face||face.length<3)continue;
+        for(let k=1;k<face.length-1;k++){
+          for(const idx of [face[0],face[k],face[k+1]]){
+            const p=g.points[idx];
+            positions.push(p.x,-p.y,p.z);
+          }
+        }
+      }
+      if(positions.length){
+        const geo=new THREE.BufferGeometry();
+        geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+        geo.computeVertexNormals();
+        addMesh(new THREE.Mesh(geo,mat));
+      }
+    }
+
+    if(!group.children.length && g.points&&g.edges){
+      const pts=[];
+      for(const [a,b] of g.edges){
+        const pa=g.points[a],pb=g.points[b];
+        if(pa&&pb){
+          pts.push(
+            new THREE.Vector3(pa.x,-pa.y,pa.z),
+            new THREE.Vector3(pb.x,-pb.y,pb.z)
+          );
+        }
+      }
+      if(pts.length){
+        const geo=new THREE.BufferGeometry().setFromPoints(pts);
+        group.add(new THREE.LineSegments(geo,edgeMat));
+      }
+    }
+
+    return group;
+  }
+
+  function buildThreeObjectMesh(o){
+    if(o.shape3dType==='car') return buildThreeCarMesh(o);
+    return buildThreeGenericMesh(o);
   }
 
   function buildThreeCarMesh(o){
@@ -1803,27 +2024,29 @@
     camera.updateProjectionMatrix();
   }
 
-  function drawShape3DThreeCar(o){
+  function drawShape3DThree(o){
     if(!threeBridge.ready || !threeBridge.THREE) return false;
 
     const scene=threeBridge.scene;
     const renderer=threeBridge.renderer;
 
-    // Her çağrıda yalnız ilgili nesne render edilir; böylece mevcut
-    // Beyaz Tahta nesne katman sırası değişmez.
+    // Remove previous transient object; keep the three lights.
     while(scene.children.length>3){
       const old=scene.children[scene.children.length-1];
       scene.remove(old);
       threeDisposeObject(old);
     }
 
-    const car=buildThreeCarMesh(o);
-    threeApplyWhiteboardTransform(car,o);
-    scene.add(car);
+    const root=buildThreeObjectMesh(o);
+    if(!root || !root.children.length) return false;
+
+    threeApplyWhiteboardTransform(root,o);
+    scene.add(root);
 
     threePrepareCamera();
     renderer.render(scene,threeBridge.camera);
 
+    // Composite into the original Beyaz Tahta canvas at the exact object slot.
     ctx.save();
     ctx.setTransform(1,0,0,1,0,0);
     ctx.drawImage(
@@ -1833,8 +2056,8 @@
     );
     ctx.restore();
 
-    scene.remove(car);
-    threeDisposeObject(car);
+    scene.remove(root);
+    threeDisposeObject(root);
     return true;
   }
 
@@ -8649,6 +8872,8 @@
   }
 
   function drawShape3D(o){
+    if(threeBridge.ready && drawShape3DThree(o)) return;
+
     const g=shape3DGeometry(o);
     const viewPts=shape3DViewPoints(o);
     const pts=shape3DProjectedPoints(o);
@@ -8661,16 +8886,10 @@
     ctx.globalAlpha=1;
     ctx.setLineDash([]);
 
-    // Material first, existing educational edge/hidden-line drawing on top.
-    if(!(o.shape3dType==='car' && threeBridge.ready)){
-      drawShape3DMaterial(o,g,viewPts,pts);
-    }
+    // Fallback path: classic renderer is used only if Three.js is unavailable.
+    drawShape3DMaterial(o,g,viewPts,pts);
 
     if(o.shape3dType==='car'){
-      if(drawShape3DThreeCar(o)){
-        ctx.restore();
-        return;
-      }
       drawShape3DCarEdgesWithOcclusion(o,g);
       ctx.restore();
       return;
