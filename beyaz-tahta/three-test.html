@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Beyaz Tahta · Three.js Mimari Testi v20.00</title>
+<title>Beyaz Tahta · Three.js Mimari Testi v20.01</title>
 <style>
 :root{
   --bg:#f6f8fb;--panel:#ffffffee;--line:#d8dee9;--text:#1f2937;
@@ -70,6 +70,7 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
     <div class="sep"></div>
     <button id="cubeBtn">3D Küp</button>
     <button id="carBtn">3D Araba</button>
+    <button id="select3DBtn">3D Seç</button>
     <button id="resetBtn">Görünümü Sıfırla</button>
     <button id="clearBtn">Temizle</button>
   </div>
@@ -78,10 +79,11 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
     <b>Three.js mimari testi</b><br>
     XY düzlemi = 2D çizim düzlemi.<br>
     X: ekran sağ/sol · Y: ekran yukarı/aşağı · Z: kullanıcıya doğru/uzak.<br>
-    Kamera yalnız X/Y yönünde hareket eder; dönmez.
+    Kamera yalnız X/Y yönünde hareket eder; dönmez.<br>
+    <b>3D Seç</b>: nesneyi tıkla · sürükle = X/Y taşı · Shift+sürükle = Z · Alt+sürükle = döndür.
   </div>
 
-  <div class="version">v20.00-three-test · Three.js ortak 2D/3D koordinat mimarisi · checkpoint: v19.15</div>
+  <div class="version">v20.01-three-test · 3D seçme/taşıma/döndürme + geliştirilmiş araba · checkpoint: v19.15</div>
 
   <div id="helpModal">
     <div class="card">
@@ -107,6 +109,7 @@ const cubeBtn=document.getElementById('cubeBtn');
 const carBtn=document.getElementById('carBtn');
 const resetBtn=document.getElementById('resetBtn');
 const clearBtn=document.getElementById('clearBtn');
+const select3DBtn=document.getElementById('select3DBtn');
 const helpBtn=document.getElementById('helpBtn');
 const helpModal=document.getElementById('helpModal');
 const closeHelp=document.getElementById('closeHelp');
@@ -123,24 +126,24 @@ helpModal.onpointerdown=e=>{if(e.target===helpModal)helpModal.classList.remove('
 
 const text={
  tr:{
-  pan:'Pan',pen:'2D Kalem',cube:'3D Küp',car:'3D Araba',reset:'Görünümü Sıfırla',clear:'Temizle',
+  pan:'Pan',pen:'2D Kalem',cube:'3D Küp',car:'3D Araba',select3d:'3D Seç',reset:'Görünümü Sıfırla',clear:'Temizle',
   info:'<b>Three.js mimari testi</b><br>XY düzlemi = 2D çizim düzlemi.<br>X: ekran sağ/sol · Y: ekran yukarı/aşağı · Z: kullanıcıya doğru/uzak.<br>Kamera yalnız X/Y yönünde hareket eder; dönmez.',
   ht:'Yardım',hb:'Bu sayfa sadece yeni 3D mimariyi dener. 2D çizim XY düzlemindedir. Three.js nesneleri aynı koordinat sisteminde gösterir. Kamera dönmez; sadece sağ-sol ve yukarı-aşağı taşınır.'
  },
  de:{
-  pan:'Verschieben',pen:'2D Stift',cube:'3D Würfel',car:'3D Auto',reset:'Ansicht zurücksetzen',clear:'Löschen',
+  pan:'Verschieben',pen:'2D Stift',cube:'3D Würfel',car:'3D Auto',select3d:'3D wählen',reset:'Ansicht zurücksetzen',clear:'Löschen',
   info:'<b>Three.js Architekturtest</b><br>XY-Ebene = 2D-Zeichenebene.<br>X: Bildschirm rechts/links · Y: oben/unten · Z: zum Nutzer/vom Nutzer weg.<br>Die Kamera bewegt sich nur in X/Y und dreht sich nicht.',
   ht:'Hilfe',hb:'Diese Seite testet nur die neue 3D-Architektur. Die 2D-Zeichnung liegt in der XY-Ebene. Three.js benutzt dasselbe Koordinatensystem. Die Kamera dreht sich nicht.'
  },
  en:{
-  pan:'Pan',pen:'2D Pen',cube:'3D Cube',car:'3D Car',reset:'Reset View',clear:'Clear',
+  pan:'Pan',pen:'2D Pen',cube:'3D Cube',car:'3D Car',select3d:'3D Select',reset:'Reset View',clear:'Clear',
   info:'<b>Three.js architecture test</b><br>XY plane = 2D drawing plane.<br>X: screen left/right · Y: up/down · Z: toward/away from user.<br>The camera moves only in X/Y and never rotates.',
   ht:'Help',hb:'This page only tests the new 3D architecture. 2D drawing lives on the XY plane. Three.js uses the same coordinate system. The camera never rotates.'
  }
 };
 function applyLang(){
  const t=text[lang.value]||text.tr;
- panBtn.textContent=t.pan;penBtn.textContent=t.pen;cubeBtn.textContent=t.cube;carBtn.textContent=t.car;
+ panBtn.textContent=t.pan;penBtn.textContent=t.pen;cubeBtn.textContent=t.cube;carBtn.textContent=t.car;select3DBtn.textContent=t.select3d;
  resetBtn.textContent=t.reset;clearBtn.textContent=t.clear;info.innerHTML=t.info;helpTitle.textContent=t.ht;helpText.textContent=t.hb;
 }
 lang.onchange=applyLang;
@@ -200,21 +203,51 @@ function screenToWorld(p){
 const strokes=[];
 let activeStroke=null;
 let mode='pan',dragging=false,startScreen=null,startView=null;
+let selected3D=null;
+let selectedStart=null;
+let selectedStartPos=null;
+let selectedStartQuat=null;
+let selectedStartZ=0;
+const raycaster=new THREE.Raycaster();
+const pointerNDC=new THREE.Vector2();
 function setMode(m){
- mode=m;panBtn.classList.toggle('active',m==='pan');penBtn.classList.toggle('active',m==='pen');
- drawCanvas.style.cursor=m==='pan'?'grab':'crosshair';
+ mode=m;
+ panBtn.classList.toggle('active',m==='pan');
+ penBtn.classList.toggle('active',m==='pen');
+ select3DBtn.classList.toggle('active',m==='select3d');
+ drawCanvas.style.cursor=m==='pan'?'grab':(m==='pen'?'crosshair':'default');
 }
 panBtn.onclick=()=>setMode('pan');
 penBtn.onclick=()=>setMode('pen');
+select3DBtn.onclick=()=>setMode('select3d');
 
 function screenPoint(e){
  const r=drawCanvas.getBoundingClientRect();
  return {x:e.clientX-r.left,y:e.clientY-r.top};
 }
+function pick3DAt(p){
+ pointerNDC.x=(p.x/cssW)*2-1;
+ pointerNDC.y=-(p.y/cssH)*2+1;
+ raycaster.setFromCamera(pointerNDC,camera);
+ const hits=raycaster.intersectObjects(objects3D,true);
+ if(!hits.length)return null;
+ let o=hits[0].object;
+ while(o.parent && o.parent!==scene && !o.userData.selectRoot)o=o.parent;
+ return o;
+}
 drawCanvas.onpointerdown=e=>{
  drawCanvas.setPointerCapture(e.pointerId);dragging=true;startScreen=screenPoint(e);startView={...view};
- if(mode==='pen'){activeStroke=[screenToWorld(startScreen)];strokes.push(activeStroke)}
- else drawCanvas.style.cursor='grabbing';
+ if(mode==='pen'){
+   activeStroke=[screenToWorld(startScreen)];strokes.push(activeStroke);
+ }else if(mode==='select3d'){
+   selected3D=pick3DAt(startScreen);
+   if(selected3D){
+     selectedStart=startScreen;
+     selectedStartPos=selected3D.position.clone();
+     selectedStartQuat=selected3D.quaternion.clone();
+     selectedStartZ=selected3D.position.z;
+   }
+ }else drawCanvas.style.cursor='grabbing';
 };
 drawCanvas.onpointermove=e=>{
  if(!dragging)return;
@@ -222,6 +255,20 @@ drawCanvas.onpointermove=e=>{
  if(mode==='pen'){
    const w=screenToWorld(p),last=activeStroke[activeStroke.length-1];
    if(Math.hypot(w.x-last.x,w.y-last.y)>.8)activeStroke.push(w);
+ }else if(mode==='select3d'){
+   if(!selected3D)return;
+   const dx=p.x-selectedStart.x,dy=p.y-selectedStart.y;
+   if(e.altKey){
+     const qy=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dx*.008);
+     const qx=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),dy*.008);
+     selected3D.quaternion.copy(selectedStartQuat).premultiply(qy).premultiply(qx);
+   }else if(e.shiftKey){
+     selected3D.position.z=selectedStartZ-dy/pixelsPerWorld();
+   }else{
+     const s=pixelsPerWorld();
+     selected3D.position.x=selectedStartPos.x+dx/s;
+     selected3D.position.y=selectedStartPos.y-dy/s;
+   }
  }else{
    const s=pixelsPerWorld();
    view.x=startView.x-(p.x-startScreen.x)/s;
@@ -229,7 +276,7 @@ drawCanvas.onpointermove=e=>{
  }
 };
 function endPointer(e){
- dragging=false;activeStroke=null;drawCanvas.style.cursor=mode==='pan'?'grab':'crosshair';
+ dragging=false;activeStroke=null;selected3D=null;drawCanvas.style.cursor=mode==='pan'?'grab':(mode==='pen'?'crosshair':'default');
  try{drawCanvas.releasePointerCapture(e.pointerId)}catch(_){}
 }
 drawCanvas.onpointerup=endPointer;drawCanvas.onpointercancel=endPointer;
@@ -246,7 +293,10 @@ function material(color,rough=.68,metal=.08){return new THREE.MeshStandardMateri
 
 function addCube(){
  const m=new THREE.Mesh(new THREE.BoxGeometry(150,150,150),material(0x4f98f7));
- m.position.set(view.x,view.y,90);m.rotation.set(.42,.58,.1);addObject(m);
+ m.position.set(view.x,view.y,75);
+ m.rotation.set(0,0,0);
+ m.userData.selectRoot=true;
+ addObject(m);
 }
 
 function wheel(){
@@ -259,18 +309,69 @@ function wheel(){
 }
 function addCar(){
  const g=new THREE.Group();
- const blue=material(0x4a94ee,.55,.12),blue2=material(0x2f70c9,.62,.09),glass=material(0xa9d8f5,.28,.08);
- const body=new THREE.Mesh(new THREE.BoxGeometry(330,82,150),blue);body.position.y=0;g.add(body);
- const hood=new THREE.Mesh(new THREE.BoxGeometry(110,28,146),material(0x68b1ff,.5,.1));hood.position.set(102,46,0);hood.rotation.z=-.08;g.add(hood);
- const cabin=new THREE.Mesh(new THREE.BoxGeometry(150,72,132),glass);cabin.position.set(-22,79,0);g.add(cabin);
- const frontSlope=new THREE.Mesh(new THREE.BoxGeometry(52,68,134),glass);frontSlope.position.set(55,74,0);frontSlope.rotation.z=-.38;g.add(frontSlope);
- const rearSlope=new THREE.Mesh(new THREE.BoxGeometry(50,66,134),blue2);rearSlope.position.set(-97,70,0);rearSlope.rotation.z=.34;g.add(rearSlope);
- for(const x of [-105,105])for(const z of [-78,78]){const w=wheel();w.position.set(x,-52,z);g.add(w)}
- const lampMat=material(0xffef9e,.35,.15);
- for(const z of [-45,45]){const l=new THREE.Mesh(new THREE.BoxGeometry(9,13,23),lampMat);l.position.set(169,16,z);g.add(l)}
- g.position.set(view.x,view.y,85);g.rotation.set(.02,-.42,0);addObject(g);
-}
+ const blue=material(0x4b91e8,.48,.14);
+ const blueDark=material(0x2e68b8,.58,.10);
+ const blueLight=material(0x6eb6ff,.42,.12);
+ const glass=new THREE.MeshStandardMaterial({color:0xa7d5f2,roughness:.16,metalness:.03,transparent:true,opacity:.88,side:THREE.DoubleSide});
+ const black=material(0x20262d,.92,0);
+ const rimMat=material(0xcbd3da,.28,.5);
+ const trim=material(0x31363d,.72,.05);
+ const lightMat=new THREE.MeshStandardMaterial({color:0xffed9a,emissive:0x665000,emissiveIntensity:.55,roughness:.35});
+ const rearMat=new THREE.MeshStandardMaterial({color:0xff6f61,emissive:0x5a0906,emissiveIntensity:.35,roughness:.45});
 
+ function box(w,h,d,mat,x,y,z,rz=0){
+   const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+   m.position.set(x,y,z);m.rotation.z=rz;g.add(m);return m;
+ }
+
+ // Ana gövde: daha alçak ve uzun.
+ box(340,74,152,blue,0,-6,0);
+ box(142,26,148,blueLight,92,43,0,-.06);
+ box(80,24,146,blueDark,-128,35,0,.03);
+
+ // Kabin ve eğimli ön/arka cam blokları.
+ box(156,60,132,glass,-24,82,0);
+ box(54,64,134,glass,59,76,0,-.42);
+ box(50,62,134,blueDark,-103,72,0,.40);
+
+ // İnce tavan ve alt eşik.
+ box(142,10,134,trim,-22,116,0);
+ box(330,12,154,blueDark,0,-47,0);
+
+ // Ön ve arka yüz.
+ box(20,62,148,blueDark,170,-5,0);
+ box(18,60,148,blueDark,-170,-8,0);
+
+ function makeWheel(){
+   const wg=new THREE.Group();
+   const tire=new THREE.Mesh(new THREE.CylinderGeometry(34,34,24,28),black);
+   tire.rotation.x=Math.PI/2;wg.add(tire);
+   const rim=new THREE.Mesh(new THREE.CylinderGeometry(19,19,25,24),rimMat);
+   rim.rotation.x=Math.PI/2;wg.add(rim);
+   const hub=new THREE.Mesh(new THREE.CylinderGeometry(7,7,26,20),trim);
+   hub.rotation.x=Math.PI/2;wg.add(hub);
+   return wg;
+ }
+ for(const x of [-105,105]){
+   for(const z of [-79,79]){
+     const w=makeWheel();w.position.set(x,-50,z);g.add(w);
+   }
+ }
+
+ // Farlar.
+ for(const z of [-47,47]){
+   box(9,12,22,lightMat,179,13,z);
+   box(8,11,20,rearMat,-179,8,z);
+ }
+
+ // Tampon/grill detayı.
+ box(8,22,58,trim,181,-17,0);
+
+ g.position.set(view.x,view.y,86);
+ g.rotation.set(.02,-.44,0);
+ g.userData.selectRoot=true;
+ addObject(g);
+}
 cubeBtn.onclick=addCube;carBtn.onclick=addCar;
 resetBtn.onclick=()=>{view.x=0;view.y=0;view.zoom=1};
 clearBtn.onclick=()=>{
@@ -303,7 +404,7 @@ window.onresize=resize;
 function frame(){
  requestAnimationFrame(frame);updateCamera();renderer.render(scene,camera);draw2D();
 }
-applyLang();rebuild3DGrid();resize();setMode('pan');addCar();frame();
+applyLang();rebuild3DGrid();resize();setMode('pan');addCar();addCube();frame();
 </script>
 <script src="/projeler/analytics.js?v=20261114-auto"></script>
 </body>
