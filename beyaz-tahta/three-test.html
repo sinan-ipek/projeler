@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Beyaz Tahta · Three.js Mimari Testi v20.01</title>
+<title>Beyaz Tahta · Three.js Mimari Testi v20.02</title>
 <style>
 :root{
   --bg:#f6f8fb;--panel:#ffffffee;--line:#d8dee9;--text:#1f2937;
@@ -71,6 +71,10 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
     <button id="cubeBtn">3D Küp</button>
     <button id="carBtn">3D Araba</button>
     <button id="select3DBtn">3D Seç</button>
+    <button id="axisModeBtn">World</button>
+    <button id="duplicateBtn">Kopyala</button>
+    <button id="delete3DBtn">Sil</button>
+    <button id="dropBtn">XY'ye İndir</button>
     <button id="resetBtn">Görünümü Sıfırla</button>
     <button id="clearBtn">Temizle</button>
   </div>
@@ -80,10 +84,11 @@ kbd{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:1px 5p
     XY düzlemi = 2D çizim düzlemi.<br>
     X: ekran sağ/sol · Y: ekran yukarı/aşağı · Z: kullanıcıya doğru/uzak.<br>
     Kamera yalnız X/Y yönünde hareket eder; dönmez.<br>
-    <b>3D Seç</b>: nesneyi tıkla · sürükle = X/Y taşı · Shift+sürükle = Z · Alt+sürükle = döndür.
+    <b>3D Seç</b>: tıkla · sürükle = X/Y · Shift+sürükle = Z · Alt+sürükle = döndür · Ctrl+sürükle = ölçek.<br>
+    Seçili nesne sarı kutu ve XYZ eksenleriyle gösterilir.
   </div>
 
-  <div class="version">v20.01-three-test · 3D seçme/taşıma/döndürme + geliştirilmiş araba · checkpoint: v19.15</div>
+  <div class="version">v20.02-three-test · kalıcı seçim + ölçek/kopyala/sil/drop + World/Local + gölge · checkpoint: v19.15</div>
 
   <div id="helpModal">
     <div class="card">
@@ -110,6 +115,10 @@ const carBtn=document.getElementById('carBtn');
 const resetBtn=document.getElementById('resetBtn');
 const clearBtn=document.getElementById('clearBtn');
 const select3DBtn=document.getElementById('select3DBtn');
+const axisModeBtn=document.getElementById('axisModeBtn');
+const duplicateBtn=document.getElementById('duplicateBtn');
+const delete3DBtn=document.getElementById('delete3DBtn');
+const dropBtn=document.getElementById('dropBtn');
 const helpBtn=document.getElementById('helpBtn');
 const helpModal=document.getElementById('helpModal');
 const closeHelp=document.getElementById('closeHelp');
@@ -126,17 +135,17 @@ helpModal.onpointerdown=e=>{if(e.target===helpModal)helpModal.classList.remove('
 
 const text={
  tr:{
-  pan:'Pan',pen:'2D Kalem',cube:'3D Küp',car:'3D Araba',select3d:'3D Seç',reset:'Görünümü Sıfırla',clear:'Temizle',
+  pan:'Pan',pen:'2D Kalem',cube:'3D Küp',car:'3D Araba',select3d:'3D Seç',axis:'World',dup:'Kopyala',del:'Sil',drop:"XY'ye İndir",reset:'Görünümü Sıfırla',clear:'Temizle',
   info:'<b>Three.js mimari testi</b><br>XY düzlemi = 2D çizim düzlemi.<br>X: ekran sağ/sol · Y: ekran yukarı/aşağı · Z: kullanıcıya doğru/uzak.<br>Kamera yalnız X/Y yönünde hareket eder; dönmez.',
   ht:'Yardım',hb:'Bu sayfa sadece yeni 3D mimariyi dener. 2D çizim XY düzlemindedir. Three.js nesneleri aynı koordinat sisteminde gösterir. Kamera dönmez; sadece sağ-sol ve yukarı-aşağı taşınır.'
  },
  de:{
-  pan:'Verschieben',pen:'2D Stift',cube:'3D Würfel',car:'3D Auto',select3d:'3D wählen',reset:'Ansicht zurücksetzen',clear:'Löschen',
+  pan:'Verschieben',pen:'2D Stift',cube:'3D Würfel',car:'3D Auto',select3d:'3D wählen',axis:'World',dup:'Kopieren',del:'Löschen',drop:'Auf XY',reset:'Ansicht zurücksetzen',clear:'Löschen',
   info:'<b>Three.js Architekturtest</b><br>XY-Ebene = 2D-Zeichenebene.<br>X: Bildschirm rechts/links · Y: oben/unten · Z: zum Nutzer/vom Nutzer weg.<br>Die Kamera bewegt sich nur in X/Y und dreht sich nicht.',
   ht:'Hilfe',hb:'Diese Seite testet nur die neue 3D-Architektur. Die 2D-Zeichnung liegt in der XY-Ebene. Three.js benutzt dasselbe Koordinatensystem. Die Kamera dreht sich nicht.'
  },
  en:{
-  pan:'Pan',pen:'2D Pen',cube:'3D Cube',car:'3D Car',select3d:'3D Select',reset:'Reset View',clear:'Clear',
+  pan:'Pan',pen:'2D Pen',cube:'3D Cube',car:'3D Car',select3d:'3D Select',axis:'World',dup:'Duplicate',del:'Delete',drop:'Drop to XY',reset:'Reset View',clear:'Clear',
   info:'<b>Three.js architecture test</b><br>XY plane = 2D drawing plane.<br>X: screen left/right · Y: up/down · Z: toward/away from user.<br>The camera moves only in X/Y and never rotates.',
   ht:'Help',hb:'This page only tests the new 3D architecture. 2D drawing lives on the XY plane. Three.js uses the same coordinate system. The camera never rotates.'
  }
@@ -144,6 +153,8 @@ const text={
 function applyLang(){
  const t=text[lang.value]||text.tr;
  panBtn.textContent=t.pan;penBtn.textContent=t.pen;cubeBtn.textContent=t.cube;carBtn.textContent=t.car;select3DBtn.textContent=t.select3d;
+ duplicateBtn.textContent=t.dup;delete3DBtn.textContent=t.del;dropBtn.textContent=t.drop;
+ axisModeBtn.textContent=transformSpace==='world'?'World':'Local';
  resetBtn.textContent=t.reset;clearBtn.textContent=t.clear;info.innerHTML=t.info;helpTitle.textContent=t.ht;helpText.textContent=t.hb;
 }
 lang.onchange=applyLang;
@@ -152,6 +163,8 @@ const renderer=new THREE.WebGLRenderer({canvas:threeCanvas,antialias:true,alpha:
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
 renderer.setClearColor(0x000000,0);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(42,1,1,5000);
@@ -161,7 +174,20 @@ let cssW=1,cssH=1,dpr=1;
 
 scene.add(new THREE.HemisphereLight(0xffffff,0x76849a,2.1));
 const keyLight=new THREE.DirectionalLight(0xffffff,2.6);
-keyLight.position.set(400,500,700);scene.add(keyLight);
+keyLight.position.set(400,500,700);
+keyLight.castShadow=true;
+keyLight.shadow.mapSize.set(1024,1024);
+keyLight.shadow.camera.left=-1200;keyLight.shadow.camera.right=1200;
+keyLight.shadow.camera.top=1200;keyLight.shadow.camera.bottom=-1200;
+scene.add(keyLight);
+
+const shadowPlane=new THREE.Mesh(
+  new THREE.PlaneGeometry(5000,5000),
+  new THREE.ShadowMaterial({color:0x263238,opacity:.16})
+);
+shadowPlane.position.z=0;
+shadowPlane.receiveShadow=true;
+scene.add(shadowPlane);
 
 const gridGroup=new THREE.Group();
 scene.add(gridGroup);
@@ -204,12 +230,77 @@ const strokes=[];
 let activeStroke=null;
 let mode='pan',dragging=false,startScreen=null,startView=null;
 let selected3D=null;
+let drag3D=null;
 let selectedStart=null;
 let selectedStartPos=null;
 let selectedStartQuat=null;
 let selectedStartZ=0;
+let selectedStartScale=null;
+let transformSpace='world';
+let selectionBox=null;
+let selectionAxes=null;
 const raycaster=new THREE.Raycaster();
 const pointerNDC=new THREE.Vector2();
+
+function clearSelectionVisuals(){
+ if(selectionBox){scene.remove(selectionBox);selectionBox.geometry?.dispose();selectionBox.material?.dispose();selectionBox=null}
+ if(selectionAxes){scene.remove(selectionAxes);selectionAxes.dispose?.();selectionAxes=null}
+}
+function refreshSelectionVisuals(){
+ clearSelectionVisuals();
+ if(!selected3D)return;
+ selectionBox=new THREE.BoxHelper(selected3D,0xffbf00);
+ scene.add(selectionBox);
+ selectionAxes=new THREE.AxesHelper(105);
+ selectionAxes.position.copy(selected3D.position);
+ if(transformSpace==='local')selectionAxes.quaternion.copy(selected3D.quaternion);
+ selectionAxes.renderOrder=999;
+ scene.add(selectionAxes);
+}
+function select3DObject(o){
+ selected3D=o||null;
+ refreshSelectionVisuals();
+}
+function remove3DObject(o){
+ if(!o)return;
+ const i=objects3D.indexOf(o);
+ if(i>=0)objects3D.splice(i,1);
+ scene.remove(o);
+ o.traverse(c=>{c.geometry?.dispose();if(c.material){if(Array.isArray(c.material))c.material.forEach(m=>m.dispose());else c.material.dispose()}});
+ if(selected3D===o)select3DObject(null);
+}
+function duplicateSelected(){
+ if(!selected3D)return;
+ const clone=selected3D.clone(true);
+ clone.position.x+=45;
+ clone.position.y-=35;
+ clone.traverse(c=>{
+   if(c.isMesh){
+     c.geometry=c.geometry?.clone();
+     if(Array.isArray(c.material))c.material=c.material.map(m=>m.clone());
+     else if(c.material)c.material=c.material.clone();
+   }
+ });
+ clone.userData.selectRoot=true;
+ addObject(clone);
+ select3DObject(clone);
+}
+function dropSelectedToXY(){
+ if(!selected3D)return;
+ selected3D.updateMatrixWorld(true);
+ const box=new THREE.Box3().setFromObject(selected3D);
+ if(!Number.isFinite(box.min.z))return;
+ selected3D.position.z-=box.min.z;
+ refreshSelectionVisuals();
+}
+axisModeBtn.onclick=()=>{
+ transformSpace=transformSpace==='world'?'local':'world';
+ axisModeBtn.textContent=transformSpace==='world'?'World':'Local';
+ refreshSelectionVisuals();
+};
+duplicateBtn.onclick=duplicateSelected;
+delete3DBtn.onclick=()=>remove3DObject(selected3D);
+dropBtn.onclick=dropSelectedToXY;
 function setMode(m){
  mode=m;
  panBtn.classList.toggle('active',m==='pan');
@@ -240,12 +331,14 @@ drawCanvas.onpointerdown=e=>{
  if(mode==='pen'){
    activeStroke=[screenToWorld(startScreen)];strokes.push(activeStroke);
  }else if(mode==='select3d'){
-   selected3D=pick3DAt(startScreen);
-   if(selected3D){
+   drag3D=pick3DAt(startScreen);
+   select3DObject(drag3D);
+   if(drag3D){
      selectedStart=startScreen;
-     selectedStartPos=selected3D.position.clone();
-     selectedStartQuat=selected3D.quaternion.clone();
-     selectedStartZ=selected3D.position.z;
+     selectedStartPos=drag3D.position.clone();
+     selectedStartQuat=drag3D.quaternion.clone();
+     selectedStartZ=drag3D.position.z;
+     selectedStartScale=drag3D.scale.clone();
    }
  }else drawCanvas.style.cursor='grabbing';
 };
@@ -256,19 +349,27 @@ drawCanvas.onpointermove=e=>{
    const w=screenToWorld(p),last=activeStroke[activeStroke.length-1];
    if(Math.hypot(w.x-last.x,w.y-last.y)>.8)activeStroke.push(w);
  }else if(mode==='select3d'){
-   if(!selected3D)return;
+   if(!drag3D)return;
    const dx=p.x-selectedStart.x,dy=p.y-selectedStart.y;
-   if(e.altKey){
+   if(e.ctrlKey||e.metaKey){
+     const k=Math.max(.12,Math.min(6,Math.exp(-dy*.008)));
+     drag3D.scale.copy(selectedStartScale).multiplyScalar(k);
+   }else if(e.altKey){
      const qy=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dx*.008);
      const qx=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),dy*.008);
-     selected3D.quaternion.copy(selectedStartQuat).premultiply(qy).premultiply(qx);
+     if(transformSpace==='local'){
+       drag3D.quaternion.copy(selectedStartQuat).multiply(qy).multiply(qx);
+     }else{
+       drag3D.quaternion.copy(selectedStartQuat).premultiply(qy).premultiply(qx);
+     }
    }else if(e.shiftKey){
-     selected3D.position.z=selectedStartZ-dy/pixelsPerWorld();
+     drag3D.position.z=selectedStartZ-dy/pixelsPerWorld();
    }else{
      const s=pixelsPerWorld();
-     selected3D.position.x=selectedStartPos.x+dx/s;
-     selected3D.position.y=selectedStartPos.y-dy/s;
+     drag3D.position.x=selectedStartPos.x+dx/s;
+     drag3D.position.y=selectedStartPos.y-dy/s;
    }
+   refreshSelectionVisuals();
  }else{
    const s=pixelsPerWorld();
    view.x=startView.x-(p.x-startScreen.x)/s;
@@ -276,7 +377,7 @@ drawCanvas.onpointermove=e=>{
  }
 };
 function endPointer(e){
- dragging=false;activeStroke=null;selected3D=null;drawCanvas.style.cursor=mode==='pan'?'grab':(mode==='pen'?'crosshair':'default');
+ dragging=false;activeStroke=null;drag3D=null;drawCanvas.style.cursor=mode==='pan'?'grab':(mode==='pen'?'crosshair':'default');
  try{drawCanvas.releasePointerCapture(e.pointerId)}catch(_){}
 }
 drawCanvas.onpointerup=endPointer;drawCanvas.onpointercancel=endPointer;
@@ -288,7 +389,10 @@ drawCanvas.addEventListener('wheel',e=>{
 },{passive:false});
 
 const objects3D=[];
-function addObject(o){scene.add(o);objects3D.push(o)}
+function addObject(o){
+ o.traverse?.(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true}});
+ scene.add(o);objects3D.push(o)
+}
 function material(color,rough=.68,metal=.08){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal,flatShading:false})}
 
 function addCube(){
@@ -297,6 +401,7 @@ function addCube(){
  m.rotation.set(0,0,0);
  m.userData.selectRoot=true;
  addObject(m);
+ select3DObject(m);
 }
 
 function wheel(){
@@ -371,6 +476,7 @@ function addCar(){
  g.rotation.set(.02,-.44,0);
  g.userData.selectRoot=true;
  addObject(g);
+ select3DObject(g);
 }
 cubeBtn.onclick=addCube;carBtn.onclick=addCar;
 resetBtn.onclick=()=>{view.x=0;view.y=0;view.zoom=1};
@@ -378,8 +484,18 @@ clearBtn.onclick=()=>{
  strokes.length=0;
  for(const o of objects3D){scene.remove(o);o.traverse(c=>{c.geometry?.dispose();if(c.material){if(Array.isArray(c.material))c.material.forEach(m=>m.dispose());else c.material.dispose()}})}
  objects3D.length=0;
+ select3DObject(null);
 };
 
+
+window.addEventListener('keydown',e=>{
+ if(e.target && ['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
+ if(mode==='select3d' && selected3D){
+   if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();remove3DObject(selected3D);return}
+   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'){e.preventDefault();duplicateSelected();return}
+   if(e.key.toLowerCase()==='g'){e.preventDefault();dropSelectedToXY();return}
+ }
+});
 function draw2D(){
  ctx.clearRect(0,0,cssW,cssH);
  ctx.lineCap='round';ctx.lineJoin='round';
@@ -402,7 +518,15 @@ function resize(){
 window.onresize=resize;
 
 function frame(){
- requestAnimationFrame(frame);updateCamera();renderer.render(scene,camera);draw2D();
+ requestAnimationFrame(frame);
+ updateCamera();
+ if(selectionBox&&selected3D){
+   selectionBox.update();
+   selectionAxes.position.copy(selected3D.position);
+   if(transformSpace==='local')selectionAxes.quaternion.copy(selected3D.quaternion);
+   else selectionAxes.quaternion.identity();
+ }
+ renderer.render(scene,camera);draw2D();
 }
 applyLang();rebuild3DGrid();resize();setMode('pan');addCar();addCube();frame();
 </script>
