@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v19.13-deneme</title>
+<title>Beyaz Tahta v19.14-deneme</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1347,7 +1347,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.13-deneme · Baştan tasarlanmış gerçek 3D otomobil · checkpoint: v19.00</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.14-deneme · 3D araba gerçek gizli-kenar kaldırma · checkpoint: v19.00</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -8173,6 +8173,178 @@
     ctx.restore();
   }
 
+
+  function shape3DTriangleDepthAtScreenPoint(p,a,b,c){
+    // Perspective-correct triangle depth.
+    const den=(b.y-c.y)*(a.x-c.x)+(c.x-b.x)*(a.y-c.y);
+    if(Math.abs(den)<1e-9) return null;
+
+    const l1=((b.y-c.y)*(p.x-c.x)+(c.x-b.x)*(p.y-c.y))/den;
+    const l2=((c.y-a.y)*(p.x-c.x)+(a.x-c.x)*(p.y-c.y))/den;
+    const l3=1-l1-l2;
+    const eps=-1e-5;
+
+    if(l1<eps || l2<eps || l3<eps) return null;
+
+    const z1=Math.max(1e-6,Number(a.z)||1e-6);
+    const z2=Math.max(1e-6,Number(b.z)||1e-6);
+    const z3=Math.max(1e-6,Number(c.z)||1e-6);
+
+    const invZ=l1/z1+l2/z2+l3/z3;
+    if(invZ<=1e-12) return null;
+    return 1/invZ;
+  }
+
+  function shape3DProjectedFaceTriangles(g,pts){
+    const out=[];
+    for(let fi=0;fi<(g.faces||[]).length;fi++){
+      const face=g.faces[fi];
+      if(!face || face.length<3) continue;
+      const a=pts[face[0]];
+      if(!a) continue;
+      for(let k=1;k<face.length-1;k++){
+        const b=pts[face[k]];
+        const c=pts[face[k+1]];
+        if(!b||!c) continue;
+        out.push({
+          fi,
+          indices:[face[0],face[k],face[k+1]],
+          a,b,c,
+          minX:Math.min(a.x,b.x,c.x),
+          maxX:Math.max(a.x,b.x,c.x),
+          minY:Math.min(a.y,b.y,c.y),
+          maxY:Math.max(a.y,b.y,c.y)
+        });
+      }
+    }
+    return out;
+  }
+
+  function shape3DPointOccludedByFaces(p,depth,triangles,ignoreVertices){
+    // Small depth tolerance avoids self-occlusion on the same surface.
+    const depthEpsilon=Math.max(.7,depth*.0012);
+
+    for(const tri of triangles){
+      if(
+        p.x<tri.minX-.2 || p.x>tri.maxX+.2 ||
+        p.y<tri.minY-.2 || p.y>tri.maxY+.2
+      ) continue;
+
+      // Faces containing the tested edge itself are not occluders.
+      if(
+        ignoreVertices &&
+        tri.indices.some(i=>ignoreVertices.has(i))
+      ){
+        // Do not skip a triangle merely because it shares one endpoint:
+        // only skip when it contains both edge endpoints.
+        const hits=tri.indices.reduce((n,i)=>n+(ignoreVertices.has(i)?1:0),0);
+        if(hits>=2) continue;
+      }
+
+      const faceDepth=shape3DTriangleDepthAtScreenPoint(p,tri.a,tri.b,tri.c);
+      if(faceDepth===null) continue;
+
+      if(faceDepth < depth-depthEpsilon){
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function drawShape3DOcclusionClippedEdge(o,g,ia,ib,triangles){
+    const localA=(g.points||[])[ia];
+    const localB=(g.points||[])[ib];
+    if(!localA||!localB) return;
+
+    const screenA=shape3DProjectLocalPoint(o,localA);
+    const screenB=shape3DProjectLocalPoint(o,localB);
+    const pixelLength=Math.hypot(screenB.x-screenA.x,screenB.y-screenA.y)*viewZoom;
+
+    // Enough samples for wheel arcs and long body seams, capped for performance.
+    const steps=Math.max(6,Math.min(96,Math.ceil(pixelLength/5)));
+    const samples=[];
+    const ignoreVertices=new Set([ia,ib]);
+
+    for(let i=0;i<=steps;i++){
+      const t=i/steps;
+      const local={
+        x:localA.x+(localB.x-localA.x)*t,
+        y:localA.y+(localB.y-localA.y)*t,
+        z:localA.z+(localB.z-localA.z)*t
+      };
+      const projected=shape3DProjectLocalPoint(o,local);
+      samples.push({
+        x:projected.x,
+        y:projected.y,
+        z:projected.z,
+        visible:!shape3DPointOccludedByFaces(
+          projected,
+          projected.z,
+          triangles,
+          ignoreVertices
+        )
+      });
+    }
+
+    // Draw only continuous visible runs. No dashed hidden lines for the car.
+    let run=[];
+    const flush=()=>{
+      if(run.length<2){ run=[]; return; }
+      ctx.beginPath();
+      ctx.moveTo(run[0].x,run[0].y);
+      for(let k=1;k<run.length;k++){
+        ctx.lineTo(run[k].x,run[k].y);
+      }
+      ctx.stroke();
+      run=[];
+    };
+
+    for(let i=0;i<samples.length;i++){
+      const q=samples[i];
+      if(q.visible){
+        if(!run.length && i>0){
+          // Add previous point at a visibility boundary for smoother clipping.
+          const prev=samples[i-1];
+          run.push({
+            x:(prev.x+q.x)/2,
+            y:(prev.y+q.y)/2
+          });
+        }
+        run.push(q);
+      }else if(run.length){
+        if(i>0){
+          const prev=samples[i-1];
+          run.push({
+            x:(prev.x+q.x)/2,
+            y:(prev.y+q.y)/2
+          });
+        }
+        flush();
+      }
+    }
+    flush();
+  }
+
+  function drawShape3DCarEdgesWithOcclusion(o,g){
+    const pts=shape3DProjectedPoints(o);
+    const triangles=shape3DProjectedFaceTriangles(g,pts);
+
+    ctx.save();
+    ctx.strokeStyle=(o.style&&o.style.color)||'#111111';
+    ctx.lineWidth=Math.max(.75/viewZoom,visualStrokeWidth(o.style||{})*.78);
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    ctx.globalAlpha=1;
+    ctx.setLineDash([]);
+
+    for(const edge of (g.edges||[])){
+      if(!edge || edge.length<2) continue;
+      drawShape3DOcclusionClippedEdge(o,g,edge[0],edge[1],triangles);
+    }
+
+    ctx.restore();
+  }
+
   function drawShape3D(o){
     const g=shape3DGeometry(o);
     const viewPts=shape3DViewPoints(o);
@@ -8188,6 +8360,12 @@
 
     // Material first, existing educational edge/hidden-line drawing on top.
     drawShape3DMaterial(o,g,viewPts,pts);
+
+    if(o.shape3dType==='car'){
+      drawShape3DCarEdgesWithOcclusion(o,g);
+      ctx.restore();
+      return;
+    }
 
 
     if(o.shape3dType==='cylinder'){
