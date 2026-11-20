@@ -1,17 +1,28 @@
-# Check Liste
+# Check Liste (Çetin, 2026)
 
-GitHub / projeler içindeki Çetin çalışma listesi.
+Bu klasörde Çetin'in Almanca–Türkçe **41 soruluk** matematik checklist uygulaması bulunmaktadır.
 
-## GitHub'da bulunanlar (20 Kasım 2026)
+- `index.html` — Soru/çeviri ekranı ve sağdaki Beyaz Tahta paneli
+- `app.js` — Soru listesi, ilerleme, her soru için tahta adresi
+- `sets/cetin-2026/data.js` — 41 sorunun Almanca ve Türkçe metinleri
+- `whiteboard.html` — `../beyaz-tahta/index.html` sürümünden **doğrudan kopyalanmış orijinal Beyaz Tahta çizim motoru**
 
-- `index.html`: Çetin için açılan çalışma arayüzü
-- `app.js`: Sayfa/soru menüsü, ilerleme durumu, kalem/silgi ve beyaz tahta işlevleri
-- `sets/cetin-2026/data.js`: 13 sayfadan 41 Almanca–Türkçe soru
-- Projeler ana sayfasında **Check Liste** bağlantısı
+## Beyaz Tahta
 
-**Görsel durumu:** Daha önce sohbet içinde üretilmiş tek dosyalı son sürümdeki bütün kırpılmış orijinal kitap görselleri bu GitHub aktarımında henüz bulunmuyor. Bu GitHub sürümünün birebir aynı sürüm olduğu iddia edilmemelidir.
+Orijinal **Beyaz Tahta v19.15-deneme** çizim ve seçim algoritmaları aynen korunmuştur. Check Liste'de yalnızca görünüm sınırlanmıştır: **Seç**, **Ink**, **Silgi**, **Tümünü temizle** görünür. Beyaz Tahta normal kullanıcı hesabıyla **yerel Ben modunda** başlatılır; ortak canlı tahta paylaşılmaz. Her soru için bağımsız kayıt anahtarı kullanılır:
 
-## Daha sonra yeni checklist
+`check-liste:board:<checklistId>:<profileId>:<page-number>`
 
-Her öğrenci için ayrı veri dosyası ve benzersiz liste kimliği kullanın. Şablonun beyaz tahta işlevlerini sabit tutun; Almanca/Türkçe soru metinleri ve kitap görsellerini kontrol ederek ekleyin. Tamamlandı işaretlerini ve çizimleri liste kimliği + öğrenci profili + soru numarasına göre saklayın.
+Dolayısıyla soru değişimi başka sorunun çözümünü silmez. Beyaz Tahta'nın orijinal nesne seçimi, nokta düzenleme, döndürme, şekil tanıma ve ink işlevleri kullanılır.
 
+## Yeni checklist hazırlama
+
+1. Checklist ve kitap fotoğraflarını analiz ederek sayfa–soru eşleştirmelerini doğrula.
+2. Almanca metinleri kontrol et, Türkçelerini yaz; şekillerin ilgili kısımlarını kırp.
+3. `sets/<benzersiz-id>/data.js` oluştur.
+4. Yeni paket seçim ekranına eklenir veya ilgili öğrenci için ayrı giriş sayfası hazırlanır.
+5. Ortak Beyaz Tahta motorunu ikinci kez yazma. Gerekirse `whiteboard.html` kopyasını kaynak sürümle güncelle.
+
+**Bilinen eksik:** Bu GitHub sürümünde sohbet içinde hazırlanan bazı orijinal kırpılmış kitap görselleri henüz bulunmuyor. Görsel gerektiren sorular için ilgili `figureImage` veya `sourceImage` alanları ayrıca eklenmelidir.
+
+**Kontrol:** GitHub dosyaları ve JavaScript sözdizimi doğrulandı; canlı GitHub Pages tarayıcı testi henüz yapılamadı.
