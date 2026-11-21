@@ -25,7 +25,7 @@ function safeTitle(s){
  .replace(/[^a-zA-Z0-9-]+/g,'-').replace(/^-|-$/g,'').slice(0,56)||'Check-Liste';
 }
 function savedObjects(q){
- const k=['dotem-checkliste-v2',pack.id||'matematik-5-2026',profile,'board:'+q.id].join(':');
+ const k=['dotem-checkliste-v2',pack.id||'check-liste-default',profile,'board:'+q.id].join(':');
  try{
   const v=JSON.parse(localStorage.getItem(k)||'{}');
   return Array.isArray(v.objects)?v.objects:[];
