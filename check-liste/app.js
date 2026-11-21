@@ -214,16 +214,60 @@ function hitHandle(p){const b=bboxAll();if(!b)return null;return handles(b).find
 function duplicateSelected(){const arr=selected.map(i=>structuredClone(objects[i]));let start=objects.length;objects.push(...arr);selected=arr.map((_,i)=>start+i)}
 function applyMove(ix,dy){selected.forEach(i=>objects[i].pts.forEach(p=>{p.x+=ix;p.y+=dy}))}
 function rotateSelected(angle){const b=bboxAll(),c={x:b.x+b.w/2,y:b.y+b.h/2};let cos=Math.cos(angle),sin=Math.sin(angle);selected.forEach(i=>objects[i].pts.forEach(p=>{let x=p.x-c.x,y=p.y-c.y;p.x=c.x+x*cos-y*sin;p.y=c.y+x*sin+y*cos}))}
-function stretchSelected(handle,prev,now){const b=bboxAll();if(!b)return;let dx=now.x-prev.x,dy=now.y-prev.y;
- if(handle.kind==='rot'){let c={x:b.x+b.w/2,y:b.y+b.h/2};let a=Math.atan2(now.y-c.y,now.x-c.x)-Math.atan2(prev.y-c.y,prev.x-c.x);rotateSelected(a);return}
- let x=handle.kind.includes('l')?b.x:b.x+b.w,y=handle.kind.includes('t')?b.y:b.y+b.h, sx=(x===b.x?b.w-dx:b.w+dx)/b.w,sy=(y===b.y?b.h-dy:b.h+dy)/b.h;
- sx=Math.max(.1,sx);sy=Math.max(.1,sy);let ax=x===b.x?b.x+b.w:b.x,ay=y===b.y?b.y+b.h:b.y;
- selected.forEach(i=>{
-  const obj=objects[i];
-  // Keep circles and circle arcs round when resizing with corner handles.
-  const uniform=(obj.kind==='arc'||obj.kind==='circle')?Math.sqrt(sx*sy):null;
-  obj.pts.forEach(p=>{p.x=ax+(p.x-ax)*(uniform??sx);p.y=ay+(p.y-ay)*(uniform??sy)});
- })
+// Resize against the original geometry for stable Shift toggling.
+function beginHandleDrag(handle,p){
+ if(handle.kind==='rot')return{kind:'handle',handle,prev:{...p},last:{...p}};
+ const box=bboxAll();if(!box)return null;
+ const opposite={
+  x:handle.kind.includes('l')?box.x+box.w:box.x,
+  y:handle.kind.includes('t')?box.y+box.h:box.y
+ };
+ return{
+  kind:'handle',handle,start:{...p},last:{...p},opposite,
+  originalCorner:{x:handle.x,y:handle.y},
+  originalObjects:selected.map(i=>({
+   index:i,kind:objects[i].kind,
+   pts:objects[i].pts.map(pt=>({...pt}))
+  }))
+ };
+}
+function stretchSelected(drag,now,keepAspect=false){
+ if(!drag)return;
+ if(drag.handle.kind==='rot'){
+  const box=bboxAll();if(!box)return;
+  const center={x:box.x+box.w/2,y:box.y+box.h/2};
+  const angle=Math.atan2(now.y-center.y,now.x-center.x)-Math.atan2(drag.prev.y-center.y,drag.prev.x-center.x);
+  rotateSelected(angle);drag.prev={...now};drag.last={...now};return;
+ }
+ const anchor=drag.opposite,corner=drag.originalCorner;
+ if(!anchor||!corner)return;
+ // Compensate the initial pointer/handle offset to prevent jumps.
+ const requested={x:corner.x+now.x-drag.start.x,y:corner.y+now.y-drag.start.y};
+ const width=corner.x-anchor.x,height=corner.y-anchor.y;
+ let sx=(requested.x-anchor.x)/(width||1),sy=(requested.y-anchor.y)/(height||1);
+ if(keepAspect){
+  // Shift: all selected paths scale by the same factor on both axes.
+  const factor=Math.abs(sx-1)>=Math.abs(sy-1)?sx:sy;
+  sx=sy=Math.max(.05,factor);
+ }else{
+  // Default: horizontal and vertical factors are independent.
+  sx=Math.max(.05,sx);sy=Math.max(.05,sy);
+ }
+ for(const source of drag.originalObjects){
+  const obj=objects[source.index];if(!obj)continue;
+  obj.pts=source.pts.map(pt=>({
+   x:anchor.x+(pt.x-anchor.x)*sx,
+   y:anchor.y+(pt.y-anchor.y)*sy
+  }));
+  // Nonuniform scaling turns circles into ellipses. Keep the full editable
+  // sampled path; PDF export and object hit-testing already use these points.
+  obj.kind=source.kind;
+  if(Math.abs(sx-sy)>1e-5){
+   if(source.kind==='circle')obj.kind='ellipse';
+   if(source.kind==='arc')obj.kind='elliptic-arc';
+  }
+ }
+ drag.last={...now};
 }
 function eraser(p){let id=hit(p);if(id>=0){objects.splice(id,1);selected=[];saveBoard();repaint()}}
 function clearPending(){clearTimeout(holdTimer);holdTimer=null}
@@ -329,7 +373,7 @@ area.addEventListener('pointerdown',e=>{
  // Selecting and transforming existing ink is only possible in explicit selection mode.
  // Pen mode NEVER hit-tests strokes, so handwriting may overlap earlier strokes.
  if(tool==='select'){
-  const h=hitHandle(p);if(h){drag={kind:'handle',handle:h,prev:p};return}
+  const h=hitHandle(p);if(h){drag=beginHandleDrag(h,p);return}
   const found=hit(p);
   if(found>=0){
    if(e.shiftKey){selected=selected.includes(found)?selected.filter(i=>i!==found):[...selected,found];drag=null;repaint();return}
@@ -359,7 +403,7 @@ area.addEventListener('pointermove',e=>{
   repaint();return;
  }
  if(drag?.kind==='move'){let dx=p.x-drag.prev.x,dy=p.y-drag.prev.y;applyMove(dx,dy);drag.prev=p;repaint();return}
- if(drag?.kind==='handle'){stretchSelected(drag.handle,drag.prev,p);drag.prev=p;repaint();return}
+ if(drag?.kind==='handle'){stretchSelected(drag,p,e.shiftKey);repaint();return}
  if(!holding)return;
  let last=holding.pts.at(-1);if(length(last,p)<1.5)return;
  if(preview){previewResize(p);repaint();return}
@@ -384,6 +428,17 @@ function setTool(v){
  repaint();
 }
 $('clear').onclick=()=>{clearPending();objects=[];selected=[];holding=null;preview=null;shapeLock=null;drag=null;pan={x:0,y:0};saveBoard();repaint()};
+// Shift affects a held resize immediately, even without a pointer movement.
+document.addEventListener('keydown',e=>{
+ if(e.key==='Shift'&&drag?.kind==='handle'&&drag.handle.kind!=='rot'){
+  stretchSelected(drag,drag.last||drag.start,true);repaint();
+ }
+});
+document.addEventListener('keyup',e=>{
+ if(e.key==='Shift'&&drag?.kind==='handle'&&drag.handle.kind!=='rot'){
+  stretchSelected(drag,drag.last||drag.start,false);repaint();
+ }
+});
 document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))return;if((e.key==='Delete'||e.key==='Backspace')&&selected.length){objects=objects.filter((_,i)=>!selected.includes(i));selected=[];saveBoard();repaint()}else if(e.key==='Escape'){e.preventDefault();setTool(tool==='pen'?'select':'pen')}else if(e.key==='ArrowRight'){open(current+1)}else if(e.key==='ArrowLeft'){open(current-1)}});
 new ResizeObserver(resize).observe(area);
 open(current);
