@@ -84,8 +84,36 @@ function bboxAll(){if(!selected.length)return null;let p=selected.flatMap(i=>obj
 function handles(r){let x=r.x,y=r.y,w=r.w,h=r.h;return[{kind:'tl',x,y},{kind:'tr',x:x+w,y},{kind:'br',x:x+w,y:y+h},{kind:'bl',x,y:y+h},{kind:'rot',x:x+w/2,y:y-33}]}
 function repaint(){if(!canvas.width||!canvas.height)return;const d=canvas.width/Math.max(1,canvas.clientWidth);ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);ctx.save();ctx.translate(pan.x,pan.y);
  objects.forEach((o,i)=>lineObj(o,selected.includes(i)));if(holding)lineObj(preview||{pts:holding.pts},!!preview);
- const b=bboxAll();if(b){ctx.strokeStyle='#2988d7';ctx.lineWidth=1.2;ctx.setLineDash([6,4]);ctx.strokeRect(b.x-7,b.y-7,b.w+14,b.h+14);ctx.setLineDash([]);handles(b).forEach(h=>{ctx.beginPath();ctx.arc(h.x,h.y,7,0,2*Math.PI);ctx.fillStyle=h.kind==='rot'?'#fff':'#3095d4';ctx.fill();ctx.strokeStyle='#1684c5';ctx.stroke()})}
+ const b=drag?.kind==='marquee'?null:bboxAll();if(b){ctx.strokeStyle='#2988d7';ctx.lineWidth=1.2;ctx.setLineDash([6,4]);ctx.strokeRect(b.x-7,b.y-7,b.w+14,b.h+14);ctx.setLineDash([]);handles(b).forEach(h=>{ctx.beginPath();ctx.arc(h.x,h.y,7,0,2*Math.PI);ctx.fillStyle=h.kind==='rot'?'#fff':'#3095d4';ctx.fill();ctx.strokeStyle='#1684c5';ctx.stroke()})}
+ if(drag?.kind==='marquee'&&drag.moved){
+  const r=marqueeRect(drag.start,drag.current);
+  ctx.fillStyle='rgba(41,136,215,.10)';
+  ctx.fillRect(r.x,r.y,r.w,r.h);
+  ctx.lineWidth=1.5;ctx.strokeStyle='#2988d7';
+  ctx.setLineDash([6,4]);ctx.strokeRect(r.x,r.y,r.w,r.h);ctx.setLineDash([]);
+ }
  ctx.restore()}
+// A mark is selected only if its actual stroke touches the rectangle.
+function marqueeRect(a,b){return{x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y)}}
+function segmentTouchesRect(a,b,r){
+ const dx=b.x-a.x,dy=b.y-a.y,p=[-dx,dx,-dy,dy],q=[a.x-r.x,r.x+r.w-a.x,a.y-r.y,r.y+r.h-a.y];
+ let t0=0,t1=1;
+ for(let i=0;i<4;i++){
+  if(Math.abs(p[i])<1e-10){if(q[i]<0)return false;continue}
+  const t=q[i]/p[i];
+  if(p[i]<0)t0=Math.max(t0,t);else t1=Math.min(t1,t);
+  if(t0>t1)return false;
+ }
+ return true;
+}
+function strokeTouchesMarquee(o,r){
+ const pts=o.pts||[];
+ for(let i=0;i<pts.length;i++){
+  if(pts[i].x>=r.x&&pts[i].x<=r.x+r.w&&pts[i].y>=r.y&&pts[i].y<=r.y+r.h)return true;
+  if(i>0&&segmentTouchesRect(pts[i-1],pts[i],r))return true;
+ }
+ return false;
+}
 function hit(p){for(let i=objects.length-1;i>=0;i--){let pts=objects[i].pts;for(let j=1;j<pts.length;j++)if(segdist(p,pts[j-1],pts[j])<11)return i}return-1}
 function hitHandle(p){const b=bboxAll();if(!b)return null;return handles(b).find(h=>length(h,p)<13)||null}
 function duplicateSelected(){const arr=selected.map(i=>structuredClone(objects[i]));let start=objects.length;objects.push(...arr);selected=arr.map((_,i)=>start+i)}
@@ -101,7 +129,7 @@ function eraser(p){let id=hit(p);if(id>=0){objects.splice(id,1);selected=[];save
 function clearPending(){clearTimeout(holdTimer);holdTimer=null}
 function armHold(){clearPending();if(!holding||preview)return;holdTimer=setTimeout(()=>{if(!holding||preview)return;const r=recognizer(holding.pts);if(r){preview=r;holding.anchor={...holding.pts[0]};repaint()}},650)}
 function previewResize(p){if(!preview||!holding)return;let r=bounds(preview),a=holding.anchor||holding.pts[0],end=holding.pts.at(-1);let dx=p.x-end.x,dy=p.y-end.y;preview.pts.forEach(v=>{v.x+=dx;v.y+=dy});holding.pts[holding.pts.length-1]={...p}}
-function finish(e,cancel=false){if(!drag&&!holding)return;if(drag){drag=null;saveBoard()}else if(holding){clearPending();if(!cancel&&holding.pts.length>1){objects.push(preview||{kind:'ink',pts:holding.pts});saveBoard()}holding=null;preview=null}area.classList.remove('pan');repaint()}
+function finish(e,cancel=false){if(!drag&&!holding)return;if(drag){if(drag.kind==='marquee'){if(cancel||!drag.moved)selected=drag.base.slice();drag=null;repaint();return}drag=null;saveBoard()}else if(holding){clearPending();if(!cancel&&holding.pts.length>1){objects.push(preview||{kind:'ink',pts:holding.pts});saveBoard()}holding=null;preview=null}area.classList.remove('pan');repaint()}
 area.addEventListener('contextmenu',e=>e.preventDefault());
 area.addEventListener('pointerdown',e=>{
  if(e.button!==0&&e.button!==2)return;e.preventDefault();canvas.setPointerCapture(e.pointerId);
@@ -117,7 +145,9 @@ area.addEventListener('pointerdown',e=>{
    if(e.shiftKey){selected=selected.includes(found)?selected.filter(i=>i!==found):[...selected,found];drag=null;repaint();return}
    if(!selected.includes(found))selected=[found];if(e.altKey)duplicateSelected();drag={kind:'move',prev:p};repaint();return
   }
-  selected=[];drag=null;repaint();return;
+  // Drag from empty space to select multiple strokes; Shift adds to old selection.
+  drag={kind:'marquee',start:p,current:p,base:e.shiftKey?selected.slice():[],moved:false};
+  selected=drag.base.slice();repaint();return;
  }
  // Pen mode starts a new stroke even directly on top of an existing one.
  selected=[];holding={pts:[p]};preview=null;drag=null;repaint();
@@ -128,6 +158,16 @@ area.addEventListener('pointermove',e=>{
  const p=point(e);
  if(drag?.kind==='pan'){pan.x+=cur.x-drag.last.x;pan.y+=cur.y-drag.last.y;drag.last=cur;repaint();return}
  if(drag?.kind==='erase'){eraser(p);return}
+ if(drag?.kind==='marquee'){
+  drag.current=p;
+  if(length(drag.start,p)>4)drag.moved=true;
+  if(drag.moved){
+   const r=marqueeRect(drag.start,p),hits=[];
+   objects.forEach((o,i)=>{if(strokeTouchesMarquee(o,r))hits.push(i)});
+   selected=[...new Set([...drag.base,...hits])];
+  }
+  repaint();return;
+ }
  if(drag?.kind==='move'){let dx=p.x-drag.prev.x,dy=p.y-drag.prev.y;applyMove(dx,dy);drag.prev=p;repaint();return}
  if(drag?.kind==='handle'){stretchSelected(drag.handle,drag.prev,p);drag.prev=p;repaint();return}
  if(!holding)return;
