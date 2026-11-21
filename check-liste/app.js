@@ -2,7 +2,7 @@
 'use strict';
 const $=id=>document.getElementById(id), pack=window.CHECKLIST_PACK;
 if(!pack||!Array.isArray(pack.questions)){document.getElementById('menu').textContent='Soru verileri bulunamadı.';return}
-const qs=pack.questions, checkId=pack.id||'matematik-5-2026', profile=new URLSearchParams(location.search).get('profile')||'default';
+const qs=pack.questions, checkId=pack.id||'check-liste-default', profile=new URLSearchParams(location.search).get('profile')||'default';
 let current=Math.max(0,qs.findIndex(q=>'#'+q.id===decodeURIComponent(location.hash))), done={};
 const key=type=>['dotem-checkliste-v2',checkId,profile,type].join(':');
 // Preserve local work when a checklist receives a new, anonymous package id.
@@ -40,12 +40,13 @@ const pages=[...new Set(qs.map(q=>q.page))];
 pages.forEach(p=>{let o=document.createElement('option');o.value=p;o.textContent='Sayfa '+p;$('pageSelect').append(o)});
 const saveDone=()=>{try{localStorage.setItem(key('done'),JSON.stringify(done))}catch{}};
 function drawMenu(){
- const pg=$('pageSelect').value,s=$('search').value.toLocaleLowerCase('tr');let last='';
+ const pg=$('pageSelect').value,s=$('search').value.toLocaleLowerCase('tr');let last=null;
  $('menu').replaceChildren();
  for(let i=0;i<qs.length;i++){
   let q=qs[i];if(pg!=='all'&&String(q.page)!==pg)continue;
   if(s&&!([q.id,q.german,q.turkish].join(' ').toLocaleLowerCase('tr').includes(s)))continue;
-  if(String(q.page)!==last){let h=document.createElement('div');h.className='group';h.textContent='SAYFA '+q.page;$('menu').append(h);last=String(q.page)}
+  const group=q.exercise!=null?'exercise:'+q.exercise:'page:'+q.page;
+  if(group!==last){let h=document.createElement('div');h.className='group';h.textContent='SAYFA '+q.page+(q.exercise!=null?' · SORU '+q.exercise:'');$('menu').append(h);last=group}
   let b=document.createElement('button');b.type='button';b.className='item'+(done[q.id]?' done':'')+(i===current?' active':'');b.textContent=(done[q.id]?'✓ ':'')+'Soru '+q.number+(q.star?' ★':'')+(q.plus?' +':'');b.onclick=()=>open(i);$('menu').append(b);
  }
  const n=qs.filter(q=>done[q.id]).length;$('progressText').textContent=n+' / '+qs.length+' tamamlandı';$('progressBar').style.width=100*n/qs.length+'%';
@@ -278,7 +279,20 @@ function nearestShape(ps){
   {kind:'line',pts:[first,last]};
 }
 function resize(){const r=area.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,3);canvas.width=Math.round(r.width*d);canvas.height=Math.round(r.height*d);canvas.style.width=r.width+'px';canvas.style.height=r.height+'px';ctx.setTransform(d,0,0,d,0,0);repaint()}
-function lineObj(o,highlight=false){let p=o.pts||[];if(!p.length)return;ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);p.slice(1).forEach(t=>ctx.lineTo(t.x,t.y));ctx.lineWidth=inkWidth;ctx.lineJoin='round';ctx.lineCap='round';ctx.strokeStyle=highlight?'#278bd2':'#1a2520';ctx.setLineDash(highlight?[9,6]:[]);ctx.stroke();ctx.setLineDash([])}
+function lineObj(o,highlight=false){
+ const p=o.pts||[];if(!p.length)return;
+ ctx.lineWidth=inkWidth;ctx.lineJoin='round';ctx.lineCap='round';
+ const color=highlight?'#278bd2':'#1a2520';
+ // A single click creates an actual dot object, with no pointer motion.
+ if(p.length===1){
+  ctx.beginPath();ctx.arc(p[0].x,p[0].y,Math.max(2.4,inkWidth*1.1),0,Math.PI*2);
+  ctx.fillStyle=color;ctx.fill();return;
+ }
+ ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);
+ p.slice(1).forEach(t=>ctx.lineTo(t.x,t.y));
+ ctx.strokeStyle=color;ctx.setLineDash(highlight?[9,6]:[]);
+ ctx.stroke();ctx.setLineDash([]);
+}
 function bboxAll(){if(!selected.length)return null;let p=selected.flatMap(i=>objects[i]?.pts||[]);return bounds({pts:p})}
 function handles(r){let x=r.x,y=r.y,w=r.w,h=r.h;return[{kind:'tl',x,y},{kind:'tr',x:x+w,y},{kind:'br',x:x+w,y:y+h},{kind:'bl',x,y:y+h},{kind:'rot',x:x+w/2,y:y-33}]}
 function repaint(){if(!canvas.width||!canvas.height)return;const d=canvas.width/Math.max(1,canvas.clientWidth);ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);ctx.save();ctx.translate(pan.x,pan.y);
@@ -313,7 +327,14 @@ function strokeTouchesMarquee(o,r){
  }
  return false;
 }
-function hit(p){for(let i=objects.length-1;i>=0;i--){let pts=objects[i].pts;for(let j=1;j<pts.length;j++)if(segdist(p,pts[j-1],pts[j])<11)return i}return-1}
+function hit(p){
+ for(let i=objects.length-1;i>=0;i--){
+  const pts=objects[i].pts||[];
+  if(pts.length===1&&length(p,pts[0])<11)return i;
+  for(let j=1;j<pts.length;j++)if(segdist(p,pts[j-1],pts[j])<11)return i;
+ }
+ return -1;
+}
 function hitHandle(p){const b=bboxAll();if(!b)return null;return handles(b).find(h=>length(h,p)<13)||null}
 function duplicateSelected(){const arr=selected.map(i=>structuredClone(objects[i]));let start=objects.length;objects.push(...arr);selected=arr.map((_,i)=>start+i)}
 function applyMove(ix,dy){selected.forEach(i=>objects[i].pts.forEach(p=>{p.x+=ix;p.y+=dy}))}
@@ -514,8 +535,10 @@ function finish(e,cancel=false){
  }else if(holding){
   clearPending();
   if(!cancel&&preview&&e&&shapeLock)previewResize(point(e));
-  if(!cancel&&holding.pts.length>1){
-   const item=preview||{kind:'ink',pts:holding.pts};
+  if(!cancel&&holding.pts.length){
+   const item=preview||(holding.pts.length===1?
+    {kind:'dot',pts:[{...holding.pts[0]}]}:
+    {kind:'ink',pts:holding.pts});
    objects.push(item);
    latestInkIndex=item.kind==='ink'?objects.length-1:-1;
    saveBoard();
