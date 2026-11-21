@@ -278,7 +278,15 @@ function nearestShape(ps){
   {kind:candidates[0].kind,pts:candidates[0].pts}:
   {kind:'line',pts:[first,last]};
 }
-function resize(){const r=area.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,3);canvas.width=Math.round(r.width*d);canvas.height=Math.round(r.height*d);canvas.style.width=r.width+'px';canvas.style.height=r.height+'px';ctx.setTransform(d,0,0,d,0,0);repaint()}
+function resize(){
+ // Supersample at least 2 device pixels per CSS pixel to reduce stair-step
+ // edges, especially on standard-density monitors. Cap the cost at 3x.
+ const r=area.getBoundingClientRect();
+ const d=Math.min(3,Math.max(2,window.devicePixelRatio||1));
+ canvas.width=Math.round(r.width*d);canvas.height=Math.round(r.height*d);
+ canvas.style.width=r.width+'px';canvas.style.height=r.height+'px';
+ ctx.setTransform(d,0,0,d,0,0);repaint();
+}
 function lineObj(o,highlight=false){
  const p=o.pts||[];if(!p.length)return;
  ctx.lineWidth=inkWidth;ctx.lineJoin='round';ctx.lineCap='round';
@@ -289,7 +297,21 @@ function lineObj(o,highlight=false){
   ctx.fillStyle=color;ctx.fill();return;
  }
  ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);
- p.slice(1).forEach(t=>ctx.lineTo(t.x,t.y));
+ if(o.kind==='ink'&&p.length>2){
+  // Gentle quadratic smoothing: control points remain unchanged for shape
+  // recognition, selecting, erasing, saving and exporting.
+  const mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+  const firstMid=mid(p[0],p[1]);
+  ctx.lineTo(firstMid.x,firstMid.y);
+  for(let i=1;i<p.length-1;i++){
+   const next=mid(p[i],p[i+1]);
+   ctx.quadraticCurveTo(p[i].x,p[i].y,next.x,next.y);
+  }
+  ctx.lineTo(p[p.length-1].x,p[p.length-1].y);
+ }else{
+  // Lines, rectangles, triangles and other geometric shapes stay precise.
+  p.slice(1).forEach(t=>ctx.lineTo(t.x,t.y));
+ }
  ctx.strokeStyle=color;ctx.setLineDash(highlight?[9,6]:[]);
  ctx.stroke();ctx.setLineDash([]);
 }
