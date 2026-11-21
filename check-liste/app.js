@@ -2,9 +2,39 @@
 'use strict';
 const $=id=>document.getElementById(id), pack=window.CHECKLIST_PACK;
 if(!pack||!Array.isArray(pack.questions)){document.getElementById('menu').textContent='Soru verileri bulunamadı.';return}
-const qs=pack.questions, checkId=pack.id||'cetin-2026', profile=new URLSearchParams(location.search).get('profile')||'default';
+const qs=pack.questions, checkId=pack.id||'matematik-5-2026', profile=new URLSearchParams(location.search).get('profile')||'default';
 let current=Math.max(0,qs.findIndex(q=>'#'+q.id===decodeURIComponent(location.hash))), done={};
 const key=type=>['dotem-checkliste-v2',checkId,profile,type].join(':');
+// Preserve local work when a checklist receives a new, anonymous package id.
+// Only migrate if exactly one other compatible saved checklist exists on this browser.
+(function migrateLegacyWork(){
+ try{
+  const head='dotem-checkliste-v2:',tail=':'+profile+':';
+  const questionIds=new Set(qs.map(q=>q.id)),sources=new Set();
+  for(let i=0;i<localStorage.length;i++){
+   const storedKey=localStorage.key(i);
+   if(!storedKey||!storedKey.startsWith(head))continue;
+   const cut=storedKey.indexOf(tail,head.length);if(cut<0)continue;
+   const candidate=storedKey.slice(head.length,cut);
+   if(!candidate||candidate===checkId)continue;
+   const type=storedKey.slice(cut+tail.length);
+   if(type.startsWith('board:')&&questionIds.has(type.slice(6)))sources.add(candidate);
+   else if(type==='done'){
+    try{
+     const progress=JSON.parse(localStorage.getItem(storedKey)||'{}');
+     if(Object.keys(progress).some(q=>questionIds.has(q)))sources.add(candidate);
+    }catch{}
+   }
+  }
+  if(sources.size!==1)return;
+  const legacyId=[...sources][0];
+  for(const type of ['done',...qs.map(q=>'board:'+q.id)]){
+   const dest=key(type),src=head+legacyId+tail+type;
+   const value=localStorage.getItem(src);
+   if(value!==null&&localStorage.getItem(dest)===null)localStorage.setItem(dest,value);
+  }
+ }catch(err){console.warn('Önceki çözüm kayıtları taşınamadı',err)}
+})();
 try{done=JSON.parse(localStorage.getItem(key('done'))||'{}')||{}}catch{}
 const pages=[...new Set(qs.map(q=>q.page))];
 pages.forEach(p=>{let o=document.createElement('option');o.value=p;o.textContent='Sayfa '+p;$('pageSelect').append(o)});
@@ -48,34 +78,99 @@ function center(o){let r=bounds(o);return{x:r.x+r.w/2,y:r.y+r.h/2}}
 function circlePoints(r,n=72){return Array.from({length:n+1},(_,i)=>({x:r.x+r.w/2+r.w/2*Math.cos(2*Math.PI*i/n),y:r.y+r.h/2+r.h/2*Math.sin(2*Math.PI*i/n)}))}
 function rectPoints(r){return[{x:r.x,y:r.y},{x:r.x+r.w,y:r.y},{x:r.x+r.w,y:r.y+r.h},{x:r.x,y:r.y+r.h},{x:r.x,y:r.y}]}
 function simplify(ps,tolerance){if(ps.length<=2)return ps.slice();let best=0,idx=0;for(let i=1;i<ps.length-1;i++){let d=segdist(ps[i],ps[0],ps.at(-1));if(d>best){best=d;idx=i}}if(best<tolerance)return [ps[0],ps.at(-1)];let a=simplify(ps.slice(0,idx+1),tolerance),b=simplify(ps.slice(idx),tolerance);return a.slice(0,-1).concat(b)}
-function recognizer(ps){
- if(ps.length<5)return null;
- let len=0;for(let i=1;i<ps.length;i++)len+=length(ps[i-1],ps[i]);
- if(len<45)return null;
- const r=bounds({pts:ps}),diag=Math.hypot(r.w,r.h),enddist=length(ps[0],ps.at(-1)),closed=enddist<Math.max(26,diag*.32),simple=simplify(ps,Math.max(10,diag*.095));
- // straight lines, even when drawn slightly unevenly
- let lineErr=ps.reduce((s,p)=>s+segdist(p,ps[0],ps.at(-1)),0)/ps.length;
- if(!closed&&lineErr<Math.max(10,diag*.07)&&enddist>32)return {kind:'line',pts:[ps[0],ps.at(-1)]};
- if(closed &&r.w>28&&r.h>28){
-  let radial=ps.map(p=>Math.hypot((p.x-r.x-r.w/2)/(r.w/2),(p.y-r.y-r.h/2)/(r.h/2)));
-  let err=radial.reduce((s,z)=>s+Math.abs(z-1),0)/radial.length;
-  if(err<.36&&len>diag*2)return {kind:'circle',pts:circlePoints(r)};
-  // Rectangles must have approximate right angles: trapezoids and arbitrary quads remain ink.
-  let corners=[{x:r.x,y:r.y},{x:r.x+r.w,y:r.y},{x:r.x+r.w,y:r.y+r.h},{x:r.x,y:r.y+r.h}];
-  const cornerDists=corners.map(c=>Math.min(...ps.map(p=>length(p,c))));
-  const edgeD=ps.reduce((s,p)=>s+Math.min(Math.abs(p.x-r.x),Math.abs(p.x-r.x-r.w),Math.abs(p.y-r.y),Math.abs(p.y-r.y-r.h)),0)/ps.length;
-  if(cornerDists.every(d=>d<diag*.26)&&edgeD<Math.max(14,Math.min(r.w,r.h)*.18))
-   return {kind:'rectangle',pts:rectPoints(r)};
-  let vertices=simplify(ps,Math.max(12,diag*.15));
-  if(vertices.length>=4&&vertices.length<=6){let v=vertices.slice(0,-1);if(v.length===3)return {kind:'triangle',pts:[...v,v[0]]}}
+function circleSweep(ps,c){
+ let total=0,absolute=0,prev=Math.atan2(ps[0].y-c.y,ps[0].x-c.x);
+ for(let i=1;i<ps.length;i++){
+  const cur=Math.atan2(ps[i].y-c.y,ps[i].x-c.x);
+  const delta=Math.atan2(Math.sin(cur-prev),Math.cos(cur-prev));
+  total+=delta;absolute+=Math.abs(delta);prev=cur;
  }
- if(!closed&&len>diag*1.35&&lineErr>diag*.065){
-  // open arcs are approximated using a smoothed quadratic curve sampled to points
-  let a=ps[0],b=ps.at(-1),far=ps.reduce((v,p)=>segdist(p,a,b)>segdist(v,a,b)?p:v,ps[0]);
-  if(segdist(far,a,b)>Math.max(15,diag*.15)){
-   let curve=[];for(let i=0;i<=64;i++){let t=i/64,u=1-t;curve.push({x:u*u*a.x+2*u*t*far.x+t*t*b.x,y:u*u*a.y+2*u*t*far.y+t*t*b.y})}return{kind:'arc',pts:curve}
+ return{total,absolute,backwards:(absolute-Math.abs(total))/2};
+}
+function circumcircle(a,b,c){
+ const aa=a.x*a.x+a.y*a.y,bb=b.x*b.x+b.y*b.y,cc=c.x*c.x+c.y*c.y;
+ const d=2*(a.x*(b.y-c.y)+b.x*(c.y-a.y)+c.x*(a.y-b.y));
+ if(Math.abs(d)<1e-5)return null;
+ const x=(aa*(b.y-c.y)+bb*(c.y-a.y)+cc*(a.y-b.y))/d;
+ const y=(aa*(c.x-b.x)+bb*(a.x-c.x)+cc*(b.x-a.x))/d;
+ return{x,y,r:Math.hypot(a.x-x,a.y-y)};
+}
+function circularArc(ps,diag){
+ const first=ps[0],last=ps[ps.length-1],chord=Math.hypot(last.x-first.x,last.y-first.y);
+ if(chord<24)return null;
+ // Fit a circle through stroke endpoints and the point furthest from their chord.
+ let pivot=null,maxSagitta=0;
+ for(let i=Math.floor(ps.length*.12);i<=Math.ceil(ps.length*.88);i++){
+  const p=ps[i];
+  const distance=Math.abs((p.x-first.x)*(last.y-first.y)-(p.y-first.y)*(last.x-first.x))/chord;
+  if(distance>maxSagitta){maxSagitta=distance;pivot=p}
+ }
+ if(!pivot||maxSagitta<Math.max(8,chord*.075))return null;
+ const fit=circumcircle(first,pivot,last);
+ if(!fit||!Number.isFinite(fit.r)||fit.r<17||fit.r>diag*15)return null;
+ let residual=0;
+ for(const p of ps){const d=Math.hypot(p.x-fit.x,p.y-fit.y)-fit.r;residual+=d*d}
+ if(Math.sqrt(residual/ps.length)/fit.r>.095)return null;
+ const sweep=circleSweep(ps,fit);
+ if(Math.abs(sweep.total)<.43||Math.abs(sweep.total)>5.87)return null;
+ if(sweep.backwards>sweep.absolute*.13)return null;
+ const a0=Math.atan2(first.y-fit.y,first.x-fit.x);
+ const samples=Math.max(24,Math.ceil(Math.abs(sweep.total)*25));
+ const pts=Array.from({length:samples+1},(_,i)=>{
+  const angle=a0+sweep.total*i/samples;
+  return{x:fit.x+fit.r*Math.cos(angle),y:fit.y+fit.r*Math.sin(angle)};
+ });
+ // Every point lies on one circle: a true circular arc, not a Bezier curve.
+ return{kind:'arc',pts};
+}
+function recognizer(ps){
+ if(ps.length<6)return null;
+ let totalLength=0;
+ for(let i=1;i<ps.length;i++)totalLength+=length(ps[i-1],ps[i]);
+ if(totalLength<45)return null;
+ const box=bounds({pts:ps}),diag=Math.hypot(box.w,box.h);
+ const endDistance=length(ps[0],ps[ps.length-1]);
+ const lineError=ps.reduce((sum,p)=>sum+segdist(p,ps[0],ps[ps.length-1]),0)/ps.length;
+ if(endDistance>Math.max(18,diag*.18)&&lineError<Math.max(8,diag*.055)&&endDistance>32)
+  return{kind:'line',pts:[ps[0],ps[ps.length-1]]};
+ if(box.w>28&&box.h>28){
+  const aspect=Math.min(box.w,box.h)/Math.max(box.w,box.h);
+  const center={x:box.x+box.w/2,y:box.y+box.h/2};
+  const radius=(box.w+box.h)/4;
+  const turn=circleSweep(ps,center);
+  let residual=0;
+  for(const p of ps){const d=Math.hypot(p.x-center.x,p.y-center.y)-radius;residual+=d*d}
+  const deviation=Math.sqrt(residual/ps.length)/radius;
+  // A near-circle must be closed, round, and complete about 360 degrees.
+  // This rejects rectangles, triangles, ellipses and most handwritten loops.
+  const closed=endDistance<Math.max(15,diag*.17);
+  if(closed&&aspect>=.78&&deviation<=.112&&
+     Math.abs(turn.total)>=5.72&&Math.abs(turn.total)<=6.90&&
+     turn.backwards<turn.absolute*.11){
+    return{kind:'circle',pts:circlePoints({
+      x:center.x-radius,y:center.y-radius,w:radius*2,h:radius*2
+    })};
+  }
+  if(closed){
+   const corners=[{x:box.x,y:box.y},{x:box.x+box.w,y:box.y},
+    {x:box.x+box.w,y:box.y+box.h},{x:box.x,y:box.y+box.h}];
+   const distances=corners.map(c=>Math.min(...ps.map(p=>length(p,c))));
+   const edgeError=ps.reduce((sum,p)=>sum+Math.min(
+    Math.abs(p.x-box.x),Math.abs(p.x-box.x-box.w),
+    Math.abs(p.y-box.y),Math.abs(p.y-box.y-box.h)),0)/ps.length;
+   // Corners must actually be visited; a rounded ellipse is not a rectangle.
+   if(distances.every(d=>d<Math.min(diag*.14,Math.min(box.w,box.h)*.24))&&
+      edgeError<Math.max(9,Math.min(box.w,box.h)*.12))
+     return{kind:'rectangle',pts:rectPoints(box)};
+   const vertices=simplify(ps,Math.max(12,diag*.15));
+   if(vertices.length>=4&&vertices.length<=6){
+    const v=vertices.slice(0,-1);
+    if(v.length===3)return{kind:'triangle',pts:[...v,v[0]]};
+   }
   }
  }
+ if(totalLength>diag*1.06&&lineError>Math.max(7,diag*.055))
+  return circularArc(ps,diag);
  return null;
 }
 function resize(){const r=area.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,3);canvas.width=Math.round(r.width*d);canvas.height=Math.round(r.height*d);canvas.style.width=r.width+'px';canvas.style.height=r.height+'px';ctx.setTransform(d,0,0,d,0,0);repaint()}
@@ -123,7 +218,12 @@ function stretchSelected(handle,prev,now){const b=bboxAll();if(!b)return;let dx=
  if(handle.kind==='rot'){let c={x:b.x+b.w/2,y:b.y+b.h/2};let a=Math.atan2(now.y-c.y,now.x-c.x)-Math.atan2(prev.y-c.y,prev.x-c.x);rotateSelected(a);return}
  let x=handle.kind.includes('l')?b.x:b.x+b.w,y=handle.kind.includes('t')?b.y:b.y+b.h, sx=(x===b.x?b.w-dx:b.w+dx)/b.w,sy=(y===b.y?b.h-dy:b.h+dy)/b.h;
  sx=Math.max(.1,sx);sy=Math.max(.1,sy);let ax=x===b.x?b.x+b.w:b.x,ay=y===b.y?b.y+b.h:b.y;
- selected.forEach(i=>objects[i].pts.forEach(p=>{p.x=ax+(p.x-ax)*sx;p.y=ay+(p.y-ay)*sy}))
+ selected.forEach(i=>{
+  const obj=objects[i];
+  // Keep circles and circle arcs round when resizing with corner handles.
+  const uniform=(obj.kind==='arc'||obj.kind==='circle')?Math.sqrt(sx*sy):null;
+  obj.pts.forEach(p=>{p.x=ax+(p.x-ax)*(uniform??sx);p.y=ay+(p.y-ay)*(uniform??sy)});
+ })
 }
 function eraser(p){let id=hit(p);if(id>=0){objects.splice(id,1);selected=[];saveBoard();repaint()}}
 function clearPending(){clearTimeout(holdTimer);holdTimer=null}
