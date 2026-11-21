@@ -59,13 +59,13 @@ h1{font-size:clamp(32px,5vw,54px);font-weight:760;line-height:1.15;letter-spacin
   <p class="subtitle" id="subtitle">Çalışmak istediğin öğrenci ve dersi seç.</p>
  </section>
  <section class="cards" aria-label="Ders listesi">
-  <a class="lesson" href="./cetin-1.html">
+  <a class="lesson" href="./lesson.html?set=cetin-1">
    <span class="lesson-number" id="cetinType">Matematik · 5. sınıf</span>
    <h2>Çetin 1</h2>
    <span class="description" id="cetinDescription">41 soru, Almanca–Türkçe çeviri ve çizimle çözüm alanı.</span>
    <span class="foot"><span id="cetinAction">Çalışmayı aç</span><span class="arrow" aria-hidden="true">↗</span></span>
   </a>
-  <a class="lesson" href="../aras/index.html">
+  <a class="lesson" href="./lesson.html?set=aras-1">
    <span class="lesson-number" id="arasType">Zaman hesaplama · Sayfa 35</span>
    <h2>Aras 1</h2>
    <span class="description" id="arasDescription">34 alt soru, saat çizimleri ve çözüm alanı.</span>
@@ -79,7 +79,7 @@ h1{font-size:clamp(32px,5vw,54px);font-weight:760;line-height:1.15;letter-spacin
   </a>
  </section>
 </main>
-<div class="version">v1.2.0 · Öğrenci ve ders seçimi: Çetin 1, Aras 1, Tuana 1</div>
+<div class="version">v1.3.0 · Ortak HTML, çizim ve PDF şablonu</div>
 <script>
 (function(){
  'use strict';
@@ -129,7 +129,7 @@ h1{font-size:clamp(32px,5vw,54px);font-weight:760;line-height:1.15;letter-spacin
  applyLanguage();
  // Preserve old bookmarked question links after the index became a lesson hub.
  if(/^#\d+[-_]/.test(location.hash)){
-  location.replace('./cetin-1.html'+location.search+location.hash);
+  location.replace('./lesson.html?set=cetin-1'+(location.search?'&'+location.search.slice(1):'')+location.hash);
  }
 })();
 </script>
