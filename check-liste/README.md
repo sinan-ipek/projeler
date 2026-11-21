@@ -1,17 +1,14 @@
-# Check Liste
+# Check Liste — Matematik
 
-GitHub / projeler içindeki Çetin çalışma listesi.
+Bu klasör 5. sınıf seviyesinde Almanca–Türkçe **41 soruluk** çalışma listesini barındırır.
 
-## GitHub'da bulunanlar (20 Kasım 2026)
+- `index.html`: Soru/çeviri ekranı, çizim alanı, PDF indirme düğmesi
+- `app.js`: Soru gezintisi, tamamlandı bilgisi, kalem, seçim, çoklu seçim, silgi ve akıllı şekil tanıma
+- `pdf-export.js`: Bütün sorular ve çözüm çizimleriyle PDF üretme ve indirme
+- `sets/matematik-5-2026/data.js`: Almanca ve Türkçe 41 soru
 
-- `index.html`: Çetin için açılan çalışma arayüzü
-- `app.js`: Sayfa/soru menüsü, ilerleme durumu, kalem/silgi ve beyaz tahta işlevleri
-- `sets/cetin-2026/data.js`: 13 sayfadan 41 Almanca–Türkçe soru
-- Projeler ana sayfasında **Check Liste** bağlantısı
+Çizimler ve tamamlanma durumu liste kimliği, profil ve soru kimliği altında cihazın tarayıcısında saklanır. Liste kimliği değiştirilirken tek bir uygun eski kayıt bulunursa veriler yeni anahtarlara kopyalanır.
 
-**Görsel durumu:** Daha önce sohbet içinde üretilmiş tek dosyalı son sürümdeki bütün kırpılmış orijinal kitap görselleri bu GitHub aktarımında henüz bulunmuyor. Bu GitHub sürümünün birebir aynı sürüm olduğu iddia edilmemelidir.
+Daire tanıma kapalı ve yaklaşık tam dönüşlü çizimlerde sıkı çembersellik denetimine tabidir. **Yay**, üç noktadan bulunan çemberin bir parçasıdır; Bézier değildir. Tanıma yalnızca çizdikten sonra 0,65 saniye kalemi/fareyi basılı bekleyince çalışır.
 
-## Daha sonra yeni checklist
-
-Her öğrenci için ayrı veri dosyası ve benzersiz liste kimliği kullanın. Şablonun beyaz tahta işlevlerini sabit tutun; Almanca/Türkçe soru metinleri ve kitap görsellerini kontrol ederek ekleyin. Tamamlandı işaretlerini ve çizimleri liste kimliği + öğrenci profili + soru numarasına göre saklayın.
-
+**Not:** Daha önce hazırlanmış kırpılmış kitap görselleri GitHub sürümüne henüz eklenmediği için bunlar uygulamanın PDF çıktısında da bulunmaz.
