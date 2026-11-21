@@ -1,27 +1,42 @@
-# Check Liste · Ders Seçimi
+# Check Liste — Ortak ders sistemi
 
-**v1.2.0** — Öğrenciye ve derse göre üç çalışmayı açan giriş ekranı.
+**Sürüm v1.3.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
-## Bağlantılar
+## Tek merkezli mimari
 
-| Seçim | Bağlantı | İçerik |
-|---|---|---|
-| **Çetin 1** | `check-liste/cetin-1.html` | Önceki Check Liste: 41 Almanca–Türkçe matematik sorusu, çizim alanı, tamamlanma ve PDF |
-| **Aras 1** | `aras/index.html` | 34 zaman hesaplama sorusu, saat/zaman çizelgesi, çizim alanı ve PDF |
-| **Tuana 1** | `mathe-gk/index.html` | Mathe GK Analysis: trigonometri, türev, integral ve grafik sunumu (Check Liste çizim motoruyla karıştırılmamalı) |
+```
+Öğren ana sayfası
+└── Check Liste (check-liste/index.html)
+    ├── Çetin 1 → lesson.html?set=cetin-1
+    │   └── sets/matematik-5-2026/data.js (41 soru)
+    ├── Aras 1  → lesson.html?set=aras-1
+    │   └── ../aras/data.js (34 soru, saat görselleri)
+    └── Tuana 1 → ../mathe-gk/index.html (ayrı slayt sunumu)
+```
 
-Ana `Öğren` ekranında tek **Check Liste** bağlantısı bulunur. Giriş sayfası `check-liste/index.html` üç ayrı öğrenci kartı gösterir. Eski Check Liste çalışması `cetin-1.html` olarak **aynı klasöre** taşındı/kopyalandı; mevcut `matematik-5-2026` kayıt kimliği değişmedi. Önceden kaydedilmiş soru çizimleri tarayıcıda aynı anahtarlarla durur.
+Çetin 1 ve Aras 1 için **yalnızca bir** arayüz, bir çizim motoru ve bir PDF oluşturucu kullanılır:
 
-## Ortak çizim motoru
+- `lesson.html` — tek ortak HTML arayüzü; Home / Dil / Help, Paylaş, Kalem, Seçim, Silgi ve sürüm notu
+- `lesson-loader.js` — `?set=` parametresinden yalnızca izin verilen soru paketini seçer; sonra aynı `app.js` ile `pdf-export.js` dosyalarını yükler
+- `app.js` — **tek çizim/Check Liste motoru**, her soruya özgü çizimler ve ilerleme
+- `pdf-export.js` — **tek PDF üretme motoru**, tüm soruları, görselleri ve kaydedilmiş çizimleri PDF yapar
+- `sets/matematik-5-2026/data.js` — Çetin 1 soruları
+- `../aras/data.js` — Aras 1 soruları
 
-`check-liste/app.js` ortak bir çizim motorudur. Çetin 1 ve Aras 1 aynı kodu kullanır. Kalemle tek tıklama **nokta** oluşturur; sürükleme normal çizimdir. Nesne seçimi, çoklu seçim, sağ tuşla şekil tanıma ve ölçekleme korunur.
+## Eski adresleri ve kayıtları koruma
 
-Tuana 1 mevcut matematik sunumudur; bu sürümde farklı bir Check Liste çözüm alanı eklenmemiştir.
+- Eski `check-liste/cetin-1.html` bağlantısı ortak sayfaya yönlendirilir
+- Eski `aras/index.html` bağlantısı ortak sayfaya yönlendirilir
+- Yönlendirmeler `profile` gibi URL parametrelerini ve `#soru-id` bölümünü korur
+- Daha önce oluşturulmuş `localStorage` anahtarları **değişmez**: `matematik-5-2026` ve `aras-zaman-2026`
+- `../aras/pdf-export.js` eski tarayıcı önbellekleri için küçük bir yönlendirme dosyasıdır; ikinci PDF motoru **değildir**
 
-## Dosyalar
+## Güncelleme biçimi
 
-- `check-liste/index.html`: Ders seçme sayfası (Home, Dil, Help; v1.2.0)
-- `check-liste/cetin-1.html`: 41 soruluk asıl Check Liste uygulaması (v1.2.0)
-- `check-liste/app.js`: Çetin 1 ve Aras 1 için ortak çizim motoru
-- `check-liste/pdf-export.js`: Çetin 1 PDF çıktısı
-- `check-liste/sets/matematik-5-2026/data.js`: Çetin 1 soru verileri
+- Çizim, şekil tanıma, nesne seçme, tek tıklama ile nokta oluşturma: **yalnızca `app.js`**
+- Sayfa tasarımı ve araçların yerleşimi: **yalnızca `lesson.html`**
+- PDF çıktısının düzeni ve oluşturulması: **yalnızca `pdf-export.js`**
+- Tek bir öğrencinin soruları: **yalnızca ilgili `data.js`**
+- Yeni öğrenci: yeni soru verisi, `lesson-loader.js` izin listesine ve `index.html` ders menüsüne giriş
+
+**Tuana 1**, şimdilik kendi `mathe-gk/index.html` dosyasını kullanan ayrı ders sunumudur; ortak çizim/Check Liste uygulamasına dönüştürülmemiştir.
