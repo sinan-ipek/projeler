@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v22.00-three-clone</title>
+<title>Beyaz Tahta v22.10-models</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1110,6 +1110,9 @@
         <option value="hexprism3d">Altıgen prizma 3D</option>
         <option value="sphere3d">Küre 3D</option>
         <option value="car3d">Araba 3D</option>
+        <option value="bus3d">Otobüs 3D</option>
+        <option value="character3d">İnsan 3D</option>
+        <option value="house3d">Ev 3D</option>
       </optgroup>
     </select>
 
@@ -1347,7 +1350,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v22.00-three-clone · Beyaz Tahta bire bir + tüm 3D nesneler Three.js · checkpoint: v19.15</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v22.10-models · GLB model kütüphanesi: otobüs, insan, ev · checkpoint: v19.15</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -1368,6 +1371,14 @@
         </p>
 
         <div class="helpGrid">
+          <section class="helpSection">
+            <h3>3D model kaynakları</h3>
+            <ul>
+              <li>Bus — Poly by Google — CC BY — Poly Pizza</li>
+              <li>Character Base — madtrollstudio — CC BY — Poly Pizza</li>
+              <li>House — Quaternius — CC0 — Poly Pizza</li>
+            </ul>
+          </section>
           <section class="helpSection">
             <h3>Çizim</h3>
             <ul>
@@ -1542,7 +1553,7 @@
   const inkOverlayCtx = inkOverlay.getContext('2d',{alpha:true});
   const wrap = document.getElementById('stageWrap');
   // ============================================================
-  // v22.00 — THREE.JS 3D ENGINE
+  // v22.10 — THREE.JS 3D ENGINE + GLB LIBRARY
   // Beyaz Tahta'nın 2D kodu ve UI'si aynen korunur.
   // Tüm 3D nesneler Three.js tarafından render edilir.
   // ============================================================
@@ -1551,13 +1562,20 @@
     renderer:null,
     scene:null,
     camera:null,
+    GLTFLoader:null,
+    assets:new Map(),
+    assetPromises:new Map(),
     ready:false,
     fov:42
   };
 
-  import('https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js')
-    .then(THREE=>{
+  Promise.all([
+    import('https://cdn.jsdelivr.net/npm/three@0.170.0/+esm'),
+    import('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/loaders/GLTFLoader.js/+esm')
+  ])
+    .then(([THREE,loaderModule])=>{
       threeBridge.THREE=THREE;
+      threeBridge.GLTFLoader=loaderModule.GLTFLoader;
       threeBridge.renderer=new THREE.WebGLRenderer({
         antialias:true,
         alpha:true,
@@ -1579,6 +1597,7 @@
       threeBridge.scene.add(fill);
 
       threeBridge.ready=true;
+      threePreloadLibraryAssets();
       redraw();
     })
     .catch(err=>{
@@ -1586,7 +1605,7 @@
     });
 
   function threeDisposeObject(root){
-    if(!root) return;
+    if(!root || (root.userData&&root.userData.sharedAssetClone)) return;
     root.traverse?.(n=>{
       n.geometry?.dispose?.();
       if(n.material){
@@ -1594,6 +1613,148 @@
         else n.material.dispose?.();
       }
     });
+  }
+
+
+  const THREE_MODEL_LIBRARY={
+    asset_bus:{
+      key:'asset_bus',
+      url:'models/bus.glb.gz.b64',
+      preRotateY:Math.PI/2,
+      credit:'Bus — Poly by Google — CC BY — Poly Pizza',
+      defaultSize:{x:320,y:120,z:105}
+    },
+    asset_character:{
+      key:'asset_character',
+      url:'models/character.glb.gz.b64',
+      preRotateY:0,
+      credit:'Character Base — madtrollstudio — CC BY — Poly Pizza',
+      defaultSize:{x:85,y:185,z:55}
+    },
+    asset_house:{
+      key:'asset_house',
+      url:'models/house.glb.gz.b64',
+      preRotateY:0,
+      credit:'House — Quaternius — CC0 — Poly Pizza',
+      defaultSize:{x:260,y:220,z:240}
+    }
+  };
+
+  function threeBase64ToBytes(text){
+    const raw=atob(String(text||'').replace(/\s+/g,''));
+    const out=new Uint8Array(raw.length);
+    for(let i=0;i<raw.length;i++) out[i]=raw.charCodeAt(i);
+    return out;
+  }
+
+  async function threeGunzipBase64(text){
+    const compressed=threeBase64ToBytes(text);
+    if(typeof DecompressionStream!=='function'){
+      throw new Error('Bu tarayıcı gzip açmayı desteklemiyor.');
+    }
+    const stream=new Blob([compressed]).stream().pipeThrough(
+      new DecompressionStream('gzip')
+    );
+    return await new Response(stream).arrayBuffer();
+  }
+
+  async function threeLoadLibraryAsset(type){
+    if(threeBridge.assets.has(type)) return threeBridge.assets.get(type);
+    if(threeBridge.assetPromises.has(type)) return threeBridge.assetPromises.get(type);
+
+    const cfg=THREE_MODEL_LIBRARY[type];
+    if(!cfg || !threeBridge.GLTFLoader || !threeBridge.THREE) return null;
+
+    const promise=(async()=>{
+      const response=await fetch(cfg.url,{cache:'force-cache'});
+      if(!response.ok) throw new Error('Model yüklenemedi: '+cfg.url);
+      const encoded=await response.text();
+      const buffer=await threeGunzipBase64(encoded);
+
+      const parsed=await new Promise((resolve,reject)=>{
+        const loader=new threeBridge.GLTFLoader();
+        loader.parse(buffer,'',resolve,reject);
+      });
+
+      const THREE=threeBridge.THREE;
+      const source=parsed.scene || parsed.scenes&&parsed.scenes[0];
+      if(!source) throw new Error('GLB sahnesi bulunamadı: '+type);
+
+      if(cfg.preRotateY) source.rotation.y=cfg.preRotateY;
+      source.updateMatrixWorld(true);
+
+      let box=new THREE.Box3().setFromObject(source);
+      const center=box.getCenter(new THREE.Vector3());
+
+      // Center the source in world axes after the source's corrective rotation.
+      source.position.x-=center.x;
+      source.position.y-=center.y;
+      source.position.z-=center.z;
+      source.updateMatrixWorld(true);
+
+      box=new THREE.Box3().setFromObject(source);
+      const size=box.getSize(new THREE.Vector3());
+
+      // Ensure imported materials keep their intended colors/textures.
+      source.traverse(n=>{
+        if(n.isMesh){
+          n.castShadow=false;
+          n.receiveShadow=false;
+          if(n.material){
+            const mats=Array.isArray(n.material)?n.material:[n.material];
+            for(const m of mats){
+              if(m.map) m.map.colorSpace=THREE.SRGBColorSpace;
+              m.needsUpdate=true;
+            }
+          }
+        }
+      });
+
+      const wrapper=new THREE.Group();
+      wrapper.add(source);
+      const item={root:wrapper,size,credit:cfg.credit};
+      threeBridge.assets.set(type,item);
+      threeBridge.assetPromises.delete(type);
+      redraw();
+      return item;
+    })().catch(err=>{
+      threeBridge.assetPromises.delete(type);
+      console.warn('3D model yüklenemedi:',type,err);
+      return null;
+    });
+
+    threeBridge.assetPromises.set(type,promise);
+    return promise;
+  }
+
+  function threePreloadLibraryAssets(){
+    for(const type of Object.keys(THREE_MODEL_LIBRARY)){
+      threeLoadLibraryAsset(type);
+    }
+  }
+
+  function buildThreeLibraryAsset(o){
+    const THREE=threeBridge.THREE;
+    const item=threeBridge.assets.get(o.shape3dType);
+    if(!item){
+      threeLoadLibraryAsset(o.shape3dType);
+      return null;
+    }
+
+    const clone=item.root.clone(true);
+    clone.userData.sharedAssetClone=true;
+
+    const sx=Math.max(8,Number(o.sizeX)||120);
+    const sy=Math.max(8,Number(o.sizeY)||120);
+    const sz=Math.max(8,Number(o.sizeZ)||120);
+
+    clone.scale.set(
+      sx/Math.max(.0001,item.size.x),
+      sy/Math.max(.0001,item.size.y),
+      sz/Math.max(.0001,item.size.z)
+    );
+
+    return clone;
   }
 
   function threeCarMaterial(color,rough=.62,metal=.08,extra={}){
@@ -1844,6 +2005,9 @@
   }
 
   function buildThreeObjectMesh(o){
+    if(THREE_MODEL_LIBRARY[o.shape3dType]){
+      return buildThreeLibraryAsset(o);
+    }
     if(o.shape3dType==='car') return buildThreeCarMesh(o);
     return buildThreeGenericMesh(o);
   }
@@ -2038,7 +2202,7 @@
     }
 
     const root=buildThreeObjectMesh(o);
-    if(!root || !root.children.length) return false;
+    if(!root || !root.children || !root.children.length) return false;
 
     threeApplyWhiteboardTransform(root,o);
     scene.add(root);
@@ -9345,6 +9509,36 @@
       base.rotationY=-0.34;
       base.rotationX=0.03;
       base.rotationQuat=quatFromEuler(base.rotationX,base.rotationY,0);
+    }else if(type==='bus3d'){
+      base.shape3dType='asset_bus';
+      base.shapeName='bus 3D';
+      base.assetCredit='Bus — Poly by Google — CC BY — Poly Pizza';
+      base.sizeX=320*scale;
+      base.sizeY=120*scale;
+      base.sizeZ=105*scale;
+      base.rotationY=-0.28;
+      base.rotationX=0.02;
+      base.rotationQuat=quatFromEuler(base.rotationX,base.rotationY,0);
+    }else if(type==='character3d'){
+      base.shape3dType='asset_character';
+      base.shapeName='character 3D';
+      base.assetCredit='Character Base — madtrollstudio — CC BY — Poly Pizza';
+      base.sizeX=85*scale;
+      base.sizeY=185*scale;
+      base.sizeZ=55*scale;
+      base.rotationY=-0.18;
+      base.rotationX=0;
+      base.rotationQuat=quatFromEuler(0,base.rotationY,0);
+    }else if(type==='house3d'){
+      base.shape3dType='asset_house';
+      base.shapeName='house 3D';
+      base.assetCredit='House — Quaternius — CC0 — Poly Pizza';
+      base.sizeX=260*scale;
+      base.sizeY=220*scale;
+      base.sizeZ=240*scale;
+      base.rotationY=-0.28;
+      base.rotationX=0;
+      base.rotationQuat=quatFromEuler(0,base.rotationY,0);
     }else{
       return null;
     }
@@ -21016,7 +21210,8 @@
     }
     if([
       'line3d','cube3d','pyramid3d','cylinder3d','cone3d',
-      'hexpyramid3d','hexprism3d','sphere3d','car3d'
+      'hexpyramid3d','hexprism3d','sphere3d','car3d',
+      'bus3d','character3d','house3d'
     ].includes(t)){
       const obj=makeShape3D(t,cx,cy,insertionScale,style);
       if(obj) objects.push(obj);
