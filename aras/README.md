@@ -1,24 +1,32 @@
 # Aras · Zaman Hesaplama (Almanca / Türkçe)
 
-**Sürüm: v1.0.0** — Ders kitabı sayfa 35'teki 6 ana alıştırmanın **34 alt maddesi** için bağımsız Check Liste.
+**Sürüm: v1.1.0** — Sayfa 35, 6 ana alıştırma, 34 bağımsız soru.
 
-## Kapsam
-- Görev 1: 14 alt madde (s, min, h, d dönüşümleri)
-- Görev 2: 6 alt madde (karma birimli toplama/çıkarma)
-- Görev 3: 2 zaman çizelgesi; her biri üç boşluk içerir
-- Görev 4: 4 analog saat sorusu (fotoğraftan yeniden oluşturulmuş vektör saatler)
-- Görev 5: 4 alt madde (Teste dich! zaman birimi dönüşümleri)
-- Görev 6: 4 alt madde (13:15'ten sonraki saat)
+## Ortak şablon
 
-Görseller fotoğraftaki saat kollarının yaklaşık konumlarından vektör olarak yeniden çizilmiştir; orijinal fotoğrafın bire bir kırpılmış kopyası değildir. Almanca soruların yanında Türkçe çevirileri bulunur; çözümler bilerek hazır verilmemiştir.
+Aras artık bağımsız bir çizim motoru kopyası taşımaz. İki uygulama **aynı güncel** `../check-liste/app.js` dosyasını kullanır. Böylece nokta, kalem, seçim ve geometri davranışları bir kez değiştirilir ve iki uygulamada birden güncellenir.
 
-## Dosyalar
-- `index.html`: Uygulama ekranı, sorular, Home/Dil/Help, v1.0.0 alt bilgi, PDF Paylaş
-- `data.js`: 34 soru, tercümeleri ve saat/zaman çizelgesi SVG'leri
-- `app.js`: Kalem, Seçim, Silgi, çoklu seçim, geometri tanıma, Shift oranlı ölçekleme, sağ tuşla zorunlu tanıma ve tamamlanma takibi
-- `pdf-export.js`: tüm soruları, ilgili görselleri ve tarayıcıdaki çözüm çizimlerini PDF olarak indirme
+- `aras/index.html`: Aras sayfası, araç çubuğu, Home / Dil / Help ve **v1.1.0** sürüm notu
+- `aras/data.js`: 34 Almanca–Türkçe soru ve yeniden çizilmiş 4 analog saat / 2 zaman çizelgesi görseli
+- `../check-liste/app.js`: **ortak** çizim motoru, kontrol listesi ve her soruya özel kayıt
+- `aras/pdf-export.js`: bütün sorular ve çözüm alanlarını PDF olarak kaydetme
 
-## Veri saklama
-Her öğrenci/çalışma listesi ayrı tutulur: `dotem-checkliste-v2:aras-zaman-2026:<profil>:board:<soru>`. Veriler kullanılan tarayıcıda localStorage içinde saklanır. PDF oluşturmak için çözümlerin yazıldığı aynı tarayıcıyı kullanın.
+## Güncelleme: v1.1.0
 
-İlerleme sol panelden izlenir. Sorular cevap ya da otomatik çözüm göstermez; öğrenci beyaz tahtada çözer.
+- Kalem ile **tek tıklama = nokta**, fareyle sürükleme = normal çizim
+- Nokta bir nesne olarak saklanır, seçilir, silinir ve PDF'ye eklenir
+- İki uygulama artık tek çizim motoru kullanır, eski `aras/app.js` kopyası kaldırılmıştır
+- Her sorunun çizimleri ve ilerlemesi tarayıcıda, `aras-zaman-2026` liste kimliği altında ayrı saklanır
+
+## Fotoğraftaki sorular
+
+1. 14 birim dönüştürme maddesi
+2. 6 saat/dakika/saniye toplama-çıkarma maddesi
+3. İki zaman çizelgesi (her biri üç boşluk)
+4. Dört analog saat sorusu
+5. Dört `Teste dich!` maddesi
+6. Dört saat hesaplama maddesi
+
+Saat ve zaman çizelgesi görselleri fotoğrafı temel alan **yeniden çizimlerdir**. Bire bir kırpılmış kitap görüntüsü değildir. Otomatik cevap verilmez.
+
+Çözümler `localStorage` içinde yalnızca kullanılan tarayıcıda saklanır. Aynı cihazdan **Paylaş** ile PDF indirilebilir.
