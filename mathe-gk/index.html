@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="de">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mathe GK | Trigonometrie & Analysis</title>
+<title>Tuana 1 | Mathe GK Analysis</title>
 <meta name="description" content="Interaktive zweisprachige Mathe-GK-Präsentation mit Sinus, Kosinus, Tangenten, Stammfunktionen, Integralen und Abituraufgaben.">
 <style>
 :root{--bg:#0d1526;--panel:#182641;--panel2:#213552;--ink:#f5f8ff;--muted:#bac7dc;--accent:#58e2d7;--gold:#ffd175;--pink:#f58fc9;--line:#354563}
@@ -10,7 +10,13 @@ button,select{font:inherit;color:inherit;cursor:pointer}button:focus-visible,sel
 header{display:flex;align-items:center;gap:10px;padding:10px 15px;background:#111d33;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
 .brand{font-weight:900;letter-spacing:.02em;white-space:nowrap}.brand span{color:var(--accent)}.spacer{flex:1}
 .control{border:1px solid #4a5a78;border-radius:11px;padding:9px 12px;background:#233553;text-decoration:none;white-space:nowrap}
-.control:hover{background:#334969}.home{background:#ffda60;color:#15191f;border-color:#e5b631;font-weight:800}
+.control:hover{background:#334969}.home{background:#ffda28;color:#111;border-color:#e5b631;font-weight:800;border-radius:3px;display:grid;place-items:center;width:38px;height:38px;padding:5px;flex:0 0 38px}
+.home svg{display:block;width:22px;height:22px;fill:currentColor}
+.back-to-lessons{font-size:12px}
+.quick-help{background:#16243a;color:#d9e4ee;border-bottom:1px solid #42536c;padding:11px 20px;font-size:13px}
+.quick-help[hidden]{display:none}
+.version-note{position:fixed;bottom:7px;left:9px;z-index:9;color:#909caa;font-size:10px;pointer-events:none;background:#111d339c;padding:2px 5px;border-radius:3px}
+@media print{.quick-help,.version-note{display:none!important}}
 .layout{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:calc(100vh - 63px)}
 aside{padding:18px 10px 25px;background:#111e34;border-right:1px solid var(--line);overflow-y:auto}
 .menulabel{color:var(--accent);font-size:11px;font-weight:900;letter-spacing:.12em;margin:0 10px 14px}
@@ -46,12 +52,13 @@ body[data-lang="tr"] .panel .heading2.lang-de{display:none}body[data-lang="de"] 
 </style></head>
 <body data-lang="both">
 <header>
-<a class="control home" href="../index.html" title="Projelere dön">⌂</a><div class="brand"><span>MATHE GK</span> · Präsentation</div>
+<a class="control home" href="../index.html" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a><a class="control back-to-lessons" href="../check-liste/index.html">← Check Liste</a><div class="brand"><span>Tuana 1</span> · Mathe GK Analysis</div>
 <div class="spacer"></div>
-<select class="control" id="lang" aria-label="Sprache"><option value="both">Deutsch + Türkçe</option><option value="de">Deutsch</option><option value="tr">Türkçe</option></select>
+<select class="control" id="lang" aria-label="Dil / Sprache / Language"><option value="tr">Türkçe</option><option value="de">Almanca</option><option value="en">İngilizce</option></select><button class="control" id="quickHelp" type="button" aria-label="Help" title="Help" aria-expanded="false" aria-controls="quickHelpText">?</button>
 <button class="control" id="full" title="Vollbild / Tam ekran">⛶</button>
 <button class="control" id="print" title="Als PDF drucken">⎙</button>
 </header>
+<div id="quickHelpText" class="quick-help" hidden></div>
 <div class="layout"><aside><div class="menulabel">KAPITEL · KONULAR</div><div id="navigation"></div></aside><main>
 <article class="slide" id="slide" aria-live="polite">
 <div class="tag" id="tag"></div><h1 id="title"></h1><div class="sub" id="sub"></div>
@@ -84,15 +91,32 @@ if(['area','exp','polynom'].includes(type)){let a=0,b=4,fn=x=>x/2;if(type==='exp
 for(let j=0;j<lines.length;j++)s+='<path class="'+lines[j][2]+'" d="'+samplePath(lines[j][1],xmin,xmax,ymin,ymax)+'"/>';
 s+='</svg><div class="legend">'+lines.map((z,j)=>'<span style="color:'+['#58e2d7','#ffd175','#f58fc9'][j]+'">● '+z[0]+'</span>').join(' &nbsp; ')+'</div>';return s}
 function render(){let d=slides[idx];$('tag').textContent=d.tag;$('title').textContent=d.title;$('sub').textContent=d.de;$('turkish').textContent=d.tr;$('formula').textContent=d.math;$('demo').textContent=d.demo;$('graphwrap').innerHTML=d.graph?graph(d.graph):'';$('note').hidden=!d.note;$('note').textContent=d.note||'';$('count').textContent=(idx+1)+' / '+slides.length;$('progress').style.width=((idx+1)/slides.length*100)+'%';$('prev').disabled=idx===0;$('next').disabled=idx===slides.length-1;
-document.querySelectorAll('.navitem').forEach((el,i)=>el.classList.toggle('active',idx===i));history.replaceState(null,'','#'+(idx+1));document.title=d.title+' · Mathe GK';}
+document.querySelectorAll('.navitem').forEach((el,i)=>el.classList.toggle('active',idx===i));history.replaceState(null,'','#'+(idx+1));document.title=d.title+' · Tuana 1';}
 const nav=$('navigation');nav.innerHTML=slides.map((d,i)=>'<button class="navitem" data-n="'+i+'"><span class="nr">'+String(i+1).padStart(2,'0')+'</span><span>'+d.title+'</span></button>').join('');
 nav.addEventListener('click',e=>{let b=e.target.closest('[data-n]');if(b){idx=+b.dataset.n;render()}});
 $('prev').onclick=()=>{idx=Math.max(0,idx-1);render()};$('next').onclick=()=>{idx=Math.min(slides.length-1,idx+1);render()};
-$('lang').value=localStorage.getItem('mathegk-lang')||'both';document.body.dataset.lang=$('lang').value;
-$('lang').onchange=()=>{document.body.dataset.lang=$('lang').value;localStorage.setItem('mathegk-lang',$('lang').value)};
+const supportedLangs=['tr','de','en'];
+ const savedLang=localStorage.getItem('mathegk-lang');
+ $('lang').value=supportedLangs.includes(savedLang)?savedLang:'tr';
+ function setLanguage(){
+  document.body.dataset.lang=$('lang').value;
+  const copy={
+   tr:'Oklarla sayfaları değiştir. Dil seç. PDF için yazdır düğmesine bas.',
+   de:'Mit den Pfeilen blättern. Sprache wählen. Für PDF auf Drucken klicken.',
+   en:'Use the arrows to change slides. Choose a language. Print to save a PDF. Slides are in German and Turkish.'
+  };
+  $('quickHelpText').textContent=copy[$('lang').value]||copy.tr;
+ }
+ setLanguage();
+ $('lang').onchange=()=>{setLanguage();localStorage.setItem('mathegk-lang',$('lang').value)};
+ $('quickHelp').onclick=()=>{
+  const panel=$('quickHelpText');
+  panel.hidden=!panel.hidden;
+  $('quickHelp').setAttribute('aria-expanded',String(!panel.hidden));
+ };
 $('full').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else $('slide').requestFullscreen?.()};
 $('print').onclick=()=>window.print();
 document.addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' '].includes(e.key)&&!['SELECT','BUTTON'].includes(document.activeElement.tagName)){e.preventDefault();idx=Math.min(slides.length-1,idx+1);render()}if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();idx=Math.max(0,idx-1);render()}});
 const num=parseInt(location.hash.replace('#',''));if(num>0&&num<=slides.length)idx=num-1;render();
-</script><script src="/projeler/analytics.js?v=20261114-auto"></script>
+</script><div class="version-note">v1.2.0 · Tuana 1 · Mathe GK Analysis sunumu</div><script src="/projeler/analytics.js?v=20261114-auto"></script>
 </body></html>
