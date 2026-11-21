@@ -1,20 +1,27 @@
-# Check Liste · Matematik
+# Check Liste · Ders Seçimi
 
-**Sürüm: v1.1.0** — 41 Almanca–Türkçe 5. sınıf matematik sorusu.
+**v1.2.0** — Öğrenciye ve derse göre üç çalışmayı açan giriş ekranı.
 
-## Ortak Check Liste şablonu
+## Bağlantılar
 
-`check-liste/app.js` **genel çizim ve ilerleme motorudur**. Hem `check-liste/index.html` hem de `aras/index.html` bu **tek dosyayı** yükler. Her sayfa kendi `window.CHECKLIST_PACK` verisini sağlayarak soruları, liste kimliğini ve kayıtları ayrı tutar.
+| Seçim | Bağlantı | İçerik |
+|---|---|---|
+| **Çetin 1** | `check-liste/cetin-1.html` | Önceki Check Liste: 41 Almanca–Türkçe matematik sorusu, çizim alanı, tamamlanma ve PDF |
+| **Aras 1** | `aras/index.html` | 34 zaman hesaplama sorusu, saat/zaman çizelgesi, çizim alanı ve PDF |
+| **Tuana 1** | `mathe-gk/index.html` | Mathe GK Analysis: trigonometri, türev, integral ve grafik sunumu (Check Liste çizim motoruyla karıştırılmamalı) |
 
-- `index.html`: Check Liste arayüzü, Home / Dil / Help, Paylaş ve sürüm notu
-- `app.js`: **ortak** kalem, nokta, seçim, silgi, çoklu seçim, şekil tanıma, geometri dönüşümleri, ilerleme ve soru geçişleri
-- `sets/matematik-5-2026/data.js`: 41 Almanca–Türkçe soru
-- `pdf-export.js`: tüm soruları ve çözüm çizimlerini PDF olarak kaydetme
+Ana `Öğren` ekranında tek **Check Liste** bağlantısı bulunur. Giriş sayfası `check-liste/index.html` üç ayrı öğrenci kartı gösterir. Eski Check Liste çalışması `cetin-1.html` olarak **aynı klasöre** taşındı/kopyalandı; mevcut `matematik-5-2026` kayıt kimliği değişmedi. Önceden kaydedilmiş soru çizimleri tarayıcıda aynı anahtarlarla durur.
 
-## v1.1.0: Tek tıkla nokta
+## Ortak çizim motoru
 
-Kalem modunda tek tıklandığında `{kind:'dot',pts:[{x,y}]}` biçiminde **bağımsız nokta nesnesi** oluşturulur. Tıklayıp sürüklemek normal yazı/çizimdir. Noktalar seçilebilir, silinebilir, soru bazında saklanır ve PDF'de de çizilir. Bu davranış **Aras** uygulamasına da otomatik uygulanır; onun ayrı çizim motoru yoktur.
+`check-liste/app.js` ortak bir çizim motorudur. Çetin 1 ve Aras 1 aynı kodu kullanır. Kalemle tek tıklama **nokta** oluşturur; sürükleme normal çizimdir. Nesne seçimi, çoklu seçim, sağ tuşla şekil tanıma ve ölçekleme korunur.
 
-Seçim modunda boş alandan sürükle = çoklu seçim; köşe ölçekleme Shift basılıyken oranlı, basılı değilken bağımsızdır. Kalem modunda çizime müdahale eden otomatik seçim yoktur. Normal ve sağ tuşla zorunlu şekil tanıma korunur.
+Tuana 1 mevcut matematik sunumudur; bu sürümde farklı bir Check Liste çözüm alanı eklenmemiştir.
 
-Tarayıcı kayıtları liste kimliği, profil ve soru kimliği altında ayrılır. Önceki çalışmalar silinmez. Fotoğraflardan kırpılmış bazı kitap görselleri GitHub'daki 41 soruluk pakette bulunmayabilir.
+## Dosyalar
+
+- `check-liste/index.html`: Ders seçme sayfası (Home, Dil, Help; v1.2.0)
+- `check-liste/cetin-1.html`: 41 soruluk asıl Check Liste uygulaması (v1.2.0)
+- `check-liste/app.js`: Çetin 1 ve Aras 1 için ortak çizim motoru
+- `check-liste/pdf-export.js`: Çetin 1 PDF çıktısı
+- `check-liste/sets/matematik-5-2026/data.js`: Çetin 1 soru verileri
