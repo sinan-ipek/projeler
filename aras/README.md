@@ -1,8 +1,8 @@
 # Aras 1 — Ortak Check Liste
 
-**v1.3.0** · 34 Almanca–Türkçe zaman alıştırması (sayfa 35).
+**v1.3.1** · 34 Almanca–Türkçe zaman alıştırması (sayfa 35).
 
-Artık Aras'ın ayrı bir HTML arayüzü, çizim motoru veya PDF motoru yoktur.
+Artık Aras'ın ayrı bir HTML arayüzü, çizim motoru veya PDF motoru yoktur. v1.3.1 ile ortak çizim motorunda mürekkep hafif yumuşatılır, 2× çözünürlük kullanılır ve PDF aynı eğriyi üretir.
 
 - **Ders:** `../check-liste/lesson.html?set=aras-1`
 - **Soru verisi:** `data.js` (34 madde, 4 analog saat, 2 zaman çizelgesi)
