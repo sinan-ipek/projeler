@@ -66,9 +66,12 @@ $('pageSelect').onchange=()=>{const p=$('pageSelect').value;if(p!=='all'){let i=
 $('search').oninput=drawMenu;$('figure').onclick=()=>{$('figure').classList.toggle('zoom')};
 const area=$('boardArea'),canvas=$('board'),ctx=canvas.getContext('2d');
 let objects=[],selected=[],tool='pen',drag=null,holding=null,preview=null,holdTimer=null,pan={x:0,y:0},activePointers=new Map(),raf=0,inkWidth=2.25;
+const RIGHT_FORCE_MS=700,RIGHT_MOVE_TOLERANCE=6;
+let rightForceTimer=null,latestInkIndex=-1;
+function cancelRightForce(){if(rightForceTimer!==null){clearTimeout(rightForceTimer);rightForceTimer=null}}
 function boardKey(){return key('board:'+qs[current].id)}
 function saveBoard(){try{localStorage.setItem(boardKey(),JSON.stringify({objects,pan}))}catch{}}
-window.loadBoard=function(){holding=null;preview=null;shapeLock=null;drag=null;selected=[];clearTimeout(holdTimer);try{let v=JSON.parse(localStorage.getItem(boardKey())||'{}');objects=Array.isArray(v.objects)?v.objects:[];pan=v.pan||{x:0,y:0}}catch{objects=[];pan={x:0,y:0}}repaint()};
+window.loadBoard=function(){cancelRightForce();latestInkIndex=-1;holding=null;preview=null;shapeLock=null;drag=null;selected=[];clearTimeout(holdTimer);try{let v=JSON.parse(localStorage.getItem(boardKey())||'{}');objects=Array.isArray(v.objects)?v.objects:[];pan=v.pan||{x:0,y:0}}catch{objects=[];pan={x:0,y:0}}repaint()};
 function point(e){const r=canvas.getBoundingClientRect();return {x:e.clientX-r.left-pan.x,y:e.clientY-r.top-pan.y}}
 function eventScreen(e){const r=canvas.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}}
 function length(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
@@ -173,12 +176,113 @@ function recognizer(ps){
   return circularArc(ps,diag);
  return null;
 }
+// Forced recognition uses relative geometric fit scores, not the strict
+// confidence thresholds used for ordinary left-button handwriting.
+function nearestShape(ps){
+ const valid=(ps||[]).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));
+ if(valid.length<2)return null;
+ const first=valid[0],last=valid[valid.length-1];
+ const box=bounds({pts:valid}),diag=Math.hypot(box.w,box.h);
+ const endDist=length(first,last);
+ if(diag<4)return{kind:'line',pts:[first,{x:last.x+.01,y:last.y+.01}]};
+ // Ordinary recognition remains the first choice when it is confident.
+ const certain=recognizer(valid);
+ if(certain)return certain;
+ let totalLength=0;
+ for(let i=1;i<valid.length;i++)totalLength+=length(valid[i-1],valid[i]);
+ const avg=fn=>valid.reduce((sum,p)=>sum+fn(p),0)/valid.length;
+ const candidates=[];
+ function offer(kind,pts,cost){
+  if(pts&&Number.isFinite(cost))candidates.push({kind,pts,cost});
+ }
+ offer('line',[first,last],
+  avg(p=>segdist(p,first,last))/diag*5+
+  Math.max(0,totalLength/Math.max(1,endDist)-1.1)*.38);
+ const corners=[
+  {x:box.x,y:box.y},{x:box.x+box.w,y:box.y},
+  {x:box.x+box.w,y:box.y+box.h},{x:box.x,y:box.y+box.h}
+ ];
+ const aspect=Math.min(box.w,box.h)/Math.max(box.w,box.h);
+ const edgeError=avg(p=>Math.min(
+  Math.abs(p.x-box.x),Math.abs(p.x-box.x-box.w),
+  Math.abs(p.y-box.y),Math.abs(p.y-box.y-box.h)))/diag;
+ const cornerMiss=corners.reduce((sum,c)=>sum+
+  Math.min(...valid.map(p=>length(p,c))),0)/4/diag;
+ if(aspect>.1)offer('rectangle',[...corners,{...corners[0]}],
+  edgeError*6+cornerMiss*2.7+Math.min(1.5,endDist/diag)*1.1+
+  (totalLength<1.5*(box.w+box.h)?1:0));
+ const center={x:box.x+box.w/2,y:box.y+box.h/2};
+ const radius=(box.w+box.h)/4;
+ const radialError=Math.sqrt(avg(p=>(length(p,center)-radius)**2))/radius;
+ const circleTurn=circleSweep(valid,center);
+ if(aspect>.20)offer('circle',
+  circlePoints({x:center.x-radius,y:center.y-radius,w:2*radius,h:2*radius}),
+  radialError*2.5+(1-aspect)*1.1+
+  Math.min(2,endDist/diag)*1.7+
+  Math.abs(Math.abs(circleTurn.total)-2*Math.PI)/Math.PI*.6+
+  circleTurn.backwards/Math.max(.1,circleTurn.absolute));
+ // Approximate triangle corners via the most separated pair and the
+ // point furthest from their connecting chord.
+ const step=Math.max(1,Math.floor(valid.length/80));
+ const sample=valid.filter((_,i)=>i%step===0);
+ if(sample[sample.length-1]!==last)sample.push(last);
+ let pair=[first,last],longest=0;
+ for(let i=0;i<sample.length;i++){
+  for(let j=i+1;j<sample.length;j++){
+   const d=length(sample[i],sample[j]);
+   if(d>longest){longest=d;pair=[sample[i],sample[j]]}
+  }
+ }
+ let third=null,far=0;
+ for(const p of sample){
+  const d=segdist(p,pair[0],pair[1]);
+  if(d>far){third=p;far=d}
+ }
+ if(third&&far>diag*.10){
+  const tri=[pair[0],third,pair[1]];
+  const err=avg(p=>Math.min(...[0,1,2].map(i=>
+   segdist(p,tri[i],tri[(i+1)%3]))))/diag;
+  offer('triangle',[...tri,{...tri[0]}],
+   err*5+Math.min(1.5,endDist/diag)*1.1);
+ }
+ // Generate only true circular arcs, sampled from one fitted circumcircle.
+ if(endDist>diag*.10){
+  let pivot=null,sag=0;
+  for(const p of valid){
+   const d=segdist(p,first,last);
+   if(d>sag){sag=d;pivot=p}
+  }
+  if(pivot&&sag>diag*.04){
+   const fit=circumcircle(first,pivot,last);
+   if(fit&&fit.r>4&&fit.r<diag*20){
+    const turn=circleSweep(valid,fit);
+    const abs=Math.abs(turn.total);
+    if(abs>.25&&abs<6.1&&turn.backwards<turn.absolute*.35){
+     const start=Math.atan2(first.y-fit.y,first.x-fit.x);
+     const count=Math.max(24,Math.ceil(abs*26));
+     const points=Array.from({length:count+1},(_,i)=>{
+      const angle=start+turn.total*i/count;
+      return{x:fit.x+fit.r*Math.cos(angle),y:fit.y+fit.r*Math.sin(angle)};
+     });
+     const rmse=Math.sqrt(avg(p=>(length(p,fit)-fit.r)**2))/fit.r;
+     offer('arc',points,
+      rmse*4+turn.backwards/Math.max(.1,turn.absolute)*2+
+      Math.max(0,abs-5.4)*.3);
+    }
+   }
+  }
+ }
+ candidates.sort((a,b)=>a.cost-b.cost);
+ return candidates[0]?
+  {kind:candidates[0].kind,pts:candidates[0].pts}:
+  {kind:'line',pts:[first,last]};
+}
 function resize(){const r=area.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,3);canvas.width=Math.round(r.width*d);canvas.height=Math.round(r.height*d);canvas.style.width=r.width+'px';canvas.style.height=r.height+'px';ctx.setTransform(d,0,0,d,0,0);repaint()}
 function lineObj(o,highlight=false){let p=o.pts||[];if(!p.length)return;ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);p.slice(1).forEach(t=>ctx.lineTo(t.x,t.y));ctx.lineWidth=inkWidth;ctx.lineJoin='round';ctx.lineCap='round';ctx.strokeStyle=highlight?'#278bd2':'#1a2520';ctx.setLineDash(highlight?[9,6]:[]);ctx.stroke();ctx.setLineDash([])}
 function bboxAll(){if(!selected.length)return null;let p=selected.flatMap(i=>objects[i]?.pts||[]);return bounds({pts:p})}
 function handles(r){let x=r.x,y=r.y,w=r.w,h=r.h;return[{kind:'tl',x,y},{kind:'tr',x:x+w,y},{kind:'br',x:x+w,y:y+h},{kind:'bl',x,y:y+h},{kind:'rot',x:x+w/2,y:y-33}]}
 function repaint(){if(!canvas.width||!canvas.height)return;const d=canvas.width/Math.max(1,canvas.clientWidth);ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);ctx.save();ctx.translate(pan.x,pan.y);
- objects.forEach((o,i)=>lineObj(o,selected.includes(i)));if(holding)lineObj(preview||{pts:holding.pts},!!preview);
+ objects.forEach((o,i)=>{if(drag?.kind==='forced'&&i===drag.target)return;lineObj(o,selected.includes(i))});if(holding)lineObj(preview||{pts:holding.pts},!!preview);if(drag?.kind==='forced')lineObj(drag.preview,true);
  const b=drag?.kind==='marquee'?null:bboxAll();if(b){ctx.strokeStyle='#2988d7';ctx.lineWidth=1.2;ctx.setLineDash([6,4]);ctx.strokeRect(b.x-7,b.y-7,b.w+14,b.h+14);ctx.setLineDash([]);handles(b).forEach(h=>{ctx.beginPath();ctx.arc(h.x,h.y,7,0,2*Math.PI);ctx.fillStyle=h.kind==='rot'?'#fff':'#3095d4';ctx.fill();ctx.strokeStyle='#1684c5';ctx.stroke()})}
  if(drag?.kind==='marquee'&&drag.moved){
   const r=marqueeRect(drag.start,drag.current);
@@ -269,7 +373,7 @@ function stretchSelected(drag,now,keepAspect=false){
  }
  drag.last={...now};
 }
-function eraser(p){let id=hit(p);if(id>=0){objects.splice(id,1);selected=[];saveBoard();repaint()}}
+function eraser(p){let id=hit(p);if(id>=0){objects.splice(id,1);if(id===latestInkIndex)latestInkIndex=-1;else if(id<latestInkIndex)latestInkIndex--;selected=[];saveBoard();repaint()}}
 function clearPending(){clearTimeout(holdTimer);holdTimer=null}
 // During the held-press preview, one geometrical control point follows the cursor.
 // The fixed geometry is captured when the 650 ms recognition fires; only release commits it.
@@ -363,12 +467,79 @@ function previewResize(p){
  preview=lockedShape(shapeLock,p);
  holding.pts[holding.pts.length-1]={...p};
 }
-function finish(e,cancel=false){if(!drag&&!holding)return;if(drag){if(drag.kind==='marquee'){if(cancel||!drag.moved)selected=drag.base.slice();drag=null;repaint();return}drag=null;saveBoard()}else if(holding){clearPending();if(!cancel&&preview&&e&&shapeLock)previewResize(point(e));if(!cancel&&holding.pts.length>1){objects.push(preview||{kind:'ink',pts:holding.pts});saveBoard()}holding=null;preview=null;shapeLock=null}area.classList.remove('pan');repaint()}
+function eligibleInkIndex(p){
+ const touching=hit(p);
+ if(touching>=0&&objects[touching]?.kind==='ink')return touching;
+ if(latestInkIndex>=0&&objects[latestInkIndex]?.kind==='ink')return latestInkIndex;
+ return -1;
+}
+function armRightForce(down){
+ cancelRightForce();
+ rightForceTimer=setTimeout(()=>{
+  rightForceTimer=null;
+  if(drag!==down||down.kind!=='right-pending'||tool!=='pen')return;
+  const ink=objects[down.target];
+  if(!ink||ink.kind!=='ink')return;
+  const candidate=nearestShape(ink.pts);
+  if(!candidate)return;
+  const endpoint=candidate.pts[candidate.pts.length-1];
+  // Start exactly at the best-fit geometry; moving the pointer afterwards
+  // edits the control point relative to the right-press starting position.
+  const lock=makeShapeLock(candidate,endpoint);
+  drag={kind:'forced',target:down.target,preview:candidate,
+   lock,origin:{...down.startWorld},
+   endpoint:{...endpoint},pointerId:down.pointerId};
+  repaint();
+ },RIGHT_FORCE_MS);
+}
+function finish(e,cancel=false){
+ cancelRightForce();
+ if(!drag&&!holding)return;
+ if(drag){
+  if(drag.kind==='right-pending'){drag=null;repaint();return}
+  if(drag.kind==='forced'){
+   if(!cancel&&objects[drag.target]){
+    // On release, the chosen best-fit geometry replaces the same saved stroke.
+    objects[drag.target]=drag.preview;
+    latestInkIndex=-1;
+    saveBoard();
+   }
+   drag=null;repaint();return;
+  }
+  if(drag.kind==='marquee'){
+   if(cancel||!drag.moved)selected=drag.base.slice();
+   drag=null;repaint();return;
+  }
+  drag=null;saveBoard();
+ }else if(holding){
+  clearPending();
+  if(!cancel&&preview&&e&&shapeLock)previewResize(point(e));
+  if(!cancel&&holding.pts.length>1){
+   const item=preview||{kind:'ink',pts:holding.pts};
+   objects.push(item);
+   latestInkIndex=item.kind==='ink'?objects.length-1:-1;
+   saveBoard();
+  }
+  holding=null;preview=null;shapeLock=null;
+ }
+ area.classList.remove('pan');repaint();
+}
 area.addEventListener('contextmenu',e=>e.preventDefault());
 area.addEventListener('pointerdown',e=>{
  if(e.button!==0&&e.button!==2)return;e.preventDefault();canvas.setPointerCapture(e.pointerId);
  activePointers.set(e.pointerId,eventScreen(e));let p=point(e);
- if(e.button===2){drag={kind:'pan',last:eventScreen(e)};area.classList.add('pan');return}
+ if(e.button===2){
+  const target=tool==='pen'&&!holding?eligibleInkIndex(p):-1;
+  if(target>=0){
+   drag={kind:'right-pending',target,
+    startScreen:eventScreen(e),startWorld:{...p},pointerId:e.pointerId};
+   armRightForce(drag);
+  }else{
+   drag={kind:'pan',last:eventScreen(e)};
+   area.classList.add('pan');
+  }
+  return;
+ }
  if(tool==='eraser'){eraser(p);drag={kind:'erase'};return}
  // Selecting and transforming existing ink is only possible in explicit selection mode.
  // Pen mode NEVER hit-tests strokes, so handwriting may overlap earlier strokes.
@@ -390,6 +561,23 @@ area.addEventListener('pointermove',e=>{
  let cur=eventScreen(e);if(activePointers.has(e.pointerId))activePointers.set(e.pointerId,cur);
  if(!canvas.hasPointerCapture(e.pointerId))return;
  const p=point(e);
+ if(drag?.kind==='right-pending'){
+  if(length(cur,drag.startScreen)>RIGHT_MOVE_TOLERANCE){
+   cancelRightForce();
+   const start=drag.startScreen;
+   drag={kind:'pan',last:start};
+   area.classList.add('pan');
+   pan.x+=cur.x-start.x;pan.y+=cur.y-start.y;
+   drag.last=cur;repaint();
+  }
+  return;
+ }
+ if(drag?.kind==='forced'){
+  const p=point(e),origin=drag.origin,endpoint=drag.endpoint;
+  const control={x:endpoint.x+p.x-origin.x,y:endpoint.y+p.y-origin.y};
+  drag.preview=drag.lock?lockedShape(drag.lock,control):drag.preview;
+  repaint();return;
+ }
  if(drag?.kind==='pan'){pan.x+=cur.x-drag.last.x;pan.y+=cur.y-drag.last.y;drag.last=cur;repaint();return}
  if(drag?.kind==='erase'){eraser(p);return}
  if(drag?.kind==='marquee'){
@@ -417,7 +605,7 @@ $('selectTool').onclick=()=>setTool('select');
 $('eraser').onclick=()=>setTool('eraser');
 function setTool(v){
  if(!['pen','select','eraser'].includes(v))return;
- if(drag||holding)finish(null);
+ if(drag||holding)finish(null,true);
  tool=v;selected=[];
  for(const [id,kind] of [['pen','pen'],['selectTool','select'],['eraser','eraser']]){
   const on=v===kind;$(id).classList.toggle('on',on);$(id).setAttribute('aria-pressed',String(on));
@@ -427,7 +615,7 @@ function setTool(v){
  area.classList.toggle('select',v==='select');
  repaint();
 }
-$('clear').onclick=()=>{clearPending();objects=[];selected=[];holding=null;preview=null;shapeLock=null;drag=null;pan={x:0,y:0};saveBoard();repaint()};
+$('clear').onclick=()=>{clearPending();cancelRightForce();latestInkIndex=-1;objects=[];selected=[];holding=null;preview=null;shapeLock=null;drag=null;pan={x:0,y:0};saveBoard();repaint()};
 // Shift affects a held resize immediately, even without a pointer movement.
 document.addEventListener('keydown',e=>{
  if(e.key==='Shift'&&drag?.kind==='handle'&&drag.handle.kind!=='rot'){
