@@ -1,14 +1,20 @@
-# Check Liste — Matematik
+# Check Liste · Matematik
 
-Bu klasör 5. sınıf seviyesinde Almanca–Türkçe **41 soruluk** çalışma listesini barındırır.
+**Sürüm: v1.1.0** — 41 Almanca–Türkçe 5. sınıf matematik sorusu.
 
-- `index.html`: Soru/çeviri ekranı, çizim alanı, PDF indirme düğmesi
-- `app.js`: Soru gezintisi, tamamlandı bilgisi, kalem, seçim, çoklu seçim, silgi ve akıllı şekil tanıma
-- `pdf-export.js`: Bütün sorular ve çözüm çizimleriyle PDF üretme ve indirme
-- `sets/matematik-5-2026/data.js`: Almanca ve Türkçe 41 soru
+## Ortak Check Liste şablonu
 
-Çizimler ve tamamlanma durumu liste kimliği, profil ve soru kimliği altında cihazın tarayıcısında saklanır. Liste kimliği değiştirilirken tek bir uygun eski kayıt bulunursa veriler yeni anahtarlara kopyalanır.
+`check-liste/app.js` **genel çizim ve ilerleme motorudur**. Hem `check-liste/index.html` hem de `aras/index.html` bu **tek dosyayı** yükler. Her sayfa kendi `window.CHECKLIST_PACK` verisini sağlayarak soruları, liste kimliğini ve kayıtları ayrı tutar.
 
-Daire tanıma kapalı ve yaklaşık tam dönüşlü çizimlerde sıkı çembersellik denetimine tabidir. **Yay**, üç noktadan bulunan çemberin bir parçasıdır; Bézier değildir. Tanıma yalnızca çizdikten sonra 0,65 saniye kalemi/fareyi basılı bekleyince çalışır.
+- `index.html`: Check Liste arayüzü, Home / Dil / Help, Paylaş ve sürüm notu
+- `app.js`: **ortak** kalem, nokta, seçim, silgi, çoklu seçim, şekil tanıma, geometri dönüşümleri, ilerleme ve soru geçişleri
+- `sets/matematik-5-2026/data.js`: 41 Almanca–Türkçe soru
+- `pdf-export.js`: tüm soruları ve çözüm çizimlerini PDF olarak kaydetme
 
-**Not:** Daha önce hazırlanmış kırpılmış kitap görselleri GitHub sürümüne henüz eklenmediği için bunlar uygulamanın PDF çıktısında da bulunmaz.
+## v1.1.0: Tek tıkla nokta
+
+Kalem modunda tek tıklandığında `{kind:'dot',pts:[{x,y}]}` biçiminde **bağımsız nokta nesnesi** oluşturulur. Tıklayıp sürüklemek normal yazı/çizimdir. Noktalar seçilebilir, silinebilir, soru bazında saklanır ve PDF'de de çizilir. Bu davranış **Aras** uygulamasına da otomatik uygulanır; onun ayrı çizim motoru yoktur.
+
+Seçim modunda boş alandan sürükle = çoklu seçim; köşe ölçekleme Shift basılıyken oranlı, basılı değilken bağımsızdır. Kalem modunda çizime müdahale eden otomatik seçim yoktur. Normal ve sağ tuşla zorunlu şekil tanıma korunur.
+
+Tarayıcı kayıtları liste kimliği, profil ve soru kimliği altında ayrılır. Önceki çalışmalar silinmez. Fotoğraflardan kırpılmış bazı kitap görselleri GitHub'daki 41 soruluk pakette bulunmayabilir.
