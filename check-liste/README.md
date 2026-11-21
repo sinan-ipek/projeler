@@ -1,6 +1,6 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.3.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.3.1** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
 ## Tek merkezli mimari
 
@@ -30,6 +30,13 @@
 - Yönlendirmeler `profile` gibi URL parametrelerini ve `#soru-id` bölümünü korur
 - Daha önce oluşturulmuş `localStorage` anahtarları **değişmez**: `matematik-5-2026` ve `aras-zaman-2026`
 - `../aras/pdf-export.js` eski tarayıcı önbellekleri için küçük bir yönlendirme dosyasıdır; ikinci PDF motoru **değildir**
+
+## v1.3.1 — Daha yumuşak mürekkep
+
+- Serbest el çizgilerinde yalnızca ekrandaki yol **hafif kuadratik eğrilerle** yumuşatılır. Geometri nesneleri düz/gerçek biçimlerini korur.
+- Normal yoğunluklu ekranlarda çözüm tuvali **en az 2× çözünürlükte** oluşturulur (en fazla 3×).
+- PDF çıktısında da aynı serbest çizgi yumuşatması uygulanır.
+- Orijinal koordinatlar ve tarayıcıda kayıtlı çizimler değiştirilmez; iyileştirme eski çizimlerde de görünür.
 
 ## Güncelleme biçimi
 
