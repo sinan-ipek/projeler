@@ -108,11 +108,18 @@ area.addEventListener('pointerdown',e=>{
  activePointers.set(e.pointerId,eventScreen(e));let p=point(e);
  if(e.button===2){drag={kind:'pan',last:eventScreen(e)};area.classList.add('pan');return}
  if(tool==='eraser'){eraser(p);drag={kind:'erase'};return}
- const h=hitHandle(p);if(h){drag={kind:'handle',handle:h,prev:p};return}
- const found=hit(p);if(found>=0){
-  if(e.shiftKey){selected=selected.includes(found)?selected.filter(i=>i!==found):[...selected,found];drag=null;repaint();return}
-  if(!selected.includes(found))selected=[found];if(e.altKey)duplicateSelected();drag={kind:'move',prev:p};repaint();return
+ // Selecting and transforming existing ink is only possible in explicit selection mode.
+ // Pen mode NEVER hit-tests strokes, so handwriting may overlap earlier strokes.
+ if(tool==='select'){
+  const h=hitHandle(p);if(h){drag={kind:'handle',handle:h,prev:p};return}
+  const found=hit(p);
+  if(found>=0){
+   if(e.shiftKey){selected=selected.includes(found)?selected.filter(i=>i!==found):[...selected,found];drag=null;repaint();return}
+   if(!selected.includes(found))selected=[found];if(e.altKey)duplicateSelected();drag={kind:'move',prev:p};repaint();return
+  }
+  selected=[];drag=null;repaint();return;
  }
+ // Pen mode starts a new stroke even directly on top of an existing one.
  selected=[];holding={pts:[p]};preview=null;drag=null;repaint();
 });
 area.addEventListener('pointermove',e=>{
@@ -131,10 +138,23 @@ area.addEventListener('pointermove',e=>{
 area.addEventListener('pointerup',e=>{activePointers.delete(e.pointerId);finish(e)});
 area.addEventListener('pointercancel',e=>{activePointers.delete(e.pointerId);finish(e,true)});
 area.addEventListener('lostpointercapture',e=>{if(drag||holding)finish(e,true)});
-$('pen').onclick=()=>setTool('pen');$('eraser').onclick=()=>setTool('eraser');
-function setTool(v){tool=v;selected=[];$('pen').classList.toggle('on',v==='pen');$('eraser').classList.toggle('on',v==='eraser');area.classList.toggle('eraser',v==='eraser');area.classList.toggle('pen',v==='pen');repaint()}
+$('pen').onclick=()=>setTool('pen');
+$('selectTool').onclick=()=>setTool('select');
+$('eraser').onclick=()=>setTool('eraser');
+function setTool(v){
+ if(!['pen','select','eraser'].includes(v))return;
+ if(drag||holding)finish(null);
+ tool=v;selected=[];
+ for(const [id,kind] of [['pen','pen'],['selectTool','select'],['eraser','eraser']]){
+  const on=v===kind;$(id).classList.toggle('on',on);$(id).setAttribute('aria-pressed',String(on));
+ }
+ area.classList.toggle('eraser',v==='eraser');
+ area.classList.toggle('pen',v==='pen');
+ area.classList.toggle('select',v==='select');
+ repaint();
+}
 $('clear').onclick=()=>{clearPending();objects=[];selected=[];holding=null;preview=null;drag=null;pan={x:0,y:0};saveBoard();repaint()};
-document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))return;if((e.key==='Delete'||e.key==='Backspace')&&selected.length){objects=objects.filter((_,i)=>!selected.includes(i));selected=[];saveBoard();repaint()}else if(e.key==='Escape'){selected=[];repaint()}else if(e.key==='ArrowRight'){open(current+1)}else if(e.key==='ArrowLeft'){open(current-1)}});
+document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))return;if((e.key==='Delete'||e.key==='Backspace')&&selected.length){objects=objects.filter((_,i)=>!selected.includes(i));selected=[];saveBoard();repaint()}else if(e.key==='Escape'){e.preventDefault();setTool(tool==='pen'?'select':'pen')}else if(e.key==='ArrowRight'){open(current+1)}else if(e.key==='ArrowLeft'){open(current-1)}});
 new ResizeObserver(resize).observe(area);
 open(current);
 })();
