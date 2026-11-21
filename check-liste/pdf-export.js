@@ -152,15 +152,35 @@ function drawSolutionBoard(objects){
  ctx.lineJoin='round';ctx.lineCap='round';ctx.strokeStyle='#17231e';
  ctx.lineWidth=Math.max(2,Math.min(6,2.25*scale));
  for(const o of paths){
-  ctx.beginPath();let drawn=0;
-  for(const p of o.pts){
-   if(!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;
-   const x=ox+p.x*scale,py=oy+p.y*scale;
-   if(!drawn)ctx.moveTo(x,py);else ctx.lineTo(x,py);
-   drawn++;
+  // Use the same freehand smoothing as the interactive solution board.
+  const valid=o.pts.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));
+  if(!valid.length)continue;
+  const px=p=>({x:ox+p.x*scale,y:oy+p.y*scale});
+  ctx.beginPath();
+  const first=px(valid[0]);
+  ctx.moveTo(first.x,first.y);
+  if(valid.length===1){
+   ctx.arc(first.x,first.y,ctx.lineWidth/2,0,Math.PI*2);
+   ctx.fillStyle='#17231e';ctx.fill();
+  }else{
+   if(o.kind==='ink'&&valid.length>2){
+    const mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+    let start=px(valid[0]),next=px(valid[1]),m=mid(start,next);
+    ctx.lineTo(m.x,m.y);
+    for(let i=1;i<valid.length-1;i++){
+     const control=px(valid[i]),following=px(valid[i+1]);
+     m=mid(control,following);
+     ctx.quadraticCurveTo(control.x,control.y,m.x,m.y);
+    }
+    const end=px(valid[valid.length-1]);
+    ctx.lineTo(end.x,end.y);
+   }else{
+    for(let i=1;i<valid.length;i++){
+     const p=px(valid[i]);ctx.lineTo(p.x,p.y);
+    }
+   }
+   ctx.stroke();
   }
-  if(drawn===1){const p=o.pts[0];ctx.arc(ox+p.x*scale,oy+p.y*scale,ctx.lineWidth/2,0,Math.PI*2);ctx.fillStyle='#17231e';ctx.fill()}
-  else if(drawn>1)ctx.stroke();
  }
  ctx.restore();y+=height+20;
 }
