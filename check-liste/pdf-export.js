@@ -221,7 +221,7 @@ button.addEventListener('click',async()=>{
   downloadPdf(blob,name);
   const canShare=!!(fileToShare&&navigator.canShare&&navigator.canShare({files:[fileToShare]})&&navigator.share);
   shareButton.hidden=!canShare;
-  setStatus(questions.length+' sorunun çözümleri '+pictures.length+' sayfalık PDF olarak indirildi.'+(canShare?' İstersen “Dosyayı paylaş”a bas.':''));
+  setStatus(questions.length+' soru ve kayıtlı çözümler '+pictures.length+' sayfalık PDF dosyasına dönüştürüldü; indirme başlatıldı.'+(canShare?' İstersen “Dosyayı paylaş”a bas.':''));
  }catch(err){
   console.error('PDF dışa aktarma hatası:',err);
   setStatus('PDF oluşturulamadı: '+(err?.message||String(err)));
