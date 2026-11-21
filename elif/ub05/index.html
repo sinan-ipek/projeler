@@ -1,0 +1,50 @@
+<!doctype html><html lang="tr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Übungsblatt 05 · Çözüm / Lösung</title>
+<style>
+:root{--bg:#f5f7fa;--fg:#1e293b;--card:#fff;--bd:#cbd5e1;--accent:#2459ac;--muted:#64748b}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,Segoe UI,Arial,sans-serif}.shell{max-width:900px;margin:auto;padding:15px}header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}h1{font-size:1.3rem;flex:1;margin:12px 0}button{font:inherit;background:var(--card);color:var(--fg);border:1px solid var(--bd);border-radius:9px;padding:6px 13px;cursor:pointer}button.on{background:var(--accent);color:#fff}button:disabled{opacity:.45}.nav{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.card{background:var(--card);padding:17px;border-radius:12px;border:1px solid var(--bd);margin:12px 0}.step{border-left:4px solid var(--bd);padding:8px 12px;margin:10px 0;background:var(--card)}.step.current{border-color:var(--accent);background:#eaf1ff}.mut{color:var(--muted)}.math{white-space:pre-wrap;overflow-wrap:anywhere}.tablewrap{overflow:auto}table{border-collapse:collapse;text-align:center;margin:12px 0}td,th{border:1px solid var(--bd);padding:5px 12px}th{background:#e2e8f0;color:#111}@media(prefers-color-scheme:dark){:root{--bg:#141a23;--fg:#e7edf7;--card:#202937;--bd:#48556a;--accent:#477ac9;--muted:#a5b3c8}.step.current{background:#243751}th{background:#39485c;color:#fff}}</style>
+<div class="shell"><header><button onclick="location.href='../index.html'" title="Home">⌂ Home</button><h1>Mathematik für Informatik 1 · Übungsblatt #05</h1><button id="tr">Türkçe</button><button id="de">Deutsch</button></header>
+<div class="nav" id="tasknav"></div><article class="card" id="heading"></article><div id="content"></div>
+<div class="nav"><button id="prev"></button><button id="next"></button><button id="showall"></button></div><p class="mut" id="count"></p></div>
+<script>
+const T=[
+{h:['Abel grupta birim ve ters elemanın tekliği','Eindeutigkeit des neutralen und inversen Elements in einer abelschen Gruppe'],
+s:[
+['(a) İki birim eleman 0 ve 0′ bulunduğunu varsayalım.','(a) Seien 0 und 0′ zwei neutrale Elemente.'],
+['0 = 0 + 0′ = 0′. İlk eşitlikte 0′, ikinci eşitlikte 0 birim eleman olduğundan birim eleman tektir. ∎','0 = 0 + 0′ = 0′. Die erste Gleichheit folgt aus der Neutralität von 0′, die zweite aus der Neutralität von 0. ∎'],
+['(b) b ve c, a elemanının iki tersi olsun: a+b=0=a+c.','(b) Seien b und c zwei inverse Elemente von a: a+b=0=a+c.'],
+['b = b+0 = b+(a+c) = (b+a)+c = 0+c = c. Kullanılanlar: birim eleman, ters eleman, birleşme aksiyomu. ∎','b = b+0 = b+(a+c) = (b+a)+c = 0+c = c. Benutzt: neutrales Element, inverses Element, Assoziativität. ∎']
+]},
+{h:['Altı elemanlı grubun işlem tablosunu tamamla ve tekliğini kanıtla','Verknüpfungstafel der sechselementigen Gruppe vervollständigen und Eindeutigkeit begründen'],
+s:[
+['Önce birim elemanı bul: a∘a=a olduğundan (grupta idempotent eleman birim elemandır) e=a.','Zuerst das neutrale Element: Aus a∘a=a folgt in einer Gruppe durch Kürzen e=a.'],
+['Birim eleman satırını ve sütununu yaz. Her satır ve sütunda a,b,c,x,y,z birer kez bulunmalıdır; çünkü sabit bir elemanla çarpma bijektiftir.','Ergänze die Zeile und Spalte des neutralen Elements. In jeder Zeile und Spalte kommt jedes Gruppenelement genau einmal vor, da Translationen bijektiv sind.'],
+['Verilen hücreleri kullanarak satır/sütunları sırayla doldur. Örneğin a∘a = a∘(z∘z) = (a∘z)∘z eşitliği birleşme aksiyomunu kullanır.','Ergänze Zeilen und Spalten mit den vorgegebenen Einträgen. Zum Beispiel nutzt a∘a = a∘(z∘z) = (a∘z)∘z die Assoziativität.'],
+['Tamamlanan tablo:\n'+['∘  a b c x y z','a  a b c x y z','b  b c a y z x','c  c a b z x y','x  x z y a c b','y  y x z b a c','z  z y x c b a'].join('\n'),'Vollständige Verknüpfungstafel:\n'+['∘  a b c x y z','a  a b c x y z','b  b c a y z x','c  c a b z x y','x  x z y a c b','y  y x z b a c','z  z y x c b a'].join('\n')],
+['Teklik: Önce birim eleman, ardından her satır ve sütunda tekrar bulunmaması koşulu ve birleşme aksiyomu eksik hücreleri zorunlu olarak belirler. Dolayısıyla başka tamamlama mümkün değildir.','Eindeutigkeit: Das neutrale Element, die genau einmal vorkommenden Einträge pro Zeile/Spalte und die Assoziativität erzwingen die fehlenden Werte. Eine andere Vervollständigung ist nicht möglich.']
+]},
+{h:['λₐ(x)=x∘a dönüşümünün bijektif olduğunu göster','Beweisen, dass λₐ(x)=x∘a bijektiv ist'],
+s:[
+['Bijektiflik için hem injektivlik hem surjektiflik gösterilir. a⁻¹, a’nın tersidir.','Für die Bijektivität werden Injektivität und Surjektivität gezeigt. a⁻¹ ist das Inverse von a.'],
+['İnjektiflik: λₐ(x)=λₐ(y) ⇒ x∘a=y∘a. Sağdan a⁻¹ ile birleştir: (x∘a)∘a⁻¹=(y∘a)∘a⁻¹ ⇒ x∘e=y∘e ⇒ x=y.','Injektivität: λₐ(x)=λₐ(y) ⇒ x∘a=y∘a. Rechts mit a⁻¹ verknüpfen: (x∘a)∘a⁻¹=(y∘a)∘a⁻¹ ⇒ x∘e=y∘e ⇒ x=y.'],
+['Surjektiflik: İstenen y∈M için x=y∘a⁻¹ seç. O zaman λₐ(x)=(y∘a⁻¹)∘a=y∘(a⁻¹∘a)=y.','Surjektivität: Zu beliebigem y∈M wähle x=y∘a⁻¹. Dann λₐ(x)=(y∘a⁻¹)∘a=y∘(a⁻¹∘a)=y.'],
+['İki özellik de sağlandığından λₐ bijektiftir. ∎','Damit ist λₐ sowohl injektiv als auch surjektiv, also bijektiv. ∎']
+]},
+{h:['Cisimde negatif işaret ve çarpma özellikleri','Vorzeichenregeln in einem Körper'],
+s:[
+['Yardımcı lemma: 0·a=(0+0)·a=0·a+0·a. Her iki tarafa −(0·a) ekleyince 0·a=0. Kullanılanlar: toplama birimi ve tersi, dağılma, birleşme.','Hilfslemma: 0·a=(0+0)·a=0·a+0·a. Durch Addition von −(0·a) folgt 0·a=0. Benutzt: additives Neutral- und Inverselement, Distributivität, Assoziativität.'],
+['(a) a+(−1)·a = 1·a+(−1)·a = (1+(−1))·a = 0·a=0. Demek ki (−1)·a, a’nın toplamsal tersidir. Tersin tekliğinden −a=(−1)·a.','(a) a+(−1)·a = 1·a+(−1)·a = (1+(−1))·a = 0·a=0. Somit ist (−1)·a ein additives Inverses zu a. Nach Eindeutigkeit: −a=(−1)·a.'],
+['(b) (−a)·b=((−1)·a)·b=(−1)·(a·b)=−(a·b). Ayrıca a·(−b)=a·((−1)·b)=(a·(−1))·b=((−1)·a)·b=−(a·b). Kullanılanlar: (a), birleşme, değişme.','(b) (−a)·b=((−1)·a)·b=(−1)·(a·b)=−(a·b). Ferner a·(−b)=a·((−1)·b)=(a·(−1))·b=((−1)·a)·b=−(a·b). Benutzt: (a), Assoziativität, Kommutativität.'],
+['(c) (−a)+a=0 olduğundan a, −a’nın tersidir: −(−a)=a.','(c) Wegen (−a)+a=0 ist a das Inverse von −a: −(−a)=a.'],
+['(d) (−a)·(−b)=−(a·(−b))=−(−(a·b))=a·b. Kullanılanlar: (b) ve (c).','(d) (−a)·(−b)=−(a·(−b))=−(−(a·b))=a·b. Benutzt: (b) und (c).'],
+['Not: Sorudaki K1, K2 vb. numaralar dersin aksiyom listesine bağlıdır; burada aksiyom adları açıkça kullanılmıştır.','Hinweis: Die K-Nummern hängen von der Axiomenliste der Vorlesung ab. Hier werden die verwendeten Axiome ausdrücklich benannt.']
+]},
+{h:['Birim çember S¹ çarpma altında değişmeli gruptur','Der Einheitskreis S¹ ist bezüglich Multiplikation eine abelsche Gruppe'],
+s:[
+['S¹={z∈ℂ:|z|=1}={e^(iθ): θ∈ℝ}.','S¹={z∈ℂ:|z|=1}={e^(iθ): θ∈ℝ}.'],
+['(a) z₁=e^(iθ₁), z₂=e^(iθ₂) için z₁z₂=e^(i(θ₁+θ₂)). Mutlak değeri 1 olduğu için z₁z₂∈S¹. Kapalılık sağlandı.','(a) Für z₁=e^(iθ₁), z₂=e^(iθ₂) gilt z₁z₂=e^(i(θ₁+θ₂)). Sein Betrag ist 1, also z₁z₂∈S¹. Abgeschlossenheit gezeigt.'],
+['(b) Birleşme ve değişme ℂ’de çarpma için geçerlidir; S¹’e de aktarılır.','(b) Assoziativität und Kommutativität gelten für die Multiplikation in ℂ und somit auch in S¹.'],
+['Birim eleman 1=e^(i0)∈S¹ ve her z için z·1=1·z=z.','Neutrales Element: 1=e^(i0)∈S¹ und für alle z gilt z·1=1·z=z.'],
+['z=e^(iθ) elemanının tersi z⁻¹=e^(−iθ)∈S¹ ve zz⁻¹=1. Böylece (S¹,·) değişmeli gruptur. ∎','Das Inverse von z=e^(iθ) ist z⁻¹=e^(−iθ)∈S¹, und zz⁻¹=1. Damit ist (S¹,·) eine abelsche Gruppe. ∎']
+]}];
+let lang=0,task=0,n=1;const $=id=>document.getElementById(id);function render(){document.documentElement.lang=lang?'de':'tr';$('tr').classList.toggle('on',!lang);$('de').classList.toggle('on',!!lang);$('tasknav').innerHTML=T.map((x,i)=>'<button data-t="'+i+'" class="'+(task===i?'on':'')+'">'+(lang?'Aufgabe ':'Soru ')+(i+1)+'</button>').join('');$('heading').innerHTML='<b>'+(lang?'Aufgabe ':'Soru ')+(task+1)+'</b><p>'+T[task].h[lang]+'</p>';$('content').innerHTML=T[task].s.slice(0,n).map((s,i)=>'<section class="step '+(i===n-1?'current':'')+'"><small class="mut">'+(lang?'Schritt ':'Adım ')+(i+1)+'</small><div class="math">'+s[lang]+'</div></section>').join('');$('prev').textContent=lang?'◀ Zurück':'◀ Geri';$('next').textContent=lang?'Weiter ▶':'İleri ▶';$('showall').textContent=lang?'Alle Schritte zeigen':'Tüm adımları göster';$('count').textContent=(lang?'Aufgabe ':'Soru ')+(task+1)+' · '+n+'/'+T[task].s.length;$('prev').disabled=task===0&&n===1;$('next').disabled=task===T.length-1&&n===T[task].s.length}document.addEventListener('click',e=>{let t=e.target.dataset.t;if(t!==undefined){task=+t;n=1;render()}});$('tr').onclick=()=>{lang=0;render()};$('de').onclick=()=>{lang=1;render()};$('prev').onclick=()=>{if(n>1)n--;else if(task>0){task--;n=T[task].s.length}render()};$('next').onclick=()=>{if(n<T[task].s.length)n++;else if(task<T.length-1){task++;n=1}render()};$('showall').onclick=()=>{n=T[task].s.length;render()};render();
+</script></html>
