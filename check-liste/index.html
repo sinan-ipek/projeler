@@ -1,41 +1,138 @@
-<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Check Liste · Matematik</title><style>
-:root{--green:#426751;--line:#e4e8e3}*{box-sizing:border-box}body{margin:0;color:#26352b;background:#f7f8f5;font:15px system-ui,-apple-system,sans-serif}.app{display:grid;grid-template-columns:205px minmax(300px,1fr) minmax(320px,48%);height:100dvh;gap:0}.left{background:#f1f4f0;border-right:1px solid var(--line);overflow:auto;padding:19px 12px}.left h2{margin:0 0 8px;font-size:20px}.small{color:#718079;font-size:12px}.progress{height:7px;border-radius:9px;background:#dae3d9;margin:13px 0}.progress>i{height:100%;display:block;background:#53926a;border-radius:9px} .shareSolutions{width:auto;flex:0 0 auto;margin:0;padding:9px 10px;border:1px solid #33684a;border-radius:10px;background:#426751;color:white;font-size:13px;font-weight:750;cursor:pointer;text-align:center}
-.shareSolutions:hover{background:#315e41}
-.shareSolutions:disabled{opacity:.55;cursor:wait}
-#sharePdfFile{display:inline-block;width:auto;margin:0;padding:9px 10px;border:1px solid #cad8cb;border-radius:9px;background:white;color:#36583d;font-weight:700;cursor:pointer}
-#sharePdfFile[hidden]{display:none}
-#exportStatus{display:block;min-height:0;margin:0;padding:0 12px;color:#607968;font-size:12px;line-height:1.4}
-.left select,.left input{width:100%;padding:10px;margin:5px 0;border:1px solid var(--line);border-radius:8px;background:white}.group{padding:14px 8px 5px;color:#7a837d;font-size:12px;font-weight:700}.item{width:100%;text-align:left;border:0;border-radius:7px;padding:10px 9px;background:transparent;cursor:pointer;color:#344a37}.item.active{background:#dcebe0;color:#214d32;font-weight:700}.item.done{color:#89938c;background:#e7e9e6;text-decoration:line-through}.main{overflow:auto;min-width:0;padding:23px}.card{max-width:900px;margin:auto;background:white;border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:0 3px 18px #2331}.title{color:var(--green);font-size:14px;font-weight:700}.card h1{font-size:28px;margin:9px 0 26px}.section{font-size:11px;letter-spacing:.13em;color:#7b8980;font-weight:800;text-transform:uppercase;margin:19px 0 8px}.statement{white-space:pre-wrap;line-height:1.65;font-size:17px}.turkish{color:#355145}.source{max-width:100%;cursor:zoom-in;transition:transform .2s;transform-origin:top left}.source.zoom{cursor:zoom-out;transform:scale(2)}.figcontainer{overflow:auto;max-height:380px}.actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:25px}.navbtn,.tool,.clear{border:1px solid #d5dfd5;border-radius:9px;background:white;padding:10px 12px;cursor:pointer;font-weight:600}.navbtn.primary,.tool.on{background:var(--green);color:white}.doneLabel{display:flex;align-items:center;gap:7px}.doneLabel input{width:21px;height:21px;accent-color:var(--green)}.boardpanel{border-left:1px solid var(--line);background:white;display:flex;flex-direction:column;min-width:0}.boardbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:13px 13px;border-bottom:1px solid var(--line)}.boardbar strong{margin-right:auto}.board-area{position:relative;flex:1;min-height:220px;cursor:default;overflow:hidden;touch-action:none}.board-area canvas{display:block;width:100%;height:100%;touch-action:none;cursor:inherit}.boardhint{border-top:1px solid var(--line);color:#89968d;font-size:12px;padding:10px;line-height:1.3}.board-area.pen{cursor:default}.board-area.select{cursor:default}.board-area.eraser{cursor:cell}.board-area.pan{cursor:grabbing}@media(max-width:900px){.app{display:flex;flex-direction:column;height:auto;min-height:100dvh}.left{max-height:200px}.main{overflow:visible}.boardpanel{height:70vh;min-height:420px;border-top:1px solid var(--line)}.card{padding:20px}}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #9cc1aa}
-.utility-bar{display:flex;align-items:center;gap:6px;margin-bottom:12px}.utility-home{display:grid;place-items:center;flex:0 0 33px;height:33px;border:1px solid #e4bd19;border-radius:3px;background:#ffdc28;color:#111}.utility-home svg{width:20px;height:20px;fill:currentColor}.utility-bar select{width:1px;min-width:0;flex:1;margin:0!important;padding:7px 3px!important;font-size:11px}.utility-help{flex:0 0 33px;height:33px;border:1px solid #d5dfd5;border-radius:6px;background:#fff;font-weight:800;cursor:pointer}.utility-helptext{font-size:12px;color:#526b5a;line-height:1.45;margin-bottom:12px;background:#fff;padding:9px;border:1px solid #dce5de;border-radius:7px}.version-note{position:fixed;bottom:6px;left:10px;color:#919993;font-size:10px;line-height:1.25;z-index:3;pointer-events:none}.left{padding-bottom:38px}
-</style></head><body><div class="app"><aside class="left"><nav class="utility-bar" aria-label="Sayfa araçları"><a class="utility-home" href="/projeler/" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a><select id="uiLanguage" aria-label="Dil" title="Dil"><option value="tr">Türkçe</option><option value="de">Almanca</option><option value="en">İngilizce</option></select><button id="quickHelp" class="utility-help" type="button" aria-expanded="false" title="Help">?</button></nav><div id="quickHelpText" class="utility-helptext" hidden></div><h2>Check Liste</h2><div id="setTitle" class="small">Matematik · 5. sınıf</div><div id="progressText" class="small"></div><div class="progress"><i id="progressBar"></i></div><select id="pageSelect"><option value="all">Tüm sayfalar</option></select><input id="search" type="search" placeholder="Soru ara…"><div id="menu"></div></aside><main class="main"><article class="card"><div id="qid" class="title"></div><h1 id="qtitle"></h1><div class="section">🇩🇪 Deutsch · Almanca</div><div id="german" class="statement"></div><div class="section">🇹🇷 Türkçe · Çeviri</div><div id="turkish" class="statement turkish"></div><div id="pictures" hidden><div class="section">Kitaptan kırpılmış görsel (tıklayarak büyüt)</div><div class="figcontainer"><img id="figure" class="source" alt="Soru görseli"></div></div><div class="actions"><label class="doneLabel"><input type="checkbox" id="done"> Tamamlandı ✓</label><div><button class="navbtn" id="prev">← Geri</button><button class="navbtn primary" id="next">İleri →</button></div></div></article></main><section class="boardpanel"><div class="boardbar"><strong>✎ Çözüm alanı</strong><button id="shareSolutions" class="shareSolutions" type="button" title="Tüm sorular ve kaydedilmiş çözüm çizimleri tek PDF olarak indirilir">↗ Paylaş</button><button id="pen" class="tool on" type="button" aria-pressed="true">✎ Kalem</button><button id="selectTool" class="tool" type="button" aria-pressed="false">↖ Seçim</button><button id="eraser" class="tool" type="button" aria-pressed="false">▧ Silgi</button><button id="clear" class="clear">Tümünü sil</button><button id="sharePdfFile" type="button" hidden>↗ Dosyayı paylaş</button></div><span id="exportStatus" role="status" aria-live="polite"></span><div class="board-area pen" id="boardArea"><canvas id="board"></canvas></div><div class="boardhint">Kalem: üst üste çiz, seçim yapılmaz · Seçim: boş alandan sürükle ve birden çok nesneyi çerçeveyle seç; Shift+sürükle ile seçime ekle · Köşeden sürükle: serbest en/boy; Shift+köşeden sürükle: oranı koru · Seçilenleri birlikte taşı, Alt+sürükle ile kopyala · Esc: Kalem ↔ Seçim · Sol tuşla çizerken 0,65 sn bekle: normal şekil tanıma · Çizimi bitirip sağ tuşa 0,7 sn hareketsiz basılı tut: en benzer şekle zorunlu dönüştür · Basılıyken hareket ettir: şekli güncelle · Bırak: sabitle · Sağ tuşla hemen sürükle: kaydır.</div></section></div><div class="version-note" aria-label="Sürüm">v1.1.0 · Kalemde tek tıkla nokta ekleme · Ortak çizim motoru</div><script src="./sets/matematik-5-2026/data.js"></script><script src="./app.js?v=1.1.0"></script><script src="./pdf-export.js?v=20261121-pdf-v2"></script><script>
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Check Liste · Dersler</title>
+<meta name="description" content="Çetin 1, Aras 1 ve Tuana 1 çalışmaları.">
+<style>
+:root{--ink:#20372b;--muted:#6b7c70;--green:#426751;--border:#dce6df;--bg:#f5f8f5;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+a{color:inherit}
+.shell{max-width:1080px;min-height:100dvh;margin:auto;padding:26px 24px 76px}
+.utility{display:flex;align-items:center;gap:12px}
+.home{width:40px;height:40px;display:grid;place-items:center;flex:none;background:#ffdc28;border:1px solid #d9b621;border-radius:3px;color:#111}
+.home svg{width:24px;height:24px;fill:currentColor}
+.lang{margin-left:auto;display:flex;align-items:center;gap:9px;color:var(--muted);font-size:13px}
+.lang select{padding:9px 11px;border:1px solid #c9d6cb;border-radius:8px;background:#fff;color:var(--ink);font:inherit}
+.help{width:40px;height:40px;border:1px solid #c9d6cb;border-radius:9px;background:#fff;color:var(--ink);font-size:22px;font-weight:750;cursor:pointer}
+.help-text{padding:12px 14px;background:#fff;border:1px solid var(--border);border-radius:10px;margin-top:14px;max-width:430px;color:#4f6957}
+.help-text[hidden]{display:none}
+.intro{margin:66px 0 28px}
+.eyebrow{color:#638b6c;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+h1{font-size:clamp(32px,5vw,54px);font-weight:760;line-height:1.15;letter-spacing:-.045em;margin:9px 0 13px}
+.subtitle{font-size:17px;color:var(--muted);max-width:650px;margin:0}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:33px}
+.lesson{display:flex;flex-direction:column;min-height:236px;padding:25px 24px;border:1px solid var(--border);border-radius:17px;background:var(--card);text-decoration:none;box-shadow:0 7px 19px #24432b09;transition:box-shadow .15s,transform .15s}
+.lesson:hover,.lesson:focus-visible{transform:translateY(-3px);box-shadow:0 13px 26px #24432b1a;border-color:#a3bfa9}
+.lesson:focus-visible,.home:focus-visible,.help:focus-visible,.lang select:focus-visible{outline:3px solid #83ad89;outline-offset:2px}
+.lesson-number{font-size:12px;font-weight:800;color:#608568}
+.lesson h2{margin:14px 0 8px;font-size:26px;letter-spacing:-.035em}
+.lesson .description{color:var(--muted);font-size:14px;line-height:1.5}
+.lesson .foot{margin-top:auto;padding-top:20px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-weight:700;font-size:13px;color:#416950}
+.lesson .arrow{font-size:20px}
+.version{position:fixed;bottom:9px;left:11px;color:#939f96;font-size:10px;pointer-events:none}
+@media(max-width:820px){.cards{grid-template-columns:1fr}.lesson{min-height:170px}.shell{padding:20px 18px 64px}.intro{margin:42px 0 22px}}
+@media(max-width:380px){.lang{gap:4px}.lang select{padding:8px 4px;font-size:12px}.shell{padding-left:12px;padding-right:12px}}
+</style>
+</head>
+<body>
+<main class="shell">
+ <nav class="utility" aria-label="Sayfa araçları">
+  <a class="home" href="../index.html" aria-label="Home" title="Home">
+   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg>
+  </a>
+  <label class="lang" for="language"><span id="languageLabel">Dil</span>
+   <select id="language" aria-label="Dil">
+    <option value="tr">Türkçe</option>
+    <option value="de">Almanca</option>
+    <option value="en">İngilizce</option>
+   </select>
+  </label>
+  <button id="help" class="help" type="button" title="Help" aria-label="Help" aria-expanded="false" aria-controls="helpText">?</button>
+ </nav>
+ <p id="helpText" class="help-text" hidden></p>
+ <section class="intro">
+  <div class="eyebrow" id="eyebrow">Derslerim</div>
+  <h1 id="heading">Check Liste</h1>
+  <p class="subtitle" id="subtitle">Çalışmak istediğin öğrenci ve dersi seç.</p>
+ </section>
+ <section class="cards" aria-label="Ders listesi">
+  <a class="lesson" href="./cetin-1.html">
+   <span class="lesson-number" id="cetinType">Matematik · 5. sınıf</span>
+   <h2>Çetin 1</h2>
+   <span class="description" id="cetinDescription">41 soru, Almanca–Türkçe çeviri ve çizimle çözüm alanı.</span>
+   <span class="foot"><span id="cetinAction">Çalışmayı aç</span><span class="arrow" aria-hidden="true">↗</span></span>
+  </a>
+  <a class="lesson" href="../aras/index.html">
+   <span class="lesson-number" id="arasType">Zaman hesaplama · Sayfa 35</span>
+   <h2>Aras 1</h2>
+   <span class="description" id="arasDescription">34 alt soru, saat çizimleri ve çözüm alanı.</span>
+   <span class="foot"><span id="arasAction">Çalışmayı aç</span><span class="arrow" aria-hidden="true">↗</span></span>
+  </a>
+  <a class="lesson" href="../mathe-gk/index.html">
+   <span class="lesson-number" id="tuanaType">Mathe GK · Analysis</span>
+   <h2>Tuana 1</h2>
+   <span class="description" id="tuanaDescription">Trigonometri, türev ve integral ders sunumu.</span>
+   <span class="foot"><span id="tuanaAction">Sunumu aç</span><span class="arrow" aria-hidden="true">↗</span></span>
+  </a>
+ </section>
+</main>
+<div class="version">v1.2.0 · Öğrenci ve ders seçimi: Çetin 1, Aras 1, Tuana 1</div>
+<script>
 (function(){
- const lang=document.getElementById('uiLanguage');
- const help=document.getElementById('quickHelp');
- const text=document.getElementById('quickHelpText');
- const labels={
-  tr:{help:'Kalem ile çiz. Seçim ile çizgiyi taşı. Paylaş ile PDF kaydet.',title:'Matematik · 5. sınıf',search:'Soru ara…',all:'Tüm sayfalar',share:'↗ Paylaş',pen:'✎ Kalem',select:'↖ Seçim',eraser:'▧ Silgi',clear:'Tümünü sil',prev:'← Geri',next:'İleri →',done:'Tamamlandı ✓',heading:'✎ Çözüm alanı'},
-  de:{help:'Mit dem Stift zeichnen. Mit Auswahl verschieben. Mit Teilen PDF speichern.',title:'Mathematik · 5. Klasse',search:'Aufgabe suchen…',all:'Alle Seiten',share:'↗ Teilen',pen:'✎ Stift',select:'↖ Auswahl',eraser:'▧ Radierer',clear:'Alles löschen',prev:'← Zurück',next:'Weiter →',done:'Fertig ✓',heading:'✎ Lösungsfeld'},
-  en:{help:'Draw with Pen. Move with Select. Save PDF with Share.',title:'Math · Grade 5',search:'Search questions…',all:'All pages',share:'↗ Share',pen:'✎ Pen',select:'↖ Select',eraser:'▧ Eraser',clear:'Clear all',prev:'← Back',next:'Next →',done:'Done ✓',heading:'✎ Solution board'}
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ const texts={
+  tr:{languageLabel:'Dil',eyebrow:'Derslerim',heading:'Check Liste',
+   subtitle:'Çalışmak istediğin öğrenci ve dersi seç.',
+   cetinType:'Matematik · 5. sınıf',cetinDescription:'41 soru, Almanca–Türkçe çeviri ve çizimle çözüm alanı.',
+   arasType:'Zaman hesaplama · Sayfa 35',arasDescription:'34 alt soru, saat çizimleri ve çözüm alanı.',
+   tuanaType:'Mathe GK · Analysis',tuanaDescription:'Trigonometri, türev ve integral ders sunumu.',
+   cetinAction:'Çalışmayı aç',arasAction:'Çalışmayı aç',tuanaAction:'Sunumu aç',
+   help:'Bir öğrenciye tıkla. Çalışması açılır. Geri dönebilirsin.'},
+  de:{languageLabel:'Sprache',eyebrow:'Meine Kurse',heading:'Check Liste',
+   subtitle:'Wähle einen Schüler und eine Unterrichtseinheit.',
+   cetinType:'Mathematik · 5. Klasse',cetinDescription:'41 Aufgaben, zweisprachig, mit Zeichenfläche.',
+   arasType:'Zeitangaben · Seite 35',arasDescription:'34 Aufgaben mit Uhren und Zeichenfläche.',
+   tuanaType:'Mathe GK · Analysis',tuanaDescription:'Präsentation zu Trigonometrie, Ableitungen und Integralen.',
+   cetinAction:'Übung öffnen',arasAction:'Übung öffnen',tuanaAction:'Präsentation öffnen',
+   help:'Klicke auf einen Namen. Die Übung öffnet sich. Du kannst zurückgehen.'},
+  en:{languageLabel:'Language',eyebrow:'My lessons',heading:'Check Liste',
+   subtitle:'Choose a student and a lesson.',
+   cetinType:'Math · Grade 5',cetinDescription:'41 questions, German–Turkish, with a drawing board.',
+   arasType:'Time calculations · Page 35',arasDescription:'34 questions with clocks and a drawing board.',
+   tuanaType:'Mathe GK · Analysis',tuanaDescription:'Presentation on trigonometry, derivatives and integrals.',
+   cetinAction:'Open exercise',arasAction:'Open exercise',tuanaAction:'Open presentation',
+   help:'Click a name. The lesson opens. You can go back.'}
  };
- function translate(){
-  const l=labels[lang.value]||labels.tr;
-  document.documentElement.lang=lang.value;
-  document.getElementById('setTitle').textContent=l.title;
-  document.getElementById('search').placeholder=l.search;
-  document.getElementById('pageSelect').options[0].textContent=l.all;
-  for(const [id,key] of [['shareSolutions','share'],['pen','pen'],['selectTool','select'],['eraser','eraser'],['clear','clear'],['prev','prev'],['next','next']]){
-   document.getElementById(id).textContent=l[key];
+ const select=$('language'),help=$('help'),helpText=$('helpText');
+ function applyLanguage(){
+  const language=texts[select.value]||texts.tr;
+  document.documentElement.lang=select.value;
+  for(const [id,value] of Object.entries(language)){
+   if(id==='help')continue;
+   $(id).textContent=value;
   }
-  const done=document.querySelector('.doneLabel');
-  if(done&&done.lastChild&&done.lastChild.nodeType===3)done.lastChild.textContent=' '+l.done;
-  const bar=document.querySelector('.boardbar strong');
-  if(bar)bar.textContent=l.heading;
-  text.textContent=l.help;
+  helpText.textContent=language.help;
  }
- try{const saved=localStorage.getItem('check-liste:ui-language');if(labels[saved])lang.value=saved}catch(e){}
- lang.addEventListener('change',()=>{translate();try{localStorage.setItem('check-liste:ui-language',lang.value)}catch(e){}});
- help.addEventListener('click',()=>{text.hidden=!text.hidden;help.setAttribute('aria-expanded',String(!text.hidden))});
- translate();
+ try{const last=localStorage.getItem('check-liste:hub-language');if(texts[last])select.value=last}catch(e){}
+ select.addEventListener('change',()=>{
+  applyLanguage();
+  try{localStorage.setItem('check-liste:hub-language',select.value)}catch(e){}
+ });
+ help.addEventListener('click',()=>{
+  helpText.hidden=!helpText.hidden;
+  help.setAttribute('aria-expanded',String(!helpText.hidden));
+ });
+ applyLanguage();
+ // Preserve old bookmarked question links after the index became a lesson hub.
+ if(/^#\d+[-_]/.test(location.hash)){
+  location.replace('./cetin-1.html'+location.hash);
+ }
 })();
-</script><script src="/projeler/analytics.js?v=20261114-auto"></script>
-</body></html>
+</script>
+<script src="/projeler/analytics.js?v=20261114-auto"></script>
+</body>
+</html>
