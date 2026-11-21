@@ -68,7 +68,7 @@ const area=$('boardArea'),canvas=$('board'),ctx=canvas.getContext('2d');
 let objects=[],selected=[],tool='pen',drag=null,holding=null,preview=null,holdTimer=null,pan={x:0,y:0},activePointers=new Map(),raf=0,inkWidth=2.25;
 function boardKey(){return key('board:'+qs[current].id)}
 function saveBoard(){try{localStorage.setItem(boardKey(),JSON.stringify({objects,pan}))}catch{}}
-window.loadBoard=function(){holding=null;preview=null;drag=null;selected=[];clearTimeout(holdTimer);try{let v=JSON.parse(localStorage.getItem(boardKey())||'{}');objects=Array.isArray(v.objects)?v.objects:[];pan=v.pan||{x:0,y:0}}catch{objects=[];pan={x:0,y:0}}repaint()};
+window.loadBoard=function(){holding=null;preview=null;shapeLock=null;drag=null;selected=[];clearTimeout(holdTimer);try{let v=JSON.parse(localStorage.getItem(boardKey())||'{}');objects=Array.isArray(v.objects)?v.objects:[];pan=v.pan||{x:0,y:0}}catch{objects=[];pan={x:0,y:0}}repaint()};
 function point(e){const r=canvas.getBoundingClientRect();return {x:e.clientX-r.left-pan.x,y:e.clientY-r.top-pan.y}}
 function eventScreen(e){const r=canvas.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}}
 function length(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
@@ -227,9 +227,99 @@ function stretchSelected(handle,prev,now){const b=bboxAll();if(!b)return;let dx=
 }
 function eraser(p){let id=hit(p);if(id>=0){objects.splice(id,1);selected=[];saveBoard();repaint()}}
 function clearPending(){clearTimeout(holdTimer);holdTimer=null}
-function armHold(){clearPending();if(!holding||preview)return;holdTimer=setTimeout(()=>{if(!holding||preview)return;const r=recognizer(holding.pts);if(r){preview=r;holding.anchor={...holding.pts[0]};repaint()}},650)}
-function previewResize(p){if(!preview||!holding)return;let r=bounds(preview),a=holding.anchor||holding.pts[0],end=holding.pts.at(-1);let dx=p.x-end.x,dy=p.y-end.y;preview.pts.forEach(v=>{v.x+=dx;v.y+=dy});holding.pts[holding.pts.length-1]={...p}}
-function finish(e,cancel=false){if(!drag&&!holding)return;if(drag){if(drag.kind==='marquee'){if(cancel||!drag.moved)selected=drag.base.slice();drag=null;repaint();return}drag=null;saveBoard()}else if(holding){clearPending();if(!cancel&&holding.pts.length>1){objects.push(preview||{kind:'ink',pts:holding.pts});saveBoard()}holding=null;preview=null}area.classList.remove('pan');repaint()}
+// During the held-press preview, one geometrical control point follows the cursor.
+// The fixed geometry is captured when the 650 ms recognition fires; only release commits it.
+let shapeLock=null;
+function nearestVertex(v,p){let index=0,best=Infinity;v.forEach((q,i)=>{const d=length(q,p);if(d<best){best=d;index=i}});return index}
+function makeShapeLock(shape,p){
+ const base=structuredClone(shape);
+ if(shape.kind==='line'){
+  return{kind:'line',A:{...shape.pts[0]},cursor:{...p}};
+ }
+ if(shape.kind==='rectangle'){
+  const corners=shape.pts.slice(0,4);
+  const i=nearestVertex(corners,p);
+  // Order A-B-C-D so D is the corner under the mouse; B stays fixed.
+  const oriented=[corners[(i+1)%4],corners[(i+2)%4],corners[(i+3)%4],corners[i]].map(q=>({...q}));
+  const a=oriented[0],b=oriented[1];
+  return{kind:'rectangle',A:a,B:b,orientation:Math.abs(a.x-b.x)<Math.abs(a.y-b.y)?'vertical':'horizontal',cursor:{...p}};
+ }
+ if(shape.kind==='triangle'){
+  const vertices=shape.pts.slice(0,3);
+  const i=nearestVertex(vertices,p);
+  return{kind:'triangle',A:{...vertices[(i+1)%3]},B:{...vertices[(i+2)%3]},cursor:{...p}};
+ }
+ if(shape.kind==='circle'){
+  const b=bounds(shape),center={x:b.x+b.w/2,y:b.y+b.h/2};
+  return{kind:'circle',center,cursor:{...p}};
+ }
+ if(shape.kind==='arc'){
+  const pts=shape.pts;
+  const A={...pts[0]},mid={...pts[Math.floor(pts.length/2)]};
+  const circle=circumcircle(A,mid,pts[pts.length-1]);
+  const sweep=circle?circleSweep(pts,circle).total:Math.PI;
+  return{kind:'arc',A,mid,turn:sweep<0?-1:1,base, cursor:{...p}};
+ }
+ return null;
+}
+function lockedShape(lock,p){
+ const P={...p};
+ if(lock.kind==='line')return{kind:'line',pts:[{...lock.A},P]};
+ if(lock.kind==='triangle')return{kind:'triangle',pts:[{...lock.A},{...lock.B},P,{...lock.A}]};
+ if(lock.kind==='rectangle'){
+  const B={...lock.B},A=lock.orientation==='vertical'?
+   {x:B.x,y:P.y}:{x:P.x,y:B.y};
+  const C=lock.orientation==='vertical'?
+   {x:P.x,y:B.y}:{x:B.x,y:P.y};
+  return{kind:'rectangle',pts:[A,B,C,P,{...A}]};
+ }
+ if(lock.kind==='circle'){
+  const r=Math.max(8,length(lock.center,P));
+  return{kind:'circle',pts:circlePoints({x:lock.center.x-r,y:lock.center.y-r,w:2*r,h:2*r})};
+ }
+ if(lock.kind==='arc'){
+  // A, an original guide point, and the moving endpoint lie on one true circle.
+  // Re-fitting the circle gives an arc ending exactly at P, never a Bezier approximation.
+  const fit=circumcircle(lock.A,lock.mid,P);
+  if(!fit||!Number.isFinite(fit.r)||fit.r<4||fit.r>100000)
+   return lock.base;
+  const start=Math.atan2(lock.A.y-fit.y,lock.A.x-fit.x);
+  const end=Math.atan2(P.y-fit.y,P.x-fit.x);
+  const twoPi=2*Math.PI;
+  let sweep=lock.turn>0?((end-start)%twoPi+twoPi)%twoPi:
+   -(((start-end)%twoPi+twoPi)%twoPi);
+  if(Math.abs(sweep)>Math.PI*1.99)sweep=Math.sign(sweep)*Math.PI*1.99;
+  if(Math.abs(sweep)<.01)return lock.base;
+  const n=Math.max(24,Math.ceil(Math.abs(sweep)*26));
+  const pts=Array.from({length:n+1},(_,i)=>{
+   const angle=start+sweep*i/n;
+   return{x:fit.x+fit.r*Math.cos(angle),y:fit.y+fit.r*Math.sin(angle)};
+  });
+  return{kind:'arc',pts};
+ }
+ return lock.base;
+}
+function armHold(){
+ clearPending();
+ if(!holding||preview)return;
+ holdTimer=setTimeout(()=>{
+  holdTimer=null;
+  if(!holding||preview)return;
+  const recognized=recognizer(holding.pts);
+  if(!recognized)return;
+  const mouse=holding.pts[holding.pts.length-1];
+  shapeLock=makeShapeLock(recognized,mouse);
+  preview=shapeLock?lockedShape(shapeLock,mouse):recognized;
+  repaint();
+ },650);
+}
+function previewResize(p){
+ if(!preview||!holding||!shapeLock)return;
+ shapeLock.cursor={...p};
+ preview=lockedShape(shapeLock,p);
+ holding.pts[holding.pts.length-1]={...p};
+}
+function finish(e,cancel=false){if(!drag&&!holding)return;if(drag){if(drag.kind==='marquee'){if(cancel||!drag.moved)selected=drag.base.slice();drag=null;repaint();return}drag=null;saveBoard()}else if(holding){clearPending();if(!cancel&&preview&&e&&shapeLock)previewResize(point(e));if(!cancel&&holding.pts.length>1){objects.push(preview||{kind:'ink',pts:holding.pts});saveBoard()}holding=null;preview=null;shapeLock=null}area.classList.remove('pan');repaint()}
 area.addEventListener('contextmenu',e=>e.preventDefault());
 area.addEventListener('pointerdown',e=>{
  if(e.button!==0&&e.button!==2)return;e.preventDefault();canvas.setPointerCapture(e.pointerId);
@@ -250,7 +340,7 @@ area.addEventListener('pointerdown',e=>{
   selected=drag.base.slice();repaint();return;
  }
  // Pen mode starts a new stroke even directly on top of an existing one.
- selected=[];holding={pts:[p]};preview=null;drag=null;repaint();
+ selected=[];holding={pts:[p]};preview=null;shapeLock=null;drag=null;repaint();
 });
 area.addEventListener('pointermove',e=>{
  let cur=eventScreen(e);if(activePointers.has(e.pointerId))activePointers.set(e.pointerId,cur);
@@ -293,7 +383,7 @@ function setTool(v){
  area.classList.toggle('select',v==='select');
  repaint();
 }
-$('clear').onclick=()=>{clearPending();objects=[];selected=[];holding=null;preview=null;drag=null;pan={x:0,y:0};saveBoard();repaint()};
+$('clear').onclick=()=>{clearPending();objects=[];selected=[];holding=null;preview=null;shapeLock=null;drag=null;pan={x:0,y:0};saveBoard();repaint()};
 document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))return;if((e.key==='Delete'||e.key==='Backspace')&&selected.length){objects=objects.filter((_,i)=>!selected.includes(i));selected=[];saveBoard();repaint()}else if(e.key==='Escape'){e.preventDefault();setTool(tool==='pen'?'select':'pen')}else if(e.key==='ArrowRight'){open(current+1)}else if(e.key==='ArrowLeft'){open(current-1)}});
 new ResizeObserver(resize).observe(area);
 open(current);
