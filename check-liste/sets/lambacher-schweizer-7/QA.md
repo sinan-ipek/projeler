@@ -1,4 +1,4 @@
-# Lambacher Schweizer 7 – denetim v1.9.0 (22.11.2026)
+# Lambacher Schweizer 7 – denetim v1.10.0 (22.11.2026)
 
 **Durum: yapısal denetim ilerledi; metin düzeyinde eksiksizlik henüz onaylanmadı.**
 
@@ -110,3 +110,41 @@
 5. Yeni 60 görselle önceki 128 görsel birleştirildi: toplam **188** farklı görsel. Arşiv bütünlük testi hata vermedi. Telifli kırpımlar **herkese açık GitHub'a yüklenmedi**.
 
 **Açık kalite notu:** Fotoğraflardaki matematiksel ifadeler ve küçük sayılar tam metin olarak tek tek aktarılmadı; veri kartları özet düzeyindedir. Bu nedenle “bütün matematiksel ifadeler %100 doğrulandı” denmiyor. Görsele ihtiyaç duyulan soruların kırpımları mevcut, ancak bazıları küçük baskı nedeniyle daha yakın çekim isteyebilir.
+
+
+## BEŞİNCİ GRUP — 76–95 (v1.10.0, 22.11.2026)
+
+**Sayfa kontrolü:** Fotoğraf sırası tam olarak **76–77, 78–79, 80–81, 82–83, 84–85, 86–87, 88–89, 90–91, 92–93, 94–95**. Basılı sayfa numaraları gözle kontrol edildi. Eksik veya tekrar eden sayfa yok. s.4–95 arası ardışık.
+
+### Envanter
+
+| Sayfa | İncelenen bölümler |
+|---|---|
+| 76 | Rückblick, Zuordnungen, proportionale/antiproportionale Zuordnungen, Dreisatz |
+| 77 | Test Runde 1: 1–4; Runde 2: 1–5; alt maddeler |
+| 78 | Erkundungen: 1 (GPS-Diagramm), 2 (Telefonkosten a–d), 3 (Sprunggraph a–b) |
+| 79 | Ausgleichsgerade + Erkundung 4 a–f, Messgrafik und Versuch |
+| 80 | III. Prozentrechnung – Zinsrechnung Kapitelauftakt |
+| 81 | Check-in Aufgaben 1–5, Brüche/Prozente/Dreisatz |
+| 82 | Prozentgummi: üç keşif çalışması ve görseller |
+| 83 | Schlussverkauf: Aufgaben 1–3, reklam ve çözüm kartları |
+| 84 | Prozentsätze berechnen: Regel, Basketballbeispiel und Streifendiagramm |
+| 85 | Prozentuale Bevölkerungszunahme; Beispiel 1 a–b und Beispiel 2 |
+| 86 | Aufgaben 1–8 und Teilaufgaben, Obst/Gebäck- und Schuhabbildungen |
+| 87 | Aufgaben 9–15 und Teilaufgaben, Schätz- und Bruchkarten |
+| 88 | Aufgaben 16–23, Grundriss, Geschwindigkeitsgraph |
+| 89 | Prozentwerte berechnen: Regeln und Formeldarstellungen |
+| 90 | Prozentuale Veränderungen, Beispiele 1–2 und Schemata |
+| 91 | Aufgaben 1–8, Rechentabellen und Sonderangebote |
+| 92 | Aufgaben 9–14, Preisdiagramm und Fehlerkästen |
+| 93 | Aufgaben 15–20, Mehrwertsteuer, Parabelwertetabelle |
+| 94 | Grundwerte berechnen: Regeln, Sport-Angebote, Formeln |
+| 95 | Grundwert vor Preisänderung: Beispiele 1 und 2 |
+
+### Technischer Doppelcheck
+
+- 20 basılı sayfa üzerinden **206** yeni konu/soru/örnek/alt-madde kartı oluşturuldu. Daha önce başka bir karta bağlanmayan 6 görsel için destek kartı eklendi. **Bu grubun toplamı 212 kart**, genel toplam **1362**.
+- Soru kimliği tekrarları kontrol edildi. Önceki 1150 kartın kimlikleri değiştirilmedi.
+- Bu grup için **60 ayrı JPG kırpımı** alındı, 60'ı da en az bir veri kartından `privateImageFile` alanıyla referanslandı. Grafiklerde eksen/etiket ve tablolarda değerler mümkün olduğunca kesilmeden bırakıldı. Görsel kalite sınırı kaynak fotoğraf çözünürlüğüdür.
+- Birleştirilmiş özel ZIP'te **248 benzersiz PNG/JPG dosyası** ve açıklama bulunur. Arşivin bütünlük kontrolü yapıldı; dosya adları ile kayıtları karşılaştırılmalıdır.
+- **Önemli kalite sınırı:** Harfli alt maddelerin sayısı ve bazı küçük ifadeler fotoğraf üzerinden elle envanterlendi. Baskının tamamı karakter karakter aktarılmadığı için rakam ve matematik işaretleri kitaptan doğrulanmalıdır. Bu, tam soru transkripsiyonu değildir.
