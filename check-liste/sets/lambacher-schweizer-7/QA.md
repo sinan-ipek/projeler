@@ -63,3 +63,10 @@
 - Görseller: **43 farklı kırpım** JPEG olarak hazırlandı; kırpım adları veri kümesine bağlandı. Kırpımların bir kısmındaki baskı çok küçük; gerekli olduğunda daha yakın fotoğraf istenmelidir.
 - Toplam: s.4–37 **776 kart**, s.38–55 **179 kart** = **955 takip kartı**. Bazı sorularda genel bir üst kart ve alt maddeler birlikte bulunduğundan bu, 955 özgün soru değildir.
 - **Açık sınırlama:** Kitap görselleri yan yana tek fotoğrafta küçük kaldığı için tüm matematiksel ifadeler ve alt maddelerin tam metni karakter karakter doğrulanmadı; bu nedenle “tam transkripsiyon ve %100 eksiksiz” olarak onaylanmıyor. Görseller özel ZIP içindedir, uygulamada içe aktarılmalıdır.
+
+### İkinci teknik görsel kontrolü
+
+- Tüm özel kırpımların birleşik arşivi: `Lambacher_Schweizer_7_tum_gorseller_s4-55.zip` (85 PNG + 43 JPG = 128).
+- ZIP içindeki 128 görsel dosyası ile GitHub `data.js` içerisindeki **128 benzersiz `privateImageFile`** adının sıralı dosya-adı kontrol toplamları **birebir eşleşti**; eksik/yabancı dosya adı yok.
+- Yeni 43 JPEG'in dosya bütünlüğü doğrulandı; 43 görsel için ikinci görsel inceleme yapıldı, 7 kırpım daha sıkı sınırlarla düzenlendi. Küçük grafik yazıları kaynak fotoğraf kalitesine bağlıdır.
+- Kırpımların kitap görselleriyle geometrik tam eşleşmesi teknik olarak doğrulanır, matematiksel etiket ve ifadelerin tümünün kusursuz okunması garanti edilmez.
