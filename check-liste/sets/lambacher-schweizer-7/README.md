@@ -1,39 +1,39 @@
 # Lambacher Schweizer 7 · Mathematik für Gymnasien (NRW)
 
-**Check Liste sürümü: v1.9.0 · 22 Kasım 2026**
+**Check Liste sürümü: v1.10.0 · 22 Kasım 2026**
 
 ## Güncel kapsam
 
 - **Kitap:** Klett, Lambacher Schweizer 7, Nordrhein-Westfalen.
-- **Alınan sayfalar:** İçindekiler s.2–3 ve ders kitabı s.4–75; kullanım açıklaması ve kapak ayrıca sağlandı.
-- **Sayfa boşluğu:** Yok (s.4–75). Önceki grupta eksik olan **s.56–57**, son gönderide tamamlandı.
-- **Kart sayısı:** Önceki 955 + bu gruptaki 195 = **1150 takip kartı**. Bir sorunun alt maddeleri, örnekleri veya önceki genel üst kartları ayrı olabileceği için bu sayı özgün soru sayısı değildir.
-- **Görsel kırpımı:** Eski 128 + yeni 60 = **188 benzersiz dosya**. Fotoğraflar açık GitHub deposunda yayımlanmadı.
-- **Tek özel görsel arşivi:** `Lambacher_Schweizer_7_tum_gorseller_s4-75.zip` (188 görsel ve 1 açıklama dosyası).
-- **Görsel kullanımı:** ZIP'i çıkar, `lesson.html?set=lambacher-7` ders sayfasında **Görselleri içe aktar** düğmesini kullan; tüm PNG ve JPG dosyalarını seç. Tarayıcının yerel IndexedDB alanında saklanır, başka cihazda yeniden içe aktarılmalıdır.
-- **Sonraki fotoğraflar:** s.76–95 (10 karşılıklı sayfa fotoğrafı).
+- **Elde bulunan fotoğraflar:** İçindekiler s.2–3 ve ders sayfaları **s.4–95**, ayrıca kapak ve kullanım açıklamaları.
+- **Sayfa boşluğu:** Yok (s.4–95). Önceki eksik 56–57 sayfaları sonradan tamamlanmıştır.
+- **Toplam kart:** Önceki **1150** + bu grupta **206 konu/soru/örnek/alt madde** + **6 destek görseli** = **1362**. Kart adedi özgün soru sayısı değildir; önceki genel kartlar ve alt maddeler birlikte tutulur.
+- **Görsel kırpımları:** Eski 188 + 76–95 için 60 JPEG = **248 benzersiz görsel**.
+- **Özel görsel arşivi:** `Lambacher_Schweizer_7_tum_gorseller_s4-95.zip`. Dosyalar açık GitHub deposunda yayımlanmaz, kullanıcının tarayıcısına yerel içe aktarma için ayrıdır.
+- **Henüz içe aktarmak gerekmiyor:** Kitap tamamlandığında tüm PNG/JPG'ler tek seferde `Görselleri içe aktar` düğmesiyle seçilecektir.
+- **Sonraki fotoğraf grubu:** s.96–115 (10 çift sayfa fotoğrafı).
 
-## Bu grupta eklenen başlıklar
+## 76–95 sayfalarındaki konular
 
-- s.56–57: Formüllerle eşleştirmeler; Aufgaben 3–14, test etkinlikleri ve sayı doğruları.
-- s.58–62: Proportionale Zuordnungen; giriş ve çözümlü Beispiele, ardından Aufgaben 1–16.
-- s.63–67: Antiproportionale Zuordnungen; balık ve kâğıt örnekleri, çözümlü Beispiele 1–2, Aufgaben 1–16.
-- s.68–71: Zuordnungstypen erkennen und nutzen; üç adımlı problem çözme ve Beispiele 1–2, Aufgaben 1–10.
-- s.72–75: Wiederholen – Vertiefen – Vernetzen; Aufgaben 1–21.
+- **76:** Rückblick — eşleştirme türleri, tablo/grafik ve üçlü oran tekrar özeti
+- **77:** Test — Runde 1 (1–4) ve Runde 2 (1–5), ayrı takip kartları
+- **78–79:** Erkundungen — grafik seçimi, sıçramalı grafikler, en iyi uyum doğrusu, taşırma kabı deneyi
+- **80–81:** III. Prozentrechnung – Zinsrechnung bölüm girişi ve Check-in (1–5)
+- **82–83:** Keşif etkinlikleri; Prozentgummi ve Schlussverkauf ilan/çözüm kartları
+- **84–85:** Prozentsätze berechnen, Theorie, Beispiel 1 (fiyat indirimi) ve Beispiel 2 (Grundwert kavramı)
+- **86–88:** Prozentsätze berechnen — Aufgaben 1–23, alt maddeler ve görsel/tablolar
+- **89–90:** Prozentwerte berechnen, kurallar, formül ve Beispiele 1–2
+- **91–93:** Prozentwerte berechnen — Aufgaben 1–20, harfli alt maddeler ve tekrar/test
+- **94–95:** Grundwerte berechnen, Theorie ve Beispiele 1–2
 
-Örnekler ve harfli soru alt maddeleri ayrı çalışma kartları olarak yerleştirildi. Soru verileri **Almanca–Türkçe anlam özetleridir**; kitaptaki telifli tam sayfa/soru metinlerini içermez. Gerekli grafik, tablo, görsel kırpımları özel ZIP'te tutulur. Küçük matematik sembollerinin karakter karakter denetimi tamamlanmış sayılmaz; kitapla karşılaştırılmalıdır.
+## Sınırlamalar
 
-## Altı ana bölüm
+Soru ve örneklerin yalnızca iki dilli **özgün kısa konu özetleri ve çalışılacak alt madde numaraları** GitHub'dadır; kitap sayfalarının veya telifli tam soruların birebir kopyası değildir. Görsele bağlı çalışmaların kırpımları özel ZIP'tedir. Küçük matematik sembollerinin tamamının karakter karakter doğrulandığı iddia edilmez; kesin veri için basılı kitabı karşılaştır.
 
-1. Rechnen mit rationalen Zahlen — s.4
-2. Zuordnungen — s.44
-3. Prozentrechnung – Zinsrechnung — s.80
-4. Terme und Gleichungen — s.120
-5. Konstruieren und Argumentieren — s.162
-6. Wahrscheinlichkeiten — s.196
+**Veri kaynağı:** `sets/lambacher-schweizer-7/data.js` · **Kayıt anahtarı:** `lambacher-schweizer-7-nrw` · **Açılış:** `lesson.html?set=lambacher-7`.
 
-**Ekler:** s.228'den itibaren.
+## Bölüm başlangıçları
 
-**Veri kaynağı:** `sets/lambacher-schweizer-7/data.js` · **Anahtar:** `lambacher-schweizer-7-nrw` · **Ders adresi:** `lesson.html?set=lambacher-7`.
+I. Rechnen mit rationalen Zahlen — s.4; II. Zuordnungen — s.44; III. Prozentrechnung – Zinsrechnung — s.80; IV. Terme und Gleichungen — s.120; V. Konstruieren und Argumentieren — s.162; VI. Wahrscheinlichkeiten — s.196. Ekler s.228.
 
-Önceki grupların ayrıntılı denetimleri ve bu gruba ait kontrol sonuçları `QA.md` içinde tutulur.
+**Ayrıntılı sayfa ve görsel doğrulama notları:** `QA.md`.
