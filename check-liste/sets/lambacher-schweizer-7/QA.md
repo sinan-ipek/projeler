@@ -1,4 +1,4 @@
-# Lambacher Schweizer 7 – denetim v1.8.0 (22.11.2026)
+# Lambacher Schweizer 7 – denetim v1.9.0 (22.11.2026)
 
 **Durum: yapısal denetim ilerledi; metin düzeyinde eksiksizlik henüz onaylanmadı.**
 
@@ -70,3 +70,43 @@
 - ZIP içindeki 128 görsel dosyası ile GitHub `data.js` içerisindeki **128 benzersiz `privateImageFile`** adının sıralı dosya-adı kontrol toplamları **birebir eşleşti**; eksik/yabancı dosya adı yok.
 - Yeni 43 JPEG'in dosya bütünlüğü doğrulandı; 43 görsel için ikinci görsel inceleme yapıldı, 7 kırpım daha sıkı sınırlarla düzenlendi. Küçük grafik yazıları kaynak fotoğraf kalitesine bağlıdır.
 - Kırpımların kitap görselleriyle geometrik tam eşleşmesi teknik olarak doğrulanır, matematiksel etiket ve ifadelerin tümünün kusursuz okunması garanti edilmez.
+
+
+## DÖRDÜNCÜ GRUP — 56–75, 22.11.2026 (v1.9.0)
+
+**Önceki uyarı çözüldü:** s.56–57 fotoğrafı ilk görüntüde mevcut. Bu gönderide 10 ayrı karşılıklı fotoğrafın basılı numaraları sırasıyla 56–57, 58–59, 60–61, 62–63, 64–65, 66–67, 68–69, 70–71, 72–73, 74–75 olarak kontrol edildi. Eksik/tekrar yok. 4–75 numaralı ders sayfalarında boşluk kalmadı.
+
+### Sayfa bazında örnek/soru sayımı
+
+| Basılı sayfa | Denetlenen soru, Beispiel ve anlatım |
+|---|---|
+| 56 | 3–8; tablo, elektronik hesap tablosu, formula kartları |
+| 57 | 9–14; blok, dikdörtgen, sayı duvarı, kesir sayı doğrusu |
+| 58 | Proportionale Zuordnungen – kurallar ve Fruchtgummi uygulama örneği |
+| 59 | Elma ağırlığı grafiği; Beispiel 1 (tel uzunluğu ve ağırlık) |
+| 60 | Beispiel 2 (sinema), Aufgaben 1–4 |
+| 61 | Aufgaben 5–11; tablo, su kabı ve üç farklı kap |
+| 62 | Aufgaben 12–16; tahta işlemleri, meyve sepeti, daire grafiği |
+| 63 | Antiproportionale Zuordnungen – balık ve şerit örnekleri |
+| 64 | Grafik/kural; Beispiel 1 (hız-süre) |
+| 65 | Beispiel 2 (pompalar), Aufgaben 1–4 |
+| 66 | Aufgaben 5–11; ters orantı eğrileri ve tablolar |
+| 67 | Aufgaben 12–16; gemi, grup bütçesi, dönüşüm tablosu |
+| 68 | Zuordnungstypen erkennen und nutzen; tavşan yeminde aşamalı çözüm |
+| 69 | Beispiele 1–2; tabloyla sınıflandırma ve bisiklet süresi |
+| 70 | Aufgaben 1–5; reklam, dört tablo, hata analizi |
+| 71 | Aufgaben 6–10; deterjan, kestane, buz pateni ve malzeme tablosu |
+| 72 | Aufgaben 1–7; yağ tankı, tablo, nokta grafikler |
+| 73 | Aufgaben 8–12; reklamlar, orman grafiği, su kemeri ve çikolata |
+| 74 | Aufgaben 13–17; bağcık, katamaran, salyangoz, alan |
+| 75 | Aufgaben 18–21; çit, kedi, geometri şekilleri, yay |
+
+### Çift kontrol
+
+1. Fotoğraf sırası ve basılı sayfa numarası bütün 10 fotoğrafta incelendi.
+2. Her sayfada başlık, numaralı Aufgaben, harfli alt maddeler, kavramsal Beispiel ve önemli görsellerin envanteri çıkarıldı; özel olarak etiketli Beispiele ayrı kartlara alındı.
+3. Kaynak fotoğraflardan 60 JPEG kırpım hazırlandı. İlk görsel incelemede sınırları aşırı dar olan kırpımlar yeniden düzenlendi; ikinci temassayfa kontrolü yapıldı.
+4. Veri kümesine **195** yeni kart eklendi: önceki 955 ile **1150**. Kimlik tekrarına ve 56–75 arası eksik sayfaya karşı otomatik test uygulandı.
+5. Yeni 60 görselle önceki 128 görsel birleştirildi: toplam **188** farklı görsel. Arşiv bütünlük testi hata vermedi. Telifli kırpımlar **herkese açık GitHub'a yüklenmedi**.
+
+**Açık kalite notu:** Fotoğraflardaki matematiksel ifadeler ve küçük sayılar tam metin olarak tek tek aktarılmadı; veri kartları özet düzeyindedir. Bu nedenle “bütün matematiksel ifadeler %100 doğrulandı” denmiyor. Görsele ihtiyaç duyulan soruların kırpımları mevcut, ancak bazıları küçük baskı nedeniyle daha yakın çekim isteyebilir.
