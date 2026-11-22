@@ -1,4 +1,4 @@
-# Lambacher Schweizer 7 – denetim v1.13.0 (22.11.2026)
+# Lambacher Schweizer 7 – denetim v1.14.0 (22.11.2026)
 
 **Durum: yapısal denetim ilerledi; metin düzeyinde eksiksizlik henüz onaylanmadı.**
 
@@ -244,3 +244,37 @@
 **Görsel kırpımları:** 20 sayfadan **52** özel JPG oluşturuldu. Önceki 366 dosyayla toplam **418** özel görsel arşivi oluşturuldu. Görsel denetiminde 148, 152 ve 154. sayfalarda üç crop sınırı düzeltildi; hedef grafik, tablo, şema ve örnek alanlarının korunmasına çalışıldı. ZIP bütünlük testi başarılı; telifli görseller açık GitHub'a yüklenmedi.
 
 **Teknik karşılaştırma:** Yeni kart kimlikleri benzersiz, 4–155 sayfaları ardışık. ZIP'in sıralı **418 görüntü dosya adı** ve veri kartlarının **418 `privateImageFile` adı** FNV-1a kontrol toplamı **1739785576** ile birebir uyuştu. Bu teknik denetim, görseldeki her sayının karakter karakter doğrulandığı anlamına gelmez.
+
+
+## DOKUZUNCU GRUP — 156–175 (v1.14.0, 22.11.2026)
+
+**Görsel sayfa kontrolü (10 fotoğraf):** 156–157, 158–159, 160–161, 162–163, 164–165, 166–167, 168–169, 170–171, 172–173, 174–175. Fotoğraflardaki basılı sayfa numaraları gözle karşılaştırıldı; 20 sayfa ardışık, eksik/tekrar yok.
+
+| Sayfa | Basılı içerik ve sayılan alıştırmalar |
+|---|---|
+| 156 | Wiederholen/Vertiefen 13–19; açma/sadeleştirme, çözüm hatası, denklem, kesirli denklem ve sayı bulmacası |
+| 157 | Wiederholen 20–24; denklem hatası, aynı çözümlü denklemler, su akış problemi |
+| 158 | Rückblick: Terme, Gleichungen ve Bruchgleichungen (3 konu kartı) |
+| 159 | Test: Runde 1 Aufgaben 1–4; Runde 2 Aufgaben 1–4; kibrit, prizma ve sayısal test |
+| 160 | Exkursion Zahlenzauberei: Kartentrick, Erbsenzauber, görevler 1–3 |
+| 161 | Zahlen- und Streichholzzauber: görevler 4–6, harfli alt maddeler |
+| 162 | Bölüm V: Konstruieren und Argumentieren açılışı |
+| 163 | Check-in: Winkel zeichnen/messen, senkrecht-parallel, Kreise Aufgaben 1–4 |
+| 164 | Forschung 1–3: Winkel an Geraden, Dreiecke, Flächenzerlegung; bir renkli alan karşılaştırma görevi |
+| 165 | Dreiecke sortieren: 20 numaralı üçgen figüründe sınıflandırma |
+| 166 | Nebenwinkel/Scheitelwinkel/Stufen- und Wechselwinkel; 3 kâğıt katlama araştırması |
+| 167 | Parallelen ve Winkel: Beispiele 1–2, alt maddeler |
+| 168 | Aufgaben 1–6, açı şemaları, çizim, Fachwerkhaus |
+| 169 | Aufgaben 7–13, açı bağıntıları, paralelkenar/trapez |
+| 170 | Aufgaben 14–20, açı hesapları, Fehler, Winkelhalbierende, Test |
+| 171 | 2 Winkelsummen: Innenwinkelsatz und Außenwinkel; Beispiele 1–2 |
+| 172 | Aufgaben 1–8, Winkel in Dreiecken, Puzzle, zwei Zeichnungen |
+| 173 | Aufgaben 9–15, Raute, Drachen, Beweis und Segelboot |
+| 174 | Aufgaben 16–20, Außenwinkelsatz, Polygonwinkelsummen, Streichholzbrücken |
+| 175 | 3 Dreiecke konstruieren: konstruktive Schritte, Beispiel und Eindeutigkeit |
+
+**Yeniler:** 99 üst düzey konu/örnek/soru girdisinden harfli alt maddelerle **210 yeni takip kartı** üretildi. Önceki 2226 kart değiştirilmeden eklendi; toplam **2436**. `data.js` 4–175 arasında 172 ayrı basılı sayfa içeriyor ve tekrar eden kart kimliği bulunmuyor.
+
+**Kırpım denetimi:** Her fotoğraf sayfası ayrı dikleştirilerek incelendi; 63 özel JPG kırpımı oluşturuldu. İlk kontrolde özellikle 168–175'in açı şemalarının kırpım sınırları düzeltildi. Özel ZIP'te 418 eski + 63 yeni = **481 görsel** ve `README_GORSELLER.txt` bulunur. ZIP CRC testi başarılı. Kamuya açık GitHub deposuna görüntüler aktarılmadı.
+
+**Kart–dosya eşleşme testi:** 481 benzersiz `privateImageFile` adı ile ZIP'teki 481 benzersiz resim adı birbiriyle eşleşiyor; sıralı FNV-1a dosya-adı kontrol toplamı **2693434964**. Soru düzeyinde küçük yazı/denklem transkripsiyonu henüz kesin garanti değildir; kartlar basılı ifadeye referans veren kısa çalışma özetleridir.
