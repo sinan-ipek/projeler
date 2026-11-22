@@ -10,9 +10,9 @@
 
 ## Yapılan düzeltme
 - Önceki **165** genel konu/soru kartı korundu. (Eski 164 sayısı sonraki sürümde düzelmişti.)
-- **583** harfli alt madde için ayrı takip kartı oluşturuldu.
+- **583** harfli alt madde ve **13** iç içe numaralanmış madde için ayrı takip kartı oluşturuldu.
 - Açık biçimde **Beispiel** başlığı bulunan **12 çözümlü örnek**, ayrı kartlar hâline getirildi: s.6 (1), s.9 (1), s.13 (2), s.17 (2), s.22 (2), s.27 (2), s.32 (2).
-- **3 destek görsel kartı** eklendi. Toplam **763 takip kartı**. Bu toplam 763 benzersiz özgün soru değildir; önceki genel kartlar da içerilir.
+- **3 destek görsel kartı** eklendi. Toplam **776 takip kartı**. Bu toplam 763 benzersiz özgün soru değildir; önceki genel kartlar da içerilir.
 - Kullanıcının sağladığı fotoğraflardan grafik, sayı doğrusu, kart, tablo ve diyagramlar için **85 özel kırpım** hazırlandı. Tüm dosyalar teknik olarak sağlam. İkinci görsel kalite turunda **6 kesit düzeltildi**; 85 görsel kimliğinin tamamı kayıtlarda referanslanıyor.
 - Kamuya açık GitHub deposunda tam sayfa fotoğrafları, kırpımlar veya telifli tam sorular tutulmuyor.
 
@@ -26,7 +26,7 @@
 
 ## Tamamlanmamış ikinci kontroller
 1. Tüm soruların sayılarını ve matematik sembollerini fotoğrafla karakter karakter karşılaştırma; mevcut iki sayfalı fotoğraflar küçük yazılarda her zaman güvenilir değil.
-2. Harfli şıkların içindeki ayrıca numaralanmış küçük görevleri ayırma (örn. s.19/14a, s.20/21a, s.35/20b).
+2. İç içe numaralanmış maddeler (s.19/14a: 8, s.20/21a: 3, s.35/20b: 2) ayrıca ayrıldı; diğer kartların ince formül/veri doğrulaması bekliyor.
 3. 85 kırpımın tamamı ikinci görsel temassayfa kontrolünden geçirildi, 6 kırpımın sınırları düzeltildi. **Küçük matematik sembollerinin** karakter-karakter teyidi hâlâ bekliyor.
 
 ## Özel görsellerin kullanımı
