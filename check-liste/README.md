@@ -9,7 +9,7 @@
 - **Bağlantı:** `lesson.html?set=lambacher-7`
 - **Veri kaynağı:** `sets/lambacher-schweizer-7/data.js`
 - **İlk fotoğraf grubu:** İçindekiler s.2–3; ders sayfaları s.4–37
-- **763 takip kartı**; bölüm girişleri ve sayfa/soru numaraları, Almanca–Türkçe konu özetleri
+- **776 takip kartı**; bölüm girişleri ve sayfa/soru numaraları, Almanca–Türkçe konu özetleri
 - **Önemli:** Tam telifli metinler ve sayfa fotoğrafları **açık GitHub deposunda paylaşılmaz**; soruyu kitaptan okuyup çözmek gerekir
 - **Altı bölüm:** s.4, 44, 80, 120, 162 ve 196'da başlar. Ekler s.228'den itibaren.
 - **Sonraki fotoğraf grubu:** s.38–47
