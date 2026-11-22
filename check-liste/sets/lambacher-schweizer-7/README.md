@@ -31,4 +31,4 @@ Bu paket, 4–37 sayfalarındaki konu girişleri ve görülebilen soru numaralar
 
 ## Denetim v1.7.0
 
-Sayfalar 4–37 eksiksizdir; 165 önceki genel kart korunarak 583 alt madde, 12 çözümlü Beispiel ve 3 görsel kartı eklendi. 85 ayrı kırpım **özel ZIP arşivinde**, kamuya açık depoda değil. Tarayıcıdaki Görselleri içe aktar düğmesi kullanılır. **Ayrıntılı ikinci metin/görsel kontrolü bekliyor.** Ayrıntılar: [QA.md](QA.md).
+Sayfalar 4–37 eksiksizdir; 165 önceki genel kart korunarak 583 alt madde, 13 iç alt madde, 12 çözümlü Beispiel ve 3 görsel kartı eklendi. 85 ayrı kırpım **özel ZIP arşivinde**, kamuya açık depoda değil. Tarayıcıdaki Görselleri içe aktar düğmesi kullanılır. **Ayrıntılı ikinci metin/görsel kontrolü bekliyor.** Ayrıntılar: [QA.md](QA.md).
