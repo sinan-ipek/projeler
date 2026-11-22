@@ -1,16 +1,18 @@
-/* Lambacher Schweizer 7 · Nordrhein-Westfalen · Check Liste v1.6.1
+/* Lambacher Schweizer 7 · Nordrhein-Westfalen · Check Liste v1.7.0
  * İlk kullanıcı fotoğrafları: içindekiler s.2–3, kitap s.4–37.
  * Bu açık depoda telifli kitap fotoğrafları veya soruların tam metinleri tutulmaz.
  * Her soru için yer, konu özeti ve Almanca-Türkçe çalışma yönergesi bulunur.
  * Tam soru ve şekiller için fiziksel kitaba bakılmalıdır.
- * Sonraki paket: s.38–47.
+ * 4–37 yapısal soru + alt madde + 12 çözümlü örnek envanteri, özel görsel kimlikleri.
+ * Görseller herkese açık depoda değil; kullanıcı tarafından tarayıcıya özel içe aktarılır.
+ * Sonraki paket: s.38–57.
  */
 (function(){
 'use strict';
 window.CHECKLIST_PACK = {
   id: "lambacher-schweizer-7-nrw",
   title: "Lambacher Schweizer 7 · Nordrhein-Westfalen",
-  version: "1.6.1",
+  version: "1.7.0",
   capture: { receivedPages: [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37], indexedRange: [4,37], kind:"navigation-and-tracking", fullText:false },
   chapters: [
   {
@@ -59,7 +61,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 4 · Rechnen mit rationalen Zahlen – Kapitelübersicht und Lernziele\nLies die Buchseite und bearbeite die Einführung oder die Beispiele in deinem eigenen Buch.",
     "turkish": "Sayfa 4 · Rasyonel sayılarla işlemler – bölüm tanıtımı ve öğrenme hedefleri\nKitaptaki konuyu, giriş etkinliğini veya örnekleri incele. Tamamlayınca işaretle.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p04_giris-iklim-tablosu.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-5-1",
@@ -69,7 +74,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 5 · Aufgabe 1\nZahlen ordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 5 · Soru 1\nSayıları sıralama.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p05_s1-sayi-kartlari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-5-2",
@@ -79,7 +87,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 5 · Aufgabe 2\nMit positiven Brüchen und Dezimalzahlen rechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 5 · Soru 2\nPozitif kesirlerle ve ondalık sayılarla işlem yapma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-5-2-a",
+    "page": 5,
+    "exercise": "2",
+    "number": "2a",
+    "parentId": "ls7-5-2",
+    "german": "Seite 5 · Aufgabe 2, Teil a)\nMit positiven Brüchen und Dezimalzahlen rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 5 · Soru 2, a şıkkı\nPozitif kesirlerle ve ondalık sayılarla işlem yapma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-5-2-b",
+    "page": 5,
+    "exercise": "2",
+    "number": "2b",
+    "parentId": "ls7-5-2",
+    "german": "Seite 5 · Aufgabe 2, Teil b)\nMit positiven Brüchen und Dezimalzahlen rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 5 · Soru 2, b şıkkı\nPozitif kesirlerle ve ondalık sayılarla işlem yapma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-5-2-c",
+    "page": 5,
+    "exercise": "2",
+    "number": "2c",
+    "parentId": "ls7-5-2",
+    "german": "Seite 5 · Aufgabe 2, Teil c)\nMit positiven Brüchen und Dezimalzahlen rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 5 · Soru 2, c şıkkı\nPozitif kesirlerle ve ondalık sayılarla işlem yapma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-5-2-d",
+    "page": 5,
+    "exercise": "2",
+    "number": "2d",
+    "parentId": "ls7-5-2",
+    "german": "Seite 5 · Aufgabe 2, Teil d)\nMit positiven Brüchen und Dezimalzahlen rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 5 · Soru 2, d şıkkı\nPozitif kesirlerle ve ondalık sayılarla işlem yapma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-5-3",
@@ -89,7 +143,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 5 · Aufgabe 3\nMit positiven Dezimalzahlen rechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 5 · Soru 3\nPozitif ondalık sayılarla işlem yapma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-5-3-a",
+    "page": 5,
+    "exercise": "3",
+    "number": "3a",
+    "parentId": "ls7-5-3",
+    "german": "Seite 5 · Aufgabe 3, Teil a)\nMit positiven Dezimalzahlen rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 5 · Soru 3, a şıkkı\nPozitif ondalık sayılarla işlem yapma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-5-3-b",
+    "page": 5,
+    "exercise": "3",
+    "number": "3b",
+    "parentId": "ls7-5-3",
+    "german": "Seite 5 · Aufgabe 3, Teil b)\nMit positiven Dezimalzahlen rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 5 · Soru 3, b şıkkı\nPozitif ondalık sayılarla işlem yapma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-5-3-c",
+    "page": 5,
+    "exercise": "3",
+    "number": "3c",
+    "parentId": "ls7-5-3",
+    "german": "Seite 5 · Aufgabe 3, Teil c)\nMit positiven Dezimalzahlen rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 5 · Soru 3, c şıkkı\nPozitif ondalık sayılarla işlem yapma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-5-3-d",
+    "page": 5,
+    "exercise": "3",
+    "number": "3d",
+    "parentId": "ls7-5-3",
+    "german": "Seite 5 · Aufgabe 3, Teil d)\nMit positiven Dezimalzahlen rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 5 · Soru 3, d şıkkı\nPozitif ondalık sayılarla işlem yapma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-5-4",
@@ -99,7 +199,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 5 · Aufgabe 4\nPunkte in ein erweitertes Koordinatensystem einzeichnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 5 · Soru 4\nGenişletilmiş koordinat sisteminde noktaları gösterme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-5-5",
@@ -109,7 +210,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 5 · Aufgabe 5\nGeschickt überschlagen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 5 · Soru 5\nAkıllıca yaklaşık hesap yapma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p05_s5-bayrak-ifadeleri.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-5-6",
@@ -119,7 +223,65 @@ window.CHECKLIST_PACK = {
     "german": "Seite 5 · Aufgabe 6\nGeschickt berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 5 · Soru 6\nPratik hesaplama.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-5-6-a",
+    "page": 5,
+    "exercise": "6",
+    "number": "6a",
+    "parentId": "ls7-5-6",
+    "german": "Seite 5 · Aufgabe 6, Teil a)\nGeschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 5 · Soru 6, a şıkkı\nPratik hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-5-6-b",
+    "page": 5,
+    "exercise": "6",
+    "number": "6b",
+    "parentId": "ls7-5-6",
+    "german": "Seite 5 · Aufgabe 6, Teil b)\nGeschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 5 · Soru 6, b şıkkı\nPratik hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-5-6-c",
+    "page": 5,
+    "exercise": "6",
+    "number": "6c",
+    "parentId": "ls7-5-6",
+    "german": "Seite 5 · Aufgabe 6, Teil c)\nGeschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 5 · Soru 6, c şıkkı\nPratik hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-5-6-d",
+    "page": 5,
+    "exercise": "6",
+    "number": "6d",
+    "parentId": "ls7-5-6",
+    "german": "Seite 5 · Aufgabe 6, Teil d)\nGeschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 5 · Soru 6, d şıkkı\nPratik hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-6-beispiel-1",
+    "page": 6,
+    "exercise": "Beispiel 1",
+    "number": "Beispiel 1",
+    "kind": "beispiel",
+    "german": "Beispiel 1 · Spiel Hin und her: Spielzug mit positiven und negativen Zahlen.\nVerfolge zuerst den gelösten Rechenweg im eigenen Buch und erkläre ihn anschließend mit eigenen Worten.",
+    "turkish": "Çözümlü Örnek 1 · Oyun örneği: pozitif ve negatif sayılarla ilerleme.\nKitaptaki çözümü incele, sonra işlemin neden bu şekilde yapıldığını kendi sözlerinle açıkla.",
+    "privateImageFile": "p06_beispiel-oyun.png",
+    "privateFigureAvailable": true,
+    "auditStatus": "example-heading-verified"
   },
   {
     "id": "ls7-6-konu",
@@ -129,7 +291,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 6 · Hin und her – ein Spiel mit positiven und negativen Zahlen\nLies die Buchseite und bearbeite die Einführung oder die Beispiele in deinem eigenen Buch.",
     "turkish": "Sayfa 6 · İleri geri – pozitif ve negatif sayılarla oyun\nKitaptaki konuyu, giriş etkinliğini veya örnekleri incele. Tamamlayınca işaretle.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p06_oyun-tahtasi.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-7-1",
@@ -139,7 +304,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 7 · Aufgabe 1\nAbstände in Alltagssituationen beschreiben und skizzieren.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 7 · Soru 1\nGünlük durumlardaki uzaklıkları açıklama ve çizimle gösterme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p07_s1-senaryo-kartlari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-7-2",
@@ -149,7 +317,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 7 · Aufgabe 2\nWeitere Fragen zu Abständen formulieren und lösen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 7 · Soru 2\nUzaklıklar hakkında yeni sorular kurma ve çözme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p07_s2-senaryolar.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-7-3",
@@ -159,7 +330,97 @@ window.CHECKLIST_PACK = {
     "german": "Seite 7 · Aufgabe 3\nAbstandsangaben in Termen und Skizzen vergleichen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 7 · Soru 3\nUzaklık ifadelerini işlem ve çizimlerle karşılaştırma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-7-3-a",
+    "page": 7,
+    "exercise": "3",
+    "number": "3a",
+    "parentId": "ls7-7-3",
+    "german": "Seite 7 · Aufgabe 3, Teil a)\nAbstandsangaben in Termen und Skizzen vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 7 · Soru 3, a şıkkı\nUzaklık ifadelerini işlem ve çizimlerle karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-7-3-b",
+    "page": 7,
+    "exercise": "3",
+    "number": "3b",
+    "parentId": "ls7-7-3",
+    "german": "Seite 7 · Aufgabe 3, Teil b)\nAbstandsangaben in Termen und Skizzen vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 7 · Soru 3, b şıkkı\nUzaklık ifadelerini işlem ve çizimlerle karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-7-3-c",
+    "page": 7,
+    "exercise": "3",
+    "number": "3c",
+    "parentId": "ls7-7-3",
+    "german": "Seite 7 · Aufgabe 3, Teil c)\nAbstandsangaben in Termen und Skizzen vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 7 · Soru 3, c şıkkı\nUzaklık ifadelerini işlem ve çizimlerle karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-7-3-d",
+    "page": 7,
+    "exercise": "3",
+    "number": "3d",
+    "parentId": "ls7-7-3",
+    "german": "Seite 7 · Aufgabe 3, Teil d)\nAbstandsangaben in Termen und Skizzen vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 7 · Soru 3, d şıkkı\nUzaklık ifadelerini işlem ve çizimlerle karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-7-3-e",
+    "page": 7,
+    "exercise": "3",
+    "number": "3e",
+    "parentId": "ls7-7-3",
+    "german": "Seite 7 · Aufgabe 3, Teil e)\nAbstandsangaben in Termen und Skizzen vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 7 · Soru 3, e şıkkı\nUzaklık ifadelerini işlem ve çizimlerle karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-7-3-f",
+    "page": 7,
+    "exercise": "3",
+    "number": "3f",
+    "parentId": "ls7-7-3",
+    "german": "Seite 7 · Aufgabe 3, Teil f)\nAbstandsangaben in Termen und Skizzen vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 7 · Soru 3, f şıkkı\nUzaklık ifadelerini işlem ve çizimlerle karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-7-3-g",
+    "page": 7,
+    "exercise": "3",
+    "number": "3g",
+    "parentId": "ls7-7-3",
+    "german": "Seite 7 · Aufgabe 3, Teil g)\nAbstandsangaben in Termen und Skizzen vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 7 · Soru 3, g şıkkı\nUzaklık ifadelerini işlem ve çizimlerle karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-7-3-h",
+    "page": 7,
+    "exercise": "3",
+    "number": "3h",
+    "parentId": "ls7-7-3",
+    "german": "Seite 7 · Aufgabe 3, Teil h)\nAbstandsangaben in Termen und Skizzen vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 7 · Soru 3, h şıkkı\nUzaklık ifadelerini işlem ve çizimlerle karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-7-4",
@@ -169,7 +430,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 7 · Aufgabe 4\nTerme mit einfachen Rechenwegen bestimmen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 7 · Soru 4\nİşlemleri uygun kısa yöntemlerle hesaplama.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-8-konu",
@@ -179,7 +441,22 @@ window.CHECKLIST_PACK = {
     "german": "Seite 8 · Ganze Zahlen – negative Zahlen, Gegenzahlen und die Zahlengerade\nLies die Buchseite und bearbeite die Einführung oder die Beispiele in deinem eigenen Buch.",
     "turkish": "Sayfa 8 · Tam sayılar – negatif sayılar, karşıt sayılar ve sayı doğrusu\nKitaptaki konuyu, giriş etkinliğini veya örnekleri incele. Tamamlayınca işaretle.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p08_giris-futbol-tablo.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-9-beispiel-1",
+    "page": 9,
+    "exercise": "Beispiel 1",
+    "number": "Beispiel 1",
+    "kind": "beispiel",
+    "german": "Beispiel 1 · Ganze Zahlen auf der Zahlengeraden markieren.\nVerfolge zuerst den gelösten Rechenweg im eigenen Buch und erkläre ihn anschließend mit eigenen Worten.",
+    "turkish": "Çözümlü Örnek 1 · Tam sayıları sayı doğrusunda gösterme.\nKitaptaki çözümü incele, sonra işlemin neden bu şekilde yapıldığını kendi sözlerinle açıkla.",
+    "privateImageFile": "p09_beispiel-gezegenler.png",
+    "privateFigureAvailable": true,
+    "auditStatus": "example-heading-verified"
   },
   {
     "id": "ls7-9-1",
@@ -189,7 +466,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 9 · Aufgabe 1\nGanze Zahlen in Alltagssituationen deuten.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 9 · Soru 1\nTam sayıların günlük yaşamdaki anlamını açıklama.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-9-1-a",
+    "page": 9,
+    "exercise": "1",
+    "number": "1a",
+    "parentId": "ls7-9-1",
+    "german": "Seite 9 · Aufgabe 1, Teil a)\nGanze Zahlen in Alltagssituationen deuten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 9 · Soru 1, a şıkkı\nTam sayıların günlük yaşamdaki anlamını açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-9-1-b",
+    "page": 9,
+    "exercise": "1",
+    "number": "1b",
+    "parentId": "ls7-9-1",
+    "german": "Seite 9 · Aufgabe 1, Teil b)\nGanze Zahlen in Alltagssituationen deuten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 9 · Soru 1, b şıkkı\nTam sayıların günlük yaşamdaki anlamını açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-9-1-c",
+    "page": 9,
+    "exercise": "1",
+    "number": "1c",
+    "parentId": "ls7-9-1",
+    "german": "Seite 9 · Aufgabe 1, Teil c)\nGanze Zahlen in Alltagssituationen deuten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 9 · Soru 1, c şıkkı\nTam sayıların günlük yaşamdaki anlamını açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-9-1-d",
+    "page": 9,
+    "exercise": "1",
+    "number": "1d",
+    "parentId": "ls7-9-1",
+    "german": "Seite 9 · Aufgabe 1, Teil d)\nGanze Zahlen in Alltagssituationen deuten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 9 · Soru 1, d şıkkı\nTam sayıların günlük yaşamdaki anlamını açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-9-2",
@@ -199,7 +522,76 @@ window.CHECKLIST_PACK = {
     "german": "Seite 9 · Aufgabe 2\nTemperaturen an Thermometern ablesen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 9 · Soru 2\nTermometrelerden sıcaklık okuma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p09_s2-termometre.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcde"
+  },
+  {
+    "id": "ls7-9-2-a",
+    "page": 9,
+    "exercise": "2",
+    "number": "2a",
+    "parentId": "ls7-9-2",
+    "german": "Seite 9 · Aufgabe 2, Teil a)\nTemperaturen an Thermometern ablesen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 9 · Soru 2, a şıkkı\nTermometrelerden sıcaklık okuma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p09_s2-termometre.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-9-2-b",
+    "page": 9,
+    "exercise": "2",
+    "number": "2b",
+    "parentId": "ls7-9-2",
+    "german": "Seite 9 · Aufgabe 2, Teil b)\nTemperaturen an Thermometern ablesen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 9 · Soru 2, b şıkkı\nTermometrelerden sıcaklık okuma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p09_s2-termometre.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-9-2-c",
+    "page": 9,
+    "exercise": "2",
+    "number": "2c",
+    "parentId": "ls7-9-2",
+    "german": "Seite 9 · Aufgabe 2, Teil c)\nTemperaturen an Thermometern ablesen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 9 · Soru 2, c şıkkı\nTermometrelerden sıcaklık okuma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p09_s2-termometre.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-9-2-d",
+    "page": 9,
+    "exercise": "2",
+    "number": "2d",
+    "parentId": "ls7-9-2",
+    "german": "Seite 9 · Aufgabe 2, Teil d)\nTemperaturen an Thermometern ablesen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 9 · Soru 2, d şıkkı\nTermometrelerden sıcaklık okuma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p09_s2-termometre.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-9-2-e",
+    "page": 9,
+    "exercise": "2",
+    "number": "2e",
+    "parentId": "ls7-9-2",
+    "german": "Seite 9 · Aufgabe 2, Teil e)\nTemperaturen an Thermometern ablesen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 9 · Soru 2, e şıkkı\nTermometrelerden sıcaklık okuma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p09_s2-termometre.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-9-3",
@@ -209,7 +601,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 9 · Aufgabe 3\nLebensmittel nach Temperaturbereichen zuordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 9 · Soru 3\nYiyecekleri sıcaklık aralıklarına göre eşleştirme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p09_s3-sicaklik-kartlari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-9-4",
@@ -219,7 +614,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 9 · Aufgabe 4\nMarkierte Zahlen auf Zahlengeraden notieren.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 9 · Soru 4\nSayı doğrusunda işaretlenmiş sayıları yazma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p09_s4-sayi-dogrulari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-9-4-a",
+    "page": 9,
+    "exercise": "4",
+    "number": "4a",
+    "parentId": "ls7-9-4",
+    "german": "Seite 9 · Aufgabe 4, Teil a)\nMarkierte Zahlen auf Zahlengeraden notieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 9 · Soru 4, a şıkkı\nSayı doğrusunda işaretlenmiş sayıları yazma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p09_s4-sayi-dogrulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-9-4-b",
+    "page": 9,
+    "exercise": "4",
+    "number": "4b",
+    "parentId": "ls7-9-4",
+    "german": "Seite 9 · Aufgabe 4, Teil b)\nMarkierte Zahlen auf Zahlengeraden notieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 9 · Soru 4, b şıkkı\nSayı doğrusunda işaretlenmiş sayıları yazma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p09_s4-sayi-dogrulari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-10-5",
@@ -229,7 +654,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 10 · Aufgabe 5\nGanze Zahlen auf Zahlengeraden eintragen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 10 · Soru 5\nTam sayıları sayı doğrusunda gösterme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-10-5-a",
+    "page": 10,
+    "exercise": "5",
+    "number": "5a",
+    "parentId": "ls7-10-5",
+    "german": "Seite 10 · Aufgabe 5, Teil a)\nGanze Zahlen auf Zahlengeraden eintragen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 5, a şıkkı\nTam sayıları sayı doğrusunda gösterme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-5-b",
+    "page": 10,
+    "exercise": "5",
+    "number": "5b",
+    "parentId": "ls7-10-5",
+    "german": "Seite 10 · Aufgabe 5, Teil b)\nGanze Zahlen auf Zahlengeraden eintragen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 5, b şıkkı\nTam sayıları sayı doğrusunda gösterme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-5-c",
+    "page": 10,
+    "exercise": "5",
+    "number": "5c",
+    "parentId": "ls7-10-5",
+    "german": "Seite 10 · Aufgabe 5, Teil c)\nGanze Zahlen auf Zahlengeraden eintragen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 5, c şıkkı\nTam sayıları sayı doğrusunda gösterme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-10-6",
@@ -239,7 +699,97 @@ window.CHECKLIST_PACK = {
     "german": "Seite 10 · Aufgabe 6\nZahlen und Kontostände vergleichen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 10 · Soru 6\nSayıları ve hesap bakiyelerini karşılaştırma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-10-6-a",
+    "page": 10,
+    "exercise": "6",
+    "number": "6a",
+    "parentId": "ls7-10-6",
+    "german": "Seite 10 · Aufgabe 6, Teil a)\nZahlen und Kontostände vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 6, a şıkkı\nSayıları ve hesap bakiyelerini karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-6-b",
+    "page": 10,
+    "exercise": "6",
+    "number": "6b",
+    "parentId": "ls7-10-6",
+    "german": "Seite 10 · Aufgabe 6, Teil b)\nZahlen und Kontostände vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 6, b şıkkı\nSayıları ve hesap bakiyelerini karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-6-c",
+    "page": 10,
+    "exercise": "6",
+    "number": "6c",
+    "parentId": "ls7-10-6",
+    "german": "Seite 10 · Aufgabe 6, Teil c)\nZahlen und Kontostände vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 6, c şıkkı\nSayıları ve hesap bakiyelerini karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-6-d",
+    "page": 10,
+    "exercise": "6",
+    "number": "6d",
+    "parentId": "ls7-10-6",
+    "german": "Seite 10 · Aufgabe 6, Teil d)\nZahlen und Kontostände vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 6, d şıkkı\nSayıları ve hesap bakiyelerini karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-6-e",
+    "page": 10,
+    "exercise": "6",
+    "number": "6e",
+    "parentId": "ls7-10-6",
+    "german": "Seite 10 · Aufgabe 6, Teil e)\nZahlen und Kontostände vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 6, e şıkkı\nSayıları ve hesap bakiyelerini karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-6-f",
+    "page": 10,
+    "exercise": "6",
+    "number": "6f",
+    "parentId": "ls7-10-6",
+    "german": "Seite 10 · Aufgabe 6, Teil f)\nZahlen und Kontostände vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 6, f şıkkı\nSayıları ve hesap bakiyelerini karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-6-g",
+    "page": 10,
+    "exercise": "6",
+    "number": "6g",
+    "parentId": "ls7-10-6",
+    "german": "Seite 10 · Aufgabe 6, Teil g)\nZahlen und Kontostände vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 6, g şıkkı\nSayıları ve hesap bakiyelerini karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-6-h",
+    "page": 10,
+    "exercise": "6",
+    "number": "6h",
+    "parentId": "ls7-10-6",
+    "german": "Seite 10 · Aufgabe 6, Teil h)\nZahlen und Kontostände vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 6, h şıkkı\nSayıları ve hesap bakiyelerini karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-10-7",
@@ -249,7 +799,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 10 · Aufgabe 7\nMarkierte Zahlen auf Zahlengeraden ablesen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 10 · Soru 7\nSayı doğrusunda işaretli sayıları okuma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p10_s7-sayi-dogrusu.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-10-8",
@@ -259,7 +812,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 10 · Aufgabe 8\nKontostände und Geldbeträge vergleichen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 10 · Soru 8\nHesap bakiyelerini ve para miktarlarını karşılaştırma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-10-8-a",
+    "page": 10,
+    "exercise": "8",
+    "number": "8a",
+    "parentId": "ls7-10-8",
+    "german": "Seite 10 · Aufgabe 8, Teil a)\nKontostände und Geldbeträge vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 8, a şıkkı\nHesap bakiyelerini ve para miktarlarını karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-8-b",
+    "page": 10,
+    "exercise": "8",
+    "number": "8b",
+    "parentId": "ls7-10-8",
+    "german": "Seite 10 · Aufgabe 8, Teil b)\nKontostände und Geldbeträge vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 8, b şıkkı\nHesap bakiyelerini ve para miktarlarını karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-8-c",
+    "page": 10,
+    "exercise": "8",
+    "number": "8c",
+    "parentId": "ls7-10-8",
+    "german": "Seite 10 · Aufgabe 8, Teil c)\nKontostände und Geldbeträge vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 8, c şıkkı\nHesap bakiyelerini ve para miktarlarını karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-8-d",
+    "page": 10,
+    "exercise": "8",
+    "number": "8d",
+    "parentId": "ls7-10-8",
+    "german": "Seite 10 · Aufgabe 8, Teil d)\nKontostände und Geldbeträge vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 8, d şıkkı\nHesap bakiyelerini ve para miktarlarını karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-10-9",
@@ -269,7 +868,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 10 · Aufgabe 9\nVergleichsaussagen aus dem Alltag zuordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 10 · Soru 9\nGünlük karşılaştırma ifadelerini eşleştirme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p10_s9-karsilastirma-kartlari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-10-9-a",
+    "page": 10,
+    "exercise": "9",
+    "number": "9a",
+    "parentId": "ls7-10-9",
+    "german": "Seite 10 · Aufgabe 9, Teil a)\nVergleichsaussagen aus dem Alltag zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 9, a şıkkı\nGünlük karşılaştırma ifadelerini eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p10_s9-karsilastirma-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-10-9-b",
+    "page": 10,
+    "exercise": "9",
+    "number": "9b",
+    "parentId": "ls7-10-9",
+    "german": "Seite 10 · Aufgabe 9, Teil b)\nVergleichsaussagen aus dem Alltag zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 9, b şıkkı\nGünlük karşılaştırma ifadelerini eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p10_s9-karsilastirma-kartlari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-10-10",
@@ -279,7 +908,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 10 · Aufgabe 10\nZahlen anhand markierter Punkte bestimmen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 10 · Soru 10\nİşaretli noktalardan sayıları belirleme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p10_s10-sayi-dogrulari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-10-10-a",
+    "page": 10,
+    "exercise": "10",
+    "number": "10a",
+    "parentId": "ls7-10-10",
+    "german": "Seite 10 · Aufgabe 10, Teil a)\nZahlen anhand markierter Punkte bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 10, a şıkkı\nİşaretli noktalardan sayıları belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p10_s10-sayi-dogrulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-10-10-b",
+    "page": 10,
+    "exercise": "10",
+    "number": "10b",
+    "parentId": "ls7-10-10",
+    "german": "Seite 10 · Aufgabe 10, Teil b)\nZahlen anhand markierter Punkte bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 10, b şıkkı\nİşaretli noktalardan sayıları belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p10_s10-sayi-dogrulari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-10-11",
@@ -289,7 +948,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 10 · Aufgabe 11\nDie Zahl genau in der Mitte finden.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 10 · Soru 11\nTam ortadaki sayıyı bulma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-10-11-a",
+    "page": 10,
+    "exercise": "11",
+    "number": "11a",
+    "parentId": "ls7-10-11",
+    "german": "Seite 10 · Aufgabe 11, Teil a)\nDie Zahl genau in der Mitte finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 11, a şıkkı\nTam ortadaki sayıyı bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-11-b",
+    "page": 10,
+    "exercise": "11",
+    "number": "11b",
+    "parentId": "ls7-10-11",
+    "german": "Seite 10 · Aufgabe 11, Teil b)\nDie Zahl genau in der Mitte finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 11, b şıkkı\nTam ortadaki sayıyı bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-11-c",
+    "page": 10,
+    "exercise": "11",
+    "number": "11c",
+    "parentId": "ls7-10-11",
+    "german": "Seite 10 · Aufgabe 11, Teil c)\nDie Zahl genau in der Mitte finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 11, c şıkkı\nTam ortadaki sayıyı bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-11-d",
+    "page": 10,
+    "exercise": "11",
+    "number": "11d",
+    "parentId": "ls7-10-11",
+    "german": "Seite 10 · Aufgabe 11, Teil d)\nDie Zahl genau in der Mitte finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 11, d şıkkı\nTam ortadaki sayıyı bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-10-12",
@@ -299,7 +1004,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 10 · Aufgabe 12\nZahlen mit gleichem Abstand bestimmen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 10 · Soru 12\nEşit uzaklıktaki sayıları belirleme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-10-12-a",
+    "page": 10,
+    "exercise": "12",
+    "number": "12a",
+    "parentId": "ls7-10-12",
+    "german": "Seite 10 · Aufgabe 12, Teil a)\nZahlen mit gleichem Abstand bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 12, a şıkkı\nEşit uzaklıktaki sayıları belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-12-b",
+    "page": 10,
+    "exercise": "12",
+    "number": "12b",
+    "parentId": "ls7-10-12",
+    "german": "Seite 10 · Aufgabe 12, Teil b)\nZahlen mit gleichem Abstand bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 12, b şıkkı\nEşit uzaklıktaki sayıları belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-12-c",
+    "page": 10,
+    "exercise": "12",
+    "number": "12c",
+    "parentId": "ls7-10-12",
+    "german": "Seite 10 · Aufgabe 12, Teil c)\nZahlen mit gleichem Abstand bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 12, c şıkkı\nEşit uzaklıktaki sayıları belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-12-d",
+    "page": 10,
+    "exercise": "12",
+    "number": "12d",
+    "parentId": "ls7-10-12",
+    "german": "Seite 10 · Aufgabe 12, Teil d)\nZahlen mit gleichem Abstand bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 12, d şıkkı\nEşit uzaklıktaki sayıları belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-10-13",
@@ -309,7 +1060,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 10 · Aufgabe 13\nAbstände auf der Zahlengeraden bestimmen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 10 · Soru 13\nSayı doğrusunda uzaklıkları belirleme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-10-13-a",
+    "page": 10,
+    "exercise": "13",
+    "number": "13a",
+    "parentId": "ls7-10-13",
+    "german": "Seite 10 · Aufgabe 13, Teil a)\nAbstände auf der Zahlengeraden bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 13, a şıkkı\nSayı doğrusunda uzaklıkları belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-13-b",
+    "page": 10,
+    "exercise": "13",
+    "number": "13b",
+    "parentId": "ls7-10-13",
+    "german": "Seite 10 · Aufgabe 13, Teil b)\nAbstände auf der Zahlengeraden bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 13, b şıkkı\nSayı doğrusunda uzaklıkları belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-13-c",
+    "page": 10,
+    "exercise": "13",
+    "number": "13c",
+    "parentId": "ls7-10-13",
+    "german": "Seite 10 · Aufgabe 13, Teil c)\nAbstände auf der Zahlengeraden bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 13, c şıkkı\nSayı doğrusunda uzaklıkları belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-10-13-d",
+    "page": 10,
+    "exercise": "13",
+    "number": "13d",
+    "parentId": "ls7-10-13",
+    "german": "Seite 10 · Aufgabe 13, Teil d)\nAbstände auf der Zahlengeraden bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 10 · Soru 13, d şıkkı\nSayı doğrusunda uzaklıkları belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-11-14",
@@ -319,7 +1116,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 11 · Aufgabe 14\nDie Lage des Toten Meeres bezogen auf den Meeresspiegel beurteilen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 11 · Soru 14\nÖlü Deniz'in deniz seviyesine göre konumunu değerlendirme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p11_s14-harita.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-11-15",
@@ -329,7 +1129,50 @@ window.CHECKLIST_PACK = {
     "german": "Seite 11 · Aufgabe 15\nZeitzonen anhand einer Karte bestimmen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 11 · Soru 15\nHaritadan saat dilimlerini belirleme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p11_s15-saat-dilimleri.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-11-15-a",
+    "page": 11,
+    "exercise": "15",
+    "number": "15a",
+    "parentId": "ls7-11-15",
+    "german": "Seite 11 · Aufgabe 15, Teil a)\nZeitzonen anhand einer Karte bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 11 · Soru 15, a şıkkı\nHaritadan saat dilimlerini belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p11_s15-saat-dilimleri.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-11-15-b",
+    "page": 11,
+    "exercise": "15",
+    "number": "15b",
+    "parentId": "ls7-11-15",
+    "german": "Seite 11 · Aufgabe 15, Teil b)\nZeitzonen anhand einer Karte bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 11 · Soru 15, b şıkkı\nHaritadan saat dilimlerini belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p11_s15-saat-dilimleri.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-11-15-c",
+    "page": 11,
+    "exercise": "15",
+    "number": "15c",
+    "parentId": "ls7-11-15",
+    "german": "Seite 11 · Aufgabe 15, Teil c)\nZeitzonen anhand einer Karte bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 11 · Soru 15, c şıkkı\nHaritadan saat dilimlerini belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p11_s15-saat-dilimleri.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-11-16",
@@ -339,7 +1182,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 11 · Aufgabe 16\nAussagen über ganze Zahlen als wahr oder falsch prüfen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 11 · Soru 16\nTam sayılar hakkındaki ifadeleri doğru-yanlış olarak değerlendirme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-11-16-a",
+    "page": 11,
+    "exercise": "16",
+    "number": "16a",
+    "parentId": "ls7-11-16",
+    "german": "Seite 11 · Aufgabe 16, Teil a)\nAussagen über ganze Zahlen als wahr oder falsch prüfen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 11 · Soru 16, a şıkkı\nTam sayılar hakkındaki ifadeleri doğru-yanlış olarak değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-11-16-b",
+    "page": 11,
+    "exercise": "16",
+    "number": "16b",
+    "parentId": "ls7-11-16",
+    "german": "Seite 11 · Aufgabe 16, Teil b)\nAussagen über ganze Zahlen als wahr oder falsch prüfen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 11 · Soru 16, b şıkkı\nTam sayılar hakkındaki ifadeleri doğru-yanlış olarak değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-11-16-c",
+    "page": 11,
+    "exercise": "16",
+    "number": "16c",
+    "parentId": "ls7-11-16",
+    "german": "Seite 11 · Aufgabe 16, Teil c)\nAussagen über ganze Zahlen als wahr oder falsch prüfen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 11 · Soru 16, c şıkkı\nTam sayılar hakkındaki ifadeleri doğru-yanlış olarak değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-11-17",
@@ -349,7 +1227,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 11 · Aufgabe 17\nDie Mitte zwischen −6 und +14 bestimmen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 11 · Soru 17\n−6 ile +14 arasındaki orta noktayı bulma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-11-18",
@@ -359,7 +1238,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 11 · Aufgabe 18\nTemperaturveränderungen am Thermometer berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 11 · Soru 18\nTermometredeki sıcaklık değişimlerini hesaplama.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-11-19",
@@ -369,7 +1249,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 11 · Aufgabe 19\nEinen Temperaturverlauf als Graph zeichnen und auswerten.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 11 · Soru 19\nSıcaklık değişimini grafikle gösterip yorumlama.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p11_s19-sicaklik-tablosu.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-11-20",
@@ -379,7 +1262,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 11 · Aufgabe 20\nEinheiten von Längen, Gewichten und Zeit umrechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 11 · Soru 20\nUzunluk, kütle ve zaman birimlerini dönüştürme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-11-20-a",
+    "page": 11,
+    "exercise": "20",
+    "number": "20a",
+    "parentId": "ls7-11-20",
+    "german": "Seite 11 · Aufgabe 20, Teil a)\nEinheiten von Längen, Gewichten und Zeit umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 11 · Soru 20, a şıkkı\nUzunluk, kütle ve zaman birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-11-20-b",
+    "page": 11,
+    "exercise": "20",
+    "number": "20b",
+    "parentId": "ls7-11-20",
+    "german": "Seite 11 · Aufgabe 20, Teil b)\nEinheiten von Längen, Gewichten und Zeit umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 11 · Soru 20, b şıkkı\nUzunluk, kütle ve zaman birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-11-20-c",
+    "page": 11,
+    "exercise": "20",
+    "number": "20c",
+    "parentId": "ls7-11-20",
+    "german": "Seite 11 · Aufgabe 20, Teil c)\nEinheiten von Längen, Gewichten und Zeit umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 11 · Soru 20, c şıkkı\nUzunluk, kütle ve zaman birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-11-20-d",
+    "page": 11,
+    "exercise": "20",
+    "number": "20d",
+    "parentId": "ls7-11-20",
+    "german": "Seite 11 · Aufgabe 20, Teil d)\nEinheiten von Längen, Gewichten und Zeit umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 11 · Soru 20, d şıkkı\nUzunluk, kütle ve zaman birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-12-konu",
@@ -389,7 +1318,34 @@ window.CHECKLIST_PACK = {
     "german": "Seite 12 · Rationale Zahlen und ihre Anordnung – Brüche und Dezimalzahlen auf der Zahlengeraden\nLies die Buchseite und bearbeite die Einführung oder die Beispiele in deinem eigenen Buch.",
     "turkish": "Sayfa 12 · Rasyonel sayılar ve sıralanışları – sayı doğrusunda kesirler ve ondalık sayılar\nKitaptaki konuyu, giriş etkinliğini veya örnekleri incele. Tamamlayınca işaretle.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p12_rasyonel-sayi-dogrulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-13-beispiel-2",
+    "page": 13,
+    "exercise": "Beispiel 2",
+    "number": "Beispiel 2",
+    "kind": "beispiel",
+    "german": "Beispiel 2 · Zahlen anordnen und vergleichen.\nVerfolge zuerst den gelösten Rechenweg im eigenen Buch und erkläre ihn anschließend mit eigenen Worten.",
+    "turkish": "Çözümlü Örnek 2 · Sayıları sıralama ve karşılaştırma.\nKitaptaki çözümü incele, sonra işlemin neden bu şekilde yapıldığını kendi sözlerinle açıkla.",
+    "privateImageFile": "p13_beispiel2.png",
+    "privateFigureAvailable": true,
+    "auditStatus": "example-heading-verified"
+  },
+  {
+    "id": "ls7-13-beispiel-1",
+    "page": 13,
+    "exercise": "Beispiel 1",
+    "number": "Beispiel 1",
+    "kind": "beispiel",
+    "german": "Beispiel 1 · Zahlen markieren und Zahlbereichen zuordnen.\nVerfolge zuerst den gelösten Rechenweg im eigenen Buch und erkläre ihn anschließend mit eigenen Worten.",
+    "turkish": "Çözümlü Örnek 1 · Sayıları sayı doğrusuna yerleştirme ve sayı kümelerine ayırma.\nKitaptaki çözümü incele, sonra işlemin neden bu şekilde yapıldığını kendi sözlerinle açıkla.",
+    "privateImageFile": "p13_beispiel1.png",
+    "privateFigureAvailable": true,
+    "auditStatus": "example-heading-verified"
   },
   {
     "id": "ls7-13-1",
@@ -399,7 +1355,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 13 · Aufgabe 1\nZahlenbereiche und passende Alltagssituationen zuordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 13 · Soru 1\nSayı kümelerini günlük yaşam örnekleriyle eşleştirme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p13_s1-kartlar.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-13-1-a",
+    "page": 13,
+    "exercise": "1",
+    "number": "1a",
+    "parentId": "ls7-13-1",
+    "german": "Seite 13 · Aufgabe 1, Teil a)\nZahlenbereiche und passende Alltagssituationen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 13 · Soru 1, a şıkkı\nSayı kümelerini günlük yaşam örnekleriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p13_s1-kartlar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-13-1-b",
+    "page": 13,
+    "exercise": "1",
+    "number": "1b",
+    "parentId": "ls7-13-1",
+    "german": "Seite 13 · Aufgabe 1, Teil b)\nZahlenbereiche und passende Alltagssituationen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 13 · Soru 1, b şıkkı\nSayı kümelerini günlük yaşam örnekleriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p13_s1-kartlar.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-13-2",
@@ -409,7 +1395,50 @@ window.CHECKLIST_PACK = {
     "german": "Seite 13 · Aufgabe 2\nBrüche und Dezimalzahlen auf Zahlengeraden markieren.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 13 · Soru 2\nKesirleri ve ondalık sayıları sayı doğrusunda gösterme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p13_s2-sayi-dogrusu.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-13-2-a",
+    "page": 13,
+    "exercise": "2",
+    "number": "2a",
+    "parentId": "ls7-13-2",
+    "german": "Seite 13 · Aufgabe 2, Teil a)\nBrüche und Dezimalzahlen auf Zahlengeraden markieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 13 · Soru 2, a şıkkı\nKesirleri ve ondalık sayıları sayı doğrusunda gösterme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p13_s2-sayi-dogrusu.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-13-2-b",
+    "page": 13,
+    "exercise": "2",
+    "number": "2b",
+    "parentId": "ls7-13-2",
+    "german": "Seite 13 · Aufgabe 2, Teil b)\nBrüche und Dezimalzahlen auf Zahlengeraden markieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 13 · Soru 2, b şıkkı\nKesirleri ve ondalık sayıları sayı doğrusunda gösterme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p13_s2-sayi-dogrusu.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-13-2-c",
+    "page": 13,
+    "exercise": "2",
+    "number": "2c",
+    "parentId": "ls7-13-2",
+    "german": "Seite 13 · Aufgabe 2, Teil c)\nBrüche und Dezimalzahlen auf Zahlengeraden markieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 13 · Soru 2, c şıkkı\nKesirleri ve ondalık sayıları sayı doğrusunda gösterme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p13_s2-sayi-dogrusu.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-14-3",
@@ -419,7 +1448,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 14 · Aufgabe 3\nAussagen und Zahlenkärtchen einander zuordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 14 · Soru 3\nİfade kartlarını sayı kartlarıyla eşleştirme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p14_s3-kartlar.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-14-4",
@@ -429,7 +1461,31 @@ window.CHECKLIST_PACK = {
     "german": "Seite 14 · Aufgabe 4\nRationale Zahlen auf einer Zahlengeraden markieren.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 14 · Soru 4\nRasyonel sayıları sayı doğrusunda gösterme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-14-4-a",
+    "page": 14,
+    "exercise": "4",
+    "number": "4a",
+    "parentId": "ls7-14-4",
+    "german": "Seite 14 · Aufgabe 4, Teil a)\nRationale Zahlen auf einer Zahlengeraden markieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 4, a şıkkı\nRasyonel sayıları sayı doğrusunda gösterme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-14-4-b",
+    "page": 14,
+    "exercise": "4",
+    "number": "4b",
+    "parentId": "ls7-14-4",
+    "german": "Seite 14 · Aufgabe 4, Teil b)\nRationale Zahlen auf einer Zahlengeraden markieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 4, b şıkkı\nRasyonel sayıları sayı doğrusunda gösterme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-14-5",
@@ -439,7 +1495,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 14 · Aufgabe 5\nMarkierten Punkten passende Zahlen zuordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 14 · Soru 5\nİşaretli noktalara uygun sayıları bulma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p14_s5-sayi-dogrulari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-14-5-a",
+    "page": 14,
+    "exercise": "5",
+    "number": "5a",
+    "parentId": "ls7-14-5",
+    "german": "Seite 14 · Aufgabe 5, Teil a)\nMarkierten Punkten passende Zahlen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 5, a şıkkı\nİşaretli noktalara uygun sayıları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p14_s5-sayi-dogrulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-14-5-b",
+    "page": 14,
+    "exercise": "5",
+    "number": "5b",
+    "parentId": "ls7-14-5",
+    "german": "Seite 14 · Aufgabe 5, Teil b)\nMarkierten Punkten passende Zahlen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 5, b şıkkı\nİşaretli noktalara uygun sayıları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p14_s5-sayi-dogrulari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-14-6",
@@ -449,7 +1535,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 14 · Aufgabe 6\nZahlen als natürlich, ganz oder rational einordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 14 · Soru 6\nSayıları doğal, tam veya rasyonel olarak sınıflandırma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p14_s6-tablo.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-14-6-a",
+    "page": 14,
+    "exercise": "6",
+    "number": "6a",
+    "parentId": "ls7-14-6",
+    "german": "Seite 14 · Aufgabe 6, Teil a)\nZahlen als natürlich, ganz oder rational einordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 6, a şıkkı\nSayıları doğal, tam veya rasyonel olarak sınıflandırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p14_s6-tablo.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-14-6-b",
+    "page": 14,
+    "exercise": "6",
+    "number": "6b",
+    "parentId": "ls7-14-6",
+    "german": "Seite 14 · Aufgabe 6, Teil b)\nZahlen als natürlich, ganz oder rational einordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 6, b şıkkı\nSayıları doğal, tam veya rasyonel olarak sınıflandırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p14_s6-tablo.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-14-7",
@@ -459,7 +1575,31 @@ window.CHECKLIST_PACK = {
     "german": "Seite 14 · Aufgabe 7\nMarkierte Zahlen auf einer Zahlengeraden bestimmen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 14 · Soru 7\nSayı doğrusunda belirtilen sayıları belirleme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-14-7-a",
+    "page": 14,
+    "exercise": "7",
+    "number": "7a",
+    "parentId": "ls7-14-7",
+    "german": "Seite 14 · Aufgabe 7, Teil a)\nMarkierte Zahlen auf einer Zahlengeraden bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 7, a şıkkı\nSayı doğrusunda belirtilen sayıları belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-14-7-b",
+    "page": 14,
+    "exercise": "7",
+    "number": "7b",
+    "parentId": "ls7-14-7",
+    "german": "Seite 14 · Aufgabe 7, Teil b)\nMarkierte Zahlen auf einer Zahlengeraden bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 7, b şıkkı\nSayı doğrusunda belirtilen sayıları belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-14-8",
@@ -469,7 +1609,31 @@ window.CHECKLIST_PACK = {
     "german": "Seite 14 · Aufgabe 8\nRationale Zahlen der Größe nach ordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 14 · Soru 8\nRasyonel sayıları büyüklük sırasına koyma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-14-8-a",
+    "page": 14,
+    "exercise": "8",
+    "number": "8a",
+    "parentId": "ls7-14-8",
+    "german": "Seite 14 · Aufgabe 8, Teil a)\nRationale Zahlen der Größe nach ordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 8, a şıkkı\nRasyonel sayıları büyüklük sırasına koyma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-14-8-b",
+    "page": 14,
+    "exercise": "8",
+    "number": "8b",
+    "parentId": "ls7-14-8",
+    "german": "Seite 14 · Aufgabe 8, Teil b)\nRationale Zahlen der Größe nach ordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 8, b şıkkı\nRasyonel sayıları büyüklük sırasına koyma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-14-9",
@@ -479,7 +1643,31 @@ window.CHECKLIST_PACK = {
     "german": "Seite 14 · Aufgabe 9\nEine geeignete Zahlengerade zeichnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 14 · Soru 9\nUygun ölçekli bir sayı doğrusu çizme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-14-9-a",
+    "page": 14,
+    "exercise": "9",
+    "number": "9a",
+    "parentId": "ls7-14-9",
+    "german": "Seite 14 · Aufgabe 9, Teil a)\nEine geeignete Zahlengerade zeichnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 9, a şıkkı\nUygun ölçekli bir sayı doğrusu çizme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-14-9-b",
+    "page": 14,
+    "exercise": "9",
+    "number": "9b",
+    "parentId": "ls7-14-9",
+    "german": "Seite 14 · Aufgabe 9, Teil b)\nEine geeignete Zahlengerade zeichnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 9, b şıkkı\nUygun ölçekli bir sayı doğrusu çizme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-14-10",
@@ -489,7 +1677,50 @@ window.CHECKLIST_PACK = {
     "german": "Seite 14 · Aufgabe 10\nZahlen vergleichen und Buchstabenkärtchen ordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 14 · Soru 10\nSayıları karşılaştırıp harf kartlarını sıralama.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p14_s10-kartlar.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-14-10-a",
+    "page": 14,
+    "exercise": "10",
+    "number": "10a",
+    "parentId": "ls7-14-10",
+    "german": "Seite 14 · Aufgabe 10, Teil a)\nZahlen vergleichen und Buchstabenkärtchen ordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 10, a şıkkı\nSayıları karşılaştırıp harf kartlarını sıralama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p14_s10-kartlar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-14-10-b",
+    "page": 14,
+    "exercise": "10",
+    "number": "10b",
+    "parentId": "ls7-14-10",
+    "german": "Seite 14 · Aufgabe 10, Teil b)\nZahlen vergleichen und Buchstabenkärtchen ordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 10, b şıkkı\nSayıları karşılaştırıp harf kartlarını sıralama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p14_s10-kartlar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-14-10-c",
+    "page": 14,
+    "exercise": "10",
+    "number": "10c",
+    "parentId": "ls7-14-10",
+    "german": "Seite 14 · Aufgabe 10, Teil c)\nZahlen vergleichen und Buchstabenkärtchen ordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 14 · Soru 10, c şıkkı\nSayıları karşılaştırıp harf kartlarını sıralama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p14_s10-kartlar.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-15-11",
@@ -499,7 +1730,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 15 · Aufgabe 11\nEntfernungen bei einem Wurfspiel vergleichen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 15 · Soru 11\nAtış oyunundaki uzaklıkları karşılaştırma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p15_s11-saha.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-15-11-a",
+    "page": 15,
+    "exercise": "11",
+    "number": "11a",
+    "parentId": "ls7-15-11",
+    "german": "Seite 15 · Aufgabe 11, Teil a)\nEntfernungen bei einem Wurfspiel vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 11, a şıkkı\nAtış oyunundaki uzaklıkları karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p15_s11-saha.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-15-11-b",
+    "page": 15,
+    "exercise": "11",
+    "number": "11b",
+    "parentId": "ls7-15-11",
+    "german": "Seite 15 · Aufgabe 11, Teil b)\nEntfernungen bei einem Wurfspiel vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 11, b şıkkı\nAtış oyunundaki uzaklıkları karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p15_s11-saha.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-15-12",
@@ -509,7 +1770,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 15 · Aufgabe 12\nZahlenrätsel lösen und eigene Rätsel formulieren.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 15 · Soru 12\nSayı bilmecelerini çözüp yenilerini oluşturma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p15_s12-aciklama-kartlari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-15-12-a",
+    "page": 15,
+    "exercise": "12",
+    "number": "12a",
+    "parentId": "ls7-15-12",
+    "german": "Seite 15 · Aufgabe 12, Teil a)\nZahlenrätsel lösen und eigene Rätsel formulieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 12, a şıkkı\nSayı bilmecelerini çözüp yenilerini oluşturma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p15_s12-aciklama-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-15-12-b",
+    "page": 15,
+    "exercise": "12",
+    "number": "12b",
+    "parentId": "ls7-15-12",
+    "german": "Seite 15 · Aufgabe 12, Teil b)\nZahlenrätsel lösen und eigene Rätsel formulieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 12, b şıkkı\nSayı bilmecelerini çözüp yenilerini oluşturma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p15_s12-aciklama-kartlari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-15-13",
@@ -519,7 +1810,50 @@ window.CHECKLIST_PACK = {
     "german": "Seite 15 · Aufgabe 13\nFehler in Vergleichen und Zahlbereichen finden.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 15 · Soru 13\nKarşılaştırma ve sayı kümelerindeki hataları bulma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p15_s13-hata-tablosu.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-15-13-a",
+    "page": 15,
+    "exercise": "13",
+    "number": "13a",
+    "parentId": "ls7-15-13",
+    "german": "Seite 15 · Aufgabe 13, Teil a)\nFehler in Vergleichen und Zahlbereichen finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 13, a şıkkı\nKarşılaştırma ve sayı kümelerindeki hataları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p15_s13-hata-tablosu.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-15-13-b",
+    "page": 15,
+    "exercise": "13",
+    "number": "13b",
+    "parentId": "ls7-15-13",
+    "german": "Seite 15 · Aufgabe 13, Teil b)\nFehler in Vergleichen und Zahlbereichen finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 13, b şıkkı\nKarşılaştırma ve sayı kümelerindeki hataları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p15_s13-hata-tablosu.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-15-13-c",
+    "page": 15,
+    "exercise": "13",
+    "number": "13c",
+    "parentId": "ls7-15-13",
+    "german": "Seite 15 · Aufgabe 13, Teil c)\nFehler in Vergleichen und Zahlbereichen finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 13, c şıkkı\nKarşılaştırma ve sayı kümelerindeki hataları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p15_s13-hata-tablosu.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-15-14",
@@ -529,7 +1863,31 @@ window.CHECKLIST_PACK = {
     "german": "Seite 15 · Aufgabe 14\nRationale Zahlen ordnen und vergleichen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 15 · Soru 14\nRasyonel sayıları sıralama ve karşılaştırma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-15-14-a",
+    "page": 15,
+    "exercise": "14",
+    "number": "14a",
+    "parentId": "ls7-15-14",
+    "german": "Seite 15 · Aufgabe 14, Teil a)\nRationale Zahlen ordnen und vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 14, a şıkkı\nRasyonel sayıları sıralama ve karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-15-14-b",
+    "page": 15,
+    "exercise": "14",
+    "number": "14b",
+    "parentId": "ls7-15-14",
+    "german": "Seite 15 · Aufgabe 14, Teil b)\nRationale Zahlen ordnen und vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 14, b şıkkı\nRasyonel sayıları sıralama ve karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-15-15",
@@ -539,7 +1897,31 @@ window.CHECKLIST_PACK = {
     "german": "Seite 15 · Aufgabe 15\nZahlen durch Veränderung und Abstand bestimmen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 15 · Soru 15\nDeğişim ve uzaklıktan hareketle sayıları bulma.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-15-15-a",
+    "page": 15,
+    "exercise": "15",
+    "number": "15a",
+    "parentId": "ls7-15-15",
+    "german": "Seite 15 · Aufgabe 15, Teil a)\nZahlen durch Veränderung und Abstand bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 15, a şıkkı\nDeğişim ve uzaklıktan hareketle sayıları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-15-15-b",
+    "page": 15,
+    "exercise": "15",
+    "number": "15b",
+    "parentId": "ls7-15-15",
+    "german": "Seite 15 · Aufgabe 15, Teil b)\nZahlen durch Veränderung und Abstand bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 15, b şıkkı\nDeğişim ve uzaklıktan hareketle sayıları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-15-16",
@@ -549,7 +1931,31 @@ window.CHECKLIST_PACK = {
     "german": "Seite 15 · Aufgabe 16\nAussagen über den Betrag untersuchen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 15 · Soru 16\nMutlak değer hakkındaki ifadeleri inceleme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-15-16-a",
+    "page": 15,
+    "exercise": "16",
+    "number": "16a",
+    "parentId": "ls7-15-16",
+    "german": "Seite 15 · Aufgabe 16, Teil a)\nAussagen über den Betrag untersuchen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 16, a şıkkı\nMutlak değer hakkındaki ifadeleri inceleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-15-16-b",
+    "page": 15,
+    "exercise": "16",
+    "number": "16b",
+    "parentId": "ls7-15-16",
+    "german": "Seite 15 · Aufgabe 16, Teil b)\nAussagen über den Betrag untersuchen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 16, b şıkkı\nMutlak değer hakkındaki ifadeleri inceleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-15-17",
@@ -559,7 +1965,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 15 · Aufgabe 17\nPassende Vergleichszeichen einsetzen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 15 · Soru 17\nUygun karşılaştırma işaretlerini yerleştirme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-15-17-a",
+    "page": 15,
+    "exercise": "17",
+    "number": "17a",
+    "parentId": "ls7-15-17",
+    "german": "Seite 15 · Aufgabe 17, Teil a)\nPassende Vergleichszeichen einsetzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 17, a şıkkı\nUygun karşılaştırma işaretlerini yerleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-15-17-b",
+    "page": 15,
+    "exercise": "17",
+    "number": "17b",
+    "parentId": "ls7-15-17",
+    "german": "Seite 15 · Aufgabe 17, Teil b)\nPassende Vergleichszeichen einsetzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 17, b şıkkı\nUygun karşılaştırma işaretlerini yerleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-15-17-c",
+    "page": 15,
+    "exercise": "17",
+    "number": "17c",
+    "parentId": "ls7-15-17",
+    "german": "Seite 15 · Aufgabe 17, Teil c)\nPassende Vergleichszeichen einsetzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 17, c şıkkı\nUygun karşılaştırma işaretlerini yerleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-15-18",
@@ -569,7 +2010,97 @@ window.CHECKLIST_PACK = {
     "german": "Seite 15 · Aufgabe 18\nFlächenmaße umrechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 15 · Soru 18\nAlan birimlerini dönüştürme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-15-18-a",
+    "page": 15,
+    "exercise": "18",
+    "number": "18a",
+    "parentId": "ls7-15-18",
+    "german": "Seite 15 · Aufgabe 18, Teil a)\nFlächenmaße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 18, a şıkkı\nAlan birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-15-18-b",
+    "page": 15,
+    "exercise": "18",
+    "number": "18b",
+    "parentId": "ls7-15-18",
+    "german": "Seite 15 · Aufgabe 18, Teil b)\nFlächenmaße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 18, b şıkkı\nAlan birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-15-18-c",
+    "page": 15,
+    "exercise": "18",
+    "number": "18c",
+    "parentId": "ls7-15-18",
+    "german": "Seite 15 · Aufgabe 18, Teil c)\nFlächenmaße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 18, c şıkkı\nAlan birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-15-18-d",
+    "page": 15,
+    "exercise": "18",
+    "number": "18d",
+    "parentId": "ls7-15-18",
+    "german": "Seite 15 · Aufgabe 18, Teil d)\nFlächenmaße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 18, d şıkkı\nAlan birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-15-18-e",
+    "page": 15,
+    "exercise": "18",
+    "number": "18e",
+    "parentId": "ls7-15-18",
+    "german": "Seite 15 · Aufgabe 18, Teil e)\nFlächenmaße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 18, e şıkkı\nAlan birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-15-18-f",
+    "page": 15,
+    "exercise": "18",
+    "number": "18f",
+    "parentId": "ls7-15-18",
+    "german": "Seite 15 · Aufgabe 18, Teil f)\nFlächenmaße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 18, f şıkkı\nAlan birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-15-18-g",
+    "page": 15,
+    "exercise": "18",
+    "number": "18g",
+    "parentId": "ls7-15-18",
+    "german": "Seite 15 · Aufgabe 18, Teil g)\nFlächenmaße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 18, g şıkkı\nAlan birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-15-18-h",
+    "page": 15,
+    "exercise": "18",
+    "number": "18h",
+    "parentId": "ls7-15-18",
+    "german": "Seite 15 · Aufgabe 18, Teil h)\nFlächenmaße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 15 · Soru 18, h şıkkı\nAlan birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-16-konu",
@@ -579,7 +2110,34 @@ window.CHECKLIST_PACK = {
     "german": "Seite 16 · Positive Zahlen addieren und subtrahieren – Zahlengeraden und Rechenregeln\nLies die Buchseite und bearbeite die Einführung oder die Beispiele in deinem eigenen Buch.",
     "turkish": "Sayfa 16 · Pozitif sayıları toplama ve çıkarma – sayı doğrusu ve işlem kuralları\nKitaptaki konuyu, giriş etkinliğini veya örnekleri incele. Tamamlayınca işaretle.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p16_islem-oklari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-17-beispiel-2",
+    "page": 17,
+    "exercise": "Beispiel 2",
+    "number": "Beispiel 2",
+    "kind": "beispiel",
+    "german": "Beispiel 2 · Summen und Differenzen überschlagen und berechnen.\nVerfolge zuerst den gelösten Rechenweg im eigenen Buch und erkläre ihn anschließend mit eigenen Worten.",
+    "turkish": "Çözümlü Örnek 2 · Toplama ve çıkarma sonucunu tahmin etme ve hesaplama.\nKitaptaki çözümü incele, sonra işlemin neden bu şekilde yapıldığını kendi sözlerinle açıkla.",
+    "privateImageFile": "p17_beispiel2.png",
+    "privateFigureAvailable": true,
+    "auditStatus": "example-heading-verified"
+  },
+  {
+    "id": "ls7-17-beispiel-1",
+    "page": 17,
+    "exercise": "Beispiel 1",
+    "number": "Beispiel 1",
+    "kind": "beispiel",
+    "german": "Beispiel 1 · Summen und Differenzen an der Zahlengeraden berechnen.\nVerfolge zuerst den gelösten Rechenweg im eigenen Buch und erkläre ihn anschließend mit eigenen Worten.",
+    "turkish": "Çözümlü Örnek 1 · Sayı doğrusunda toplama ve çıkarma.\nKitaptaki çözümü incele, sonra işlemin neden bu şekilde yapıldığını kendi sözlerinle açıkla.",
+    "privateImageFile": "p17_beispiel1.png",
+    "privateFigureAvailable": true,
+    "auditStatus": "example-heading-verified"
   },
   {
     "id": "ls7-17-1",
@@ -589,7 +2147,63 @@ window.CHECKLIST_PACK = {
     "german": "Seite 17 · Aufgabe 1\nFehlende Werte auf Zahlenpfeilen ergänzen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 17 · Soru 1\nSayı oklarındaki eksik değerleri tamamlama.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p17_s1-sayi-oklari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-17-1-a",
+    "page": 17,
+    "exercise": "1",
+    "number": "1a",
+    "parentId": "ls7-17-1",
+    "german": "Seite 17 · Aufgabe 1, Teil a)\nFehlende Werte auf Zahlenpfeilen ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 1, a şıkkı\nSayı oklarındaki eksik değerleri tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p17_s1-sayi-oklari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-17-1-b",
+    "page": 17,
+    "exercise": "1",
+    "number": "1b",
+    "parentId": "ls7-17-1",
+    "german": "Seite 17 · Aufgabe 1, Teil b)\nFehlende Werte auf Zahlenpfeilen ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 1, b şıkkı\nSayı oklarındaki eksik değerleri tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p17_s1-sayi-oklari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-17-1-c",
+    "page": 17,
+    "exercise": "1",
+    "number": "1c",
+    "parentId": "ls7-17-1",
+    "german": "Seite 17 · Aufgabe 1, Teil c)\nFehlende Werte auf Zahlenpfeilen ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 1, c şıkkı\nSayı oklarındaki eksik değerleri tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p17_s1-sayi-oklari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-17-1-d",
+    "page": 17,
+    "exercise": "1",
+    "number": "1d",
+    "parentId": "ls7-17-1",
+    "german": "Seite 17 · Aufgabe 1, Teil d)\nFehlende Werte auf Zahlenpfeilen ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 1, d şıkkı\nSayı oklarındaki eksik değerleri tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p17_s1-sayi-oklari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-17-2",
@@ -599,7 +2213,63 @@ window.CHECKLIST_PACK = {
     "german": "Seite 17 · Aufgabe 2\nPfeilbilder passenden Rechnungen zuordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 17 · Soru 2\nOk diyagramlarını uygun işlemlerle eşleştirme.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p17_s2-pfeilbilder.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-17-2-a",
+    "page": 17,
+    "exercise": "2",
+    "number": "2a",
+    "parentId": "ls7-17-2",
+    "german": "Seite 17 · Aufgabe 2, Teil a)\nPfeilbilder passenden Rechnungen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 2, a şıkkı\nOk diyagramlarını uygun işlemlerle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p17_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-17-2-b",
+    "page": 17,
+    "exercise": "2",
+    "number": "2b",
+    "parentId": "ls7-17-2",
+    "german": "Seite 17 · Aufgabe 2, Teil b)\nPfeilbilder passenden Rechnungen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 2, b şıkkı\nOk diyagramlarını uygun işlemlerle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p17_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-17-2-c",
+    "page": 17,
+    "exercise": "2",
+    "number": "2c",
+    "parentId": "ls7-17-2",
+    "german": "Seite 17 · Aufgabe 2, Teil c)\nPfeilbilder passenden Rechnungen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 2, c şıkkı\nOk diyagramlarını uygun işlemlerle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p17_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-17-2-d",
+    "page": 17,
+    "exercise": "2",
+    "number": "2d",
+    "parentId": "ls7-17-2",
+    "german": "Seite 17 · Aufgabe 2, Teil d)\nPfeilbilder passenden Rechnungen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 2, d şıkkı\nOk diyagramlarını uygun işlemlerle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p17_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-17-3",
@@ -609,7 +2279,119 @@ window.CHECKLIST_PACK = {
     "german": "Seite 17 · Aufgabe 3\nErgebnisse überschlagen und berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 17 · Soru 3\nSonuçları yaklaşık tahmin edip hesaplama.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefghij"
+  },
+  {
+    "id": "ls7-17-3-a",
+    "page": 17,
+    "exercise": "3",
+    "number": "3a",
+    "parentId": "ls7-17-3",
+    "german": "Seite 17 · Aufgabe 3, Teil a)\nErgebnisse überschlagen und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 3, a şıkkı\nSonuçları yaklaşık tahmin edip hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-17-3-b",
+    "page": 17,
+    "exercise": "3",
+    "number": "3b",
+    "parentId": "ls7-17-3",
+    "german": "Seite 17 · Aufgabe 3, Teil b)\nErgebnisse überschlagen und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 3, b şıkkı\nSonuçları yaklaşık tahmin edip hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-17-3-c",
+    "page": 17,
+    "exercise": "3",
+    "number": "3c",
+    "parentId": "ls7-17-3",
+    "german": "Seite 17 · Aufgabe 3, Teil c)\nErgebnisse überschlagen und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 3, c şıkkı\nSonuçları yaklaşık tahmin edip hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-17-3-d",
+    "page": 17,
+    "exercise": "3",
+    "number": "3d",
+    "parentId": "ls7-17-3",
+    "german": "Seite 17 · Aufgabe 3, Teil d)\nErgebnisse überschlagen und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 3, d şıkkı\nSonuçları yaklaşık tahmin edip hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-17-3-e",
+    "page": 17,
+    "exercise": "3",
+    "number": "3e",
+    "parentId": "ls7-17-3",
+    "german": "Seite 17 · Aufgabe 3, Teil e)\nErgebnisse überschlagen und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 3, e şıkkı\nSonuçları yaklaşık tahmin edip hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-17-3-f",
+    "page": 17,
+    "exercise": "3",
+    "number": "3f",
+    "parentId": "ls7-17-3",
+    "german": "Seite 17 · Aufgabe 3, Teil f)\nErgebnisse überschlagen und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 3, f şıkkı\nSonuçları yaklaşık tahmin edip hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-17-3-g",
+    "page": 17,
+    "exercise": "3",
+    "number": "3g",
+    "parentId": "ls7-17-3",
+    "german": "Seite 17 · Aufgabe 3, Teil g)\nErgebnisse überschlagen und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 3, g şıkkı\nSonuçları yaklaşık tahmin edip hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-17-3-h",
+    "page": 17,
+    "exercise": "3",
+    "number": "3h",
+    "parentId": "ls7-17-3",
+    "german": "Seite 17 · Aufgabe 3, Teil h)\nErgebnisse überschlagen und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 3, h şıkkı\nSonuçları yaklaşık tahmin edip hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-17-3-i",
+    "page": 17,
+    "exercise": "3",
+    "number": "3i",
+    "parentId": "ls7-17-3",
+    "german": "Seite 17 · Aufgabe 3, Teil i)\nErgebnisse überschlagen und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 3, i şıkkı\nSonuçları yaklaşık tahmin edip hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-17-3-j",
+    "page": 17,
+    "exercise": "3",
+    "number": "3j",
+    "parentId": "ls7-17-3",
+    "german": "Seite 17 · Aufgabe 3, Teil j)\nErgebnisse überschlagen und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 3, j şıkkı\nSonuçları yaklaşık tahmin edip hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-17-4",
@@ -619,7 +2401,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 17 · Aufgabe 4\nRechnungen mit fehlenden Zahlen ergänzen.\nLies die vollständige Aufgabenstellung im eigenen Buch. Bearbeite alle zugehörigen Teilaufgaben.",
     "turkish": "Sayfa 17 · Soru 4\nEksik sayılı işlemleri tamamlama.\nSorunun tam metnini kendi kitabından oku; varsa bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-17-4-a",
+    "page": 17,
+    "exercise": "4",
+    "number": "4a",
+    "parentId": "ls7-17-4",
+    "german": "Seite 17 · Aufgabe 4, Teil a)\nRechnungen mit fehlenden Zahlen ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 4, a şıkkı\nEksik sayılı işlemleri tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-17-4-b",
+    "page": 17,
+    "exercise": "4",
+    "number": "4b",
+    "parentId": "ls7-17-4",
+    "german": "Seite 17 · Aufgabe 4, Teil b)\nRechnungen mit fehlenden Zahlen ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 4, b şıkkı\nEksik sayılı işlemleri tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-17-4-c",
+    "page": 17,
+    "exercise": "4",
+    "number": "4c",
+    "parentId": "ls7-17-4",
+    "german": "Seite 17 · Aufgabe 4, Teil c)\nRechnungen mit fehlenden Zahlen ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 4, c şıkkı\nEksik sayılı işlemleri tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-17-4-d",
+    "page": 17,
+    "exercise": "4",
+    "number": "4d",
+    "parentId": "ls7-17-4",
+    "german": "Seite 17 · Aufgabe 4, Teil d)\nRechnungen mit fehlenden Zahlen ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 17 · Soru 4, d şıkkı\nEksik sayılı işlemleri tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-18-5",
@@ -629,7 +2457,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 18 · Aufgabe 5\nVeränderungen auf Zahlengeraden veranschaulichen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 18 · Soru 5\nSayı doğrusunda değişimleri gösterme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-18-5-a",
+    "page": 18,
+    "exercise": "5",
+    "number": "5a",
+    "parentId": "ls7-18-5",
+    "german": "Seite 18 · Aufgabe 5, Teil a)\nVeränderungen auf Zahlengeraden veranschaulichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 5, a şıkkı\nSayı doğrusunda değişimleri gösterme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-18-5-b",
+    "page": 18,
+    "exercise": "5",
+    "number": "5b",
+    "parentId": "ls7-18-5",
+    "german": "Seite 18 · Aufgabe 5, Teil b)\nVeränderungen auf Zahlengeraden veranschaulichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 5, b şıkkı\nSayı doğrusunda değişimleri gösterme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-18-5-c",
+    "page": 18,
+    "exercise": "5",
+    "number": "5c",
+    "parentId": "ls7-18-5",
+    "german": "Seite 18 · Aufgabe 5, Teil c)\nVeränderungen auf Zahlengeraden veranschaulichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 5, c şıkkı\nSayı doğrusunda değişimleri gösterme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-18-6",
@@ -639,7 +2502,63 @@ window.CHECKLIST_PACK = {
     "german": "Seite 18 · Aufgabe 6\nRechnungen zu Pfeilbildern notieren.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 18 · Soru 6\nOk çizimlerine uygun işlemleri yazma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p18_s6-pfeilbilder.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-18-6-a",
+    "page": 18,
+    "exercise": "6",
+    "number": "6a",
+    "parentId": "ls7-18-6",
+    "german": "Seite 18 · Aufgabe 6, Teil a)\nRechnungen zu Pfeilbildern notieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 6, a şıkkı\nOk çizimlerine uygun işlemleri yazma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s6-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-6-b",
+    "page": 18,
+    "exercise": "6",
+    "number": "6b",
+    "parentId": "ls7-18-6",
+    "german": "Seite 18 · Aufgabe 6, Teil b)\nRechnungen zu Pfeilbildern notieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 6, b şıkkı\nOk çizimlerine uygun işlemleri yazma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s6-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-6-c",
+    "page": 18,
+    "exercise": "6",
+    "number": "6c",
+    "parentId": "ls7-18-6",
+    "german": "Seite 18 · Aufgabe 6, Teil c)\nRechnungen zu Pfeilbildern notieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 6, c şıkkı\nOk çizimlerine uygun işlemleri yazma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s6-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-6-d",
+    "page": 18,
+    "exercise": "6",
+    "number": "6d",
+    "parentId": "ls7-18-6",
+    "german": "Seite 18 · Aufgabe 6, Teil d)\nRechnungen zu Pfeilbildern notieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 6, d şıkkı\nOk çizimlerine uygun işlemleri yazma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s6-pfeilbilder.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-18-7",
@@ -649,7 +2568,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 18 · Aufgabe 7\nTauchrekorde und Entfernungen berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 18 · Soru 7\nDalış rekorları ve uzaklıkları hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-18-8",
@@ -659,7 +2579,167 @@ window.CHECKLIST_PACK = {
     "german": "Seite 18 · Aufgabe 8\nSkizzen den Rechnungen und Ergebnissen zuordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 18 · Soru 8\nŞekilleri işlemler ve sonuçlarla eşleştirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p18_s8-pfeilbilder.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcdefghijkl"
+  },
+  {
+    "id": "ls7-18-8-a",
+    "page": 18,
+    "exercise": "8",
+    "number": "8a",
+    "parentId": "ls7-18-8",
+    "german": "Seite 18 · Aufgabe 8, Teil a)\nSkizzen den Rechnungen und Ergebnissen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 8, a şıkkı\nŞekilleri işlemler ve sonuçlarla eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s8-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-8-b",
+    "page": 18,
+    "exercise": "8",
+    "number": "8b",
+    "parentId": "ls7-18-8",
+    "german": "Seite 18 · Aufgabe 8, Teil b)\nSkizzen den Rechnungen und Ergebnissen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 8, b şıkkı\nŞekilleri işlemler ve sonuçlarla eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s8-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-8-c",
+    "page": 18,
+    "exercise": "8",
+    "number": "8c",
+    "parentId": "ls7-18-8",
+    "german": "Seite 18 · Aufgabe 8, Teil c)\nSkizzen den Rechnungen und Ergebnissen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 8, c şıkkı\nŞekilleri işlemler ve sonuçlarla eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s8-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-8-d",
+    "page": 18,
+    "exercise": "8",
+    "number": "8d",
+    "parentId": "ls7-18-8",
+    "german": "Seite 18 · Aufgabe 8, Teil d)\nSkizzen den Rechnungen und Ergebnissen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 8, d şıkkı\nŞekilleri işlemler ve sonuçlarla eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s8-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-8-e",
+    "page": 18,
+    "exercise": "8",
+    "number": "8e",
+    "parentId": "ls7-18-8",
+    "german": "Seite 18 · Aufgabe 8, Teil e)\nSkizzen den Rechnungen und Ergebnissen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 8, e şıkkı\nŞekilleri işlemler ve sonuçlarla eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s8-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-8-f",
+    "page": 18,
+    "exercise": "8",
+    "number": "8f",
+    "parentId": "ls7-18-8",
+    "german": "Seite 18 · Aufgabe 8, Teil f)\nSkizzen den Rechnungen und Ergebnissen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 8, f şıkkı\nŞekilleri işlemler ve sonuçlarla eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s8-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-8-g",
+    "page": 18,
+    "exercise": "8",
+    "number": "8g",
+    "parentId": "ls7-18-8",
+    "german": "Seite 18 · Aufgabe 8, Teil g)\nSkizzen den Rechnungen und Ergebnissen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 8, g şıkkı\nŞekilleri işlemler ve sonuçlarla eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s8-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-8-h",
+    "page": 18,
+    "exercise": "8",
+    "number": "8h",
+    "parentId": "ls7-18-8",
+    "german": "Seite 18 · Aufgabe 8, Teil h)\nSkizzen den Rechnungen und Ergebnissen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 8, h şıkkı\nŞekilleri işlemler ve sonuçlarla eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s8-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-8-i",
+    "page": 18,
+    "exercise": "8",
+    "number": "8i",
+    "parentId": "ls7-18-8",
+    "german": "Seite 18 · Aufgabe 8, Teil i)\nSkizzen den Rechnungen und Ergebnissen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 8, i şıkkı\nŞekilleri işlemler ve sonuçlarla eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s8-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-8-j",
+    "page": 18,
+    "exercise": "8",
+    "number": "8j",
+    "parentId": "ls7-18-8",
+    "german": "Seite 18 · Aufgabe 8, Teil j)\nSkizzen den Rechnungen und Ergebnissen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 8, j şıkkı\nŞekilleri işlemler ve sonuçlarla eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s8-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-8-k",
+    "page": 18,
+    "exercise": "8",
+    "number": "8k",
+    "parentId": "ls7-18-8",
+    "german": "Seite 18 · Aufgabe 8, Teil k)\nSkizzen den Rechnungen und Ergebnissen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 8, k şıkkı\nŞekilleri işlemler ve sonuçlarla eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s8-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-8-l",
+    "page": 18,
+    "exercise": "8",
+    "number": "8l",
+    "parentId": "ls7-18-8",
+    "german": "Seite 18 · Aufgabe 8, Teil l)\nSkizzen den Rechnungen und Ergebnissen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 8, l şıkkı\nŞekilleri işlemler ve sonuçlarla eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s8-pfeilbilder.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-18-9",
@@ -669,7 +2749,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 18 · Aufgabe 9\nMarlens Behauptung über Rechengesetze überprüfen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 18 · Soru 9\nMarlene'nin işlem kuralları hakkındaki iddiasını inceleme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-18-10",
@@ -679,7 +2760,63 @@ window.CHECKLIST_PACK = {
     "german": "Seite 18 · Aufgabe 10\nErgebnisse durch Überschlagen auf der Zahlengeraden einschätzen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 18 · Soru 10\nSayı doğrusunda yaklaşık sonuç aralıklarını tahmin etme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p18_s10-bolge-dogrusu.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-18-10-a",
+    "page": 18,
+    "exercise": "10",
+    "number": "10a",
+    "parentId": "ls7-18-10",
+    "german": "Seite 18 · Aufgabe 10, Teil a)\nErgebnisse durch Überschlagen auf der Zahlengeraden einschätzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 10, a şıkkı\nSayı doğrusunda yaklaşık sonuç aralıklarını tahmin etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s10-bolge-dogrusu.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-10-b",
+    "page": 18,
+    "exercise": "10",
+    "number": "10b",
+    "parentId": "ls7-18-10",
+    "german": "Seite 18 · Aufgabe 10, Teil b)\nErgebnisse durch Überschlagen auf der Zahlengeraden einschätzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 10, b şıkkı\nSayı doğrusunda yaklaşık sonuç aralıklarını tahmin etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s10-bolge-dogrusu.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-10-c",
+    "page": 18,
+    "exercise": "10",
+    "number": "10c",
+    "parentId": "ls7-18-10",
+    "german": "Seite 18 · Aufgabe 10, Teil c)\nErgebnisse durch Überschlagen auf der Zahlengeraden einschätzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 10, c şıkkı\nSayı doğrusunda yaklaşık sonuç aralıklarını tahmin etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s10-bolge-dogrusu.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-18-10-d",
+    "page": 18,
+    "exercise": "10",
+    "number": "10d",
+    "parentId": "ls7-18-10",
+    "german": "Seite 18 · Aufgabe 10, Teil d)\nErgebnisse durch Überschlagen auf der Zahlengeraden einschätzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 10, d şıkkı\nSayı doğrusunda yaklaşık sonuç aralıklarını tahmin etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p18_s10-bolge-dogrusu.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-18-11",
@@ -689,7 +2826,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 18 · Aufgabe 11\nGesuchte Zahlen mithilfe der Zahlengeraden bestimmen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 18 · Soru 11\nSayı doğrusuyla aranan sayıları bulma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-18-11-a",
+    "page": 18,
+    "exercise": "11",
+    "number": "11a",
+    "parentId": "ls7-18-11",
+    "german": "Seite 18 · Aufgabe 11, Teil a)\nGesuchte Zahlen mithilfe der Zahlengeraden bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 11, a şıkkı\nSayı doğrusuyla aranan sayıları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-18-11-b",
+    "page": 18,
+    "exercise": "11",
+    "number": "11b",
+    "parentId": "ls7-18-11",
+    "german": "Seite 18 · Aufgabe 11, Teil b)\nGesuchte Zahlen mithilfe der Zahlengeraden bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 11, b şıkkı\nSayı doğrusuyla aranan sayıları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-18-11-c",
+    "page": 18,
+    "exercise": "11",
+    "number": "11c",
+    "parentId": "ls7-18-11",
+    "german": "Seite 18 · Aufgabe 11, Teil c)\nGesuchte Zahlen mithilfe der Zahlengeraden bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 18 · Soru 11, c şıkkı\nSayı doğrusuyla aranan sayıları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-19-12",
@@ -699,7 +2871,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 19 · Aufgabe 12\nTerme ordnen und ein Lösungswort finden.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 19 · Soru 12\nİşlemleri sıralayıp şifreli sözcüğü bulma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p19_s12-terim-kartlari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-19-13",
@@ -709,7 +2884,63 @@ window.CHECKLIST_PACK = {
     "german": "Seite 19 · Aufgabe 13\nRechenfehler mit Fachbegriffen erklären.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 19 · Soru 13\nİşlem hatalarını matematik terimleriyle açıklama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p19_s13-hatalar.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-19-13-a",
+    "page": 19,
+    "exercise": "13",
+    "number": "13a",
+    "parentId": "ls7-19-13",
+    "german": "Seite 19 · Aufgabe 13, Teil a)\nRechenfehler mit Fachbegriffen erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 19 · Soru 13, a şıkkı\nİşlem hatalarını matematik terimleriyle açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p19_s13-hatalar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-19-13-b",
+    "page": 19,
+    "exercise": "13",
+    "number": "13b",
+    "parentId": "ls7-19-13",
+    "german": "Seite 19 · Aufgabe 13, Teil b)\nRechenfehler mit Fachbegriffen erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 19 · Soru 13, b şıkkı\nİşlem hatalarını matematik terimleriyle açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p19_s13-hatalar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-19-13-c",
+    "page": 19,
+    "exercise": "13",
+    "number": "13c",
+    "parentId": "ls7-19-13",
+    "german": "Seite 19 · Aufgabe 13, Teil c)\nRechenfehler mit Fachbegriffen erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 19 · Soru 13, c şıkkı\nİşlem hatalarını matematik terimleriyle açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p19_s13-hatalar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-19-13-d",
+    "page": 19,
+    "exercise": "13",
+    "number": "13d",
+    "parentId": "ls7-19-13",
+    "german": "Seite 19 · Aufgabe 13, Teil d)\nRechenfehler mit Fachbegriffen erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 19 · Soru 13, d şıkkı\nİşlem hatalarını matematik terimleriyle açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p19_s13-hatalar.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-19-14",
@@ -719,7 +2950,31 @@ window.CHECKLIST_PACK = {
     "german": "Seite 19 · Aufgabe 14\nGeeignete Aufgaben für den Taschenrechner auswählen und begründen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 19 · Soru 14\nHesap makinesi kullanılacak işlemleri seçip gerekçelendirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-19-14-a",
+    "page": 19,
+    "exercise": "14",
+    "number": "14a",
+    "parentId": "ls7-19-14",
+    "german": "Seite 19 · Aufgabe 14, Teil a)\nGeeignete Aufgaben für den Taschenrechner auswählen und begründen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 19 · Soru 14, a şıkkı\nHesap makinesi kullanılacak işlemleri seçip gerekçelendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-19-14-b",
+    "page": 19,
+    "exercise": "14",
+    "number": "14b",
+    "parentId": "ls7-19-14",
+    "german": "Seite 19 · Aufgabe 14, Teil b)\nGeeignete Aufgaben für den Taschenrechner auswählen und begründen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 19 · Soru 14, b şıkkı\nHesap makinesi kullanılacak işlemleri seçip gerekçelendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-19-15",
@@ -729,7 +2984,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 19 · Aufgabe 15\nJanas Fahrradtraining: Tages- und Gesamtbilanz ergänzen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 19 · Soru 15\nJana'nın bisiklet antrenmanındaki günlük ve toplam mesafeleri tamamlama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p19_s15-bisiklet-tablosu.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-19-15-a",
+    "page": 19,
+    "exercise": "15",
+    "number": "15a",
+    "parentId": "ls7-19-15",
+    "german": "Seite 19 · Aufgabe 15, Teil a)\nJanas Fahrradtraining: Tages- und Gesamtbilanz ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 19 · Soru 15, a şıkkı\nJana'nın bisiklet antrenmanındaki günlük ve toplam mesafeleri tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p19_s15-bisiklet-tablosu.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-19-15-b",
+    "page": 19,
+    "exercise": "15",
+    "number": "15b",
+    "parentId": "ls7-19-15",
+    "german": "Seite 19 · Aufgabe 15, Teil b)\nJanas Fahrradtraining: Tages- und Gesamtbilanz ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 19 · Soru 15, b şıkkı\nJana'nın bisiklet antrenmanındaki günlük ve toplam mesafeleri tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p19_s15-bisiklet-tablosu.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-19-16",
@@ -739,7 +3024,31 @@ window.CHECKLIST_PACK = {
     "german": "Seite 19 · Aufgabe 16\nAussagen als immer, nie oder manchmal richtig beurteilen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 19 · Soru 16\nİfadeleri her zaman, hiçbir zaman veya bazen doğru diye değerlendirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-19-16-a",
+    "page": 19,
+    "exercise": "16",
+    "number": "16a",
+    "parentId": "ls7-19-16",
+    "german": "Seite 19 · Aufgabe 16, Teil a)\nAussagen als immer, nie oder manchmal richtig beurteilen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 19 · Soru 16, a şıkkı\nİfadeleri her zaman, hiçbir zaman veya bazen doğru diye değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-19-16-b",
+    "page": 19,
+    "exercise": "16",
+    "number": "16b",
+    "parentId": "ls7-19-16",
+    "german": "Seite 19 · Aufgabe 16, Teil b)\nAussagen als immer, nie oder manchmal richtig beurteilen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 19 · Soru 16, b şıkkı\nİfadeleri her zaman, hiçbir zaman veya bazen doğru diye değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-20-17",
@@ -749,7 +3058,63 @@ window.CHECKLIST_PACK = {
     "german": "Seite 20 · Aufgabe 17\nFehlende Zahlen in Zahlengeraden-Skizzen bestimmen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 20 · Soru 17\nSayı doğrusu çizimlerindeki eksik sayıları bulma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p20_s17-oklar.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-20-17-a",
+    "page": 20,
+    "exercise": "17",
+    "number": "17a",
+    "parentId": "ls7-20-17",
+    "german": "Seite 20 · Aufgabe 17, Teil a)\nFehlende Zahlen in Zahlengeraden-Skizzen bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 17, a şıkkı\nSayı doğrusu çizimlerindeki eksik sayıları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p20_s17-oklar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-20-17-b",
+    "page": 20,
+    "exercise": "17",
+    "number": "17b",
+    "parentId": "ls7-20-17",
+    "german": "Seite 20 · Aufgabe 17, Teil b)\nFehlende Zahlen in Zahlengeraden-Skizzen bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 17, b şıkkı\nSayı doğrusu çizimlerindeki eksik sayıları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p20_s17-oklar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-20-17-c",
+    "page": 20,
+    "exercise": "17",
+    "number": "17c",
+    "parentId": "ls7-20-17",
+    "german": "Seite 20 · Aufgabe 17, Teil c)\nFehlende Zahlen in Zahlengeraden-Skizzen bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 17, c şıkkı\nSayı doğrusu çizimlerindeki eksik sayıları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p20_s17-oklar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-20-17-d",
+    "page": 20,
+    "exercise": "17",
+    "number": "17d",
+    "parentId": "ls7-20-17",
+    "german": "Seite 20 · Aufgabe 17, Teil d)\nFehlende Zahlen in Zahlengeraden-Skizzen bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 17, d şıkkı\nSayı doğrusu çizimlerindeki eksik sayıları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p20_s17-oklar.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-20-18",
@@ -759,7 +3124,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 20 · Aufgabe 18\nTerme der Größe nach ordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 20 · Soru 18\nİşlemleri sonuçlarına göre sıralama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-20-19",
@@ -769,7 +3135,63 @@ window.CHECKLIST_PACK = {
     "german": "Seite 20 · Aufgabe 19\nWasserstände von Rhein und Mosel aus einem Diagramm auswerten.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 20 · Soru 19\nRen ve Mosel nehirlerinin su seviyesi grafiğini yorumlama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p20_s19-su-grafigi.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-20-19-a",
+    "page": 20,
+    "exercise": "19",
+    "number": "19a",
+    "parentId": "ls7-20-19",
+    "german": "Seite 20 · Aufgabe 19, Teil a)\nWasserstände von Rhein und Mosel aus einem Diagramm auswerten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 19, a şıkkı\nRen ve Mosel nehirlerinin su seviyesi grafiğini yorumlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p20_s19-su-grafigi.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-20-19-b",
+    "page": 20,
+    "exercise": "19",
+    "number": "19b",
+    "parentId": "ls7-20-19",
+    "german": "Seite 20 · Aufgabe 19, Teil b)\nWasserstände von Rhein und Mosel aus einem Diagramm auswerten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 19, b şıkkı\nRen ve Mosel nehirlerinin su seviyesi grafiğini yorumlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p20_s19-su-grafigi.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-20-19-c",
+    "page": 20,
+    "exercise": "19",
+    "number": "19c",
+    "parentId": "ls7-20-19",
+    "german": "Seite 20 · Aufgabe 19, Teil c)\nWasserstände von Rhein und Mosel aus einem Diagramm auswerten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 19, c şıkkı\nRen ve Mosel nehirlerinin su seviyesi grafiğini yorumlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p20_s19-su-grafigi.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-20-19-d",
+    "page": 20,
+    "exercise": "19",
+    "number": "19d",
+    "parentId": "ls7-20-19",
+    "german": "Seite 20 · Aufgabe 19, Teil d)\nWasserstände von Rhein und Mosel aus einem Diagramm auswerten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 19, d şıkkı\nRen ve Mosel nehirlerinin su seviyesi grafiğini yorumlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p20_s19-su-grafigi.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-20-20",
@@ -779,7 +3201,185 @@ window.CHECKLIST_PACK = {
     "german": "Seite 20 · Aufgabe 20\nFehlende Zahlen mit Umkehraufgaben finden.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 20 · Soru 20\nEksik sayıları ters işlemlerle bulma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefghijklmnop"
+  },
+  {
+    "id": "ls7-20-20-a",
+    "page": 20,
+    "exercise": "20",
+    "number": "20a",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil a)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, a şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-b",
+    "page": 20,
+    "exercise": "20",
+    "number": "20b",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil b)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, b şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-c",
+    "page": 20,
+    "exercise": "20",
+    "number": "20c",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil c)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, c şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-d",
+    "page": 20,
+    "exercise": "20",
+    "number": "20d",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil d)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, d şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-e",
+    "page": 20,
+    "exercise": "20",
+    "number": "20e",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil e)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, e şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-f",
+    "page": 20,
+    "exercise": "20",
+    "number": "20f",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil f)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, f şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-g",
+    "page": 20,
+    "exercise": "20",
+    "number": "20g",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil g)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, g şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-h",
+    "page": 20,
+    "exercise": "20",
+    "number": "20h",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil h)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, h şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-i",
+    "page": 20,
+    "exercise": "20",
+    "number": "20i",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil i)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, i şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-j",
+    "page": 20,
+    "exercise": "20",
+    "number": "20j",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil j)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, j şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-k",
+    "page": 20,
+    "exercise": "20",
+    "number": "20k",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil k)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, k şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-l",
+    "page": 20,
+    "exercise": "20",
+    "number": "20l",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil l)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, l şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-m",
+    "page": 20,
+    "exercise": "20",
+    "number": "20m",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil m)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, m şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-n",
+    "page": 20,
+    "exercise": "20",
+    "number": "20n",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil n)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, n şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-o",
+    "page": 20,
+    "exercise": "20",
+    "number": "20o",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil o)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, o şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-20-p",
+    "page": 20,
+    "exercise": "20",
+    "number": "20p",
+    "parentId": "ls7-20-20",
+    "german": "Seite 20 · Aufgabe 20, Teil p)\nFehlende Zahlen mit Umkehraufgaben finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 20, p şıkkı\nEksik sayıları ters işlemlerle bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-20-21",
@@ -789,7 +3389,31 @@ window.CHECKLIST_PACK = {
     "german": "Seite 20 · Aufgabe 21\nMögliche Zahlen bestimmen und auf Zahlengeraden darstellen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 20 · Soru 21\nOlası sayıları bulup sayı doğrusunda gösterme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-20-21-a",
+    "page": 20,
+    "exercise": "21",
+    "number": "21a",
+    "parentId": "ls7-20-21",
+    "german": "Seite 20 · Aufgabe 21, Teil a)\nMögliche Zahlen bestimmen und auf Zahlengeraden darstellen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 21, a şıkkı\nOlası sayıları bulup sayı doğrusunda gösterme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-21-b",
+    "page": 20,
+    "exercise": "21",
+    "number": "21b",
+    "parentId": "ls7-20-21",
+    "german": "Seite 20 · Aufgabe 21, Teil b)\nMögliche Zahlen bestimmen und auf Zahlengeraden darstellen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 21, b şıkkı\nOlası sayıları bulup sayı doğrusunda gösterme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-20-22",
@@ -799,7 +3423,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 20 · Aufgabe 22\nLynns Aussage über das Rechnen prüfen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 20 · Soru 22\nLynn'in hesaplama hakkındaki iddiasını değerlendirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-20-23",
@@ -809,7 +3434,97 @@ window.CHECKLIST_PACK = {
     "german": "Seite 20 · Aufgabe 23\nRaummaße und Volumeneinheiten umrechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 20 · Soru 23\nHacim ölçü birimlerini dönüştürme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-20-23-a",
+    "page": 20,
+    "exercise": "23",
+    "number": "23a",
+    "parentId": "ls7-20-23",
+    "german": "Seite 20 · Aufgabe 23, Teil a)\nRaummaße und Volumeneinheiten umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 23, a şıkkı\nHacim ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-23-b",
+    "page": 20,
+    "exercise": "23",
+    "number": "23b",
+    "parentId": "ls7-20-23",
+    "german": "Seite 20 · Aufgabe 23, Teil b)\nRaummaße und Volumeneinheiten umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 23, b şıkkı\nHacim ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-23-c",
+    "page": 20,
+    "exercise": "23",
+    "number": "23c",
+    "parentId": "ls7-20-23",
+    "german": "Seite 20 · Aufgabe 23, Teil c)\nRaummaße und Volumeneinheiten umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 23, c şıkkı\nHacim ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-23-d",
+    "page": 20,
+    "exercise": "23",
+    "number": "23d",
+    "parentId": "ls7-20-23",
+    "german": "Seite 20 · Aufgabe 23, Teil d)\nRaummaße und Volumeneinheiten umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 23, d şıkkı\nHacim ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-23-e",
+    "page": 20,
+    "exercise": "23",
+    "number": "23e",
+    "parentId": "ls7-20-23",
+    "german": "Seite 20 · Aufgabe 23, Teil e)\nRaummaße und Volumeneinheiten umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 23, e şıkkı\nHacim ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-23-f",
+    "page": 20,
+    "exercise": "23",
+    "number": "23f",
+    "parentId": "ls7-20-23",
+    "german": "Seite 20 · Aufgabe 23, Teil f)\nRaummaße und Volumeneinheiten umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 23, f şıkkı\nHacim ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-23-g",
+    "page": 20,
+    "exercise": "23",
+    "number": "23g",
+    "parentId": "ls7-20-23",
+    "german": "Seite 20 · Aufgabe 23, Teil g)\nRaummaße und Volumeneinheiten umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 23, g şıkkı\nHacim ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-20-23-h",
+    "page": 20,
+    "exercise": "23",
+    "number": "23h",
+    "parentId": "ls7-20-23",
+    "german": "Seite 20 · Aufgabe 23, Teil h)\nRaummaße und Volumeneinheiten umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 20 · Soru 23, h şıkkı\nHacim ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-21-konu",
@@ -819,7 +3534,34 @@ window.CHECKLIST_PACK = {
     "german": "Seite 21 · Negative Zahlen addieren und subtrahieren – Regeln anhand eines Punktespiels\nLies die Buchseite mit den Erklärungen und Beispielen.",
     "turkish": "Sayfa 21 · Negatif sayılarla toplama ve çıkarma – puan oyunu üzerinden kurallar\nKitabındaki konu anlatımını ve örnekleri incele.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p21_cikarma-tablosu.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-22-beispiel-2",
+    "page": 22,
+    "exercise": "Beispiel 2",
+    "number": "Beispiel 2",
+    "kind": "beispiel",
+    "german": "Beispiel 2 · Summen und Differenzen überschlagen und berechnen.\nVerfolge zuerst den gelösten Rechenweg im eigenen Buch und erkläre ihn anschließend mit eigenen Worten.",
+    "turkish": "Çözümlü Örnek 2 · Toplam ve farkları yaklaşık ve tam hesaplama.\nKitaptaki çözümü incele, sonra işlemin neden bu şekilde yapıldığını kendi sözlerinle açıkla.",
+    "privateImageFile": "p22_beispiel2.png",
+    "privateFigureAvailable": true,
+    "auditStatus": "example-heading-verified"
+  },
+  {
+    "id": "ls7-22-beispiel-1",
+    "page": 22,
+    "exercise": "Beispiel 1",
+    "number": "Beispiel 1",
+    "kind": "beispiel",
+    "german": "Beispiel 1 · Negative Zahlen addieren und subtrahieren.\nVerfolge zuerst den gelösten Rechenweg im eigenen Buch und erkläre ihn anschließend mit eigenen Worten.",
+    "turkish": "Çözümlü Örnek 1 · Negatif sayıları toplama ve çıkarma.\nKitaptaki çözümü incele, sonra işlemin neden bu şekilde yapıldığını kendi sözlerinle açıkla.",
+    "privateImageFile": "p22_beispiel1.png",
+    "privateFigureAvailable": true,
+    "auditStatus": "example-heading-verified"
   },
   {
     "id": "ls7-22-1",
@@ -829,7 +3571,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 22 · Aufgabe 1\nSpielkarten mit positiven und negativen Punkten zuordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 22 · Soru 1\nPozitif ve negatif puanlı oyun kartlarını eşleştirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p22_s1-kartlar.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-23-2",
@@ -839,7 +3584,167 @@ window.CHECKLIST_PACK = {
     "german": "Seite 23 · Aufgabe 2\nPfeilbilder zu Rechenausdrücken und Vorzeichen zuordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 23 · Soru 2\nOk çizimlerini işlemler ve sonuç işaretleriyle eşleştirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p23_s2-pfeilbilder.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcdefghijkl"
+  },
+  {
+    "id": "ls7-23-2-a",
+    "page": 23,
+    "exercise": "2",
+    "number": "2a",
+    "parentId": "ls7-23-2",
+    "german": "Seite 23 · Aufgabe 2, Teil a)\nPfeilbilder zu Rechenausdrücken und Vorzeichen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 2, a şıkkı\nOk çizimlerini işlemler ve sonuç işaretleriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-2-b",
+    "page": 23,
+    "exercise": "2",
+    "number": "2b",
+    "parentId": "ls7-23-2",
+    "german": "Seite 23 · Aufgabe 2, Teil b)\nPfeilbilder zu Rechenausdrücken und Vorzeichen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 2, b şıkkı\nOk çizimlerini işlemler ve sonuç işaretleriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-2-c",
+    "page": 23,
+    "exercise": "2",
+    "number": "2c",
+    "parentId": "ls7-23-2",
+    "german": "Seite 23 · Aufgabe 2, Teil c)\nPfeilbilder zu Rechenausdrücken und Vorzeichen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 2, c şıkkı\nOk çizimlerini işlemler ve sonuç işaretleriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-2-d",
+    "page": 23,
+    "exercise": "2",
+    "number": "2d",
+    "parentId": "ls7-23-2",
+    "german": "Seite 23 · Aufgabe 2, Teil d)\nPfeilbilder zu Rechenausdrücken und Vorzeichen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 2, d şıkkı\nOk çizimlerini işlemler ve sonuç işaretleriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-2-e",
+    "page": 23,
+    "exercise": "2",
+    "number": "2e",
+    "parentId": "ls7-23-2",
+    "german": "Seite 23 · Aufgabe 2, Teil e)\nPfeilbilder zu Rechenausdrücken und Vorzeichen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 2, e şıkkı\nOk çizimlerini işlemler ve sonuç işaretleriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-2-f",
+    "page": 23,
+    "exercise": "2",
+    "number": "2f",
+    "parentId": "ls7-23-2",
+    "german": "Seite 23 · Aufgabe 2, Teil f)\nPfeilbilder zu Rechenausdrücken und Vorzeichen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 2, f şıkkı\nOk çizimlerini işlemler ve sonuç işaretleriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-2-g",
+    "page": 23,
+    "exercise": "2",
+    "number": "2g",
+    "parentId": "ls7-23-2",
+    "german": "Seite 23 · Aufgabe 2, Teil g)\nPfeilbilder zu Rechenausdrücken und Vorzeichen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 2, g şıkkı\nOk çizimlerini işlemler ve sonuç işaretleriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-2-h",
+    "page": 23,
+    "exercise": "2",
+    "number": "2h",
+    "parentId": "ls7-23-2",
+    "german": "Seite 23 · Aufgabe 2, Teil h)\nPfeilbilder zu Rechenausdrücken und Vorzeichen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 2, h şıkkı\nOk çizimlerini işlemler ve sonuç işaretleriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-2-i",
+    "page": 23,
+    "exercise": "2",
+    "number": "2i",
+    "parentId": "ls7-23-2",
+    "german": "Seite 23 · Aufgabe 2, Teil i)\nPfeilbilder zu Rechenausdrücken und Vorzeichen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 2, i şıkkı\nOk çizimlerini işlemler ve sonuç işaretleriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-2-j",
+    "page": 23,
+    "exercise": "2",
+    "number": "2j",
+    "parentId": "ls7-23-2",
+    "german": "Seite 23 · Aufgabe 2, Teil j)\nPfeilbilder zu Rechenausdrücken und Vorzeichen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 2, j şıkkı\nOk çizimlerini işlemler ve sonuç işaretleriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-2-k",
+    "page": 23,
+    "exercise": "2",
+    "number": "2k",
+    "parentId": "ls7-23-2",
+    "german": "Seite 23 · Aufgabe 2, Teil k)\nPfeilbilder zu Rechenausdrücken und Vorzeichen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 2, k şıkkı\nOk çizimlerini işlemler ve sonuç işaretleriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-2-l",
+    "page": 23,
+    "exercise": "2",
+    "number": "2l",
+    "parentId": "ls7-23-2",
+    "german": "Seite 23 · Aufgabe 2, Teil l)\nPfeilbilder zu Rechenausdrücken und Vorzeichen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 2, l şıkkı\nOk çizimlerini işlemler ve sonuç işaretleriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s2-pfeilbilder.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-23-3",
@@ -849,7 +3754,50 @@ window.CHECKLIST_PACK = {
     "german": "Seite 23 · Aufgabe 3\nZahlenmauern mit den passenden Summen ergänzen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 23 · Soru 3\nSayı duvarlarını uygun toplamlarla tamamlama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p23_s3-sayipiramitleri.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-23-3-a",
+    "page": 23,
+    "exercise": "3",
+    "number": "3a",
+    "parentId": "ls7-23-3",
+    "german": "Seite 23 · Aufgabe 3, Teil a)\nZahlenmauern mit den passenden Summen ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 3, a şıkkı\nSayı duvarlarını uygun toplamlarla tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s3-sayipiramitleri.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-3-b",
+    "page": 23,
+    "exercise": "3",
+    "number": "3b",
+    "parentId": "ls7-23-3",
+    "german": "Seite 23 · Aufgabe 3, Teil b)\nZahlenmauern mit den passenden Summen ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 3, b şıkkı\nSayı duvarlarını uygun toplamlarla tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s3-sayipiramitleri.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-3-c",
+    "page": 23,
+    "exercise": "3",
+    "number": "3c",
+    "parentId": "ls7-23-3",
+    "german": "Seite 23 · Aufgabe 3, Teil c)\nZahlenmauern mit den passenden Summen ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 3, c şıkkı\nSayı duvarlarını uygun toplamlarla tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s3-sayipiramitleri.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-23-4",
@@ -859,7 +3807,97 @@ window.CHECKLIST_PACK = {
     "german": "Seite 23 · Aufgabe 4\nAdditionen und Subtraktionen geschickt berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 23 · Soru 4\nToplama ve çıkarmayı pratik yollarla hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-23-4-a",
+    "page": 23,
+    "exercise": "4",
+    "number": "4a",
+    "parentId": "ls7-23-4",
+    "german": "Seite 23 · Aufgabe 4, Teil a)\nAdditionen und Subtraktionen geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 4, a şıkkı\nToplama ve çıkarmayı pratik yollarla hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-4-b",
+    "page": 23,
+    "exercise": "4",
+    "number": "4b",
+    "parentId": "ls7-23-4",
+    "german": "Seite 23 · Aufgabe 4, Teil b)\nAdditionen und Subtraktionen geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 4, b şıkkı\nToplama ve çıkarmayı pratik yollarla hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-4-c",
+    "page": 23,
+    "exercise": "4",
+    "number": "4c",
+    "parentId": "ls7-23-4",
+    "german": "Seite 23 · Aufgabe 4, Teil c)\nAdditionen und Subtraktionen geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 4, c şıkkı\nToplama ve çıkarmayı pratik yollarla hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-4-d",
+    "page": 23,
+    "exercise": "4",
+    "number": "4d",
+    "parentId": "ls7-23-4",
+    "german": "Seite 23 · Aufgabe 4, Teil d)\nAdditionen und Subtraktionen geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 4, d şıkkı\nToplama ve çıkarmayı pratik yollarla hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-4-e",
+    "page": 23,
+    "exercise": "4",
+    "number": "4e",
+    "parentId": "ls7-23-4",
+    "german": "Seite 23 · Aufgabe 4, Teil e)\nAdditionen und Subtraktionen geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 4, e şıkkı\nToplama ve çıkarmayı pratik yollarla hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-4-f",
+    "page": 23,
+    "exercise": "4",
+    "number": "4f",
+    "parentId": "ls7-23-4",
+    "german": "Seite 23 · Aufgabe 4, Teil f)\nAdditionen und Subtraktionen geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 4, f şıkkı\nToplama ve çıkarmayı pratik yollarla hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-4-g",
+    "page": 23,
+    "exercise": "4",
+    "number": "4g",
+    "parentId": "ls7-23-4",
+    "german": "Seite 23 · Aufgabe 4, Teil g)\nAdditionen und Subtraktionen geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 4, g şıkkı\nToplama ve çıkarmayı pratik yollarla hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-4-h",
+    "page": 23,
+    "exercise": "4",
+    "number": "4h",
+    "parentId": "ls7-23-4",
+    "german": "Seite 23 · Aufgabe 4, Teil h)\nAdditionen und Subtraktionen geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 4, h şıkkı\nToplama ve çıkarmayı pratik yollarla hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-23-5",
@@ -869,7 +3907,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 23 · Aufgabe 5\nDas Vorzeichen von Ergebnissen vorhersagen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 23 · Soru 5\nİşlem sonuçlarının işaretlerini önceden belirleme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-23-5-a",
+    "page": 23,
+    "exercise": "5",
+    "number": "5a",
+    "parentId": "ls7-23-5",
+    "german": "Seite 23 · Aufgabe 5, Teil a)\nDas Vorzeichen von Ergebnissen vorhersagen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 5, a şıkkı\nİşlem sonuçlarının işaretlerini önceden belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-5-b",
+    "page": 23,
+    "exercise": "5",
+    "number": "5b",
+    "parentId": "ls7-23-5",
+    "german": "Seite 23 · Aufgabe 5, Teil b)\nDas Vorzeichen von Ergebnissen vorhersagen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 5, b şıkkı\nİşlem sonuçlarının işaretlerini önceden belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-5-c",
+    "page": 23,
+    "exercise": "5",
+    "number": "5c",
+    "parentId": "ls7-23-5",
+    "german": "Seite 23 · Aufgabe 5, Teil c)\nDas Vorzeichen von Ergebnissen vorhersagen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 5, c şıkkı\nİşlem sonuçlarının işaretlerini önceden belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-5-d",
+    "page": 23,
+    "exercise": "5",
+    "number": "5d",
+    "parentId": "ls7-23-5",
+    "german": "Seite 23 · Aufgabe 5, Teil d)\nDas Vorzeichen von Ergebnissen vorhersagen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 5, d şıkkı\nİşlem sonuçlarının işaretlerini önceden belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-23-6",
@@ -879,7 +3963,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 23 · Aufgabe 6\nSummen ohne Klammern schreiben und berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 23 · Soru 6\nToplamları parantezsiz yazıp hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-23-6-a",
+    "page": 23,
+    "exercise": "6",
+    "number": "6a",
+    "parentId": "ls7-23-6",
+    "german": "Seite 23 · Aufgabe 6, Teil a)\nSummen ohne Klammern schreiben und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 6, a şıkkı\nToplamları parantezsiz yazıp hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-6-b",
+    "page": 23,
+    "exercise": "6",
+    "number": "6b",
+    "parentId": "ls7-23-6",
+    "german": "Seite 23 · Aufgabe 6, Teil b)\nSummen ohne Klammern schreiben und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 6, b şıkkı\nToplamları parantezsiz yazıp hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-6-c",
+    "page": 23,
+    "exercise": "6",
+    "number": "6c",
+    "parentId": "ls7-23-6",
+    "german": "Seite 23 · Aufgabe 6, Teil c)\nSummen ohne Klammern schreiben und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 6, c şıkkı\nToplamları parantezsiz yazıp hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-6-d",
+    "page": 23,
+    "exercise": "6",
+    "number": "6d",
+    "parentId": "ls7-23-6",
+    "german": "Seite 23 · Aufgabe 6, Teil d)\nSummen ohne Klammern schreiben und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 6, d şıkkı\nToplamları parantezsiz yazıp hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-23-7",
@@ -889,7 +4019,97 @@ window.CHECKLIST_PACK = {
     "german": "Seite 23 · Aufgabe 7\nTerme ohne Klammern notieren und berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 23 · Soru 7\nİşlemleri parantezsiz yazıp hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-23-7-a",
+    "page": 23,
+    "exercise": "7",
+    "number": "7a",
+    "parentId": "ls7-23-7",
+    "german": "Seite 23 · Aufgabe 7, Teil a)\nTerme ohne Klammern notieren und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 7, a şıkkı\nİşlemleri parantezsiz yazıp hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-7-b",
+    "page": 23,
+    "exercise": "7",
+    "number": "7b",
+    "parentId": "ls7-23-7",
+    "german": "Seite 23 · Aufgabe 7, Teil b)\nTerme ohne Klammern notieren und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 7, b şıkkı\nİşlemleri parantezsiz yazıp hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-7-c",
+    "page": 23,
+    "exercise": "7",
+    "number": "7c",
+    "parentId": "ls7-23-7",
+    "german": "Seite 23 · Aufgabe 7, Teil c)\nTerme ohne Klammern notieren und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 7, c şıkkı\nİşlemleri parantezsiz yazıp hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-7-d",
+    "page": 23,
+    "exercise": "7",
+    "number": "7d",
+    "parentId": "ls7-23-7",
+    "german": "Seite 23 · Aufgabe 7, Teil d)\nTerme ohne Klammern notieren und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 7, d şıkkı\nİşlemleri parantezsiz yazıp hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-7-e",
+    "page": 23,
+    "exercise": "7",
+    "number": "7e",
+    "parentId": "ls7-23-7",
+    "german": "Seite 23 · Aufgabe 7, Teil e)\nTerme ohne Klammern notieren und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 7, e şıkkı\nİşlemleri parantezsiz yazıp hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-7-f",
+    "page": 23,
+    "exercise": "7",
+    "number": "7f",
+    "parentId": "ls7-23-7",
+    "german": "Seite 23 · Aufgabe 7, Teil f)\nTerme ohne Klammern notieren und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 7, f şıkkı\nİşlemleri parantezsiz yazıp hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-7-g",
+    "page": 23,
+    "exercise": "7",
+    "number": "7g",
+    "parentId": "ls7-23-7",
+    "german": "Seite 23 · Aufgabe 7, Teil g)\nTerme ohne Klammern notieren und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 7, g şıkkı\nİşlemleri parantezsiz yazıp hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-23-7-h",
+    "page": 23,
+    "exercise": "7",
+    "number": "7h",
+    "parentId": "ls7-23-7",
+    "german": "Seite 23 · Aufgabe 7, Teil h)\nTerme ohne Klammern notieren und berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 7, h şıkkı\nİşlemleri parantezsiz yazıp hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-23-8",
@@ -899,7 +4119,167 @@ window.CHECKLIST_PACK = {
     "german": "Seite 23 · Aufgabe 8\nKlammern entfernen und Ergebnis-Kärtchen abgleichen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 23 · Soru 8\nParantezleri kaldırıp sonuç kartlarıyla karşılaştırma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p23_s8-renkli-sonuclar.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcdefghijkl"
+  },
+  {
+    "id": "ls7-23-8-a",
+    "page": 23,
+    "exercise": "8",
+    "number": "8a",
+    "parentId": "ls7-23-8",
+    "german": "Seite 23 · Aufgabe 8, Teil a)\nKlammern entfernen und Ergebnis-Kärtchen abgleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 8, a şıkkı\nParantezleri kaldırıp sonuç kartlarıyla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s8-renkli-sonuclar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-8-b",
+    "page": 23,
+    "exercise": "8",
+    "number": "8b",
+    "parentId": "ls7-23-8",
+    "german": "Seite 23 · Aufgabe 8, Teil b)\nKlammern entfernen und Ergebnis-Kärtchen abgleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 8, b şıkkı\nParantezleri kaldırıp sonuç kartlarıyla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s8-renkli-sonuclar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-8-c",
+    "page": 23,
+    "exercise": "8",
+    "number": "8c",
+    "parentId": "ls7-23-8",
+    "german": "Seite 23 · Aufgabe 8, Teil c)\nKlammern entfernen und Ergebnis-Kärtchen abgleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 8, c şıkkı\nParantezleri kaldırıp sonuç kartlarıyla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s8-renkli-sonuclar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-8-d",
+    "page": 23,
+    "exercise": "8",
+    "number": "8d",
+    "parentId": "ls7-23-8",
+    "german": "Seite 23 · Aufgabe 8, Teil d)\nKlammern entfernen und Ergebnis-Kärtchen abgleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 8, d şıkkı\nParantezleri kaldırıp sonuç kartlarıyla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s8-renkli-sonuclar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-8-e",
+    "page": 23,
+    "exercise": "8",
+    "number": "8e",
+    "parentId": "ls7-23-8",
+    "german": "Seite 23 · Aufgabe 8, Teil e)\nKlammern entfernen und Ergebnis-Kärtchen abgleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 8, e şıkkı\nParantezleri kaldırıp sonuç kartlarıyla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s8-renkli-sonuclar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-8-f",
+    "page": 23,
+    "exercise": "8",
+    "number": "8f",
+    "parentId": "ls7-23-8",
+    "german": "Seite 23 · Aufgabe 8, Teil f)\nKlammern entfernen und Ergebnis-Kärtchen abgleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 8, f şıkkı\nParantezleri kaldırıp sonuç kartlarıyla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s8-renkli-sonuclar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-8-g",
+    "page": 23,
+    "exercise": "8",
+    "number": "8g",
+    "parentId": "ls7-23-8",
+    "german": "Seite 23 · Aufgabe 8, Teil g)\nKlammern entfernen und Ergebnis-Kärtchen abgleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 8, g şıkkı\nParantezleri kaldırıp sonuç kartlarıyla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s8-renkli-sonuclar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-8-h",
+    "page": 23,
+    "exercise": "8",
+    "number": "8h",
+    "parentId": "ls7-23-8",
+    "german": "Seite 23 · Aufgabe 8, Teil h)\nKlammern entfernen und Ergebnis-Kärtchen abgleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 8, h şıkkı\nParantezleri kaldırıp sonuç kartlarıyla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s8-renkli-sonuclar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-8-i",
+    "page": 23,
+    "exercise": "8",
+    "number": "8i",
+    "parentId": "ls7-23-8",
+    "german": "Seite 23 · Aufgabe 8, Teil i)\nKlammern entfernen und Ergebnis-Kärtchen abgleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 8, i şıkkı\nParantezleri kaldırıp sonuç kartlarıyla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s8-renkli-sonuclar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-8-j",
+    "page": 23,
+    "exercise": "8",
+    "number": "8j",
+    "parentId": "ls7-23-8",
+    "german": "Seite 23 · Aufgabe 8, Teil j)\nKlammern entfernen und Ergebnis-Kärtchen abgleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 8, j şıkkı\nParantezleri kaldırıp sonuç kartlarıyla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s8-renkli-sonuclar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-8-k",
+    "page": 23,
+    "exercise": "8",
+    "number": "8k",
+    "parentId": "ls7-23-8",
+    "german": "Seite 23 · Aufgabe 8, Teil k)\nKlammern entfernen und Ergebnis-Kärtchen abgleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 8, k şıkkı\nParantezleri kaldırıp sonuç kartlarıyla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s8-renkli-sonuclar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-8-l",
+    "page": 23,
+    "exercise": "8",
+    "number": "8l",
+    "parentId": "ls7-23-8",
+    "german": "Seite 23 · Aufgabe 8, Teil l)\nKlammern entfernen und Ergebnis-Kärtchen abgleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 8, l şıkkı\nParantezleri kaldırıp sonuç kartlarıyla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s8-renkli-sonuclar.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-23-9",
@@ -909,7 +4289,63 @@ window.CHECKLIST_PACK = {
     "german": "Seite 23 · Aufgabe 9\nErgebnisbereiche auf der Zahlengeraden erkennen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 23 · Soru 9\nSayı doğrusunda sonuçların ait olduğu aralıkları bulma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p23_s9-dogrusu.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-23-9-a",
+    "page": 23,
+    "exercise": "9",
+    "number": "9a",
+    "parentId": "ls7-23-9",
+    "german": "Seite 23 · Aufgabe 9, Teil a)\nErgebnisbereiche auf der Zahlengeraden erkennen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 9, a şıkkı\nSayı doğrusunda sonuçların ait olduğu aralıkları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s9-dogrusu.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-9-b",
+    "page": 23,
+    "exercise": "9",
+    "number": "9b",
+    "parentId": "ls7-23-9",
+    "german": "Seite 23 · Aufgabe 9, Teil b)\nErgebnisbereiche auf der Zahlengeraden erkennen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 9, b şıkkı\nSayı doğrusunda sonuçların ait olduğu aralıkları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s9-dogrusu.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-9-c",
+    "page": 23,
+    "exercise": "9",
+    "number": "9c",
+    "parentId": "ls7-23-9",
+    "german": "Seite 23 · Aufgabe 9, Teil c)\nErgebnisbereiche auf der Zahlengeraden erkennen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 9, c şıkkı\nSayı doğrusunda sonuçların ait olduğu aralıkları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s9-dogrusu.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-23-9-d",
+    "page": 23,
+    "exercise": "9",
+    "number": "9d",
+    "parentId": "ls7-23-9",
+    "german": "Seite 23 · Aufgabe 9, Teil d)\nErgebnisbereiche auf der Zahlengeraden erkennen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 23 · Soru 9, d şıkkı\nSayı doğrusunda sonuçların ait olduğu aralıkları bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p23_s9-dogrusu.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-24-10",
@@ -919,7 +4355,141 @@ window.CHECKLIST_PACK = {
     "german": "Seite 24 · Aufgabe 10\nRechenergebnisse überschlagen und exakt berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 24 · Soru 10\nİşlem sonuçlarını önce tahmin edip sonra tam hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefghijkl"
+  },
+  {
+    "id": "ls7-24-10-a",
+    "page": 24,
+    "exercise": "10",
+    "number": "10a",
+    "parentId": "ls7-24-10",
+    "german": "Seite 24 · Aufgabe 10, Teil a)\nRechenergebnisse überschlagen und exakt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 10, a şıkkı\nİşlem sonuçlarını önce tahmin edip sonra tam hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-24-10-b",
+    "page": 24,
+    "exercise": "10",
+    "number": "10b",
+    "parentId": "ls7-24-10",
+    "german": "Seite 24 · Aufgabe 10, Teil b)\nRechenergebnisse überschlagen und exakt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 10, b şıkkı\nİşlem sonuçlarını önce tahmin edip sonra tam hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-24-10-c",
+    "page": 24,
+    "exercise": "10",
+    "number": "10c",
+    "parentId": "ls7-24-10",
+    "german": "Seite 24 · Aufgabe 10, Teil c)\nRechenergebnisse überschlagen und exakt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 10, c şıkkı\nİşlem sonuçlarını önce tahmin edip sonra tam hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-24-10-d",
+    "page": 24,
+    "exercise": "10",
+    "number": "10d",
+    "parentId": "ls7-24-10",
+    "german": "Seite 24 · Aufgabe 10, Teil d)\nRechenergebnisse überschlagen und exakt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 10, d şıkkı\nİşlem sonuçlarını önce tahmin edip sonra tam hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-24-10-e",
+    "page": 24,
+    "exercise": "10",
+    "number": "10e",
+    "parentId": "ls7-24-10",
+    "german": "Seite 24 · Aufgabe 10, Teil e)\nRechenergebnisse überschlagen und exakt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 10, e şıkkı\nİşlem sonuçlarını önce tahmin edip sonra tam hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-24-10-f",
+    "page": 24,
+    "exercise": "10",
+    "number": "10f",
+    "parentId": "ls7-24-10",
+    "german": "Seite 24 · Aufgabe 10, Teil f)\nRechenergebnisse überschlagen und exakt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 10, f şıkkı\nİşlem sonuçlarını önce tahmin edip sonra tam hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-24-10-g",
+    "page": 24,
+    "exercise": "10",
+    "number": "10g",
+    "parentId": "ls7-24-10",
+    "german": "Seite 24 · Aufgabe 10, Teil g)\nRechenergebnisse überschlagen und exakt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 10, g şıkkı\nİşlem sonuçlarını önce tahmin edip sonra tam hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-24-10-h",
+    "page": 24,
+    "exercise": "10",
+    "number": "10h",
+    "parentId": "ls7-24-10",
+    "german": "Seite 24 · Aufgabe 10, Teil h)\nRechenergebnisse überschlagen und exakt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 10, h şıkkı\nİşlem sonuçlarını önce tahmin edip sonra tam hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-24-10-i",
+    "page": 24,
+    "exercise": "10",
+    "number": "10i",
+    "parentId": "ls7-24-10",
+    "german": "Seite 24 · Aufgabe 10, Teil i)\nRechenergebnisse überschlagen und exakt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 10, i şıkkı\nİşlem sonuçlarını önce tahmin edip sonra tam hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-24-10-j",
+    "page": 24,
+    "exercise": "10",
+    "number": "10j",
+    "parentId": "ls7-24-10",
+    "german": "Seite 24 · Aufgabe 10, Teil j)\nRechenergebnisse überschlagen und exakt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 10, j şıkkı\nİşlem sonuçlarını önce tahmin edip sonra tam hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-24-10-k",
+    "page": 24,
+    "exercise": "10",
+    "number": "10k",
+    "parentId": "ls7-24-10",
+    "german": "Seite 24 · Aufgabe 10, Teil k)\nRechenergebnisse überschlagen und exakt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 10, k şıkkı\nİşlem sonuçlarını önce tahmin edip sonra tam hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-24-10-l",
+    "page": 24,
+    "exercise": "10",
+    "number": "10l",
+    "parentId": "ls7-24-10",
+    "german": "Seite 24 · Aufgabe 10, Teil l)\nRechenergebnisse überschlagen und exakt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 10, l şıkkı\nİşlem sonuçlarını önce tahmin edip sonra tam hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-24-11",
@@ -929,7 +4499,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 24 · Aufgabe 11\nEiskarten-Einkauf: Zahlenausdrücke vergleichen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 24 · Soru 11\nDondurma alışverişine ait işlem ifadelerini karşılaştırma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p24_s11-terim-kartlari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-24-11-a",
+    "page": 24,
+    "exercise": "11",
+    "number": "11a",
+    "parentId": "ls7-24-11",
+    "german": "Seite 24 · Aufgabe 11, Teil a)\nEiskarten-Einkauf: Zahlenausdrücke vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 11, a şıkkı\nDondurma alışverişine ait işlem ifadelerini karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p24_s11-terim-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-24-11-b",
+    "page": 24,
+    "exercise": "11",
+    "number": "11b",
+    "parentId": "ls7-24-11",
+    "german": "Seite 24 · Aufgabe 11, Teil b)\nEiskarten-Einkauf: Zahlenausdrücke vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 11, b şıkkı\nDondurma alışverişine ait işlem ifadelerini karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p24_s11-terim-kartlari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-24-12",
@@ -939,7 +4539,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 24 · Aufgabe 12\nZwischen zwei Rechnungen die günstigere auswählen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 24 · Soru 12\nİki işlemden daha kullanışlı olanını seçme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-24-12-a",
+    "page": 24,
+    "exercise": "12",
+    "number": "12a",
+    "parentId": "ls7-24-12",
+    "german": "Seite 24 · Aufgabe 12, Teil a)\nZwischen zwei Rechnungen die günstigere auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 12, a şıkkı\nİki işlemden daha kullanışlı olanını seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-24-12-b",
+    "page": 24,
+    "exercise": "12",
+    "number": "12b",
+    "parentId": "ls7-24-12",
+    "german": "Seite 24 · Aufgabe 12, Teil b)\nZwischen zwei Rechnungen die günstigere auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 12, b şıkkı\nİki işlemden daha kullanışlı olanını seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-24-12-c",
+    "page": 24,
+    "exercise": "12",
+    "number": "12c",
+    "parentId": "ls7-24-12",
+    "german": "Seite 24 · Aufgabe 12, Teil c)\nZwischen zwei Rechnungen die günstigere auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 12, c şıkkı\nİki işlemden daha kullanışlı olanını seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-24-12-d",
+    "page": 24,
+    "exercise": "12",
+    "number": "12d",
+    "parentId": "ls7-24-12",
+    "german": "Seite 24 · Aufgabe 12, Teil d)\nZwischen zwei Rechnungen die günstigere auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 12, d şıkkı\nİki işlemden daha kullanışlı olanını seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-24-13",
@@ -949,7 +4595,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 24 · Aufgabe 13\nEmmis Behauptung über die Vertauschung bei Differenzen prüfen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 24 · Soru 13\nEmmi'nin çıkarma işleminde yer değiştirme iddiasını inceleme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-24-14",
@@ -959,7 +4606,115 @@ window.CHECKLIST_PACK = {
     "german": "Seite 24 · Aufgabe 14\nRechenfehler entdecken und erklären.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 24 · Soru 14\nİşlem hatalarını tespit edip açıklama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p24_s14-hata-kutulari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-24-14-a",
+    "page": 24,
+    "exercise": "14",
+    "number": "14a",
+    "parentId": "ls7-24-14",
+    "german": "Seite 24 · Aufgabe 14, Teil a)\nRechenfehler entdecken und erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 14, a şıkkı\nİşlem hatalarını tespit edip açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p24_s14-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-24-14-b",
+    "page": 24,
+    "exercise": "14",
+    "number": "14b",
+    "parentId": "ls7-24-14",
+    "german": "Seite 24 · Aufgabe 14, Teil b)\nRechenfehler entdecken und erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 14, b şıkkı\nİşlem hatalarını tespit edip açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p24_s14-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-24-14-c",
+    "page": 24,
+    "exercise": "14",
+    "number": "14c",
+    "parentId": "ls7-24-14",
+    "german": "Seite 24 · Aufgabe 14, Teil c)\nRechenfehler entdecken und erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 14, c şıkkı\nİşlem hatalarını tespit edip açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p24_s14-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-24-14-d",
+    "page": 24,
+    "exercise": "14",
+    "number": "14d",
+    "parentId": "ls7-24-14",
+    "german": "Seite 24 · Aufgabe 14, Teil d)\nRechenfehler entdecken und erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 14, d şıkkı\nİşlem hatalarını tespit edip açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p24_s14-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-24-14-e",
+    "page": 24,
+    "exercise": "14",
+    "number": "14e",
+    "parentId": "ls7-24-14",
+    "german": "Seite 24 · Aufgabe 14, Teil e)\nRechenfehler entdecken und erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 14, e şıkkı\nİşlem hatalarını tespit edip açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p24_s14-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-24-14-f",
+    "page": 24,
+    "exercise": "14",
+    "number": "14f",
+    "parentId": "ls7-24-14",
+    "german": "Seite 24 · Aufgabe 14, Teil f)\nRechenfehler entdecken und erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 14, f şıkkı\nİşlem hatalarını tespit edip açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p24_s14-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-24-14-g",
+    "page": 24,
+    "exercise": "14",
+    "number": "14g",
+    "parentId": "ls7-24-14",
+    "german": "Seite 24 · Aufgabe 14, Teil g)\nRechenfehler entdecken und erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 14, g şıkkı\nİşlem hatalarını tespit edip açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p24_s14-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-24-14-h",
+    "page": 24,
+    "exercise": "14",
+    "number": "14h",
+    "parentId": "ls7-24-14",
+    "german": "Seite 24 · Aufgabe 14, Teil h)\nRechenfehler entdecken und erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 14, h şıkkı\nİşlem hatalarını tespit edip açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p24_s14-hata-kutulari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-24-15",
@@ -969,7 +4724,50 @@ window.CHECKLIST_PACK = {
     "german": "Seite 24 · Aufgabe 15\nRechenformeln in einer Tabellenkalkulation verwenden.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 24 · Soru 15\nElektronik tabloda işlem formülleri kullanma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p24_s15-tablo.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-24-15-a",
+    "page": 24,
+    "exercise": "15",
+    "number": "15a",
+    "parentId": "ls7-24-15",
+    "german": "Seite 24 · Aufgabe 15, Teil a)\nRechenformeln in einer Tabellenkalkulation verwenden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 15, a şıkkı\nElektronik tabloda işlem formülleri kullanma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p24_s15-tablo.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-24-15-b",
+    "page": 24,
+    "exercise": "15",
+    "number": "15b",
+    "parentId": "ls7-24-15",
+    "german": "Seite 24 · Aufgabe 15, Teil b)\nRechenformeln in einer Tabellenkalkulation verwenden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 15, b şıkkı\nElektronik tabloda işlem formülleri kullanma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p24_s15-tablo.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-24-15-c",
+    "page": 24,
+    "exercise": "15",
+    "number": "15c",
+    "parentId": "ls7-24-15",
+    "german": "Seite 24 · Aufgabe 15, Teil c)\nRechenformeln in einer Tabellenkalkulation verwenden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 24 · Soru 15, c şıkkı\nElektronik tabloda işlem formülleri kullanma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p24_s15-tablo.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-25-16",
@@ -979,7 +4777,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 25 · Aufgabe 16\nReiswaffeln: Gesamtgewicht und Packungsgewicht berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 25 · Soru 16\nPirinç patlağı paketinde toplam ve ambalaj ağırlığını hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-25-16-a",
+    "page": 25,
+    "exercise": "16",
+    "number": "16a",
+    "parentId": "ls7-25-16",
+    "german": "Seite 25 · Aufgabe 16, Teil a)\nReiswaffeln: Gesamtgewicht und Packungsgewicht berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 16, a şıkkı\nPirinç patlağı paketinde toplam ve ambalaj ağırlığını hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-25-16-b",
+    "page": 25,
+    "exercise": "16",
+    "number": "16b",
+    "parentId": "ls7-25-16",
+    "german": "Seite 25 · Aufgabe 16, Teil b)\nReiswaffeln: Gesamtgewicht und Packungsgewicht berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 16, b şıkkı\nPirinç patlağı paketinde toplam ve ambalaj ağırlığını hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-25-16-c",
+    "page": 25,
+    "exercise": "16",
+    "number": "16c",
+    "parentId": "ls7-25-16",
+    "german": "Seite 25 · Aufgabe 16, Teil c)\nReiswaffeln: Gesamtgewicht und Packungsgewicht berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 16, c şıkkı\nPirinç patlağı paketinde toplam ve ambalaj ağırlığını hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-25-17",
@@ -989,7 +4822,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 25 · Aufgabe 17\nNegative Zahlen ohne Klammern berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 25 · Soru 17\nNegatif sayılarla parantezsiz işlem yapma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-25-17-a",
+    "page": 25,
+    "exercise": "17",
+    "number": "17a",
+    "parentId": "ls7-25-17",
+    "german": "Seite 25 · Aufgabe 17, Teil a)\nNegative Zahlen ohne Klammern berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 17, a şıkkı\nNegatif sayılarla parantezsiz işlem yapma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-25-17-b",
+    "page": 25,
+    "exercise": "17",
+    "number": "17b",
+    "parentId": "ls7-25-17",
+    "german": "Seite 25 · Aufgabe 17, Teil b)\nNegative Zahlen ohne Klammern berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 17, b şıkkı\nNegatif sayılarla parantezsiz işlem yapma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-25-17-c",
+    "page": 25,
+    "exercise": "17",
+    "number": "17c",
+    "parentId": "ls7-25-17",
+    "german": "Seite 25 · Aufgabe 17, Teil c)\nNegative Zahlen ohne Klammern berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 17, c şıkkı\nNegatif sayılarla parantezsiz işlem yapma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-25-18",
@@ -999,7 +4867,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 25 · Aufgabe 18\nTerme geschickt berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 25 · Soru 18\nİşlemleri uygun kısa yöntemlerle hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-25-18-a",
+    "page": 25,
+    "exercise": "18",
+    "number": "18a",
+    "parentId": "ls7-25-18",
+    "german": "Seite 25 · Aufgabe 18, Teil a)\nTerme geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 18, a şıkkı\nİşlemleri uygun kısa yöntemlerle hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-25-18-b",
+    "page": 25,
+    "exercise": "18",
+    "number": "18b",
+    "parentId": "ls7-25-18",
+    "german": "Seite 25 · Aufgabe 18, Teil b)\nTerme geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 18, b şıkkı\nİşlemleri uygun kısa yöntemlerle hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-25-18-c",
+    "page": 25,
+    "exercise": "18",
+    "number": "18c",
+    "parentId": "ls7-25-18",
+    "german": "Seite 25 · Aufgabe 18, Teil c)\nTerme geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 18, c şıkkı\nİşlemleri uygun kısa yöntemlerle hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-25-19",
@@ -1009,7 +4912,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 25 · Aufgabe 19\nAussagen zum Addieren und Subtrahieren beurteilen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 25 · Soru 19\nToplama ve çıkarma hakkındaki ifadeleri değerlendirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-25-19-a",
+    "page": 25,
+    "exercise": "19",
+    "number": "19a",
+    "parentId": "ls7-25-19",
+    "german": "Seite 25 · Aufgabe 19, Teil a)\nAussagen zum Addieren und Subtrahieren beurteilen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 19, a şıkkı\nToplama ve çıkarma hakkındaki ifadeleri değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-25-19-b",
+    "page": 25,
+    "exercise": "19",
+    "number": "19b",
+    "parentId": "ls7-25-19",
+    "german": "Seite 25 · Aufgabe 19, Teil b)\nAussagen zum Addieren und Subtrahieren beurteilen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 19, b şıkkı\nToplama ve çıkarma hakkındaki ifadeleri değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-25-19-c",
+    "page": 25,
+    "exercise": "19",
+    "number": "19c",
+    "parentId": "ls7-25-19",
+    "german": "Seite 25 · Aufgabe 19, Teil c)\nAussagen zum Addieren und Subtrahieren beurteilen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 19, c şıkkı\nToplama ve çıkarma hakkındaki ifadeleri değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-25-20",
@@ -1019,7 +4957,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 25 · Aufgabe 20\nEin Zauberquadrat ergänzen und prüfen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 25 · Soru 20\nSihirli kareyi tamamlama ve kontrol etme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p25_s20-sihirli-kareler.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-25-20-a",
+    "page": 25,
+    "exercise": "20",
+    "number": "20a",
+    "parentId": "ls7-25-20",
+    "german": "Seite 25 · Aufgabe 20, Teil a)\nEin Zauberquadrat ergänzen und prüfen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 20, a şıkkı\nSihirli kareyi tamamlama ve kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p25_s20-sihirli-kareler.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-25-20-b",
+    "page": 25,
+    "exercise": "20",
+    "number": "20b",
+    "parentId": "ls7-25-20",
+    "german": "Seite 25 · Aufgabe 20, Teil b)\nEin Zauberquadrat ergänzen und prüfen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 20, b şıkkı\nSihirli kareyi tamamlama ve kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p25_s20-sihirli-kareler.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-25-21",
@@ -1029,7 +4997,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 25 · Aufgabe 21\nDas Permanenzprinzip mit Beispielen erläutern.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 25 · Soru 21\nSüreklilik ilkesini örneklerle açıklama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-25-22",
@@ -1039,7 +5008,31 @@ window.CHECKLIST_PACK = {
     "german": "Seite 25 · Aufgabe 22\nRezas Zimmer: Bodenfläche und Kosten berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 25 · Soru 22\nReza'nın odasında zemin alanı ve kaplama maliyetini hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-25-22-a",
+    "page": 25,
+    "exercise": "22",
+    "number": "22a",
+    "parentId": "ls7-25-22",
+    "german": "Seite 25 · Aufgabe 22, Teil a)\nRezas Zimmer: Bodenfläche und Kosten berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 22, a şıkkı\nReza'nın odasında zemin alanı ve kaplama maliyetini hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-25-22-b",
+    "page": 25,
+    "exercise": "22",
+    "number": "22b",
+    "parentId": "ls7-25-22",
+    "german": "Seite 25 · Aufgabe 22, Teil b)\nRezas Zimmer: Bodenfläche und Kosten berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 25 · Soru 22, b şıkkı\nReza'nın odasında zemin alanı ve kaplama maliyetini hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-26-konu",
@@ -1049,7 +5042,34 @@ window.CHECKLIST_PACK = {
     "german": "Seite 26 · Multiplizieren und Dividieren rationaler Zahlen – Vorzeichenregeln\nLies die Buchseite mit den Erklärungen und Beispielen.",
     "turkish": "Sayfa 26 · Rasyonel sayılarda çarpma ve bölme – işaret kuralları\nKitabındaki konu anlatımını ve örnekleri incele.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p26_giris-carpim-tablosu.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-27-beispiel-2",
+    "page": 27,
+    "exercise": "Beispiel 2",
+    "number": "Beispiel 2",
+    "kind": "beispiel",
+    "german": "Beispiel 2 · Faktoren vertauschen und überschlagen.\nVerfolge zuerst den gelösten Rechenweg im eigenen Buch und erkläre ihn anschließend mit eigenen Worten.",
+    "turkish": "Çözümlü Örnek 2 · Çarpanların yerini değiştirerek yaklaşık hesaplama.\nKitaptaki çözümü incele, sonra işlemin neden bu şekilde yapıldığını kendi sözlerinle açıkla.",
+    "privateImageFile": "p27_beispiel2.png",
+    "privateFigureAvailable": true,
+    "auditStatus": "example-heading-verified"
+  },
+  {
+    "id": "ls7-27-beispiel-1",
+    "page": 27,
+    "exercise": "Beispiel 1",
+    "number": "Beispiel 1",
+    "kind": "beispiel",
+    "german": "Beispiel 1 · Rationale Zahlen multiplizieren und dividieren.\nVerfolge zuerst den gelösten Rechenweg im eigenen Buch und erkläre ihn anschließend mit eigenen Worten.",
+    "turkish": "Çözümlü Örnek 1 · Rasyonel sayıları çarpma ve bölme.\nKitaptaki çözümü incele, sonra işlemin neden bu şekilde yapıldığını kendi sözlerinle açıkla.",
+    "privateImageFile": "p27_beispiel1.png",
+    "privateFigureAvailable": true,
+    "auditStatus": "example-heading-verified"
   },
   {
     "id": "ls7-27-konu",
@@ -1059,7 +5079,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 27 · Rechenregeln, Beispiele und Vertauschen von Faktoren\nLies die Buchseite mit den Erklärungen und Beispielen.",
     "turkish": "Sayfa 27 · İşlem kuralları, örnekler ve çarpanların yer değiştirmesi\nKitabındaki konu anlatımını ve örnekleri incele.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-28-1",
@@ -1069,7 +5090,119 @@ window.CHECKLIST_PACK = {
     "german": "Seite 28 · Aufgabe 1\nMultiplikationen im Kopf berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 28 · Soru 1\nÇarpma işlemlerini zihinden hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefghij"
+  },
+  {
+    "id": "ls7-28-1-a",
+    "page": 28,
+    "exercise": "1",
+    "number": "1a",
+    "parentId": "ls7-28-1",
+    "german": "Seite 28 · Aufgabe 1, Teil a)\nMultiplikationen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 1, a şıkkı\nÇarpma işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-1-b",
+    "page": 28,
+    "exercise": "1",
+    "number": "1b",
+    "parentId": "ls7-28-1",
+    "german": "Seite 28 · Aufgabe 1, Teil b)\nMultiplikationen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 1, b şıkkı\nÇarpma işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-1-c",
+    "page": 28,
+    "exercise": "1",
+    "number": "1c",
+    "parentId": "ls7-28-1",
+    "german": "Seite 28 · Aufgabe 1, Teil c)\nMultiplikationen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 1, c şıkkı\nÇarpma işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-1-d",
+    "page": 28,
+    "exercise": "1",
+    "number": "1d",
+    "parentId": "ls7-28-1",
+    "german": "Seite 28 · Aufgabe 1, Teil d)\nMultiplikationen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 1, d şıkkı\nÇarpma işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-1-e",
+    "page": 28,
+    "exercise": "1",
+    "number": "1e",
+    "parentId": "ls7-28-1",
+    "german": "Seite 28 · Aufgabe 1, Teil e)\nMultiplikationen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 1, e şıkkı\nÇarpma işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-1-f",
+    "page": 28,
+    "exercise": "1",
+    "number": "1f",
+    "parentId": "ls7-28-1",
+    "german": "Seite 28 · Aufgabe 1, Teil f)\nMultiplikationen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 1, f şıkkı\nÇarpma işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-1-g",
+    "page": 28,
+    "exercise": "1",
+    "number": "1g",
+    "parentId": "ls7-28-1",
+    "german": "Seite 28 · Aufgabe 1, Teil g)\nMultiplikationen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 1, g şıkkı\nÇarpma işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-1-h",
+    "page": 28,
+    "exercise": "1",
+    "number": "1h",
+    "parentId": "ls7-28-1",
+    "german": "Seite 28 · Aufgabe 1, Teil h)\nMultiplikationen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 1, h şıkkı\nÇarpma işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-1-i",
+    "page": 28,
+    "exercise": "1",
+    "number": "1i",
+    "parentId": "ls7-28-1",
+    "german": "Seite 28 · Aufgabe 1, Teil i)\nMultiplikationen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 1, i şıkkı\nÇarpma işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-1-j",
+    "page": 28,
+    "exercise": "1",
+    "number": "1j",
+    "parentId": "ls7-28-1",
+    "german": "Seite 28 · Aufgabe 1, Teil j)\nMultiplikationen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 1, j şıkkı\nÇarpma işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-28-2",
@@ -1079,7 +5212,119 @@ window.CHECKLIST_PACK = {
     "german": "Seite 28 · Aufgabe 2\nDivisionen im Kopf berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 28 · Soru 2\nBölme işlemlerini zihinden hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefghij"
+  },
+  {
+    "id": "ls7-28-2-a",
+    "page": 28,
+    "exercise": "2",
+    "number": "2a",
+    "parentId": "ls7-28-2",
+    "german": "Seite 28 · Aufgabe 2, Teil a)\nDivisionen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 2, a şıkkı\nBölme işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-2-b",
+    "page": 28,
+    "exercise": "2",
+    "number": "2b",
+    "parentId": "ls7-28-2",
+    "german": "Seite 28 · Aufgabe 2, Teil b)\nDivisionen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 2, b şıkkı\nBölme işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-2-c",
+    "page": 28,
+    "exercise": "2",
+    "number": "2c",
+    "parentId": "ls7-28-2",
+    "german": "Seite 28 · Aufgabe 2, Teil c)\nDivisionen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 2, c şıkkı\nBölme işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-2-d",
+    "page": 28,
+    "exercise": "2",
+    "number": "2d",
+    "parentId": "ls7-28-2",
+    "german": "Seite 28 · Aufgabe 2, Teil d)\nDivisionen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 2, d şıkkı\nBölme işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-2-e",
+    "page": 28,
+    "exercise": "2",
+    "number": "2e",
+    "parentId": "ls7-28-2",
+    "german": "Seite 28 · Aufgabe 2, Teil e)\nDivisionen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 2, e şıkkı\nBölme işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-2-f",
+    "page": 28,
+    "exercise": "2",
+    "number": "2f",
+    "parentId": "ls7-28-2",
+    "german": "Seite 28 · Aufgabe 2, Teil f)\nDivisionen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 2, f şıkkı\nBölme işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-2-g",
+    "page": 28,
+    "exercise": "2",
+    "number": "2g",
+    "parentId": "ls7-28-2",
+    "german": "Seite 28 · Aufgabe 2, Teil g)\nDivisionen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 2, g şıkkı\nBölme işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-2-h",
+    "page": 28,
+    "exercise": "2",
+    "number": "2h",
+    "parentId": "ls7-28-2",
+    "german": "Seite 28 · Aufgabe 2, Teil h)\nDivisionen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 2, h şıkkı\nBölme işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-2-i",
+    "page": 28,
+    "exercise": "2",
+    "number": "2i",
+    "parentId": "ls7-28-2",
+    "german": "Seite 28 · Aufgabe 2, Teil i)\nDivisionen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 2, i şıkkı\nBölme işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-2-j",
+    "page": 28,
+    "exercise": "2",
+    "number": "2j",
+    "parentId": "ls7-28-2",
+    "german": "Seite 28 · Aufgabe 2, Teil j)\nDivisionen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 2, j şıkkı\nBölme işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-28-3",
@@ -1089,7 +5334,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 28 · Aufgabe 3\nTerme mit gleichem Ergebnis einander zuordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 28 · Soru 3\nAynı sonucu veren işlemleri eşleştirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p28_s3-kartlar.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-28-4",
@@ -1099,7 +5347,97 @@ window.CHECKLIST_PACK = {
     "german": "Seite 28 · Aufgabe 4\nMit Rechengesetzen günstig berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 28 · Soru 4\nİşlem kurallarını kullanarak kolay hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-28-4-a",
+    "page": 28,
+    "exercise": "4",
+    "number": "4a",
+    "parentId": "ls7-28-4",
+    "german": "Seite 28 · Aufgabe 4, Teil a)\nMit Rechengesetzen günstig berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 4, a şıkkı\nİşlem kurallarını kullanarak kolay hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-4-b",
+    "page": 28,
+    "exercise": "4",
+    "number": "4b",
+    "parentId": "ls7-28-4",
+    "german": "Seite 28 · Aufgabe 4, Teil b)\nMit Rechengesetzen günstig berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 4, b şıkkı\nİşlem kurallarını kullanarak kolay hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-4-c",
+    "page": 28,
+    "exercise": "4",
+    "number": "4c",
+    "parentId": "ls7-28-4",
+    "german": "Seite 28 · Aufgabe 4, Teil c)\nMit Rechengesetzen günstig berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 4, c şıkkı\nİşlem kurallarını kullanarak kolay hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-4-d",
+    "page": 28,
+    "exercise": "4",
+    "number": "4d",
+    "parentId": "ls7-28-4",
+    "german": "Seite 28 · Aufgabe 4, Teil d)\nMit Rechengesetzen günstig berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 4, d şıkkı\nİşlem kurallarını kullanarak kolay hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-4-e",
+    "page": 28,
+    "exercise": "4",
+    "number": "4e",
+    "parentId": "ls7-28-4",
+    "german": "Seite 28 · Aufgabe 4, Teil e)\nMit Rechengesetzen günstig berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 4, e şıkkı\nİşlem kurallarını kullanarak kolay hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-4-f",
+    "page": 28,
+    "exercise": "4",
+    "number": "4f",
+    "parentId": "ls7-28-4",
+    "german": "Seite 28 · Aufgabe 4, Teil f)\nMit Rechengesetzen günstig berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 4, f şıkkı\nİşlem kurallarını kullanarak kolay hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-4-g",
+    "page": 28,
+    "exercise": "4",
+    "number": "4g",
+    "parentId": "ls7-28-4",
+    "german": "Seite 28 · Aufgabe 4, Teil g)\nMit Rechengesetzen günstig berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 4, g şıkkı\nİşlem kurallarını kullanarak kolay hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-4-h",
+    "page": 28,
+    "exercise": "4",
+    "number": "4h",
+    "parentId": "ls7-28-4",
+    "german": "Seite 28 · Aufgabe 4, Teil h)\nMit Rechengesetzen günstig berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 4, h şıkkı\nİşlem kurallarını kullanarak kolay hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-28-5",
@@ -1109,7 +5447,97 @@ window.CHECKLIST_PACK = {
     "german": "Seite 28 · Aufgabe 5\nErgebnisse zuerst überschlagen und anschließend berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 28 · Soru 5\nSonuçları önce tahmin edip sonra hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-28-5-a",
+    "page": 28,
+    "exercise": "5",
+    "number": "5a",
+    "parentId": "ls7-28-5",
+    "german": "Seite 28 · Aufgabe 5, Teil a)\nErgebnisse zuerst überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 5, a şıkkı\nSonuçları önce tahmin edip sonra hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-5-b",
+    "page": 28,
+    "exercise": "5",
+    "number": "5b",
+    "parentId": "ls7-28-5",
+    "german": "Seite 28 · Aufgabe 5, Teil b)\nErgebnisse zuerst überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 5, b şıkkı\nSonuçları önce tahmin edip sonra hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-5-c",
+    "page": 28,
+    "exercise": "5",
+    "number": "5c",
+    "parentId": "ls7-28-5",
+    "german": "Seite 28 · Aufgabe 5, Teil c)\nErgebnisse zuerst überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 5, c şıkkı\nSonuçları önce tahmin edip sonra hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-5-d",
+    "page": 28,
+    "exercise": "5",
+    "number": "5d",
+    "parentId": "ls7-28-5",
+    "german": "Seite 28 · Aufgabe 5, Teil d)\nErgebnisse zuerst überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 5, d şıkkı\nSonuçları önce tahmin edip sonra hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-5-e",
+    "page": 28,
+    "exercise": "5",
+    "number": "5e",
+    "parentId": "ls7-28-5",
+    "german": "Seite 28 · Aufgabe 5, Teil e)\nErgebnisse zuerst überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 5, e şıkkı\nSonuçları önce tahmin edip sonra hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-5-f",
+    "page": 28,
+    "exercise": "5",
+    "number": "5f",
+    "parentId": "ls7-28-5",
+    "german": "Seite 28 · Aufgabe 5, Teil f)\nErgebnisse zuerst überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 5, f şıkkı\nSonuçları önce tahmin edip sonra hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-5-g",
+    "page": 28,
+    "exercise": "5",
+    "number": "5g",
+    "parentId": "ls7-28-5",
+    "german": "Seite 28 · Aufgabe 5, Teil g)\nErgebnisse zuerst überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 5, g şıkkı\nSonuçları önce tahmin edip sonra hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-5-h",
+    "page": 28,
+    "exercise": "5",
+    "number": "5h",
+    "parentId": "ls7-28-5",
+    "german": "Seite 28 · Aufgabe 5, Teil h)\nErgebnisse zuerst überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 5, h şıkkı\nSonuçları önce tahmin edip sonra hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-28-6",
@@ -1119,7 +5547,63 @@ window.CHECKLIST_PACK = {
     "german": "Seite 28 · Aufgabe 6\nErgebnisbereiche auf einer Zahlengeraden abschätzen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 28 · Soru 6\nSayı doğrusunda sonuç aralıklarını yaklaşık belirleme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p28_s6-renkli-dogru.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-28-6-a",
+    "page": 28,
+    "exercise": "6",
+    "number": "6a",
+    "parentId": "ls7-28-6",
+    "german": "Seite 28 · Aufgabe 6, Teil a)\nErgebnisbereiche auf einer Zahlengeraden abschätzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 6, a şıkkı\nSayı doğrusunda sonuç aralıklarını yaklaşık belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p28_s6-renkli-dogru.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-28-6-b",
+    "page": 28,
+    "exercise": "6",
+    "number": "6b",
+    "parentId": "ls7-28-6",
+    "german": "Seite 28 · Aufgabe 6, Teil b)\nErgebnisbereiche auf einer Zahlengeraden abschätzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 6, b şıkkı\nSayı doğrusunda sonuç aralıklarını yaklaşık belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p28_s6-renkli-dogru.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-28-6-c",
+    "page": 28,
+    "exercise": "6",
+    "number": "6c",
+    "parentId": "ls7-28-6",
+    "german": "Seite 28 · Aufgabe 6, Teil c)\nErgebnisbereiche auf einer Zahlengeraden abschätzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 6, c şıkkı\nSayı doğrusunda sonuç aralıklarını yaklaşık belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p28_s6-renkli-dogru.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-28-6-d",
+    "page": 28,
+    "exercise": "6",
+    "number": "6d",
+    "parentId": "ls7-28-6",
+    "german": "Seite 28 · Aufgabe 6, Teil d)\nErgebnisbereiche auf einer Zahlengeraden abschätzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 6, d şıkkı\nSayı doğrusunda sonuç aralıklarını yaklaşık belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p28_s6-renkli-dogru.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-28-7",
@@ -1129,7 +5613,141 @@ window.CHECKLIST_PACK = {
     "german": "Seite 28 · Aufgabe 7\nFehlende Faktoren und Divisoren bestimmen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 28 · Soru 7\nEksik çarpanları ve bölenleri bulma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefghijkl"
+  },
+  {
+    "id": "ls7-28-7-a",
+    "page": 28,
+    "exercise": "7",
+    "number": "7a",
+    "parentId": "ls7-28-7",
+    "german": "Seite 28 · Aufgabe 7, Teil a)\nFehlende Faktoren und Divisoren bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 7, a şıkkı\nEksik çarpanları ve bölenleri bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-7-b",
+    "page": 28,
+    "exercise": "7",
+    "number": "7b",
+    "parentId": "ls7-28-7",
+    "german": "Seite 28 · Aufgabe 7, Teil b)\nFehlende Faktoren und Divisoren bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 7, b şıkkı\nEksik çarpanları ve bölenleri bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-7-c",
+    "page": 28,
+    "exercise": "7",
+    "number": "7c",
+    "parentId": "ls7-28-7",
+    "german": "Seite 28 · Aufgabe 7, Teil c)\nFehlende Faktoren und Divisoren bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 7, c şıkkı\nEksik çarpanları ve bölenleri bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-7-d",
+    "page": 28,
+    "exercise": "7",
+    "number": "7d",
+    "parentId": "ls7-28-7",
+    "german": "Seite 28 · Aufgabe 7, Teil d)\nFehlende Faktoren und Divisoren bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 7, d şıkkı\nEksik çarpanları ve bölenleri bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-7-e",
+    "page": 28,
+    "exercise": "7",
+    "number": "7e",
+    "parentId": "ls7-28-7",
+    "german": "Seite 28 · Aufgabe 7, Teil e)\nFehlende Faktoren und Divisoren bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 7, e şıkkı\nEksik çarpanları ve bölenleri bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-7-f",
+    "page": 28,
+    "exercise": "7",
+    "number": "7f",
+    "parentId": "ls7-28-7",
+    "german": "Seite 28 · Aufgabe 7, Teil f)\nFehlende Faktoren und Divisoren bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 7, f şıkkı\nEksik çarpanları ve bölenleri bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-7-g",
+    "page": 28,
+    "exercise": "7",
+    "number": "7g",
+    "parentId": "ls7-28-7",
+    "german": "Seite 28 · Aufgabe 7, Teil g)\nFehlende Faktoren und Divisoren bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 7, g şıkkı\nEksik çarpanları ve bölenleri bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-7-h",
+    "page": 28,
+    "exercise": "7",
+    "number": "7h",
+    "parentId": "ls7-28-7",
+    "german": "Seite 28 · Aufgabe 7, Teil h)\nFehlende Faktoren und Divisoren bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 7, h şıkkı\nEksik çarpanları ve bölenleri bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-7-i",
+    "page": 28,
+    "exercise": "7",
+    "number": "7i",
+    "parentId": "ls7-28-7",
+    "german": "Seite 28 · Aufgabe 7, Teil i)\nFehlende Faktoren und Divisoren bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 7, i şıkkı\nEksik çarpanları ve bölenleri bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-7-j",
+    "page": 28,
+    "exercise": "7",
+    "number": "7j",
+    "parentId": "ls7-28-7",
+    "german": "Seite 28 · Aufgabe 7, Teil j)\nFehlende Faktoren und Divisoren bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 7, j şıkkı\nEksik çarpanları ve bölenleri bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-7-k",
+    "page": 28,
+    "exercise": "7",
+    "number": "7k",
+    "parentId": "ls7-28-7",
+    "german": "Seite 28 · Aufgabe 7, Teil k)\nFehlende Faktoren und Divisoren bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 7, k şıkkı\nEksik çarpanları ve bölenleri bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-7-l",
+    "page": 28,
+    "exercise": "7",
+    "number": "7l",
+    "parentId": "ls7-28-7",
+    "german": "Seite 28 · Aufgabe 7, Teil l)\nFehlende Faktoren und Divisoren bestimmen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 7, l şıkkı\nEksik çarpanları ve bölenleri bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-28-8",
@@ -1139,7 +5757,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 28 · Aufgabe 8\nMultiplikations- und Divisionsaufgaben berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 28 · Soru 8\nÇarpma ve bölme işlemlerini hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-28-8-a",
+    "page": 28,
+    "exercise": "8",
+    "number": "8a",
+    "parentId": "ls7-28-8",
+    "german": "Seite 28 · Aufgabe 8, Teil a)\nMultiplikations- und Divisionsaufgaben berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 8, a şıkkı\nÇarpma ve bölme işlemlerini hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-8-b",
+    "page": 28,
+    "exercise": "8",
+    "number": "8b",
+    "parentId": "ls7-28-8",
+    "german": "Seite 28 · Aufgabe 8, Teil b)\nMultiplikations- und Divisionsaufgaben berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 8, b şıkkı\nÇarpma ve bölme işlemlerini hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-8-c",
+    "page": 28,
+    "exercise": "8",
+    "number": "8c",
+    "parentId": "ls7-28-8",
+    "german": "Seite 28 · Aufgabe 8, Teil c)\nMultiplikations- und Divisionsaufgaben berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 8, c şıkkı\nÇarpma ve bölme işlemlerini hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-8-d",
+    "page": 28,
+    "exercise": "8",
+    "number": "8d",
+    "parentId": "ls7-28-8",
+    "german": "Seite 28 · Aufgabe 8, Teil d)\nMultiplikations- und Divisionsaufgaben berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 8, d şıkkı\nÇarpma ve bölme işlemlerini hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-28-9",
@@ -1149,7 +5813,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 28 · Aufgabe 9\nÜberschlagen und Ergebnisse überprüfen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 28 · Soru 9\nYaklaşık hesaplama yapıp sonuçları kontrol etme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-28-9-a",
+    "page": 28,
+    "exercise": "9",
+    "number": "9a",
+    "parentId": "ls7-28-9",
+    "german": "Seite 28 · Aufgabe 9, Teil a)\nÜberschlagen und Ergebnisse überprüfen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 9, a şıkkı\nYaklaşık hesaplama yapıp sonuçları kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-9-b",
+    "page": 28,
+    "exercise": "9",
+    "number": "9b",
+    "parentId": "ls7-28-9",
+    "german": "Seite 28 · Aufgabe 9, Teil b)\nÜberschlagen und Ergebnisse überprüfen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 9, b şıkkı\nYaklaşık hesaplama yapıp sonuçları kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-9-c",
+    "page": 28,
+    "exercise": "9",
+    "number": "9c",
+    "parentId": "ls7-28-9",
+    "german": "Seite 28 · Aufgabe 9, Teil c)\nÜberschlagen und Ergebnisse überprüfen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 9, c şıkkı\nYaklaşık hesaplama yapıp sonuçları kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-9-d",
+    "page": 28,
+    "exercise": "9",
+    "number": "9d",
+    "parentId": "ls7-28-9",
+    "german": "Seite 28 · Aufgabe 9, Teil d)\nÜberschlagen und Ergebnisse überprüfen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 9, d şıkkı\nYaklaşık hesaplama yapıp sonuçları kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-28-10",
@@ -1159,7 +5869,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 28 · Aufgabe 10\nMit Zahlenkärtchen Terme mit dem Wert vier bilden.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 28 · Soru 10\nSayı kartlarıyla sonucu dört olan işlemler kurma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p28_s10-sayi-kartlari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-28-11",
@@ -1169,7 +5882,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 28 · Aufgabe 11\nKopfrechnen und eigene passende Aufgaben bilden.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 28 · Soru 11\nZihinden hesaplama ve benzer sorular oluşturma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-28-11-a",
+    "page": 28,
+    "exercise": "11",
+    "number": "11a",
+    "parentId": "ls7-28-11",
+    "german": "Seite 28 · Aufgabe 11, Teil a)\nKopfrechnen und eigene passende Aufgaben bilden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 11, a şıkkı\nZihinden hesaplama ve benzer sorular oluşturma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-11-b",
+    "page": 28,
+    "exercise": "11",
+    "number": "11b",
+    "parentId": "ls7-28-11",
+    "german": "Seite 28 · Aufgabe 11, Teil b)\nKopfrechnen und eigene passende Aufgaben bilden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 11, b şıkkı\nZihinden hesaplama ve benzer sorular oluşturma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-11-c",
+    "page": 28,
+    "exercise": "11",
+    "number": "11c",
+    "parentId": "ls7-28-11",
+    "german": "Seite 28 · Aufgabe 11, Teil c)\nKopfrechnen und eigene passende Aufgaben bilden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 11, c şıkkı\nZihinden hesaplama ve benzer sorular oluşturma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-28-11-d",
+    "page": 28,
+    "exercise": "11",
+    "number": "11d",
+    "parentId": "ls7-28-11",
+    "german": "Seite 28 · Aufgabe 11, Teil d)\nKopfrechnen und eigene passende Aufgaben bilden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 28 · Soru 11, d şıkkı\nZihinden hesaplama ve benzer sorular oluşturma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-29-12",
@@ -1179,7 +5938,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 29 · Aufgabe 12\nMultiplikations- und Divisionstabellen ergänzen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 29 · Soru 12\nÇarpma ve bölme tablolarını tamamlama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p29_s12-tablolar.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-29-12-a",
+    "page": 29,
+    "exercise": "12",
+    "number": "12a",
+    "parentId": "ls7-29-12",
+    "german": "Seite 29 · Aufgabe 12, Teil a)\nMultiplikations- und Divisionstabellen ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 12, a şıkkı\nÇarpma ve bölme tablolarını tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p29_s12-tablolar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-29-12-b",
+    "page": 29,
+    "exercise": "12",
+    "number": "12b",
+    "parentId": "ls7-29-12",
+    "german": "Seite 29 · Aufgabe 12, Teil b)\nMultiplikations- und Divisionstabellen ergänzen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 12, b şıkkı\nÇarpma ve bölme tablolarını tamamlama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p29_s12-tablolar.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-29-13",
@@ -1189,7 +5978,97 @@ window.CHECKLIST_PACK = {
     "german": "Seite 29 · Aufgabe 13\nErgebnisse berechnen und übrige Zahlenkärtchen finden.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 29 · Soru 13\nSonuçları bulup kullanılmayan sayı kartlarını belirleme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-29-13-a",
+    "page": 29,
+    "exercise": "13",
+    "number": "13a",
+    "parentId": "ls7-29-13",
+    "german": "Seite 29 · Aufgabe 13, Teil a)\nErgebnisse berechnen und übrige Zahlenkärtchen finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 13, a şıkkı\nSonuçları bulup kullanılmayan sayı kartlarını belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-13-b",
+    "page": 29,
+    "exercise": "13",
+    "number": "13b",
+    "parentId": "ls7-29-13",
+    "german": "Seite 29 · Aufgabe 13, Teil b)\nErgebnisse berechnen und übrige Zahlenkärtchen finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 13, b şıkkı\nSonuçları bulup kullanılmayan sayı kartlarını belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-13-c",
+    "page": 29,
+    "exercise": "13",
+    "number": "13c",
+    "parentId": "ls7-29-13",
+    "german": "Seite 29 · Aufgabe 13, Teil c)\nErgebnisse berechnen und übrige Zahlenkärtchen finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 13, c şıkkı\nSonuçları bulup kullanılmayan sayı kartlarını belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-13-d",
+    "page": 29,
+    "exercise": "13",
+    "number": "13d",
+    "parentId": "ls7-29-13",
+    "german": "Seite 29 · Aufgabe 13, Teil d)\nErgebnisse berechnen und übrige Zahlenkärtchen finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 13, d şıkkı\nSonuçları bulup kullanılmayan sayı kartlarını belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-13-e",
+    "page": 29,
+    "exercise": "13",
+    "number": "13e",
+    "parentId": "ls7-29-13",
+    "german": "Seite 29 · Aufgabe 13, Teil e)\nErgebnisse berechnen und übrige Zahlenkärtchen finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 13, e şıkkı\nSonuçları bulup kullanılmayan sayı kartlarını belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-13-f",
+    "page": 29,
+    "exercise": "13",
+    "number": "13f",
+    "parentId": "ls7-29-13",
+    "german": "Seite 29 · Aufgabe 13, Teil f)\nErgebnisse berechnen und übrige Zahlenkärtchen finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 13, f şıkkı\nSonuçları bulup kullanılmayan sayı kartlarını belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-13-g",
+    "page": 29,
+    "exercise": "13",
+    "number": "13g",
+    "parentId": "ls7-29-13",
+    "german": "Seite 29 · Aufgabe 13, Teil g)\nErgebnisse berechnen und übrige Zahlenkärtchen finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 13, g şıkkı\nSonuçları bulup kullanılmayan sayı kartlarını belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-13-h",
+    "page": 29,
+    "exercise": "13",
+    "number": "13h",
+    "parentId": "ls7-29-13",
+    "german": "Seite 29 · Aufgabe 13, Teil h)\nErgebnisse berechnen und übrige Zahlenkärtchen finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 13, h şıkkı\nSonuçları bulup kullanılmayan sayı kartlarını belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-29-14",
@@ -1199,7 +6078,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 29 · Aufgabe 14\nVorzeichen von Produkten und Rechenketten verfolgen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 29 · Soru 14\nÇarpımların işaretlerini ve işlem zincirini takip etme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p29_s14-yilan.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-29-14-a",
+    "page": 29,
+    "exercise": "14",
+    "number": "14a",
+    "parentId": "ls7-29-14",
+    "german": "Seite 29 · Aufgabe 14, Teil a)\nVorzeichen von Produkten und Rechenketten verfolgen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 14, a şıkkı\nÇarpımların işaretlerini ve işlem zincirini takip etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p29_s14-yilan.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-29-14-b",
+    "page": 29,
+    "exercise": "14",
+    "number": "14b",
+    "parentId": "ls7-29-14",
+    "german": "Seite 29 · Aufgabe 14, Teil b)\nVorzeichen von Produkten und Rechenketten verfolgen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 14, b şıkkı\nÇarpımların işaretlerini ve işlem zincirini takip etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p29_s14-yilan.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-29-15",
@@ -1209,7 +6118,75 @@ window.CHECKLIST_PACK = {
     "german": "Seite 29 · Aufgabe 15\nGünstig überschlagen, berechnen und kontrollieren.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 29 · Soru 15\nPratik tahmin yapıp hesaplama ve kontrol etme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdef"
+  },
+  {
+    "id": "ls7-29-15-a",
+    "page": 29,
+    "exercise": "15",
+    "number": "15a",
+    "parentId": "ls7-29-15",
+    "german": "Seite 29 · Aufgabe 15, Teil a)\nGünstig überschlagen, berechnen und kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 15, a şıkkı\nPratik tahmin yapıp hesaplama ve kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-15-b",
+    "page": 29,
+    "exercise": "15",
+    "number": "15b",
+    "parentId": "ls7-29-15",
+    "german": "Seite 29 · Aufgabe 15, Teil b)\nGünstig überschlagen, berechnen und kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 15, b şıkkı\nPratik tahmin yapıp hesaplama ve kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-15-c",
+    "page": 29,
+    "exercise": "15",
+    "number": "15c",
+    "parentId": "ls7-29-15",
+    "german": "Seite 29 · Aufgabe 15, Teil c)\nGünstig überschlagen, berechnen und kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 15, c şıkkı\nPratik tahmin yapıp hesaplama ve kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-15-d",
+    "page": 29,
+    "exercise": "15",
+    "number": "15d",
+    "parentId": "ls7-29-15",
+    "german": "Seite 29 · Aufgabe 15, Teil d)\nGünstig überschlagen, berechnen und kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 15, d şıkkı\nPratik tahmin yapıp hesaplama ve kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-15-e",
+    "page": 29,
+    "exercise": "15",
+    "number": "15e",
+    "parentId": "ls7-29-15",
+    "german": "Seite 29 · Aufgabe 15, Teil e)\nGünstig überschlagen, berechnen und kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 15, e şıkkı\nPratik tahmin yapıp hesaplama ve kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-15-f",
+    "page": 29,
+    "exercise": "15",
+    "number": "15f",
+    "parentId": "ls7-29-15",
+    "german": "Seite 29 · Aufgabe 15, Teil f)\nGünstig überschlagen, berechnen und kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 15, f şıkkı\nPratik tahmin yapıp hesaplama ve kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-29-16",
@@ -1219,7 +6196,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 29 · Aufgabe 16\nTaucher Rico und Oscar: unterschiedliche Rechenterme vergleichen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 29 · Soru 16\nDalgıç Rico ve Oscar için uygun hesaplamaları karşılaştırma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p29_s16-terim-kartlari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-29-16-a",
+    "page": 29,
+    "exercise": "16",
+    "number": "16a",
+    "parentId": "ls7-29-16",
+    "german": "Seite 29 · Aufgabe 16, Teil a)\nTaucher Rico und Oscar: unterschiedliche Rechenterme vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 16, a şıkkı\nDalgıç Rico ve Oscar için uygun hesaplamaları karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p29_s16-terim-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-29-16-b",
+    "page": 29,
+    "exercise": "16",
+    "number": "16b",
+    "parentId": "ls7-29-16",
+    "german": "Seite 29 · Aufgabe 16, Teil b)\nTaucher Rico und Oscar: unterschiedliche Rechenterme vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 16, b şıkkı\nDalgıç Rico ve Oscar için uygun hesaplamaları karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p29_s16-terim-kartlari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-29-17",
@@ -1229,7 +6236,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 29 · Aufgabe 17\nDas Permanenzprinzip beim Multiplizieren begründen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 29 · Soru 17\nÇarpma işlemindeki süreklilik ilkesini açıklama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-29-18",
@@ -1239,7 +6247,75 @@ window.CHECKLIST_PACK = {
     "german": "Seite 29 · Aufgabe 18\nProdukte notieren und Vorzeichen beachten.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 29 · Soru 18\nÇarpımları yazma ve sonuç işaretlerine dikkat etme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdef"
+  },
+  {
+    "id": "ls7-29-18-a",
+    "page": 29,
+    "exercise": "18",
+    "number": "18a",
+    "parentId": "ls7-29-18",
+    "german": "Seite 29 · Aufgabe 18, Teil a)\nProdukte notieren und Vorzeichen beachten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 18, a şıkkı\nÇarpımları yazma ve sonuç işaretlerine dikkat etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-18-b",
+    "page": 29,
+    "exercise": "18",
+    "number": "18b",
+    "parentId": "ls7-29-18",
+    "german": "Seite 29 · Aufgabe 18, Teil b)\nProdukte notieren und Vorzeichen beachten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 18, b şıkkı\nÇarpımları yazma ve sonuç işaretlerine dikkat etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-18-c",
+    "page": 29,
+    "exercise": "18",
+    "number": "18c",
+    "parentId": "ls7-29-18",
+    "german": "Seite 29 · Aufgabe 18, Teil c)\nProdukte notieren und Vorzeichen beachten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 18, c şıkkı\nÇarpımları yazma ve sonuç işaretlerine dikkat etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-18-d",
+    "page": 29,
+    "exercise": "18",
+    "number": "18d",
+    "parentId": "ls7-29-18",
+    "german": "Seite 29 · Aufgabe 18, Teil d)\nProdukte notieren und Vorzeichen beachten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 18, d şıkkı\nÇarpımları yazma ve sonuç işaretlerine dikkat etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-18-e",
+    "page": 29,
+    "exercise": "18",
+    "number": "18e",
+    "parentId": "ls7-29-18",
+    "german": "Seite 29 · Aufgabe 18, Teil e)\nProdukte notieren und Vorzeichen beachten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 18, e şıkkı\nÇarpımları yazma ve sonuç işaretlerine dikkat etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-29-18-f",
+    "page": 29,
+    "exercise": "18",
+    "number": "18f",
+    "parentId": "ls7-29-18",
+    "german": "Seite 29 · Aufgabe 18, Teil f)\nProdukte notieren und Vorzeichen beachten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 29 · Soru 18, f şıkkı\nÇarpımları yazma ve sonuç işaretlerine dikkat etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-30-19",
@@ -1249,7 +6325,89 @@ window.CHECKLIST_PACK = {
     "german": "Seite 30 · Aufgabe 19\nRechenfehler bei der Multiplikation und Division finden.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 30 · Soru 19\nÇarpma ve bölmedeki işlem hatalarını bulma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p30_s19-hata-kutulari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcdef"
+  },
+  {
+    "id": "ls7-30-19-a",
+    "page": 30,
+    "exercise": "19",
+    "number": "19a",
+    "parentId": "ls7-30-19",
+    "german": "Seite 30 · Aufgabe 19, Teil a)\nRechenfehler bei der Multiplikation und Division finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 19, a şıkkı\nÇarpma ve bölmedeki işlem hatalarını bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p30_s19-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-30-19-b",
+    "page": 30,
+    "exercise": "19",
+    "number": "19b",
+    "parentId": "ls7-30-19",
+    "german": "Seite 30 · Aufgabe 19, Teil b)\nRechenfehler bei der Multiplikation und Division finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 19, b şıkkı\nÇarpma ve bölmedeki işlem hatalarını bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p30_s19-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-30-19-c",
+    "page": 30,
+    "exercise": "19",
+    "number": "19c",
+    "parentId": "ls7-30-19",
+    "german": "Seite 30 · Aufgabe 19, Teil c)\nRechenfehler bei der Multiplikation und Division finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 19, c şıkkı\nÇarpma ve bölmedeki işlem hatalarını bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p30_s19-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-30-19-d",
+    "page": 30,
+    "exercise": "19",
+    "number": "19d",
+    "parentId": "ls7-30-19",
+    "german": "Seite 30 · Aufgabe 19, Teil d)\nRechenfehler bei der Multiplikation und Division finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 19, d şıkkı\nÇarpma ve bölmedeki işlem hatalarını bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p30_s19-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-30-19-e",
+    "page": 30,
+    "exercise": "19",
+    "number": "19e",
+    "parentId": "ls7-30-19",
+    "german": "Seite 30 · Aufgabe 19, Teil e)\nRechenfehler bei der Multiplikation und Division finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 19, e şıkkı\nÇarpma ve bölmedeki işlem hatalarını bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p30_s19-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-30-19-f",
+    "page": 30,
+    "exercise": "19",
+    "number": "19f",
+    "parentId": "ls7-30-19",
+    "german": "Seite 30 · Aufgabe 19, Teil f)\nRechenfehler bei der Multiplikation und Division finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 19, f şıkkı\nÇarpma ve bölmedeki işlem hatalarını bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p30_s19-hata-kutulari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-30-20",
@@ -1259,7 +6417,50 @@ window.CHECKLIST_PACK = {
     "german": "Seite 30 · Aufgabe 20\nDas Viereck ABCD im Koordinatensystem verändern.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 30 · Soru 20\nKoordinat sistemindeki ABCD dörtgeninin dönüşümünü inceleme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p30_s20-koordinatlar.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-30-20-a",
+    "page": 30,
+    "exercise": "20",
+    "number": "20a",
+    "parentId": "ls7-30-20",
+    "german": "Seite 30 · Aufgabe 20, Teil a)\nDas Viereck ABCD im Koordinatensystem verändern..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 20, a şıkkı\nKoordinat sistemindeki ABCD dörtgeninin dönüşümünü inceleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p30_s20-koordinatlar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-30-20-b",
+    "page": 30,
+    "exercise": "20",
+    "number": "20b",
+    "parentId": "ls7-30-20",
+    "german": "Seite 30 · Aufgabe 20, Teil b)\nDas Viereck ABCD im Koordinatensystem verändern..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 20, b şıkkı\nKoordinat sistemindeki ABCD dörtgeninin dönüşümünü inceleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p30_s20-koordinatlar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-30-20-c",
+    "page": 30,
+    "exercise": "20",
+    "number": "20c",
+    "parentId": "ls7-30-20",
+    "german": "Seite 30 · Aufgabe 20, Teil c)\nDas Viereck ABCD im Koordinatensystem verändern..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 20, c şıkkı\nKoordinat sistemindeki ABCD dörtgeninin dönüşümünü inceleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p30_s20-koordinatlar.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-30-21",
@@ -1269,7 +6470,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 30 · Aufgabe 21\nMultiplikationen und Divisionen im Kopf berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 30 · Soru 21\nÇarpma ve bölme işlemlerini zihinden hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-30-21-a",
+    "page": 30,
+    "exercise": "21",
+    "number": "21a",
+    "parentId": "ls7-30-21",
+    "german": "Seite 30 · Aufgabe 21, Teil a)\nMultiplikationen und Divisionen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 21, a şıkkı\nÇarpma ve bölme işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-30-21-b",
+    "page": 30,
+    "exercise": "21",
+    "number": "21b",
+    "parentId": "ls7-30-21",
+    "german": "Seite 30 · Aufgabe 21, Teil b)\nMultiplikationen und Divisionen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 21, b şıkkı\nÇarpma ve bölme işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-30-21-c",
+    "page": 30,
+    "exercise": "21",
+    "number": "21c",
+    "parentId": "ls7-30-21",
+    "german": "Seite 30 · Aufgabe 21, Teil c)\nMultiplikationen und Divisionen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 21, c şıkkı\nÇarpma ve bölme işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-30-21-d",
+    "page": 30,
+    "exercise": "21",
+    "number": "21d",
+    "parentId": "ls7-30-21",
+    "german": "Seite 30 · Aufgabe 21, Teil d)\nMultiplikationen und Divisionen im Kopf berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 21, d şıkkı\nÇarpma ve bölme işlemlerini zihinden hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-30-22",
@@ -1279,7 +6526,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 30 · Aufgabe 22\nErgebnisse überschlagen und geschickt berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 30 · Soru 22\nSonuçları yaklaşık tahmin edip pratik hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-30-22-a",
+    "page": 30,
+    "exercise": "22",
+    "number": "22a",
+    "parentId": "ls7-30-22",
+    "german": "Seite 30 · Aufgabe 22, Teil a)\nErgebnisse überschlagen und geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 22, a şıkkı\nSonuçları yaklaşık tahmin edip pratik hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-30-22-b",
+    "page": 30,
+    "exercise": "22",
+    "number": "22b",
+    "parentId": "ls7-30-22",
+    "german": "Seite 30 · Aufgabe 22, Teil b)\nErgebnisse überschlagen und geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 22, b şıkkı\nSonuçları yaklaşık tahmin edip pratik hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-30-22-c",
+    "page": 30,
+    "exercise": "22",
+    "number": "22c",
+    "parentId": "ls7-30-22",
+    "german": "Seite 30 · Aufgabe 22, Teil c)\nErgebnisse überschlagen und geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 22, c şıkkı\nSonuçları yaklaşık tahmin edip pratik hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-30-22-d",
+    "page": 30,
+    "exercise": "22",
+    "number": "22d",
+    "parentId": "ls7-30-22",
+    "german": "Seite 30 · Aufgabe 22, Teil d)\nErgebnisse überschlagen und geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 22, d şıkkı\nSonuçları yaklaşık tahmin edip pratik hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-30-23",
@@ -1289,7 +6582,64 @@ window.CHECKLIST_PACK = {
     "german": "Seite 30 · Aufgabe 23\nAussagen über Vorzeichen und Produkte bewerten.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 30 · Soru 23\nİşaretler ve çarpımlar hakkındaki ifadeleri değerlendirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcde"
+  },
+  {
+    "id": "ls7-30-23-a",
+    "page": 30,
+    "exercise": "23",
+    "number": "23a",
+    "parentId": "ls7-30-23",
+    "german": "Seite 30 · Aufgabe 23, Teil a)\nAussagen über Vorzeichen und Produkte bewerten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 23, a şıkkı\nİşaretler ve çarpımlar hakkındaki ifadeleri değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-30-23-b",
+    "page": 30,
+    "exercise": "23",
+    "number": "23b",
+    "parentId": "ls7-30-23",
+    "german": "Seite 30 · Aufgabe 23, Teil b)\nAussagen über Vorzeichen und Produkte bewerten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 23, b şıkkı\nİşaretler ve çarpımlar hakkındaki ifadeleri değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-30-23-c",
+    "page": 30,
+    "exercise": "23",
+    "number": "23c",
+    "parentId": "ls7-30-23",
+    "german": "Seite 30 · Aufgabe 23, Teil c)\nAussagen über Vorzeichen und Produkte bewerten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 23, c şıkkı\nİşaretler ve çarpımlar hakkındaki ifadeleri değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-30-23-d",
+    "page": 30,
+    "exercise": "23",
+    "number": "23d",
+    "parentId": "ls7-30-23",
+    "german": "Seite 30 · Aufgabe 23, Teil d)\nAussagen über Vorzeichen und Produkte bewerten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 23, d şıkkı\nİşaretler ve çarpımlar hakkındaki ifadeleri değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-30-23-e",
+    "page": 30,
+    "exercise": "23",
+    "number": "23e",
+    "parentId": "ls7-30-23",
+    "german": "Seite 30 · Aufgabe 23, Teil e)\nAussagen über Vorzeichen und Produkte bewerten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 23, e şıkkı\nİşaretler ve çarpımlar hakkındaki ifadeleri değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-30-24",
@@ -1299,7 +6649,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 30 · Aufgabe 24\nFehlende Zahlen finden und die Probe rechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 30 · Soru 24\nEksik sayıları bulup sağlamasını yapma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-30-24-a",
+    "page": 30,
+    "exercise": "24",
+    "number": "24a",
+    "parentId": "ls7-30-24",
+    "german": "Seite 30 · Aufgabe 24, Teil a)\nFehlende Zahlen finden und die Probe rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 24, a şıkkı\nEksik sayıları bulup sağlamasını yapma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-30-24-b",
+    "page": 30,
+    "exercise": "24",
+    "number": "24b",
+    "parentId": "ls7-30-24",
+    "german": "Seite 30 · Aufgabe 24, Teil b)\nFehlende Zahlen finden und die Probe rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 24, b şıkkı\nEksik sayıları bulup sağlamasını yapma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-30-24-c",
+    "page": 30,
+    "exercise": "24",
+    "number": "24c",
+    "parentId": "ls7-30-24",
+    "german": "Seite 30 · Aufgabe 24, Teil c)\nFehlende Zahlen finden und die Probe rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 30 · Soru 24, c şıkkı\nEksik sayıları bulup sağlamasını yapma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-30-25",
@@ -1309,7 +6694,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 30 · Aufgabe 25\nEigene Zahlenbeispiele für Rechenregeln finden.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 30 · Soru 25\nİşlem kurallarına kendi sayı örneklerini verme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p30_s25-kartlar.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-30-26",
@@ -1319,7 +6707,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 30 · Aufgabe 26\nNicolas Zimmer: das Raumvolumen berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 30 · Soru 26\nNikola'nın odasının hacmini hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-31-konu",
@@ -1329,7 +6718,34 @@ window.CHECKLIST_PACK = {
     "german": "Seite 31 · Rechenvorteile nutzen – Kommutativ-, Assoziativ- und Distributivgesetz\nLies die Buchseite mit den Erklärungen und Beispielen.",
     "turkish": "Sayfa 31 · Pratik hesaplama – değişme, birleşme ve dağılma özellikleri\nKitabındaki konu anlatımını ve örnekleri incele.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p31_islem-kurallari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-32-beispiel-2",
+    "page": 32,
+    "exercise": "Beispiel 2",
+    "number": "Beispiel 2",
+    "kind": "beispiel",
+    "german": "Beispiel 2 · Rechenvorteile nutzen.\nVerfolge zuerst den gelösten Rechenweg im eigenen Buch und erkläre ihn anschließend mit eigenen Worten.",
+    "turkish": "Çözümlü Örnek 2 · İşlem özelliklerinden yararlanma.\nKitaptaki çözümü incele, sonra işlemin neden bu şekilde yapıldığını kendi sözlerinle açıkla.",
+    "privateImageFile": "p32_beispiel2.png",
+    "privateFigureAvailable": true,
+    "auditStatus": "example-heading-verified"
+  },
+  {
+    "id": "ls7-32-beispiel-1",
+    "page": 32,
+    "exercise": "Beispiel 1",
+    "number": "Beispiel 1",
+    "kind": "beispiel",
+    "german": "Beispiel 1 · Minusklammern auflösen.\nVerfolge zuerst den gelösten Rechenweg im eigenen Buch und erkläre ihn anschließend mit eigenen Worten.",
+    "turkish": "Çözümlü Örnek 1 · Önündeki eksi işaretini dikkate alarak parantez açma.\nKitaptaki çözümü incele, sonra işlemin neden bu şekilde yapıldığını kendi sözlerinle açıkla.",
+    "privateImageFile": "p32_beispiel1.png",
+    "privateFigureAvailable": true,
+    "auditStatus": "example-heading-verified"
   },
   {
     "id": "ls7-32-1",
@@ -1339,7 +6755,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 32 · Aufgabe 1\nAus zwei Aufgaben die einfacher zu berechnende auswählen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 32 · Soru 1\nİki işlem arasından hesaplaması kolay olanı seçme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-32-1-a",
+    "page": 32,
+    "exercise": "1",
+    "number": "1a",
+    "parentId": "ls7-32-1",
+    "german": "Seite 32 · Aufgabe 1, Teil a)\nAus zwei Aufgaben die einfacher zu berechnende auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 32 · Soru 1, a şıkkı\nİki işlem arasından hesaplaması kolay olanı seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-32-1-b",
+    "page": 32,
+    "exercise": "1",
+    "number": "1b",
+    "parentId": "ls7-32-1",
+    "german": "Seite 32 · Aufgabe 1, Teil b)\nAus zwei Aufgaben die einfacher zu berechnende auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 32 · Soru 1, b şıkkı\nİki işlem arasından hesaplaması kolay olanı seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-32-1-c",
+    "page": 32,
+    "exercise": "1",
+    "number": "1c",
+    "parentId": "ls7-32-1",
+    "german": "Seite 32 · Aufgabe 1, Teil c)\nAus zwei Aufgaben die einfacher zu berechnende auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 32 · Soru 1, c şıkkı\nİki işlem arasından hesaplaması kolay olanı seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-32-2",
@@ -1349,7 +6800,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 32 · Aufgabe 2\nKärtchen mit gleichwertigen Termen und Ergebnissen zuordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 32 · Soru 2\nEşdeğer işlem kartlarını ve sonuçlarını eşleştirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p32_s2-kartlar.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-33-3",
@@ -1359,7 +6813,97 @@ window.CHECKLIST_PACK = {
     "german": "Seite 33 · Aufgabe 3\nMit und ohne Klammern rechnen und Rechenwege vergleichen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 33 · Soru 3\nParantezli ve parantezsiz işlem yollarını karşılaştırma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-33-3-a",
+    "page": 33,
+    "exercise": "3",
+    "number": "3a",
+    "parentId": "ls7-33-3",
+    "german": "Seite 33 · Aufgabe 3, Teil a)\nMit und ohne Klammern rechnen und Rechenwege vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 3, a şıkkı\nParantezli ve parantezsiz işlem yollarını karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-3-b",
+    "page": 33,
+    "exercise": "3",
+    "number": "3b",
+    "parentId": "ls7-33-3",
+    "german": "Seite 33 · Aufgabe 3, Teil b)\nMit und ohne Klammern rechnen und Rechenwege vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 3, b şıkkı\nParantezli ve parantezsiz işlem yollarını karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-3-c",
+    "page": 33,
+    "exercise": "3",
+    "number": "3c",
+    "parentId": "ls7-33-3",
+    "german": "Seite 33 · Aufgabe 3, Teil c)\nMit und ohne Klammern rechnen und Rechenwege vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 3, c şıkkı\nParantezli ve parantezsiz işlem yollarını karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-3-d",
+    "page": 33,
+    "exercise": "3",
+    "number": "3d",
+    "parentId": "ls7-33-3",
+    "german": "Seite 33 · Aufgabe 3, Teil d)\nMit und ohne Klammern rechnen und Rechenwege vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 3, d şıkkı\nParantezli ve parantezsiz işlem yollarını karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-3-e",
+    "page": 33,
+    "exercise": "3",
+    "number": "3e",
+    "parentId": "ls7-33-3",
+    "german": "Seite 33 · Aufgabe 3, Teil e)\nMit und ohne Klammern rechnen und Rechenwege vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 3, e şıkkı\nParantezli ve parantezsiz işlem yollarını karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-3-f",
+    "page": 33,
+    "exercise": "3",
+    "number": "3f",
+    "parentId": "ls7-33-3",
+    "german": "Seite 33 · Aufgabe 3, Teil f)\nMit und ohne Klammern rechnen und Rechenwege vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 3, f şıkkı\nParantezli ve parantezsiz işlem yollarını karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-3-g",
+    "page": 33,
+    "exercise": "3",
+    "number": "3g",
+    "parentId": "ls7-33-3",
+    "german": "Seite 33 · Aufgabe 3, Teil g)\nMit und ohne Klammern rechnen und Rechenwege vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 3, g şıkkı\nParantezli ve parantezsiz işlem yollarını karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-3-h",
+    "page": 33,
+    "exercise": "3",
+    "number": "3h",
+    "parentId": "ls7-33-3",
+    "german": "Seite 33 · Aufgabe 3, Teil h)\nMit und ohne Klammern rechnen und Rechenwege vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 3, h şıkkı\nParantezli ve parantezsiz işlem yollarını karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-33-4",
@@ -1369,7 +6913,75 @@ window.CHECKLIST_PACK = {
     "german": "Seite 33 · Aufgabe 4\nPrüfen, ob Ausklammern die Rechnung erleichtert.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 33 · Soru 4\nOrtak çarpan parantezine almanın hesabı kolaylaştırıp kolaylaştırmadığını inceleme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdef"
+  },
+  {
+    "id": "ls7-33-4-a",
+    "page": 33,
+    "exercise": "4",
+    "number": "4a",
+    "parentId": "ls7-33-4",
+    "german": "Seite 33 · Aufgabe 4, Teil a)\nPrüfen, ob Ausklammern die Rechnung erleichtert..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 4, a şıkkı\nOrtak çarpan parantezine almanın hesabı kolaylaştırıp kolaylaştırmadığını inceleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-4-b",
+    "page": 33,
+    "exercise": "4",
+    "number": "4b",
+    "parentId": "ls7-33-4",
+    "german": "Seite 33 · Aufgabe 4, Teil b)\nPrüfen, ob Ausklammern die Rechnung erleichtert..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 4, b şıkkı\nOrtak çarpan parantezine almanın hesabı kolaylaştırıp kolaylaştırmadığını inceleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-4-c",
+    "page": 33,
+    "exercise": "4",
+    "number": "4c",
+    "parentId": "ls7-33-4",
+    "german": "Seite 33 · Aufgabe 4, Teil c)\nPrüfen, ob Ausklammern die Rechnung erleichtert..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 4, c şıkkı\nOrtak çarpan parantezine almanın hesabı kolaylaştırıp kolaylaştırmadığını inceleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-4-d",
+    "page": 33,
+    "exercise": "4",
+    "number": "4d",
+    "parentId": "ls7-33-4",
+    "german": "Seite 33 · Aufgabe 4, Teil d)\nPrüfen, ob Ausklammern die Rechnung erleichtert..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 4, d şıkkı\nOrtak çarpan parantezine almanın hesabı kolaylaştırıp kolaylaştırmadığını inceleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-4-e",
+    "page": 33,
+    "exercise": "4",
+    "number": "4e",
+    "parentId": "ls7-33-4",
+    "german": "Seite 33 · Aufgabe 4, Teil e)\nPrüfen, ob Ausklammern die Rechnung erleichtert..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 4, e şıkkı\nOrtak çarpan parantezine almanın hesabı kolaylaştırıp kolaylaştırmadığını inceleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-4-f",
+    "page": 33,
+    "exercise": "4",
+    "number": "4f",
+    "parentId": "ls7-33-4",
+    "german": "Seite 33 · Aufgabe 4, Teil f)\nPrüfen, ob Ausklammern die Rechnung erleichtert..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 4, f şıkkı\nOrtak çarpan parantezine almanın hesabı kolaylaştırıp kolaylaştırmadığını inceleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-33-5",
@@ -1379,7 +6991,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 33 · Aufgabe 5\nMit Rechengesetzen günstiger rechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 33 · Soru 5\nİşlem kurallarını kullanarak daha kolay hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-33-5-a",
+    "page": 33,
+    "exercise": "5",
+    "number": "5a",
+    "parentId": "ls7-33-5",
+    "german": "Seite 33 · Aufgabe 5, Teil a)\nMit Rechengesetzen günstiger rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 5, a şıkkı\nİşlem kurallarını kullanarak daha kolay hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-5-b",
+    "page": 33,
+    "exercise": "5",
+    "number": "5b",
+    "parentId": "ls7-33-5",
+    "german": "Seite 33 · Aufgabe 5, Teil b)\nMit Rechengesetzen günstiger rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 5, b şıkkı\nİşlem kurallarını kullanarak daha kolay hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-5-c",
+    "page": 33,
+    "exercise": "5",
+    "number": "5c",
+    "parentId": "ls7-33-5",
+    "german": "Seite 33 · Aufgabe 5, Teil c)\nMit Rechengesetzen günstiger rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 5, c şıkkı\nİşlem kurallarını kullanarak daha kolay hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-33-6",
@@ -1389,7 +7036,63 @@ window.CHECKLIST_PACK = {
     "german": "Seite 33 · Aufgabe 6\nRechenbäume ergänzen und Terme bilden.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 33 · Soru 6\nİşlem ağaçlarını tamamlayıp işlemler kurma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p33_s6-rechenbaeume.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-33-6-a",
+    "page": 33,
+    "exercise": "6",
+    "number": "6a",
+    "parentId": "ls7-33-6",
+    "german": "Seite 33 · Aufgabe 6, Teil a)\nRechenbäume ergänzen und Terme bilden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 6, a şıkkı\nİşlem ağaçlarını tamamlayıp işlemler kurma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p33_s6-rechenbaeume.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-33-6-b",
+    "page": 33,
+    "exercise": "6",
+    "number": "6b",
+    "parentId": "ls7-33-6",
+    "german": "Seite 33 · Aufgabe 6, Teil b)\nRechenbäume ergänzen und Terme bilden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 6, b şıkkı\nİşlem ağaçlarını tamamlayıp işlemler kurma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p33_s6-rechenbaeume.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-33-6-c",
+    "page": 33,
+    "exercise": "6",
+    "number": "6c",
+    "parentId": "ls7-33-6",
+    "german": "Seite 33 · Aufgabe 6, Teil c)\nRechenbäume ergänzen und Terme bilden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 6, c şıkkı\nİşlem ağaçlarını tamamlayıp işlemler kurma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p33_s6-rechenbaeume.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-33-6-d",
+    "page": 33,
+    "exercise": "6",
+    "number": "6d",
+    "parentId": "ls7-33-6",
+    "german": "Seite 33 · Aufgabe 6, Teil d)\nRechenbäume ergänzen und Terme bilden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 6, d şıkkı\nİşlem ağaçlarını tamamlayıp işlemler kurma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p33_s6-rechenbaeume.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-33-7",
@@ -1399,7 +7102,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 33 · Aufgabe 7\nRechenvorteile nutzen und erklären.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 33 · Soru 7\nPratik hesap yöntemlerini kullanıp açıklama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-33-7-a",
+    "page": 33,
+    "exercise": "7",
+    "number": "7a",
+    "parentId": "ls7-33-7",
+    "german": "Seite 33 · Aufgabe 7, Teil a)\nRechenvorteile nutzen und erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 7, a şıkkı\nPratik hesap yöntemlerini kullanıp açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-7-b",
+    "page": 33,
+    "exercise": "7",
+    "number": "7b",
+    "parentId": "ls7-33-7",
+    "german": "Seite 33 · Aufgabe 7, Teil b)\nRechenvorteile nutzen und erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 7, b şıkkı\nPratik hesap yöntemlerini kullanıp açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-7-c",
+    "page": 33,
+    "exercise": "7",
+    "number": "7c",
+    "parentId": "ls7-33-7",
+    "german": "Seite 33 · Aufgabe 7, Teil c)\nRechenvorteile nutzen und erklären..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 7, c şıkkı\nPratik hesap yöntemlerini kullanıp açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-33-8",
@@ -1409,7 +7147,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 33 · Aufgabe 8\nAusklammern mit direkter Rechnung vergleichen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 33 · Soru 8\nOrtak çarpana almayı doğrudan hesaplamayla karşılaştırma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-33-8-a",
+    "page": 33,
+    "exercise": "8",
+    "number": "8a",
+    "parentId": "ls7-33-8",
+    "german": "Seite 33 · Aufgabe 8, Teil a)\nAusklammern mit direkter Rechnung vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 8, a şıkkı\nOrtak çarpana almayı doğrudan hesaplamayla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-8-b",
+    "page": 33,
+    "exercise": "8",
+    "number": "8b",
+    "parentId": "ls7-33-8",
+    "german": "Seite 33 · Aufgabe 8, Teil b)\nAusklammern mit direkter Rechnung vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 8, b şıkkı\nOrtak çarpana almayı doğrudan hesaplamayla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-8-c",
+    "page": 33,
+    "exercise": "8",
+    "number": "8c",
+    "parentId": "ls7-33-8",
+    "german": "Seite 33 · Aufgabe 8, Teil c)\nAusklammern mit direkter Rechnung vergleichen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 8, c şıkkı\nOrtak çarpana almayı doğrudan hesaplamayla karşılaştırma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-33-9",
@@ -1419,7 +7192,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 33 · Aufgabe 9\nGleichwertige Ausdrücke auf unterschiedlichen Wegen berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 33 · Soru 9\nEşdeğer ifadeleri farklı yollarla hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-33-9-a",
+    "page": 33,
+    "exercise": "9",
+    "number": "9a",
+    "parentId": "ls7-33-9",
+    "german": "Seite 33 · Aufgabe 9, Teil a)\nGleichwertige Ausdrücke auf unterschiedlichen Wegen berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 9, a şıkkı\nEşdeğer ifadeleri farklı yollarla hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-9-b",
+    "page": 33,
+    "exercise": "9",
+    "number": "9b",
+    "parentId": "ls7-33-9",
+    "german": "Seite 33 · Aufgabe 9, Teil b)\nGleichwertige Ausdrücke auf unterschiedlichen Wegen berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 9, b şıkkı\nEşdeğer ifadeleri farklı yollarla hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-9-c",
+    "page": 33,
+    "exercise": "9",
+    "number": "9c",
+    "parentId": "ls7-33-9",
+    "german": "Seite 33 · Aufgabe 9, Teil c)\nGleichwertige Ausdrücke auf unterschiedlichen Wegen berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 9, c şıkkı\nEşdeğer ifadeleri farklı yollarla hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-9-d",
+    "page": 33,
+    "exercise": "9",
+    "number": "9d",
+    "parentId": "ls7-33-9",
+    "german": "Seite 33 · Aufgabe 9, Teil d)\nGleichwertige Ausdrücke auf unterschiedlichen Wegen berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 9, d şıkkı\nEşdeğer ifadeleri farklı yollarla hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-33-10",
@@ -1429,7 +7248,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 33 · Aufgabe 10\nRechenwege auf Kärtchen prüfen und begründen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 33 · Soru 10\nKartlardaki çözüm yöntemlerini değerlendirip gerekçelendirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-33-10-a",
+    "page": 33,
+    "exercise": "10",
+    "number": "10a",
+    "parentId": "ls7-33-10",
+    "german": "Seite 33 · Aufgabe 10, Teil a)\nRechenwege auf Kärtchen prüfen und begründen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 10, a şıkkı\nKartlardaki çözüm yöntemlerini değerlendirip gerekçelendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-10-b",
+    "page": 33,
+    "exercise": "10",
+    "number": "10b",
+    "parentId": "ls7-33-10",
+    "german": "Seite 33 · Aufgabe 10, Teil b)\nRechenwege auf Kärtchen prüfen und begründen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 10, b şıkkı\nKartlardaki çözüm yöntemlerini değerlendirip gerekçelendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-33-10-c",
+    "page": 33,
+    "exercise": "10",
+    "number": "10c",
+    "parentId": "ls7-33-10",
+    "german": "Seite 33 · Aufgabe 10, Teil c)\nRechenwege auf Kärtchen prüfen und begründen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 33 · Soru 10, c şıkkı\nKartlardaki çözüm yöntemlerini değerlendirip gerekçelendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-34-11",
@@ -1439,7 +7293,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 34 · Aufgabe 11\nTerme finden, bei denen man Klammern weglassen kann.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 34 · Soru 11\nParantezin kaldırılabildiği işlemleri belirleme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-34-12",
@@ -1449,7 +7304,141 @@ window.CHECKLIST_PACK = {
     "german": "Seite 34 · Aufgabe 12\nGeschickt rechnen und mit dem Taschenrechner kontrollieren.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 34 · Soru 12\nPratik hesap yapıp hesap makinesiyle kontrol etme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefghijkl"
+  },
+  {
+    "id": "ls7-34-12-a",
+    "page": 34,
+    "exercise": "12",
+    "number": "12a",
+    "parentId": "ls7-34-12",
+    "german": "Seite 34 · Aufgabe 12, Teil a)\nGeschickt rechnen und mit dem Taschenrechner kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 12, a şıkkı\nPratik hesap yapıp hesap makinesiyle kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-12-b",
+    "page": 34,
+    "exercise": "12",
+    "number": "12b",
+    "parentId": "ls7-34-12",
+    "german": "Seite 34 · Aufgabe 12, Teil b)\nGeschickt rechnen und mit dem Taschenrechner kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 12, b şıkkı\nPratik hesap yapıp hesap makinesiyle kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-12-c",
+    "page": 34,
+    "exercise": "12",
+    "number": "12c",
+    "parentId": "ls7-34-12",
+    "german": "Seite 34 · Aufgabe 12, Teil c)\nGeschickt rechnen und mit dem Taschenrechner kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 12, c şıkkı\nPratik hesap yapıp hesap makinesiyle kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-12-d",
+    "page": 34,
+    "exercise": "12",
+    "number": "12d",
+    "parentId": "ls7-34-12",
+    "german": "Seite 34 · Aufgabe 12, Teil d)\nGeschickt rechnen und mit dem Taschenrechner kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 12, d şıkkı\nPratik hesap yapıp hesap makinesiyle kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-12-e",
+    "page": 34,
+    "exercise": "12",
+    "number": "12e",
+    "parentId": "ls7-34-12",
+    "german": "Seite 34 · Aufgabe 12, Teil e)\nGeschickt rechnen und mit dem Taschenrechner kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 12, e şıkkı\nPratik hesap yapıp hesap makinesiyle kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-12-f",
+    "page": 34,
+    "exercise": "12",
+    "number": "12f",
+    "parentId": "ls7-34-12",
+    "german": "Seite 34 · Aufgabe 12, Teil f)\nGeschickt rechnen und mit dem Taschenrechner kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 12, f şıkkı\nPratik hesap yapıp hesap makinesiyle kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-12-g",
+    "page": 34,
+    "exercise": "12",
+    "number": "12g",
+    "parentId": "ls7-34-12",
+    "german": "Seite 34 · Aufgabe 12, Teil g)\nGeschickt rechnen und mit dem Taschenrechner kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 12, g şıkkı\nPratik hesap yapıp hesap makinesiyle kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-12-h",
+    "page": 34,
+    "exercise": "12",
+    "number": "12h",
+    "parentId": "ls7-34-12",
+    "german": "Seite 34 · Aufgabe 12, Teil h)\nGeschickt rechnen und mit dem Taschenrechner kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 12, h şıkkı\nPratik hesap yapıp hesap makinesiyle kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-12-i",
+    "page": 34,
+    "exercise": "12",
+    "number": "12i",
+    "parentId": "ls7-34-12",
+    "german": "Seite 34 · Aufgabe 12, Teil i)\nGeschickt rechnen und mit dem Taschenrechner kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 12, i şıkkı\nPratik hesap yapıp hesap makinesiyle kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-12-j",
+    "page": 34,
+    "exercise": "12",
+    "number": "12j",
+    "parentId": "ls7-34-12",
+    "german": "Seite 34 · Aufgabe 12, Teil j)\nGeschickt rechnen und mit dem Taschenrechner kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 12, j şıkkı\nPratik hesap yapıp hesap makinesiyle kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-12-k",
+    "page": 34,
+    "exercise": "12",
+    "number": "12k",
+    "parentId": "ls7-34-12",
+    "german": "Seite 34 · Aufgabe 12, Teil k)\nGeschickt rechnen und mit dem Taschenrechner kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 12, k şıkkı\nPratik hesap yapıp hesap makinesiyle kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-12-l",
+    "page": 34,
+    "exercise": "12",
+    "number": "12l",
+    "parentId": "ls7-34-12",
+    "german": "Seite 34 · Aufgabe 12, Teil l)\nGeschickt rechnen und mit dem Taschenrechner kontrollieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 12, l şıkkı\nPratik hesap yapıp hesap makinesiyle kontrol etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-34-13",
@@ -1459,7 +7448,50 @@ window.CHECKLIST_PACK = {
     "german": "Seite 34 · Aufgabe 13\nAlltagssituationen mit dem Distributivgesetz modellieren.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 34 · Soru 13\nGünlük yaşam durumlarını dağılma özelliğiyle ifade etme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p34_s13-uygulama-kartlari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-34-13-a",
+    "page": 34,
+    "exercise": "13",
+    "number": "13a",
+    "parentId": "ls7-34-13",
+    "german": "Seite 34 · Aufgabe 13, Teil a)\nAlltagssituationen mit dem Distributivgesetz modellieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 13, a şıkkı\nGünlük yaşam durumlarını dağılma özelliğiyle ifade etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p34_s13-uygulama-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-34-13-b",
+    "page": 34,
+    "exercise": "13",
+    "number": "13b",
+    "parentId": "ls7-34-13",
+    "german": "Seite 34 · Aufgabe 13, Teil b)\nAlltagssituationen mit dem Distributivgesetz modellieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 13, b şıkkı\nGünlük yaşam durumlarını dağılma özelliğiyle ifade etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p34_s13-uygulama-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-34-13-c",
+    "page": 34,
+    "exercise": "13",
+    "number": "13c",
+    "parentId": "ls7-34-13",
+    "german": "Seite 34 · Aufgabe 13, Teil c)\nAlltagssituationen mit dem Distributivgesetz modellieren..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 13, c şıkkı\nGünlük yaşam durumlarını dağılma özelliğiyle ifade etme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p34_s13-uygulama-kartlari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-34-14",
@@ -1469,7 +7501,108 @@ window.CHECKLIST_PACK = {
     "german": "Seite 34 · Aufgabe 14\nTerme möglichst geschickt berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 34 · Soru 14\nİşlemleri en uygun yoldan hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefghi"
+  },
+  {
+    "id": "ls7-34-14-a",
+    "page": 34,
+    "exercise": "14",
+    "number": "14a",
+    "parentId": "ls7-34-14",
+    "german": "Seite 34 · Aufgabe 14, Teil a)\nTerme möglichst geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 14, a şıkkı\nİşlemleri en uygun yoldan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-14-b",
+    "page": 34,
+    "exercise": "14",
+    "number": "14b",
+    "parentId": "ls7-34-14",
+    "german": "Seite 34 · Aufgabe 14, Teil b)\nTerme möglichst geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 14, b şıkkı\nİşlemleri en uygun yoldan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-14-c",
+    "page": 34,
+    "exercise": "14",
+    "number": "14c",
+    "parentId": "ls7-34-14",
+    "german": "Seite 34 · Aufgabe 14, Teil c)\nTerme möglichst geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 14, c şıkkı\nİşlemleri en uygun yoldan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-14-d",
+    "page": 34,
+    "exercise": "14",
+    "number": "14d",
+    "parentId": "ls7-34-14",
+    "german": "Seite 34 · Aufgabe 14, Teil d)\nTerme möglichst geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 14, d şıkkı\nİşlemleri en uygun yoldan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-14-e",
+    "page": 34,
+    "exercise": "14",
+    "number": "14e",
+    "parentId": "ls7-34-14",
+    "german": "Seite 34 · Aufgabe 14, Teil e)\nTerme möglichst geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 14, e şıkkı\nİşlemleri en uygun yoldan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-14-f",
+    "page": 34,
+    "exercise": "14",
+    "number": "14f",
+    "parentId": "ls7-34-14",
+    "german": "Seite 34 · Aufgabe 14, Teil f)\nTerme möglichst geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 14, f şıkkı\nİşlemleri en uygun yoldan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-14-g",
+    "page": 34,
+    "exercise": "14",
+    "number": "14g",
+    "parentId": "ls7-34-14",
+    "german": "Seite 34 · Aufgabe 14, Teil g)\nTerme möglichst geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 14, g şıkkı\nİşlemleri en uygun yoldan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-14-h",
+    "page": 34,
+    "exercise": "14",
+    "number": "14h",
+    "parentId": "ls7-34-14",
+    "german": "Seite 34 · Aufgabe 14, Teil h)\nTerme möglichst geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 14, h şıkkı\nİşlemleri en uygun yoldan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-14-i",
+    "page": 34,
+    "exercise": "14",
+    "number": "14i",
+    "parentId": "ls7-34-14",
+    "german": "Seite 34 · Aufgabe 14, Teil i)\nTerme möglichst geschickt berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 14, i şıkkı\nİşlemleri en uygun yoldan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-34-15",
@@ -1479,7 +7612,53 @@ window.CHECKLIST_PACK = {
     "german": "Seite 34 · Aufgabe 15\nBrüche und Dezimalzahlen mit Rechengesetzen berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 34 · Soru 15\nKesir ve ondalık sayılarda işlem kurallarını kullanma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-34-15-a",
+    "page": 34,
+    "exercise": "15",
+    "number": "15a",
+    "parentId": "ls7-34-15",
+    "german": "Seite 34 · Aufgabe 15, Teil a)\nBrüche und Dezimalzahlen mit Rechengesetzen berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 15, a şıkkı\nKesir ve ondalık sayılarda işlem kurallarını kullanma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-15-b",
+    "page": 34,
+    "exercise": "15",
+    "number": "15b",
+    "parentId": "ls7-34-15",
+    "german": "Seite 34 · Aufgabe 15, Teil b)\nBrüche und Dezimalzahlen mit Rechengesetzen berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 15, b şıkkı\nKesir ve ondalık sayılarda işlem kurallarını kullanma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-15-c",
+    "page": 34,
+    "exercise": "15",
+    "number": "15c",
+    "parentId": "ls7-34-15",
+    "german": "Seite 34 · Aufgabe 15, Teil c)\nBrüche und Dezimalzahlen mit Rechengesetzen berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 15, c şıkkı\nKesir ve ondalık sayılarda işlem kurallarını kullanma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-34-15-d",
+    "page": 34,
+    "exercise": "15",
+    "number": "15d",
+    "parentId": "ls7-34-15",
+    "german": "Seite 34 · Aufgabe 15, Teil d)\nBrüche und Dezimalzahlen mit Rechengesetzen berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 15, d şıkkı\nKesir ve ondalık sayılarda işlem kurallarını kullanma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-34-16",
@@ -1489,7 +7668,63 @@ window.CHECKLIST_PACK = {
     "german": "Seite 34 · Aufgabe 16\nFehler beim Ausmultiplizieren und Ausklammern finden.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 34 · Soru 16\nParantez açma ve ortak çarpana alma hatalarını bulma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p34_s16-hata-kutulari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcd"
+  },
+  {
+    "id": "ls7-34-16-a",
+    "page": 34,
+    "exercise": "16",
+    "number": "16a",
+    "parentId": "ls7-34-16",
+    "german": "Seite 34 · Aufgabe 16, Teil a)\nFehler beim Ausmultiplizieren und Ausklammern finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 16, a şıkkı\nParantez açma ve ortak çarpana alma hatalarını bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p34_s16-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-34-16-b",
+    "page": 34,
+    "exercise": "16",
+    "number": "16b",
+    "parentId": "ls7-34-16",
+    "german": "Seite 34 · Aufgabe 16, Teil b)\nFehler beim Ausmultiplizieren und Ausklammern finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 16, b şıkkı\nParantez açma ve ortak çarpana alma hatalarını bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p34_s16-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-34-16-c",
+    "page": 34,
+    "exercise": "16",
+    "number": "16c",
+    "parentId": "ls7-34-16",
+    "german": "Seite 34 · Aufgabe 16, Teil c)\nFehler beim Ausmultiplizieren und Ausklammern finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 16, c şıkkı\nParantez açma ve ortak çarpana alma hatalarını bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p34_s16-hata-kutulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-34-16-d",
+    "page": 34,
+    "exercise": "16",
+    "number": "16d",
+    "parentId": "ls7-34-16",
+    "german": "Seite 34 · Aufgabe 16, Teil d)\nFehler beim Ausmultiplizieren und Ausklammern finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 34 · Soru 16, d şıkkı\nParantez açma ve ortak çarpana alma hatalarını bulma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p34_s16-hata-kutulari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-35-17",
@@ -1499,7 +7734,75 @@ window.CHECKLIST_PACK = {
     "german": "Seite 35 · Aufgabe 17\nMinusklammern auflösen und geschickt rechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 35 · Soru 17\nEksi işaretli parantezleri açıp pratik hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdef"
+  },
+  {
+    "id": "ls7-35-17-a",
+    "page": 35,
+    "exercise": "17",
+    "number": "17a",
+    "parentId": "ls7-35-17",
+    "german": "Seite 35 · Aufgabe 17, Teil a)\nMinusklammern auflösen und geschickt rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 17, a şıkkı\nEksi işaretli parantezleri açıp pratik hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-17-b",
+    "page": 35,
+    "exercise": "17",
+    "number": "17b",
+    "parentId": "ls7-35-17",
+    "german": "Seite 35 · Aufgabe 17, Teil b)\nMinusklammern auflösen und geschickt rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 17, b şıkkı\nEksi işaretli parantezleri açıp pratik hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-17-c",
+    "page": 35,
+    "exercise": "17",
+    "number": "17c",
+    "parentId": "ls7-35-17",
+    "german": "Seite 35 · Aufgabe 17, Teil c)\nMinusklammern auflösen und geschickt rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 17, c şıkkı\nEksi işaretli parantezleri açıp pratik hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-17-d",
+    "page": 35,
+    "exercise": "17",
+    "number": "17d",
+    "parentId": "ls7-35-17",
+    "german": "Seite 35 · Aufgabe 17, Teil d)\nMinusklammern auflösen und geschickt rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 17, d şıkkı\nEksi işaretli parantezleri açıp pratik hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-17-e",
+    "page": 35,
+    "exercise": "17",
+    "number": "17e",
+    "parentId": "ls7-35-17",
+    "german": "Seite 35 · Aufgabe 17, Teil e)\nMinusklammern auflösen und geschickt rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 17, e şıkkı\nEksi işaretli parantezleri açıp pratik hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-17-f",
+    "page": 35,
+    "exercise": "17",
+    "number": "17f",
+    "parentId": "ls7-35-17",
+    "german": "Seite 35 · Aufgabe 17, Teil f)\nMinusklammern auflösen und geschickt rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 17, f şıkkı\nEksi işaretli parantezleri açıp pratik hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-35-18",
@@ -1509,7 +7812,75 @@ window.CHECKLIST_PACK = {
     "german": "Seite 35 · Aufgabe 18\nDas Distributivgesetz beim Berechnen anwenden.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 35 · Soru 18\nHesaplamada dağılma özelliğini kullanma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdef"
+  },
+  {
+    "id": "ls7-35-18-a",
+    "page": 35,
+    "exercise": "18",
+    "number": "18a",
+    "parentId": "ls7-35-18",
+    "german": "Seite 35 · Aufgabe 18, Teil a)\nDas Distributivgesetz beim Berechnen anwenden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 18, a şıkkı\nHesaplamada dağılma özelliğini kullanma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-18-b",
+    "page": 35,
+    "exercise": "18",
+    "number": "18b",
+    "parentId": "ls7-35-18",
+    "german": "Seite 35 · Aufgabe 18, Teil b)\nDas Distributivgesetz beim Berechnen anwenden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 18, b şıkkı\nHesaplamada dağılma özelliğini kullanma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-18-c",
+    "page": 35,
+    "exercise": "18",
+    "number": "18c",
+    "parentId": "ls7-35-18",
+    "german": "Seite 35 · Aufgabe 18, Teil c)\nDas Distributivgesetz beim Berechnen anwenden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 18, c şıkkı\nHesaplamada dağılma özelliğini kullanma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-18-d",
+    "page": 35,
+    "exercise": "18",
+    "number": "18d",
+    "parentId": "ls7-35-18",
+    "german": "Seite 35 · Aufgabe 18, Teil d)\nDas Distributivgesetz beim Berechnen anwenden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 18, d şıkkı\nHesaplamada dağılma özelliğini kullanma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-18-e",
+    "page": 35,
+    "exercise": "18",
+    "number": "18e",
+    "parentId": "ls7-35-18",
+    "german": "Seite 35 · Aufgabe 18, Teil e)\nDas Distributivgesetz beim Berechnen anwenden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 18, e şıkkı\nHesaplamada dağılma özelliğini kullanma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-18-f",
+    "page": 35,
+    "exercise": "18",
+    "number": "18f",
+    "parentId": "ls7-35-18",
+    "german": "Seite 35 · Aufgabe 18, Teil f)\nDas Distributivgesetz beim Berechnen anwenden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 18, f şıkkı\nHesaplamada dağılma özelliğini kullanma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-35-19",
@@ -1519,7 +7890,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 35 · Aufgabe 19\nRechenbäume und Rechenreihenfolge untersuchen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 35 · Soru 19\nİşlem ağaçlarını ve işlem sırasını inceleme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p35_s19-rechenbaeume.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-35-19-a",
+    "page": 35,
+    "exercise": "19",
+    "number": "19a",
+    "parentId": "ls7-35-19",
+    "german": "Seite 35 · Aufgabe 19, Teil a)\nRechenbäume und Rechenreihenfolge untersuchen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 19, a şıkkı\nİşlem ağaçlarını ve işlem sırasını inceleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p35_s19-rechenbaeume.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-35-19-b",
+    "page": 35,
+    "exercise": "19",
+    "number": "19b",
+    "parentId": "ls7-35-19",
+    "german": "Seite 35 · Aufgabe 19, Teil b)\nRechenbäume und Rechenreihenfolge untersuchen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 19, b şıkkı\nİşlem ağaçlarını ve işlem sırasını inceleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p35_s19-rechenbaeume.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-35-20",
@@ -1529,7 +7930,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 35 · Aufgabe 20\nTerme durch Ausklammern vereinfachen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 35 · Soru 20\nOrtak çarpan parantezine alarak işlemleri sadeleştirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p35_s20-terimler.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-35-20-a",
+    "page": 35,
+    "exercise": "20",
+    "number": "20a",
+    "parentId": "ls7-35-20",
+    "german": "Seite 35 · Aufgabe 20, Teil a)\nTerme durch Ausklammern vereinfachen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 20, a şıkkı\nOrtak çarpan parantezine alarak işlemleri sadeleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p35_s20-terimler.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-35-20-b",
+    "page": 35,
+    "exercise": "20",
+    "number": "20b",
+    "parentId": "ls7-35-20",
+    "german": "Seite 35 · Aufgabe 20, Teil b)\nTerme durch Ausklammern vereinfachen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 20, b şıkkı\nOrtak çarpan parantezine alarak işlemleri sadeleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p35_s20-terimler.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-35-21",
@@ -1539,7 +7970,31 @@ window.CHECKLIST_PACK = {
     "german": "Seite 35 · Aufgabe 21\nGleichwertige Terme ohne vollständige Berechnung erkennen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 35 · Soru 21\nTam hesap yapmadan eşdeğer işlemleri belirleme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-35-21-a",
+    "page": 35,
+    "exercise": "21",
+    "number": "21a",
+    "parentId": "ls7-35-21",
+    "german": "Seite 35 · Aufgabe 21, Teil a)\nGleichwertige Terme ohne vollständige Berechnung erkennen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 21, a şıkkı\nTam hesap yapmadan eşdeğer işlemleri belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-21-b",
+    "page": 35,
+    "exercise": "21",
+    "number": "21b",
+    "parentId": "ls7-35-21",
+    "german": "Seite 35 · Aufgabe 21, Teil b)\nGleichwertige Terme ohne vollständige Berechnung erkennen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 21, b şıkkı\nTam hesap yapmadan eşdeğer işlemleri belirleme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-35-22",
@@ -1549,7 +8004,31 @@ window.CHECKLIST_PACK = {
     "german": "Seite 35 · Aufgabe 22\nUmformungen von Termen auf Gleichwertigkeit prüfen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 35 · Soru 22\nİşlem dönüşümlerinin eşdeğerliğini değerlendirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-35-22-a",
+    "page": 35,
+    "exercise": "22",
+    "number": "22a",
+    "parentId": "ls7-35-22",
+    "german": "Seite 35 · Aufgabe 22, Teil a)\nUmformungen von Termen auf Gleichwertigkeit prüfen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 22, a şıkkı\nİşlem dönüşümlerinin eşdeğerliğini değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-22-b",
+    "page": 35,
+    "exercise": "22",
+    "number": "22b",
+    "parentId": "ls7-35-22",
+    "german": "Seite 35 · Aufgabe 22, Teil b)\nUmformungen von Termen auf Gleichwertigkeit prüfen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 22, b şıkkı\nİşlem dönüşümlerinin eşdeğerliğini değerlendirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-35-23",
@@ -1559,7 +8038,141 @@ window.CHECKLIST_PACK = {
     "german": "Seite 35 · Aufgabe 23\nLängen-, Flächen- und andere Maße umrechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 35 · Soru 23\nUzunluk, alan ve diğer ölçü birimlerini dönüştürme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefghijkl"
+  },
+  {
+    "id": "ls7-35-23-a",
+    "page": 35,
+    "exercise": "23",
+    "number": "23a",
+    "parentId": "ls7-35-23",
+    "german": "Seite 35 · Aufgabe 23, Teil a)\nLängen-, Flächen- und andere Maße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 23, a şıkkı\nUzunluk, alan ve diğer ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-23-b",
+    "page": 35,
+    "exercise": "23",
+    "number": "23b",
+    "parentId": "ls7-35-23",
+    "german": "Seite 35 · Aufgabe 23, Teil b)\nLängen-, Flächen- und andere Maße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 23, b şıkkı\nUzunluk, alan ve diğer ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-23-c",
+    "page": 35,
+    "exercise": "23",
+    "number": "23c",
+    "parentId": "ls7-35-23",
+    "german": "Seite 35 · Aufgabe 23, Teil c)\nLängen-, Flächen- und andere Maße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 23, c şıkkı\nUzunluk, alan ve diğer ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-23-d",
+    "page": 35,
+    "exercise": "23",
+    "number": "23d",
+    "parentId": "ls7-35-23",
+    "german": "Seite 35 · Aufgabe 23, Teil d)\nLängen-, Flächen- und andere Maße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 23, d şıkkı\nUzunluk, alan ve diğer ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-23-e",
+    "page": 35,
+    "exercise": "23",
+    "number": "23e",
+    "parentId": "ls7-35-23",
+    "german": "Seite 35 · Aufgabe 23, Teil e)\nLängen-, Flächen- und andere Maße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 23, e şıkkı\nUzunluk, alan ve diğer ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-23-f",
+    "page": 35,
+    "exercise": "23",
+    "number": "23f",
+    "parentId": "ls7-35-23",
+    "german": "Seite 35 · Aufgabe 23, Teil f)\nLängen-, Flächen- und andere Maße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 23, f şıkkı\nUzunluk, alan ve diğer ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-23-g",
+    "page": 35,
+    "exercise": "23",
+    "number": "23g",
+    "parentId": "ls7-35-23",
+    "german": "Seite 35 · Aufgabe 23, Teil g)\nLängen-, Flächen- und andere Maße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 23, g şıkkı\nUzunluk, alan ve diğer ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-23-h",
+    "page": 35,
+    "exercise": "23",
+    "number": "23h",
+    "parentId": "ls7-35-23",
+    "german": "Seite 35 · Aufgabe 23, Teil h)\nLängen-, Flächen- und andere Maße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 23, h şıkkı\nUzunluk, alan ve diğer ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-23-i",
+    "page": 35,
+    "exercise": "23",
+    "number": "23i",
+    "parentId": "ls7-35-23",
+    "german": "Seite 35 · Aufgabe 23, Teil i)\nLängen-, Flächen- und andere Maße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 23, i şıkkı\nUzunluk, alan ve diğer ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-23-j",
+    "page": 35,
+    "exercise": "23",
+    "number": "23j",
+    "parentId": "ls7-35-23",
+    "german": "Seite 35 · Aufgabe 23, Teil j)\nLängen-, Flächen- und andere Maße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 23, j şıkkı\nUzunluk, alan ve diğer ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-23-k",
+    "page": 35,
+    "exercise": "23",
+    "number": "23k",
+    "parentId": "ls7-35-23",
+    "german": "Seite 35 · Aufgabe 23, Teil k)\nLängen-, Flächen- und andere Maße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 23, k şıkkı\nUzunluk, alan ve diğer ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-35-23-l",
+    "page": 35,
+    "exercise": "23",
+    "number": "23l",
+    "parentId": "ls7-35-23",
+    "german": "Seite 35 · Aufgabe 23, Teil l)\nLängen-, Flächen- und andere Maße umrechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 35 · Soru 23, l şıkkı\nUzunluk, alan ve diğer ölçü birimlerini dönüştürme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-36-1",
@@ -1569,7 +8182,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 36 · Aufgabe 1\nRationale Zahlen der Größe nach ordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 36 · Soru 1\nRasyonel sayıları küçükten büyüğe sıralama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-36-1-a",
+    "page": 36,
+    "exercise": "1",
+    "number": "1a",
+    "parentId": "ls7-36-1",
+    "german": "Seite 36 · Aufgabe 1, Teil a)\nRationale Zahlen der Größe nach ordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 1, a şıkkı\nRasyonel sayıları küçükten büyüğe sıralama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-36-1-b",
+    "page": 36,
+    "exercise": "1",
+    "number": "1b",
+    "parentId": "ls7-36-1",
+    "german": "Seite 36 · Aufgabe 1, Teil b)\nRationale Zahlen der Größe nach ordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 1, b şıkkı\nRasyonel sayıları küçükten büyüğe sıralama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-36-1-c",
+    "page": 36,
+    "exercise": "1",
+    "number": "1c",
+    "parentId": "ls7-36-1",
+    "german": "Seite 36 · Aufgabe 1, Teil c)\nRationale Zahlen der Größe nach ordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 1, c şıkkı\nRasyonel sayıları küçükten büyüğe sıralama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-36-2",
@@ -1579,7 +8227,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 36 · Aufgabe 2\nAuf Zahlengeraden markierte Zahlen benennen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 36 · Soru 2\nSayı doğrularında işaretlenmiş sayıları yazma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p36_s2-sayi-dogrulari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-36-2-a",
+    "page": 36,
+    "exercise": "2",
+    "number": "2a",
+    "parentId": "ls7-36-2",
+    "german": "Seite 36 · Aufgabe 2, Teil a)\nAuf Zahlengeraden markierte Zahlen benennen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 2, a şıkkı\nSayı doğrularında işaretlenmiş sayıları yazma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p36_s2-sayi-dogrulari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-36-2-b",
+    "page": 36,
+    "exercise": "2",
+    "number": "2b",
+    "parentId": "ls7-36-2",
+    "german": "Seite 36 · Aufgabe 2, Teil b)\nAuf Zahlengeraden markierte Zahlen benennen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 2, b şıkkı\nSayı doğrularında işaretlenmiş sayıları yazma..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p36_s2-sayi-dogrulari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-36-3",
@@ -1589,7 +8267,97 @@ window.CHECKLIST_PACK = {
     "german": "Seite 36 · Aufgabe 3\nVorzeichen von Ergebnissen erkennen und Terme berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 36 · Soru 3\nİşlem sonuçlarının işaretini bulup hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-36-3-a",
+    "page": 36,
+    "exercise": "3",
+    "number": "3a",
+    "parentId": "ls7-36-3",
+    "german": "Seite 36 · Aufgabe 3, Teil a)\nVorzeichen von Ergebnissen erkennen und Terme berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 3, a şıkkı\nİşlem sonuçlarının işaretini bulup hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-36-3-b",
+    "page": 36,
+    "exercise": "3",
+    "number": "3b",
+    "parentId": "ls7-36-3",
+    "german": "Seite 36 · Aufgabe 3, Teil b)\nVorzeichen von Ergebnissen erkennen und Terme berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 3, b şıkkı\nİşlem sonuçlarının işaretini bulup hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-36-3-c",
+    "page": 36,
+    "exercise": "3",
+    "number": "3c",
+    "parentId": "ls7-36-3",
+    "german": "Seite 36 · Aufgabe 3, Teil c)\nVorzeichen von Ergebnissen erkennen und Terme berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 3, c şıkkı\nİşlem sonuçlarının işaretini bulup hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-36-3-d",
+    "page": 36,
+    "exercise": "3",
+    "number": "3d",
+    "parentId": "ls7-36-3",
+    "german": "Seite 36 · Aufgabe 3, Teil d)\nVorzeichen von Ergebnissen erkennen und Terme berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 3, d şıkkı\nİşlem sonuçlarının işaretini bulup hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-36-3-e",
+    "page": 36,
+    "exercise": "3",
+    "number": "3e",
+    "parentId": "ls7-36-3",
+    "german": "Seite 36 · Aufgabe 3, Teil e)\nVorzeichen von Ergebnissen erkennen und Terme berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 3, e şıkkı\nİşlem sonuçlarının işaretini bulup hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-36-3-f",
+    "page": 36,
+    "exercise": "3",
+    "number": "3f",
+    "parentId": "ls7-36-3",
+    "german": "Seite 36 · Aufgabe 3, Teil f)\nVorzeichen von Ergebnissen erkennen und Terme berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 3, f şıkkı\nİşlem sonuçlarının işaretini bulup hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-36-3-g",
+    "page": 36,
+    "exercise": "3",
+    "number": "3g",
+    "parentId": "ls7-36-3",
+    "german": "Seite 36 · Aufgabe 3, Teil g)\nVorzeichen von Ergebnissen erkennen und Terme berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 3, g şıkkı\nİşlem sonuçlarının işaretini bulup hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-36-3-h",
+    "page": 36,
+    "exercise": "3",
+    "number": "3h",
+    "parentId": "ls7-36-3",
+    "german": "Seite 36 · Aufgabe 3, Teil h)\nVorzeichen von Ergebnissen erkennen und Terme berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 3, h şıkkı\nİşlem sonuçlarının işaretini bulup hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-36-4",
@@ -1599,7 +8367,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 36 · Aufgabe 4\nKärtchen den passenden Gegenzahl-Beziehungen zuordnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 36 · Soru 4\nKartları uygun karşıt sayı ilişkileriyle eşleştirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p36_s4-kartlar.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-36-4-a",
+    "page": 36,
+    "exercise": "4",
+    "number": "4a",
+    "parentId": "ls7-36-4",
+    "german": "Seite 36 · Aufgabe 4, Teil a)\nKärtchen den passenden Gegenzahl-Beziehungen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 4, a şıkkı\nKartları uygun karşıt sayı ilişkileriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p36_s4-kartlar.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-36-4-b",
+    "page": 36,
+    "exercise": "4",
+    "number": "4b",
+    "parentId": "ls7-36-4",
+    "german": "Seite 36 · Aufgabe 4, Teil b)\nKärtchen den passenden Gegenzahl-Beziehungen zuordnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 4, b şıkkı\nKartları uygun karşıt sayı ilişkileriyle eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p36_s4-kartlar.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-36-5",
@@ -1609,7 +8407,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 36 · Aufgabe 5\nZwischen zwei Aufgaben den einfacheren Rechenweg wählen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 36 · Soru 5\nİki işlem arasından daha kolay yolu seçme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-36-5-a",
+    "page": 36,
+    "exercise": "5",
+    "number": "5a",
+    "parentId": "ls7-36-5",
+    "german": "Seite 36 · Aufgabe 5, Teil a)\nZwischen zwei Aufgaben den einfacheren Rechenweg wählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 5, a şıkkı\nİki işlem arasından daha kolay yolu seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-36-5-b",
+    "page": 36,
+    "exercise": "5",
+    "number": "5b",
+    "parentId": "ls7-36-5",
+    "german": "Seite 36 · Aufgabe 5, Teil b)\nZwischen zwei Aufgaben den einfacheren Rechenweg wählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 5, b şıkkı\nİki işlem arasından daha kolay yolu seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-36-5-c",
+    "page": 36,
+    "exercise": "5",
+    "number": "5c",
+    "parentId": "ls7-36-5",
+    "german": "Seite 36 · Aufgabe 5, Teil c)\nZwischen zwei Aufgaben den einfacheren Rechenweg wählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 5, c şıkkı\nİki işlem arasından daha kolay yolu seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-36-6",
@@ -1619,7 +8452,37 @@ window.CHECKLIST_PACK = {
     "german": "Seite 36 · Aufgabe 6\nBerge vergleichen und Höhendifferenzen berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 36 · Soru 6\nDağ yüksekliklerini karşılaştırıp yükseklik farklarını hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p36_s6-harita.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "ab"
+  },
+  {
+    "id": "ls7-36-6-a",
+    "page": 36,
+    "exercise": "6",
+    "number": "6a",
+    "parentId": "ls7-36-6",
+    "german": "Seite 36 · Aufgabe 6, Teil a)\nBerge vergleichen und Höhendifferenzen berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 6, a şıkkı\nDağ yüksekliklerini karşılaştırıp yükseklik farklarını hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p36_s6-harita.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-36-6-b",
+    "page": 36,
+    "exercise": "6",
+    "number": "6b",
+    "parentId": "ls7-36-6",
+    "german": "Seite 36 · Aufgabe 6, Teil b)\nBerge vergleichen und Höhendifferenzen berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 36 · Soru 6, b şıkkı\nDağ yüksekliklerini karşılaştırıp yükseklik farklarını hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p36_s6-harita.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-37-7",
@@ -1629,7 +8492,8 @@ window.CHECKLIST_PACK = {
     "german": "Seite 37 · Aufgabe 7\nKontostände von Anna und Ben vergleichen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 37 · Soru 7\nAnna ile Ben'in banka hesap bakiyelerini karşılaştırma.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed"
   },
   {
     "id": "ls7-37-8",
@@ -1639,7 +8503,75 @@ window.CHECKLIST_PACK = {
     "german": "Seite 37 · Aufgabe 8\nMit und ohne Ausklammern rechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 37 · Soru 8\nOrtak çarpana alarak ve almadan hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdef"
+  },
+  {
+    "id": "ls7-37-8-a",
+    "page": 37,
+    "exercise": "8",
+    "number": "8a",
+    "parentId": "ls7-37-8",
+    "german": "Seite 37 · Aufgabe 8, Teil a)\nMit und ohne Ausklammern rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 8, a şıkkı\nOrtak çarpana alarak ve almadan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-8-b",
+    "page": 37,
+    "exercise": "8",
+    "number": "8b",
+    "parentId": "ls7-37-8",
+    "german": "Seite 37 · Aufgabe 8, Teil b)\nMit und ohne Ausklammern rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 8, b şıkkı\nOrtak çarpana alarak ve almadan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-8-c",
+    "page": 37,
+    "exercise": "8",
+    "number": "8c",
+    "parentId": "ls7-37-8",
+    "german": "Seite 37 · Aufgabe 8, Teil c)\nMit und ohne Ausklammern rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 8, c şıkkı\nOrtak çarpana alarak ve almadan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-8-d",
+    "page": 37,
+    "exercise": "8",
+    "number": "8d",
+    "parentId": "ls7-37-8",
+    "german": "Seite 37 · Aufgabe 8, Teil d)\nMit und ohne Ausklammern rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 8, d şıkkı\nOrtak çarpana alarak ve almadan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-8-e",
+    "page": 37,
+    "exercise": "8",
+    "number": "8e",
+    "parentId": "ls7-37-8",
+    "german": "Seite 37 · Aufgabe 8, Teil e)\nMit und ohne Ausklammern rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 8, e şıkkı\nOrtak çarpana alarak ve almadan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-8-f",
+    "page": 37,
+    "exercise": "8",
+    "number": "8f",
+    "parentId": "ls7-37-8",
+    "german": "Seite 37 · Aufgabe 8, Teil f)\nMit und ohne Ausklammern rechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 8, f şıkkı\nOrtak çarpana alarak ve almadan hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-37-9",
@@ -1649,7 +8581,115 @@ window.CHECKLIST_PACK = {
     "german": "Seite 37 · Aufgabe 9\nAufgaben mit negativen Ergebnissen auswählen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 37 · Soru 9\nSonucu negatif olan işlemleri seçme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p37_s9-sonuc-kartlari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-37-9-a",
+    "page": 37,
+    "exercise": "9",
+    "number": "9a",
+    "parentId": "ls7-37-9",
+    "german": "Seite 37 · Aufgabe 9, Teil a)\nAufgaben mit negativen Ergebnissen auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 9, a şıkkı\nSonucu negatif olan işlemleri seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s9-sonuc-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-37-9-b",
+    "page": 37,
+    "exercise": "9",
+    "number": "9b",
+    "parentId": "ls7-37-9",
+    "german": "Seite 37 · Aufgabe 9, Teil b)\nAufgaben mit negativen Ergebnissen auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 9, b şıkkı\nSonucu negatif olan işlemleri seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s9-sonuc-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-37-9-c",
+    "page": 37,
+    "exercise": "9",
+    "number": "9c",
+    "parentId": "ls7-37-9",
+    "german": "Seite 37 · Aufgabe 9, Teil c)\nAufgaben mit negativen Ergebnissen auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 9, c şıkkı\nSonucu negatif olan işlemleri seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s9-sonuc-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-37-9-d",
+    "page": 37,
+    "exercise": "9",
+    "number": "9d",
+    "parentId": "ls7-37-9",
+    "german": "Seite 37 · Aufgabe 9, Teil d)\nAufgaben mit negativen Ergebnissen auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 9, d şıkkı\nSonucu negatif olan işlemleri seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s9-sonuc-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-37-9-e",
+    "page": 37,
+    "exercise": "9",
+    "number": "9e",
+    "parentId": "ls7-37-9",
+    "german": "Seite 37 · Aufgabe 9, Teil e)\nAufgaben mit negativen Ergebnissen auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 9, e şıkkı\nSonucu negatif olan işlemleri seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s9-sonuc-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-37-9-f",
+    "page": 37,
+    "exercise": "9",
+    "number": "9f",
+    "parentId": "ls7-37-9",
+    "german": "Seite 37 · Aufgabe 9, Teil f)\nAufgaben mit negativen Ergebnissen auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 9, f şıkkı\nSonucu negatif olan işlemleri seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s9-sonuc-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-37-9-g",
+    "page": 37,
+    "exercise": "9",
+    "number": "9g",
+    "parentId": "ls7-37-9",
+    "german": "Seite 37 · Aufgabe 9, Teil g)\nAufgaben mit negativen Ergebnissen auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 9, g şıkkı\nSonucu negatif olan işlemleri seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s9-sonuc-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-37-9-h",
+    "page": 37,
+    "exercise": "9",
+    "number": "9h",
+    "parentId": "ls7-37-9",
+    "german": "Seite 37 · Aufgabe 9, Teil h)\nAufgaben mit negativen Ergebnissen auswählen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 9, h şıkkı\nSonucu negatif olan işlemleri seçme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s9-sonuc-kartlari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-37-10",
@@ -1659,7 +8699,97 @@ window.CHECKLIST_PACK = {
     "german": "Seite 37 · Aufgabe 10\nErgebnisse überschlagen und anschließend berechnen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 37 · Soru 10\nSonuçları tahmin edip ardından hesaplama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-37-10-a",
+    "page": 37,
+    "exercise": "10",
+    "number": "10a",
+    "parentId": "ls7-37-10",
+    "german": "Seite 37 · Aufgabe 10, Teil a)\nErgebnisse überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 10, a şıkkı\nSonuçları tahmin edip ardından hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-10-b",
+    "page": 37,
+    "exercise": "10",
+    "number": "10b",
+    "parentId": "ls7-37-10",
+    "german": "Seite 37 · Aufgabe 10, Teil b)\nErgebnisse überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 10, b şıkkı\nSonuçları tahmin edip ardından hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-10-c",
+    "page": 37,
+    "exercise": "10",
+    "number": "10c",
+    "parentId": "ls7-37-10",
+    "german": "Seite 37 · Aufgabe 10, Teil c)\nErgebnisse überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 10, c şıkkı\nSonuçları tahmin edip ardından hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-10-d",
+    "page": 37,
+    "exercise": "10",
+    "number": "10d",
+    "parentId": "ls7-37-10",
+    "german": "Seite 37 · Aufgabe 10, Teil d)\nErgebnisse überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 10, d şıkkı\nSonuçları tahmin edip ardından hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-10-e",
+    "page": 37,
+    "exercise": "10",
+    "number": "10e",
+    "parentId": "ls7-37-10",
+    "german": "Seite 37 · Aufgabe 10, Teil e)\nErgebnisse überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 10, e şıkkı\nSonuçları tahmin edip ardından hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-10-f",
+    "page": 37,
+    "exercise": "10",
+    "number": "10f",
+    "parentId": "ls7-37-10",
+    "german": "Seite 37 · Aufgabe 10, Teil f)\nErgebnisse überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 10, f şıkkı\nSonuçları tahmin edip ardından hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-10-g",
+    "page": 37,
+    "exercise": "10",
+    "number": "10g",
+    "parentId": "ls7-37-10",
+    "german": "Seite 37 · Aufgabe 10, Teil g)\nErgebnisse überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 10, g şıkkı\nSonuçları tahmin edip ardından hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-10-h",
+    "page": 37,
+    "exercise": "10",
+    "number": "10h",
+    "parentId": "ls7-37-10",
+    "german": "Seite 37 · Aufgabe 10, Teil h)\nErgebnisse überschlagen und anschließend berechnen..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 10, h şıkkı\nSonuçları tahmin edip ardından hesaplama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-37-11",
@@ -1669,7 +8799,115 @@ window.CHECKLIST_PACK = {
     "german": "Seite 37 · Aufgabe 11\nGeschickt rechnen und zugeordnete Ergebniskarten finden.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 37 · Soru 11\nPratik hesaplama yapıp sonuç kartlarını eşleştirme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p37_s11-sonuc-kartlari.png",
+    "privateFigureAvailable": true,
+    "subpartLetters": "abcdefgh"
+  },
+  {
+    "id": "ls7-37-11-a",
+    "page": 37,
+    "exercise": "11",
+    "number": "11a",
+    "parentId": "ls7-37-11",
+    "german": "Seite 37 · Aufgabe 11, Teil a)\nGeschickt rechnen und zugeordnete Ergebniskarten finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 11, a şıkkı\nPratik hesaplama yapıp sonuç kartlarını eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s11-sonuc-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-37-11-b",
+    "page": 37,
+    "exercise": "11",
+    "number": "11b",
+    "parentId": "ls7-37-11",
+    "german": "Seite 37 · Aufgabe 11, Teil b)\nGeschickt rechnen und zugeordnete Ergebniskarten finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 11, b şıkkı\nPratik hesaplama yapıp sonuç kartlarını eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s11-sonuc-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-37-11-c",
+    "page": 37,
+    "exercise": "11",
+    "number": "11c",
+    "parentId": "ls7-37-11",
+    "german": "Seite 37 · Aufgabe 11, Teil c)\nGeschickt rechnen und zugeordnete Ergebniskarten finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 11, c şıkkı\nPratik hesaplama yapıp sonuç kartlarını eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s11-sonuc-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-37-11-d",
+    "page": 37,
+    "exercise": "11",
+    "number": "11d",
+    "parentId": "ls7-37-11",
+    "german": "Seite 37 · Aufgabe 11, Teil d)\nGeschickt rechnen und zugeordnete Ergebniskarten finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 11, d şıkkı\nPratik hesaplama yapıp sonuç kartlarını eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s11-sonuc-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-37-11-e",
+    "page": 37,
+    "exercise": "11",
+    "number": "11e",
+    "parentId": "ls7-37-11",
+    "german": "Seite 37 · Aufgabe 11, Teil e)\nGeschickt rechnen und zugeordnete Ergebniskarten finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 11, e şıkkı\nPratik hesaplama yapıp sonuç kartlarını eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s11-sonuc-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-37-11-f",
+    "page": 37,
+    "exercise": "11",
+    "number": "11f",
+    "parentId": "ls7-37-11",
+    "german": "Seite 37 · Aufgabe 11, Teil f)\nGeschickt rechnen und zugeordnete Ergebniskarten finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 11, f şıkkı\nPratik hesaplama yapıp sonuç kartlarını eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s11-sonuc-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-37-11-g",
+    "page": 37,
+    "exercise": "11",
+    "number": "11g",
+    "parentId": "ls7-37-11",
+    "german": "Seite 37 · Aufgabe 11, Teil g)\nGeschickt rechnen und zugeordnete Ergebniskarten finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 11, g şıkkı\nPratik hesaplama yapıp sonuç kartlarını eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s11-sonuc-kartlari.png",
+    "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-37-11-h",
+    "page": 37,
+    "exercise": "11",
+    "number": "11h",
+    "parentId": "ls7-37-11",
+    "german": "Seite 37 · Aufgabe 11, Teil h)\nGeschickt rechnen und zugeordnete Ergebniskarten finden..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 11, h şıkkı\nPratik hesaplama yapıp sonuç kartlarını eşleştirme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed",
+    "privateImageFile": "p37_s11-sonuc-kartlari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-37-12",
@@ -1679,7 +8917,75 @@ window.CHECKLIST_PACK = {
     "german": "Seite 37 · Aufgabe 12\nRechenvorteile bei verschiedenen Termen erläutern.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 37 · Soru 12\nFarklı işlemlerde kullanılan pratik yöntemleri açıklama.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abcdef"
+  },
+  {
+    "id": "ls7-37-12-a",
+    "page": 37,
+    "exercise": "12",
+    "number": "12a",
+    "parentId": "ls7-37-12",
+    "german": "Seite 37 · Aufgabe 12, Teil a)\nRechenvorteile bei verschiedenen Termen erläutern..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 12, a şıkkı\nFarklı işlemlerde kullanılan pratik yöntemleri açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-12-b",
+    "page": 37,
+    "exercise": "12",
+    "number": "12b",
+    "parentId": "ls7-37-12",
+    "german": "Seite 37 · Aufgabe 12, Teil b)\nRechenvorteile bei verschiedenen Termen erläutern..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 12, b şıkkı\nFarklı işlemlerde kullanılan pratik yöntemleri açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-12-c",
+    "page": 37,
+    "exercise": "12",
+    "number": "12c",
+    "parentId": "ls7-37-12",
+    "german": "Seite 37 · Aufgabe 12, Teil c)\nRechenvorteile bei verschiedenen Termen erläutern..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 12, c şıkkı\nFarklı işlemlerde kullanılan pratik yöntemleri açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-12-d",
+    "page": 37,
+    "exercise": "12",
+    "number": "12d",
+    "parentId": "ls7-37-12",
+    "german": "Seite 37 · Aufgabe 12, Teil d)\nRechenvorteile bei verschiedenen Termen erläutern..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 12, d şıkkı\nFarklı işlemlerde kullanılan pratik yöntemleri açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-12-e",
+    "page": 37,
+    "exercise": "12",
+    "number": "12e",
+    "parentId": "ls7-37-12",
+    "german": "Seite 37 · Aufgabe 12, Teil e)\nRechenvorteile bei verschiedenen Termen erläutern..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 12, e şıkkı\nFarklı işlemlerde kullanılan pratik yöntemleri açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-12-f",
+    "page": 37,
+    "exercise": "12",
+    "number": "12f",
+    "parentId": "ls7-37-12",
+    "german": "Seite 37 · Aufgabe 12, Teil f)\nRechenvorteile bei verschiedenen Termen erläutern..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 12, f şıkkı\nFarklı işlemlerde kullanılan pratik yöntemleri açıklama..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   },
   {
     "id": "ls7-37-13",
@@ -1689,7 +8995,10 @@ window.CHECKLIST_PACK = {
     "german": "Seite 37 · Aufgabe 13\nZahlen anhand ihrer Eigenschaften auswählen.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 37 · Soru 13\nSayıları verilen özelliklerine göre seçme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "privateImageFile": "p37_s13-ozellik-kartlari.png",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-37-14",
@@ -1699,7 +9008,42 @@ window.CHECKLIST_PACK = {
     "german": "Seite 37 · Aufgabe 14\nAus einer Rechnung weitere Ergebnisse ableiten.\nLies die vollständige Aufgabenstellung im eigenen Buch und bearbeite alle Teilaufgaben.",
     "turkish": "Sayfa 37 · Soru 14\nBir işlem sonucundan diğer sonuçları türetme.\nSoruyu kitabından okuyup bütün alt maddelerini çöz.",
     "star": false,
-    "plus": false
+    "plus": false,
+    "auditStatus": "page-question-number-reviewed",
+    "subpartLetters": "abc"
+  },
+  {
+    "id": "ls7-37-14-a",
+    "page": 37,
+    "exercise": "14",
+    "number": "14a",
+    "parentId": "ls7-37-14",
+    "german": "Seite 37 · Aufgabe 14, Teil a)\nAus einer Rechnung weitere Ergebnisse ableiten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 14, a şıkkı\nBir işlem sonucundan diğer sonuçları türetme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-14-b",
+    "page": 37,
+    "exercise": "14",
+    "number": "14b",
+    "parentId": "ls7-37-14",
+    "german": "Seite 37 · Aufgabe 14, Teil b)\nAus einer Rechnung weitere Ergebnisse ableiten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 14, b şıkkı\nBir işlem sonucundan diğer sonuçları türetme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
+  },
+  {
+    "id": "ls7-37-14-c",
+    "page": 37,
+    "exercise": "14",
+    "number": "14c",
+    "parentId": "ls7-37-14",
+    "german": "Seite 37 · Aufgabe 14, Teil c)\nAus einer Rechnung weitere Ergebnisse ableiten..\nBearbeite diese Teilaufgabe mit dem vollständigen Text im eigenen Buch.",
+    "turkish": "Sayfa 37 · Soru 14, c şıkkı\nBir işlem sonucundan diğer sonuçları türetme..\nSorunun ayrıntıları için kendi kitabına bak.",
+    "kind": "teilaufgabe",
+    "auditStatus": "subpart-structure-reviewed"
   }
 ]
 };
