@@ -1,4 +1,4 @@
-# Lambacher Schweizer 7 – denetim v1.14.0 (22.11.2026)
+# Lambacher Schweizer 7 – denetim v1.15.0 (22.11.2026)
 
 **Durum: yapısal denetim ilerledi; metin düzeyinde eksiksizlik henüz onaylanmadı.**
 
@@ -278,3 +278,37 @@
 **Kırpım denetimi:** Her fotoğraf sayfası ayrı dikleştirilerek incelendi; 63 özel JPG kırpımı oluşturuldu. İlk kontrolde özellikle 168–175'in açı şemalarının kırpım sınırları düzeltildi. Özel ZIP'te 418 eski + 63 yeni = **481 görsel** ve `README_GORSELLER.txt` bulunur. ZIP CRC testi başarılı. Kamuya açık GitHub deposuna görüntüler aktarılmadı.
 
 **Kart–dosya eşleşme testi:** 481 benzersiz `privateImageFile` adı ile ZIP'teki 481 benzersiz resim adı birbiriyle eşleşiyor; sıralı FNV-1a dosya-adı kontrol toplamı **2693434964**. Soru düzeyinde küçük yazı/denklem transkripsiyonu henüz kesin garanti değildir; kartlar basılı ifadeye referans veren kısa çalışma özetleridir.
+
+
+## ONUNCU GRUP — 176–195 (v1.15.0, 23.11.2026)
+
+**Fotoğraf envanteri:** 176–177, 178–179, 180–181, 182–183, 184–185, 186–187, 188–189, 190–191, 192–193, 194–195. Basılı sayfa numaraları görselden doğrulandı: eksik ve yinelenen sayfa yok.
+
+| Sayfa | Kontrol edilen ayrı içerikler |
+|---|---|
+| 176 | Beispiele 1–2: Dreieckskonstruktion mit 4 Schritten ve Leiterhöhe; ayrı Planfigur |
+| 177 | Dreiecke konstruieren Aufgaben 1–7, a–f alt maddeleri, Teste dich |
+| 178 | Aufgaben 8–13, konstruktionsbeschreibung, Schatten, Winkel, Dreiecksungleichung |
+| 179 | Aufgaben 14–19, Kran, Donau, Richtungsscheibe, gleichwertige Terme A–E |
+| 180 | 4 Kongruenz, vier Kongruenzsätze und Begriffsillustrationen |
+| 181 | Beispiel, Aufgaben 1–6 (1a–d, 3a–g, 5(1–4), 6(1–4)) |
+| 182 | Aufgaben 7–14 (9a–c ve 14a–b dahil) |
+| 183 | Aufgaben 15–20, Teste dich, Winkel, Quadrate und Dreiecke |
+| 184 | 5 Mit Kongruenzsätzen argumentieren, Basiswinkelsatz, drei Beweismethoden |
+| 185 | Beispiel (gleichseitiges Dreieck), Aufgaben 1–2 |
+| 186 | Aufgaben 3–7, Außenwinkelsatz und Beweisbausteine |
+| 187 | Aufgaben 8–15, Figuren 1–2 und Gleichungen a–f |
+| 188 | Wiederholen 1–6 (alle markierten Teilaufgaben) |
+| 189 | Wiederholen/Vertiefen 7–13, a–h Winkelbedingungen |
+| 190 | Wiederholen 14–18, Theodolit und Halbkreis |
+| 191 | Vernetzen 19–21, regelmäßiges Vieleck und Umfangswinkelsatz |
+| 192 | Rückblick: Winkel, Konstruktion, Kongruenz, Beweis |
+| 193 | Tests: Runde 1 Aufgaben 1–5; Runde 2 Aufgaben 1–4 |
+| 194 | Exkursion DGS, Beispiel und Aufgaben 1–2 (2a–c) |
+| 195 | Exkursion DGS, Aufgaben 3a–d, 4a–b und Pisa-Turm |
+
+**Soru ve Beispiel denetimi:** Önceki 2436 kart korunarak 105 üst düzey içerikten 211 yeni kart eklendi; toplam **2647**. 4–195 arasında 192 ardışık basılı sayfa, **0 eksik**, **0 yinelenen kart kimliği**.
+
+**Görsel kırpımlar:** Kitap fotoğrafları 90 derece döndürülüp sayfalar ayrı incelendi. 71 yeni gerekli fotoğraf, şekil, grafik, tablo veya örnek alanı kırpıldı. İkinci görsel denetimde eksik/sınırı kayan bazı çizimler düzeltilerek p193 Runde 1 soru 3 mast görseli doğru karta bağlandı. 552 özel görselin tüm adları ZIP ile `privateImageFile` kartları arasında birebir eşleşti. Sıralı FNV-1a dosya-adı sağlaması **1574339094**; ZIP CRC testi başarılı.
+
+**Sınırlama:** Matematiksel küçük yazılar ve her alt maddenin tüm sayı değerleri tek tek çevriyazılmamıştır; kartlar basılı kaynağa işaret eden telif dostu özetlerdir. Fiziksel kitabın tam metni olmadan sayısal birebir doğruluk iddia edilmez.
