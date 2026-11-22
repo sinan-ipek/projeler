@@ -1,4 +1,4 @@
-/* Lambacher Schweizer 7 · Nordrhein-Westfalen · Check Liste v1.7.0
+/* Lambacher Schweizer 7 · Nordrhein-Westfalen · Check Liste v1.8.0
  * İlk kullanıcı fotoğrafları: içindekiler s.2–3, kitap s.4–55.
  * Bu açık depoda telifli kitap fotoğrafları veya soruların tam metinleri tutulmaz.
  * Her soru için yer, konu özeti ve Almanca-Türkçe çalışma yönergesi bulunur.
@@ -12,7 +12,7 @@
 window.CHECKLIST_PACK = {
   id: "lambacher-schweizer-7-nrw",
   title: "Lambacher Schweizer 7 · Nordrhein-Westfalen",
-  version: "1.7.0",
+  version: "1.8.0",
   capture: { receivedPages: [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55], indexedRange: [4,55], kind:"navigation-and-tracking", fullText:false },
   chapters: [
   {
@@ -9242,7 +9242,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-16-a",
@@ -9255,7 +9256,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-16-b",
@@ -9268,7 +9270,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-16-c",
@@ -9281,7 +9284,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-16-d",
@@ -9294,7 +9298,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-16-e",
@@ -9307,7 +9312,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-16-f",
@@ -9320,7 +9326,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-16-g",
@@ -9333,7 +9340,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-16-h",
@@ -9346,7 +9354,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-16-i",
@@ -9359,7 +9368,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-17-a",
@@ -9372,9 +9382,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s38-17-divers-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 38
+    "sourcePage": 38,
+    "privateImageFile": "s38-17-divers-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-17-b",
@@ -9387,9 +9398,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s38-17-divers-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 38
+    "sourcePage": 38,
+    "privateImageFile": "s38-17-divers-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-17-c",
@@ -9402,9 +9414,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s38-17-divers-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 38
+    "sourcePage": 38,
+    "privateImageFile": "s38-17-divers-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-17-d",
@@ -9417,9 +9430,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s38-17-divers-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 38
+    "sourcePage": 38,
+    "privateImageFile": "s38-17-divers-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-18-a",
@@ -9432,9 +9446,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s38-18-coordinate-cards.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 38
+    "sourcePage": 38,
+    "privateImageFile": "s38-18-coordinate-cards.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-18-b",
@@ -9447,9 +9462,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s38-18-coordinate-cards.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 38
+    "sourcePage": 38,
+    "privateImageFile": "s38-18-coordinate-cards.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-18-c",
@@ -9462,9 +9478,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s38-18-coordinate-cards.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 38
+    "sourcePage": 38,
+    "privateImageFile": "s38-18-coordinate-cards.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-18-d",
@@ -9477,9 +9494,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s38-18-coordinate-cards.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 38
+    "sourcePage": 38,
+    "privateImageFile": "s38-18-coordinate-cards.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-19-a",
@@ -9492,7 +9510,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-19-b",
@@ -9505,7 +9524,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-19-c",
@@ -9518,7 +9538,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-20",
@@ -9531,7 +9552,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-38-21",
@@ -9544,7 +9566,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 38
+    "sourcePage": 38,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-39-22",
@@ -9557,7 +9580,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 39
+    "sourcePage": 39,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-39-23-a",
@@ -9570,9 +9594,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s39-23-coordinate-grid.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 39
+    "sourcePage": 39,
+    "privateImageFile": "s39-23-coordinate-grid.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-39-23-b",
@@ -9585,9 +9610,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s39-23-coordinate-grid.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 39
+    "sourcePage": 39,
+    "privateImageFile": "s39-23-coordinate-grid.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-39-24-a",
@@ -9600,7 +9626,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 39
+    "sourcePage": 39,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-39-24-b",
@@ -9613,7 +9640,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 39
+    "sourcePage": 39,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-39-25-a",
@@ -9626,9 +9654,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s39-25-frac-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 39
+    "sourcePage": 39,
+    "privateImageFile": "s39-25-frac-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-39-25-b",
@@ -9641,9 +9670,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s39-25-frac-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 39
+    "sourcePage": 39,
+    "privateImageFile": "s39-25-frac-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-39-26",
@@ -9656,9 +9686,218 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s39-26-number-puzzle.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 39
+    "sourcePage": 39,
+    "privateImageFile": "s39-26-number-puzzle.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-39-26-1",
+    "page": 39,
+    "number": "26(1)",
+    "exercise": "26",
+    "german": "Seite 39 · Aufgabe 26(1)\nGemischte Rechnungen mit rationalen Zahlen und einem Zahlenrätsel.\nBearbeite genau diese Unteraufgabe (1) anhand der Buchseite.",
+    "turkish": "Sayfa 39 · Soru 26(1)\nRasyonel sayılarla karma işlemler ve sayı bulmacası.\nKitaptaki yalnızca (1) alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 39,
+    "privateImageFile": "s39-26-number-puzzle.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-39-26-2",
+    "page": 39,
+    "number": "26(2)",
+    "exercise": "26",
+    "german": "Seite 39 · Aufgabe 26(2)\nGemischte Rechnungen mit rationalen Zahlen und einem Zahlenrätsel.\nBearbeite genau diese Unteraufgabe (2) anhand der Buchseite.",
+    "turkish": "Sayfa 39 · Soru 26(2)\nRasyonel sayılarla karma işlemler ve sayı bulmacası.\nKitaptaki yalnızca (2) alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 39,
+    "privateImageFile": "s39-26-number-puzzle.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-39-26-3",
+    "page": 39,
+    "number": "26(3)",
+    "exercise": "26",
+    "german": "Seite 39 · Aufgabe 26(3)\nGemischte Rechnungen mit rationalen Zahlen und einem Zahlenrätsel.\nBearbeite genau diese Unteraufgabe (3) anhand der Buchseite.",
+    "turkish": "Sayfa 39 · Soru 26(3)\nRasyonel sayılarla karma işlemler ve sayı bulmacası.\nKitaptaki yalnızca (3) alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 39,
+    "privateImageFile": "s39-26-number-puzzle.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-39-26-4",
+    "page": 39,
+    "number": "26(4)",
+    "exercise": "26",
+    "german": "Seite 39 · Aufgabe 26(4)\nGemischte Rechnungen mit rationalen Zahlen und einem Zahlenrätsel.\nBearbeite genau diese Unteraufgabe (4) anhand der Buchseite.",
+    "turkish": "Sayfa 39 · Soru 26(4)\nRasyonel sayılarla karma işlemler ve sayı bulmacası.\nKitaptaki yalnızca (4) alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 39,
+    "privateImageFile": "s39-26-number-puzzle.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-39-26-5",
+    "page": 39,
+    "number": "26(5)",
+    "exercise": "26",
+    "german": "Seite 39 · Aufgabe 26(5)\nGemischte Rechnungen mit rationalen Zahlen und einem Zahlenrätsel.\nBearbeite genau diese Unteraufgabe (5) anhand der Buchseite.",
+    "turkish": "Sayfa 39 · Soru 26(5)\nRasyonel sayılarla karma işlemler ve sayı bulmacası.\nKitaptaki yalnızca (5) alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 39,
+    "privateImageFile": "s39-26-number-puzzle.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-39-26-6",
+    "page": 39,
+    "number": "26(6)",
+    "exercise": "26",
+    "german": "Seite 39 · Aufgabe 26(6)\nGemischte Rechnungen mit rationalen Zahlen und einem Zahlenrätsel.\nBearbeite genau diese Unteraufgabe (6) anhand der Buchseite.",
+    "turkish": "Sayfa 39 · Soru 26(6)\nRasyonel sayılarla karma işlemler ve sayı bulmacası.\nKitaptaki yalnızca (6) alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 39,
+    "privateImageFile": "s39-26-number-puzzle.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-39-26-7",
+    "page": 39,
+    "number": "26(7)",
+    "exercise": "26",
+    "german": "Seite 39 · Aufgabe 26(7)\nGemischte Rechnungen mit rationalen Zahlen und einem Zahlenrätsel.\nBearbeite genau diese Unteraufgabe (7) anhand der Buchseite.",
+    "turkish": "Sayfa 39 · Soru 26(7)\nRasyonel sayılarla karma işlemler ve sayı bulmacası.\nKitaptaki yalnızca (7) alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 39,
+    "privateImageFile": "s39-26-number-puzzle.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-39-26-8",
+    "page": 39,
+    "number": "26(8)",
+    "exercise": "26",
+    "german": "Seite 39 · Aufgabe 26(8)\nGemischte Rechnungen mit rationalen Zahlen und einem Zahlenrätsel.\nBearbeite genau diese Unteraufgabe (8) anhand der Buchseite.",
+    "turkish": "Sayfa 39 · Soru 26(8)\nRasyonel sayılarla karma işlemler ve sayı bulmacası.\nKitaptaki yalnızca (8) alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 39,
+    "privateImageFile": "s39-26-number-puzzle.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-39-26-9",
+    "page": 39,
+    "number": "26(9)",
+    "exercise": "26",
+    "german": "Seite 39 · Aufgabe 26(9)\nGemischte Rechnungen mit rationalen Zahlen und einem Zahlenrätsel.\nBearbeite genau diese Unteraufgabe (9) anhand der Buchseite.",
+    "turkish": "Sayfa 39 · Soru 26(9)\nRasyonel sayılarla karma işlemler ve sayı bulmacası.\nKitaptaki yalnızca (9) alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 39,
+    "privateImageFile": "s39-26-number-puzzle.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-39-26-10",
+    "page": 39,
+    "number": "26(10)",
+    "exercise": "26",
+    "german": "Seite 39 · Aufgabe 26(10)\nGemischte Rechnungen mit rationalen Zahlen und einem Zahlenrätsel.\nBearbeite genau diese Unteraufgabe (10) anhand der Buchseite.",
+    "turkish": "Sayfa 39 · Soru 26(10)\nRasyonel sayılarla karma işlemler ve sayı bulmacası.\nKitaptaki yalnızca (10) alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 39,
+    "privateImageFile": "s39-26-number-puzzle.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-39-26-11",
+    "page": 39,
+    "number": "26(11)",
+    "exercise": "26",
+    "german": "Seite 39 · Aufgabe 26(11)\nGemischte Rechnungen mit rationalen Zahlen und einem Zahlenrätsel.\nBearbeite genau diese Unteraufgabe (11) anhand der Buchseite.",
+    "turkish": "Sayfa 39 · Soru 26(11)\nRasyonel sayılarla karma işlemler ve sayı bulmacası.\nKitaptaki yalnızca (11) alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 39,
+    "privateImageFile": "s39-26-number-puzzle.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-39-26-12",
+    "page": 39,
+    "number": "26(12)",
+    "exercise": "26",
+    "german": "Seite 39 · Aufgabe 26(12)\nGemischte Rechnungen mit rationalen Zahlen und einem Zahlenrätsel.\nBearbeite genau diese Unteraufgabe (12) anhand der Buchseite.",
+    "turkish": "Sayfa 39 · Soru 26(12)\nRasyonel sayılarla karma işlemler ve sayı bulmacası.\nKitaptaki yalnızca (12) alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 39,
+    "privateImageFile": "s39-26-number-puzzle.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-39-26-13",
+    "page": 39,
+    "number": "26(13)",
+    "exercise": "26",
+    "german": "Seite 39 · Aufgabe 26(13)\nGemischte Rechnungen mit rationalen Zahlen und einem Zahlenrätsel.\nBearbeite genau diese Unteraufgabe (13) anhand der Buchseite.",
+    "turkish": "Sayfa 39 · Soru 26(13)\nRasyonel sayılarla karma işlemler ve sayı bulmacası.\nKitaptaki yalnızca (13) alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 39,
+    "privateImageFile": "s39-26-number-puzzle.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-40-Beispiel-1",
@@ -9671,8 +9910,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s40-rueckblick-numberlines.jpg",
-    "sourcePage": 40
+    "sourcePage": 40,
+    "privateImageFile": "s40-rueckblick-numberlines.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-40-Beispiel-2",
@@ -9685,8 +9926,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s40-rueckblick-numberlines.jpg",
-    "sourcePage": 40
+    "sourcePage": 40,
+    "privateImageFile": "s40-rueckblick-numberlines.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-40-Beispiel-3",
@@ -9699,8 +9942,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s40-rueckblick-numberlines.jpg",
-    "sourcePage": 40
+    "sourcePage": 40,
+    "privateImageFile": "s40-rueckblick-numberlines.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-40-Beispiel-4",
@@ -9713,8 +9958,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s40-rueckblick-numberlines.jpg",
-    "sourcePage": 40
+    "sourcePage": 40,
+    "privateImageFile": "s40-rueckblick-numberlines.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-40-Beispiel-5",
@@ -9727,8 +9974,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s40-rueckblick-numberlines.jpg",
-    "sourcePage": 40
+    "sourcePage": 40,
+    "privateImageFile": "s40-rueckblick-numberlines.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-40-Beispiel-6",
@@ -9741,8 +9990,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s40-rueckblick-numberlines.jpg",
-    "sourcePage": 40
+    "sourcePage": 40,
+    "privateImageFile": "s40-rueckblick-numberlines.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-40-Beispiel-7",
@@ -9755,8 +10006,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s40-rueckblick-numberlines.jpg",
-    "sourcePage": 40
+    "sourcePage": 40,
+    "privateImageFile": "s40-rueckblick-numberlines.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-40-Beispiel-8",
@@ -9769,8 +10022,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s40-rueckblick-numberlines.jpg",
-    "sourcePage": 40
+    "sourcePage": 40,
+    "privateImageFile": "s40-rueckblick-numberlines.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-41-R1-1",
@@ -9783,7 +10038,64 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 41
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-1-a",
+    "page": 41,
+    "number": "R1-1a",
+    "exercise": "R1-1",
+    "german": "Seite 41 · Aufgabe R1-1a\nGanze Zahlen vergleichen und Abstände bestimmen.\nBearbeite genau diese Unteraufgabe a anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-1a\nTam sayıları karşılaştırıp uzaklıkları belirleme.\nKitaptaki yalnızca a alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-1-b",
+    "page": 41,
+    "number": "R1-1b",
+    "exercise": "R1-1",
+    "german": "Seite 41 · Aufgabe R1-1b\nGanze Zahlen vergleichen und Abstände bestimmen.\nBearbeite genau diese Unteraufgabe b anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-1b\nTam sayıları karşılaştırıp uzaklıkları belirleme.\nKitaptaki yalnızca b alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-1-c",
+    "page": 41,
+    "number": "R1-1c",
+    "exercise": "R1-1",
+    "german": "Seite 41 · Aufgabe R1-1c\nGanze Zahlen vergleichen und Abstände bestimmen.\nBearbeite genau diese Unteraufgabe c anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-1c\nTam sayıları karşılaştırıp uzaklıkları belirleme.\nKitaptaki yalnızca c alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-1-d",
+    "page": 41,
+    "number": "R1-1d",
+    "exercise": "R1-1",
+    "german": "Seite 41 · Aufgabe R1-1d\nGanze Zahlen vergleichen und Abstände bestimmen.\nBearbeite genau diese Unteraufgabe d anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-1d\nTam sayıları karşılaştırıp uzaklıkları belirleme.\nKitaptaki yalnızca d alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-41-R1-2",
@@ -9796,7 +10108,92 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 41
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-2-a",
+    "page": 41,
+    "number": "R1-2a",
+    "exercise": "R1-2",
+    "german": "Seite 41 · Aufgabe R1-2a\nTerme geschickt berechnen.\nBearbeite genau diese Unteraufgabe a anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-2a\nPratik yoldan işlemleri hesaplama.\nKitaptaki yalnızca a alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-2-b",
+    "page": 41,
+    "number": "R1-2b",
+    "exercise": "R1-2",
+    "german": "Seite 41 · Aufgabe R1-2b\nTerme geschickt berechnen.\nBearbeite genau diese Unteraufgabe b anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-2b\nPratik yoldan işlemleri hesaplama.\nKitaptaki yalnızca b alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-2-c",
+    "page": 41,
+    "number": "R1-2c",
+    "exercise": "R1-2",
+    "german": "Seite 41 · Aufgabe R1-2c\nTerme geschickt berechnen.\nBearbeite genau diese Unteraufgabe c anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-2c\nPratik yoldan işlemleri hesaplama.\nKitaptaki yalnızca c alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-2-d",
+    "page": 41,
+    "number": "R1-2d",
+    "exercise": "R1-2",
+    "german": "Seite 41 · Aufgabe R1-2d\nTerme geschickt berechnen.\nBearbeite genau diese Unteraufgabe d anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-2d\nPratik yoldan işlemleri hesaplama.\nKitaptaki yalnızca d alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-2-e",
+    "page": 41,
+    "number": "R1-2e",
+    "exercise": "R1-2",
+    "german": "Seite 41 · Aufgabe R1-2e\nTerme geschickt berechnen.\nBearbeite genau diese Unteraufgabe e anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-2e\nPratik yoldan işlemleri hesaplama.\nKitaptaki yalnızca e alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-2-f",
+    "page": 41,
+    "number": "R1-2f",
+    "exercise": "R1-2",
+    "german": "Seite 41 · Aufgabe R1-2f\nTerme geschickt berechnen.\nBearbeite genau diese Unteraufgabe f anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-2f\nPratik yoldan işlemleri hesaplama.\nKitaptaki yalnızca f alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-41-R1-3",
@@ -9809,7 +10206,64 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 41
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-3-a",
+    "page": 41,
+    "number": "R1-3a",
+    "exercise": "R1-3",
+    "german": "Seite 41 · Aufgabe R1-3a\nKlammer- und Vorzeichenrechnungen.\nBearbeite genau diese Unteraufgabe a anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-3a\nParantez ve işaretli sayı işlemleri.\nKitaptaki yalnızca a alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-3-b",
+    "page": 41,
+    "number": "R1-3b",
+    "exercise": "R1-3",
+    "german": "Seite 41 · Aufgabe R1-3b\nKlammer- und Vorzeichenrechnungen.\nBearbeite genau diese Unteraufgabe b anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-3b\nParantez ve işaretli sayı işlemleri.\nKitaptaki yalnızca b alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-3-c",
+    "page": 41,
+    "number": "R1-3c",
+    "exercise": "R1-3",
+    "german": "Seite 41 · Aufgabe R1-3c\nKlammer- und Vorzeichenrechnungen.\nBearbeite genau diese Unteraufgabe c anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-3c\nParantez ve işaretli sayı işlemleri.\nKitaptaki yalnızca c alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-3-d",
+    "page": 41,
+    "number": "R1-3d",
+    "exercise": "R1-3",
+    "german": "Seite 41 · Aufgabe R1-3d\nKlammer- und Vorzeichenrechnungen.\nBearbeite genau diese Unteraufgabe d anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-3d\nParantez ve işaretli sayı işlemleri.\nKitaptaki yalnızca d alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-41-R1-4",
@@ -9822,9 +10276,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s41-test-penguins.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 41
+    "sourcePage": 41,
+    "privateImageFile": "s41-test-penguins.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-41-R1-5",
@@ -9837,7 +10292,36 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 41
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-5-a",
+    "page": 41,
+    "number": "R1-5a",
+    "exercise": "R1-5",
+    "german": "Seite 41 · Aufgabe R1-5a\nRationale Zahlen zwischen ganzen Zahlen markieren.\nBearbeite genau diese Unteraufgabe a anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-5a\nTam sayılar arasındaki rasyonel sayıları işaretleme.\nKitaptaki yalnızca a alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R1-5-b",
+    "page": 41,
+    "number": "R1-5b",
+    "exercise": "R1-5",
+    "german": "Seite 41 · Aufgabe R1-5b\nRationale Zahlen zwischen ganzen Zahlen markieren.\nBearbeite genau diese Unteraufgabe b anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R1-5b\nTam sayılar arasındaki rasyonel sayıları işaretleme.\nKitaptaki yalnızca b alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-41-R2-1",
@@ -9850,7 +10334,36 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 41
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R2-1-a",
+    "page": 41,
+    "number": "R2-1a",
+    "exercise": "R2-1",
+    "german": "Seite 41 · Aufgabe R2-1a\nZahlen auf der Zahlengeraden und passende Einteilung.\nBearbeite genau diese Unteraufgabe a anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R2-1a\nSayı doğrusunda yer ve ölçek belirleme.\nKitaptaki yalnızca a alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R2-1-b",
+    "page": 41,
+    "number": "R2-1b",
+    "exercise": "R2-1",
+    "german": "Seite 41 · Aufgabe R2-1b\nZahlen auf der Zahlengeraden und passende Einteilung.\nBearbeite genau diese Unteraufgabe b anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R2-1b\nSayı doğrusunda yer ve ölçek belirleme.\nKitaptaki yalnızca b alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-41-R2-2",
@@ -9863,7 +10376,92 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 41
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R2-2-a",
+    "page": 41,
+    "number": "R2-2a",
+    "exercise": "R2-2",
+    "german": "Seite 41 · Aufgabe R2-2a\nTerme mit rationalen Zahlen berechnen.\nBearbeite genau diese Unteraufgabe a anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R2-2a\nRasyonel sayılarla işlemler.\nKitaptaki yalnızca a alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R2-2-b",
+    "page": 41,
+    "number": "R2-2b",
+    "exercise": "R2-2",
+    "german": "Seite 41 · Aufgabe R2-2b\nTerme mit rationalen Zahlen berechnen.\nBearbeite genau diese Unteraufgabe b anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R2-2b\nRasyonel sayılarla işlemler.\nKitaptaki yalnızca b alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R2-2-c",
+    "page": 41,
+    "number": "R2-2c",
+    "exercise": "R2-2",
+    "german": "Seite 41 · Aufgabe R2-2c\nTerme mit rationalen Zahlen berechnen.\nBearbeite genau diese Unteraufgabe c anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R2-2c\nRasyonel sayılarla işlemler.\nKitaptaki yalnızca c alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R2-2-d",
+    "page": 41,
+    "number": "R2-2d",
+    "exercise": "R2-2",
+    "german": "Seite 41 · Aufgabe R2-2d\nTerme mit rationalen Zahlen berechnen.\nBearbeite genau diese Unteraufgabe d anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R2-2d\nRasyonel sayılarla işlemler.\nKitaptaki yalnızca d alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R2-2-e",
+    "page": 41,
+    "number": "R2-2e",
+    "exercise": "R2-2",
+    "german": "Seite 41 · Aufgabe R2-2e\nTerme mit rationalen Zahlen berechnen.\nBearbeite genau diese Unteraufgabe e anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R2-2e\nRasyonel sayılarla işlemler.\nKitaptaki yalnızca e alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R2-2-f",
+    "page": 41,
+    "number": "R2-2f",
+    "exercise": "R2-2",
+    "german": "Seite 41 · Aufgabe R2-2f\nTerme mit rationalen Zahlen berechnen.\nBearbeite genau diese Unteraufgabe f anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R2-2f\nRasyonel sayılarla işlemler.\nKitaptaki yalnızca f alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-41-R2-3",
@@ -9876,7 +10474,64 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 41
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R2-3-a",
+    "page": 41,
+    "number": "R2-3a",
+    "exercise": "R2-3",
+    "german": "Seite 41 · Aufgabe R2-3a\nErgebnisse auf Plausibilität prüfen.\nBearbeite genau diese Unteraufgabe a anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R2-3a\nSonuçların doğruluğunu ve makullüğünü kontrol etme.\nKitaptaki yalnızca a alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R2-3-b",
+    "page": 41,
+    "number": "R2-3b",
+    "exercise": "R2-3",
+    "german": "Seite 41 · Aufgabe R2-3b\nErgebnisse auf Plausibilität prüfen.\nBearbeite genau diese Unteraufgabe b anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R2-3b\nSonuçların doğruluğunu ve makullüğünü kontrol etme.\nKitaptaki yalnızca b alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R2-3-c",
+    "page": 41,
+    "number": "R2-3c",
+    "exercise": "R2-3",
+    "german": "Seite 41 · Aufgabe R2-3c\nErgebnisse auf Plausibilität prüfen.\nBearbeite genau diese Unteraufgabe c anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R2-3c\nSonuçların doğruluğunu ve makullüğünü kontrol etme.\nKitaptaki yalnızca c alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-41-R2-3-d",
+    "page": 41,
+    "number": "R2-3d",
+    "exercise": "R2-3",
+    "german": "Seite 41 · Aufgabe R2-3d\nErgebnisse auf Plausibilität prüfen.\nBearbeite genau diese Unteraufgabe d anhand der Buchseite.",
+    "turkish": "Sayfa 41 · Soru R2-3d\nSonuçların doğruluğunu ve makullüğünü kontrol etme.\nKitaptaki yalnızca d alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-41-R2-4",
@@ -9889,7 +10544,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 41
+    "sourcePage": 41,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-41-R2-5",
@@ -9902,9 +10558,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s41-r2-sketch.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 41
+    "sourcePage": 41,
+    "privateImageFile": "s41-r2-sketch.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-42-1",
@@ -9917,9 +10574,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s42-1-magic-balls-and-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 42
+    "sourcePage": 42,
+    "privateImageFile": "s42-1-magic-balls-and-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-42-2",
@@ -9932,9 +10590,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s42-2-magic-balls.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 42
+    "sourcePage": 42,
+    "privateImageFile": "s42-2-magic-balls.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-42-3",
@@ -9947,7 +10606,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 42
+    "sourcePage": 42,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-43-4",
@@ -9960,9 +10620,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s43-4-magic-temperature-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 43
+    "sourcePage": 43,
+    "privateImageFile": "s43-4-magic-temperature-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-43-5",
@@ -9975,9 +10636,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s43-5-rule-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 43
+    "sourcePage": 43,
+    "privateImageFile": "s43-5-rule-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-43-6",
@@ -9990,9 +10652,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s43-6-operation-cards.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 43
+    "sourcePage": 43,
+    "privateImageFile": "s43-6-operation-cards.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-44-Kapitel",
@@ -10005,9 +10668,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "theory",
     "visualRequired": true,
-    "figureCrop": "s44-chapter-gorilla-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 44
+    "sourcePage": 44,
+    "privateImageFile": "s44-chapter-gorilla-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-45-1",
@@ -10020,7 +10684,92 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 45
+    "sourcePage": 45,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-45-1-a",
+    "page": 45,
+    "number": "1a",
+    "exercise": "1",
+    "german": "Seite 45 · Aufgabe 1a\nMit Brüchen und Dezimalzahlen rechnen.\nBearbeite genau diese Unteraufgabe a anhand der Buchseite.",
+    "turkish": "Sayfa 45 · Soru 1a\nKesirlerle ve ondalık sayılarla işlem yapma.\nKitaptaki yalnızca a alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 45,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-45-1-b",
+    "page": 45,
+    "number": "1b",
+    "exercise": "1",
+    "german": "Seite 45 · Aufgabe 1b\nMit Brüchen und Dezimalzahlen rechnen.\nBearbeite genau diese Unteraufgabe b anhand der Buchseite.",
+    "turkish": "Sayfa 45 · Soru 1b\nKesirlerle ve ondalık sayılarla işlem yapma.\nKitaptaki yalnızca b alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 45,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-45-1-c",
+    "page": 45,
+    "number": "1c",
+    "exercise": "1",
+    "german": "Seite 45 · Aufgabe 1c\nMit Brüchen und Dezimalzahlen rechnen.\nBearbeite genau diese Unteraufgabe c anhand der Buchseite.",
+    "turkish": "Sayfa 45 · Soru 1c\nKesirlerle ve ondalık sayılarla işlem yapma.\nKitaptaki yalnızca c alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 45,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-45-1-d",
+    "page": 45,
+    "number": "1d",
+    "exercise": "1",
+    "german": "Seite 45 · Aufgabe 1d\nMit Brüchen und Dezimalzahlen rechnen.\nBearbeite genau diese Unteraufgabe d anhand der Buchseite.",
+    "turkish": "Sayfa 45 · Soru 1d\nKesirlerle ve ondalık sayılarla işlem yapma.\nKitaptaki yalnızca d alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 45,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-45-1-e",
+    "page": 45,
+    "number": "1e",
+    "exercise": "1",
+    "german": "Seite 45 · Aufgabe 1e\nMit Brüchen und Dezimalzahlen rechnen.\nBearbeite genau diese Unteraufgabe e anhand der Buchseite.",
+    "turkish": "Sayfa 45 · Soru 1e\nKesirlerle ve ondalık sayılarla işlem yapma.\nKitaptaki yalnızca e alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 45,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-45-1-f",
+    "page": 45,
+    "number": "1f",
+    "exercise": "1",
+    "german": "Seite 45 · Aufgabe 1f\nMit Brüchen und Dezimalzahlen rechnen.\nBearbeite genau diese Unteraufgabe f anhand der Buchseite.",
+    "turkish": "Sayfa 45 · Soru 1f\nKesirlerle ve ondalık sayılarla işlem yapma.\nKitaptaki yalnızca f alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": false,
+    "sourcePage": 45,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-45-2",
@@ -10033,9 +10782,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s45-2-coordinates-shapes.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 45
+    "sourcePage": 45,
+    "privateImageFile": "s45-2-coordinates-shapes.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-45-3-a",
@@ -10048,7 +10798,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 45
+    "sourcePage": 45,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-45-3-b",
@@ -10061,7 +10812,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 45
+    "sourcePage": 45,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-45-3-c",
@@ -10074,7 +10826,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 45
+    "sourcePage": 45,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-45-3-d",
@@ -10087,7 +10840,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 45
+    "sourcePage": 45,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-45-4-a",
@@ -10100,7 +10854,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 45
+    "sourcePage": 45,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-45-4-b",
@@ -10113,7 +10868,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 45
+    "sourcePage": 45,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-45-5",
@@ -10126,9 +10882,74 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s45-5-rectangles-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 45
+    "sourcePage": 45,
+    "privateImageFile": "s45-5-rectangles-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-45-5-a",
+    "page": 45,
+    "number": "5a",
+    "exercise": "5",
+    "german": "Seite 45 · Aufgabe 5a\nFlächeninhalt und Umfang von Rechtecken ergänzen.\nBearbeite genau diese Unteraufgabe a anhand der Buchseite.",
+    "turkish": "Sayfa 45 · Soru 5a\nDikdörtgenlerde alan ve çevre tablosunu tamamlama.\nKitaptaki yalnızca a alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 45,
+    "privateImageFile": "s45-5-rectangles-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-45-5-b",
+    "page": 45,
+    "number": "5b",
+    "exercise": "5",
+    "german": "Seite 45 · Aufgabe 5b\nFlächeninhalt und Umfang von Rechtecken ergänzen.\nBearbeite genau diese Unteraufgabe b anhand der Buchseite.",
+    "turkish": "Sayfa 45 · Soru 5b\nDikdörtgenlerde alan ve çevre tablosunu tamamlama.\nKitaptaki yalnızca b alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 45,
+    "privateImageFile": "s45-5-rectangles-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-45-5-c",
+    "page": 45,
+    "number": "5c",
+    "exercise": "5",
+    "german": "Seite 45 · Aufgabe 5c\nFlächeninhalt und Umfang von Rechtecken ergänzen.\nBearbeite genau diese Unteraufgabe c anhand der Buchseite.",
+    "turkish": "Sayfa 45 · Soru 5c\nDikdörtgenlerde alan ve çevre tablosunu tamamlama.\nKitaptaki yalnızca c alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 45,
+    "privateImageFile": "s45-5-rectangles-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-45-5-d",
+    "page": 45,
+    "number": "5d",
+    "exercise": "5",
+    "german": "Seite 45 · Aufgabe 5d\nFlächeninhalt und Umfang von Rechtecken ergänzen.\nBearbeite genau diese Unteraufgabe d anhand der Buchseite.",
+    "turkish": "Sayfa 45 · Soru 5d\nDikdörtgenlerde alan ve çevre tablosunu tamamlama.\nKitaptaki yalnızca d alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 45,
+    "privateImageFile": "s45-5-rectangles-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-46-Exploration1",
@@ -10141,9 +10962,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exploration",
     "visualRequired": true,
-    "figureCrop": "s46-spaziergang-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 46
+    "sourcePage": 46,
+    "privateImageFile": "s46-spaziergang-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-46-Exploration2",
@@ -10156,9 +10978,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exploration",
     "visualRequired": true,
-    "figureCrop": "s46-rectangles-grid.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 46
+    "sourcePage": 46,
+    "privateImageFile": "s46-rectangles-grid.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-47-1",
@@ -10171,9 +10994,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exploration",
     "visualRequired": true,
-    "figureCrop": "s47-banana-label.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 47
+    "sourcePage": 47,
+    "privateImageFile": "s47-banana-label.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-47-2",
@@ -10186,9 +11010,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exploration",
     "visualRequired": true,
-    "figureCrop": "s47-cherries-apples-labels.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 47
+    "sourcePage": 47,
+    "privateImageFile": "s47-cherries-apples-labels.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-47-3",
@@ -10201,7 +11026,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exploration",
     "visualRequired": false,
-    "sourcePage": 47
+    "sourcePage": 47,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-48-Beispiel",
@@ -10214,9 +11040,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s48-temperature-table-and-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 48
+    "sourcePage": 48,
+    "privateImageFile": "s48-temperature-table-and-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-48-Theorie",
@@ -10229,7 +11056,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "theory",
     "visualRequired": false,
-    "sourcePage": 48
+    "sourcePage": 48,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-49-Beispiel",
@@ -10242,9 +11070,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s49-beispiel-sprint.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 49
+    "sourcePage": 49,
+    "privateImageFile": "s49-beispiel-sprint.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-49-1-a",
@@ -10257,9 +11086,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s49-1-torzahl-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 49
+    "sourcePage": 49,
+    "privateImageFile": "s49-1-torzahl-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-49-1-b",
@@ -10272,9 +11102,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s49-1-torzahl-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 49
+    "sourcePage": 49,
+    "privateImageFile": "s49-1-torzahl-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-50-2-a",
@@ -10287,9 +11118,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s50-2-subway-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 50
+    "sourcePage": 50,
+    "privateImageFile": "s50-2-subway-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-50-2-b",
@@ -10302,9 +11134,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s50-2-subway-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 50
+    "sourcePage": 50,
+    "privateImageFile": "s50-2-subway-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-50-3-a",
@@ -10317,9 +11150,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s50-3-snow-height-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 50
+    "sourcePage": 50,
+    "privateImageFile": "s50-3-snow-height-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-50-3-b",
@@ -10332,9 +11166,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s50-3-snow-height-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 50
+    "sourcePage": 50,
+    "privateImageFile": "s50-3-snow-height-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-50-3-c",
@@ -10347,9 +11182,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s50-3-snow-height-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 50
+    "sourcePage": 50,
+    "privateImageFile": "s50-3-snow-height-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-50-4-a",
@@ -10362,7 +11198,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 50
+    "sourcePage": 50,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-50-4-b",
@@ -10375,7 +11212,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 50
+    "sourcePage": 50,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-50-4-c",
@@ -10388,7 +11226,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 50
+    "sourcePage": 50,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-50-4-d",
@@ -10401,7 +11240,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 50
+    "sourcePage": 50,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-50-5-a",
@@ -10414,9 +11254,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s50-5-points-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 50
+    "sourcePage": 50,
+    "privateImageFile": "s50-5-points-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-50-5-b",
@@ -10429,9 +11270,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s50-5-points-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 50
+    "sourcePage": 50,
+    "privateImageFile": "s50-5-points-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-50-6-a",
@@ -10444,9 +11286,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s50-6-cyclist-speed-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 50
+    "sourcePage": 50,
+    "privateImageFile": "s50-6-cyclist-speed-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-50-6-b",
@@ -10459,9 +11302,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s50-6-cyclist-speed-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 50
+    "sourcePage": 50,
+    "privateImageFile": "s50-6-cyclist-speed-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-51-7-a",
@@ -10474,9 +11318,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s51-7-snails-tables-graphs.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 51
+    "sourcePage": 51,
+    "privateImageFile": "s51-7-snails-tables-graphs.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-51-7-b",
@@ -10489,9 +11334,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s51-7-snails-tables-graphs.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 51
+    "sourcePage": 51,
+    "privateImageFile": "s51-7-snails-tables-graphs.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-51-8",
@@ -10504,9 +11350,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s51-8-balloon-height-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 51
+    "sourcePage": 51,
+    "privateImageFile": "s51-8-balloon-height-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-51-9-a",
@@ -10519,9 +11366,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s51-9-fuel-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 51
+    "sourcePage": 51,
+    "privateImageFile": "s51-9-fuel-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-51-9-b",
@@ -10534,9 +11382,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s51-9-fuel-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 51
+    "sourcePage": 51,
+    "privateImageFile": "s51-9-fuel-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-51-9-c",
@@ -10549,9 +11398,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s51-9-fuel-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 51
+    "sourcePage": 51,
+    "privateImageFile": "s51-9-fuel-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-52-10",
@@ -10564,9 +11414,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s52-10-road-and-graphs.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 52
+    "sourcePage": 52,
+    "privateImageFile": "s52-10-road-and-graphs.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-52-11-a",
@@ -10579,9 +11430,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s52-11-school-walk-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 52
+    "sourcePage": 52,
+    "privateImageFile": "s52-11-school-walk-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-52-11-b",
@@ -10594,9 +11446,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s52-11-school-walk-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 52
+    "sourcePage": 52,
+    "privateImageFile": "s52-11-school-walk-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-52-12-a",
@@ -10609,9 +11462,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s52-12-water-temperature-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 52
+    "sourcePage": 52,
+    "privateImageFile": "s52-12-water-temperature-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-52-12-b",
@@ -10624,9 +11478,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s52-12-water-temperature-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 52
+    "sourcePage": 52,
+    "privateImageFile": "s52-12-water-temperature-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-52-12-c",
@@ -10639,9 +11494,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s52-12-water-temperature-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 52
+    "sourcePage": 52,
+    "privateImageFile": "s52-12-water-temperature-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-52-13-a",
@@ -10654,9 +11510,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s52-13-cyclist-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 52
+    "sourcePage": 52,
+    "privateImageFile": "s52-13-cyclist-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-52-13-b",
@@ -10669,9 +11526,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s52-13-cyclist-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 52
+    "sourcePage": 52,
+    "privateImageFile": "s52-13-cyclist-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-52-13-c",
@@ -10684,9 +11542,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s52-13-cyclist-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 52
+    "sourcePage": 52,
+    "privateImageFile": "s52-13-cyclist-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-52-13-d",
@@ -10699,9 +11558,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s52-13-cyclist-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 52
+    "sourcePage": 52,
+    "privateImageFile": "s52-13-cyclist-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-53-14",
@@ -10714,9 +11574,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s53-14-vessels-graphs.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 53
+    "sourcePage": 53,
+    "privateImageFile": "s53-14-vessels-graphs.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-53-15-a",
@@ -10729,9 +11590,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s53-15-ball-speed-graphs.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 53
+    "sourcePage": 53,
+    "privateImageFile": "s53-15-ball-speed-graphs.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-53-15-b",
@@ -10744,9 +11606,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s53-15-ball-speed-graphs.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 53
+    "sourcePage": 53,
+    "privateImageFile": "s53-15-ball-speed-graphs.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-53-16",
@@ -10759,9 +11622,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s53-16-story-cards.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 53
+    "sourcePage": 53,
+    "privateImageFile": "s53-16-story-cards.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-53-17-a",
@@ -10774,9 +11638,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s53-17-sam-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 53
+    "sourcePage": 53,
+    "privateImageFile": "s53-17-sam-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-53-17-b",
@@ -10789,9 +11654,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s53-17-sam-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 53
+    "sourcePage": 53,
+    "privateImageFile": "s53-17-sam-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-53-18-a",
@@ -10804,7 +11670,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 53
+    "sourcePage": 53,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-53-18-b",
@@ -10817,7 +11684,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 53
+    "sourcePage": 53,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-53-18-c",
@@ -10830,7 +11698,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 53
+    "sourcePage": 53,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-53-18-d",
@@ -10843,7 +11712,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": false,
-    "sourcePage": 53
+    "sourcePage": 53,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-54-Theorie",
@@ -10856,7 +11726,8 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "theory",
     "visualRequired": false,
-    "sourcePage": 54
+    "sourcePage": 54,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-54-Beispiel",
@@ -10869,9 +11740,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s54-speed-formula-table.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 54
+    "sourcePage": 54,
+    "privateImageFile": "s54-speed-formula-table.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-54-Beispiel1",
@@ -10884,9 +11756,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s54-example-formula-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 54
+    "sourcePage": 54,
+    "privateImageFile": "s54-example-formula-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-55-Beispiel2-a",
@@ -10899,9 +11772,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s55-example2-diving-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 55
+    "sourcePage": 55,
+    "privateImageFile": "s55-example2-diving-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-55-Beispiel2-b",
@@ -10914,9 +11788,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s55-example2-diving-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 55
+    "sourcePage": 55,
+    "privateImageFile": "s55-example2-diving-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-55-Beispiel2-c",
@@ -10929,9 +11804,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "example",
     "visualRequired": true,
-    "figureCrop": "s55-example2-diving-graph.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 55
+    "sourcePage": 55,
+    "privateImageFile": "s55-example2-diving-graph.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-55-1-a",
@@ -10944,9 +11820,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s55-1-value-tables.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 55
+    "sourcePage": 55,
+    "privateImageFile": "s55-1-value-tables.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-55-1-b",
@@ -10959,9 +11836,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s55-1-value-tables.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 55
+    "sourcePage": 55,
+    "privateImageFile": "s55-1-value-tables.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-55-1-c",
@@ -10974,9 +11852,10 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s55-1-value-tables.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 55
+    "sourcePage": 55,
+    "privateImageFile": "s55-1-value-tables.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   },
   {
     "id": "ls7-55-2",
@@ -10989,9 +11868,74 @@ window.CHECKLIST_PACK = {
     "plus": false,
     "kind": "exercise",
     "visualRequired": true,
-    "figureCrop": "s55-2-formula-graph-tables.jpg",
-    "sourcePhoto": "100017... fotoğrafından kırpılmış",
-    "sourcePage": 55
+    "sourcePage": 55,
+    "privateImageFile": "s55-2-formula-graph-tables.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-55-2-A",
+    "page": 55,
+    "number": "2A",
+    "exercise": "2",
+    "german": "Seite 55 · Aufgabe 2A\nFormeln passenden Graphen und Wertetabellen zuordnen.\nBearbeite genau diese Unteraufgabe A anhand der Buchseite.",
+    "turkish": "Sayfa 55 · Soru 2A\nFormülleri doğru grafik ve değer tablolarıyla eşleştirme.\nKitaptaki yalnızca A alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 55,
+    "privateImageFile": "s55-2-formula-graph-tables.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-55-2-B",
+    "page": 55,
+    "number": "2B",
+    "exercise": "2",
+    "german": "Seite 55 · Aufgabe 2B\nFormeln passenden Graphen und Wertetabellen zuordnen.\nBearbeite genau diese Unteraufgabe B anhand der Buchseite.",
+    "turkish": "Sayfa 55 · Soru 2B\nFormülleri doğru grafik ve değer tablolarıyla eşleştirme.\nKitaptaki yalnızca B alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 55,
+    "privateImageFile": "s55-2-formula-graph-tables.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-55-2-C",
+    "page": 55,
+    "number": "2C",
+    "exercise": "2",
+    "german": "Seite 55 · Aufgabe 2C\nFormeln passenden Graphen und Wertetabellen zuordnen.\nBearbeite genau diese Unteraufgabe C anhand der Buchseite.",
+    "turkish": "Sayfa 55 · Soru 2C\nFormülleri doğru grafik ve değer tablolarıyla eşleştirme.\nKitaptaki yalnızca C alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 55,
+    "privateImageFile": "s55-2-formula-graph-tables.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
+  },
+  {
+    "id": "ls7-55-2-D",
+    "page": 55,
+    "number": "2D",
+    "exercise": "2",
+    "german": "Seite 55 · Aufgabe 2D\nFormeln passenden Graphen und Wertetabellen zuordnen.\nBearbeite genau diese Unteraufgabe D anhand der Buchseite.",
+    "turkish": "Sayfa 55 · Soru 2D\nFormülleri doğru grafik ve değer tablolarıyla eşleştirme.\nKitaptaki yalnızca D alt maddesini çöz.",
+    "star": false,
+    "plus": false,
+    "kind": "exercise",
+    "visualRequired": true,
+    "sourcePage": 55,
+    "privateImageFile": "s55-2-formula-graph-tables.jpg",
+    "privateFigureAvailable": true,
+    "auditStatus": "page-and-number-double-reviewed; mathematical-expression-proofreading-pending"
   }
 ]
 };
