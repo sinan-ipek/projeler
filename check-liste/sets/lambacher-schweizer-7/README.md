@@ -1,10 +1,10 @@
 # Lambacher Schweizer 7 — Check Liste
 
-**Sürüm v1.5.0** · Klett · NRW · Klasse 7
+**Sürüm v1.6.0** · Klett · NRW · Klasse 7
 
-İlk gönderilen fotoğraflar: kapak, kullanım açıklaması, **içindekiler (s.2–3)** ve **s.4–17** (7 çift sayfa).
+İlk gönderilen fotoğraflar: kapak, kullanım açıklaması, **içindekiler (s.2–3)** ve **s.4–37** (7 çift sayfa).
 
-Bu paket, 4–17 sayfalarındaki konu girişleri ve görülebilen soru numaraları için **57 bağımsız tamamlanma kutusu** sağlar. Soru başlıkları, kullanıcının fotoğraflarına dayanılarak **özetlenmiştir**; telifli tam soru metinleri ve sayfa görüntüleri bu açık GitHub deposunda yayımlanmamıştır. Detaylı soru ve şekiller için fiziksel kitap gereklidir. Soru numaraları sayfa bazında takip edilir ve alt soruların çözümü tek kutuda işaretlenir.
+Bu paket, 4–17 sayfalarındaki konu girişleri ve görülebilen soru numaraları için **164 bağımsız tamamlanma kutusu** sağlar. Soru başlıkları, kullanıcının fotoğraflarına dayanılarak **özetlenmiştir**; telifli tam soru metinleri ve sayfa görüntüleri bu açık GitHub deposunda yayımlanmamıştır. Detaylı soru ve şekiller için fiziksel kitap gereklidir. Soru numaraları sayfa bazında takip edilir ve alt soruların çözümü tek kutuda işaretlenir.
 
 **Bölümler (içindekiler):**
 - I. Rechnen mit rationalen Zahlen (Rasyonel sayılarla işlemler) — s.4
@@ -15,10 +15,15 @@ Bu paket, 4–17 sayfalarındaki konu girişleri ve görülebilen soru numaralar
 - VI. Wahrscheinlichkeiten (Olasılıklar) — s.196
 - Ekler: Nachschlagen und Überprüfen — s.228
 
-**İşlenen sayfalar:** s.4–17. **Sonraki fotoğraf grubu:** s.18–27.
+**İşlenen sayfalar:** s.4–37. **Sonraki fotoğraf grubu:** s.38–47.
 
 **Açılış:** `check-liste/lesson.html?set=lambacher-7`
 
 **Kayıt anahtarı:** `lambacher-schweizer-7-nrw`. Diğer öğrencilerin ve derslerin ilerleme/çizim kayıtlarından bağımsızdır.
 
 **İleri geliştirme:** Fotoğraflardan kontrol edilerek özgün örnekler, şematik şekiller ve her alt soru için ayrı çalışma kartları eklenebilir.
+
+
+## İkinci fotoğraf grubu (s.18–37)
+
+20 sayfa / 10 fotoğraf. 107 yeni takip maddesi. Sayfa ve soru numaraları ile iki dilli konu özetleri eklendi; telifli tam soru metinleri ve görseller yayımlanmadı.
