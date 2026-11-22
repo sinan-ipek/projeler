@@ -39,6 +39,71 @@ try{done=JSON.parse(localStorage.getItem(key('done'))||'{}')||{}}catch{}
 const pages=[...new Set(qs.map(q=>q.page))];
 pages.forEach(p=>{let o=document.createElement('option');o.value=p;o.textContent='Sayfa '+p;$('pageSelect').append(o)});
 const saveDone=()=>{try{localStorage.setItem(key('done'),JSON.stringify(done))}catch{}};
+
+/* Özel kitap kırpımları: Her dosya yalnızca kullanıcının tarayıcısındaki IndexedDB'de tutulur.
+   GitHub'a veya herhangi bir sunucuya gönderilmez. */
+const privateInput=$('privateImagesInput'), privateButton=$('importPrivateImages'), privateHint=$('privateImagesHint');
+let privateDbPromise=null, privateUrl=null, privateImageSequence=0;
+function privateDb(){
+ if(privateDbPromise)return privateDbPromise;
+ privateDbPromise=new Promise((resolve,reject)=>{
+  if(!('indexedDB' in window)){reject(new Error('Tarayıcı yerel görsel saklamayı desteklemiyor'));return}
+  const request=indexedDB.open('check-liste-private-figures-v1',1);
+  request.onupgradeneeded=()=>{if(!request.result.objectStoreNames.contains('files'))request.result.createObjectStore('files')};
+  request.onsuccess=()=>resolve(request.result);
+  request.onerror=()=>reject(request.error||new Error('Görsel veritabanı açılamadı'));
+ });
+ return privateDbPromise;
+}
+async function privateImage(name){
+ const db=await privateDb();
+ return new Promise((resolve,reject)=>{
+  const r=db.transaction('files','readonly').objectStore('files').get(checkId+':'+name);
+  r.onsuccess=()=>resolve(r.result||null);
+  r.onerror=()=>reject(r.error);
+ });
+}
+async function displayPrivateImage(name,serial){
+ const status=$('privateImageStatus');
+ try{
+  const blob=await privateImage(name);
+  if(serial!==privateImageSequence)return;
+  if(!blob){if(status){status.hidden=false;status.textContent='Özel görsel henüz içe aktarılmadı: '+name+'. Soldaki “Görselleri içe aktar” düğmesini kullan.'}return}
+  privateUrl=URL.createObjectURL(blob);
+  $('figure').src=privateUrl;$('figure').hidden=false;
+  if(status){status.hidden=false;status.textContent='Özel görsel, bu cihazda saklanıyor: '+name}
+ }catch(err){
+  if(serial!==privateImageSequence)return;
+  if(status){status.hidden=false;status.textContent='Özel görsel açılamadı: '+(err.message||err)}
+ }
+}
+if(privateButton&&privateInput){
+ const hasAssets=qs.some(q=>q.privateImageFile);
+ privateButton.hidden=!hasAssets;
+ if(privateHint){privateHint.hidden=!hasAssets;privateHint.textContent='ZIP arşivini açıp PNG dosyalarını seç. Görseller yalnızca bu tarayıcıda saklanır.'}
+ privateButton.addEventListener('click',()=>privateInput.click());
+ privateInput.addEventListener('change',async()=>{
+  const files=[...privateInput.files].filter(f=>/^image\/(png|jpeg|webp)$/.test(f.type)&&f.size<12000000);
+  if(!files.length){if(privateHint)privateHint.textContent='PNG/JPG dosyası seçilmedi.';return}
+  privateButton.disabled=true;
+  if(privateHint)privateHint.textContent=files.length+' görsel içe aktarılıyor…';
+  try{
+   const db=await privateDb();
+   await new Promise((resolve,reject)=>{
+    const tx=db.transaction('files','readwrite'),store=tx.objectStore('files');
+    for(const file of files)store.put(file,checkId+':'+file.name);
+    tx.oncomplete=resolve;
+    tx.onerror=()=>reject(tx.error||new Error('Kayıt hatası'));
+    tx.onabort=()=>reject(tx.error||new Error('Kayıt iptal edildi'));
+   });
+   if(privateHint)privateHint.textContent=files.length+' görsel bu tarayıcıya kaydedildi. Başka cihazda tekrar içe aktarılmalıdır.';
+   open(current);
+  }catch(err){
+   if(privateHint)privateHint.textContent='Görseller kaydedilemedi: '+(err.message||err);
+  }finally{privateButton.disabled=false;privateInput.value=''}
+ });
+}
+
 function drawMenu(){
  const pg=$('pageSelect').value,s=$('search').value.toLocaleLowerCase('tr');let last=null;
  $('menu').replaceChildren();
@@ -58,7 +123,16 @@ function open(i){
  $('german').textContent=q.german;$('turkish').textContent=q.turkish;$('done').checked=!!done[q.id];
  $('prev').disabled=i===0;$('next').disabled=i===qs.length-1;
  const src=q.figureImage||q.sourceImage||q.image||'';
- $('pictures').hidden=!src;if(src){$('figure').src=src;$('figure').classList.remove('zoom')}
+ const serial=++privateImageSequence;
+ if(privateUrl){URL.revokeObjectURL(privateUrl);privateUrl=null}
+ $('figure').classList.remove('zoom');$('figure').hidden=false;
+ const imgStatus=$('privateImageStatus');
+ if(imgStatus){imgStatus.hidden=true;imgStatus.textContent=''}
+ if(src){$('pictures').hidden=false;$('figure').src=src}
+ else if(q.privateImageFile){
+  $('pictures').hidden=false;$('figure').hidden=true;$('figure').removeAttribute('src');
+  displayPrivateImage(q.privateImageFile,serial);
+ }else{$('pictures').hidden=true;$('figure').removeAttribute('src')}
  history.replaceState(null,'','#'+q.id);drawMenu();if(window.loadBoard)window.loadBoard();
 }
 $('done').onchange=e=>{done[qs[current].id]=e.target.checked;saveDone();drawMenu()};
