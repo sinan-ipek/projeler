@@ -42,3 +42,5 @@ Sayfalar 4–37 eksiksizdir; 165 önceki genel kart korunarak 583 alt madde, 13 
 - Görsel arşivi: `Lambacher_Schweizer_7_gorseller_s38-55.zip`; ZIP'i kullanıcı sohbetten indirip çıkarır, sonra uygulamadaki **Görselleri içe aktar** düğmesiyle JPG dosyalarını seçer.
 - Görseller kamuya açık depoda değil; kullanıcının tarayıcısında IndexedDB'ye kaydedilir.
 - Matematiksel sembollerin ve bütün küçük baskılı alt ifadelerin karakter karakter son denetimi **henüz tamamlanmış değildir**. Kitabın aslı referanstır.
+
+**Tüm görseller tek ZIP'te:** `Lambacher_Schweizer_7_tum_gorseller_s4-55.zip` (128 görsel). ZIP'i çıkarıp içindeki **PNG ve JPG dosyalarının tamamını** seçerek `Görselleri içe aktar` ile kaydet. Bu arşiv GitHub'da yayımlanmaz; kullanıcının sohbet indirmesiyle sağlanır.
