@@ -1,14 +1,15 @@
 # Munzur · Matematik Check Liste
 
-**v1.4.0** — Kullanıcının yüklediği dört fotoğraf ve okul ödevi ekranı esas alınmıştır.
+**v1.4.1** — Kullanıcının yüklediği dört fotoğraf ve okul ödevi ekranı esas alınmıştır.
 
 ## Soru sırası
 
 1. **Ödev ilk sırada:** s.50 soru 4 (a–d), s.51 soru 7 (a–b), s.51 soru 8.
-2. Diğer s.50–51 çalışmaları: grafikler, tablolar, hız, kar yüksekliği, bisiklet ve yakıt.
-3. s.91–93: yüzdeler, yüzdelik hesap, indirim, KDV, karışık yüzde değişimi ve formüller.
+2. Diğer s.50–52 çalışmaları: grafikler, tablolar, hız, kar yüksekliği, bisiklet, okul yolu, soğuma ve yakıt.
+3. **Yeni s.52:** soru 10; 11a–b; 12a–c; 13a–d (10 alt madde).
+4. s.91–93: yüzdeler, yüzdelik hesap, indirim, KDV, karışık yüzde değişimi ve formüller.
 
-Toplam **77 alt madde**; Almanca ve Türkçe. Her alt maddenin kendine ait çözüm alanı ve tamamlanma kaydı vardır. Yanıtlar önceden gösterilmez.
+Toplam **87 alt madde**; Almanca ve Türkçe. Her alt maddenin kendine ait çözüm alanı ve tamamlanma kaydı vardır. Yanıtlar önceden gösterilmez.
 
 ## Görseller ve metin doğruluğu
 
