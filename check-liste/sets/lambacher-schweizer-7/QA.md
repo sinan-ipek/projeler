@@ -13,7 +13,7 @@
 - **583** harfli alt madde için ayrı takip kartı oluşturuldu.
 - Açık biçimde **Beispiel** başlığı bulunan **12 çözümlü örnek**, ayrı kartlar hâline getirildi: s.6 (1), s.9 (1), s.13 (2), s.17 (2), s.22 (2), s.27 (2), s.32 (2).
 - **3 destek görsel kartı** eklendi. Toplam **763 takip kartı**. Bu toplam 763 benzersiz özgün soru değildir; önceki genel kartlar da içerilir.
-- Kullanıcının sağladığı fotoğraflardan gerekli grafik, sayı doğrusu, kart, tablo ve diyagramlar için **85 özel kırpım** hazırlandı. 85 dosya teknik olarak sağlam, 85'i de kayıtlarda referanslanıyor.
+- Kullanıcının sağladığı fotoğraflardan grafik, sayı doğrusu, kart, tablo ve diyagramlar için **85 özel kırpım** hazırlandı. Tüm dosyalar teknik olarak sağlam. İkinci görsel kalite turunda **6 kesit düzeltildi**; 85 görsel kimliğinin tamamı kayıtlarda referanslanıyor.
 - Kamuya açık GitHub deposunda tam sayfa fotoğrafları, kırpımlar veya telifli tam sorular tutulmuyor.
 
 ## Örnek eksiklikler
@@ -27,7 +27,7 @@
 ## Tamamlanmamış ikinci kontroller
 1. Tüm soruların sayılarını ve matematik sembollerini fotoğrafla karakter karakter karşılaştırma; mevcut iki sayfalı fotoğraflar küçük yazılarda her zaman güvenilir değil.
 2. Harfli şıkların içindeki ayrıca numaralanmış küçük görevleri ayırma (örn. s.19/14a, s.20/21a, s.35/20b).
-3. Kırpılan 85 görselin **tek tek ikinci bağımsız görsel kalite kontrolü**. Teknik sağlamlık testi tamamlandı, ayrıntılı görsel teyit sürüyor.
+3. 85 kırpımın tamamı ikinci görsel temassayfa kontrolünden geçirildi, 6 kırpımın sınırları düzeltildi. **Küçük matematik sembollerinin** karakter-karakter teyidi hâlâ bekliyor.
 
 ## Özel görsellerin kullanımı
 Özel görsel ZIP arşivini indir ve çıkar; açılan PNG dosyalarını Check Liste dersindeki **“Görselleri içe aktar”** düğmesinden topluca seç. Görseller yalnızca kullanıcının bu tarayıcısının IndexedDB deposuna kaydolur; sunucuya gönderilmez. Site ilk açılışta görselleri otomatik olarak içermez. Başka cihazda yeniden yüklemek gerekir.
