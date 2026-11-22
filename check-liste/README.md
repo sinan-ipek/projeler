@@ -79,7 +79,7 @@ Munzur, Çetin 1 ve Aras 1 ile **aynı `lesson.html`, `app.js` ve `pdf-export.js
 **Tuana 1**, şimdilik kendi `mathe-gk/index.html` dosyasını kullanan ayrı ders sunumudur; ortak çizim/Check Liste uygulamasına dönüştürülmemiştir.
 
 
-**v1.12.0 notu:** 96–115: 290 yeni takip kartı (soru ve alt maddeler, Beispiele, konu), 61 özel görsel. Sonraki fotoğraflar: 116–135. Yerel görsel ZIP dosyası: Lambacher_Schweizer_7_tum_gorseller_s4-115.zip.
+**v1.11.0 tarihsel notu:** 96–115: 290 yeni takip kartı (soru ve alt maddeler, Beispiele, konu), 61 özel görsel. Sonraki fotoğraflar: 116–135. Yerel görsel ZIP dosyası: Lambacher_Schweizer_7_tum_gorseller_s4-115.zip.
 
 
 **v1.12.0 güncellemesi:** s.116–135 için 247 soru/alt madde, test, örnek ve konu kartı ile 2 destek görsel kartı eklendi; toplam 1901 kart. 57 kırpım eklendi, özel ZIP 366 görsel içeriyor. Geçmiş sürüm notları tarihsel kayıttır; güncel kapsam 4–135. Sonraki grup 136–155.
