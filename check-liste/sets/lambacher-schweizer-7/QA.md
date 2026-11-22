@@ -1,4 +1,4 @@
-# Lambacher Schweizer 7 – denetim v1.11.0 (22.11.2026)
+# Lambacher Schweizer 7 – denetim v1.12.0 (22.11.2026)
 
 **Durum: yapısal denetim ilerledi; metin düzeyinde eksiksizlik henüz onaylanmadı.**
 
@@ -171,3 +171,40 @@
 **Açık kalite sınırı:** Sayfa numarası ve soru listesi kontrol edilmiş olsa da küçük yazılı matematiksel ifadelerin tamamı karakter karakter çözümlenmemiştir; kullanıcı gerekirse yakın çekim göndermelidir.
 
 **SON TEKNİK DOĞRULAMA (v1.11.0):** `data.js` içinde 1652 takip kartı, 96–115 aralığı için 290 yeni kart ve 4–115 arasında 112 farklı basılı sayfa kaydı bulundu. **0 eksik sayfa ve 0 yinelenen kart kimliği.** Özel ZIP'te 309 görsel var; bu dosyaların sıralı adları ile `data.js` içindeki 309 benzersiz `privateImageFile` adının FNV-1a kontrol toplamları **3378412036** değerinde birebir eşleşti. ZIP bütünlük kontrolü hatasız. Bu teknik eşleşme küçük baskının matematiksel doğruluğunu garanti etmez.
+
+## YEDİNCİ GRUP — 116–135. SAYFALAR (v1.12.0, 22.11.2026)
+
+**Fotoğraf denetimi:** 10 karşılıklı fotoğrafın basılı sayfaları sırayla 116–117, 118–119, 120–121, 122–123, 124–125, 126–127, 128–129, 130–131, 132–133, 134–135. Eksik ve tekrarlanan basılı sayfa yok.
+
+### Soru, alt madde, Beispiel ve ek görseller için iki geçişli envanter
+
+| Sayfa | İçerik |
+|---|---|
+| 116 | Rückblick: Grundwert, Prozentwert, Prozentsatz; Prozentveränderung, Zinsen, Zinseszins |
+| 117 | Test, Runde 1 (1–5) ve Runde 2 (1–5), ilan ve indirim grafikleri |
+| 118 | Von großen und kleinen Tieren; 1–4, dinozor/fil çizimi, yükseklik tablosu, hayvan türleri daire grafiği |
+| 119 | 5–8, memeli sayıları, yaşam alanları diyagramları, fil, tür kütle tablosu |
+| 120 | IV. Terme und Gleichungen bölüm açılış görselleri |
+| 121 | Check-in 1–4, sayı terimleri, parantez açma, tablolar, geometrik şekiller |
+| 122 | Forschungsauftrag: küp kuleleri, küp örüntüleri, boncuk dizileri, kibrit çöpü şekilleri |
+| 123 | Knack die Box: kutular ve eşitlikler üzerine üç araştırma görevi |
+| 124 | 1. Terme mit einer Variablen: tasarruf örneği ve değer tablosu |
+| 125 | Beispiel 1 terim değeri, Beispiel 2 kibrit kareleri |
+| 126 | Aufgaben 1–7, terim kartları, değer tabloları ve küçük test |
+| 127 | Aufgaben 8–12, nokta/çöp örüntüleri, bileşik alan, hata analizi |
+| 128 | Aufgaben 13–20, prizma, çember içi bağlantılar, kutup ayısı, temel işlemler |
+| 129 | 2. Terme mit einer Variablen umformen: U biçimli alan ve çevre örnekleri |
+| 130 | Beispiele 1–3, terim sadeleştirme, tatil masrafı, eşdeğerlik; Aufgabe 1 |
+| 131 | Aufgaben 2–11, terim dönüşümü, test ve kartlar |
+| 132 | Aufgaben 12–18, hatalar, U şekli, prizma, sayı bulmacası |
+| 133 | 3. Ausmultiplizieren und Ausklammern: dağılma özelliği ve ortak çarpan, şekilli anlatım |
+| 134 | Beispiele 1–2, Aufgaben 1–5, nokta örüntüsü ve terim kartları |
+| 135 | Aufgaben 6–11, dikdörtgen ve U biçimli alanlar, hayvan ağılı |
+
+**Görsel gözden geçirme:** Başta 57 yeni görsel kırpımı oluşturuldu, 127, 131 ve 135. sayfalarda sınırları yanlış yerde olan 9 kırpım geometrik koordinat denetimiyle düzeltildi; denetlenen görsellerde gereksiz masa ve kitap çevresi mümkün olduğunca ayıklandı. 57 dosyanın tamamı en az bir kartın `privateImageFile` alanına bağlandı.
+
+**Takip kartları:** Önceki 1652 + 247 yeni çalışma kartı + 2 destek şekil kartı = **1901**. Önceki tüm kart kimlikleri değişmeden bırakıldı. Yeni seride eksik sayfa ve tekrarlanan soru kimliği kontrol edildi.
+
+**Özel görsel arşivi:** 309 eski + 57 yeni = **366** PNG/JPG. ZIP açma/CRC bütünlük testi başarılı. Yerel ve özel arşiv `Lambacher_Schweizer_7_tum_gorseller_s4-135.zip` olarak üretildi; telifli kitap kırpımları herkese açık GitHub deposuna gönderilmedi.
+
+**Açık kalite sınırı:** Soru ve örnek envanteri kitap fotoğraflarından çıkarılmıştır, ancak matematiksel küçük yazı ve her alt maddenin birebir karakter düzeyinde transkripsiyonu tamamlanmadı. Özellikle soru değerleri için basılı kitaptaki asıl ifadeler kullanılmalıdır.
