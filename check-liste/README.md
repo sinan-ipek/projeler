@@ -1,18 +1,18 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.7.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.8.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
-## Lambacher Schweizer 7 (v1.7.0)
+## Lambacher Schweizer 7 (v1.8.0)
 
-**Denetim:** `sets/lambacher-schweizer-7/QA.md`. 4–37 sayfa ardışık; 12 Beispiel ve 583 alt madde ayrı kaydedildi. 85 kırpım GitHub'da değildir; özel ZIP arşivinden tarayıcıya yüklenir. Tam soru metinleri ve simgeler için metin düzeyi kontrolü sürüyor.
+**Denetim:** `sets/lambacher-schweizer-7/QA.md`. 4–55 ardışık; 56–57 eksik, 50–51 iki kez gönderildi. Önceki 85 kırpıma 43 yeni JPEG kırpımı eklendi (toplam 128); iki özel ZIP arşivinden tarayıcıya içe aktarılır. Tam soru metinleri ve simgeler için metin düzeyi kontrolü sürüyor.
 
 - **Bağlantı:** `lesson.html?set=lambacher-7`
 - **Veri kaynağı:** `sets/lambacher-schweizer-7/data.js`
-- **İlk fotoğraf grubu:** İçindekiler s.2–3; ders sayfaları s.4–37
-- **776 takip kartı**; bölüm girişleri ve sayfa/soru numaraları, Almanca–Türkçe konu özetleri
+- **İlk fotoğraf grubu:** İçindekiler s.2–3; ders sayfaları s.4–55
+- **955 takip kartı**; bölüm girişleri ve sayfa/soru numaraları, Almanca–Türkçe konu özetleri
 - **Önemli:** Tam telifli metinler ve sayfa fotoğrafları **açık GitHub deposunda paylaşılmaz**; soruyu kitaptan okuyup çözmek gerekir
 - **Altı bölüm:** s.4, 44, 80, 120, 162 ve 196'da başlar. Ekler s.228'den itibaren.
-- **Sonraki fotoğraf grubu:** s.38–47
+- **Sonraki fotoğraf grubu:** s.56–57
 - **Kayıt anahtarı:** `lambacher-schweizer-7-nrw`; önceki çalışmalardan bağımsız
 
 ## Munzur — yeni çalışma paketi (v1.4.0)
@@ -40,7 +40,7 @@ Munzur, Çetin 1 ve Aras 1 ile **aynı `lesson.html`, `app.js` ve `pdf-export.js
     ├── Munzur  → lesson.html?set=munzur
     │   └── sets/munzur-2026/data.js (87 soru)
     ├── Lambacher Schweizer 7 → lesson.html?set=lambacher-7
-    │   └── sets/lambacher-schweizer-7/data.js (165 takip maddesi, s.4–37)
+    │   └── sets/lambacher-schweizer-7/data.js (165 takip maddesi, s.4–55)
     └── Tuana 1 → ../mathe-gk/index.html (ayrı slayt sunumu)
 ```
 
