@@ -1,4 +1,4 @@
-# Lambacher Schweizer 7 – denetim v1.7.0 (22.11.2026)
+# Lambacher Schweizer 7 – denetim v1.8.0 (22.11.2026)
 
 **Durum: yapısal denetim ilerledi; metin düzeyinde eksiksizlik henüz onaylanmadı.**
 
@@ -38,3 +38,28 @@
 3. Görsele bağlı her örnek/sorunun ayrı kırpımı; eksen, etiket ve önemli sayılar korunur, gereksiz alan atılır.
 4. Bağımsız ikinci kontrol: kaynak görünümü – soru/örnek/görsel envanteri – GitHub veri paketi karşılaştırması.
 5. Açık hata listesi; hiçbir belirsizlik uydurularak giderilmez.
+
+
+## 38–57 fotoğraf grubu — sayfa denetimi
+
+**ÇİFT KONTROL UYARISI (22.11.2026):** Gönderilen 10 fotoğraf, basılı s.38–55'i kapsıyor; **s.50–51 iki kez** mevcut; **s.56–57 yok**. 38–55 arasında başka bir sayfa boşluğu tespit edilmedi. Eksik 56–57 veri kümesine eklenmedi, tamamlandı işaretlenmedi.
+
+### Soru/örnek envanteri (görsel üstündeki numaralara göre)
+
+| Sayfalar | Tespit edilenler |
+|---|---|
+| 38–39 | s.38: 15–21; s.39: 22–26, 26'nın (1)–(13) numaralı parçaları |
+| 40–41 | s.40 Rückblick: 8 özet/işlem örneği; s.41 Runde 1 (1–5), Runde 2 (1–5); harfli alt maddeler ayrıca takip edilir |
+| 42–43 | Exkursion: s.42 (1–3), s.43 (4–6), sıcaklık ve sihirli toplar tabloları |
+| 44–45 | II. Zuordnungen bölüm girişi; s.45 Check-in soruları 1–5 ve harfli alt maddeleri |
+| 46–47 | İki *Erkundung* etkinliği; alışverişte muz, kiraz ve elma fiyat etiketleri |
+| 48–49 | Eşleştirme konu anlatımı ve grafikli örnekler; s.49 soru 1a–b |
+| 50–51 | s.50 soru 2–6; s.51 soru 7–9, görselli soru/alt maddeler |
+| 52–53 | s.52 soru 10–13; s.53 soru 14–18, grafik ve şekiller |
+| 54–55 | Formülle eşleştirme anlatımı, Beispiel 1, Beispiel 2; s.55 soru 1a–c ve soru 2 |
+
+- İlk geçiş: Her fotoğrafın basılı sayfa numarası ve başlık/soru aralığı kontrol edildi.
+- İkinci geçiş: Soru/alt madde kartları veri kümesiyle karşılaştırıldı; 55 ilave numaralı/harfli çalışma kartı eklendi.
+- Görseller: **43 farklı kırpım** JPEG olarak hazırlandı; kırpım adları veri kümesine bağlandı. Kırpımların bir kısmındaki baskı çok küçük; gerekli olduğunda daha yakın fotoğraf istenmelidir.
+- Toplam: s.4–37 **776 kart**, s.38–55 **179 kart** = **955 takip kartı**. Bazı sorularda genel bir üst kart ve alt maddeler birlikte bulunduğundan bu, 955 özgün soru değildir.
+- **Açık sınırlama:** Kitap görselleri yan yana tek fotoğrafta küçük kaldığı için tüm matematiksel ifadeler ve alt maddelerin tam metni karakter karakter doğrulanmadı; bu nedenle “tam transkripsiyon ve %100 eksiksiz” olarak onaylanmıyor. Görseller özel ZIP içindedir, uygulamada içe aktarılmalıdır.
