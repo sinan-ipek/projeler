@@ -1,4 +1,4 @@
-/* Check Liste v1.9.0 — Tek ortak ders yükleyicisi.
+/* Check Liste v1.10.0 — Tek ortak ders yükleyicisi.
    Yalnızca ders veri kaynağı değişir: aynı HTML, çizim motoru ve PDF oluşturucu. */
 (function(){
  'use strict';
@@ -27,7 +27,7 @@
  }
  async function start(){
   try{
-   await load(selected.data+'?v=1.9.0');
+   await load(selected.data+'?v=1.10.0');
    if(!window.CHECKLIST_PACK||
       window.CHECKLIST_PACK.id!==selected.pack||
       !Array.isArray(window.CHECKLIST_PACK.questions))
