@@ -1,5 +1,5 @@
 /* Lambacher Schweizer 7 · Nordrhein-Westfalen · Check Liste v1.12.0
- * Kapsam: içindekiler s.2–3, ders s.4–115.
+ * Kapsam: içindekiler s.2–3, ders s.4–135.
  * Bu açık depoda telifli kitap fotoğrafları veya soruların tam metinleri tutulmaz.
  * Her soru için yer, konu özeti ve Almanca-Türkçe çalışma yönergesi bulunur.
  * Tam soru ve şekiller için fiziksel kitaba bakılmalıdır.
