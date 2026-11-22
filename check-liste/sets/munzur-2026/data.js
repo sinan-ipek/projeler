@@ -127,7 +127,104 @@ const s9='Familie Fischer fährt mit dem Auto an die Nordsee. Rechts ist der Gra
 add(51,9,'a',s9+'\na) Lies am Graphen ab, wie viel Benzin nach 100 km ungefähr noch im Tank war.','Fischer ailesinin yolculuğunda grafikte gidilen yol ve depoda kalan benzin gösteriliyor.\na) 100 km sonra depoda yaklaşık kaç litre benzin kaldığını oku.',{figure:'gasoline'});
 add(51,9,'b',s9+'\nb) Gib an, nach welcher ungefähren Fahrstrecke noch 30 l Benzin im Tank sind.','b) Depoda 30 litre benzin kaldığında yaklaşık kaç kilometre gidildiğini bul.',{figure:'gasoline'});
 add(51,9,'c',s9+'\nc) Begründe, warum der Graph fällt.','c) Grafiğin neden aşağı doğru indiğini açıkla.',{figure:'gasoline'});
-// MUNZUR_MORE_QUESTIONS
+// === S.91 · Prozentwerte berechnen ===
+IMAGES.percentCards=table('Zuordnung: gelbe Karten → blaue Karten',Array(4).fill(''),[
+ ['Gelb 1','20 % von 25','Blau I','3 Schüler'],
+ ['Gelb 2','30 % von 30','Blau S','5 Schüler'],
+ ['Gelb 3','10 % von 30','Blau E','11 Schüler'],
+ ['Gelb 4','25 % von 28','Blau P','9 Schüler'],
+ ['Gelb 5','50 % von 26','Blau T','7 Schüler']
+]);
+const m1='Ordne jeder gelben Karte eine passende blaue Karte zu. Wenn du alle Karten richtig zugeordnet hast, erhältst du ein Lösungswort.\nGelb: (1) 20 % von 25 Schülern; (2) 30 % von 30 Schülern; (3) 10 % von 30 Schülern; (4) 25 % von 28 Schülern; (5) 50 % von 26 Schülern; (6) 55 % von 20 Schülern.\nBlau: I=3 Schüler, S=5 Schüler, E=11 Schüler, P=9 Schüler, T=7 Schüler, Z=13 Schüler.';
+add(91,1,'',m1,'Her sarı yüzde kartını uygun mavi sayı kartıyla eşleştir ve ortaya çıkan sözcüğü bul.\nSarı kartlar: 25’in %20’si; 30’un %30’u; 30’un %10’u; 28’in %25’i; 26’nın %50’si; 20’nin %55’i.\nMavi kartlar: I=3, S=5, E=11, P=9, T=7, Z=13 öğrenci.',{figure:'percentCards'});
+const d2='Übertrage die Tabelle in dein Heft, ergänze die fehlenden Werte und beschrifte die Pfeile, die den Rechenweg darstellen.';
+add(91,2,'a',d2+'\na) 100 % = 400 kg. Gesucht: 1 % und 7 %.','Tabloyu deftere geçir. Eksik değerleri doldur ve hesap adımlarını okların üzerine yaz.\na) %100 = 400 kg. %1 ve %7 kaç kg?',{figure:'percent2a'});
+add(91,2,'b',d2+'\nb) 100 % = 220 dm. Gesucht: 1 % und 3 %.','b) %100 = 220 dm. %1 ve %3 kaç dm?',{figure:'percent2b'});
+const d3='Als Zwischengröße muss nicht immer 1 % gewählt werden. Übertrage die Tabellen in dein Heft, ergänze die Werte und beschrifte die Pfeile, die den Rechenweg darstellen.';
+add(91,3,'a',d3+'\na) 100 % = 250 m². Gesucht: 10 % und 30 %.','Ara hesaplama basamağında her zaman %1 kullanmak gerekmez. Tabloyu tamamla.\na) %100 = 250 m². %10 ve %30’u bul.',{figure:'percent3a'});
+add(91,3,'b',d3+'\nb) 100 % = 350 l. Gesucht: 20 % und 60 %.','b) %100 = 350 litre. %20 ve %60’ı bul.',{figure:'percent3b'});
+const d4='Berechne schriftlich mit einem Dreisatz.';
+for(const [part,de,tr] of [
+ ['a','37 % von 500 €','500 €’nun %37’si'],
+ ['b','8 % von 250 kg','250 kg’ın %8’i'],
+ ['c','9 % von 150 m','150 metrenin %9’u'],
+ ['d','45 % von 300 h','300 saatin %45’i']
+])add(91,4,part,d4+'\n'+part+') '+de,'Orantı / üçlü kural (Dreisatz) kullanarak yazılı hesapla.\n'+part+') '+tr);
+const d5='Notiere den Prozentsatz als gekürzten Bruch. Berechne damit den Prozentwert.';
+for(const [part,de,tr] of [
+ ['a','10 % von 75 €','75 €’nun %10’u'],
+ ['b','25 % von 280 €','280 €’nun %25’i'],
+ ['c','50 % von 620 km','620 km’nin %50’si'],
+ ['d','20 % von 80 m','80 m’nin %20’si'],
+ ['e','75 % von 240 kg','240 kg’ın %75’i'],
+ ['f','40 % von 360 kg','360 kg’ın %40’ı'],
+ ['g','60 % von 80 cm','80 cm’nin %60’ı'],
+ ['h','90 % von 40 km','40 km’nin %90’ı']
+])add(91,5,part,d5+'\n'+part+') '+de,'Yüzde oranını sadeleştirilmiş kesir olarak yaz ve sonucu kesir yardımıyla bul.\n'+part+') '+tr);
+const d6='Ein Elektrogeschäft hat die Preise stark reduziert. Überschlage zuerst, wie viel die Geräte nach der Preissenkung kosten. Berechne dann mit dem Taschenrechner.';
+add(91,6,'a',d6+'\na) Der Preis eines 889,99 € teuren Fernsehers wird um 50 % reduziert.','Elektronik mağazasında indirim yapılıyor. Önce tahmin et, sonra hesapla.\na) 889,99 €’luk televizyona %50 indirim uygulanıyor.');
+add(91,6,'b',d6+'\nb) Ein Drucker hat bisher 68,99 € gekostet. Der Preis wird um 30 % reduziert.','b) 68,99 €’luk yazıcıya %30 indirim uygulanıyor.');
+add(91,6,'c',d6+'\nc) Ein Laptop hat bisher 619,99 € gekostet. Der Preis wird um 70 % reduziert.','c) 619,99 €’luk dizüstü bilgisayara %70 indirim uygulanıyor.');
+add(91,7,'a','Teste dich! Berechne 15 % von 80 €.','Kendini dene! 80 €’nun %15’ini hesapla.');
+add(91,7,'b','Teste dich! In der Klasse 7 d sind 25 Schüler. Davon sind 20 % Linkshänder. Berechne, wie viele Personen das sind.','7d sınıfında 25 öğrenci var. Bunların %20’si solak. Kaç öğrenci solaktır?');
+add(91,8,'','Ein Taschenrechner kostete bisher 29,59 €. Der Händler reduziert den Preis um 30 %. Überschlage zunächst und berechne dann den neuen Preis des Taschenrechners.','Bir hesap makinesi 29,59 € idi. Satıcı %30 indirim yapıyor. Önce yaklaşık sonucu tahmin et, sonra yeni fiyatı hesapla.');
+IMAGES.percent2a=table('Prozenttabelle A',Array(2).fill(''),[['100 %','400 kg'],['1 %','?'],['7 %','?']]);
+IMAGES.percent2b=table('Prozenttabelle B',Array(2).fill(''),[['100 %','220 dm'],['1 %','?'],['3 %','?']]);
+IMAGES.percent3a=table('Prozenttabelle A',Array(2).fill(''),[['100 %','250 m²'],['10 %','?'],['30 %','?']]);
+IMAGES.percent3b=table('Prozenttabelle B',Array(2).fill(''),[['100 %','350 l'],['20 %','?'],['60 %','?']]);
+// === S.92 · Prozente und Preisänderungen ===
+const d9='Überschlage. Berechne dann mit dem Taschenrechner und vergleiche die Ergebnisse.';
+for(const [part,de,tr] of [
+ ['a','9,2 % von 300 €','300 €’nun %9,2’si'],
+ ['b','19,7 % von 90 kg','90 kg’ın %19,7’si'],
+ ['c','5 % von 12,5 cm','12,5 cm’nin %5’i'],
+ ['d','92 % von 18 cm','18 cm’nin %92’si'],
+ ['e','112 % von 250 l','250 litrenin %112’si'],
+ ['f','115 % von 258 €','258 €’nun %115’i'],
+ ['g','22,8 % von 40,5 ha','40,5 hektarın %22,8’i'],
+ ['h','40,2 % von 3,5 m³','3,5 metreküpün %40,2’si']
+])add(92,9,part,d9+'\n'+part+') '+de,'Önce yaklaşık değer tahmini yap, sonra hesap makinesiyle hesaplayıp karşılaştır.\n'+part+') '+tr);
+const d10='a) Gib an, welches Bild zu welcher Information gehört. Begründe deine Zuordnung und berechne dann den Preis nach der Preissenkung.';
+add(92,10,'a',d10+'\nDie Abbildungen A und B zeigen unterschiedliche Prozentdarstellungen. Nutze die beiden Preis- und Rabattbalken im Buch.', 'a) A ve B görsellerini ilgili fiyat/indirim bilgileriyle eşleştir; nedenini açıklayıp indirimli fiyatı hesapla. **Küçük fiyat/indirim etiketlerinin kesin değerleri için kitaptaki görsele bak.**',{figure:'discountBars'});
+add(92,10,'b1','Erstelle zu den folgenden Informationen Skizzen wie in Teilaufgabe a). Berechne dann den Preis nach der Preissenkung.\n(1) Eine Tischtennisplatte hat bisher 300 Euro gekostet. Der Preis wird um 30 % reduziert.','a şıkkındaki gibi bir fiyat/indirim şeması çiz ve yeni fiyatı bul.\n(1) Masa tenisi masası 300 € idi. %30 indirim yapılıyor.');
+add(92,10,'b2','Erstelle zu den folgenden Informationen Skizzen wie in Teilaufgabe a). Berechne dann den Preis nach der Preissenkung.\n(2) Eine Matratze hat bisher 300 Euro gekostet. Der Preis wird um 70 % gesenkt.','a şıkkındaki gibi bir fiyat/indirim şeması çiz ve yeni fiyatı bul.\n(2) Yatak 300 € idi. %70 indirim yapılıyor.');
+const d11='Berechne den neuen Preis sowohl mit einem Dreisatz als auch mit der Formel. Welchen Rechenweg findest du einfacher? Begründe.';
+for(const [part,de,tr] of [
+ ['a','Ein Bilderrahmen hat bisher 15 € gekostet. Der Preis wird um 40 % reduziert.','Çerçeve eskiden 15 € idi. %40 indirim.'],
+ ['b','Eine Tasche hat bisher 60 € gekostet. Der Preis wird um 15 % reduziert.','Çanta eskiden 60 € idi. %15 indirim.'],
+ ['c','Ein Poster hat bisher 4 € gekostet. Der Preis wird um 30 % reduziert.','Poster eskiden 4 € idi. %30 indirim.'],
+ ['d','Eine Lampe hat bisher 30 € gekostet. Der Preis wird um 35 % reduziert.','Lamba eskiden 30 € idi. %35 indirim.']
+])add(92,11,part,d11+'\n'+part+') '+de,'Yeni fiyatı hem orantı (Dreisatz) hem formülle hesapla. Hangi yöntemi daha kolay buluyorsun? Neden?\n'+part+') '+tr);
+add(92,12,'a','Ein Fahrrad kostet 350 €. Ein neues Modell der gleichen Firma kommt auf den Markt. Es ist um 25 % teurer als das bisherige Modell. Berechne den Preis des neuen Modells.','Bisikletin eski modeli 350 €. Yeni model %25 daha pahalı. Yeni fiyatı hesapla.');
+add(92,12,'b','Die Miete von Familie Meckermann beträgt 800 € im Monat. Sie soll nun um 10 % erhöht werden. Berechne, wie hoch die Miete nach der Erhöhung sein wird.','Bir ailenin aylık kirası 800 €. Kira %10 artıyor. Yeni kirayı bul.');
+add(92,12,'c','Vor 10 Jahren wohnten in einem Dorf 800 Menschen. Die Einwohnerzahl ist seitdem um 30 % gestiegen. Berechne, wie viele Menschen jetzt in dem Dorf leben.','Bir köyde 10 yıl önce 800 kişi yaşıyordu. Nüfus %30 arttı. Şimdi kaç kişi var?');
+add(92,13,'','Einige Schülerinnen und Schüler haben die dargestellte Aufgabe mit dem Taschenrechner bearbeitet. Auf den Bildern (1) bis (5) ist abgebildet, was sie in den Taschenrechner eingegeben haben. Das Endergebnis fehlt jedoch. Gib an, welche Lösungswege richtig sind. Begründe.\nAufgabe: Die Klasse 7a plant einen Ausflug in den Zoo. Der Eintritt kostet 12 € pro Kind. Wegen einer Sonderaktion für Schulklassen ist der Eintritt um 35 % billiger. Berechne, was nun jedes Kind zahlen muss.','Öğrenciler hesap makinesiyle beş farklı hesap yolu kullanmıştır. Doğru olanları belirleyip nedenini açıkla.\n7a sınıfı hayvanat bahçesine gidiyor. Giriş çocuk başına 12 €. Okul grupları için %35 indirim var. Çocuk başına yeni ücreti bul. **(1)–(5) tuşlama görüntüleri küçük ve net okunamadığı için fotoğraftan kesin aktarılmamıştır; kitapla karşılaştır.**');
+const d14='Finde den Fehler! Erkläre jeweils, was falsch gemacht wurde, und korrigiere im Heft. Verwende Fachbegriffe.';
+add(92,14,'a',d14+'\na) In einer Rechnung zu einem alten Preis und einer Reduzierung wurden der Prozentwert und der neue Preis verwechselt. Prüfe die Rechnung im Buch.','Hataları bul, matematik terimleriyle açıkla ve doğru işlemi yap.\na) Eski fiyat, indirim miktarı ve yeni fiyat karıştırılmış. Kitaptaki çözümü incele.');
+add(92,14,'b',d14+'\nb) Eine Prozentrechnung enthält einen fehlerhaften Ansatz mit Prozentsatz p und Grundwert G. Prüfe die Rechnung im Buch.','b) Yüzde oranı p ile temel değer G yanlış kullanılmış. Kitaptaki işlemi inceleyip düzelt.');
+add(92,14,'c',d14+'\nc) Ein Preis wurde zuerst um 50 % reduziert und dann nochmals um 30 % reduziert. In der fehlerhaften Lösung werden die beiden Prozentsätze einfach addiert.','c) Fiyat önce %50, sonra kalan fiyat üzerinden %30 azaltılıyor. Yanlış çözümde yüzdeler doğrudan toplanıyor. Hatayı açıkla.');
+IMAGES.discountBars=table('Preisänderung: Grundpreis, Rabatt, neuer Preis',Array(3).fill(''),[
+ ['Darstellung A','Grundpreis','Rabatt'],
+ ['Darstellung B','Neuer Preis','Restprozentsatz']
+]);
+// === S.93 · Mehrwertsteuer, Prozentänderungen und Formeln ===
+const d15='Wahr oder falsch? Entscheide, ob die folgenden Aussagen wahr oder falsch sind. Begründe.';
+add(93,15,'a',d15+'\na) Wenn man einen Preis um 200 % erhöht, dann kostet das Produkt doppelt so viel wie vorher.','Doğru mu yanlış mı? Neden?\na) Fiyat %200 artırılırsa ürün eskisinin iki katı olur.');
+add(93,15,'b',d15+'\nb) Wenn man einen Preis um 100 % senkt, dann kostet das Produkt halb so viel wie vorher.','b) Fiyat %100 düşürülürse ürün eskisinin yarısı kadar olur.');
+add(93,15,'c',d15+'\nc) Wenn man einen Preis um 50 % erhöht und danach den neuen Preis um 50 % senkt, dann kostet das Produkt genauso viel wie vorher.','c) Fiyat önce %50 artırılıp sonra yeni fiyat %50 azaltılırsa başlangıç fiyatına dönülür.');
+const d16='Mehrwertsteuer: In Deutschland ist auf viele Produkte der reguläre Mehrwertsteuersatz von 19 % anzuwenden. Bei manchen Produkten gilt ein ermäßigter Satz von 7 %. Preis ohne Mehrwertsteuer = Nettopreis; Preis einschließlich Mehrwertsteuer = Bruttopreis.';
+add(93,16,'a',d16+'\na) Ein Handwerker teilt seinem Kunden mit, dass eine Reparatur ohne Mehrwertsteuer 150 € kostet. Berechne, wie hoch die Rechnung inklusive Mehrwertsteuer sein wird.','KDV: Pek çok üründe %19, bazı ürünlerde %7 vergi bulunur. Vergisiz fiyat net, vergili fiyat brüttür.\na) Tamirin vergisiz ücreti 150 €. %19 KDV ile faturayı hesapla.');
+add(93,16,'b',d16+'\nb) Ein Automechaniker teilt seinem Kunden mit, dass eine Reparatur 220 € kosten wird. Auf der Rechnung steht dann, dass der Kunde 261,80 € zahlen soll. Erläutere, wie der Preis von 261,80 € zustande kommt.','b) Tamirci fiyatı 220 € olarak bildiriyor. Fatura 261,80 € geliyor. Bu tutarın nasıl oluştuğunu açıkla.');
+add(93,16,'c',d16+'\nc) Informiere dich über die Mehrwertsteuer. Für welche Produkte gilt der Mehrwertsteuersatz von 7 %? Für welche Produkte gilt der Mehrwertsteuersatz von 19 %?','c) Almanya’daki KDV oranlarını araştır: hangi ürünlerde %7, hangilerinde %19 uygulanıyor? (Vergi oranları zamanla değişebileceğinden güncel kaynaktan kontrol et.)');
+add(93,17,'a','Teste dich! Der Preis einer 145 € teuren Uhr wird um 30 % gesenkt. Der neue Preis wird dann nochmals um 20 % reduziert. Berechne den Preis nach der erneuten Reduzierung.','Kendini dene! 145 €’luk saate önce %30 indirim, sonra indirimli fiyata %20 indirim uygulanıyor. Son fiyatı bul.');
+add(93,17,'b','Mahmut behauptet: Wenn der Preis erst um 30 % und dann um 20 % gesenkt wird, dann kostet die Uhr nur noch halb so viel. Erkläre, warum diese Überlegung falsch ist.','Mahmut, %30 ve ardından %20 indirimin toplamda %50 indirim olduğunu söylüyor. Neden yanlış olduğunu açıkla.');
+add(93,18,'a','Im Jahr 2007 wurde die Mehrwertsteuer für die meisten Waren von 16 % auf 19 % erhöht.\na) Ein Rasenmäher hat im Jahr 2007 ohne Mehrwertsteuer 259,99 € gekostet. Berechne, um wie viel Euro der Bruttopreis durch die Mehrwertsteuererhöhung gestiegen ist.','2007’de çoğu ürün için KDV %16’dan %19’a yükseldi.\na) Vergisiz fiyatı 259,99 € olan çim biçme makinesinin brüt fiyatı kaç € arttı?');
+add(93,18,'b','Paul behauptet: Wenn die Mehrwertsteuer von 16 % auf 19 % gestiegen ist, dann wurden die Preise um 3 % teurer. Überprüfe, ob Paul recht hat.','b) Paul, KDV %16’dan %19’a çıkınca ürün fiyatlarının da %3 arttığını söylüyor. Doğru mu?');
+const d19='Emma behauptet: Wenn man einen Preis um 20 % (also 1/5) senkt, dann ist der alte Preis 25 % (also 1/4) höher als der neue Preis. Wenn man einen Preis um 1/5 reduziert, dann ist der alte Preis 1/4 höher als der neue Preis. Da steckt doch ein System dahinter!';
+add(93,19,'a',d19+'\na) Überprüfe Emmas Aussage anhand verschiedener Zahlenbeispiele.','Emma, bir fiyat %20 azalınca eski fiyatın yeni fiyattan %25 fazla olacağını söylüyor.\na) Farklı sayısal örneklerle kontrol et.');
+add(93,19,'b',d19+'\nb) Beschreibe, was du herausgefunden hast. Erkläre, wie man mit der Bruchrechnung begründen kann, warum das System so funktioniert.','b) Bulduğun düzeni açıkla. Kesir hesabıyla neden böyle olduğunu göster.');
+add(93,20,'','Teste dein Grundwissen! Zuordnungen mit Formeln beschreiben.\nEin Fußballtorwart macht einen weiten Abstoß. Die Höhe h des Balls kann in den ersten zwei Sekunden mit der Formel h(t) = 10 · t − 5 · t² bestimmt werden (Zeit t in s; Höhe h in m).\nÜbertrage die Tabelle in dein Heft und fülle sie aus. Zeichne dann den Graphen.\nZeit (in s): 0 | 0,5 | 1 | 1,5 | 2.\nHöhe (in m): □ | □ | □ | □ | □.','Temel bilgilerini dene! Bir kalecinin topa vuruşundan sonraki ilk 2 saniyede topun yüksekliği h(t)=10t−5t² formülüyle bulunuyor (t saniye, h metre).\nTabloyu tamamla ve grafiğini çiz.\nZaman (s): 0 | 0,5 | 1 | 1,5 | 2.\nYükseklik (m): □ | □ | □ | □ | □.',{figure:'goal'});
+
 const pictures=Object.fromEntries(Object.entries(IMAGES).map(([k,v])=>[k,svgData(v)]));
 for(const q of Q){if(q.figureKind){q.figureImage=pictures[q.figureKind];delete q.figureKind}}
 window.CHECKLIST_PACK={id:'munzur-2026',title:'Munzur · Zuordnungen & Prozentrechnung · S. 50–51, 91–93',questions:Q};
