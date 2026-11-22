@@ -1,4 +1,4 @@
-/* Munzur Check Liste · v1.4.0 · sayfa 50–51, 91–93
+/* Munzur Check Liste · v1.4.1 · sayfa 50–52, 91–93
  * Ödev önceliği: s.50/4, s.51/7, s.51/8.
  * Öğretim verileri kullanıcı tarafından sağlanan dört fotoğraf ve ödev ekranından hazırlanmıştır.
  * Küçük grafiklerin yeniden çizimleri yaklaşık/şematiktir; kitapta verilen grafiği esas alın.
@@ -127,6 +127,126 @@ const s9='Familie Fischer fährt mit dem Auto an die Nordsee. Rechts ist der Gra
 add(51,9,'a',s9+'\na) Lies am Graphen ab, wie viel Benzin nach 100 km ungefähr noch im Tank war.','Fischer ailesinin yolculuğunda grafikte gidilen yol ve depoda kalan benzin gösteriliyor.\na) 100 km sonra depoda yaklaşık kaç litre benzin kaldığını oku.',{figure:'gasoline'});
 add(51,9,'b',s9+'\nb) Gib an, nach welcher ungefähren Fahrstrecke noch 30 l Benzin im Tank sind.','b) Depoda 30 litre benzin kaldığında yaklaşık kaç kilometre gidildiğini bul.',{figure:'gasoline'});
 add(51,9,'c',s9+'\nc) Begründe, warum der Graph fällt.','c) Grafiğin neden aşağı doğru indiğini açıkla.',{figure:'gasoline'});
+// === S.52 · Zuordnungen: Straßenverlauf, Schulweg, Abkühlung, Radrennen ===
+// These SVGs reconstruct the diagrams supplied with the user's photo.
+// They are prompts, not completed solutions.
+function page52Graph10(){
+ const speed=(x,y,title,d,num)=>{
+  let g='<g transform="translate('+x+' '+y+')">'+txt(7,20,'('+num+')  Geschwindigkeit',18);
+  g+='<path d="M20 40V153H258" fill="none" stroke="#33483d" stroke-width="2"/>';
+  g+=txt(235,175,'Zeit',14);
+  g+='<path d="'+d+'" fill="none" stroke="#ba5f51" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>';
+  return g+'</g>';
+ };
+ let v='<svg xmlns="http://www.w3.org/2000/svg" width="960" height="450" viewBox="0 0 960 450"><rect width="960" height="450" fill="#fff"/>';
+ v+=txt(24,34,'10  ·  Auto von A nach B: Straße und drei Geschwindigkeitsgraphen',23);
+ v+='<rect x="25" y="55" width="905" height="150" rx="12" fill="#dce9c2"/>';
+ // The road has a right/up bend near its middle and then a straight section.
+ v+='<path d="M45 162 C145 166 245 164 351 162 S450 152 475 113 S510 93 559 91 L913 91" fill="none" stroke="#fff" stroke-width="49" stroke-linecap="round"/>';
+ v+='<path d="M45 162 C145 166 245 164 351 162 S450 152 475 113 S510 93 559 91 L913 91" fill="none" stroke="#777c78" stroke-width="39" stroke-linecap="round"/>';
+ v+='<path d="M45 162 C145 166 245 164 351 162 S450 152 475 113 S510 93 559 91 L913 91" fill="none" stroke="#f6f4d6" stroke-width="2.4" stroke-dasharray="25 33"/>';
+ v+=txt(55,116,'A',22)+txt(874,73,'B',22);
+ v+='<rect x="67" y="142" width="53" height="25" rx="7" fill="#e9b72e" stroke="#8f792f" stroke-width="2"/><circle cx="79" cy="170" r="6" fill="#2c3833"/><circle cx="108" cy="170" r="6" fill="#2c3833"/>';
+ v+=speed(30,240,'','M20 125 H115 Q125 125 129 115 L138 96 Q141 92 152 92 H258',1);
+ v+=speed(344,240,'','M20 122 H89 Q105 122 113 102 Q120 90 139 90 H167 Q181 90 190 108 Q198 119 212 119 H258',2);
+ v+=speed(655,240,'','M20 95 H96 Q114 95 122 114 Q131 127 151 127 H172 Q189 127 200 112 Q210 99 234 99 H258',3);
+ v+=txt(26,434,'Drei mögliche Verläufe. Vergleiche sie mit der Kurve in der Straße.',15,'#677c70');
+ return v+'</svg>';
+}
+function page52SchoolGraph(){
+ let v='<svg xmlns="http://www.w3.org/2000/svg" width="900" height="480" viewBox="0 0 900 480"><rect width="900" height="480" fill="#fff"/>';
+ v+=txt(34,32,'11  ·  Schulweg von Tim und Jana',24);
+ const x0=120,y0=415,W=690,H=320,maxT=34,maxD=1100;
+ const pos=(t,d)=>[x0+t/maxT*W,y0-d/maxD*H];
+ for(const t of [0,5,10,15,20,25,30]){const [x]=pos(t,0);v+='<line x1="'+x+'" y1="'+(y0-H)+'" x2="'+x+'" y2="'+y0+'" stroke="#d9e4df"/>'+txt(x-10,y0+26,t,14)}
+ for(const d of [0,200,400,600,800,1000]){const [,y]=pos(0,d);v+='<line x1="'+x0+'" y1="'+y+'" x2="'+(x0+W)+'" y2="'+y+'" stroke="#d9e4df"/>'+txt(74,y+5,d,14)}
+ v+='<path d="M120 90 V415 H810" fill="none" stroke="#394f43" stroke-width="2.8"/>';
+ v+=txt(135,72,'Entfernung von der Schule (m)',18)+txt(688,466,'Zeit (in min)',17);
+ const tim=[[0,1000],[2.5,810],[13,810],[22,0]],jana=[[0,600],[30,0]];
+ for(const [points,col] of [[tim,'#3a657e'],[jana,'#ac655c']]){
+  v+='<path d="'+points.map((p,i)=>{const [x,y]=pos(...p);return(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)}).join(' ')+'" fill="none" stroke="'+col+'" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>';
+ }
+ v+=txt(350,275,'Tim',20,'#3a657e')+txt(333,315,'Jana',20,'#ac655c');
+ v+=txt(150,465,'Graph anhand des Buchfotos nachgezeichnet; Werte ungefähr.',13,'#78897e');
+ return v+'</svg>';
+}
+function page52Temps(){
+ const t=[0,5,10,15,20,25,30,35,40,45,50,55,60];
+ const a=['50,0','34,2','26,7','23,2','21,5','20,7','20,3','20,2','20,1','20,0','20,0','20,0','20,0'];
+ const b=['50,0','40,1','33,5','29,5','26,1','24,1','22,7','21,8','21,2','20,8','20,5','20,4','20,2'];
+ let v='<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="425" viewBox="0 0 1080 425"><rect width="1080" height="425" fill="#fff"/>';
+ v+=txt(22,35,'12  ·  Heißes Wasser in zwei Gefäßen — Wertetabelle',25);
+ const rows=[['Zeit (min)',...t.map(String)],['Gefäß 1 (°C)',...a],['Gefäß 2 (°C)',...b]];
+ const subsets=[rows.map(r=>[r[0],...r.slice(1,8)]),rows.map(r=>[r[0],...r.slice(8)])];
+ for(let set=0;set<2;set++){
+  const tab=subsets[set],y0=80+set*160;
+  for(let row=0;row<3;row++)for(let j=0;j<tab[row].length;j++){
+   const x=j?220+(j-1)*116:22, width=j?116:198,y=y0+row*47;
+   v+='<rect x="'+x+'" y="'+y+'" width="'+width+'" height="47" fill="'+(row===0?'#e0e9dc':row===1?'#f0f7ed':'#f7f9f5')+'" stroke="#adbeb1"/>';
+   v+=txt(x+9,y+30,tab[row][j],j?19:18);
+  }
+ }
+ v+=txt(24,410,'Aufgabe a): Zeichne beide Temperaturgraphen selbst (nicht vorgegeben).',17,'#698074');
+ return v+'</svg>';
+}
+function page52CycleGraph(){
+ let v='<svg xmlns="http://www.w3.org/2000/svg" width="920" height="490" viewBox="0 0 920 490"><rect width="920" height="490" fill="#fff"/>';
+ v+=txt(23,32,'13  ·  Radrennen: Geschwindigkeit während 45 Minuten',23);
+ const x0=108,y0=423,w=746,h=347;
+ const X=t=>x0+w*t/45,Y=g=>y0-h*g/50;
+ for(let t=0;t<=45;t+=5){const x=X(t);v+='<line x1="'+x+'" y1="'+Y(50)+'" x2="'+x+'" y2="'+y0+'" stroke="#dbe3dd" stroke-width="1"/>'+txt(x-10,y0+23,t,14)}
+ for(let k=0;k<=50;k+=5){const y=Y(k);v+='<line x1="'+x0+'" y1="'+y+'" x2="'+(x0+w)+'" y2="'+y+'" stroke="#dbe3dd" stroke-width="1"/>'+txt(76,y+5,k,14)}
+ v+='<path d="M108 76 V423 H854" fill="none" stroke="#34453c" stroke-width="2.5"/>';
+ v+=txt(125,61,'Geschwindigkeit (km/h)',18)+txt(732,476,'Zeit (in min)',17);
+ // Approximation of the reference red line, including the initial decline,
+ // the gentle rise to ~30 km/h and the steep ending increase.
+ const coords=[[0,33],[4,32],[7,29],[10,23],[13,20],[16,19.5],[19,21],[24,27],[28,30],[31,29],[34,28.5],[38,31],[42,37],[45,45]];
+ const cubic=(vals)=>{
+  let z='M'+X(vals[0][0]).toFixed(1)+' '+Y(vals[0][1]).toFixed(1);
+  for(let i=0;i<vals.length-1;i++){
+   const p0=vals[Math.max(0,i-1)],p1=vals[i],p2=vals[i+1],p3=vals[Math.min(vals.length-1,i+2)];
+   const f=0.16;
+   const a=[p1[0]+(p2[0]-p0[0])*f,p1[1]+(p2[1]-p0[1])*f];
+   const b=[p2[0]-(p3[0]-p1[0])*f,p2[1]-(p3[1]-p1[1])*f];
+   z+=' C'+X(a[0]).toFixed(1)+' '+Y(a[1]).toFixed(1)+' '+X(b[0]).toFixed(1)+' '+Y(b[1]).toFixed(1)+' '+X(p2[0]).toFixed(1)+' '+Y(p2[1]).toFixed(1);
+  }
+  return z;
+ };
+ v+='<path d="'+cubic(coords)+'" fill="none" stroke="#b76565" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>';
+ v+=txt(104,484,'Verlauf nach Buchfoto rekonstruiert; die Grafik ist nicht millimetergenau.',13,'#73887c');
+ return v+'</svg>';
+}
+IMAGES.page52road=page52Graph10();
+IMAGES.page52school=page52SchoolGraph();
+IMAGES.page52temps=page52Temps();
+IMAGES.page52cycles=page52CycleGraph();
+
+const d52_10='Ein Auto fährt auf der skizzierten Straße von A nach B. Welcher der drei abgebildeten Graphen gehört vermutlich zur Zuordnung Zeit → Geschwindigkeit? Begründe.';
+const t52_10='Bir otomobil çizimdeki yolda A’dan B’ye gidiyor. Üç grafikten hangisi zaman → hız ilişkisini en iyi gösterir? Nedenini açıkla.';
+add(52,10,'',d52_10,t52_10,{figure:'page52road'});
+const d52_11='Tim behauptet: „Ich habe dich heute auf dem Schulweg gesehen.“ Jana entgegnet: „Das geht doch gar nicht. Du warst doch schon da, als ich gekommen bin.“';
+const t52_11='Tim: “Bugün okul yolunda seni gördüm.” Jana: “Bu mümkün değil. Ben geldiğimde sen zaten oradaydın.”';
+add(52,11,'a',d52_11+'\na) Rechts wird der Schulweg von Tim und Jana dargestellt. Schreibe eine kleine Geschichte, die zu den Graphen passt.',t52_11+'\na) Tim ve Jana’nın okula uzaklığı–zaman grafiklerine uygun kısa bir öykü yaz.',{figure:'page52school'});
+add(52,11,'b',d52_11+'\nb) Überprüfe anhand der Graphen, ob sich die beiden begegnet sein könnten.',t52_11+'\nb) Grafiklere göre iki öğrencinin yolda karşılaşmış olma ihtimalini kontrol et.',{figure:'page52school'});
+
+const tempTimes='0 | 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60';
+const tempOne='50,0 | 34,2 | 26,7 | 23,2 | 21,5 | 20,7 | 20,3 | 20,2 | 20,1 | 20,0 | 20,0 | 20,0 | 20,0';
+const tempTwo='50,0 | 40,1 | 33,5 | 29,5 | 26,1 | 24,1 | 22,7 | 21,8 | 21,2 | 20,8 | 20,5 | 20,4 | 20,2';
+const d52_12='Die Tabelle gibt die Temperaturen von heißem Wasser an, das in zwei unterschiedlichen Gefäßen abkühlt.\nZeit (in min): '+tempTimes+'\nTemperatur, Gefäß 1 (in °C): '+tempOne+'\nTemperatur, Gefäß 2 (in °C): '+tempTwo;
+const t52_12='Tabloda iki farklı kaptaki sıcak suyun zamanla soğuması verilmiştir.\nZaman (dakika): '+tempTimes+'\n1. kabın sıcaklığı (°C): '+tempOne+'\n2. kabın sıcaklığı (°C): '+tempTwo;
+add(52,12,'a',d52_12+'\na) Zeichne die Graphen der Zuordnungen Zeit (in min) → Temperatur (in °C) für die beiden Gefäße mithilfe einer Tabellenkalkulation.',t52_12+'\na) Her iki kabın zaman (dk) → sıcaklık (°C) grafiklerini bir hesap tablosu yardımıyla çiz.',{figure:'page52temps'});
+add(52,12,'b',d52_12+'\nb) Gib jeweils einen Schätzwert für die Temperatur des Wassers nach 22 Minuten an. Erläutere deine Vorgehensweise.',t52_12+'\nb) 22 dakika sonraki sıcaklığı iki kap için ayrı ayrı yaklaşık tahmin et. Yöntemini açıkla.',{figure:'page52temps'});
+add(52,12,'c',d52_12+'\nc) Gib mögliche Ursachen für den unterschiedlichen Verlauf der Graphen an.',t52_12+'\nc) İki sıcaklık grafiğinin farklı seyretmesinin olası nedenlerini söyle.',{figure:'page52temps'});
+
+const d52_13='Wahr oder falsch?\nBei einem Radrennen wurde in den letzten 45 Minuten des Rennens die Geschwindigkeit eines Fahrers laufend gemessen und aufgezeichnet. Die Abbildung rechts zeigt den Graphen der Zuordnung Zeit (in min) → Geschwindigkeit (in km/h).\nEntscheide bei jeder Aussage, ob sie wahr oder falsch ist. Begründe deine Entscheidung.';
+const t52_13='Doğru mu, yanlış mı?\nBir bisiklet yarışının son 45 dakikasında bir sporcunun hızı sürekli ölçülerek grafiğe aktarılmıştır. Grafik zaman (dk) → hız (km/sa) ilişkisini gösteriyor.\nHer ifadenin doğru mu yanlış mı olduğunu belirle ve nedenini açıkla.';
+for(const [part,de,tr] of [
+ ['a','10 Minuten nach Beginn der Messung liegt die Geschwindigkeit bei 20 km/h.','Ölçüm başladıktan 10 dakika sonra hız 20 km/saattir.'],
+ ['b','Die Geschwindigkeit sinkt im gesamten Zeitraum der Messung niemals unter 15 km/h.','Ölçüm süresince hız hiçbir zaman 15 km/saatin altına düşmez.'],
+ ['c','In den letzten 35 Minuten steigt die Geschwindigkeit die ganze Zeit an.','Son 35 dakika boyunca hız sürekli artar.'],
+ ['d','Man kann dem Graphen entnehmen, dass es in den ersten 15 Minuten der Messung nur bergab ging.','Grafikten, ilk 15 dakika boyunca yolun yalnızca yokuş aşağı olduğu anlaşılabilir.']
+])add(52,13,part,d52_13+'\n'+part+') '+de,t52_13+'\n'+part+') '+tr,{figure:'page52cycles'});
+
 // === S.91 · Prozentwerte berechnen ===
 IMAGES.percentCards=table('Zuordnung: gelbe Karten → blaue Karten',Array(4).fill(''),[
  ['Gelb 1','20 % von 25','Blau I','3 Schüler'],
@@ -227,5 +347,5 @@ add(93,20,'','Teste dein Grundwissen! Zuordnungen mit Formeln beschreiben.\nEin 
 
 const pictures=Object.fromEntries(Object.entries(IMAGES).map(([k,v])=>[k,svgData(v)]));
 for(const q of Q){if(q.figureKind){q.figureImage=pictures[q.figureKind];delete q.figureKind}}
-window.CHECKLIST_PACK={id:'munzur-2026',title:'Munzur · Zuordnungen & Prozentrechnung · S. 50–51, 91–93',questions:Q};
+window.CHECKLIST_PACK={id:'munzur-2026',title:'Munzur · Zuordnungen & Prozentrechnung · S. 50–52, 91–93',questions:Q};
 })();
