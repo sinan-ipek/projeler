@@ -80,7 +80,7 @@ async function displayPrivateImage(name,serial){
 if(privateButton&&privateInput){
  const hasAssets=qs.some(q=>q.privateImageFile);
  privateButton.hidden=!hasAssets;
- if(privateHint){privateHint.hidden=!hasAssets;privateHint.textContent='ZIP arşivini açıp PNG dosyalarını seç. Görseller yalnızca bu tarayıcıda saklanır.'}
+ if(privateHint){privateHint.hidden=!hasAssets;privateHint.textContent='ZIP arşivini açıp PNG/JPG dosyalarını seç. Görseller yalnızca bu tarayıcıda saklanır.'}
  privateButton.addEventListener('click',()=>privateInput.click());
  privateInput.addEventListener('change',async()=>{
   const files=[...privateInput.files].filter(f=>/^image\/(png|jpeg|webp)$/.test(f.type)&&f.size<12000000);
