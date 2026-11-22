@@ -104,22 +104,27 @@ if(privateButton&&privateInput){
  });
 }
 
+function questionLabel(q){
+ if(q.kind==='beispiel')return 'Örnek '+String(q.number).replace(/^Beispiel\s*/,'');
+ if(q.kind==='figure')return 'Ek görsel';
+ return /^\d/.test(String(q.number))?'Soru '+q.number:String(q.number);
+}
 function drawMenu(){
  const pg=$('pageSelect').value,s=$('search').value.toLocaleLowerCase('tr');let last=null;
  $('menu').replaceChildren();
  for(let i=0;i<qs.length;i++){
   let q=qs[i];if(pg!=='all'&&String(q.page)!==pg)continue;
   if(s&&!([q.id,q.german,q.turkish].join(' ').toLocaleLowerCase('tr').includes(s)))continue;
-  const group=q.exercise!=null?'exercise:'+q.exercise:'page:'+q.page;
+  const group=q.exercise!=null?'exercise:'+q.page+':'+q.exercise:'page:'+q.page;
   if(group!==last){let h=document.createElement('div');h.className='group';h.textContent='SAYFA '+q.page+(q.exercise!=null?' · SORU '+q.exercise:'');$('menu').append(h);last=group}
-  let b=document.createElement('button');b.type='button';b.className='item'+(done[q.id]?' done':'')+(i===current?' active':'');b.textContent=(done[q.id]?'✓ ':'')+'Soru '+q.number+(q.star?' ★':'')+(q.plus?' +':'');b.onclick=()=>open(i);$('menu').append(b);
+  let b=document.createElement('button');b.type='button';b.className='item'+(done[q.id]?' done':'')+(i===current?' active':'');b.textContent=(done[q.id]?'✓ ':'')+questionLabel(q)+(q.star?' ★':'')+(q.plus?' +':'');b.onclick=()=>open(i);$('menu').append(b);
  }
  const n=qs.filter(q=>done[q.id]).length;$('progressText').textContent=n+' / '+qs.length+' tamamlandı';$('progressBar').style.width=100*n/qs.length+'%';
 }
 window.openChecklistQuestion=(i)=>open(i);
 function open(i){
  if(i<0||i>=qs.length)return;
- current=i;let q=qs[i];$('qid').textContent='Sayfa '+q.page+' · Soru '+q.number+(q.star?'  ★':'');$('qtitle').textContent='Soru '+q.number;
+ current=i;let q=qs[i];$('qid').textContent='Sayfa '+q.page+' · '+questionLabel(q)+(q.star?'  ★':'');$('qtitle').textContent=questionLabel(q);
  $('german').textContent=q.german;$('turkish').textContent=q.turkish;$('done').checked=!!done[q.id];
  $('prev').disabled=i===0;$('next').disabled=i===qs.length-1;
  const src=q.figureImage||q.sourceImage||q.image||'';
