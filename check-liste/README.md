@@ -1,13 +1,15 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.6.1** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.7.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
-## Lambacher Schweizer 7 (v1.6.1)
+## Lambacher Schweizer 7 (v1.7.0)
+
+**Denetim:** `sets/lambacher-schweizer-7/QA.md`. 4–37 sayfa ardışık; 12 Beispiel ve 583 alt madde ayrı kaydedildi. 85 kırpım GitHub'da değildir; özel ZIP arşivinden tarayıcıya yüklenir. Tam soru metinleri ve simgeler için metin düzeyi kontrolü sürüyor.
 
 - **Bağlantı:** `lesson.html?set=lambacher-7`
 - **Veri kaynağı:** `sets/lambacher-schweizer-7/data.js`
 - **İlk fotoğraf grubu:** İçindekiler s.2–3; ders sayfaları s.4–37
-- **165 bağımsız takip maddesi**; bölüm girişleri ve sayfa/soru numaraları, Almanca–Türkçe konu özetleri
+- **763 takip kartı**; bölüm girişleri ve sayfa/soru numaraları, Almanca–Türkçe konu özetleri
 - **Önemli:** Tam telifli metinler ve sayfa fotoğrafları **açık GitHub deposunda paylaşılmaz**; soruyu kitaptan okuyup çözmek gerekir
 - **Altı bölüm:** s.4, 44, 80, 120, 162 ve 196'da başlar. Ekler s.228'den itibaren.
 - **Sonraki fotoğraf grubu:** s.38–47
