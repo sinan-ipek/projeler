@@ -1,33 +1,37 @@
 # Lambacher Schweizer 7 — Check Liste
 
-**Sürüm v1.14.0** · Klett · Nordrhein-Westfalen · 22 Kasım 2026
+**Sürüm v1.15.0** · Klett · Nordrhein-Westfalen · 23 Kasım 2026
 
 ## Güncel envanter
 
-- **Alınan basılı sayfalar:** İçindekiler 2–3, ders kitabı **4–175** (172 ardışık sayfa), kapak ve kullanım sayfası.
-- **Takip kartları:** önceki 2226 + yeni 210 = **2436**. Bu sayı basılı bağımsız soru sayısı değil; harfli alt maddeler, Theorie/Beispiele ve Erkundungen ayrıca sayılır.
-- **Yerel görseller:** 418 eski + 63 yeni = **481** kırpılmış özel JPG/PNG. Arşiv `Lambacher_Schweizer_7_tum_gorseller_s4-175.zip`.
-- **Bütünlük:** 4–175 eksiksiz; tekrarlanan kart kimliği yok; 481 görsel dosya adı kartlardaki `privateImageFile` alanlarıyla eşleşiyor. Önceki s.50–51 tekrar ve s.56–57 eksiklik kaydı daha eski grupta çözüldü.
-- **Görsel kullanımı:** Telifli görseller GitHub'a yüklenmedi. Kitabın tamamı yüklendiğinde ZIP açılıp uygulamadaki Görselleri içe aktar alanından topluca eklenebilir.
-- **Sıradaki fotoğraf grubu:** **176–195** (10 fotoğraf = 20 sayfa).
+- **Basılı sayfalar:** İçindekiler 2–3, kitabın **4–195** sayfaları (192 ardışık sayfa).
+- **Kartlar:** önceki 2436 + yeni 211 = **2647**. Bu sayı tekil bağımsız soru sayısı değildir; harfli alt maddeler, teorik açıklamalar ve ayrı Beispiele dahildir.
+- **Özel kırpılmış görseller:** önceki 481 + yeni 71 = **552**. `Lambacher_Schweizer_7_tum_gorseller_s4-195.zip`.
+- **Teknik denetim:** sayfa açığı 0; tekrarlanan kimlik 0; `privateImageFile` adları ile ZIP içeriğindeki 552 görsel adı eşleşir.
+- **Telif:** Özgün kitap sayfaları ve özel kırpımlar GitHub'a yüklenmez; görseller kullanıcı tarafından yerel ZIP arşivinden uygulamaya topluca içe aktarılır.
+- **Sonraki paket:** **s.196–215**, on karşılıklı sayfa fotoğrafı.
 
-## Bu gruptaki bölümler
+## Yeni sayfalar (176–195)
 
-| Sayfalar | İçerik |
+| Sayfa | Konu, örnek ve sorular |
 |---|---|
-| 156–157 | IV. Wiederholen – Vertiefen – Vernetzen: Aufgaben 13–24 |
-| 158–159 | Rückblick, Terme/Gleichungen/Bruchgleichungen; Test Runde 1 (1–4) ve Runde 2 (1–4) |
-| 160–161 | Exkursion Zahlenzauberei: Karten-, Erbsen-, Zahlen- und Streichholztricks |
-| 162–163 | V. Konstruieren und Argumentieren; Check-in Aufgaben 1–4 |
-| 164–165 | Erkundungen: Winkelbeziehungen, Flächenzerlegung, Dreiecke sortieren |
-| 166–167 | 1 Winkel an sich schneidenden Geraden: Nebenwinkel, Scheitelwinkel, Stufenwinkel, Wechselwinkel; Beispiele 1–2 |
-| 168–170 | Aufgaben 1–20, inklusive Bilder, Fachwerkhaus und Test |
-| 171 | 2 Winkelsummen; Innenwinkelsatz, Beispiele 1–2 |
-| 172–174 | Aufgaben 1–20, Außenwinkelsatz und Polygonwinkelsummen |
-| 175 | 3 Dreiecke konstruieren: Konstruktionsschritte und eine ausgearbeitete Konstruktion |
+| 176 | Beispiele 1–2: Dreieckskonstruktion und Leiterhöhe; Planfigur ve geometrik çizimler |
+| 177 | Dreiecke konstruieren, Aufgaben 1–7, Teste dich |
+| 178–179 | Aufgaben 8–19, gölge, merdiven, nehir mesafesi, üçgen eşitsizliği, cebir tekrarı |
+| 180 | 4 Kongruenz: sss, sws, wsw, Ssw |
+| 181 | Beispiel ve Aufgaben 1–6 |
+| 182–183 | Aufgaben 7–20, kongruenzle ilgili test ve ispatlar |
+| 184 | 5 Mit Kongruenzsätzen argumentieren: Basiswinkelsatz ve üç ispat yolu |
+| 185 | Beispiel: mathematischen Beweis führen; Aufgaben 1–2 |
+| 186–187 | Aufgaben 3–15, Teste dich, eşlik ispatı ve geometri çizimleri |
+| 188–189 | Wiederholen–Vertiefen–Vernetzen, Aufgaben 1–13 |
+| 190–191 | Aufgaben 14–21, düzenli çokgen, teodolit, Umfangswinkelsatz |
+| 192 | Rückblick: Winkel, Winkelsummen, Kongruenz, Beweisen |
+| 193 | Test: Runde 1 (1–5), Runde 2 (1–4) |
+| 194–195 | Exkursion: Konstruieren mit dynamischer Geometriesoftware, Aufgaben 1–4, Pisa Kulesi |
 
-## Doğruluk ve telif notu
+## Kontrol notu
 
-Github envanterinde özgün kısa Almanca/Türkçe çalışma açıklamaları ve basılı sayfa/alt madde referansları bulunur. Tam basılı soru metni veya kitap fotoğrafları açık depoda bulunmaz. Fotoğraflardaki küçük sayılar ve matematiksel semboller birebir aktarılmadığından soru çözümünde fiziksel kitap esas alınmalıdır.
+Fotoğraflardaki sayfa sırası iki kez kontrol edildi. Fotoğraflardaki sayısal semboller ve küçük ölçülerin tam birebir yazıya aktarımı garanti edilmez: Kartlar, Almanca ve Türkçe özgün kısa özetlerdir. Tam soru koşulları için basılı kitap esas alınır.
 
-**Ders:** `lesson.html?set=lambacher-7` · **Veri:** `data.js` · **Denetim:** `QA.md`
+Uygulama: `lesson.html?set=lambacher-7`. Son kontrol: `QA.md`.
