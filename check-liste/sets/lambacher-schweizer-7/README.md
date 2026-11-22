@@ -1,6 +1,6 @@
 # Lambacher Schweizer 7 — Check Liste
 
-**Sürüm v1.6.1** · Klett · NRW · Klasse 7
+**Sürüm v1.7.0** · Klett · NRW · Klasse 7
 
 İlk gönderilen fotoğraflar: kapak, kullanım açıklaması, **içindekiler (s.2–3)** ve **s.4–37** (17 çift sayfa).
 
@@ -15,7 +15,7 @@ Bu paket, 4–37 sayfalarındaki konu girişleri ve görülebilen soru numaralar
 - VI. Wahrscheinlichkeiten (Olasılıklar) — s.196
 - Ekler: Nachschlagen und Überprüfen — s.228
 
-**İşlenen sayfalar:** s.4–37. **Sonraki fotoğraf grubu:** s.38–47.
+**İşlenen sayfalar:** s.4–37. **Sonraki fotoğraf grubu:** s.38–57.
 
 **Açılış:** `check-liste/lesson.html?set=lambacher-7`
 
@@ -26,4 +26,9 @@ Bu paket, 4–37 sayfalarındaki konu girişleri ve görülebilen soru numaralar
 
 ## İkinci fotoğraf grubu (s.18–37)
 
-20 sayfa / 10 fotoğraf. 107 yeni takip maddesi. Sayfa ve soru numaraları ile iki dilli konu özetleri eklendi; telifli tam soru metinleri ve görseller yayımlanmadı.
+20 sayfa / 10 fotoğraf. 107 ilk tarama takip maddesi. Sayfa ve soru numaraları ile iki dilli konu özetleri eklendi; telifli tam soru metinleri ve görseller yayımlanmadı.
+
+
+## Denetim v1.7.0
+
+Sayfalar 4–37 eksiksizdir; 165 önceki genel kart korunarak 583 alt madde, 12 çözümlü Beispiel ve 3 görsel kartı eklendi. 85 ayrı kırpım **özel ZIP arşivinde**, kamuya açık depoda değil. Tarayıcıdaki Görselleri içe aktar düğmesi kullanılır. **Ayrıntılı ikinci metin/görsel kontrolü bekliyor.** Ayrıntılar: [QA.md](QA.md).
