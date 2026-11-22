@@ -1,4 +1,4 @@
-# Lambacher Schweizer 7 – denetim v1.12.0 (22.11.2026)
+# Lambacher Schweizer 7 – denetim v1.13.0 (22.11.2026)
 
 **Durum: yapısal denetim ilerledi; metin düzeyinde eksiksizlik henüz onaylanmadı.**
 
@@ -210,3 +210,37 @@
 **Açık kalite sınırı:** Soru ve örnek envanteri kitap fotoğraflarından çıkarılmıştır, ancak matematiksel küçük yazı ve her alt maddenin birebir karakter düzeyinde transkripsiyonu tamamlanmadı. Özellikle soru değerleri için basılı kitaptaki asıl ifadeler kullanılmalıdır.
 
 **SON OTOMATİK KONTROL (v1.12.0):** `data.js` içinde **1901 toplam kart** (1652 önceki + 249 yeni), **132 ayrı basılı ders sayfası** (4–135), **0 eksik sayfa**, **0 tekrarlanan kart kimliği**. ZIP içerisindeki **366 benzersiz görsel dosya adı** ile `privateImageFile` bağlantılarındaki **366 ad** birebir eşleşti; sıralı FNV-1a dosya-adı kontrol toplamı **3705974813**. ZIP CRC testi hatasız. Bu teknik kontrol kitap baskısındaki küçük sayı ve matematik sembollerinin doğruluğunu garanti etmez.
+
+
+## SEKİZİNCİ GRUP — 136–155 (v1.13.0, 22.11.2026)
+
+**Çift sayfa fotoğraf envanteri:** 136–137, 138–139, 140–141, 142–143, 144–145, 146–147, 148–149, 150–151, 152–153, 154–155. Basılı numaralar en az iki kontrolde gözden geçirildi; 20 sayfa mevcut, eksik ve tekrar yok.
+
+| Sayfalar | Bölüm, Beispiel ve soru listesi |
+|---|---|
+| 136 | III. Ausmultiplizieren und Ausklammern son alıştırmaları 12–20, Fehler bulma ve Grundwissen |
+| 137 | 4 Gleichungen aufstellen und lösen: denklem, çözüm, sağlama, tutar/değer tablosu, tersten işlem |
+| 138 | Beispiele 1–2: systematisches Probieren ve Rückwärtsrechnen; Aufgaben 1–4 |
+| 139 | Aufgaben 5–14, kutu/kibrit, denklem kartı, hata ve test |
+| 140 | 5 Gleichungen mit Äquivalenzumformungen lösen: terazi çizimi ve çözüm örneği |
+| 141 | Äquivalenzumformungen kuralları, Beispiel 1 ve Aufgabe 1 |
+| 142 | Aufgaben 2–8, kibrit kutuları, dönüşüm tabloları, test ve hata düzeltme |
+| 143 | Aufgaben 9–15, diyalog, sayı kartları, alan figürü ve temel bilgiler |
+| 144 | 6 Bruchterme und Bruchgleichungen: payda/tanım kümesi, genişletme, sadeleştirme, kesirli denklem |
+| 145 | Beispiele 1–3: Bruchterme erweitern/kürzen, addieren/subtrahieren ve Bruchgleichungen lösen |
+| 146 | Aufgaben 1–9, tanım kümesi, kesirli terim kartları, hata örnekleri |
+| 147 | Aufgaben 10–17, nehirde iki gemi ve optik mercek şemalı problemler |
+| 148 | 7 Problemlösen mit Gleichungen: vier Schritte, bisiklet-yetişme örneği |
+| 149 | Vier-Schritte-Übersicht ve Beispiel 1 Altersrätsel |
+| 150 | Beispiel 2 Zahlenrätsel mit Ungleichung; Aufgaben 1–2, yaş kartları |
+| 151 | Aufgaben 3–12, yaş, orman alanı, iki mumun yanması, küvet, dikdörtgen |
+| 152 | Aufgaben 13–17, geometrik şekiller, feribot, CD satışı, eski matematik metni |
+| 153 | Aufgaben 18–24, balık bilmecesi, yürüyen merdiven, bisiklet ve hız, Grundwissen |
+| 154 | Wiederholen – Vertiefen – Vernetzen 1–8, kibrit şekli ve eşdeğer terimler |
+| 155 | Wiederholen – Vertiefen – Vernetzen 9–12, terim kartları, oktahedron, prizma ve örüntüler |
+
+**Sayısal envanter:** Eski 1901 + yeni 325 kart = **2226**. Bu grupta kaynak basılı sayfasına bağlı **112 üst seviye soru/örnek/konu başlığı**, gerektiğinde harfli alt madde bazında ayrı kartlara ayrıldı. Sadece fotoğraf içindeki küçük matematiksel sembollerin tamamının birebir aktarımı yapılmış sayılmaz.
+
+**Görsel kırpımları:** 20 sayfadan **52** özel JPG oluşturuldu. Önceki 366 dosyayla toplam **418** özel görsel arşivi oluşturuldu. Görsel denetiminde 148, 152 ve 154. sayfalarda üç crop sınırı düzeltildi; hedef grafik, tablo, şema ve örnek alanlarının korunmasına çalışıldı. ZIP bütünlük testi başarılı; telifli görseller açık GitHub'a yüklenmedi.
+
+**Teknik karşılaştırma:** Yeni kart kimlikleri benzersiz, 4–155 sayfaları ardışık. ZIP'in sıralı **418 görüntü dosya adı** ve veri kartlarının **418 `privateImageFile` adı** FNV-1a kontrol toplamı **1739785576** ile birebir uyuştu. Bu teknik denetim, görseldeki her sayının karakter karakter doğrulandığı anlamına gelmez.
