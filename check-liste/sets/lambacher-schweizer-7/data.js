@@ -1,11 +1,11 @@
 /* Lambacher Schweizer 7 · Nordrhein-Westfalen · Check Liste v1.11.0
- * İlk kullanıcı fotoğrafları: içindekiler s.2–3, kitap s.4–55.
+ * Kapsam: içindekiler s.2–3, ders s.4–115.
  * Bu açık depoda telifli kitap fotoğrafları veya soruların tam metinleri tutulmaz.
  * Her soru için yer, konu özeti ve Almanca-Türkçe çalışma yönergesi bulunur.
  * Tam soru ve şekiller için fiziksel kitaba bakılmalıdır.
  * 4–37 yapısal soru + alt madde + 12 çözümlü örnek envanteri, özel görsel kimlikleri.
  * Görseller herkese açık depoda değil; kullanıcı tarafından tarayıcıya özel içe aktarılır.
- * Sonraki paket: s.38–57.
+ * Sonraki paket: s.116–135.
  */
 (function(){
 'use strict';
