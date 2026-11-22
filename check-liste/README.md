@@ -1,15 +1,16 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.4.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.4.1** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
 ## Munzur — yeni çalışma paketi (v1.4.0)
 
 - **Bağlantı:** `lesson.html?set=munzur`
 - **Veri kaynağı:** `sets/munzur-2026/data.js`
 - **Kayıt anahtarı:** `munzur-2026`; diğer öğrencilerin kayıtlarından bağımsız
-- **Toplam:** 77 soru/alt madde; Almanca metinler ve Türkçe çeviriler
+- **Toplam:** 87 soru/alt madde; Almanca metinler ve Türkçe çeviriler
 - **Öncelik:** Okul ödevi `Mathebuch S. 50 Nr. 4` ve `S. 51 Nr. 7, 8`. Bu maddeler ilk sıradadır ve ★ ile işaretlenir.
-- **Diğer sayfalar:** s.50–51 (Zuordnungen) ve s.91–93 (Prozentrechnung, Preisänderungen, Mehrwertsteuer)
+- **Diğer sayfalar:** s.50–52 (Zuordnungen) ve s.91–93 (Prozentrechnung, Preisänderungen, Mehrwertsteuer)
+- **Sayfa 52 (v1.4.1):** 10. soru (araba ve 3 hız grafiği), 11a–b (Tim/Jana okul yolu), 12a–c (iki kabın tam sıcaklık verisi), 13a–d (bisiklet yarışı: doğru/yanlış). Toplam **10 yeni alt madde**; grafikler fotoğrafa göre yeniden çizildi.
 - **Çizimler:** Sayısal grafik, tablo ve yarış soruları için yeniden oluşturulmuş **şematik SVG** görseller. Çok küçük/hassas kitap çizimleri bire bir kopya değildir; özgün kaynak fotoğrafla karşılaştırılmalıdır. 92/13'ün beş hesap makinesi ekranındaki küçük tuşlamalar kesin okunamadığı için uydurulmamıştır.
 
 Munzur, Çetin 1 ve Aras 1 ile **aynı `lesson.html`, `app.js` ve `pdf-export.js`** dosyalarını kullanır. Tuana 1 ayrı sunumdur.
@@ -24,7 +25,7 @@ Munzur, Çetin 1 ve Aras 1 ile **aynı `lesson.html`, `app.js` ve `pdf-export.js
     ├── Aras 1  → lesson.html?set=aras-1
     │   └── ../aras/data.js (34 soru, saat görselleri)
     ├── Munzur  → lesson.html?set=munzur
-    │   └── sets/munzur-2026/data.js (77 soru)
+    │   └── sets/munzur-2026/data.js (87 soru)
     └── Tuana 1 → ../mathe-gk/index.html (ayrı slayt sunumu)
 ```
 
