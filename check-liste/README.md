@@ -1,18 +1,18 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.11.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.12.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
-## Lambacher Schweizer 7 (v1.11.0)
+## Lambacher Schweizer 7 (v1.12.0)
 
-**Denetim:** `sets/lambacher-schweizer-7/QA.md`. 4–115 ardışık ve eksiksiz; önceki sayfa boşlukları giderildi. Eski 248 kırpıma s.96–115 için 61 görsel eklendi (toplam 309). Kullanıcıya ait ZIP tarayıcıya içe aktarılır. Tam soru metinleri ve simgeler için metin düzeyi kontrolü sürüyor.
+**Denetim:** `sets/lambacher-schweizer-7/QA.md`. 4–135 ardışık ve eksiksiz; önceki sayfa boşlukları giderildi. Önceki 309 kırpıma s.116–135 için 57 özel JPG eklendi (toplam 366). Kullanıcıya ait ZIP tarayıcıya içe aktarılır. Tam soru metinleri ve simgeler için metin düzeyi kontrolü sürüyor.
 
 - **Bağlantı:** `lesson.html?set=lambacher-7`
 - **Veri kaynağı:** `sets/lambacher-schweizer-7/data.js`
-- **İlk fotoğraf grubu:** İçindekiler s.2–3; ders sayfaları s.4–115
-- **1652 takip kartı**; bölüm girişleri ve sayfa/soru numaraları, Almanca–Türkçe konu özetleri
+- **İlk fotoğraf grubu:** İçindekiler s.2–3; ders sayfaları s.4–135
+- **1901 takip kartı**; bölüm girişleri ve sayfa/soru numaraları, Almanca–Türkçe konu özetleri
 - **Önemli:** Tam telifli metinler ve sayfa fotoğrafları **açık GitHub deposunda paylaşılmaz**; soruyu kitaptan okuyup çözmek gerekir
 - **Altı bölüm:** s.4, 44, 80, 120, 162 ve 196'da başlar. Ekler s.228'den itibaren.
-- **Sonraki fotoğraf grubu:** s.116–135
+- **Sonraki fotoğraf grubu:** s.136–155
 - **Kayıt anahtarı:** `lambacher-schweizer-7-nrw`; önceki çalışmalardan bağımsız
 
 ## Munzur — yeni çalışma paketi (v1.4.0)
@@ -40,7 +40,7 @@ Munzur, Çetin 1 ve Aras 1 ile **aynı `lesson.html`, `app.js` ve `pdf-export.js
     ├── Munzur  → lesson.html?set=munzur
     │   └── sets/munzur-2026/data.js (87 soru)
     ├── Lambacher Schweizer 7 → lesson.html?set=lambacher-7
-    │   └── sets/lambacher-schweizer-7/data.js (1652 takip kartı, s.4–115)
+    │   └── sets/lambacher-schweizer-7/data.js (1901 takip kartı, s.4–135)
     └── Tuana 1 → ../mathe-gk/index.html (ayrı slayt sunumu)
 ```
 
@@ -79,4 +79,7 @@ Munzur, Çetin 1 ve Aras 1 ile **aynı `lesson.html`, `app.js` ve `pdf-export.js
 **Tuana 1**, şimdilik kendi `mathe-gk/index.html` dosyasını kullanan ayrı ders sunumudur; ortak çizim/Check Liste uygulamasına dönüştürülmemiştir.
 
 
-**v1.11.0 notu:** 96–115: 290 yeni takip kartı (soru ve alt maddeler, Beispiele, konu), 61 özel görsel. Sonraki fotoğraflar: 116–135. Yerel görsel ZIP dosyası: Lambacher_Schweizer_7_tum_gorseller_s4-115.zip.
+**v1.12.0 notu:** 96–115: 290 yeni takip kartı (soru ve alt maddeler, Beispiele, konu), 61 özel görsel. Sonraki fotoğraflar: 116–135. Yerel görsel ZIP dosyası: Lambacher_Schweizer_7_tum_gorseller_s4-115.zip.
+
+
+**v1.12.0 güncellemesi:** s.116–135 için 247 soru/alt madde, test, örnek ve konu kartı ile 2 destek görsel kartı eklendi; toplam 1901 kart. 57 kırpım eklendi, özel ZIP 366 görsel içeriyor. Geçmiş sürüm notları tarihsel kayıttır; güncel kapsam 4–135. Sonraki grup 136–155.
