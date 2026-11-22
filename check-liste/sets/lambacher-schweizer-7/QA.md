@@ -169,3 +169,5 @@
 **Görseller:** 61 JPEG kırpımı hazırlandı. Montaj kontrolünde 5 tanesinin sınırı düzeltildi (98 q18, 101 q7, 103 q18, 114 q18 ve q21). Özel toplam ZIP: 309 farklı görsel. Görsel adları ile kart bağlantılarının karşılaştırılması son teknik kontrolde yapılacaktır.
 
 **Açık kalite sınırı:** Sayfa numarası ve soru listesi kontrol edilmiş olsa da küçük yazılı matematiksel ifadelerin tamamı karakter karakter çözümlenmemiştir; kullanıcı gerekirse yakın çekim göndermelidir.
+
+**SON TEKNİK DOĞRULAMA (v1.11.0):** `data.js` içinde 1652 takip kartı, 96–115 aralığı için 290 yeni kart ve 4–115 arasında 112 farklı basılı sayfa kaydı bulundu. **0 eksik sayfa ve 0 yinelenen kart kimliği.** Özel ZIP'te 309 görsel var; bu dosyaların sıralı adları ile `data.js` içindeki 309 benzersiz `privateImageFile` adının FNV-1a kontrol toplamları **3378412036** değerinde birebir eşleşti. ZIP bütünlük kontrolü hatasız. Bu teknik eşleşme küçük baskının matematiksel doğruluğunu garanti etmez.
