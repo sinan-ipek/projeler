@@ -35186,9 +35186,7 @@ window.CHECKLIST_PACK = {
     "sourcePage": 193,
     "auditStatus": "printed-page-task-and-example-inventory-double-checked; small symbol and numeric transcription not assured",
     "star": false,
-    "plus": false,
-    "privateImageFile": "p193_runde1-aufgabe2-mast.jpg",
-    "privateFigureAvailable": true
+    "plus": false
   },
   {
     "id": "ls7-193-test-R1-3",
@@ -35201,7 +35199,9 @@ window.CHECKLIST_PACK = {
     "sourcePage": 193,
     "auditStatus": "printed-page-task-and-example-inventory-double-checked; small symbol and numeric transcription not assured",
     "star": false,
-    "plus": false
+    "plus": false,
+    "privateImageFile": "p193_runde1-aufgabe3-mast.jpg",
+    "privateFigureAvailable": true
   },
   {
     "id": "ls7-193-test-R1-4-a",
