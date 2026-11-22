@@ -1,6 +1,18 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.3.1** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.4.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+
+## Munzur — yeni çalışma paketi (v1.4.0)
+
+- **Bağlantı:** `lesson.html?set=munzur`
+- **Veri kaynağı:** `sets/munzur-2026/data.js`
+- **Kayıt anahtarı:** `munzur-2026`; diğer öğrencilerin kayıtlarından bağımsız
+- **Toplam:** 77 soru/alt madde; Almanca metinler ve Türkçe çeviriler
+- **Öncelik:** Okul ödevi `Mathebuch S. 50 Nr. 4` ve `S. 51 Nr. 7, 8`. Bu maddeler ilk sıradadır ve ★ ile işaretlenir.
+- **Diğer sayfalar:** s.50–51 (Zuordnungen) ve s.91–93 (Prozentrechnung, Preisänderungen, Mehrwertsteuer)
+- **Çizimler:** Sayısal grafik, tablo ve yarış soruları için yeniden oluşturulmuş **şematik SVG** görseller. Çok küçük/hassas kitap çizimleri bire bir kopya değildir; özgün kaynak fotoğrafla karşılaştırılmalıdır. 92/13'ün beş hesap makinesi ekranındaki küçük tuşlamalar kesin okunamadığı için uydurulmamıştır.
+
+Munzur, Çetin 1 ve Aras 1 ile **aynı `lesson.html`, `app.js` ve `pdf-export.js`** dosyalarını kullanır. Tuana 1 ayrı sunumdur.
 
 ## Tek merkezli mimari
 
@@ -11,10 +23,12 @@
     │   └── sets/matematik-5-2026/data.js (41 soru)
     ├── Aras 1  → lesson.html?set=aras-1
     │   └── ../aras/data.js (34 soru, saat görselleri)
+    ├── Munzur  → lesson.html?set=munzur
+    │   └── sets/munzur-2026/data.js (77 soru)
     └── Tuana 1 → ../mathe-gk/index.html (ayrı slayt sunumu)
 ```
 
-Çetin 1 ve Aras 1 için **yalnızca bir** arayüz, bir çizim motoru ve bir PDF oluşturucu kullanılır:
+Çetin 1, Aras 1 ve Munzur için **yalnızca bir** arayüz, bir çizim motoru ve bir PDF oluşturucu kullanılır:
 
 - `lesson.html` — tek ortak HTML arayüzü; Home / Dil / Help, Paylaş, Kalem, Seçim, Silgi ve sürüm notu
 - `lesson-loader.js` — `?set=` parametresinden yalnızca izin verilen soru paketini seçer; sonra aynı `app.js` ile `pdf-export.js` dosyalarını yükler
