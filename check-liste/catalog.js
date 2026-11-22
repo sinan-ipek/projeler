@@ -8,7 +8,7 @@ window.CHECKLIST_CATALOG = [
   {
     id: "lambacher-schweizer-7-nrw",
     title: "Lambacher Schweizer 7 · NRW",
-    description: "7. sınıf · Sayfa 4–17 · 57 takip maddesi · Almanca–Türkçe",
+    description: "7. sınıf · Sayfa 4–37 · 165 takip maddesi · Almanca–Türkçe",
     script: "sets/lambacher-schweizer-7/data.js"
   }
 ];
