@@ -14793,6 +14793,18 @@ window.CHECKLIST_PACK = {
     "privateFigureAvailable": true
   },
   {
+    "id": "ls7-76-figure-temperatur",
+    "page": 76,
+    "number": "Ek görsel",
+    "kind": "figure",
+    "german": "Seite 76 · Bildmaterial\nTemperatur-Zeit-Diagramm im Rückblick. Beachte die Angaben in der Abbildung.",
+    "turkish": "Sayfa 76 · Ek görsel\nTekrar bölümündeki sıcaklık-zaman grafiği. Şekildeki verileri incele.",
+    "privateImageFile": "p76_tages-temperatur-diagramm.jpg",
+    "privateFigureAvailable": true,
+    "sourcePage": 76,
+    "auditStatus": "figure-crop-reviewed"
+  },
+  {
     "id": "ls7-77-test-R1-1-a",
     "page": 77,
     "number": "R1-1a",
@@ -15279,6 +15291,30 @@ window.CHECKLIST_PACK = {
     "sourcePage": 79,
     "privateImageFile": "p79_ueberlaufgefaess-messung.jpg",
     "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-79-figure-messdaten",
+    "page": 79,
+    "number": "Ek görsel",
+    "kind": "figure",
+    "german": "Seite 79 · Bildmaterial\nMesswerttabelle und Messaufbau zur Ausgleichsgeraden. Beachte die Angaben in der Abbildung.",
+    "turkish": "Sayfa 79 · Ek görsel\nEn uygun doğru için deney tablosu ve ölçüm düzeneği. Şekildeki verileri incele.",
+    "privateImageFile": "p79_ausgleichsgerade-messdaten.jpg",
+    "privateFigureAvailable": true,
+    "sourcePage": 79,
+    "auditStatus": "figure-crop-reviewed"
+  },
+  {
+    "id": "ls7-79-figure-volumen",
+    "page": 79,
+    "number": "Ek görsel",
+    "kind": "figure",
+    "german": "Seite 79 · Bildmaterial\nTabelle mit Masse- und Volumenwerten. Beachte die Angaben in der Abbildung.",
+    "turkish": "Sayfa 79 · Ek görsel\nKütle ve hacim ölçüm tablosu. Şekildeki verileri incele.",
+    "privateImageFile": "p79_koerper-messwerttabelle.jpg",
+    "privateFigureAvailable": true,
+    "sourcePage": 79,
+    "auditStatus": "figure-crop-reviewed"
   },
   {
     "id": "ls7-80-theory-K",
@@ -16692,6 +16728,30 @@ window.CHECKLIST_PACK = {
     "privateFigureAvailable": true
   },
   {
+    "id": "ls7-89-figure-sale",
+    "page": 89,
+    "number": "Ek görsel",
+    "kind": "figure",
+    "german": "Seite 89 · Bildmaterial\nRabattaktion als Einstieg zur Prozentwertberechnung. Beachte die Angaben in der Abbildung.",
+    "turkish": "Sayfa 89 · Ek görsel\nYüzde hesabına giriş için indirim görseli. Şekildeki verileri incele.",
+    "privateImageFile": "p89_sale-schuhe.jpg",
+    "privateFigureAvailable": true,
+    "sourcePage": 89,
+    "auditStatus": "figure-crop-reviewed"
+  },
+  {
+    "id": "ls7-89-figure-formel",
+    "page": 89,
+    "number": "Ek görsel",
+    "kind": "figure",
+    "german": "Seite 89 · Bildmaterial\nGrundwert-Prozentwert-Formel und Dreisatz. Beachte die Angaben in der Abbildung.",
+    "turkish": "Sayfa 89 · Ek görsel\nTemel değer ve yüzde değeri formülü. Şekildeki verileri incele.",
+    "privateImageFile": "p89_prozentwert-formel.jpg",
+    "privateFigureAvailable": true,
+    "sourcePage": 89,
+    "auditStatus": "figure-crop-reviewed"
+  },
+  {
     "id": "ls7-90-theory-K",
     "page": 90,
     "number": "K",
@@ -17542,6 +17602,18 @@ window.CHECKLIST_PACK = {
     "sourcePage": 94,
     "privateImageFile": "p94_sportgeschaeft-angebote.jpg",
     "privateFigureAvailable": true
+  },
+  {
+    "id": "ls7-94-figure-grundwert",
+    "page": 94,
+    "number": "Ek görsel",
+    "kind": "figure",
+    "german": "Seite 94 · Bildmaterial\nFormel zur Berechnung des Grundwerts. Beachte die Angaben in der Abbildung.",
+    "turkish": "Sayfa 94 · Ek görsel\nTemel değeri bulma formülünün görsel açıklaması. Şekildeki verileri incele.",
+    "privateImageFile": "p94_grundwert-formel.jpg",
+    "privateFigureAvailable": true,
+    "sourcePage": 94,
+    "auditStatus": "figure-crop-reviewed"
   },
   {
     "id": "ls7-95-theory-K",
