@@ -208,3 +208,5 @@
 **Özel görsel arşivi:** 309 eski + 57 yeni = **366** PNG/JPG. ZIP açma/CRC bütünlük testi başarılı. Yerel ve özel arşiv `Lambacher_Schweizer_7_tum_gorseller_s4-135.zip` olarak üretildi; telifli kitap kırpımları herkese açık GitHub deposuna gönderilmedi.
 
 **Açık kalite sınırı:** Soru ve örnek envanteri kitap fotoğraflarından çıkarılmıştır, ancak matematiksel küçük yazı ve her alt maddenin birebir karakter düzeyinde transkripsiyonu tamamlanmadı. Özellikle soru değerleri için basılı kitaptaki asıl ifadeler kullanılmalıdır.
+
+**SON OTOMATİK KONTROL (v1.12.0):** `data.js` içinde **1901 toplam kart** (1652 önceki + 249 yeni), **132 ayrı basılı ders sayfası** (4–135), **0 eksik sayfa**, **0 tekrarlanan kart kimliği**. ZIP içerisindeki **366 benzersiz görsel dosya adı** ile `privateImageFile` bağlantılarındaki **366 ad** birebir eşleşti; sıralı FNV-1a dosya-adı kontrol toplamı **3705974813**. ZIP CRC testi hatasız. Bu teknik kontrol kitap baskısındaki küçük sayı ve matematik sembollerinin doğruluğunu garanti etmez.
