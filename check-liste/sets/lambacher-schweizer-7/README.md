@@ -1,29 +1,33 @@
 # Lambacher Schweizer 7 — Check Liste
 
-**Sürüm v1.13.0** · Klett · Nordrhein-Westfalen · 22 Kasım 2026
+**Sürüm v1.14.0** · Klett · Nordrhein-Westfalen · 22 Kasım 2026
 
-## Güncel durum
+## Güncel envanter
 
-- **Kitap:** İçindekiler s.2–3, ders sayfaları **4–155**; kapak ve kullanım açıklaması ayrıca gönderildi.
-- **Ardışık sayfa kontrolü:** 4–155, 152 sayfa; eksik sayfa ve tekrarlanan kart numarası yok. Önceki 50–51 tekrar fotoğrafı ve 56–57 eksikliği daha önce giderildi.
-- **Takip kartları:** 1901 eski + 325 yeni = **2226**. Bu sayı kitapta basılmış bağımsız soru sayısı değildir; harfli alt maddeler ve konu/Beispiele kartlarını da içerir.
-- **Özel görseller:** 366 eski + 52 yeni = **418 kırpım**. Özel ZIP: `Lambacher_Schweizer_7_tum_gorseller_s4-155.zip`.
-- **Görsel politikası:** Telifli kırpımlar GitHub'da yayımlanmadı. Kitabın bütün fotoğrafları tamamlandığında ZIP açılarak uygulamanın **Görselleri içe aktar** düğmesiyle topluca yerel tarayıcıya yüklenir.
-- **Sonraki grup:** 156–175 (10 karşılıklı sayfa fotoğrafı).
+- **Alınan basılı sayfalar:** İçindekiler 2–3, ders kitabı **4–175** (172 ardışık sayfa), kapak ve kullanım sayfası.
+- **Takip kartları:** önceki 2226 + yeni 210 = **2436**. Bu sayı basılı bağımsız soru sayısı değil; harfli alt maddeler, Theorie/Beispiele ve Erkundungen ayrıca sayılır.
+- **Yerel görseller:** 418 eski + 63 yeni = **481** kırpılmış özel JPG/PNG. Arşiv `Lambacher_Schweizer_7_tum_gorseller_s4-175.zip`.
+- **Bütünlük:** 4–175 eksiksiz; tekrarlanan kart kimliği yok; 481 görsel dosya adı kartlardaki `privateImageFile` alanlarıyla eşleşiyor. Önceki s.50–51 tekrar ve s.56–57 eksiklik kaydı daha eski grupta çözüldü.
+- **Görsel kullanımı:** Telifli görseller GitHub'a yüklenmedi. Kitabın tamamı yüklendiğinde ZIP açılıp uygulamadaki Görselleri içe aktar alanından topluca eklenebilir.
+- **Sıradaki fotoğraf grubu:** **176–195** (10 fotoğraf = 20 sayfa).
 
-## Yeni sayfaların envanteri
+## Bu gruptaki bölümler
 
 | Sayfalar | İçerik |
 |---|---|
-| 136 | Ausmultiplizieren und Ausklammern devamı, Aufgaben 12–20 |
-| 137–139 | Gleichungen aufstellen und lösen, Theorie, Beispiele 1–2, Aufgaben 1–14 |
-| 140–143 | Gleichungen mit Äquivalenzumformungen lösen, Theorie, Beispiel 1, Aufgaben 1–15 |
-| 144–147 | Bruchterme und Bruchgleichungen, Theorie, Beispiele 1–3, Aufgaben 1–17 |
-| 148–153 | Problemlösen mit Gleichungen, dört adımlı yöntem, Beispiele 1–2, Aufgaben 1–24 |
-| 154–155 | Wiederholen – Vertiefen – Vernetzen, Aufgaben 1–12 |
+| 156–157 | IV. Wiederholen – Vertiefen – Vernetzen: Aufgaben 13–24 |
+| 158–159 | Rückblick, Terme/Gleichungen/Bruchgleichungen; Test Runde 1 (1–4) ve Runde 2 (1–4) |
+| 160–161 | Exkursion Zahlenzauberei: Karten-, Erbsen-, Zahlen- und Streichholztricks |
+| 162–163 | V. Konstruieren und Argumentieren; Check-in Aufgaben 1–4 |
+| 164–165 | Erkundungen: Winkelbeziehungen, Flächenzerlegung, Dreiecke sortieren |
+| 166–167 | 1 Winkel an sich schneidenden Geraden: Nebenwinkel, Scheitelwinkel, Stufenwinkel, Wechselwinkel; Beispiele 1–2 |
+| 168–170 | Aufgaben 1–20, inklusive Bilder, Fachwerkhaus und Test |
+| 171 | 2 Winkelsummen; Innenwinkelsatz, Beispiele 1–2 |
+| 172–174 | Aufgaben 1–20, Außenwinkelsatz und Polygonwinkelsummen |
+| 175 | 3 Dreiecke konstruieren: Konstruktionsschritte und eine ausgearbeitete Konstruktion |
 
-## Doğruluk notu
+## Doğruluk ve telif notu
 
-GitHub'a Almanca–Türkçe kısa özgün görev ve Beispiel özetleri, kaynak sayfa numarası, çalışma kimliği ve yerel şekil bağlantıları kaydedildi. Basılı kitabın soruları birebir aktarılmış değildir; küçük matematiksel işaret, sayı ve tüm alt maddelerin karakter karakter doğrulaması tamamlanmadığından kesin işlem için kitaba bakılmalıdır.
+Github envanterinde özgün kısa Almanca/Türkçe çalışma açıklamaları ve basılı sayfa/alt madde referansları bulunur. Tam basılı soru metni veya kitap fotoğrafları açık depoda bulunmaz. Fotoğraflardaki küçük sayılar ve matematiksel semboller birebir aktarılmadığından soru çözümünde fiziksel kitap esas alınmalıdır.
 
-**Ders:** `lesson.html?set=lambacher-7` · **Veri:** `sets/lambacher-schweizer-7/data.js` · **Denetim:** `QA.md`
+**Ders:** `lesson.html?set=lambacher-7` · **Veri:** `data.js` · **Denetim:** `QA.md`
