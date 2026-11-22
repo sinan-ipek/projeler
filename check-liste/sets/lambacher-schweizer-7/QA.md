@@ -1,4 +1,4 @@
-# Lambacher Schweizer 7 – denetim v1.10.0 (22.11.2026)
+# Lambacher Schweizer 7 – denetim v1.11.0 (22.11.2026)
 
 **Durum: yapısal denetim ilerledi; metin düzeyinde eksiksizlik henüz onaylanmadı.**
 
@@ -148,3 +148,24 @@
 - Bu grup için **60 ayrı JPG kırpımı** alındı, 60'ı da en az bir veri kartından `privateImageFile` alanıyla referanslandı. Grafiklerde eksen/etiket ve tablolarda değerler mümkün olduğunca kesilmeden bırakıldı. Görsel kalite sınırı kaynak fotoğraf çözünürlüğüdür.
 - Birleştirilmiş özel ZIP'te **248 benzersiz PNG/JPG dosyası** ve açıklama bulunur. Arşivin bütünlük kontrolü yapıldı; dosya adları ile kayıtları karşılaştırılmalıdır.
 - **Önemli kalite sınırı:** Harfli alt maddelerin sayısı ve bazı küçük ifadeler fotoğraf üzerinden elle envanterlendi. Baskının tamamı karakter karakter aktarılmadığı için rakam ve matematik işaretleri kitaptan doğrulanmalıdır. Bu, tam soru transkripsiyonu değildir.
+
+## ALTINCI GRUP — Sayfalar 96–115 (v1.11.0, 22.11.2026)
+
+**Fotoğraf sırası:** 96–97, 98–99, 100–101, 102–103, 104–105, 106–107, 108–109, 110–111, 112–113, 114–115. İki geçişte basılı numaralar incelendi. Eksik veya tekrar eden sayfa yok.
+
+| Sayfalar | Envanter |
+|---|---|
+| 96–98 | Grundwerte berechnen, 1–20, tablolar ve indirim-kartları |
+| 99–100 | Überall Prozente, temel üç yüzde hesabı ve Beispiele 1–2 |
+| 101–103 | Überall Prozente 1–19, indirimler, faturalar ve spor ayakkabısı şeması |
+| 104–105 | Zinsen giriş, faiz formülleri, Beispiele 1–3 ve Aufgabe 1 |
+| 106–107 | Zinsen 2–14, faizin gün sayısına göre hesabı ve grafik |
+| 108–109 | Zinseszinsen giriş, bileşik faiz formülü, Beispiele 1–2 |
+| 110–111 | Zinseszinsen 1–12, tablo hesapları ve kredi |
+| 112–115 | Wiederholen – Vertiefen – Vernetzen 1–25 |
+
+**Kayıt:** önceki 1362 + bu grupta 290 takip kartı = toplam 1652. Basılı sayfa numarası ve soru aralığı envanteri kontrol edildi, kart kimliği tekrarı bulunmadı.
+
+**Görseller:** 61 JPEG kırpımı hazırlandı. Montaj kontrolünde 5 tanesinin sınırı düzeltildi (98 q18, 101 q7, 103 q18, 114 q18 ve q21). Özel toplam ZIP: 309 farklı görsel. Görsel adları ile kart bağlantılarının karşılaştırılması son teknik kontrolde yapılacaktır.
+
+**Açık kalite sınırı:** Sayfa numarası ve soru listesi kontrol edilmiş olsa da küçük yazılı matematiksel ifadelerin tamamı karakter karakter çözümlenmemiştir; kullanıcı gerekirse yakın çekim göndermelidir.
