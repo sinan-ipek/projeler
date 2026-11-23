@@ -1,6 +1,6 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.17.1** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.18.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
 ## Lambacher Schweizer 7 (v1.17.1)
 
@@ -101,3 +101,6 @@ Munzur, Çetin 1 ve Aras 1 ile **aynı `lesson.html`, `app.js` ve `pdf-export.js
 
 
 **v1.17.1 (23.11.2026) — Soru bulunan sayfalar filtresi:** Kitabın basılı 4–295 sayfalarının tamamı fotoğraf envanterinde korunur; ancak Check Liste menüsü, sayfa seçicisi, ileri/geri geçişi, tamamlanma sayacı ve Paylaş/PDF yalnızca çalışma içeren **207 sayfayı (2955 görünür kart)** kullanır. Örnek, alıştırma veya soru bulunmayan **85 sayfa** menüde gizlenir; bunlara 238–295 çözüm/dizin/kaynakça sayfaları dahildir. 228–229 tartışma ve gerekçelendirme etkinlikleri korundu. Var olan 3080 veri kartının hiçbiri ve tarayıcıdaki tamamlanma/çizim kayıtları silinmedi. Aynı filtre diğer ders paketlerini etkilemez.
+
+
+**v1.18.0 (23.11.2026):** Kitap kartının görünen adı **7. sınıf** oldu. Kart seçilince `Çalışmayı aç` / `Yükle` seçenekleri açılır; `Yükle` bilgisayardaki PDF dosyasını tarayıcının IndexedDB'sine kaydeder. Dosya sunucuya veya GitHub'a gönderilmez. Yükleme ardından `Kitabı görüntüle` seçeneği belirir; ders içinde de `Kitabımı aç` düğmesi PDF'yi yerel görüntüleyicide açar. Kayıt bu tarayıcıya özeldir; başka cihazda yeniden seçmek gerekir. PDF'den soruları otomatik ayrıştırma/etiketleme veya sayfa numaralarını eşleme bu sürümde yoktur. Diğer dersler, kayıt anahtarları, soru kartları ve resim arşivi değişmez.
