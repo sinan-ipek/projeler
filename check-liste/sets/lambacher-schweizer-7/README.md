@@ -1,6 +1,6 @@
 # Lambacher Schweizer 7 — Check Liste
 
-**Sürüm v1.18.0** · Klett · Nordrhein-Westfalen · 23 Kasım 2026
+**Sürüm v1.19.0** · Klett · Nordrhein-Westfalen · 23 Kasım 2026
 
 ## Güncel durum
 
@@ -41,3 +41,12 @@ Kullanıcının isteğine göre **yalnızca soru, alıştırma, etkinlik veya ç
 ## Yerel kitap yükleme — v1.18.0
 
 Menüdeki ders adı **7. sınıf**. Kart tıklanınca `Çalışmayı aç` / `Yükle` seçilebilir. `Yükle` bilgisayardan tek bir PDF seçtirir ve bunu yalnızca aynı tarayıcıda `check-liste-local-books-v1` IndexedDB deposuna kaydeder. Ardından ana menüde `Kitabı görüntüle` ve ders ekranında `Kitabımı aç` kullanılabilir. Hiçbir PDF GitHub'a veya bir sunucuya aktarılmaz. Kitap verisi, önbelleğin/tarayıcı depolamasının silinmesiyle kaybolabilir. Görsellerin özgün sorularla otomatik eşlemesi ve PDF'den soru çıkarımı henüz yapılmamıştır.
+
+
+## ZIP paketi — v1.19.0
+
+**Dosya adı:** `7_sinif_Check_Liste_Paketi_v1.19.0.zip`. **Boyut:** yaklaşık 28 MB. Paket `manifest.json`, `README.txt`, yalnızca çevrimiçi ders sayfasına yönlendiren bir `index.html` ve `images/` dizininde 700 özel görsel içerir. Paketin içinde telifli özgün soru metinleri veya tek başına tam çalışabilen çevrimdışı Check Liste motoru bulunmaz.
+
+**Kullanım:** Online Check Liste → **7. sınıf → Yükle** → ZIP'i seç. Uygulama ZIP'i istemci tarafında okur ve görselleri tarayıcı IndexedDB'sine alıp **çalışmayı otomatik açar**. Özel arşivin dosyaları GitHub'a yüklenmez. Dosyalar başka bir bilgisayara kendiliğinden aktarılmaz ve tarayıcı verileri temizlenirse kaybolabilir.
+
+**Denetim:** ZIP 703 giriş içerir: 700 görsel + 3 yardımcı dosya. ZIP biçimi STORE (sıkıştırılmamış); görüntüler zaten JPG/PNG olarak sıkıştırılmıştır. Görsel adları, public repo data.js dosyasındaki 700 farklı `privateImageFile` referansıyla birebir eşleşir (FNV1a isim hash: 1079539722); ZIP CRC testi başarılı. Node ile ZIP okuma ve 700 IndexedDB dosya kaydı simülasyonu başarılı.
