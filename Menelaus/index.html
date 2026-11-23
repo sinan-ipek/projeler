@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Menelaus Tilki Minimal v6.6</title>
+<title>Menelaus Tilki Minimal v6.7</title>
 <style>
   :root { --bg:#ffffff; --fg:#111111; --line:#ffffff; --panel:#111111; }
   * { box-sizing:border-box; }
@@ -73,7 +73,7 @@
     </svg>
   </div>
 </div>
-<div class="version-badge">v6.6</div>
+<div class="version-badge">v6.7</div>
 <script>
 (() => {
   const NS = 'http://www.w3.org/2000/svg';
@@ -226,7 +226,7 @@
   const lineY = baseY + 10;
   const slots = slotCenters.map((x, i) => {
     const g = make('g', {}, formula);
-    const dot = i === 0 ? null : textEl('·', (slotCenters[i-1] + x) / 2, baseY + 14, 'dot', g);
+    const dot = i === 0 ? null : make('circle', {cx:(slotCenters[i-1] + x)/2, cy:lineY, r:4.5, fill:'var(--fg)'}, g);
     if (dot) dot.style.opacity = '0';
     const num = textEl('', x, numY, 'formula-text', g);
     const line = make('line', {x1:x-52, y1:lineY, x2:x-52, y2:lineY, stroke:'var(--fg)', 'stroke-width':2.8}, g);
