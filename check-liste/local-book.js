@@ -23,7 +23,7 @@
   const database=await db();
   return new Promise((resolve,reject)=>{
    const request=database.transaction(STORE_NAME,'readonly').objectStore(STORE_NAME).get(BOOK_KEY);
-   request.onsuccess=()=>resolve(request.result||null);
+   request.onsuccess=()=>{const item=request.result;resolve(item&&/\.html?$/i.test(item.name||'')?item:null);};
    request.onerror=()=>reject(request.error||new Error('Yerel kitap okunamadı.'));
   });
  }
