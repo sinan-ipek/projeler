@@ -1,4 +1,4 @@
-/* Check Liste v1.19.0 — Tek ortak ders yükleyicisi.
+/* Check Liste v1.20.0 — Tek ortak ders yükleyicisi.
    Yalnızca ders veri kaynağı değişir: aynı HTML, çizim motoru ve PDF oluşturucu. */
 (function(){
  'use strict';
@@ -56,15 +56,52 @@
   pack.bookPhotoPageCount=292;
   pack.menuPageCount=new Set(pack.questions.map(q=>q.page)).size;
  }
+
+ async function loadGrade7FromBrowser(){
+  const stored=await new Promise((resolve,reject)=>{
+   if(!('indexedDB' in window))return reject(new Error('Tarayıcı yerel depolamayı desteklemiyor.'));
+   const r=indexedDB.open('check-liste-private-figures-v1',1);
+   r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('files'))r.result.createObjectStore('files');};
+   r.onerror=()=>reject(r.error||new Error('Yerel çalışma deposu açılamadı.'));
+   r.onsuccess=()=>{
+    const db=r.result;
+    const tx=db.transaction('files','readonly');
+    const req=tx.objectStore('files').get('lambacher-schweizer-7-nrw:__study__.json');
+    req.onsuccess=()=>{resolve(req.result||null);db.close();};
+    req.onerror=()=>{reject(req.error||new Error('Yerel çalışma okunamadı.'));db.close();};
+   };
+  });
+  if(!stored){
+   const message='7. sınıf çalışması henüz yüklenmedi. Check Liste ana sayfasına dön, 7. sınıf → Yükle bölümünden ZIP paketini seç.';
+   const status=document.getElementById('exportStatus');
+   if(status)status.textContent=message;
+   const list=document.getElementById('menu');
+   if(list)list.textContent=message;
+   document.getElementById('setTitle').textContent='7. sınıf · ZIP paketi bekleniyor';
+   return false;
+  }
+  let pack;
+  try{pack=JSON.parse(await stored.text());}
+  catch{throw new Error('Yerel çalışma dosyası bozuk; ZIP paketini yeniden yükle.');}
+  if(pack.id!=='lambacher-schweizer-7-nrw'||!Array.isArray(pack.questions)||pack.questions.length!==3080)
+   throw new Error('Yerel çalışma paketi beklenen biçimde değil.');
+  window.CHECKLIST_PACK=pack;
+  return true;
+ }
  async function start(){
   try{
-   await load(selected.data+'?v=1.19.0');
-   if(!window.CHECKLIST_PACK||
-      window.CHECKLIST_PACK.id!==selected.pack||
-      !Array.isArray(window.CHECKLIST_PACK.questions))
-    throw new Error('Ders verileri doğrulanamadı.');
-   if(id==='lambacher-7')filterLambacherMenuPages(window.CHECKLIST_PACK);
-   await load('./app.js?v=1.19.0');
+   if(id==='lambacher-7'){
+    const available=await loadGrade7FromBrowser();
+    if(!available)return;
+    filterLambacherMenuPages(window.CHECKLIST_PACK);
+   }else{
+    await load(selected.data+'?v=1.20.0');
+    if(!window.CHECKLIST_PACK||
+       window.CHECKLIST_PACK.id!==selected.pack||
+       !Array.isArray(window.CHECKLIST_PACK.questions))
+     throw new Error('Ders verileri doğrulanamadı.');
+   }
+   await load('./app.js?v=1.20.0');
    await load('./pdf-export.js?v=1.3.1');
   }catch(err){
    console.error('Check Liste yükleme hatası:',err);
