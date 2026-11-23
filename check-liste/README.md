@@ -40,7 +40,7 @@ Munzur, Çetin 1 ve Aras 1 ile **aynı `lesson.html`, `app.js` ve `pdf-export.js
     ├── Munzur  → lesson.html?set=munzur
     │   └── sets/munzur-2026/data.js (87 soru)
     ├── Lambacher Schweizer 7 → lesson.html?set=lambacher-7
-    │   └── sets/lambacher-schweizer-7/data.js (2900 takip kartı, s.4–215)
+    │   └── sets/lambacher-schweizer-7/data.js (3080 takip kartı, s.4–295)
     └── Tuana 1 → ../mathe-gk/index.html (ayrı slayt sunumu)
 ```
 
