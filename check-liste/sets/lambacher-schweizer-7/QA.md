@@ -1,4 +1,4 @@
-# Lambacher Schweizer 7 – denetim v1.17.1 (22.11.2026)
+# Lambacher Schweizer 7 – denetim v1.19.0 (22.11.2026)
 
 **Durum: yapısal denetim ilerledi; metin düzeyinde eksiksizlik henüz onaylanmadı.**
 
@@ -350,3 +350,8 @@
 ## MENÜ FİLTRESİ — v1.17.1 (23.11.2026)
 
 **Şart:** İçinde hiç çalışma sorusu, alıştırma, keşif/tartışma görevi ya da örnek bulunmayan sayfaları sayfa seçicisi ve soru menüsünden gizle. **Sonuç:** 292 basılı sayfadan 207 çalışma sayfası görünür, 85 sayfa gizlidir; 3080 kaynak karttan 2955'i menüde/Paylaş PDF'de görünür. 228–229 üzerinde doğrudan verilen tartışma ve gerekçelendirme çalışmaları istisna olarak korunmuştur. Kitaptaki tüm 4–295 fotoğrafları, özel 700 görsel ve localStorage kayıtları silinmez. Diğer dersler etkilenmez.
+
+
+## ZIP GÖRSEL PAKETİ — v1.19.0 (23.11.2026)
+
+Pakette 700 özel JPG/PNG görseli, manifest, README ve yalnızca online Check Liste'ye yönlendiren index.html vardır. ZIP 703 giriş, 27.838.626 byte, SHA256: `6f1e85f9df24fd95086c0c58ec72fb7d0e6ea44ea39d3c5b2f9d1ed2c8fa48e1`. Görsel adlarının sıralı FNV1a denetimi GitHub soru veri dosyasıyla eşleşir: 1079539722. ZIP CRC bütünlük testi ve 700 görselin depoya aktarım testi başarılı. İçe aktarma tarayıcıda gerçekleşir ve GitHub'a veri gönderilmez. GitHub'dan sadece mevcut uygulama kodu ve soru envanteri yüklenir; çevrimdışı tam uygulama özelliği yoktur. `check-liste/index.html` ana ekranı ZIP'i aldıktan sonra ders sayfasını açar. Tam özgün soru metinleri ve kitabın özgün PDF'si ZIP'e dahil değildir.
