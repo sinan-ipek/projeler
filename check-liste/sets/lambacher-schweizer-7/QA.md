@@ -1,4 +1,4 @@
-# Lambacher Schweizer 7 – denetim v1.15.0 (22.11.2026)
+# Lambacher Schweizer 7 – denetim v1.16.0 (22.11.2026)
 
 **Durum: yapısal denetim ilerledi; metin düzeyinde eksiksizlik henüz onaylanmadı.**
 
@@ -312,3 +312,19 @@
 **Görsel kırpımlar:** Kitap fotoğrafları 90 derece döndürülüp sayfalar ayrı incelendi. 71 yeni gerekli fotoğraf, şekil, grafik, tablo veya örnek alanı kırpıldı. İkinci görsel denetimde eksik/sınırı kayan bazı çizimler düzeltilerek p193 Runde 1 soru 3 mast görseli doğru karta bağlandı. 552 özel görselin tüm adları ZIP ile `privateImageFile` kartları arasında birebir eşleşti. Sıralı FNV-1a dosya-adı sağlaması **1574339094**; ZIP CRC testi başarılı.
 
 **Sınırlama:** Matematiksel küçük yazılar ve her alt maddenin tüm sayı değerleri tek tek çevriyazılmamıştır; kartlar basılı kaynağa işaret eden telif dostu özetlerdir. Fiziksel kitabın tam metni olmadan sayısal birebir doğruluk iddia edilmez.
+
+## ON BİRİNCİ GRUP — 196–215 (v1.16.0, 23.11.2026)
+
+**Fotoğraf sıra testi:** 196–197, 198–199, 200–201, 202–203, 204–205, 206–207, 208–209, 210–211, 212–213 ve 214–215. On fotoğraf ve yirmi basılı sayfa doğrulandı. 4–215 arası 212 ders sayfası ardışık; eksik veya tekrar yok.
+
+**Envanter:** VI. Wahrscheinlichkeiten (196); Check-in 1–5 (197); Erkundungen (198–199); Wahrscheinlichkeit (200–203); Laplace-Wahrscheinlichkeit – Summenregel (204–208); Baumdiagramm und Pfadregel (209–213); Der richtige Blick auf das Baumdiagramm (214–215). Soru/Beispiel/konu, harfli alt maddeler ve görsel referansları için ayrı kayıtlar açıldı.
+
+**Kartlar:** 2647 eski + 253 yeni (68 görsel kaydı dahil) = **2900**. Yeni kart kimliklerinde tekrar bulunmadı. Sayı 2900 bağımsız kitap sorusu değildir.
+
+**Özel görseller:** 552 eski + 68 yeni = **620** ayrı JPG/PNG. Bütün görsellerin kimlikleri data.js içindeki privateImageFile alanlarına bağlandı. Toplu özel ZIP: Lambacher_Schweizer_7_tum_gorseller_s4-215.zip. 620 dosya adı benzersiz, ZIP bütünlük testi başarılı.
+
+**Kontrolün sınırı:** Sayfa sırası, görünür soru/örnek başlıkları ve kesitler incelendi; veri kimliği, sayfa kapsaması ve ZIP bütünlüğü ikinci teknik kontrolden geçirildi. Fotoğrafların küçük yazıları nedeniyle sayılar, tüm matematik sembolleri ve her alt maddenin harf düzeni karakter karakter kesin doğrulanmış değildir. Kitapta teyit edilmesi gerekir. **“Tam metin kusursuz aktarılmıştır” iddiası yoktur.**
+
+**Telif:** Özel fotoğraf kırpımları açık GitHub reposuna yüklenmez; yerel ZIP üzerinden içe aktarılır.
+
+**Sonraki grup:** s.216–235.
