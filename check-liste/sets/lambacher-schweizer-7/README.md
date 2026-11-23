@@ -1,17 +1,39 @@
 # Lambacher Schweizer 7 — Check Liste
 
-**Sürüm v1.15.0** · Klett · Nordrhein-Westfalen · 23 Kasım 2026
+**Sürüm v1.16.0** · Klett · Nordrhein-Westfalen · 23 Kasım 2026
 
 ## Güncel envanter
 
-- **Basılı sayfalar:** İçindekiler 2–3, kitabın **4–195** sayfaları (192 ardışık sayfa).
-- **Kartlar:** önceki 2436 + yeni 211 = **2647**. Bu sayı tekil bağımsız soru sayısı değildir; harfli alt maddeler, teorik açıklamalar ve ayrı Beispiele dahildir.
-- **Özel kırpılmış görseller:** önceki 481 + yeni 71 = **552**. `Lambacher_Schweizer_7_tum_gorseller_s4-195.zip`.
-- **Teknik denetim:** sayfa açığı 0; tekrarlanan kimlik 0; `privateImageFile` adları ile ZIP içeriğindeki 552 görsel adı eşleşir.
+- **Basılı sayfalar:** İçindekiler 2–3, kitabın **4–215** sayfaları (212 ardışık sayfa).
+- **Kartlar:** önceki 2647 + yeni 253 = **2900**. Bu sayı tekil bağımsız soru sayısı değildir; harfli alt maddeler, teorik açıklamalar ve ayrı Beispiele dahildir.
+- **Özel kırpılmış görseller:** önceki 552 + yeni 68 = **620**. `Lambacher_Schweizer_7_tum_gorseller_s4-215.zip`.
+- **Teknik denetim:** sayfa açığı 0; tekrarlanan kimlik 0; `privateImageFile` adları ile ZIP içeriğindeki 620 görsel adı eşleşir.
 - **Telif:** Özgün kitap sayfaları ve özel kırpımlar GitHub'a yüklenmez; görseller kullanıcı tarafından yerel ZIP arşivinden uygulamaya topluca içe aktarılır.
-- **Sonraki paket:** **s.196–215**, on karşılıklı sayfa fotoğrafı.
+- **Sonraki paket:** **s.216–235**, on karşılıklı sayfa fotoğrafı.
 
-## Yeni sayfalar (176–195)
+
+## Yeni sayfalar (196–215)
+
+| Sayfa | Konu / görev |
+|---|---|
+| 196 | VI. Wahrscheinlichkeiten – giriş |
+| 197 | Check-in 1–5 |
+| 198 | Mit Schraubenmuttern würfeln: Erkundung 1–3 |
+| 199 | Prinzessin sucht Prinzen / Hat Otto aus dem Beutel – iki Erkundung grubu |
+| 200–201 | 1 Wahrscheinlichkeit: Schätzen, Experimentieren, Beispiel |
+| 202–203 | Aufgaben 1–10: Würfel, Zylinder, Münzen, relative Häufigkeiten |
+| 204 | 2 Laplace-Wahrscheinlichkeit – Summenregel: tanımlar |
+| 205 | Beispiele 1–3; Aufgaben 1–2 |
+| 206–208 | Aufgaben 3–15: çark, rulet, deneyler, grafik, Schere–Stein–Papier |
+| 209 | 3 Baumdiagramm und Pfadregel |
+| 210 | Beispiele 1–2: Baumdiagramme bestimmen / vergleichen |
+| 211–213 | Aufgaben 1–16: iki aşamalı deneyler, zarlar, kartlar, geri koyma ve dağılım |
+| 214 | 4 Der richtige Blick auf das Baumdiagramm |
+| 215 | Beispiele 1–2: üç aşamalı olaylar ve uzun yollar |
+
+**Denetim:** Bu yeni grupta 253 kart (68 görsel referans kartı dahil); özel görsel toplamı 620. Tam kitap metninin matematik sembolleri, küçük sayıları ve harfli alt maddeleri karakter karakter doğrulanmış sayılmaz. Ayrıntılar QA.md.
+
+## Önceki grup: 176–195
 
 | Sayfa | Konu, örnek ve sorular |
 |---|---|
