@@ -68,7 +68,7 @@ async function displayPrivateImage(name,serial){
  try{
   const blob=await privateImage(name);
   if(serial!==privateImageSequence)return;
-  if(!blob){if(status){status.hidden=false;status.textContent='Özel görsel henüz içe aktarılmadı: '+name+'. Soldaki “Görselleri içe aktar” düğmesini kullan.'}return}
+  if(!blob){if(status){status.hidden=false;status.textContent='Özel görsel henüz yüklenmedi: '+name+(pack.id==='lambacher-schweizer-7-nrw'?'. Ana sayfa → 7. sınıf → Yükle bölümünden ZIP paketini seç.':'. Soldaki “Görselleri içe aktar” düğmesini kullan.')}return}
   privateUrl=URL.createObjectURL(blob);
   $('figure').src=privateUrl;$('figure').hidden=false;
   if(status){status.hidden=false;status.textContent='Özel görsel, bu cihazda saklanıyor: '+name}
@@ -79,8 +79,9 @@ async function displayPrivateImage(name,serial){
 }
 if(privateButton&&privateInput){
  const hasAssets=qs.some(q=>q.privateImageFile);
- privateButton.hidden=!hasAssets;
- if(privateHint){privateHint.hidden=!hasAssets;privateHint.textContent='ZIP arşivini açıp PNG/JPG dosyalarını seç. Görseller yalnızca bu tarayıcıda saklanır.'}
+ const isGrade7=pack.id==='lambacher-schweizer-7-nrw';
+ privateButton.hidden=!hasAssets||isGrade7;
+ if(privateHint){privateHint.hidden=!hasAssets||isGrade7;privateHint.textContent='ZIP arşivini açıp PNG/JPG dosyalarını seç. Görseller yalnızca bu tarayıcıda saklanır.'}
  privateButton.addEventListener('click',()=>privateInput.click());
  privateInput.addEventListener('change',async()=>{
   const files=[...privateInput.files].filter(f=>/^image\/(png|jpeg|webp)$/.test(f.type)&&f.size<12000000);
