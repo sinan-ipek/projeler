@@ -1,4 +1,4 @@
-/* Check Liste v1.15.0 — Tek ortak ders yükleyicisi.
+/* Check Liste v1.17.1 — Tek ortak ders yükleyicisi.
    Yalnızca ders veri kaynağı değişir: aynı HTML, çizim motoru ve PDF oluşturucu. */
 (function(){
  'use strict';
@@ -25,13 +25,40 @@
    document.head.appendChild(tag);
   });
  }
+
+ // Lambacher Schweizer 7: keep only pages with an example, exercise or question.
+ // Keep other lesson packs and saved work (localStorage question IDs) untouched.
+ function filterLambacherMenuPages(pack){
+  const activityKinds=new Set([
+   'exercise','teilaufgabe','unterteilaufgabe','review','test',
+   'beispiel','exploration','erkundung','experimentieren',
+   'checkin','check-in','grundwissen','wiederholen','aufgabe'
+  ]);
+  const hasWork=q=>{
+   const kind=String(q.kind||'').toLowerCase();
+   if(activityKinds.has(kind))return true;
+   // Older pages contain numbered exercises without an explicit "kind".
+   return !kind && /^(?:\\d+|Beispiel(?:\\s|$))/i.test(String(q.number||''));
+  };
+  const eligiblePages=new Set(pack.questions.filter(hasWork).map(q=>q.page));
+  // These two Exkursion EXTRA pages have discussion and justification tasks
+  // (rather than numbered Aufgaben).
+  eligiblePages.add(228);
+  eligiblePages.add(229);
+  const original=pack.questions;
+  pack.questions=original.filter(q=>eligiblePages.has(q.page));
+  pack.menuPolicy='exercise-example-question-pages';
+  pack.bookPhotoPageCount=292;
+  pack.menuPageCount=new Set(pack.questions.map(q=>q.page)).size;
+ }
  async function start(){
   try{
-   await load(selected.data+'?v=1.15.0');
+   await load(selected.data+'?v=1.17.1');
    if(!window.CHECKLIST_PACK||
       window.CHECKLIST_PACK.id!==selected.pack||
       !Array.isArray(window.CHECKLIST_PACK.questions))
     throw new Error('Ders verileri doğrulanamadı.');
+   if(id==='lambacher-7')filterLambacherMenuPages(window.CHECKLIST_PACK);
    await load('./app.js?v=1.8.0');
    await load('./pdf-export.js?v=1.3.1');
   }catch(err){
