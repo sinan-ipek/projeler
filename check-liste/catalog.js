@@ -8,7 +8,7 @@ window.CHECKLIST_CATALOG = [
   {
     id: "lambacher-schweizer-7-nrw",
     title: "7. sınıf",
-    description: "7. sınıf · 207 çalışma sayfası · 2955 görünür kart · Almanca–Türkçe",
+    description: "7. sınıf · Çalışma ve görseller ZIP ile yerel yüklenir",
     script: "sets/lambacher-schweizer-7/data.js"
   }
 ];
