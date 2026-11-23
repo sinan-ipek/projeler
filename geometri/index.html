@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Geometri · v1.0</title>
+<title>Geometri · v1.1</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
@@ -38,35 +38,15 @@ h1{font-size:29px;font-weight:500;margin:0 0 29px}
 <div class="site-shell"><main class="page">
 <div class="toolbar">
 <a id="homeBtn" href="/projeler/" title="Ana Sayfa · Startseite" aria-label="Ana Sayfa · Startseite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 2 11.2l1.4 1.7L5 11.6V21h5.1v-6.2h3.8V21H19v-9.4l1.6 1.3 1.4-1.7L12 2.6Z"/></svg></a>
-<div class="lang-container"><button id="langBtn" class="btn" aria-haspopup="true" aria-expanded="false">Dil</button><div id="langMenu" class="lang-menu" hidden><button data-lang="tr">Türkçe</button><button data-lang="de">Deutsch</button><button data-lang="en">English</button></div></div>
-<button id="helpBtn" class="btn" title="Yardım">?</button>
+
 </div>
-<h1 id="title">Geometri</h1>
+
 <div class="grid">
 <a class="btn-card" href="../Menelaus/index.html" data-label="menelaus">Menelaus</a>
 <a class="btn-card" href="../Ceva/index.html" data-label="ceva">Ceva Teoremi</a>
 </div>
 </main></div>
-<div id="modal" class="modal" hidden><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><h2 id="helpTitle">Yardım</h2><p id="helpText">Bir düğmeye bas. Teoremin animasyonunu izle.</p><button id="closeHelp" class="btn">Kapat</button></div></div>
-<div id="version">v1.0 · Geometri çalışma merkezi</div>
-<script>
-(()=>{
-"use strict";
-const $=id=>document.getElementById(id);
-const labels={
- tr:{title:"Geometri",lang:"Dil",help:"Yardım",body:"Bir düğmeye bas. Teoremin animasyonunu izle.",close:"Kapat",ceva:"Ceva Teoremi"},
- de:{title:"Geometrie",lang:"Sprache",help:"Hilfe",body:"Wähle einen Satz. Sieh dir die Animation an.",close:"Schließen",ceva:"Satz von Ceva"},
- en:{title:"Geometry",lang:"Language",help:"Help",body:"Choose a theorem. Watch the animation.",close:"Close",ceva:"Ceva's Theorem"}
-};
-function apply(lang){const t=labels[lang];document.documentElement.lang=lang;$("title").textContent=t.title;$("langBtn").textContent=t.lang;$("helpTitle").textContent=t.help;$("helpText").textContent=t.body;$("closeHelp").textContent=t.close;document.querySelector('[data-label="ceva"]').textContent=t.ceva;$("langMenu").hidden=true;$("langBtn").setAttribute("aria-expanded","false");}
-$("langBtn").addEventListener("click",()=>{const opening=$("langMenu").hidden;$("langMenu").hidden=!opening;$("langBtn").setAttribute("aria-expanded",String(opening));});
-document.querySelectorAll("[data-lang]").forEach(b=>b.addEventListener("click",()=>apply(b.dataset.lang)));
-$("helpBtn").addEventListener("click",()=>{$("modal").hidden=false});
-$("closeHelp").addEventListener("click",()=>{$("modal").hidden=true});
-$("modal").addEventListener("click",e=>{if(e.target===$("modal"))$("modal").hidden=true});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("modal").hidden=true;$("langMenu").hidden=true}});
-document.addEventListener("click",e=>{if(!e.target.closest(".lang-container"))$("langMenu").hidden=true});
-})();
-</script>
+<div id="version">v1.1 · Sade menü, yalnızca Home</div>
+
 <script src="/projeler/analytics.js?v=20261123"></script>
 </body></html>
