@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Menelaus Tilki Minimal v6.5</title>
+<title>Menelaus Tilki Minimal v6.6</title>
 <style>
   :root { --bg:#ffffff; --fg:#111111; --line:#ffffff; --panel:#111111; }
   * { box-sizing:border-box; }
@@ -12,7 +12,11 @@
   .controls { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:14px; }
   .btn { appearance:none; border:1px solid var(--fg); background:var(--fg); color:var(--bg); font-size:16px; line-height:1; padding:12px 18px; border-radius:999px; cursor:pointer; }
   .btn.secondary { background:transparent; color:var(--fg); }
-  #homeBtn { display:inline-flex; align-items:center; justify-content:center; min-width:43px; min-height:40px; text-decoration:none; font-size:25px; }
+  /* Standart Home: Beyaz Tahta ile paylaşılan sarı ev simgesi */
+  #homeBtn.si-home-btn { width:48px;height:48px;min-width:48px;max-width:48px;flex:0 0 48px;padding:0;border:0;border-radius:12px;background:#ffdf49;color:#000;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 5px 12px rgba(0,0,0,.23),0 2px 4px rgba(0,0,0,.12);line-height:1;text-decoration:none;transition:transform .16s ease,box-shadow .16s ease; }
+  #homeBtn.si-home-btn:hover { background:#ffe451;transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.25),0 3px 6px rgba(0,0,0,.13);opacity:1; }
+  #homeBtn.si-home-btn svg { width:27px;height:27px;display:block;fill:#000; }
+  #homeBtn.si-home-btn svg path { fill:#000;stroke:none; }
   .btn:hover { opacity:.92; }
   .btn:disabled { opacity:.35; cursor:default; }
   .option { display:flex; align-items:center; gap:8px; font-size:16px; color:var(--fg); user-select:none; }
@@ -29,7 +33,7 @@
   .dot { font-size:44px; fill:var(--fg); font-weight:700; }
   .eq { font-size:44px; font-weight:600; fill:var(--fg); }
   #hand { filter:drop-shadow(0 2px 3px rgba(0,0,0,.16)); }
-  /* v6.5: Menelaus UI, condensed formula, home, version; hand cutout retained */
+  /* v6.6: uniform 150-unit fractions, centered dots and canonical home */
   .version-badge { position:fixed; right:14px; bottom:10px; padding:6px 10px; border-radius:9px; background:rgba(255,255,255,.84); color:#444; font:600 13px/1 system-ui,sans-serif; z-index:20; box-shadow:0 1px 4px rgba(0,0,0,.08); }
   @media (prefers-color-scheme:dark) { .version-badge { background:rgba(255,255,255,.84); color:#444; } }
 </style>
@@ -37,7 +41,7 @@
 <body>
 <div class="page">
   <div class="controls">
-    <a href="/projeler/" id="homeBtn" class="btn secondary" aria-label="Ana sayfa" title="Ana sayfa">⌂</a>
+    <a href="/projeler/" id="homeBtn" class="si-home-btn" aria-label="Ana Sayfa · Startseite" title="Ana Sayfa · Startseite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 2 11.2l1.4 1.7L5 11.6V21h5.1v-6.2h3.8V21H19v-9.4l1.6 1.3 1.4-1.7L12 2.6Z"/></svg></a>
     <button id="playBtn" class="btn">Oynat</button>
     <label class="option"><input type="checkbox" id="otherEye"> Diğer gözden başla</label>
     <label class="option"><input type="checkbox" id="foxToggle" checked> Tilki</label>
@@ -69,7 +73,7 @@
     </svg>
   </div>
 </div>
-<div class="version-badge">v6.5</div>
+<div class="version-badge">v6.6</div>
 <script>
 (() => {
   const NS = 'http://www.w3.org/2000/svg';
@@ -215,14 +219,14 @@
   });
 
   // Formula layout on the right, vertically centered.
-  const slotCenters = [1035, 1215, 1395];
+  const slotCenters = [940, 1090, 1240];
   const baseY = 490;
   const numY = baseY - 28;
   const denY = baseY + 58;
   const lineY = baseY + 10;
   const slots = slotCenters.map((x, i) => {
     const g = make('g', {}, formula);
-    const dot = i === 0 ? null : textEl('·', x - 114, baseY + 14, 'dot', g);
+    const dot = i === 0 ? null : textEl('·', (slotCenters[i-1] + x) / 2, baseY + 14, 'dot', g);
     if (dot) dot.style.opacity = '0';
     const num = textEl('', x, numY, 'formula-text', g);
     const line = make('line', {x1:x-52, y1:lineY, x2:x-52, y2:lineY, stroke:'var(--fg)', 'stroke-width':2.8}, g);
@@ -230,8 +234,8 @@
     num.style.opacity = '0'; den.style.opacity = '0'; line.style.opacity = '0';
     return {x, g, dot, num, line, den};
   });
-  const eq = textEl('=', 1520, baseY + 12, 'eq', formula);
-  const one = textEl('1', 1565, baseY + 12, 'eq', formula);
+  const eq = textEl('=', 1365, baseY + 12, 'eq', formula);
+  const one = textEl('1', 1410, baseY + 12, 'eq', formula);
   eq.style.opacity = '0'; one.style.opacity = '0';
 
   let playing = false;
