@@ -1,6 +1,6 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.19.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.20.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
 ## Lambacher Schweizer 7 (v1.17.1)
 
@@ -107,3 +107,6 @@ Munzur, Çetin 1 ve Aras 1 ile **aynı `lesson.html`, `app.js` ve `pdf-export.js
 
 
 **v1.19.0 (23.11.2026) — ZIP ile tek adımda başlama:** Ana menüde **7. sınıf → Yükle** ile `7_sinif_Check_Liste_Paketi_v1.19.0.zip` dosyası seçilir. Sayfa ZIP'i tarayıcı içinde doğrular, `images/` içindeki 700 JPG/PNG görselini (mevcut `check-liste-private-figures-v1` IndexedDB deposuna) yerel olarak aktarır ve otomatik olarak `lesson.html?set=lambacher-7` ekranını açar. ZIP'i elle açmak, JPG/PNG dosyalarını tek tek seçmek, PDF veya HTML yüklemek gerekmez. Yerel dosyalar GitHub'a/başka sunucuya gönderilmez. `index.html` ZIP içinde başlangıç yönlendirmesi olarak bulunur; ders programı ve 3080 envanter kartı ZIP'ten değil GitHub'dan yüklenir, dolayısıyla internet gereklidir. Özgün tam soru metinleri ZIP'te bulunmaz. Kullanıcıya verilen ZIP herkese açık depoya eklenmemiştir. Eski manuel 'Görselleri içe aktar' düğmesi bu ders için gizlidir.
+
+
+**v1.20.0 (23.11.2026) — Yerel ders içeriği + görseller tek ZIP'te:** 7. sınıf dersi artık `lesson-loader.js` tarafından GitHub `data.js` dosyasından otomatik alınmaz; ZIP yüklenmeden ders boş kalır. Tam paketin `study.json` içeriğindeki **3080 kayıt** (207 görünür çalışma sayfası / 2955 menü kartı) ve `images/` dizinindeki **700 görsel** aynı tarayıcı IndexedDB işleminde kaydedilir; tam ZIP yeniden seçildiğinde dışarıdan çalışma verisi indirilmez. **Eski v1.19 görsel ZIP'ini kullananlar için geçiş:** İlk defa bu ZIP seçilince, mevcut herkese açık `data.js` dosyası *yalnızca bu dönüşüm sırasında* bir kere okunur; uygulama içerik + görselleri tek ZIP olarak tarayıcıda oluşturur ve `7_sinif_Tam_Calisma_Paketi_v1.20.0.zip` adıyla indirmeyi başlatır. Daha sonra ders açılır. **Önemli:** Bu eski veri dosyası geriye dönük geçiş için halen GitHub deposunda ve geçmişinde erişilebilir durumdadır. Yalnızca menüden kaldırmak, önceki Github yayınını hukuken veya teknik olarak silmez. Uygulama kabuğu çevrimiçi GitHub Pages üzerinden açılır; çalışma ve görseller ise tarayıcıya yüklenmiş paketten gelir.
