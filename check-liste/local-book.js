@@ -1,5 +1,5 @@
-/* Check Liste · Yerel kitap saklama v1.18.0
-   PDF yalnızca bu tarayıcının IndexedDB'sine yazılır; GitHub'a veya sunucuya gönderilmez. */
+/* Check Liste · Yerel kitap saklama v1.18.1
+   HTML yalnızca bu tarayıcının IndexedDB'sine yazılır; GitHub'a veya sunucuya gönderilmez. */
 (function(){
  'use strict';
  const DB_NAME='check-liste-local-books-v1', STORE_NAME='books', BOOK_KEY='grade-7';
@@ -29,10 +29,10 @@
  }
  async function save(file){
   if(!file||!(file instanceof Blob)||!file.size){
-   throw new Error('Lütfen bir PDF dosyası seç.');
+   throw new Error('Lütfen bir HTML dosyası seç.');
   }
-  if(!/\.pdf$/i.test(file.name||'') && file.type!=='application/pdf'){
-   throw new Error('Kitabı PDF dosyası olarak seçmelisin.');
+  if(!/\.html?$/i.test(file.name||'')){
+   throw new Error('Yalnızca .html veya .htm dosyası seçebilirsin.');
   }
   // This is a local browser write, not a network upload.
   const database=await db();
@@ -40,7 +40,7 @@
    const transaction=database.transaction(STORE_NAME,'readwrite');
    transaction.objectStore(STORE_NAME).put({
     file:file,
-    name:file.name||'kitap.pdf',
+    name:file.name||'index.html',
     bytes:file.size,
     savedAt:Date.now()
    },BOOK_KEY);
