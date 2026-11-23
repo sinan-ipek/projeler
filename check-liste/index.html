@@ -153,13 +153,15 @@ h1{font-size:clamp(32px,5vw,54px);font-weight:760;line-height:1.15;letter-spacin
   document.documentElement.lang=select.value;
   for(const [id,value] of Object.entries(language)){
    if(id==='help')continue;
-   $(id).textContent=value;
+   const element=$(id);
+   if(element)element.textContent=value;
   }
   helpText.textContent=language.help;
  }
  try{const last=localStorage.getItem('check-liste:hub-language');if(texts[last])select.value=last}catch(e){}
  select.addEventListener('change',()=>{
   applyLanguage();
+  void refreshGrade7Book();
   try{localStorage.setItem('check-liste:hub-language',select.value)}catch(e){}
  });
  help.addEventListener('click',()=>{
