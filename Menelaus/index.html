@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Menelaus Tilki Minimal v6.3</title>
+<title>Menelaus Tilki Minimal v6.4</title>
 <style>
   :root { --bg:#ffffff; --fg:#111111; --line:#ffffff; --panel:#111111; }
   * { box-sizing:border-box; }
@@ -35,7 +35,6 @@
 <div class="page">
   <div class="controls">
     <button id="playBtn" class="btn">Oynat</button>
-    <button id="stepBtn" class="btn secondary" aria-label="Adım adım" title="Adım adım">&gt;</button>
     <label class="option"><input type="checkbox" id="otherEye"> Diğer gözden başla</label>
     <label class="option"><input type="checkbox" id="foxToggle" checked> Tilki</label>
     <label class="option"><input type="checkbox" id="bgToggle"> Siyah arka plan</label>
@@ -104,7 +103,6 @@
   const flying = $('flying');
   const hand = $('hand');
   const playBtn = $('playBtn');
-  const stepBtn = $('stepBtn');
   const otherEye = $('otherEye');
   const foxToggle = $('foxToggle');
   const bgToggle = $('bgToggle');
@@ -397,7 +395,7 @@
     stepPlaying = false;
     lastTs = 0;
     playBtn.textContent = 'Oynat';
-    stepBtn.disabled = false;
+
   }
 
   function tick(ts) {
@@ -410,7 +408,7 @@
       time = stepTarget;
       stepPlaying = false;
       lastTs = 0;
-      stepBtn.disabled = false;
+
       playBtn.textContent = 'Oynat';
     }
     if (playing && time >= totalDur) {
@@ -421,7 +419,7 @@
     }
 
     render(time);
-    stepBtn.disabled = Boolean(stepPlaying || playing);
+
     if (playing || stepPlaying) requestAnimationFrame(tick);
   }
 
@@ -445,23 +443,6 @@
     requestAnimationFrame(tick);
   });
 
-  stepBtn.addEventListener('click', () => {
-    if (stepPlaying || playing) return;
-    stopAll();
-    if (time >= totalDur) time = 0;
-    setSequence();
-    syncTheme();
-    const slotIndex = Math.min(5, Math.floor((time + 0.0001) / slotDur));
-    const atBoundary = Math.abs(time - slotIndex * slotDur) < 0.02;
-    const currentBoundary = slotIndex * slotDur;
-    if (!atBoundary) time = currentBoundary;
-    const currentStep = Math.floor((time + 0.0001) / slotDur);
-    stepTarget = currentStep < 6 ? Math.min(totalDur, (currentStep + 1) * slotDur) : totalDur;
-    stepPlaying = true;
-    stepBtn.disabled = true;
-    lastTs = 0;
-    requestAnimationFrame(tick);
-  });
 
   [otherEye, foxToggle, bgToggle].forEach(el => el.addEventListener('change', resetScene));
 
