@@ -1,6 +1,6 @@
 # Lambacher Schweizer 7 — Check Liste
 
-**Sürüm v1.17.1** · Klett · Nordrhein-Westfalen · 23 Kasım 2026
+**Sürüm v1.18.0** · Klett · Nordrhein-Westfalen · 23 Kasım 2026
 
 ## Güncel durum
 
@@ -37,3 +37,7 @@ Bu kayıt bir **fotoğraf ve öğrenme takibi envanteridir**. Bazı küçük mat
 ## Menü filtresi (v1.17.1)
 
 Kullanıcının isteğine göre **yalnızca soru, alıştırma, etkinlik veya çözümlü örnek içeren 207 sayfa** Check Liste açılır sayfa menüsünde bulunur. **85 sayfa** (sadece açıklama/başlık, konu özeti, çözümler, dizin veya kaynakça) gizlenmiştir. Menüde **2955 görünür kart** bulunur. 228–229 sayfalarındaki tartışma etkinlikleri korunur. Bu bir görünürlük filtresidir; bütün 3080 veri kartı, 700 görsel, fotoğraf envanteri ve tarayıcıdaki kayıtlar yerinde kalır. Filtre PDF paylaşımında da geçerlidir.
+
+## Yerel kitap yükleme — v1.18.0
+
+Menüdeki ders adı **7. sınıf**. Kart tıklanınca `Çalışmayı aç` / `Yükle` seçilebilir. `Yükle` bilgisayardan tek bir PDF seçtirir ve bunu yalnızca aynı tarayıcıda `check-liste-local-books-v1` IndexedDB deposuna kaydeder. Ardından ana menüde `Kitabı görüntüle` ve ders ekranında `Kitabımı aç` kullanılabilir. Hiçbir PDF GitHub'a veya bir sunucuya aktarılmaz. Kitap verisi, önbelleğin/tarayıcı depolamasının silinmesiyle kaybolabilir. Görsellerin özgün sorularla otomatik eşlemesi ve PDF'den soru çıkarımı henüz yapılmamıştır.
