@@ -1,4 +1,4 @@
-# Lambacher Schweizer 7 – denetim v1.17.0 (22.11.2026)
+# Lambacher Schweizer 7 – denetim v1.17.1 (22.11.2026)
 
 **Durum: yapısal denetim ilerledi; metin düzeyinde eksiksizlik henüz onaylanmadı.**
 
@@ -346,3 +346,7 @@
 **Haklar:** Telifli özgün fotoğraf ve kırpımlar kamuya açık GitHub'a yüklenmez; özel ZIP'te kullanıcıya sunulur. GitHub yalnızca kısa özet/katalog ve yerel görsel dosya adlarını içerir.
 
 **Durum:** Kitabın fotoğraf toplama işi tamamlandı; yeni basılı sayfa istenmeyecek.
+
+## MENÜ FİLTRESİ — v1.17.1 (23.11.2026)
+
+**Şart:** İçinde hiç çalışma sorusu, alıştırma, keşif/tartışma görevi ya da örnek bulunmayan sayfaları sayfa seçicisi ve soru menüsünden gizle. **Sonuç:** 292 basılı sayfadan 207 çalışma sayfası görünür, 85 sayfa gizlidir; 3080 kaynak karttan 2955'i menüde/Paylaş PDF'de görünür. 228–229 üzerinde doğrudan verilen tartışma ve gerekçelendirme çalışmaları istisna olarak korunmuştur. Kitaptaki tüm 4–295 fotoğrafları, özel 700 görsel ve localStorage kayıtları silinmez. Diğer dersler etkilenmez.
