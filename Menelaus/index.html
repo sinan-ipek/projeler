@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Menelaus Tilki Minimal v6.4</title>
+<title>Menelaus Tilki Minimal v6.5</title>
 <style>
   :root { --bg:#ffffff; --fg:#111111; --line:#ffffff; --panel:#111111; }
   * { box-sizing:border-box; }
@@ -12,6 +12,7 @@
   .controls { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:14px; }
   .btn { appearance:none; border:1px solid var(--fg); background:var(--fg); color:var(--bg); font-size:16px; line-height:1; padding:12px 18px; border-radius:999px; cursor:pointer; }
   .btn.secondary { background:transparent; color:var(--fg); }
+  #homeBtn { display:inline-flex; align-items:center; justify-content:center; min-width:43px; min-height:40px; text-decoration:none; font-size:25px; }
   .btn:hover { opacity:.92; }
   .btn:disabled { opacity:.35; cursor:default; }
   .option { display:flex; align-items:center; gap:8px; font-size:16px; color:var(--fg); user-select:none; }
@@ -28,12 +29,15 @@
   .dot { font-size:44px; fill:var(--fg); font-weight:700; }
   .eq { font-size:44px; font-weight:600; fill:var(--fg); }
   #hand { filter:drop-shadow(0 2px 3px rgba(0,0,0,.16)); }
-  /* v6.2: preserve hand interior, remove only edge-connected black matte */
+  /* v6.5: Menelaus UI, condensed formula, home, version; hand cutout retained */
+  .version-badge { position:fixed; right:14px; bottom:10px; padding:6px 10px; border-radius:9px; background:rgba(255,255,255,.84); color:#444; font:600 13px/1 system-ui,sans-serif; z-index:20; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  @media (prefers-color-scheme:dark) { .version-badge { background:rgba(255,255,255,.84); color:#444; } }
 </style>
 </head>
 <body>
 <div class="page">
   <div class="controls">
+    <a href="/projeler/" id="homeBtn" class="btn secondary" aria-label="Ana sayfa" title="Ana sayfa">⌂</a>
     <button id="playBtn" class="btn">Oynat</button>
     <label class="option"><input type="checkbox" id="otherEye"> Diğer gözden başla</label>
     <label class="option"><input type="checkbox" id="foxToggle" checked> Tilki</label>
@@ -61,10 +65,11 @@
       </g>
       <g id="formula"></g>
       <g id="flying"></g>
-      <text x="1040" y="245" class="title">MENELAUS TEOREMİ (TİLKİ)</text>
+      <text x="980" y="245" class="title">MENELAUS TEOREMİ (TİLKİ)</text>
     </svg>
   </div>
 </div>
+<div class="version-badge">v6.5</div>
 <script>
 (() => {
   const NS = 'http://www.w3.org/2000/svg';
@@ -210,7 +215,7 @@
   });
 
   // Formula layout on the right, vertically centered.
-  const slotCenters = [1135, 1370, 1605];
+  const slotCenters = [1035, 1215, 1395];
   const baseY = 490;
   const numY = baseY - 28;
   const denY = baseY + 58;
@@ -225,8 +230,8 @@
     num.style.opacity = '0'; den.style.opacity = '0'; line.style.opacity = '0';
     return {x, g, dot, num, line, den};
   });
-  const eq = textEl('=', 1730, baseY + 12, 'eq', formula);
-  const one = textEl('1', 1770, baseY + 12, 'eq', formula);
+  const eq = textEl('=', 1520, baseY + 12, 'eq', formula);
+  const one = textEl('1', 1565, baseY + 12, 'eq', formula);
   eq.style.opacity = '0'; one.style.opacity = '0';
 
   let playing = false;
