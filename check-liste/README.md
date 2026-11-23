@@ -1,6 +1,6 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.18.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.19.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
 ## Lambacher Schweizer 7 (v1.17.1)
 
@@ -104,3 +104,6 @@ Munzur, Çetin 1 ve Aras 1 ile **aynı `lesson.html`, `app.js` ve `pdf-export.js
 
 
 **v1.18.0 (23.11.2026):** Kitap kartının görünen adı **7. sınıf** oldu. Kart seçilince `Çalışmayı aç` / `Yükle` seçenekleri açılır; `Yükle` bilgisayardaki PDF dosyasını tarayıcının IndexedDB'sine kaydeder. Dosya sunucuya veya GitHub'a gönderilmez. Yükleme ardından `Kitabı görüntüle` seçeneği belirir; ders içinde de `Kitabımı aç` düğmesi PDF'yi yerel görüntüleyicide açar. Kayıt bu tarayıcıya özeldir; başka cihazda yeniden seçmek gerekir. PDF'den soruları otomatik ayrıştırma/etiketleme veya sayfa numaralarını eşleme bu sürümde yoktur. Diğer dersler, kayıt anahtarları, soru kartları ve resim arşivi değişmez.
+
+
+**v1.19.0 (23.11.2026) — ZIP ile tek adımda başlama:** Ana menüde **7. sınıf → Yükle** ile `7_sinif_Check_Liste_Paketi_v1.19.0.zip` dosyası seçilir. Sayfa ZIP'i tarayıcı içinde doğrular, `images/` içindeki 700 JPG/PNG görselini (mevcut `check-liste-private-figures-v1` IndexedDB deposuna) yerel olarak aktarır ve otomatik olarak `lesson.html?set=lambacher-7` ekranını açar. ZIP'i elle açmak, JPG/PNG dosyalarını tek tek seçmek, PDF veya HTML yüklemek gerekmez. Yerel dosyalar GitHub'a/başka sunucuya gönderilmez. `index.html` ZIP içinde başlangıç yönlendirmesi olarak bulunur; ders programı ve 3080 envanter kartı ZIP'ten değil GitHub'dan yüklenir, dolayısıyla internet gereklidir. Özgün tam soru metinleri ZIP'te bulunmaz. Kullanıcıya verilen ZIP herkese açık depoya eklenmemiştir. Eski manuel 'Görselleri içe aktar' düğmesi bu ders için gizlidir.
