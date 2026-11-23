@@ -1,8 +1,8 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.17.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.17.1** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
-## Lambacher Schweizer 7 (v1.17.0)
+## Lambacher Schweizer 7 (v1.17.1)
 
 **Denetim:** `sets/lambacher-schweizer-7/QA.md`. 4–295 ardışık; s.216–295 için 80 yeni sayfa kesiti eklendi (toplam 700). Kullanıcıya ait ZIP tarayıcıya içe aktarılır. Tam soru metinleri ve simgeler için metin düzeyi kontrolü sürüyor.
 
@@ -98,3 +98,6 @@ Munzur, Çetin 1 ve Aras 1 ile **aynı `lesson.html`, `app.js` ve `pdf-export.js
 
 
 **v1.17.0 (23.11.2026):** Basılı sayfalar 216–295 de kapsama alındı. 180 yeni takip kartı (80 sayfa-görsel referansı, 94 numaralı görev/etkinlik üst kartı ve 6 konu başlığı), toplam **3080**. Önceki 620 özel görsel + 80 yeni sayfa kesiti = **700**. Tam kitap fotoğraf kapsaması **4–295**; bundan sonra yeni basılı sayfa istenmeyecek. Matematiksel küçük baskının, bütün alt maddelerin ve şekil-özel kesitlerinin tam doğrulaması ayrı iştir. Kişisel görsel ZIP: `Lambacher_Schweizer_7_tum_gorseller_s4-295.zip`.
+
+
+**v1.17.1 (23.11.2026) — Soru bulunan sayfalar filtresi:** Kitabın basılı 4–295 sayfalarının tamamı fotoğraf envanterinde korunur; ancak Check Liste menüsü, sayfa seçicisi, ileri/geri geçişi, tamamlanma sayacı ve Paylaş/PDF yalnızca çalışma içeren **207 sayfayı (2955 görünür kart)** kullanır. Örnek, alıştırma veya soru bulunmayan **85 sayfa** menüde gizlenir; bunlara 238–295 çözüm/dizin/kaynakça sayfaları dahildir. 228–229 tartışma ve gerekçelendirme etkinlikleri korundu. Var olan 3080 veri kartının hiçbiri ve tarayıcıdaki tamamlanma/çizim kayıtları silinmedi. Aynı filtre diğer ders paketlerini etkilemez.
