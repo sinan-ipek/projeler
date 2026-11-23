@@ -176,5 +176,15 @@
   progress?.('3080 kart ve 700 görsel hazır.');
   return {questions:3080,images:700,fullZip};
  }
- window.CheckListeZipImport=Object.freeze({importFile});
+ async function hasStudy(){
+  const db=await openDB();
+  try{
+   return await new Promise((resolve,reject)=>{
+    const r=db.transaction(STORE,'readonly').objectStore(STORE).get(STUDY_KEY);
+    r.onsuccess=()=>resolve(!!r.result);
+    r.onerror=()=>reject(r.error||new Error('Kayıt denetlenemedi.'));
+   });
+  }finally{db.close();}
+ }
+ window.CheckListeZipImport=Object.freeze({importFile,hasStudy});
 })();
