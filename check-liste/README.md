@@ -1,18 +1,18 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.16.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.17.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
-## Lambacher Schweizer 7 (v1.16.0)
+## Lambacher Schweizer 7 (v1.17.0)
 
-**Denetim:** `sets/lambacher-schweizer-7/QA.md`. 4–215 ardışık ve eksiksiz; s.196–215 için 68 yeni JPG eklendi (toplam 620). Kullanıcıya ait ZIP tarayıcıya içe aktarılır. Tam soru metinleri ve simgeler için metin düzeyi kontrolü sürüyor.
+**Denetim:** `sets/lambacher-schweizer-7/QA.md`. 4–295 ardışık; s.216–295 için 80 yeni sayfa kesiti eklendi (toplam 700). Kullanıcıya ait ZIP tarayıcıya içe aktarılır. Tam soru metinleri ve simgeler için metin düzeyi kontrolü sürüyor.
 
 - **Bağlantı:** `lesson.html?set=lambacher-7`
 - **Veri kaynağı:** `sets/lambacher-schweizer-7/data.js`
-- **İlk fotoğraf grubu:** İçindekiler s.2–3; ders sayfaları s.4–215
-- **2900 takip kartı**; bölüm girişleri ve sayfa/soru numaraları, Almanca–Türkçe konu özetleri
+- **İlk fotoğraf grubu:** İçindekiler s.2–3; ders sayfaları s.4–295
+- **3080 takip kartı**; bölüm girişleri ve sayfa/soru numaraları, Almanca–Türkçe konu özetleri
 - **Önemli:** Tam telifli metinler ve sayfa fotoğrafları **açık GitHub deposunda paylaşılmaz**; soruyu kitaptan okuyup çözmek gerekir
 - **Altı bölüm:** s.4, 44, 80, 120, 162 ve 196'da başlar. Ekler s.228'den itibaren.
-- **Sonraki fotoğraf grubu:** s.216–235
+- **Fotoğraflar tamamlandı:** Son basılı sayfa s.295
 - **Kayıt anahtarı:** `lambacher-schweizer-7-nrw`; önceki çalışmalardan bağımsız
 
 ## Munzur — yeni çalışma paketi (v1.4.0)
@@ -95,3 +95,6 @@ Munzur, Çetin 1 ve Aras 1 ile **aynı `lesson.html`, `app.js` ve `pdf-export.js
 
 
 **v1.16.0 (23.11.2026):** s.196–215. 253 yeni takip kartı (68 bağımsız özel görsel kaydı dahil), toplam **2900 kart**. 68 yeni özel kırpım; toplam **620 görsel**. 10 fotoğraf / 20 sayfa, eksik veya tekrarlı sayfa yok. Soru formüllerinin karakter karakter eksiksizliği garanti edilmez. Sonraki grup **216–235**. Özel ZIP: `Lambacher_Schweizer_7_tum_gorseller_s4-215.zip`.
+
+
+**v1.17.0 (23.11.2026):** Basılı sayfalar 216–295 de kapsama alındı. 180 yeni takip kartı (80 sayfa-görsel referansı, 94 numaralı görev/etkinlik üst kartı ve 6 konu başlığı), toplam **3080**. Önceki 620 özel görsel + 80 yeni sayfa kesiti = **700**. Tam kitap fotoğraf kapsaması **4–295**; bundan sonra yeni basılı sayfa istenmeyecek. Matematiksel küçük baskının, bütün alt maddelerin ve şekil-özel kesitlerinin tam doğrulaması ayrı iştir. Kişisel görsel ZIP: `Lambacher_Schweizer_7_tum_gorseller_s4-295.zip`.
