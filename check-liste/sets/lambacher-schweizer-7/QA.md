@@ -1,4 +1,4 @@
-# Lambacher Schweizer 7 – denetim v1.16.0 (22.11.2026)
+# Lambacher Schweizer 7 – denetim v1.17.0 (22.11.2026)
 
 **Durum: yapısal denetim ilerledi; metin düzeyinde eksiksizlik henüz onaylanmadı.**
 
@@ -328,3 +328,21 @@
 **Telif:** Özel fotoğraf kırpımları açık GitHub reposuna yüklenmez; yerel ZIP üzerinden içe aktarılır.
 
 **Sonraki grup:** s.216–235.
+
+## SON FOTOĞRAF GRUPLARI — 216–295 (v1.17.0, 23.11.2026)
+
+**Fotoğraf bulunurluğu:** 216–235 kullanıcının mevcut sohbetindeki 10 fotoğraf; 236–293 eski sohbetlerde bulunan 29 farklı çift sayfa fotoğrafı; 294–295 son mesajdaki fotoğraf. 286–287 çift sayfası iki kez çekilmiş, daha net olan fotoğraf değerlendirmeye alınmıştır. 293–294 Register; 295 Text- und Bildquellenverzeichnis; numarasız matematik terimleri listesi ve arka kapak da görünür.
+
+**Sayfa dizisi:** Basılı s.4–295 aralığında 292 ardışık ders ve ek sayfası. İçindekiler s.2–3. Eksik basılı sayfa yok.
+
+**İçerik envanteri:** s.216–217 Der richtige Blick auf das Baumdiagramm (1–12); s.218–221 Wiederholen–Vertiefen–Vernetzen (1–17); s.222 Rückblick; s.223 Test Runde 1–2; s.224 Glücksrad in der schiefen Ebene; s.225 Das Gesetz der großen Zahlen; s.226–227 Schokoladentest; s.228–229 Nachgehakt und neu durchdacht; s.230–237 Grundwissen; s.238–292 Lösungen; s.293–294 Register; s.295 Text- und Bildquellenverzeichnis.
+
+**Takip kayıtları:** 80 yeni sayfa/görsel kartı + 94 numaralı görev/etkinlik üst kartı + 6 konu başlığı = **180 yeni kart**. Önceki 2900 + 180 = **3080 kart**. Bu, 3080 ayrı kitap sorusu olduğu anlamına gelmez.
+
+**Görseller:** 80 yeni sayfa-odaklı JPEG kesiti; önceki 620 görselle birlikte **700** farklı özel görsel. ZIP bütünlük kontrolü başarılı. Fotoğraf kesitleri ince baskının ve özel dar şekil kırpımlarının yerine geçmez.
+
+**Açık kalite uyarısı:** Tüm soru metinleri, harfli alt maddeler, sayılar ve matematik sembolleri karakter karakter karşılaştırılmadı. Bazı görevler yalnızca üst seviye soru numaralarıyla kaydedildi; çözüm sayfaları ise sayfa düzeyinde indekslendi. Bu sürüm fotoğraf/kart takibi açısından tam sayfa kapsamına sahiptir; tam kitap metni transkripsiyonu ve soru başına bağımsız görsel doğrulaması iddiası yoktur.
+
+**Haklar:** Telifli özgün fotoğraf ve kırpımlar kamuya açık GitHub'a yüklenmez; özel ZIP'te kullanıcıya sunulur. GitHub yalnızca kısa özet/katalog ve yerel görsel dosya adlarını içerir.
+
+**Durum:** Kitabın fotoğraf toplama işi tamamlandı; yeni basılı sayfa istenmeyecek.
