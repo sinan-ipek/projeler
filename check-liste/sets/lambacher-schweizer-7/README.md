@@ -1,6 +1,6 @@
 # Lambacher Schweizer 7 — Check Liste
 
-**Sürüm v1.19.0** · Klett · Nordrhein-Westfalen · 23 Kasım 2026
+**Sürüm v1.20.0** · Klett · Nordrhein-Westfalen · 23 Kasım 2026
 
 ## Güncel durum
 
@@ -50,3 +50,9 @@ Menüdeki ders adı **7. sınıf**. Kart tıklanınca `Çalışmayı aç` / `Yü
 **Kullanım:** Online Check Liste → **7. sınıf → Yükle** → ZIP'i seç. Uygulama ZIP'i istemci tarafında okur ve görselleri tarayıcı IndexedDB'sine alıp **çalışmayı otomatik açar**. Özel arşivin dosyaları GitHub'a yüklenmez. Dosyalar başka bir bilgisayara kendiliğinden aktarılmaz ve tarayıcı verileri temizlenirse kaybolabilir.
 
 **Denetim:** ZIP 703 giriş içerir: 700 görsel + 3 yardımcı dosya. ZIP biçimi STORE (sıkıştırılmamış); görüntüler zaten JPG/PNG olarak sıkıştırılmıştır. Görsel adları, public repo data.js dosyasındaki 700 farklı `privateImageFile` referansıyla birebir eşleşir (FNV1a isim hash: 1079539722); ZIP CRC testi başarılı. Node ile ZIP okuma ve 700 IndexedDB dosya kaydı simülasyonu başarılı.
+
+## Tam yerel çalışma ZIP'i — v1.20.0
+
+Çalışma açılırken artık her defasında GitHub'daki ders verisi yüklenmez. İçeriğin görünmesi için `7. sınıf → Yükle` ile ZIP seçmek gerekir. Tam paket `study.json` (3080 kart), `images/` (700 dosya), `manifest-v2.json` ve tanıtım dosyalarından oluşur. Yüklenen içerik ve görseller sadece tarayıcı IndexedDB'sine yazılır ve çalışma başlar.
+
+**v1.19 → v1.20 geçişi:** Eski sadece-görseller ZIP'ini seçince, uygulama bugün mevcut olan GitHub `data.js` dosyasını yalnızca bir kez alır, çalışma kartlarını görsellerle birleştirerek yeni tam ZIP'in bilgisayara indirilmesini başlatır. İndirilen tam ZIP sonraki yüklemelerde hiçbir ders verisi indirmeden çalışır. Tam ZIP bu aşamadan önce ChatGPT içinde oluşturulmuş değildir; dosya kullanıcının tarayıcısında üretilir. Arayüz/çizim motoru GitHub Pages üzerinden sunulur. Mevcut GitHub `data.js` dosyası ve Git geçmişi henüz kaldırılmamıştır.
