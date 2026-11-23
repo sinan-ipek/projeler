@@ -1,4 +1,4 @@
-# Lambacher Schweizer 7 – denetim v1.19.0 (22.11.2026)
+# Lambacher Schweizer 7 – denetim v1.20.0 (22.11.2026)
 
 **Durum: yapısal denetim ilerledi; metin düzeyinde eksiksizlik henüz onaylanmadı.**
 
@@ -355,3 +355,7 @@
 ## ZIP GÖRSEL PAKETİ — v1.19.0 (23.11.2026)
 
 Pakette 700 özel JPG/PNG görseli, manifest, README ve yalnızca online Check Liste'ye yönlendiren index.html vardır. ZIP 703 giriş, 27.838.626 byte, SHA256: `6f1e85f9df24fd95086c0c58ec72fb7d0e6ea44ea39d3c5b2f9d1ed2c8fa48e1`. Görsel adlarının sıralı FNV1a denetimi GitHub soru veri dosyasıyla eşleşir: 1079539722. ZIP CRC bütünlük testi ve 700 görselin depoya aktarım testi başarılı. İçe aktarma tarayıcıda gerçekleşir ve GitHub'a veri gönderilmez. GitHub'dan sadece mevcut uygulama kodu ve soru envanteri yüklenir; çevrimdışı tam uygulama özelliği yoktur. `check-liste/index.html` ana ekranı ZIP'i aldıktan sonra ders sayfasını açar. Tam özgün soru metinleri ve kitabın özgün PDF'si ZIP'e dahil değildir.
+
+## v1.20.0 — TAM ZIP'İN TARAYICIDA OLUŞTURULMASI
+
+Başlangıçta 7. sınıf dersi yerel `__study__.json` kaydı olmadan açılmaz. Tam ZIP'teki `study.json` içeriği 3080 kart için tekil kimlik, sayfa, Almanca/Türkçe açıklama ve 700 ayrı görsel dosya adına göre doğrulanır; aynı tarayıcı işleminde çalışma + görseller kaydedilir. Eski görsel ZIP'i seçilirse mevcut GitHub `data.js` dosyası geçiş için bir defa okunur ve ZIP'e üç yeni STORE girişi (`study.json`, `manifest-v2.json`, `README-TAM-PAKET.txt`) eklenerek yeni indirilebilir tam paket oluşturulur. Yeni pakette 706 ZIP kaydı vardır (700 görsel + 6 yardımcı dosya). `data.js` dosyası hâlâ GitHub'dadır; ders açılışında otomatik yüklenmesi durdurulmuştur. Bu aşamada gerçek tarayıcı üzerinden kullanıcı testi yapılmadı; kod sözdizimi ve çalışma şeması doğrulanmıştır.
