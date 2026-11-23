@@ -45,6 +45,11 @@
   // (rather than numbered Aufgaben).
   eligiblePages.add(228);
   eligiblePages.add(229);
+  for(const q of pack.questions){
+   if((q.page===228||q.page===229)&&q.kind==='thema'){
+    q.kind='erkundung';q.number='Etkinlik';q.exercise='Etkinlik';
+   }
+  }
   const original=pack.questions;
   pack.questions=original.filter(q=>eligiblePages.has(q.page));
   pack.menuPolicy='exercise-example-question-pages';
