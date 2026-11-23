@@ -58,7 +58,7 @@
  }
  async function start(){
   try{
-   await load(selected.data+'?v=1.18.0');
+   await load(selected.data+'?v=1.19.0');
    if(!window.CHECKLIST_PACK||
       window.CHECKLIST_PACK.id!==selected.pack||
       !Array.isArray(window.CHECKLIST_PACK.questions))
