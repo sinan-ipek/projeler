@@ -38,7 +38,7 @@
    const kind=String(q.kind||'').toLowerCase();
    if(activityKinds.has(kind))return true;
    // Older pages contain numbered exercises without an explicit "kind".
-   return !kind && /^(?:\\d+|Beispiel(?:\\s|$))/i.test(String(q.number||''));
+   return !kind && /^(?:\d+|Beispiel(?:\s|$))/i.test(String(q.number||''));
   };
   const eligiblePages=new Set(pack.questions.filter(hasWork).map(q=>q.page));
   // These two Exkursion EXTRA pages have discussion and justification tasks
