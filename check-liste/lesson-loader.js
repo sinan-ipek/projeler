@@ -1,4 +1,4 @@
-/* Check Liste v1.18.0 — Tek ortak ders yükleyicisi.
+/* Check Liste v1.19.0 — Tek ortak ders yükleyicisi.
    Yalnızca ders veri kaynağı değişir: aynı HTML, çizim motoru ve PDF oluşturucu. */
 (function(){
  'use strict';
@@ -64,7 +64,7 @@
       !Array.isArray(window.CHECKLIST_PACK.questions))
     throw new Error('Ders verileri doğrulanamadı.');
    if(id==='lambacher-7')filterLambacherMenuPages(window.CHECKLIST_PACK);
-   await load('./app.js?v=1.8.0');
+   await load('./app.js?v=1.19.0');
    await load('./pdf-export.js?v=1.3.1');
   }catch(err){
    console.error('Check Liste yükleme hatası:',err);
