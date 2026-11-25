@@ -3,7 +3,7 @@
 const $=id=>document.getElementById(id), pack=window.CHECKLIST_PACK;
 if(!pack||!Array.isArray(pack.questions)){document.getElementById('menu').textContent='Soru verileri bulunamadı.';return}
 const qs=pack.questions, checkId=pack.id||'check-liste-default', profile=new URLSearchParams(location.search).get('profile')||'default';
-let current=Math.max(0,qs.findIndex(q=>'#'+q.id===decodeURIComponent(location.hash))), done={};
+let current=Math.max(0,qs.findIndex(q=>'#'+q.id===decodeURIComponent(location.hash))), done={},answers={};
 const key=type=>['dotem-checkliste-v2',checkId,profile,type].join(':');
 // Preserve local work when a checklist receives a new, anonymous package id.
 // Only migrate if exactly one other compatible saved checklist exists on this browser.
@@ -36,9 +36,11 @@ const key=type=>['dotem-checkliste-v2',checkId,profile,type].join(':');
  }catch(err){console.warn('Önceki çözüm kayıtları taşınamadı',err)}
 })();
 try{done=JSON.parse(localStorage.getItem(key('done'))||'{}')||{}}catch{}
+try{answers=JSON.parse(localStorage.getItem(key('answers'))||'{}')||{}}catch{}
 const pages=[...new Set(qs.map(q=>q.page))];
 pages.forEach(p=>{let o=document.createElement('option');o.value=p;o.textContent='Sayfa '+p;$('pageSelect').append(o)});
 const saveDone=()=>{try{localStorage.setItem(key('done'),JSON.stringify(done))}catch{}};
+const saveAnswers=()=>{try{localStorage.setItem(key('answers'),JSON.stringify(answers))}catch{}};
 
 /* Özel kitap kırpımları: Her dosya yalnızca kullanıcının tarayıcısındaki IndexedDB'de tutulur.
    GitHub'a veya herhangi bir sunucuya gönderilmez. */
@@ -122,11 +124,71 @@ function drawMenu(){
  }
  const n=qs.filter(q=>done[q.id]).length;$('progressText').textContent=n+' / '+qs.length+' tamamlandı';$('progressBar').style.width=100*n/qs.length+'%';
 }
+/* Optional graded multiple choice is active only when a question has choices.
+   Existing student packs without choices retain their normal done checkbox. */
+function completionUnlocked(q){
+ return !Array.isArray(q.choices)||q.choices.length===0||answers[q.id]===q.correctAnswer;
+}
+function applyCompletionLock(q){
+ const unlocked=completionUnlocked(q);
+ $('done').disabled=!unlocked;
+ const mirrored=$('quizDone');
+ if(mirrored){mirrored.disabled=!unlocked;mirrored.checked=!!done[q.id]}
+ $('done').checked=!!done[q.id];
+}
+function renderQuiz(q){
+ const note=$('calculatorNote');
+ if(note){
+  note.hidden=!q.calculatorNote;
+  note.textContent=q.calculatorNote||'';
+  if(q.calculatorAllowed!==undefined)note.dataset.allowed=q.calculatorAllowed?'yes':'no';
+ }
+ const panel=$('quizPanel'), options=$('quizChoices'), message=$('quizFeedback'), detail=$('quizExplanation');
+ if(!panel||!options)return;
+ const hasQuiz=Array.isArray(q.choices)&&q.choices.length>=4;
+ panel.hidden=!hasQuiz;
+ if(!hasQuiz){options.replaceChildren();if(detail)detail.hidden=true;applyCompletionLock(q);return}
+ options.replaceChildren();
+ q.choices.forEach((choice,index)=>{
+  const lab=document.createElement('label');lab.className='quiz-option';
+  const input=document.createElement('input');
+  input.type='radio';input.name='checkliste-answer-'+q.id;
+  input.value=choice.value;input.checked=answers[q.id]===choice.value;
+  const span=document.createElement('span');
+  span.textContent=String.fromCharCode(65+index)+') '+choice.label;
+  lab.append(input,span);options.append(lab);
+  input.addEventListener('change',()=>{
+   answers[q.id]=choice.value;saveAnswers();
+   if(!completionUnlocked(q)&&done[q.id]){
+    done[q.id]=false;saveDone();drawMenu();
+   }
+   renderQuiz(q);
+  });
+ });
+ const selected=answers[q.id],isCorrect=selected===q.correctAnswer;
+ message.textContent=!selected?'Önce kendi çözümünü yap, sonra bir yanıt seç.':
+  isCorrect?'Doğru! Tamamlandı kutusu artık kullanılabilir.':'Yanlış yanıt. Çözümünü kontrol edip tekrar dene.';
+ message.className='quiz-feedback'+(selected?(isCorrect?' correct':' incorrect'):'');
+ if(detail){
+  detail.hidden=!isCorrect||!q.explanation;
+  detail.textContent=isCorrect?(q.explanation||''):'';
+ }
+ const notes=$('quizExtraNotes');
+ if(notes){notes.hidden=!q.notes;notes.textContent=q.notes||''}
+ applyCompletionLock(q);
+}
+if($('quizDone')){
+ $('quizDone').addEventListener('change',e=>{
+  const q=qs[current];if(!completionUnlocked(q)){e.target.checked=false;return}
+  done[q.id]=e.target.checked;$('done').checked=e.target.checked;saveDone();drawMenu();
+ });
+}
 window.openChecklistQuestion=(i)=>open(i);
 function open(i){
  if(i<0||i>=qs.length)return;
  current=i;let q=qs[i];$('qid').textContent='Sayfa '+q.page+' · '+questionLabel(q)+(q.star?'  ★':'');$('qtitle').textContent=questionLabel(q);
  $('german').textContent=q.german;$('turkish').textContent=q.turkish;$('done').checked=!!done[q.id];
+ renderQuiz(q);
  $('prev').disabled=i===0;$('next').disabled=i===qs.length-1;
  const src=q.figureImage||q.sourceImage||q.image||'';
  const serial=++privateImageSequence;
@@ -141,7 +203,7 @@ function open(i){
  }else{$('pictures').hidden=true;$('figure').removeAttribute('src')}
  history.replaceState(null,'','#'+q.id);drawMenu();if(window.loadBoard)window.loadBoard();
 }
-$('done').onchange=e=>{done[qs[current].id]=e.target.checked;saveDone();drawMenu()};
+$('done').onchange=e=>{const q=qs[current];if(!completionUnlocked(q)){e.target.checked=false;return}done[q.id]=e.target.checked;if($('quizDone'))$('quizDone').checked=e.target.checked;saveDone();drawMenu()};
 $('prev').onclick=()=>open(current-1);$('next').onclick=()=>open(current+1);
 $('pageSelect').onchange=()=>{const p=$('pageSelect').value;if(p!=='all'){let i=qs.findIndex(q=>String(q.page)===p);if(i>=0)open(i)}else drawMenu()};
 $('search').oninput=drawMenu;$('figure').onclick=()=>{$('figure').classList.toggle('zoom')};
