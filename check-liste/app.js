@@ -137,6 +137,11 @@ function applyCompletionLock(q){
  $('done').checked=!!done[q.id];
 }
 function renderQuiz(q){
+ const info=$('examInfo');
+ if(info){
+  const message=pack.info?(q.section==='A'?pack.info.teilA:q.section==='B'?pack.info.teilB:''):'';
+  info.hidden=!message;info.textContent=message||'';
+ }
  const note=$('calculatorNote');
  if(note){
   note.hidden=!q.calculatorNote;
