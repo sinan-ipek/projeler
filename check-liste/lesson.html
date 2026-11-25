@@ -11,6 +11,9 @@
 .calculator-note[data-allowed="no"]{background:#fff6ee;border-color:#e4cdbb;color:#875232}
 .quiz-panel{background:#fff;padding:18px;border-radius:12px;border:1px solid #ceded2;margin:14px 3px 18px;display:flex;flex-direction:column;gap:12px;flex-shrink:0}
 .quiz-panel[hidden],.calculator-note[hidden],.quiz-explanation[hidden],.quiz-notes[hidden]{display:none!important}
+.boardpanel:has(.quiz-panel:not([hidden])){overflow-y:auto;min-height:0}
+.boardpanel:has(.quiz-panel:not([hidden])) .board-area{flex:0 0 43vh;min-height:240px}
+@media(max-width:900px){.boardpanel:has(.quiz-panel:not([hidden])){height:auto;min-height:0;overflow:visible}.boardpanel:has(.quiz-panel:not([hidden])) .board-area{height:48vh;flex:0 0 48vh;min-height:240px}}
 .quiz-head{font-size:16px;font-weight:750;color:#2f4a37}
 .quiz-options{display:grid;grid-template-columns:1fr;gap:8px}
 .quiz-option{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border:1px solid #d8e4dc;background:#f9fbf9;border-radius:8px;cursor:pointer;font-size:14px;line-height:1.45}
