@@ -1,6 +1,10 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.20.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.22.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+
+## Tuana 2 (v1.22.0)
+
+Vor-Abiturprüfung 2026 Grundkurs için **63 kart** (`Teil A`, `Teil B`, **21 operatör**). Dört seçenekli cevap doğrulaması, doğru şıktan sonra etkinleşen Tamamlandı, öğrenciye özel cevap kaydı, hesaba göre izin notları ve beyaz SVG çizimleri. Veri: `sets/tuana-2/data.js`. Link: `lesson.html?set=tuana-2`. Diğer dersler için cevap doğrulama **opsiyoneldir**; varsa çalışır, yoksa eski tamamlama davranışı korunur. Ayrıntı: `sets/tuana-2/README.md`.
 
 ## Miraç 1 (v1.21.0)
 
