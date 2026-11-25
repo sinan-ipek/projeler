@@ -2,6 +2,10 @@
 
 **Sürüm v1.20.0** · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
+## Miraç 1 (v1.21.0)
+
+Sayfa 20 için **44 denklem alt sorusu** eklendi. Ortak Check Liste çalışma motorunu kullanır ve diğer öğrencilerden bağımsız ilerleme kaydeder. Doğrudan bağlantı: `lesson.html?set=mirac-1`. Veri: `sets/mirac-denklemler-2026/data.js`. Fotoğrafın sağ kenarında **5f denkleminin son sayısı kesiktir**; uygulamada açıkça belirtilmiştir.
+
 ## Lambacher Schweizer 7 (v1.17.1)
 
 **Denetim:** `sets/lambacher-schweizer-7/QA.md`. 4–295 ardışık; s.216–295 için 80 yeni sayfa kesiti eklendi (toplam 700). Kullanıcıya ait ZIP tarayıcıya içe aktarılır. Tam soru metinleri ve simgeler için metin düzeyi kontrolü sürüyor.
