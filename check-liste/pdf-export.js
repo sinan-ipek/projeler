@@ -11,6 +11,8 @@ const pack=window.CHECKLIST_PACK;
 const questions=pack.questions||[];
 const params=new URLSearchParams(location.search);
 const profile=params.get('profile')||'default';
+let selectedAnswers={};
+try{selectedAnswers=JSON.parse(localStorage.getItem(['dotem-checkliste-v2',pack.id,profile,'answers'].join(':'))||'{}')||{}}catch{}
 const W=1240,H=1754, M=82, MAXY=1650, WIDTH=W-2*M;
 const PAGE_W=595.28,PAGE_H=841.89;
 const FONT='Arial, "Noto Sans", "DejaVu Sans", system-ui, sans-serif';
@@ -191,8 +193,22 @@ async function renderAll(){
   startPage(q,i,false);
   heading('DEUTSCH · ALMANCA');paragraph(q.german,'#273b30');
   heading('TÜRKÇE · ÇEVİRİ');paragraph(q.turkish,'#355a42');
+  if(q.calculatorNote)paragraph(q.calculatorNote,q.calculatorAllowed?'#356f43':'#8d5637');
   await drawExerciseImage(q);
   drawSolutionBoard(savedObjects(q));
+  if(Array.isArray(q.choices)&&q.choices.length){
+   heading('YANIT KONTROLÜ · ÇOKTAN SEÇMELİ');
+   const marked=selectedAnswers[q.id]||null;
+   for(let k=0;k<q.choices.length;k++){
+    const choice=q.choices[k];
+    const label=String.fromCharCode(65+k)+') '+choice.label;
+    paragraph(label+(marked===choice.value?'   [İşaretlendi]':''),'#26342b');
+   }
+   if(marked===q.correctAnswer&&q.explanation){
+    heading('DOĞRU YANIT SONRASI AÇIKLAMA');paragraph(q.explanation,'#355a42');
+   }
+   if(q.notes)paragraph(q.notes,'#61786a');
+  }
   finishPage();
   setStatus('PDF hazırlanıyor: '+(i+1)+' / '+questions.length+' soru');
   if(i%2===1)await new Promise(resolve=>setTimeout(resolve,0));
