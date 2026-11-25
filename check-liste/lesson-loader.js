@@ -104,7 +104,7 @@
      throw new Error('Ders verileri doğrulanamadı.');
    }
    await load('./app.js?v=1.22.0');
-   await load('./pdf-export.js?v=1.3.1');
+   await load('./pdf-export.js?v=1.22.0');
   }catch(err){
    console.error('Check Liste yükleme hatası:',err);
    if(status)status.textContent='Ders açılamadı: '+(err.message||String(err));
