@@ -103,7 +103,7 @@
        !Array.isArray(window.CHECKLIST_PACK.questions))
      throw new Error('Ders verileri doğrulanamadı.');
    }
-   await load('./app.js?v=1.22.0');
+   await load('./app.js?v=1.22.0-final');
    await load('./pdf-export.js?v=1.22.0');
   }catch(err){
    console.error('Check Liste yükleme hatası:',err);
