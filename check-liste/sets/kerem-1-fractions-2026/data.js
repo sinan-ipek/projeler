@@ -158,5 +158,5 @@ for(const [part,de,tr] of [
 ])ex(71,'B',7,part,de,tr);
 if(new Set(Q.map(q=>q.id)).size!==Q.length)throw Error('duplicate IDs');
 if(Q.some(q=>!q.german||!q.turkish))throw Error('blank text');
-window.CHECKLIST_PACK={id:'kerem-1-fractions-2026',title:'Kerem 1 · Mit Brüchen rechnen · Seiten 62, 63, 64, 68, 70, 71',questions:Q};
+window.CHECKLIST_PACK={id:'kerem-1-fractions-2026',title:'Kerem 1 · Mit Brüchen rechnen · Seiten 62, 63, 64, 68, 70, 71',onlySolvedAnswers:true,questions:Q};
 })();
