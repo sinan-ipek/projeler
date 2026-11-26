@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tuana 2 · Yanıt</title>
+<meta name="description" content="Tuana 2 için açıklamalı matematik çözümleri ve operatör anlamları">
+<style>
+:root{--bg:#f3f7f2;--ink:#253a2c;--green:#356c4c;--line:#dbe5dc;--muted:#687b6b}
+*{box-sizing:border-box}
+body{margin:0;min-height:100dvh;background:var(--bg);color:var(--ink);font:15px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;padding-bottom:56px}
+.top{display:flex;align-items:center;gap:10px;padding:14px clamp(16px,4vw,34px);background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.home{height:38px;width:38px;background:#ffdc28;border:1px solid #d3b21a;border-radius:3px;display:grid;place-items:center;flex:none;color:#111}
+.home svg{width:21px;height:21px;fill:currentColor}
+.top select{margin-left:auto;min-width:100px;border:1px solid #cddbd0;border-radius:8px;padding:8px;font:inherit;background:white;color:var(--ink)}
+.top button{height:38px;width:38px;background:white;border:1px solid var(--line);border-radius:7px;font-size:20px;font-weight:bold;cursor:pointer}
+.help{padding:10px 20px;background:#edf4ed;color:#42654b;border-bottom:1px solid var(--line)}
+.help[hidden]{display:none}
+.container{max-width:880px;margin:28px auto;padding:0 20px}
+.eyebrow{color:var(--green);font-size:12px;letter-spacing:.1em;font-weight:800;text-transform:uppercase}
+h1{font-size:clamp(28px,5vw,39px);margin:8px 0 13px;line-height:1.2}
+.card{background:#fff;border:1px solid var(--line);box-shadow:0 7px 25px #23412b0c;border-radius:16px;padding:clamp(17px,4vw,30px);margin:18px 0}
+h2{font-size:19px;margin:0 0 12px;line-height:1.4}
+.statement{white-space:pre-wrap;line-height:1.8;font-size:15px}
+.section-tag{font-size:12px;color:#66816e;text-transform:uppercase;letter-spacing:.08em;font-weight:750;margin:14px 0 5px}
+.calc{font-size:13px;color:#6c6544;padding:8px 12px;border-radius:7px;background:#f6f5ec;margin:10px 0}
+figure{margin:16px auto;max-width:650px}
+figure img{display:block;max-width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:9px}
+.steps{counter-reset:step;list-style:none;margin:0;padding:0}
+.steps li{position:relative;margin:0 0 11px;padding:13px 12px 13px 53px;border:1px solid #e1e9e2;border-radius:9px;background:#fbfdfb;white-space:pre-wrap}
+.steps li::before{counter-increment:step;content:counter(step);position:absolute;left:12px;top:12px;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#e3f2e5;color:#315c3a;font-size:13px;font-weight:800}
+.conclusion{margin-top:18px;font-weight:750;border-left:4px solid #468054;background:#edf6ed;padding:12px 16px;white-space:pre-wrap}
+.source-explanation{white-space:pre-wrap;padding:13px;background:#f6f8f5;border:1px solid #e3ebe4;border-radius:8px;line-height:1.7}
+.subtitle{color:var(--muted);font-size:13px;margin-bottom:15px}
+.close{background:white;border:1px solid #9eb9a4;border-radius:9px;color:#315e3d;padding:9px 18px;font:inherit;cursor:pointer}
+.version{position:fixed;left:10px;bottom:6px;z-index:3;font-size:10px;color:#9ba49d;pointer-events:none}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<nav class="top" aria-label="Sayfa araçları">
+ <a class="home" href="/projeler/" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a>
+ <select id="language" aria-label="Dil">
+  <option value="tr">Türkçe</option>
+  <option value="de">Almanca</option>
+  <option value="en">İngilizce</option>
+ </select>
+ <button type="button" id="help" title="Help" aria-expanded="false">?</button>
+</nav>
+<div id="helpText" class="help" hidden>Bu sayfa soruyu adım adım açıklar. Adımları sırayla oku.</div>
+<main class="container">
+ <div class="eyebrow" id="subTitle">Tuana 2 · Açıklamalı çözüm</div>
+ <h1 id="answerTitle">Yanıt yükleniyor…</h1>
+ <p class="subtitle" id="answerStatus" role="status"></p>
+ <section class="card" aria-label="Soru metni">
+  <div class="section-tag" id="deTitle">Almanca soru</div>
+  <div id="german" class="statement"></div>
+  <div class="section-tag" id="trTitle">Türkçe çevirisi</div>
+  <div id="turkish" class="statement"></div>
+  <div id="calculatorNote" class="calc" hidden></div>
+  <figure id="picture" hidden><img id="figure" alt="Soruya ait temizlenmiş şekil"></figure>
+ </section>
+ <section class="card" id="solutionCard" hidden aria-label="Açıklamalı çözüm">
+  <h2 id="solutionTitle">Adım adım açıklamalı çözüm</h2>
+  <div id="operatorInfo" class="source-explanation" hidden></div>
+  <ol class="steps" id="steps"></ol>
+  <div id="conclusion" class="conclusion" hidden></div>
+ </section>
+ <button class="close" id="close" type="button">Pencereyi kapat</button>
+</main>
+<div class="version">v1.24.0 · Tuana 2 · Ayrı pencerede açıklamalı yanıtlar</div>
+<script src="./sets/tuana-2/data.js?v=1.24.0"></script>
+<script src="./sets/tuana-2/solutions.js?v=1.24.0"></script>
+<script>
+(function(){
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ const labels={
+  tr:{subtitle:'Tuana 2 · Açıklamalı çözüm',de:'Almanca soru',tr:'Türkçe çevirisi',heading:'Adım adım açıklamalı çözüm',operator:'Anlamı ve açıklaması',example:'Kullanım örneği:',close:'Pencereyi kapat',help:'Bu sayfa soruyu adım adım açıklar. Adımları sırayla oku.',missing:'Bu soru için açıklama bulunamadı.'},
+  de:{subtitle:'Tuana 2 · Erläuterte Lösung (Türkisch)',de:'Deutsche Aufgabe',tr:'Türkische Übersetzung',heading:'Schritt-für-Schritt-Lösung (Türkisch)',operator:'Bedeutung und Erklärung',example:'Beispiel (Türkisch):',close:'Fenster schließen',help:'Hier sehen Sie den Lösungsweg. Lesen Sie die Schritte.',missing:'Keine Erklärung für diese Aufgabe gefunden.'},
+  en:{subtitle:'Tuana 2 · Explained answer (Turkish)',de:'German question',tr:'Turkish translation',heading:'Step-by-step explanation (Turkish)',operator:'Meaning and explanation',example:'Example (Turkish):',close:'Close window',help:'This page explains the answer. Read each step.',missing:'No explanation found for this question.'}
+ };
+ const p=new URLSearchParams(location.search),id=p.get('id')||'';
+ const pack=window.CHECKLIST_PACK,book=window.TUANA2_SOLUTIONS;
+ const index=pack&&Array.isArray(pack.questions)?pack.questions.findIndex(q=>q.id===id):-1;
+ const question=index>=0?pack.questions[index]:null;
+ function insertStep(text){
+  const li=document.createElement('li');li.textContent=text;$('steps').appendChild(li);
+ }
+ const opItems=pack?.questions.filter(q=>q.kind==='operator')||[];
+ const operatorIndex=question?.kind==='operator'?opItems.findIndex(q=>q.id===question.id):-1;
+ function applyLanguage(){
+  const lang=labels[$('language').value]||labels.tr;
+  $('subTitle').textContent=lang.subtitle;
+  $('deTitle').textContent=lang.de;$('trTitle').textContent=lang.tr;
+  $('solutionTitle').textContent=question?.kind==='operator'?lang.operator:lang.heading;
+  $('close').textContent=lang.close;$('helpText').textContent=lang.help;
+  if(question?.kind==='operator'&&operatorIndex>=0&&book){
+   $('steps').replaceChildren();
+   insertStep(lang.example+' '+book.operatorExamples[operatorIndex][1]);
+  }
+  if(!question)$('answerStatus').textContent=lang.missing;
+ }
+ $('language').addEventListener('change',applyLanguage);
+ $('help').addEventListener('click',()=>{
+  $('helpText').hidden=!$('helpText').hidden;
+  $('help').setAttribute('aria-expanded',String(!$('helpText').hidden));
+ });
+ $('close').addEventListener('click',()=>window.close());
+ if(question&&book){
+  document.title=question.number+' · Tuana 2 · Yanıt';
+  $('answerTitle').textContent=question.number;
+  $('german').textContent=question.german;
+  $('turkish').textContent=question.turkish;
+  $('calculatorNote').textContent=question.calculatorNote||'';
+  $('calculatorNote').hidden=!question.calculatorNote;
+  if(question.figureImage){$('figure').src=question.figureImage;$('picture').hidden=false}
+  if(question.kind==='operator'){
+   $('operatorInfo').hidden=false;
+   $('operatorInfo').textContent=question.explanation||'';
+  }else{
+   const entry=book.math[id];
+   if(entry){
+    $('solutionTitle').textContent=entry.title;
+    entry.steps.forEach(insertStep);
+    if(entry.conclusion){$('conclusion').hidden=false;$('conclusion').textContent='Sonuç: '+entry.conclusion}
+   }else $('answerStatus').textContent='Bu soru için çözüm bulunamadı.';
+  }
+  $('solutionCard').hidden=false;
+ }else{
+  $('answerTitle').textContent='Soru bulunamadı';
+  $('answerStatus').textContent='Bu soru için açıklama bulunamadı. Check Liste sayfasına geri dönün.';
+ }
+ applyLanguage();
+})();
+</script>
+</body>
+</html>
