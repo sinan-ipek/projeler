@@ -1,7 +1,11 @@
 # Kerem 1 — Mit Brüchen rechnen
 
-**Sürüm:** v1.35.0  
+**Sürüm:** v1.36.0  
 **Canlı bağlantı:** https://sinan-ipek.github.io/projeler/check-liste/kerem-1/
+
+## v1.36.0 — Çözümler
+
+Altı sayfanın tüm sorularında adım adım açıklamalı çözüm mevcuttur. Şekle bağlı sorularda boyalı parçalar kaynak fotoğraflarla tekrar karşılaştırıldı; 63. sayfadaki çizili/renkli kesirler, 71. sayfadaki dikdörtgenler ve üçgenler düzeltildi. Kart oluşturma sorularında bir bütün sonucunu veren örnekler açıklandı. **169/169 çözüm veya açıklama** test edildi.
 
 ## Kaynak
 
@@ -21,7 +25,7 @@ Paketin içinde **21 çözümlü örnek**, **8 kural/hatırlatma**, **13 sözlü
 
 ### Öğrenme düzeni
 
-Çözümlü **Beispiel** kartlarında kitaptaki hesaplamalar ve sonuçlar `Çözüm` düğmesinden açılır. Kural ve sözlük kartlarının açıklamaları da aynı pencerede mevcuttur. Alıştırmalar **öğrencinin çözmesi için cevap verilmeden** sunulur; boş çözüm penceresi gösterilmez. Formüller KaTeX ile matematiksel dizgidedir; standart beş çizim rengi, Solid/Dashed çizgi stili ve PDF çıktısı ortak sistemden gelir.
+Artık **169 kartın tamamında** `Çözüm` düğmesi bulunur. **127 alıştırma/keşfetme sorusu** işlem basamaklarıyla çözülür, **21 Beispiel** adım adım açıklanır; **8 kural** ve **13 sözlük** kartının açıklamaları da aynı pencerede açılır. Soru metinleri çözüm penceresinde tekrar edilmez. Çözümler `data.js` içinde soru kimliklerine bağlanmıştır; mevcut öğrenci çizimleri ve Tamamlandı kayıtları korunur. Formüller KaTeX ile matematiksel dizgidedir; standart beş çizim rengi, Solid/Dashed çizgi stili ve PDF çıktısı ortak sistemden gelir.
 
 Resim gerektiren sorulara **beyaz zeminli SVG şemaları** konmuştur. Özgün kitap fotoğrafları ve sayfa arka planları yayımlanmamıştır. Bazı şemalar hesaplamayı göstermek içindir; sanat veya fotoğraf kopyası değildir.
 
