@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Check Liste · Yanıt</title>
+<title>Check Liste · Çözüm</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;color:#253b2c;background:#f4f8f3;padding-bottom:42px}
 nav{display:flex;align-items:center;gap:12px;background:#fff;border-bottom:1px solid #d8e4d9;padding:12px 18px}
@@ -25,13 +25,12 @@ p{white-space:pre-wrap}.question{white-space:pre-wrap;color:#304336}
  <select id="lang" aria-label="Dil"><option value="tr">Türkçe</option><option value="de">Almanca</option><option value="en">İngilizce</option></select>
  <button id="help" aria-expanded="false" title="Help">?</button>
 </nav>
-<div id="helpText" hidden>Yanıt penceresi. Soruyu oku. Varsa açıklamayı incele.</div>
+<div id="helpText" hidden>Çözüm penceresi. Varsa açıklamayı incele.</div>
 <main>
- <h1 id="questionTitle">Yanıt</h1>
- <section class="card"><h2 id="deLabel">Almanca soru</h2><p class="question" id="german"></p><h2 id="trLabel">Türkçesi</h2><p class="question" id="turkish"></p><img id="image" alt="Soruya ait çizim" hidden></section>
- <section class="card"><h2 id="answerLabel">Açıklamalı yanıt</h2><div id="answerDetail" role="status">Soru yükleniyor…</div></section>
+ <h1 id="questionTitle">Çözüm</h1>
+ <section class="card"><h2 id="answerLabel">Açıklamalı çözüm</h2><div id="answerDetail" role="status">Soru yükleniyor…</div></section>
 </main>
-<div class="version">v1.27.0 · Ortak Yanıt penceresi · Hazır çözümler gösterilir</div>
+<div class="version">v1.28.0 · Ortak Çözüm penceresi · Sorular tekrarlanmaz</div>
 <script>
 (function(){
 'use strict';
@@ -45,16 +44,16 @@ const sources={
  'lambacher-7':'./sets/lambacher-schweizer-7/data.js'
 };
 const messages={
- tr:{heading:'Yanıt',de:'Almanca soru',tr:'Türkçesi',answer:'Açıklamalı yanıt',empty:'Bu soru için açıklamalı çözüm henüz eklenmedi.',missing:'Soru bulunamadı.',help:'Yanıt penceresi. Soruyu oku. Varsa açıklamayı incele.'},
- de:{heading:'Antwort',de:'Deutsche Aufgabe',tr:'Türkische Übersetzung',answer:'Erläuterte Antwort',empty:'Für diese Aufgabe wurde noch keine Lösung hinterlegt.',missing:'Aufgabe nicht gefunden.',help:'Hier steht die Antwort, falls sie schon vorhanden ist.'},
- en:{heading:'Answer',de:'German question',tr:'Turkish translation',answer:'Explained answer',empty:'An explained solution has not yet been added to this question.',missing:'Question not found.',help:'Read the question and the answer, if available.'}
+ tr:{heading:'Çözüm',answer:'Açıklamalı çözüm',empty:'Bu soru için açıklamalı çözüm henüz eklenmedi.',missing:'Soru bulunamadı.',help:'Çözüm penceresi. Varsa çözümü incele.'},
+ de:{heading:'Lösung',answer:'Erläuterte Lösung',empty:'Für diese Aufgabe wurde noch keine Lösung hinterlegt.',missing:'Aufgabe nicht gefunden.',help:'Hier steht die Lösung, falls sie vorhanden ist.'},
+ en:{heading:'Solution',answer:'Worked solution',empty:'An explained solution has not yet been added to this question.',missing:'Question not found.',help:'Read the solution, if available.'}
 };
 let q=null;
 function currentMessage(){return messages[$('lang').value]||messages.tr}
 function update(){
  const m=currentMessage();
  $('questionTitle').textContent=(q?.number?String(q.number)+' · ':'')+m.heading;
- $('deLabel').textContent=m.de;$('trLabel').textContent=m.tr;$('answerLabel').textContent=m.answer;
+ $('answerLabel').textContent=m.answer;
  $('helpText').textContent=m.help;
  if(!q){$('answerDetail').textContent=m.missing;return}
  const raw=q.solution||q.explainedSolution||q.explanation||q.answer||q.correctAnswerText||'';
@@ -67,8 +66,6 @@ $('help').addEventListener('click',()=>{
 });
 function show(pack){
  q=(pack?.questions||[]).find(x=>x.id===id)||null;
- if(q){$('german').textContent=q.german||'';$('turkish').textContent=q.turkish||'';
-  if(q.figureImage||q.sourceImage||q.image){$('image').src=q.figureImage||q.sourceImage||q.image;$('image').hidden=false}}
  update();
 }
 try{
@@ -80,7 +77,7 @@ try{
 const path=sources[set];
 if(!path){show(null);return}
 const script=document.createElement('script');
-script.src=path+'?v=1.27.0';
+script.src=path+'?v=1.28.0';
 script.onload=()=>show(window.CHECKLIST_PACK);
 script.onerror=()=>show(null);
 document.head.appendChild(script);
