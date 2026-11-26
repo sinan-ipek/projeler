@@ -1,0 +1,162 @@
+/* Kerem 1 · v1.35.0 · fractions · user supplied pages 62, 63, 64, 68, 70, 71.
+ * Examples and numbered exercises are separate cards.
+ * Illustrations are clean schematic SVG redrawings, not scans.
+ */
+(function(){
+'use strict';
+const Q=[],F={};
+const xml=x=>String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const svg=b=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" width="720" height="270"><rect width="720" height="270" fill="white"/>'+b+'</svg>');
+const text=(x,y,t)=>'<text x="'+x+'" y="'+y+'" fill="#345043" font-family="Arial,sans-serif" font-size="21">'+xml(t)+'</text>';
+function bar(x,y,n,k,w=260,h=52,col='#e4b97f'){return Array.from({length:n},(_,i)=>'<rect x="'+(x+i*w/n)+'" y="'+y+'" width="'+w/n+'" height="'+h+'" fill="'+(i<k?col:'#fff')+'" stroke="#4a6255" stroke-width="1.8"/>').join('')}
+function circle(x,y,n,k,r=60,col='#e7b77e'){
+ return Array.from({length:n},(_,i)=>{
+ const a=-Math.PI/2+i*2*Math.PI/n,b=a+2*Math.PI/n;
+ return '<path d="M'+x+','+y+'L'+(x+r*Math.cos(a)).toFixed(2)+','+(y+r*Math.sin(a)).toFixed(2)+'A'+r+','+r+' 0 0 1 '+(x+r*Math.cos(b)).toFixed(2)+','+(y+r*Math.sin(b)).toFixed(2)+'Z" fill="'+(i<k?col:'#fff')+'" stroke="#4a6255" stroke-width="1.8"/>';
+ }).join('');
+}
+F.pizza62=svg(circle(165,115,4,1,74)+circle(530,115,4,1,74)+text(110,232,'Selina: 1/4')+text(471,232,'Mark: 1/4'));
+F.memory62=svg(text(76,46,'8 gleiche Speicherteile')+bar(76,72,8,7,575,69,'#b8deeb')+text(79,190,'3/8 Speicher wird gelöscht'));
+F.pizza64=svg(circle(165,115,4,1,74)+circle(530,115,8,5,74)+text(75,229,'Margarita: 1/4')+text(435,229,'Vegetarisch: 5/8'));
+F.eighths64=svg(text(55,48,'1/4 = 2/8')+bar(54,71,8,2)+text(348,110,'+')+bar(408,71,8,3)+text(54,190,'3/8  →  2/8 + 3/8'));
+F.a63add=svg(bar(54,81,5,3)+text(345,117,'+')+bar(405,81,5,1));
+F.a63sub=svg(bar(54,81,4,3)+text(345,117,'−')+bar(405,81,4,1,260,52,'#e89e8a'));
+F.b63add=svg(bar(54,81,4,2,260,52,'#d8b7d5')+text(345,117,'+')+bar(405,81,4,1,260,52,'#bd8ec8'));
+F.b63sub=svg(bar(54,81,8,5,260,52,'#d8b7d5')+text(345,117,'−')+bar(405,81,8,2,260,52,'#bd8ec8'));
+F.b63mix=svg(text(50,55,'Schreibe die Brüche aus der Darstellung')+bar(50,75,3,1,180,58,'#b9d8a3')+bar(275,75,3,3,180,58,'#b9d8a3')+bar(500,75,3,1,180,58,'#b9d8a3'));
+F.clock68=svg(text(50,40,'1 Stunde = 60 Minuten')+circle(152,133,4,0,74)+text(251,138,'→')+circle(353,133,4,0,74)+text(451,138,'→')+circle(572,133,4,3,74));
+F.grams68=svg(text(55,40,'200 g')+bar(60,65,3,0,600,55)+text(55,153,'2/3 von 200 g')+bar(60,173,3,2,600,55));
+F.meter68=svg(text(55,41,'1 m = 100 cm')+bar(50,65,5,0,610)+text(55,160,'3/5 von 1 m')+bar(50,178,5,3,610));
+F.juice70=svg(text(64,40,'1 Portion: 1/8 l Kirschsaft')+bar(64,72,8,1,178,80,'#d88791')+text(273,124,'+')+bar(330,72,8,1,178,80,'#d88791')+text(530,124,'+')+bar(567,72,8,1,90,80,'#d88791'));
+F.pizza70=svg(circle(174,118,5,2,76)+circle(528,118,5,2,76)+text(67,230,'2/5 der ersten Pizza')+text(431,230,'2/5 der zweiten Pizza'));
+F.circles71=svg(circle(148,122,10,3,66)+circle(356,122,10,3,66)+circle(563,122,10,3,66)+text(84,235,'3 gleiche Kreise'));
+F.rectangles71=svg(bar(88,93,8,4,232,80,'#efc48c')+bar(397,93,8,4,232,80,'#efc48c'));
+F.triangles71=svg(text(38,42,'Drei gleiche Dreiecke')+circle(156,131,9,1,66,'#c5a0d3')+circle(357,131,9,1,66,'#c5a0d3')+circle(558,131,9,1,66,'#c5a0d3')+text(160,235,'Schematische 9-Teilung'));
+F.stars71=svg(text(80,44,'Zwei Sterne, je 5 gleiche Teile')+circle(252,130,5,3,75,'#c6a0d8')+circle(494,130,5,3,75,'#c6a0d8'));
+F.apple71=svg(text(55,49,'12 Beutel, je 4/5 kg Äpfel')+bar(54,79,5,4,600,85,'#eec083'));
+F.water71=svg(text(55,49,'6 Flaschen, je 3/4 Liter')+bar(54,79,4,3,600,85,'#b9dce7'));
+F.paints63=svg(text(42,44,'3 1/4 l')+bar(55,68,4,1,255,65,'#c5dae3')+text(350,109,'+')+text(425,44,'1 3/4 l')+bar(413,68,4,3,255,65,'#f0cb78'));
+function add(page,group,n,p,de,tr,opt={}){
+ const id=['kerem1',page,group,n,p||''].join('-');
+ const number=(group==='Beispiel'?'Beispiel ':group==='Merke'?'Merke ':group==='Vokabel'?'Wort ':group==='Entdecken'?'Entdecken ':group+' ')+n+(p||'');
+ const q={id,page,exercise:String(n),number,german:de,turkish:tr,kind:group==='Beispiel'?'beispiel':group==='Vokabel'?'vokabel':group==='Merke'?'regel':'exercise',star:false,plus:false};
+ if(opt.figure)q.figureImage=F[opt.figure];
+ if(opt.solution)q.solution=opt.solution;
+ Q.push(q);
+}
+function ex(page,gr,n,p,de,tr,fig){add(page,gr,n,p,de,tr,fig?{figure:fig}:{})}
+function es(page,n,p,de,tr,solution,fig){add(page,'Beispiel',n,p,de,tr,{solution,figure:fig})}
+function note(page,n,de,tr){add(page,'Merke',n,'',de,tr,{solution:tr})}
+function voc(page,n,de,tr){add(page,'Vokabel',n,'','Was bedeutet „'+de+'“?','„'+de+'“ ne demektir?',{solution:de+' = '+tr})}
+function seq(page,gr,n,inst,translate,arr){
+ arr.forEach((item,i)=>{const p=String.fromCharCode(97+i);
+ ex(page,gr,n,p,inst+' '+item,translate+' '+item)});
+}
+// S. 62 · Gleichnamige Brüche addieren und subtrahieren
+ex(62,'Entdecken',1,'a','Selina und Mark haben nicht aufgegessen. Die Reste legen Selina und Mark zusammen auf einen Teller. Welcher Anteil der Pizza ist zusammen noch da?','Selina ile Mark pizzalarını bitirmiyor. Kalan dilimleri aynı tabağa koyuyorlar. Toplam ne kadarlık pizza kaldı?','pizza62');
+ex(62,'Entdecken',1,'b','Wie kann man das berechnen? Schreibe eine Rechnung auf.','Bu nasıl hesaplanır? Bir işlem yaz.','pizza62');
+ex(62,'Entdecken',2,'a','Der Speicher von Oles Computer ist fast voll. Ole löscht drei Achtel des Speichers. Wie viel Speicherplatz hat er jetzt wieder? Erkläre das an der Darstellung.','Ole’nin bilgisayarının belleği neredeyse dolu. Ole belleğin 3/8’ini siliyor. Şimdi bellekte ne kadar boş alan var? Şekil üzerinde açıkla.','memory62');
+ex(62,'Entdecken',2,'b','Wie kann man das berechnen? Schreibe eine Rechnung auf.','Bu nasıl hesaplanır? Bir işlem yaz.','memory62');
+es(62,'Verstehen','a','Am Kuchenstand sind 3/5 Erdbeer-Kuchen und 1/5 Schoko-Kuchen da. Wie viel ist das zusammen?','Çilekli kekin 3/5’i ve çikolatalı kekin 1/5’i var. Toplam ne kadar?', '3/5+1/5=(3+1)/5=4/5.');
+es(62,'Verstehen','b','Frau Brandt verkauft zwei Stücke Erdbeer-Kuchen. Wie viel bleibt von 3/5 übrig?','Bayan Brandt çilekli kekin iki parçasını satıyor. 3/5’inden geriye ne kalır?','3/5−2/5=(3−2)/5=1/5.');
+note(62,'Addition','Gleichnamige Brüche addiert man, indem man nur die Zähler addiert. Der gemeinsame Nenner wird nicht verändert.','Eş paydalı kesirler toplanırken paylar toplanır, ortak payda değiştirilmez.');
+note(62,'Subtraktion','Gleichnamige Brüche subtrahiert man, indem man nur die Zähler subtrahiert. Der gemeinsame Nenner wird nicht verändert.','Eş paydalı kesirler çıkarılırken paylar çıkarılır, ortak payda değiştirilmez.');
+es(62,1,'','3/5 + 1/5','3/5 ile 1/5’i topla.','3/5+1/5=4/5.');
+es(62,2,'','3/5 − 2/5','3/5’ten 2/5’i çıkar.','3/5−2/5=1/5.');
+es(62,3,'a','3/8 + 1/8. Kürze das Ergebnis so weit wie möglich.','3/8+1/8 işlemini hesapla ve sonucu sadeleştir.','3/8+1/8=4/8=1/2.');
+es(62,3,'b','4/6 − 2/6. Kürze das Ergebnis so weit wie möglich.','4/6−2/6 işlemini hesapla ve sonucu sadeleştir.','4/6−2/6=2/6=1/3.');
+voc(62,'gleichnamig','gleichnamig','eş paydalı');voc(62,'Addition','die Addition','toplama');voc(62,'Subtraktion','die Subtraktion','çıkarma');
+// S.63 left A
+ex(63,'A',1,'a','Schreibe die Aufgabe ins Heft und löse sie. Bestimme die Addition aus den blau gefärbten Fünfteln.','Gösterilen mavi beşte birlik parçaları toplama işlemi olarak yaz ve çöz.','a63add');
+ex(63,'A',1,'b','Schreibe die Aufgabe ins Heft und löse sie. Bestimme die Subtraktion der gefärbten Viertel.','Gösterilen renkli dörtte birlik parçalardan çıkarma işlemini yaz ve çöz.','a63sub');
+seq(63,'A',2,'Berechne. Kürze das Ergebnis bei b) und d).','Hesapla; b ve d şıklarını sadeleştir.', ['1/8 + 5/8','5/14 + 2/14','5/7 − 2/7','7/9 − 1/9']);
+seq(63,'A',3,'Addiere und schreibe als Ganzes. Tipp: 4/4=1.','Topla ve sonucu tam sayı olarak yaz. İpucu: 4/4=1.', ['1/5 + 4/5','3/9 + 6/9','8/12 + 4/12','5/4 + 7/4']);
+seq(63,'A',4,'Übertrage und ergänze zu einem Ganzen.','Kendi defterine geçir ve tam sayıya tamamla.', ['5/9 + □/□ = 9/9 = 1','3/8 + □/□ = 8/8 = 1','8/11 + □/□ = 11/11 = 1','6/14 + □/□ = 28/14 = 2']);
+seq(63,'A',5,'Berechne. Schreibe das Ergebnis als gemischte Zahl.','Hesapla. Sonucu tam sayılı kesir olarak yaz.', ['5/6 + 3/6','5/7 + 6/7','8/9 + 7/9','7/12 + 8/12']);
+note(63,'Gemischte Zahlen','Gemischte Zahlen bestehen aus Ganzen und echten Brüchen. Addiere zuerst die Ganzen, dann die Brüche. Bei Subtraktion kann man in unechte Brüche umwandeln.','Tam sayılı kesirler tam ve kesirli kısımdan oluşur. Toplamada tamları ve kesirleri ayrı toplayabilirsin. Çıkarma için bileşik kesre dönüştürebilirsin.');
+es(63,'Methode','a','Gemischte Zahlen addieren: 3 1/5 + 1 2/5.','Tam sayılı kesirleri topla: 3 tam 1/5 + 1 tam 2/5.','3 1/5+1 2/5=3+1+(1+2)/5=4 3/5.');
+es(63,'Methode','b','Gemischte Zahlen subtrahieren: 4 1/3 − 3 2/3.','Tam sayılı kesirleri çıkar: 4 tam 1/3 − 3 tam 2/3.','4 1/3−3 2/3=13/3−11/3=2/3.');
+seq(63,'A',7,'Berechne.','Hesapla.', ['3 1/3 + 4 1/3','5 2/11 + 2 3/11','2 1/5 − 1 2/5','5 1/4 − 4 3/4']);
+ex(63,'A',8,'a','Oliver streicht sein Zimmer. Es sind 3 1/4 l und 1 3/4 l Farbe vorhanden. Wie viel l Farbe ist das zusammen?','Oliver odasını boyuyor. 3 tam 1/4 litre ve 1 tam 3/4 litre boya var. Toplam ne kadar boya vardır?','paints63');
+ex(63,'A',8,'b','Oliver verbraucht 2 2/4 l Farbe. Wie viel Farbe bleibt noch übrig?','Oliver 2 tam 2/4 litre boya harcıyor. Geriye ne kadar boya kalır?','paints63');
+// S.63 right B
+ex(63,'B',1,'a','Schreibe die Aufgabe ins Heft und löse sie. Lies die Addition aus den violetten Vierteln ab.','İşlemi defterine yazıp çöz. Mor dörtte birlik parçaların toplama işlemini bul.','b63add');
+ex(63,'B',1,'b','Schreibe die Aufgabe ins Heft und löse sie. Lies die Subtraktion aus der durchgestrichenen Abbildung ab.','İşlemi defterine yazıp çöz. Üzeri çizilmiş bölümden çıkarma işlemini bul.','b63sub');
+seq(63,'B',2,'Berechne. Kürze das Ergebnis so weit wie möglich.','Hesapla; sonucu mümkün olduğunca sadeleştir.', ['3/12 + 3/12','5/14 + 7/14','7/9 − 1/9','43/48 − 19/48']);
+seq(63,'B',3,'Addiere und kürze das Ergebnis. Erkläre dein Ergebnis.','Topla, sonucu sadeleştir ve açıkla.', ['9/12 + 3/12','8/13 + 5/13','5/7 + 9/7','33/25 + 42/25']);
+seq(63,'B',4,'Übertrage und ergänze zu Ganzen.','Defterine geçir ve tam sayıya tamamla.', ['6/11 + □ = 1','7/23 + □ = 1','6/4 + □ = 2','7/3 + □ = 3']);
+seq(63,'B',5,'Berechne. Schreibe das Ergebnis als gemischte Zahl.','Hesapla ve sonucu tam sayılı kesir olarak yaz.', ['7/11 + 8/11','16/17 + 15/17','32/15 − 9/15','43/24 − 11/24']);
+ex(63,'B',6,'a','Schreibe die Aufgabe ins Heft und löse sie. Lies die Addition aus den grünen Dritteln ab.','Defterine yaz ve çöz. Yeşil üçte birlik şeritlerdeki toplama işlemini bul.','b63mix');
+ex(63,'B',6,'b','Schreibe die Aufgabe ins Heft und löse sie. Lies die Subtraktion aus den grünen und roten Vierteln ab.','Defterine yaz ve çöz. Yeşil ve kırmızı dörtte birliklerden çıkarma işlemini bul.','b63sub');
+seq(63,'B',7,'Berechne.','Hesapla.', ['2 1/8 + 8 5/8','12 8/9 + 7 3/9','5 1/6 − 1 5/6','3 4/15 − 1 7/15']);
+ex(63,'B',8,'','Kim streicht ihr Zimmer. Sie mischt die gelbe und weiße Farbe und braucht 3 1/2 l Farbe. Wie viel l Farbe bleibt übrig? Die Eimer enthalten 3 1/4 l und 1 3/4 l.','Kim odasını boyuyor. Sarı ve beyaz boyayı karıştırıyor; 3 tam 1/2 litre boya harcıyor. Kovalarda 3 tam 1/4 ve 1 tam 3/4 litre boya var. Ne kadarı kalır?','paints63');
+// S.64 unequal denominators
+ex(64,'Entdecken',1,'a','Nach der Feier ist noch Pizza übrig. Welcher Anteil der Pizza ist zusammen noch da?','Kutlama sonunda toplam ne kadarlık pizza kalıyor?','pizza64');
+ex(64,'Entdecken',1,'b','Lennart isst noch ein Viertel der vegetarischen Pizza. Wie viel vegetarische Pizza ist jetzt noch übrig?','Lennart vejetaryen pizzadan bir çeyrek daha yiyor. Geriye ne kadar kalır?','pizza64');
+ex(64,'Entdecken',1,'c','Beschreibt euren Lösungsweg. Was muss man machen, um die Rechnung zu lösen?','Çözüm yolunu açıkla. İşlemi çözmek için ne yapmalıyız?');
+es(64,'Verstehen','a','Es ist noch Kuchen da. Wie viel ist das zusammen? 1/4 + 3/8.','Kalan kekler toplam ne kadardır? 1/4 + 3/8.','1/4=2/8; 2/8+3/8=5/8.','eighths64');
+es(64,'Verstehen','b','Max isst 2/9 des Kuchens. Wie viel bleibt übrig? 2/3 − 2/9.','Max kekin 2/9’unu yiyor. Geriye ne kadar kalır? 2/3−2/9.','2/3=6/9; 6/9−2/9=4/9.');
+note(64,'Ungleichnamig','Vor dem Addieren oder Subtrahieren müssen ungleichnamige Brüche gleichnamig gemacht werden: einen gemeinsamen Nenner finden, erweitern oder kürzen, dann die Zähler addieren oder subtrahieren.','Farklı paydalı kesirlerde önce ortak payda bulunur; kesirler genişletilir veya sadeleştirilir. Sonra paylar toplanır veya çıkarılır.');
+es(64,1,'a','1/4 + 3/8. Erweitere zuerst auf Achtel.','1/4 + 3/8. Önce sekizde birlik paydada eşitle.','1/4=(1·2)/(4·2)=2/8; 2/8+3/8=5/8.','eighths64');
+es(64,1,'b','12/15 − 1/5. Kürze zuerst 12/15.','12/15 − 1/5. Önce 12/15’i sadeleştir.','12/15=4/5; 4/5−1/5=3/5.');
+voc(64,'ungleichnamig','ungleichnamig','farklı paydalı');
+voc(64,'Addition','die Addition','toplama');
+voc(64,'Subtraktion','die Subtraktion','çıkarma');
+// S.68 fractions of quantities
+for(const [part,de,tr,fig] of [
+ ['a1','Wie viele Minuten sind eine 3/4 Stunde? Erkläre Schritt 1.','3/4 saat kaç dakikadır? Birinci adımı açıkla.','clock68'],
+ ['a2','Wie viele Minuten sind eine 3/4 Stunde? Erkläre Schritt 2.','3/4 saat kaç dakikadır? İkinci adımı açıkla.','clock68'],
+ ['b1','Wie viel g sind 2/3 von 200 g? Erkläre Schritt 1.','200 gramın 2/3’ü kaç gramdır? Birinci adımı açıkla.','grams68'],
+ ['b2','Wie viel g sind 2/3 von 200 g? Erkläre Schritt 2.','200 gramın 2/3’ü kaç gramdır? İkinci adımı açıkla.','grams68'],
+ ['c1','Wie viel cm sind 3/5 von 1 m? Erkläre Schritt 1.','Bir metrenin 3/5’i kaç santimetredir? Birinci adımı açıkla.','meter68'],
+ ['c2','Wie viel cm sind 3/5 von 1 m? Erkläre Schritt 2.','Bir metrenin 3/5’i kaç santimetredir? İkinci adımı açıkla.','meter68']
+ ])ex(68,'Entdecken',1,part,de,tr,fig);
+ex(68,'Entdecken',2,'','Bestimmt die Größen. Wie kann man Anteile von Größen berechnen?','Miktarların kesir kadarını belirleyin. Bir büyüklüğün kesir kadarını nasıl hesaplarız?');
+seq(68,'A',3,'Bestimmt die Größen.','Verilen kesir kadarını bul.', ['1/4 Stunde','7/8 von 240 g','3/5 von 20 cm','2/10 von 2 €','4/9 von 27 m']);
+note(68,'Nenner und Zähler','Der Nenner eines Bruchs gibt an, in wie viele gleich große Teile das Ganze geteilt wird. Der Zähler gibt an, wie viele Teile genommen werden.','Payda bir bütünün kaç eşit parçaya bölündüğünü; pay ise kaç parçanın alındığını gösterir.');
+es(68,1,'','Wie viel sind 2/3 von 60 cm? Teile in Drittel und nimm zwei davon.','60 cm’nin 2/3’ü kaç santimetredir? Üç eşit parçaya ayır, ikisini al.','60 cm : 3=20 cm; 20 cm · 2=40 cm.');
+note(68,'Anteile berechnen','Dividiere die Größe durch den Nenner. Multipliziere das Ergebnis mit dem Zähler.','Büyüklüğü önce paydaya böl, sonra çıkan sonucu payla çarp.');
+es(68,2,'','Berechne 3/4 von 800 g.','800 gramın 3/4’ünü hesapla.','800 g : 4=200 g; 200 g · 3=600 g.');
+es(68,3,'','Berechne 4/5 cm. Rechne zuerst in mm um.','4/5 santimetreyi bul. Önce milimetreye dönüştür.','1 cm=10 mm; 10 mm : 5=2 mm; 2 mm · 4=8 mm.');
+voc(68,'Größe','die Größe','büyüklük, miktar');voc(68,'Nenner','der Nenner','payda');voc(68,'Zähler','der Zähler','pay');
+// S.70 fraction x natural number
+ex(70,'Entdecken',1,'a','Lisa mischt Kirsch-Bananen-Saft. Für eine Portion braucht sie 1/8 l Kirschsaft und füllt mit Bananensaft auf. Wie viel Liter Kirschsaft braucht sie für 3 Portionen? Erkläre, wie Lisa vorgeht.','Lisa vişneli-muzlu meyve suyu yapıyor. Bir porsiyon için 1/8 litre vişne suyu kullanıyor ve üzerini muz suyuyla tamamlıyor. Üç porsiyon için kaç litre vişne suyu gerekir? Nasıl yaptığını açıkla.','juice70');
+ex(70,'Entdecken',1,'b','Schreibe einen Rechenterm und das Ergebnis für drei Portionen Kirsch-Bananen-Saft auf.','Üç porsiyon vişneli-muzlu içecek için işlemi ve sonucunu yaz.','juice70');
+ex(70,'Entdecken',2,'a','Thomas nimmt 2/5 von 2 Pizzas für seine Freunde mit. Wie viel ist das? Erkläre, was Thomas mit den Pizzas macht.','Thomas arkadaşları için iki pizzanın 2/5’i kadarını götürüyor. Bu ne kadardır? Pizzalara ne yaptığını açıkla.','pizza70');
+ex(70,'Entdecken',2,'b','Thomas überlegt: „2/5 von 2 Pizza … Das ist ja das gleiche wie 2 mal 2/5 Pizza.“ Wie meint er das?','Thomas şöyle düşünüyor: “İki pizzanın 2/5’i, iki kez 2/5 pizza almakla aynıdır.” Ne demek istiyor?','pizza70');
+es(70,'Verstehen','','Von 4 Kuchen sind jeweils noch 2/9 übrig. Frau Schulze legt die Reste zusammen. Wie viel ist das?','Dört kekin her birinden 2/9 kaldı. Bayan Schulze parçaları bir araya getiriyor. Toplam ne kadar?','4·2/9=2/9+2/9+2/9+2/9=8/9.');
+note(70,'Multiplikation','Ein Bruch wird mit einer natürlichen Zahl multipliziert, indem man den Zähler mit der natürlichen Zahl multipliziert. Der Nenner wird nicht verändert.','Bir kesir doğal sayıyla çarpılırken pay, doğal sayıyla çarpılır. Payda değişmez.');
+es(70,1,'a','4 · 2/9','4 ile 2/9’u çarp.','4·2/9=(4·2)/9=8/9.');
+es(70,1,'b','2 · 3/7','2 ile 3/7’yi çarp.','2·3/7=(2·3)/7=6/7.');
+es(70,1,'c','2/11 · 5','2/11 ile 5’i çarp.','2/11·5=(2·5)/11=10/11.');
+es(70,2,'a','Manchmal kann man die Brüche vor der Rechnung kürzen. Rechne 8 · 3/28.','Bazen hesaplamadan önce sadeleştirebiliriz. 8·3/28 işlemini yap.','8·3/28=(8·3)/28=(2·3)/7=6/7.');
+es(70,2,'b','Ist beim Ergebnis der Zähler größer als der Nenner, kann man es als gemischte Zahl schreiben. Rechne 4 · 2/5.','Sonucun payı paydasından büyükse tam sayılı kesir olarak yazılabilir. 4·2/5 işlemini yap.','4·2/5=8/5=1 3/5.');
+voc(70,'Multiplikation','die Multiplikation','çarpma');
+voc(70,'natürliche Zahl','die natürliche Zahl','doğal sayı');
+voc(70,'Zähler','der Zähler','pay');
+voc(70,'Nenner','der Nenner','payda');
+// S.71 exercises, two columns A (blue) and B (purple)
+ex(71,'A',1,'a','Schreibe die Multiplikation und das Ergebnis ins Heft. Betrachte die drei Kreise mit markierten Zehnteln.','Üç dairedeki işaretli onda birlikleri incele. Çarpma işlemini ve sonucunu defterine yaz.','circles71');
+ex(71,'A',1,'b','Schreibe die Multiplikation und das Ergebnis ins Heft. Betrachte die zwei Rechtecke mit markierten Achteln.','İki dikdörtgendeki işaretli sekizde birlikleri incele. Çarpma işlemini ve sonucunu defterine yaz.','rectangles71');
+seq(71,'A',2,'Multipliziere. Tipp zu d) bis f): Es ist egal, wo die natürliche Zahl steht.','Çarp. d–f şıkları için ipucu: Doğal sayının hangi sırada yazıldığı önemli değildir.', ['4 · 2/3','2 · 1/7','5 · 2/9','3/11 · 2','2/15 · 3','5/13 · 3']);
+seq(71,'A',3,'Multipliziere. Tipp: Kürze, bevor du multiplizierst.','Çarp. İpucu: Çarpmadan önce sadeleştir.', ['5 · 3/20','7 · 5/14','3/8 · 12','4/9 · 3','5/18 · 12','6 · 7/18']);
+seq(71,'A',4,'Multipliziere. Schreibe das Ergebnis als gemischte Zahl.','Çarp ve sonucu tam sayılı kesir olarak yaz.', ['7 · 3/4','5 · 2/3','6 · 2/7','7/9 · 8','2/7 · 9','1/2 · 13']);
+ex(71,'A',5,'','In einer Flasche sind 3/4 l Wasser. In einem Wasserkasten ist die 6-fache Menge. Wie viel l Wasser sind im Kasten?','Bir şişede 3/4 litre su var. Bir kasada bunun 6 katı var. Kasada kaç litre su bulunur?','water71');
+note(71,'Gemischte Zahlen multiplizieren','Rechne zuerst die gemischte Zahl in einen unechten Bruch um. Zum Beispiel: 4 · 1 2/3 = 4 · 5/3 = 20/3.','Önce tam sayılı kesri bileşik kesre dönüştür. Örnek: 4 · 1 tam 2/3 = 4 · 5/3 = 20/3.');
+seq(71,'A',7,'Übertrage und ergänze im Heft. Beschreibe dein Vorgehen.','Defterine geçir, boşluğu doldur ve çözüm yolunu açıkla.', ['3/□ · 3 = 9/10','4 · □/13 = 12/13','□ · 2/9 = 2/3','7 · □/□ = 4']);
+ex(71,'B',1,'a','Schreibe die Multiplikation und das Ergebnis ins Heft. Betrachte die drei Dreiecke mit markierten Teilflächen.','Üç üçgende işaretli bölgelere göre çarpma işlemini ve sonucunu yaz.','triangles71');
+ex(71,'B',1,'b','Schreibe die Multiplikation und das Ergebnis ins Heft. Betrachte die zwei Sterne mit markierten Teilflächen.','İki yıldızın boyalı parçalarını inceleyerek çarpma işlemini ve sonucunu yaz.','stars71');
+seq(71,'B',2,'Multipliziere. Tipp: Die Reihenfolge der Faktoren ist egal.','Çarp. İpucu: Çarpanların yerleri değiştirilebilir.', ['2 · 3/11','7 · 3/20','4 · 5/18','3/15 · 4','4/11 · 3','5/6 · 2']);
+seq(71,'B',3,'Multipliziere. Tipp: Kürze so weit wie möglich.','Çarp. İpucu: Mümkün olduğunca sadeleştir.', ['5 · 2/20','16 · 7/12','14 · 3/7','7/30 · 4','7/8 · 8','3/10 · 12']);
+seq(71,'B',4,'Multipliziere. Schreibe das Ergebnis als gemischte Zahl.','Çarp ve sonucu tam sayılı kesir olarak yaz.', ['3/5 · 8','3/4 · 5','7/12 · 7','5 · 7/9','16 · 2/7','4 · 6/13']);
+ex(71,'B',5,'','In eine Kiste passen 12 Beutel mit Äpfeln. In jeden Beutel passen 4/5 kg Äpfel. Wie viele kg Äpfel passen in die Kiste?','Bir kasaya 12 elma torbası sığıyor. Her torba 4/5 kg elma alıyor. Kasaya toplam kaç kilogram elma sığar?','apple71');
+seq(71,'B',6,'Multipliziere.','Çarp.', ['2 · 1 1/5','3 · 1 3/7','10 · 2 8/9','2 · 3 3/4','4 1/6 · 5','3 7/9 · 3']);
+for(const [part,de,tr] of [
+ ['a','Bilde mit den Kärtchen 2, 3, 4, 8 eine Aufgabe aus Bruch · natürliche Zahl mit einem möglichst großen Ergebnis.','2, 3, 4, 8 kartlarını birer kez kullanarak kesir × doğal sayı biçiminde olabildiğince büyük sonuç veren işlem kur.'],
+ ['b','Bilde mit den Kärtchen 2, 3, 4, 8 eine Aufgabe aus Bruch · natürliche Zahl mit einem möglichst kleinen Ergebnis.','2, 3, 4, 8 kartlarını birer kez kullanarak olabildiğince küçük sonuç veren bir kesir × doğal sayı işlemi kur.'],
+ ['c','Bilde mit den Kärtchen 2, 3, 4, 8 eine Aufgabe aus Bruch · natürliche Zahl, die eine ganze Zahl ergibt.','2, 3, 4, 8 kartlarını birer kez kullanarak sonucu tam sayı olan bir kesir × doğal sayı işlemi kur.']
+])ex(71,'B',7,part,de,tr);
+if(new Set(Q.map(q=>q.id)).size!==Q.length)throw Error('duplicate IDs');
+if(Q.some(q=>!q.german||!q.turkish))throw Error('blank text');
+window.CHECKLIST_PACK={id:'kerem-1-fractions-2026',title:'Kerem 1 · Mit Brüchen rechnen · Seiten 62, 63, 64, 68, 70, 71',questions:Q};
+})();
