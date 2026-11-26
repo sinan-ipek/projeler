@@ -4,8 +4,8 @@ const $=id=>document.getElementById(id), pack=window.CHECKLIST_PACK;
 if(!pack||!Array.isArray(pack.questions)){document.getElementById('menu').textContent='Soru verileri bulunamadı.';return}
 const qs=pack.questions, checkId=pack.id||'check-liste-default', profile=new URLSearchParams(location.search).get('profile')||'default';
 /* Show the left-bottom quiz only for graded packs. Other lessons remain unchanged. */
-document.body.classList.toggle('has-graded-quiz',qs.some(q=>Array.isArray(q.choices)&&q.choices.length>=4));
-let current=Math.max(0,qs.findIndex(q=>'#'+q.id===decodeURIComponent(location.hash))), done={},answers={};
+document.body.classList.toggle('has-graded-quiz',qs.some(q=>(Array.isArray(q.choices)&&q.choices.length>=4)||q.answerMode==='worked-solution'));
+let current=Math.max(0,qs.findIndex(q=>'#'+q.id===decodeURIComponent(location.hash))), done={},answers={},viewedAnswers={};
 const key=type=>['dotem-checkliste-v2',checkId,profile,type].join(':');
 // Preserve local work when a checklist receives a new, anonymous package id.
 // Only migrate if exactly one other compatible saved checklist exists on this browser.
@@ -39,10 +39,12 @@ const key=type=>['dotem-checkliste-v2',checkId,profile,type].join(':');
 })();
 try{done=JSON.parse(localStorage.getItem(key('done'))||'{}')||{}}catch{}
 try{answers=JSON.parse(localStorage.getItem(key('answers'))||'{}')||{}}catch{}
+try{viewedAnswers=JSON.parse(localStorage.getItem(key('viewed-answers'))||'{}')||{}}catch{}
 const pages=[...new Set(qs.map(q=>q.page))];
 pages.forEach(p=>{let o=document.createElement('option');o.value=p;o.textContent='Sayfa '+p;$('pageSelect').append(o)});
 const saveDone=()=>{try{localStorage.setItem(key('done'),JSON.stringify(done))}catch{}};
 const saveAnswers=()=>{try{localStorage.setItem(key('answers'),JSON.stringify(answers))}catch{}};
+const saveViewedAnswers=()=>{try{localStorage.setItem(key('viewed-answers'),JSON.stringify(viewedAnswers))}catch{}};
 
 /* Özel kitap kırpımları: Her dosya yalnızca kullanıcının tarayıcısındaki IndexedDB'de tutulur.
    GitHub'a veya herhangi bir sunucuya gönderilmez. */
@@ -129,6 +131,7 @@ function drawMenu(){
 /* Optional graded multiple choice is active only when a question has choices.
    Existing student packs without choices retain their normal done checkbox. */
 function completionUnlocked(q){
+ if(q.answerMode==='worked-solution')return !!viewedAnswers[q.id]||!!done[q.id];
  return !Array.isArray(q.choices)||q.choices.length===0||answers[q.id]===q.correctAnswer;
 }
 function applyCompletionLock(q){
@@ -152,8 +155,25 @@ function renderQuiz(q){
  }
  const panel=$('quizPanel'), options=$('quizChoices'), message=$('quizFeedback'), detail=$('quizExplanation');
  if(!panel||!options)return;
- const hasQuiz=Array.isArray(q.choices)&&q.choices.length>=4;
- panel.hidden=!hasQuiz;
+ const solutionMode=q.answerMode==='worked-solution';
+ const hasQuiz=!solutionMode&&Array.isArray(q.choices)&&q.choices.length>=4;
+ panel.hidden=!hasQuiz&&!solutionMode;
+ const action=$('answerAction'),hint=$('answerHint'),heading=$('quizHeading');
+ if(action)action.hidden=!solutionMode;
+ if(hint){
+  hint.hidden=!solutionMode;
+  if(solutionMode)hint.textContent=viewedAnswers[q.id]?'Yanıt açıldı. Çözümünü kontrol ettikten sonra Tamamlandı kutusunu işaretleyebilirsin.':'Önce çözümünü yap. Yanıt düğmesi açıklamalı çözümü ayrı bir pencerede açar.';
+ }
+ if(heading)heading.textContent=solutionMode?'Açıklamalı çözüm':'Yanıtını seç · 4 seçenek';
+ options.hidden=!hasQuiz;
+ if(message)message.hidden=!hasQuiz;
+ if(detail)detail.hidden=!hasQuiz;
+ if(solutionMode){
+  options.replaceChildren();
+  if(message)message.textContent='';
+  applyCompletionLock(q);
+  return;
+ }
  if(!hasQuiz){options.replaceChildren();if(detail)detail.hidden=true;applyCompletionLock(q);return}
  options.replaceChildren();
  q.choices.forEach((choice,index)=>{
@@ -183,6 +203,28 @@ function renderQuiz(q){
  const notes=$('quizExtraNotes');
  if(notes){notes.hidden=!q.notes;notes.textContent=q.notes||''}
  applyCompletionLock(q);
+}
+if($('answerAction')){
+ $('answerAction').addEventListener('click',()=>{
+  const q=qs[current];
+  if(q.answerMode!=='worked-solution')return;
+  const destination=new URL('./answer.html',location.href);
+  destination.searchParams.set('set','tuana-2');
+  destination.searchParams.set('id',q.id);
+  // The host browser may use a tab instead of a separate popup window.
+  const separate=window.open(destination.href,'tuana2-answer-'+q.id,'popup=yes,width=900,height=820,scrollbars=yes,resizable=yes');
+  if(!separate){
+   const hint=$('answerHint');
+   if(hint){hint.hidden=false;hint.textContent='Yanıt penceresi engellendi. Bu site için açılır pencerelere izin verip yeniden dene.'}
+   return;
+  }
+  try{separate.focus()}catch{}
+  viewedAnswers[q.id]=true;
+  saveViewedAnswers();
+  applyCompletionLock(q);
+  const hint=$('answerHint');
+  if(hint){hint.hidden=false;hint.textContent='Yanıt açıldı. Çözümünü karşılaştırıp Tamamlandı kutusunu işaretleyebilirsin.'}
+ });
 }
 if($('quizDone')){
  $('quizDone').addEventListener('change',e=>{
