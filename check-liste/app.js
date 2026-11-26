@@ -142,11 +142,6 @@ function applyCompletionLock(q){
  $('done').checked=!!done[q.id];
 }
 function renderQuiz(q){
- const info=$('examInfo');
- if(info){
-  const message=pack.info?(q.section==='A'?pack.info.teilA:q.section==='B'?pack.info.teilB:''):'';
-  info.hidden=!message;info.textContent=message||'';
- }
  const note=$('calculatorNote');
  if(note){
   note.hidden=!q.calculatorNote;
@@ -158,13 +153,9 @@ function renderQuiz(q){
  const solutionMode=q.answerMode==='worked-solution';
  const hasQuiz=!solutionMode&&Array.isArray(q.choices)&&q.choices.length>=4;
  panel.hidden=!hasQuiz;
- const action=$('answerAction'),hint=$('answerHint'),heading=$('quizHeading'),inline=$('answerInline');
+ const action=$('answerAction'),heading=$('quizHeading'),inline=$('answerInline');
  if(inline)inline.hidden=!solutionMode;
  if(action)action.hidden=!solutionMode;
- if(hint){
-  hint.hidden=!solutionMode;
-  if(solutionMode)hint.textContent=viewedAnswers[q.id]?'Yanıt açıldı. Çözümünü kontrol ettikten sonra Tamamlandı kutusunu işaretleyebilirsin.':'Önce çözümünü yap. Yanıt düğmesi açıklamalı çözümü ayrı bir pencerede açar.';
- }
  if(heading)heading.textContent=solutionMode?'Açıklamalı çözüm':'Yanıtını seç · 4 seçenek';
  options.hidden=!hasQuiz;
  if(message)message.hidden=!hasQuiz;
@@ -215,16 +206,13 @@ if($('answerAction')){
   // The host browser may use a tab instead of a separate popup window.
   const separate=window.open(destination.href,'tuana2-answer-'+q.id,'popup=yes,width=900,height=820,scrollbars=yes,resizable=yes');
   if(!separate){
-   const hint=$('answerHint');
-   if(hint){hint.hidden=false;hint.textContent='Yanıt penceresi engellendi. Bu site için açılır pencerelere izin verip yeniden dene.'}
+   window.alert('Yanıt penceresi engellendi. Bu site için açılır pencerelere izin verin.');
    return;
   }
   try{separate.focus()}catch{}
   viewedAnswers[q.id]=true;
   saveViewedAnswers();
   applyCompletionLock(q);
-  const hint=$('answerHint');
-  if(hint){hint.hidden=false;hint.textContent='Yanıt açıldı. Çözümünü karşılaştırıp Tamamlandı kutusunu işaretleyebilirsin.'}
  });
 }
 if($('quizDone')){
