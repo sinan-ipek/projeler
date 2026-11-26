@@ -1,10 +1,10 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.27.0 · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.28.0 · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
-## Tuana 2 (v1.27.0)
+## Tuana 2 (v1.28.0)
 
-Vor-Abiturprüfung 2026 Grundkurs için **63 kart** (42 matematik alt maddesi ve 21 operatör). Her soru için **Yanıt** düğmesi açıklamalı çözümü ayrı pencerede açar. Matematik sorularının Almancası ve Türkçesi birlikte yer alır. Hesap makinesi izin notları ve öğrencinin kendi Tamamlandı işareti korunur. Veri: `sets/tuana-2/data.js`; çözümler: `sets/tuana-2/solutions.js`. Bağlantı: `lesson.html?set=tuana-2`.
+Vor-Abiturprüfung 2026 Grundkurs için **63 kart** (42 matematik alt maddesi ve 21 operatör). Her soru için **Çözüm** düğmesi açıklamalı çözümü ayrı pencerede açar. Açılan pencerede sorunun Almanca/Türkçe metni ve görseli yeniden gösterilmez. Matematik sorularının Almancası ve Türkçesi birlikte yer alır. Hesap makinesi izin notları ve öğrencinin kendi Tamamlandı işareti korunur. Veri: `sets/tuana-2/data.js`; çözümler: `sets/tuana-2/solutions.js`. Bağlantı: `lesson.html?set=tuana-2`.
 
 ### v1.23.0 düzenlemesi
 
@@ -25,6 +25,10 @@ Küçük yardımcı açıklamalar kaldırıldı: sınavın genel Teil A/B açık
 ### v1.27.0 ortak çizim ve yanıt sistemi
 
 **Beş çizim rengi:** Siyah, kırmızı, mavi, yeşil, gri. **İki stil:** Solid (düz), Dashed (kesikli). Seçilen özellik her çizgi üzerinde korunur, önceki kayıtlar varsayılan siyah/düz olarak okunur ve PDF çıktısına aktarılır. Tüm ortak derslerde Yanıt düğmesi vardır. Tuana 2 için hazır açıklamalı çözümler ayrı pencerede açılır; başka derslerde çözüm henüz eklenmemişse dürüstçe bildirilir. Küçük açıklamalar kaldırıldı veya okunabilir metin boyutuna yükseltildi; sol alttaki gri sürüm yazısı küçüktür.
+
+### v1.28.0 düzenlemesi
+
+Bütün Check Liste soru kartlarındaki düğmenin adı **Çözüm** (Almanca: Lösung, İngilizce: Solution) oldu. Tuana 2 ve ortak çözüm pencerelerinde soru metinleri ve soru şekilleri tekrar gösterilmiyor: yalnızca açıklamalı çözüm, sonuç veya henüz hazır çözüm bulunmadığını belirten mesaj yer alıyor. Çizimler, tamamlanma kayıtları, renkler ve çizgi stilleri korunmuştur.
 
 ## Miraç 1 (v1.21.0)
 
