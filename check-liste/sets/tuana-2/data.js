@@ -1,4 +1,4 @@
-/* Tuana 2 · v1.23.0: Vor-Abiturprüfung 2026, Teil A/B, Operatoren.
+/* Tuana 2 · v1.24.0: Vor-Abiturprüfung 2026, Teil A/B, Operatoren.
    10 photographs supplied by the user. Figures reconstructed on white SVG.
    Correct choice stored as an ID; not rendered as a spoiler.
 */
@@ -399,7 +399,13 @@ const boundaryCard=questions.find(q=>q.id==='tuana2-b-b1-2a6');
 if(!boundaryCard)throw Error('Boundary question missing');
 for(const opt of boundaryCard.choices)opt.label=opt.label.replace(/g\(/g,'f(');
 
+// v1.24.0: Soru kartında çoktan seçmeli seçenekler artık yok.
 for(const q of questions)if(!q.choices.some(c=>c.value===q.correctAnswer))throw Error('Missing key '+q.id);
+for(const q of questions){
+ q.answerMode='worked-solution';
+ delete q.choices;
+ delete q.correctAnswer;
+}
 window.CHECKLIST_PACK={
  id:'tuana-2-vorabitur-2026',
  title:'Tuana 2 · Vor-Abiturprüfung 2026 · Mathematik Grundkurs',
@@ -407,7 +413,7 @@ window.CHECKLIST_PACK={
  info:{
   teilA:'Teil A: 3 Pflichtaufgaben (alle bearbeiten), aus 6 Wahlpflichtaufgaben 2 wählen. Ohne Taschenrechner. Maximal 90 Minuten.',
   teilB:'Teil B: Taschenrechner (WTR), Formelsammlung und Wörterbuch zugelassen. Mindestens 155 Minuten.',
-  note:'Mehrfachauswahl kontrolliert nur einen zentralen Teil des Ergebnisses; vollständige Rechenwege sind im Lösungsfeld zu erarbeiten.'
+  note:'Zuerst eigenständig lösen, dann die Schaltfläche Yanıt wählen: ausführliche Lösung in eigenem Fenster. Fortschritt bleibt lokal gespeichert.'
  }
 };
 })();
