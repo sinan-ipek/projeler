@@ -183,6 +183,53 @@ for(const [part,de,tr] of [
  ['b','Bilde mit den Kärtchen 2, 3, 4, 8 eine Aufgabe aus Bruch · natürliche Zahl mit einem möglichst kleinen Ergebnis.','2, 3, 4, 8 kartlarından uygun üç tanesini ayrı yerlerde kullanarak olabildiğince küçük sonuç veren bir kesir × doğal sayı işlemi kur.'],
  ['c','Bilde mit den Kärtchen 2, 3, 4, 8 eine Aufgabe aus Bruch · natürliche Zahl, die eine ganze Zahl ergibt.','2, 3, 4, 8 kartlarından uygun üç tanesini ayrı yerlerde kullanarak sonucu tam sayı olan bir kesir × doğal sayı işlemi kur.']
 ])ex(71,'B',7,part,de,tr);
+
+// v1.36.0 — Explain arithmetic in independent steps, with simplification.
+function sgcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){let z=a%b;a=b;b=z}return a||1}
+function parseFraction(raw){
+ const t=raw.trim();let m=t.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+ if(m)return {n:(+m[1])*(+m[3])+(+m[2]),d:+m[3],mixed:true};
+ m=t.match(/^(\d+)\/(\d+)$/);
+ if(m)return {n:+m[1],d:+m[2],mixed:false};
+ if(/^\d+$/.test(t))return {n:+t,d:1,mixed:false};
+ throw Error('Fraction parse error '+t);
+}
+function reduced(n,d){
+ const g=sgcd(n,d);return d/g===1?String(n/g):(n/g)+'/'+(d/g)
+}
+function mixed(n,d){
+ const g=sgcd(n,d);n/=g;d/=g;
+ if(d===1)return String(n);
+ return n>d?Math.floor(n/d)+' '+(n%d)+'/'+d:n+'/'+d
+}
+function explainArithmetic(q){
+ const m=q.german.match(/(\d+(?:\s+\d+\/\d+)?|\d+\/\d+)\s*([+−·])\s*(\d+(?:\s+\d+\/\d+)?|\d+\/\d+)\s*$/u);
+ if(!m)return null;
+ const [,at,op,bt]=m,a=parseFraction(at),b=parseFraction(bt);
+ const steps=['1. İşlem: '+at+' '+op+' '+bt+'.'];
+ if(a.mixed||b.mixed){
+  const conv=[];
+  if(a.mixed)conv.push(at+' = '+a.n+'/'+a.d);
+  if(b.mixed)conv.push(bt+' = '+b.n+'/'+b.d);
+  steps.push('2. Tam sayılı kesri bileşik kesre çevir: '+conv.join('; ')+'.');
+ }
+ let n,d;
+ if(op==='·'){
+  n=a.n*b.n;d=a.d*b.d;
+  steps.push((a.mixed||b.mixed?'3.':'2.')+' Çarp: ('+a.n+'·'+b.n+')/('+a.d+'·'+b.d+') = '+n+'/'+d+'.');
+ }else{
+  d=a.d*b.d/sgcd(a.d,b.d);
+  const x=a.n*(d/a.d),y=b.n*(d/b.d);n=op==='+'?x+y:x-y;
+  steps.push((a.mixed||b.mixed?'3.':'2.')+' Ortak payda '+d+'; payları '+(op==='+'?'topla':'çıkar')+': ('+x+op+y+')/'+d+' = '+n+'/'+d+'.');
+ }
+ const simp=reduced(n,d),mix=mixed(n,d);
+ if(simp!==n+'/'+d)steps.push('Sadeleştir: '+n+'/'+d+' = '+simp+'.');
+ if(mix!==simp)steps.push('Tam sayılı kesir biçimi: '+simp+' = '+mix+'.');
+ steps.push('Sonuç: '+mix+'.');
+ return steps.join('\n');
+}
+for(const q of Q)if(!q.solution)q.solution=explainArithmetic(q);
+
 if(new Set(Q.map(q=>q.id)).size!==Q.length)throw Error('duplicate IDs');
 if(Q.some(q=>!q.german||!q.turkish))throw Error('blank text');
 window.CHECKLIST_PACK={id:'kerem-1-fractions-2026',title:'Kerem 1 · Mit Brüchen rechnen · Seiten 62, 63, 64, 68, 70, 71',onlySolvedAnswers:true,questions:Q};
