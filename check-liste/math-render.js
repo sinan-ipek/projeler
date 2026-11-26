@@ -15,6 +15,9 @@ const functionRef=/^(?:[a-zA-Z][′″']{0,2}|P)\([^\s]*\)$/u;
 const strong=/[=+\-−·×÷^²³⁴⁵⁶⁷⁸⁹ⁿ½√≤≥≠≈→∈∩∪□]|(?:\d+\/\d+)|(?:[a-zA-Z][′″])/u;
 function tokenParts(word){
  let s=word,prefix='',suffix='';
+ // Turkish case suffix after a number belongs to prose, not to the equation.
+ const attachedSuffix=s.match(/^(.+?)([’'](?:te|ta|de|da|ten|tan|den|dan))$/i);
+ if(attachedSuffix){s=attachedSuffix[1];suffix=attachedSuffix[2]}
  while(s&&/^[“„«"'‹]/.test(s)){prefix+=s[0];s=s.slice(1)}
  while(s&&/[.!?;,»”"']$/.test(s)){
   // A prime is part of a mathematical symbol, not punctuation.
