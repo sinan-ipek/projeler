@@ -6,13 +6,13 @@
 'use strict';
 const unitNames=new Set(['m','cm','mm','km','kg','mg','g','t','h','min','s','ct','LE','C','€','%']);
 const units='cm|mm|km|kg|mg|min|ct|LE|m|g|t|h|s';
-const supMap={'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁻':'-','⁺':'+'};
+const supMap={'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁻':'-','⁺':'+','ⁿ':'n'};
 const opOnly=/^[+\-−·×÷=≤≥<>≈≠:→∈∩∪]$/;
-const mathChars=/^[0-9A-Za-zπℝ∞√□¬°€%⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺′″'_,.;:|(){}\[\]+\-−·×÷/*^=≤≥<>≈≠→∈∩∪]+$/u;
+const mathChars=/^[0-9A-Za-zπℝ∞√□¬½°€%⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺ⁿ′″'_,.;:|(){}\[\]+\-−·×÷/*^=≤≥<>≈≠→∈∩∪]+$/u;
 const number=/^[+\-−]?\d+(?:[.,]\d+)?$/;
 const variable=/^(?:[a-zA-Z]|π|∞|ℝ)(?:[′″']{1,2}|[₀₁₂₃₄₅₆₇₈₉])?$/u;
 const functionRef=/^(?:[a-zA-Z][′″']{0,2}|P)\([^\s]*\)$/u;
-const strong=/[=+\-−·×÷^²³⁴⁵⁶⁷⁸⁹√≤≥≠≈→∈∩∪□]|(?:\d+\/\d+)|(?:[a-zA-Z][′″])/u;
+const strong=/[=+\-−·×÷^²³⁴⁵⁶⁷⁸⁹ⁿ½√≤≥≠≈→∈∩∪□]|(?:\d+\/\d+)|(?:[a-zA-Z][′″])/u;
 function tokenParts(word){
  let s=word,prefix='',suffix='';
  while(s&&/^[“„«"'‹]/.test(s)){prefix+=s[0];s=s.slice(1)}
@@ -38,7 +38,7 @@ function mathToken(core){
  return /[0-9a-zA-Zπℝ∞√□²³|=^()\/]/u.test(core);
 }
 function standaloneMath(core){
- return variable.test(core)||functionRef.test(core)||/[²³⁴⁵⁶⁷⁸⁹√∞πℝ□]|(?:\d+\/\d+)|(?:[A-Za-z][′″])/u.test(core);
+ return variable.test(core)||functionRef.test(core)||/[²³⁴⁵⁶⁷⁸⁹ⁿ½√∞πℝ□]|(?:\d+\/\d+)|(?:[A-Za-z][′″])/u.test(core);
 }
 // Parenthesized and square-bracket powers need a COMPLETE exponent.
 // TeX parses e^[(a+b)] incorrectly as just an opening bracket superscript.
@@ -70,12 +70,12 @@ function expressionToTex(expr){
    .replace(/→/g,' \\to ').replace(/∞/g,'\\infty ')
    .replace(/∈/g,' \\in ').replace(/∩/g,' \\cap ').replace(/∪/g,' \\cup ')
    .replace(/ℝ/g,'\\mathbb{R}').replace(/π/g,'\\pi ').replace(/¬/g,'\\neg ')
-   .replace(/□/g,'\\square ').replace(/°C/g,'^{\\circ}\\mathrm{C}')
+   .replace(/½/g,'\\frac{1}{2}').replace(/□/g,'\\square ').replace(/°C/g,'^{\\circ}\\mathrm{C}')
    .replace(/√\(([^()]*)\)/g,'\\sqrt{$1}')
    .replace(/√(\d+)/g,'\\sqrt{$1}')
    .replace(/[′″]/g,v=>v==='′'?"'":"''");
  // Superscript glyphs (x², t³, m², etc.).
- t=t.replace(/([A-Za-z0-9)\]}])([⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+)/g,(_m,base,sup)=>base+'^{'+[...sup].map(c=>supMap[c]).join('')+'}');
+ t=t.replace(/([A-Za-z0-9)\]}])([⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺ⁿ]+)/g,(_m,base,sup)=>base+'^{'+[...sup].map(c=>supMap[c]).join('')+'}');
  // Powers with parentheses or brackets, including nested expressions.
  t=groupPowers(t);
  // Single-token exponent: a^t, x^2
@@ -89,7 +89,7 @@ function expressionToTex(expr){
  // Coordinate separators, probability separator.
  t=t.replace(/\|/g,' \\mid ');
  // Keep standard mathematical functions upright.
- t=t.replace(/\b(ln|sin|cos|tan|lim|log|exp)\s*(?=\()/g,(_m,name)=>'\\'+name);
+ t=t.replace(/(?<!\\)\b(ln|sin|cos|tan|lim|log|exp)\b/g,(_m,name)=>'\\'+name);
  // Units are upright, while symbolic variables remain italic.
  t=t.replace(new RegExp('(\\d|\\}|\\))\\s+('+units+')\\b','g'),(_m,lead,u)=>lead+'\\,\\mathrm{'+u+'}');
  t=t.replace(/%/g,'\\%');
@@ -124,11 +124,16 @@ function segmentPlain(line){
   let j=i,cores=[],raw='',hasStrong=false,hasStandalone=false,suffix='',prefix=parts.prefix;
   while(j<words.length){
    if(/^\s+$/.test(words[j])){
-    if(j+1>=words.length||!mathToken(tokenParts(words[j+1]).core))break;
+    const next=words[j+1]&&tokenParts(words[j+1]).core;
+    const closingMath=next&&/^[a-zA-Z]\)$/.test(next)
+      &&((raw.match(/\(/g)||[]).length>(raw.match(/\)/g)||[]).length);
+    if(!next||(!mathToken(next)&&!closingMath))break;
     raw+=words[j++];continue;
    }
    const item=tokenParts(words[j]);
-   if(!mathToken(item.core))break;
+   const isClosingMathToken=/^[a-zA-Z]\)$/.test(item.core)
+     &&j>start&&((raw.match(/\(/g)||[]).length>(raw.match(/\)/g)||[]).length);
+   if(!mathToken(item.core)&&!isClosingMathToken)break;
    if(j>start&&item.prefix)break;
    cores.push(item.core);raw+=item.core;
    hasStrong=hasStrong||strong.test(item.core)||opOnly.test(item.core);
