@@ -1,8 +1,8 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.26.0 · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.27.0 · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
-## Tuana 2 (v1.26.0)
+## Tuana 2 (v1.27.0)
 
 Vor-Abiturprüfung 2026 Grundkurs için **63 kart** (42 matematik alt maddesi ve 21 operatör). Her soru için **Yanıt** düğmesi açıklamalı çözümü ayrı pencerede açar. Matematik sorularının Almancası ve Türkçesi birlikte yer alır. Hesap makinesi izin notları ve öğrencinin kendi Tamamlandı işareti korunur. Veri: `sets/tuana-2/data.js`; çözümler: `sets/tuana-2/solutions.js`. Bağlantı: `lesson.html?set=tuana-2`.
 
@@ -21,6 +21,10 @@ Tuana 2 Yanıt düğmesi sol sütundan kaldırılıp **sorunun ve şeklin altın
 ### v1.26.0 düzenlemesi
 
 Küçük yardımcı açıklamalar kaldırıldı: sınavın genel Teil A/B açıklaması, Yanıt düğmesi altındaki durum mesajları ve çizim tahtasının altındaki uzun kullanım yönergeleri. Hesap makinesi izin notu, sorunun Tamamlandı kutusu ve sol alt köşedeki gri sürüm yazısı korunur.
+
+### v1.27.0 ortak çizim ve yanıt sistemi
+
+**Beş çizim rengi:** Siyah, kırmızı, mavi, yeşil, gri. **İki stil:** Solid (düz), Dashed (kesikli). Seçilen özellik her çizgi üzerinde korunur, önceki kayıtlar varsayılan siyah/düz olarak okunur ve PDF çıktısına aktarılır. Tüm ortak derslerde Yanıt düğmesi vardır. Tuana 2 için hazır açıklamalı çözümler ayrı pencerede açılır; başka derslerde çözüm henüz eklenmemişse dürüstçe bildirilir. Küçük açıklamalar kaldırıldı veya okunabilir metin boyutuna yükseltildi; sol alttaki gri sürüm yazısı küçüktür.
 
 ## Miraç 1 (v1.21.0)
 
