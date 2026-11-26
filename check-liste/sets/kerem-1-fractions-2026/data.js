@@ -351,6 +351,40 @@ for(const q of Q)if(!q.solution)q.solution=explainArithmetic(q);
 }
 const noSolution=Q.filter(q=>!q.solution);
 if(noSolution.length)throw Error('Missing Kerem 1 solutions: '+noSolution.map(q=>q.id).join(', '));
+
+// Explain the original textbook examples, not just their final arithmetic line.
+{
+ const examples={
+ '62-Beispiel-Verstehen-a':'1. Paydalar eşittir: 5.\n2. Payları topla: 3/5+1/5=(3+1)/5.\nSonuç: 4/5.',
+ '62-Beispiel-Verstehen-b':'1. Başlangıçta 3/5 çilekli kek vardır.\n2. 2/5 satılır: 3/5−2/5=(3−2)/5.\nSonuç: 1/5.',
+ '62-Beispiel-1-':'1. Ortak payda 5’tir.\n2. 3/5+1/5=(3+1)/5.\nSonuç: 4/5.',
+ '62-Beispiel-2-':'1. Ortak payda 5’tir.\n2. 3/5−2/5=(3−2)/5.\nSonuç: 1/5.',
+ '62-Beispiel-3-a':'1. Aynı paydayı koru: 3/8+1/8=4/8.\n2. 4/8 kesrini 4 ile sadeleştir.\nSonuç: 1/2.',
+ '62-Beispiel-3-b':'1. Payları çıkar: 4/6−2/6=2/6.\n2. 2/6 kesrini 2 ile sadeleştir.\nSonuç: 1/3.',
+ '63-Beispiel-Methode-a':'1. Tamları topla: 3+1=4.\n2. Kesirleri topla: 1/5+2/5=3/5.\n3. Birleştir: 4+3/5.\nSonuç: 4 3/5.',
+ '63-Beispiel-Methode-b':'1. 4 1/3=13/3 ve 3 2/3=11/3.\n2. 13/3−11/3=2/3.\nSonuç: 2/3.',
+ '64-Beispiel-Verstehen-a':'1. Paydalar 4 ve 8’dir; ortak payda 8.\n2. 1/4=2/8.\n3. 2/8+3/8=5/8.\nSonuç: 5/8.',
+ '64-Beispiel-Verstehen-b':'1. Paydalar 3 ve 9’dur; ortak payda 9.\n2. 2/3=6/9.\n3. 6/9−2/9=4/9.\nSonuç: 4/9.',
+ '64-Beispiel-1-a':'1. İlk kesri 2 ile genişlet: 1/4=(1·2)/(4·2)=2/8.\n2. Ortak payda 8’dir.\n3. 2/8+3/8=5/8.\nSonuç: 5/8.',
+ '64-Beispiel-1-b':'1. 12/15 kesrini 3 ile sadeleştir: 12/15=4/5.\n2. 4/5−1/5=3/5.\nSonuç: 3/5.',
+ '68-Beispiel-1-':'1. 60 cm’yi 3’e böl: 60:3=20 cm.\n2. Pay 2 olduğu için iki parçayı al: 20·2=40 cm.\nSonuç: 40 cm.',
+ '68-Beispiel-2-':'1. 800 gramı dörde böl: 800:4=200 gram.\n2. Üç parça al: 200·3=600 gram.\nSonuç: 600 g.',
+ '68-Beispiel-3-':'1. 1 cm=10 mm olarak birim çevir.\n2. 10 mm’yi 5’e böl: 10:5=2 mm.\n3. 4 parça al: 2·4=8 mm.\nSonuç: 8 mm.',
+ '70-Beispiel-Verstehen-':'1. Dört kekin her birinde 2/9 vardır.\n2. 2/9+2/9+2/9+2/9=4·2/9.\n3. 4·2/9=8/9.\nSonuç: 8/9.',
+ '70-Beispiel-1-a':'1. Payı 4 ile çarp, paydayı 9 olarak koru.\n2. 4·2/9=(4·2)/9.\nSonuç: 8/9.',
+ '70-Beispiel-1-b':'1. Payı 2 ile çarp, payda 7 kalır.\n2. 2·3/7=(2·3)/7.\nSonuç: 6/7.',
+ '70-Beispiel-1-c':'1. Çarpanların sırası değişebilir.\n2. 2/11·5=(2·5)/11.\nSonuç: 10/11.',
+ '70-Beispiel-2-a':'1. Çarpmadan önce 8 ile 28’i 4’e böl: 8/28=2/7.\n2. Böylece 8·3/28=2·3/7.\n3. 2·3/7=6/7.\nSonuç: 6/7.',
+ '70-Beispiel-2-b':'1. Payı 4 ile çarp: 4·2/5=8/5.\n2. 8:5=1, kalan 3; bu yüzden 8/5=1 3/5.\nSonuç: 1 3/5.'
+ };
+ for(const [suffix,solution] of Object.entries(examples)){
+  const q=Q.find(q=>q.id==='kerem1-'+suffix);
+  if(!q||q.kind!=='beispiel')throw Error('Example mismatch '+suffix);
+  q.solution=solution;
+ }
+ if(Q.filter(q=>q.kind==='beispiel'&&q.solution.startsWith('1.')).length!==21)
+  throw Error('Twenty-one examples must be explained in steps');
+}
 if(new Set(Q.map(q=>q.id)).size!==Q.length)throw Error('duplicate IDs');
 if(Q.some(q=>!q.german||!q.turkish))throw Error('blank text');
 window.CHECKLIST_PACK={id:'kerem-1-fractions-2026',title:'Kerem 1 · Mit Brüchen rechnen · Seiten 62, 63, 64, 68, 70, 71',onlySolvedAnswers:true,questions:Q};
