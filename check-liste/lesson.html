@@ -77,10 +77,17 @@ body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedbac
 
 /* v1.29.0: KaTeX typesets authentic fraction bars, powers, roots and equations. */
 .statement .katex,.statement .check-math-inline .katex{font-size:1.12em}
-.check-math-inline{display:inline-block;max-width:100%;overflow-x:auto;vertical-align:middle;white-space:nowrap;line-height:1.4}
-.check-math-display{margin:12px 0;max-width:100%;overflow-x:auto}
+.check-math-inline{display:inline;max-width:none;overflow:visible;vertical-align:baseline;white-space:normal;line-height:inherit}
+.check-math-display{margin:12px 0;max-width:100%;overflow:visible;white-space:normal}
 .check-math-display .katex-display{margin:.5em 0}
 .katex .katex-mathml{position:absolute}
+
+/* v1.31.0: inline equations flow with prose; no nested scrollbars or arrow buttons. */
+.check-math-inline .katex,.check-math-display .katex{white-space:normal}
+.check-math-inline .katex .base,.check-math-display .katex .base{white-space:nowrap}
+@media(max-width:620px){
+ .check-math-inline .katex,.check-math-display .katex{font-size:1em}
+}
 </style></head><body><div class="app"><aside class="left"><nav class="utility-bar" aria-label="Sayfa araçları"><a class="utility-home" href="/projeler/" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a><select id="uiLanguage" aria-label="Dil" title="Dil"><option value="tr">Türkçe</option><option value="de">Almanca</option><option value="en">İngilizce</option></select><button id="quickHelp" class="utility-help" type="button" aria-expanded="false" title="Help">?</button></nav><div id="quickHelpText" class="utility-helptext" hidden></div><h2 id="lessonName">Ders</h2><a class="return-to-lists" href="./index.html">← Check Liste</a><div id="setTitle" class="small">Ders yükleniyor…</div><div id="progressText" class="small"></div><div class="progress"><i id="progressBar"></i></div><select id="pageSelect"><option value="all">Tüm sayfalar</option></select><input id="search" type="search" placeholder="Soru ara…"><button id="importPrivateImages" type="button" hidden style="width:100%;padding:9px;margin:7px 0;background:#fff;border:1px solid #8ea899;border-radius:7px;cursor:pointer">⤴ Görselleri içe aktar</button><input id="privateImagesInput" type="file" multiple accept="image/png,image/jpeg,image/webp" hidden><p id="privateImagesHint" class="small" hidden></p><div id="menu"></div>
 <section id="quizPanel" class="quiz-panel" hidden aria-label="Çoktan seçmeli yanıt kontrolü">
 <div class="quiz-head" id="quizHeading">Yanıtını seç · 4 seçenek</div>
@@ -102,7 +109,7 @@ body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedbac
  <button id="inkDashed" class="ink-style" type="button" data-stroke-style="dashed" aria-pressed="false" title="Kesikli çizgi">Dashed</button>
 </div><button id="clear" class="clear">Tümünü sil</button><button id="sharePdfFile" type="button" hidden>↗ Dosyayı paylaş</button></div><span id="exportStatus" role="status" aria-live="polite"></span><div class="board-area pen" id="boardArea"><canvas id="board"></canvas></div></section></div>
 
-<div class="version-note" aria-label="Sürüm">v1.30.0 · Çözüm sayfasında gelişmiş KaTeX</div>
+<div class="version-note" aria-label="Sürüm">v1.31.0 · Çözüm sayfasında gelişmiş KaTeX</div>
 <script>
 (function(){
  const lang=document.getElementById('uiLanguage');
@@ -146,5 +153,5 @@ body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedbac
  help.addEventListener('click',()=>{text.hidden=!text.hidden;help.setAttribute('aria-expanded',String(!text.hidden))});
  translate();
 })();
-</script><script src="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.js" integrity="sha384-a1WQdjRj162i159OYq041X6I4K8NenkrI09LlPmiHg0YOb7CR+wJOraXwK9abpnE" crossorigin="anonymous"></script><script src="./math-render.js?v=1.30.0"></script><script src="./lesson-loader.js?v=1.30.0"></script><script src="/projeler/analytics.js?v=20261114-auto"></script>
+</script><script src="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.js" integrity="sha384-a1WQdjRj162i159OYq041X6I4K8NenkrI09LlPmiHg0YOb7CR+wJOraXwK9abpnE" crossorigin="anonymous"></script><script src="./math-render.js?v=1.31.0"></script><script src="./lesson-loader.js?v=1.31.0"></script><script src="/projeler/analytics.js?v=20261114-auto"></script>
 </body></html>
