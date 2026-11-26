@@ -1,6 +1,6 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.30.0 · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.31.0 · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
 ## Tuana 2 (v1.30.0)
 
@@ -37,6 +37,10 @@ Ortak `check-liste/math-render.js` dosyası ve sabit sürümlü **KaTeX v0.19.1*
 ### v1.30.0 — Çözüm sayfalarında KaTeX iyileştirmesi
 
 Özellikle Tuana 2'nin adım adım açıklamalarındaki kübik polinomlar, iç içe üsler, logaritma fonksiyonları ve kesirler gerçek KaTeX gösterimine dönüştürülür. `check-liste/math-render.js` ortak motoru hem `answer.html` hem de `answer-generic.html` içinde kullanılır. Bütün soru/çözüm veri kimlikleri ve öğrenci kayıtları korunur.
+
+### v1.31.0 — KaTeX formül kaydırma çubukları kaldırıldı
+
+Çözüm ve soru sayfalarındaki **formüllere özgü kaydırma çubukları** kaldırıldı. `check-math-inline` artık normal satır içi metin gibi davranıyor (`display:inline; overflow:visible`). KaTeX dizgisindeki kesir ve üs gösterimleri korunuyor; matematiksel parçalar uygun yerlerde satır akışına katılabilir. `check-math-display` blokları da ayrı kaydırma alanı oluşturmaz. Değişiklik yalnızca görüntüleme katmanındadır; çözüm kayıtları etkilenmez.
 
 ## Miraç 1 (v1.21.0)
 
