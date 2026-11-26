@@ -1,6 +1,10 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.32.0 · Sade ana sayfa, ortak çizim ve çözüm sistemi.**
+**Sürüm v1.33.0 · Liya 1 eklendi; ortak çizim ve çözüm sistemi.**
+
+## v1.33.0 — Liya 1
+
+**Liya 1** için 2 kullanıcı fotoğrafından **7 bağımsız soru kartı** oluşturuldu: 3a–3b, 4a–4c, 5 ve 6. Her kartta Almanca soru, Türkçe bire bir anlam karşılığı ve **Çözüm** penceresinde adım adım açıklama bulunur. Öğrencinin kayıt kimliği: `liya-1-proportion-2026`. Veri: `sets/liya-1/data.js`. Ayrıntılar: `sets/liya-1/README.md`. Kısa bağlantı: `liya-1/`. Check Liste ana sayfasında proje ana sayfasıyla aynı sade görünümde **Liya 1** düğmesi eklendi; toplam 8 öğrenci/çalışma düğmesi bulunur.
 
 ## v1.32.0 — Check Liste ana sayfası
 
