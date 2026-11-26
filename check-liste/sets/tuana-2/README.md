@@ -1,6 +1,6 @@
 # Tuana 2 — Vor-Abiturprüfung 2026
 
-**Sürüm:** Check Liste v1.28.0
+**Sürüm:** Check Liste v1.29.0
 
 **Açılış:** https://sinan-ipek.github.io/projeler/check-liste/lesson.html?set=tuana-2
 
@@ -18,6 +18,10 @@ Kullanıcının paylaştığı **10 fotoğraf** kaynak alınmıştır. Bunlar Vo
 **42 matematik kartının** Almancası ve Türkçesi satır satır yeniden eşleştirildi. B1a dahil bütün formüller, sayısal veriler ve soru koşulları her iki dilde aynı bilgiyi aktarıyor. **21 operatör kartında** Almanca kaynak açıklamaları ile tam Türkçe karşılıkları doğru yanıt sonrasında gösterilir. Kelime testinin dört seçeneği Türkçedir.
 
 Çoktan seçmeli yanıtlar **sol sütunun en altında**, ayrı kaydırılabilir bir paneldedir. Soru menüsü bunun üzerinde bağımsız kaydırılır. Çizim tahtası tam yüksekliğini korur. Eski öğrencilerin ekranı ve kaydedilmiş çözümleri değiştirilmemiştir.
+
+## v1.29.0 · Matematiksel TeX dizgisi
+
+Almanca/Türkçe soru metinleri ve açıklamalı çözüm adımları, bütün Check Liste derslerinde ortak kullanılan KaTeX ile gerçek matematik dizgisine dönüştürülür. Örnekler: `f(t)=c·a^t`, `f(t)=c·e^(kt)`, `1/3`, `x³`, `√161`. Soruların verisi ve çözüm kimlikleri değiştirilmez. Düzenleme tarayıcıdaki gösterim katmanındadır.
 
 ## v1.28.0 · Yalnızca çözüm penceresi
 
