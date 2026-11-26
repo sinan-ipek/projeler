@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Check Liste · Yanıt</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;color:#253b2c;background:#f4f8f3;padding-bottom:42px}
+nav{display:flex;align-items:center;gap:12px;background:#fff;border-bottom:1px solid #d8e4d9;padding:12px 18px}
+.home{background:#ffdc28;border:1px solid #ceb018;border-radius:4px;display:grid;place-items:center;width:40px;height:40px;color:#101810}
+.home svg{width:23px;height:23px;fill:currentColor}
+select{margin-left:auto;font:inherit;padding:8px;border:1px solid #bacfbe;border-radius:7px;background:#fff;color:#283a2e}
+button{cursor:pointer;font:inherit;padding:8px 13px;background:#fff;border:1px solid #bacfbe;border-radius:7px}
+main{max-width:840px;margin:28px auto;padding:0 20px}
+.card{background:#fff;border:1px solid #d8e4d9;border-radius:14px;padding:24px;margin:16px 0}
+h1{font-size:31px;line-height:1.2}h2{font-size:21px;line-height:1.4}
+p{white-space:pre-wrap}.question{white-space:pre-wrap;color:#304336}
+#image{display:block;max-width:100%;max-height:380px;margin:12px auto}
+#answerDetail{white-space:pre-wrap;font-size:17px;line-height:1.8}
+.hint{font-size:16px;color:#6b786b}
+#helpText{font-size:16px;max-width:830px;padding:10px 20px;margin:auto}
+[hidden]{display:none!important}
+.version{position:fixed;bottom:6px;left:10px;color:#9ba49d;font-size:10px;pointer-events:none}
+</style></head>
+<body>
+<nav>
+ <a href="/projeler/" class="home" title="Home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a>
+ <select id="lang" aria-label="Dil"><option value="tr">Türkçe</option><option value="de">Almanca</option><option value="en">İngilizce</option></select>
+ <button id="help" aria-expanded="false" title="Help">?</button>
+</nav>
+<div id="helpText" hidden>Yanıt penceresi. Soruyu oku. Varsa açıklamayı incele.</div>
+<main>
+ <h1 id="questionTitle">Yanıt</h1>
+ <section class="card"><h2 id="deLabel">Almanca soru</h2><p class="question" id="german"></p><h2 id="trLabel">Türkçesi</h2><p class="question" id="turkish"></p><img id="image" alt="Soruya ait çizim" hidden></section>
+ <section class="card"><h2 id="answerLabel">Açıklamalı yanıt</h2><div id="answerDetail" role="status">Soru yükleniyor…</div></section>
+</main>
+<div class="version">v1.27.0 · Ortak Yanıt penceresi · Hazır çözümler gösterilir</div>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id),params=new URLSearchParams(location.search);
+const id=params.get('id')||'',set=params.get('set')||'cetin-1';
+const sources={
+ 'cetin-1':'./sets/matematik-5-2026/data.js',
+ 'aras-1':'../aras/data.js',
+ 'munzur':'./sets/munzur-2026/data.js',
+ 'mirac-1':'./sets/mirac-denklemler-2026/data.js',
+ 'lambacher-7':'./sets/lambacher-schweizer-7/data.js'
+};
+const messages={
+ tr:{heading:'Yanıt',de:'Almanca soru',tr:'Türkçesi',answer:'Açıklamalı yanıt',empty:'Bu soru için açıklamalı çözüm henüz eklenmedi.',missing:'Soru bulunamadı.',help:'Yanıt penceresi. Soruyu oku. Varsa açıklamayı incele.'},
+ de:{heading:'Antwort',de:'Deutsche Aufgabe',tr:'Türkische Übersetzung',answer:'Erläuterte Antwort',empty:'Für diese Aufgabe wurde noch keine Lösung hinterlegt.',missing:'Aufgabe nicht gefunden.',help:'Hier steht die Antwort, falls sie schon vorhanden ist.'},
+ en:{heading:'Answer',de:'German question',tr:'Turkish translation',answer:'Explained answer',empty:'An explained solution has not yet been added to this question.',missing:'Question not found.',help:'Read the question and the answer, if available.'}
+};
+let q=null;
+function currentMessage(){return messages[$('lang').value]||messages.tr}
+function update(){
+ const m=currentMessage();
+ $('questionTitle').textContent=(q?.number?String(q.number)+' · ':'')+m.heading;
+ $('deLabel').textContent=m.de;$('trLabel').textContent=m.tr;$('answerLabel').textContent=m.answer;
+ $('helpText').textContent=m.help;
+ if(!q){$('answerDetail').textContent=m.missing;return}
+ const raw=q.solution||q.explainedSolution||q.explanation||q.answer||q.correctAnswerText||'';
+ $('answerDetail').textContent=Array.isArray(raw)?raw.join('\n\n'):raw?String(raw):m.empty;
+}
+$('lang').addEventListener('change',update);
+$('help').addEventListener('click',()=>{
+ $('helpText').hidden=!$('helpText').hidden;
+ $('help').setAttribute('aria-expanded',String(!$('helpText').hidden));
+});
+function show(pack){
+ q=(pack?.questions||[]).find(x=>x.id===id)||null;
+ if(q){$('german').textContent=q.german||'';$('turkish').textContent=q.turkish||'';
+  if(q.figureImage||q.sourceImage||q.image){$('image').src=q.figureImage||q.sourceImage||q.image;$('image').hidden=false}}
+ update();
+}
+try{
+ const host=window.opener;
+ if(host&&host!==window&&host.location.origin===location.origin&&host.CHECKLIST_PACK){
+  show(host.CHECKLIST_PACK);return;
+ }
+}catch(_){}
+const path=sources[set];
+if(!path){show(null);return}
+const script=document.createElement('script');
+script.src=path+'?v=1.27.0';
+script.onload=()=>show(window.CHECKLIST_PACK);
+script.onerror=()=>show(null);
+document.head.appendChild(script);
+})();
+</script>
+</body></html>
