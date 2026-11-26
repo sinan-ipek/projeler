@@ -1,4 +1,4 @@
-/* Kerem 1 · v1.35.0 · fractions · user supplied pages 62, 63, 64, 68, 70, 71.
+/* Kerem 1 · v1.36.0 · fractions · user supplied pages 62, 63, 64, 68, 70, 71.
  * Examples and numbered exercises are separate cards.
  * Illustrations are clean schematic SVG redrawings, not scans.
  */
@@ -22,15 +22,17 @@ F.eighths64=svg(text(55,48,'1/4 = 2/8')+bar(54,71,8,2)+text(348,110,'+')+bar(408
 F.a63add=svg(bar(54,81,5,3)+text(345,117,'+')+bar(405,81,5,1));
 F.a63sub=svg(bar(54,81,4,3)+text(345,117,'−')+bar(405,81,4,1,260,52,'#e89e8a'));
 F.b63add=svg(bar(54,81,4,2,260,52,'#d8b7d5')+text(345,117,'+')+bar(405,81,4,1,260,52,'#bd8ec8'));
-F.b63sub=svg(bar(54,81,8,5,260,52,'#d8b7d5')+text(345,117,'−')+bar(405,81,8,2,260,52,'#bd8ec8'));
-F.b63mix=svg(text(50,55,'Schreibe die Brüche aus der Darstellung')+bar(50,75,3,1,180,58,'#b9d8a3')+bar(275,75,3,3,180,58,'#b9d8a3')+bar(500,75,3,1,180,58,'#b9d8a3'));
+F.b63sub=svg(bar(54,81,8,6,260,52,'#d8b7d5')+text(345,117,'−')+bar(405,81,8,2,260,52,'#bd8ec8'));
+F.b63mix=svg(text(48,30,'2 Ganze und 1/3')+bar(48,47,3,1,185,42,'#b9d8a3')+bar(48,100,3,3,185,42,'#b9d8a3')+bar(48,153,3,3,185,42,'#b9d8a3')+
+ text(265,130,'+')+text(339,30,'1 Ganzes und 1/3')+bar(339,47,3,1,185,42,'#b9d8a3')+bar(339,100,3,3,185,42,'#b9d8a3'));
+F.b63mixsub=svg(text(30,30,'1 Ganzes + 3/4')+bar(38,55,4,3,235,50,'#b9d8a3')+bar(38,119,4,4,235,50,'#b9d8a3')+text(290,135,'−')+text(346,30,'1 Ganzes + 2/4')+bar(345,55,4,2,235,50,'#eab0a5')+bar(345,119,4,4,235,50,'#eab0a5'));
 F.clock68=svg(text(50,40,'1 Stunde = 60 Minuten')+circle(152,133,4,0,74)+text(251,138,'→')+circle(353,133,4,0,74)+text(451,138,'→')+circle(572,133,4,3,74));
 F.grams68=svg(text(55,40,'200 g')+bar(60,65,3,0,600,55)+text(55,153,'2/3 von 200 g')+bar(60,173,3,2,600,55));
 F.meter68=svg(text(55,41,'1 m = 100 cm')+bar(50,65,5,0,610)+text(55,160,'3/5 von 1 m')+bar(50,178,5,3,610));
 F.juice70=svg(text(64,40,'1 Portion: 1/8 l Kirschsaft')+bar(64,72,8,1,178,80,'#d88791')+text(273,124,'+')+bar(330,72,8,1,178,80,'#d88791')+text(530,124,'+')+bar(567,72,8,1,90,80,'#d88791'));
 F.pizza70=svg(circle(174,118,5,2,76)+circle(528,118,5,2,76)+text(67,230,'2/5 der ersten Pizza')+text(431,230,'2/5 der zweiten Pizza'));
 F.circles71=svg(circle(148,122,10,3,66)+circle(356,122,10,3,66)+circle(563,122,10,3,66)+text(84,235,'3 gleiche Kreise'));
-F.rectangles71=svg(bar(88,93,8,4,232,80,'#efc48c')+bar(397,93,8,4,232,80,'#efc48c'));
+F.rectangles71=svg(bar(88,93,8,3,232,80,'#efc48c')+bar(397,93,8,3,232,80,'#efc48c'));
 function triangle(cx){
  const A=[cx,54],B=[cx-78,212],C=[cx+78,212];
  const P=(i,j)=>[A[0]+(i*(B[0]-A[0])+j*(C[0]-A[0]))/3,A[1]+(i*(B[1]-A[1])+j*(C[1]-A[1]))/3];
@@ -38,7 +40,7 @@ function triangle(cx){
  let out='';
  for(let i=0;i<3;i++)for(let j=0;i+j<3;j++){
   out+=polygon([P(i,j),P(i+1,j),P(i,j+1)],i===0&&j===0?'#c8a0d7':'#fff');
-  if(i+j<2)out+=polygon([P(i+1,j),P(i,j+1),P(i+1,j+1)],'#fff');
+  if(i+j<2)out+=polygon([P(i+1,j),P(i,j+1),P(i+1,j+1)],i===0&&j===0?'#c8a0d7':'#fff');
  }
  return out;
 }
@@ -108,7 +110,7 @@ seq(63,'B',3,'Addiere und kürze das Ergebnis. Erkläre dein Ergebnis.','Topla, 
 seq(63,'B',4,'Übertrage und ergänze zu Ganzen.','Defterine geçir ve tam sayıya tamamla.', ['6/11 + □ = 1','7/23 + □ = 1','6/4 + □ = 2','7/3 + □ = 3']);
 seq(63,'B',5,'Berechne. Schreibe das Ergebnis als gemischte Zahl.','Hesapla ve sonucu tam sayılı kesir olarak yaz.', ['7/11 + 8/11','16/17 + 15/17','32/15 − 9/15','43/24 − 11/24']);
 ex(63,'B',6,'a','Schreibe die Aufgabe ins Heft und löse sie. Lies die Addition aus den grünen Dritteln ab.','Defterine yaz ve çöz. Yeşil üçte birlik şeritlerdeki toplama işlemini bul.','b63mix');
-ex(63,'B',6,'b','Schreibe die Aufgabe ins Heft und löse sie. Lies die Subtraktion aus den grünen und roten Vierteln ab.','Defterine yaz ve çöz. Yeşil ve kırmızı dörtte birliklerden çıkarma işlemini bul.','b63sub');
+ex(63,'B',6,'b','Schreibe die Aufgabe ins Heft und löse sie. Lies die Subtraktion aus den grünen und roten Vierteln ab.','Defterine yaz ve çöz. Yeşil ve kırmızı dörtte birliklerden çıkarma işlemini bul.','b63mixsub');
 seq(63,'B',7,'Berechne.','Hesapla.', ['2 1/8 + 8 5/8','12 8/9 + 7 3/9','5 1/6 − 1 5/6','3 4/15 − 1 7/15']);
 ex(63,'B',8,'','Kim streicht ihr Zimmer. Sie mischt die gelbe und weiße Farbe und braucht 3 1/2 l Farbe. Wie viel l Farbe bleibt übrig? Die Eimer enthalten 3 1/4 l und 1 3/4 l.','Kim odasını boyuyor. Sarı ve beyaz boyayı karıştırıyor; 3 tam 1/2 litre boya harcıyor. Kovalarda 3 tam 1/4 ve 1 tam 3/4 litre boya var. Ne kadarı kalır?','paints63');
 // S.64 unequal denominators
@@ -177,9 +179,9 @@ seq(71,'B',4,'Multipliziere. Schreibe das Ergebnis als gemischte Zahl.','Çarp v
 ex(71,'B',5,'','In eine Kiste passen 12 Beutel mit Äpfeln. In jeden Beutel passen 4/5 kg Äpfel. Wie viele kg Äpfel passen in die Kiste?','Bir kasaya 12 elma torbası sığıyor. Her torba 4/5 kg elma alıyor. Kasaya toplam kaç kilogram elma sığar?','apple71');
 seq(71,'B',6,'Multipliziere.','Çarp.', ['2 · 1 1/5','3 · 1 3/7','10 · 2 8/9','2 · 3 3/4','4 1/6 · 5','3 7/9 · 3']);
 for(const [part,de,tr] of [
- ['a','Bilde mit den Kärtchen 2, 3, 4, 8 eine Aufgabe aus Bruch · natürliche Zahl mit einem möglichst großen Ergebnis.','2, 3, 4, 8 kartlarını birer kez kullanarak kesir × doğal sayı biçiminde olabildiğince büyük sonuç veren işlem kur.'],
- ['b','Bilde mit den Kärtchen 2, 3, 4, 8 eine Aufgabe aus Bruch · natürliche Zahl mit einem möglichst kleinen Ergebnis.','2, 3, 4, 8 kartlarını birer kez kullanarak olabildiğince küçük sonuç veren bir kesir × doğal sayı işlemi kur.'],
- ['c','Bilde mit den Kärtchen 2, 3, 4, 8 eine Aufgabe aus Bruch · natürliche Zahl, die eine ganze Zahl ergibt.','2, 3, 4, 8 kartlarını birer kez kullanarak sonucu tam sayı olan bir kesir × doğal sayı işlemi kur.']
+ ['a','Bilde mit den Kärtchen 2, 3, 4, 8 eine Aufgabe aus Bruch · natürliche Zahl mit einem möglichst großen Ergebnis.','2, 3, 4, 8 kartlarından uygun üç tanesini ayrı yerlerde kullanarak kesir × doğal sayı biçiminde olabildiğince büyük sonuç veren işlem kur.'],
+ ['b','Bilde mit den Kärtchen 2, 3, 4, 8 eine Aufgabe aus Bruch · natürliche Zahl mit einem möglichst kleinen Ergebnis.','2, 3, 4, 8 kartlarından uygun üç tanesini ayrı yerlerde kullanarak olabildiğince küçük sonuç veren bir kesir × doğal sayı işlemi kur.'],
+ ['c','Bilde mit den Kärtchen 2, 3, 4, 8 eine Aufgabe aus Bruch · natürliche Zahl, die eine ganze Zahl ergibt.','2, 3, 4, 8 kartlarından uygun üç tanesini ayrı yerlerde kullanarak sonucu tam sayı olan bir kesir × doğal sayı işlemi kur.']
 ])ex(71,'B',7,part,de,tr);
 if(new Set(Q.map(q=>q.id)).size!==Q.length)throw Error('duplicate IDs');
 if(Q.some(q=>!q.german||!q.turkish))throw Error('blank text');
