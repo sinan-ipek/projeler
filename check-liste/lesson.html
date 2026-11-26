@@ -144,6 +144,16 @@ body.has-graded-quiz .app{grid-template-columns:minmax(270px,290px) minmax(300px
 }
 @media(max-width:550px){.question-language-card{padding:14px;font-size:16px}.main{padding:12px}.boardbar{padding:9px}.board-area{margin:10px}}
 
+
+/* v1.38.1 — Dış panel çerçevelerini kaldır; en alt arka plan beyaz. */
+html,body{background:#fff!important}
+.app{background:#fff}
+.left{background:#fff;border:0;border-radius:0;box-shadow:none}
+.main{background:transparent;border:0;border-radius:0;box-shadow:none;padding:10px 12px 18px}
+.boardpanel{background:#fff;border:0;border-radius:0;box-shadow:none}
+@media(max-width:900px){
+ .main{background:transparent;border:0;border-radius:0;box-shadow:none;padding:10px 12px 18px}
+}
 </style></head><body><div class="app"><aside class="left"><nav class="utility-bar" aria-label="Sayfa araçları"><a class="utility-home" href="/projeler/" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a><select id="uiLanguage" aria-label="Dil" title="Dil"><option value="tr">Türkçe</option><option value="de">Almanca</option><option value="en">İngilizce</option></select><button id="quickHelp" class="utility-help" type="button" aria-expanded="false" title="Help">?</button></nav><div id="quickHelpText" class="utility-helptext" hidden></div><h2 id="lessonName">Ders</h2><a class="return-to-lists" href="./index.html">← Check Liste</a><div id="setTitle" class="small">Ders yükleniyor…</div><div id="progressText" class="small"></div><div class="progress"><i id="progressBar"></i></div><select id="pageSelect"><option value="all">Tüm sayfalar</option></select><input id="search" type="search" placeholder="Soru ara…"><button id="importPrivateImages" type="button" hidden style="width:100%;padding:9px;margin:7px 0;background:#fff;border:1px solid #8ea899;border-radius:7px;cursor:pointer">⤴ Görselleri içe aktar</button><input id="privateImagesInput" type="file" multiple accept="image/png,image/jpeg,image/webp" hidden><p id="privateImagesHint" class="small" hidden></p><div id="menu"></div>
 <section id="quizPanel" class="quiz-panel" hidden aria-label="Çoktan seçmeli yanıt kontrolü">
 <div class="quiz-head" id="quizHeading">Yanıtını seç · 4 seçenek</div>
@@ -166,7 +176,7 @@ body.has-graded-quiz .app{grid-template-columns:minmax(270px,290px) minmax(300px
 </div><button id="clear" class="clear">Tümünü sil</button><button id="sharePdfFile" type="button" hidden>↗ Dosyayı paylaş</button></div><span id="exportStatus" role="status" aria-live="polite"></span><div class="board-area pen" id="boardArea"><canvas id="board"></canvas></div></section></div>
 
 <div id="imageLightbox" class="image-lightbox" role="dialog" aria-modal="true" aria-label="Büyütülmüş soru görseli" hidden><img id="imageLightboxImg" alt="Büyütülmüş görsel" title="Küçültmek için tıkla"></div>
-<div class="version-note" aria-label="Sürüm">v1.38.0 · Minimal soru kartları ve görsel büyütme</div>
+<div class="version-note" aria-label="Sürüm">v1.38.1 · Dış çerçeveler kaldırıldı, beyaz zemin</div>
 <script>
 (function(){
  const lang=document.getElementById('uiLanguage');
