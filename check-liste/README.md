@@ -1,6 +1,10 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.35.0 · Kerem 1 kesir çalışması eklendi; on sade öğrenci düğmesi.**
+**Sürüm v1.36.0 · Kerem 1 kesir çalışması eklendi; on sade öğrenci düğmesi.**
+
+## v1.36.0 — Kerem 1 açıklamalı çözümler
+
+Kerem 1'in **169 kartının tamamına** çözümler/açıklamalar eklendi: **127 alıştırma**, **21 çözümlü örnek**, **8 kural** ve **13 sözlük**. Ortak `Çözüm` düğmesi Kerem 1'de her soru için görünür. Kesir işlemlerinde ortak payda, sadeleştirme ve tam sayılı kesre dönüştürme adımları açıklanır; görsel problem çözümleri ayrı yazılmıştır. 63. ve 71. sayfa grafiklerindeki boyalı hücre sayıları kaynak fotoğraflara göre düzeltildi. Veriler `sets/kerem-1-fractions-2026/data.js` içindedir ve eski öğrenci kayıt anahtarları değiştirilmemiştir.
 
 ## v1.35.0 — Kerem 1 · Kesirler
 
