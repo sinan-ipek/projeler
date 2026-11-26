@@ -82,7 +82,7 @@ body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedbac
 <div id="quizExplanation" class="quiz-explanation" hidden></div>
 <div id="quizExtraNotes" class="quiz-notes" hidden></div>
 <label class="quiz-done"><input type="checkbox" id="quizDone" disabled> Tamamlandı ✓</label>
-</section></aside><main class="main"><article class="card"><div id="qid" class="title"></div><h1 id="qtitle"></h1><div class="section">🇩🇪 Deutsch · Almanca</div><div id="german" class="statement"></div><div class="section">🇹🇷 Türkçe · Çeviri</div><div id="turkish" class="statement turkish"></div><div id="calculatorNote" class="calculator-note" hidden></div><div id="pictures" hidden><div class="section">Kitaptan kırpılmış görsel (tıklayarak büyüt)</div><div id="privateImageStatus" class="small" hidden aria-live="polite"></div><div class="figcontainer"><img id="figure" class="source" alt="Soru görseli"></div></div><div class="answer-inline" id="answerInline" hidden><button type="button" id="answerAction" class="answer-action">Yanıt</button></div><div class="actions"><label class="doneLabel"><input type="checkbox" id="done"> Tamamlandı ✓</label><div><button class="navbtn" id="prev">← Geri</button><button class="navbtn primary" id="next">İleri →</button></div></div></article></main><section class="boardpanel"><div class="boardbar"><strong>✎ Çözüm alanı</strong><button id="shareSolutions" class="shareSolutions" type="button" title="Tüm sorular ve kaydedilmiş çözüm çizimleri tek PDF olarak indirilir">↗ Paylaş</button><button id="pen" class="tool on" type="button" aria-pressed="true">✎ Kalem</button><button id="selectTool" class="tool" type="button" aria-pressed="false">↖ Seçim</button><button id="eraser" class="tool" type="button" aria-pressed="false">▧ Silgi</button>
+</section></aside><main class="main"><article class="card"><div id="qid" class="title"></div><h1 id="qtitle"></h1><div class="section">🇩🇪 Deutsch · Almanca</div><div id="german" class="statement"></div><div class="section">🇹🇷 Türkçe · Çeviri</div><div id="turkish" class="statement turkish"></div><div id="calculatorNote" class="calculator-note" hidden></div><div id="pictures" hidden><div class="section">Kitaptan kırpılmış görsel (tıklayarak büyüt)</div><div id="privateImageStatus" class="small" hidden aria-live="polite"></div><div class="figcontainer"><img id="figure" class="source" alt="Soru görseli"></div></div><div class="answer-inline" id="answerInline" hidden><button type="button" id="answerAction" class="answer-action">Çözüm</button></div><div class="actions"><label class="doneLabel"><input type="checkbox" id="done"> Tamamlandı ✓</label><div><button class="navbtn" id="prev">← Geri</button><button class="navbtn primary" id="next">İleri →</button></div></div></article></main><section class="boardpanel"><div class="boardbar"><strong>✎ Çözüm alanı</strong><button id="shareSolutions" class="shareSolutions" type="button" title="Tüm sorular ve kaydedilmiş çözüm çizimleri tek PDF olarak indirilir">↗ Paylaş</button><button id="pen" class="tool on" type="button" aria-pressed="true">✎ Kalem</button><button id="selectTool" class="tool" type="button" aria-pressed="false">↖ Seçim</button><button id="eraser" class="tool" type="button" aria-pressed="false">▧ Silgi</button>
 <div class="ink-colors" role="group" aria-label="Çizim rengi">
  <button type="button" class="ink-swatch selected" data-ink-color="#111111" title="Siyah" aria-label="Siyah" aria-pressed="true" style="--swatch:#111111"></button>
  <button type="button" class="ink-swatch" data-ink-color="#d62d35" title="Kırmızı" aria-label="Kırmızı" aria-pressed="false" style="--swatch:#d62d35"></button>
@@ -95,7 +95,7 @@ body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedbac
  <button id="inkDashed" class="ink-style" type="button" data-stroke-style="dashed" aria-pressed="false" title="Kesikli çizgi">Dashed</button>
 </div><button id="clear" class="clear">Tümünü sil</button><button id="sharePdfFile" type="button" hidden>↗ Dosyayı paylaş</button></div><span id="exportStatus" role="status" aria-live="polite"></span><div class="board-area pen" id="boardArea"><canvas id="board"></canvas></div></section></div>
 
-<div class="version-note" aria-label="Sürüm">v1.27.0 · 5 çizim rengi, Solid / Dashed, Yanıt</div>
+<div class="version-note" aria-label="Sürüm">v1.28.0 · Çözüm düğmesi · Soru tekrarı kaldırıldı</div>
 <script>
 (function(){
  const lang=document.getElementById('uiLanguage');
@@ -114,9 +114,9 @@ body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedbac
  document.getElementById('lessonName').textContent=chosen.name;
  document.title=chosen.name+' · Check Liste';
  const labels={
-  tr:{help:'Kalem ile çiz. Seçim ile çizgiyi taşı. Paylaş ile PDF kaydet.',title:'Çetin 1 · Matematik',search:'Soru ara…',all:'Tüm sayfalar',share:'↗ Paylaş',pen:'✎ Kalem',select:'↖ Seçim',eraser:'▧ Silgi',clear:'Tümünü sil',prev:'← Geri',next:'İleri →',done:'Tamamlandı ✓',heading:'✎ Çözüm alanı'},
-  de:{help:'Mit dem Stift zeichnen. Mit Auswahl verschieben. Mit Teilen PDF speichern.',title:'Çetin 1 · Mathematik',search:'Aufgabe suchen…',all:'Alle Seiten',share:'↗ Teilen',pen:'✎ Stift',select:'↖ Auswahl',eraser:'▧ Radierer',clear:'Alles löschen',prev:'← Zurück',next:'Weiter →',done:'Fertig ✓',heading:'✎ Lösungsfeld'},
-  en:{help:'Draw with Pen. Move with Select. Save PDF with Share.',title:'Çetin 1 · Math',search:'Search questions…',all:'All pages',share:'↗ Share',pen:'✎ Pen',select:'↖ Select',eraser:'▧ Eraser',clear:'Clear all',prev:'← Back',next:'Next →',done:'Done ✓',heading:'✎ Solution board'}
+  tr:{help:'Kalem ile çiz. Seçim ile çizgiyi taşı. Paylaş ile PDF kaydet.',title:'Çetin 1 · Matematik',search:'Soru ara…',all:'Tüm sayfalar',share:'↗ Paylaş',pen:'✎ Kalem',select:'↖ Seçim',eraser:'▧ Silgi',clear:'Tümünü sil',prev:'← Geri',next:'İleri →',done:'Tamamlandı ✓',answer:'Çözüm',heading:'✎ Çözüm alanı'},
+  de:{help:'Mit dem Stift zeichnen. Mit Auswahl verschieben. Mit Teilen PDF speichern.',title:'Çetin 1 · Mathematik',search:'Aufgabe suchen…',all:'Alle Seiten',share:'↗ Teilen',pen:'✎ Stift',select:'↖ Auswahl',eraser:'▧ Radierer',clear:'Alles löschen',prev:'← Zurück',next:'Weiter →',done:'Fertig ✓',answer:'Lösung',heading:'✎ Lösungsfeld'},
+  en:{help:'Draw with Pen. Move with Select. Save PDF with Share.',title:'Çetin 1 · Math',search:'Search questions…',all:'All pages',share:'↗ Share',pen:'✎ Pen',select:'↖ Select',eraser:'▧ Eraser',clear:'Clear all',prev:'← Back',next:'Next →',done:'Done ✓',answer:'Solution',heading:'✎ Solution board'}
  };
  function translate(){
   const l=labels[lang.value]||labels.tr;
@@ -127,6 +127,7 @@ body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedbac
   for(const [id,key] of [['shareSolutions','share'],['pen','pen'],['selectTool','select'],['eraser','eraser'],['clear','clear'],['prev','prev'],['next','next']]){
    document.getElementById(id).textContent=l[key];
   }
+  document.getElementById('answerAction').textContent=l.answer;
   const done=document.querySelector('.doneLabel');
   if(done&&done.lastChild&&done.lastChild.nodeType===3)done.lastChild.textContent=' '+l.done;
   const bar=document.querySelector('.boardbar strong');
@@ -138,5 +139,5 @@ body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedbac
  help.addEventListener('click',()=>{text.hidden=!text.hidden;help.setAttribute('aria-expanded',String(!text.hidden))});
  translate();
 })();
-</script><script src="./lesson-loader.js?v=1.27.0"></script><script src="/projeler/analytics.js?v=20261114-auto"></script>
+</script><script src="./lesson-loader.js?v=1.28.0"></script><script src="/projeler/analytics.js?v=20261114-auto"></script>
 </body></html>
