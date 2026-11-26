@@ -133,7 +133,11 @@ for(const [part,de,tr,fig] of [
  ['c2','Wie viel cm sind 3/5 von 1 m? Erkläre Schritt 2.','Bir metrenin 3/5’i kaç santimetredir? İkinci adımı açıkla.','meter68']
  ])ex(68,'Entdecken',1,part,de,tr,fig);
 ex(68,'Entdecken',2,'','Bestimmt die Größen. Wie kann man Anteile von Größen berechnen?','Miktarların kesir kadarını belirleyin. Bir büyüklüğün kesir kadarını nasıl hesaplarız?');
-seq(68,'A',3,'Bestimmt die Größen.','Verilen kesir kadarını bul.', ['1/4 Stunde','7/8 von 240 g','3/5 von 20 cm','2/10 von 2 €','4/9 von 27 m']);
+ex(68,'A',3,'a','Bestimmt die Größen. 1/4 Stunde.','Büyüklüğü bul. 1/4 saat.');
+ex(68,'A',3,'b','Bestimmt die Größen. 7/8 von 240 g.','240 gramın 7/8’ini bul.');
+ex(68,'A',3,'c','Bestimmt die Größen. 3/5 von 20 cm.','20 santimetrenin 3/5’ini bul.');
+ex(68,'A',3,'d','Bestimmt die Größen. 2/10 von 2 €.','2 avronun 2/10’unu bul.');
+ex(68,'A',3,'e','Bestimmt die Größen. 4/9 von 27 m.','27 metrenin 4/9’unu bul.');
 note(68,'Nenner und Zähler','Der Nenner eines Bruchs gibt an, in wie viele gleich große Teile das Ganze geteilt wird. Der Zähler gibt an, wie viele Teile genommen werden.','Payda bir bütünün kaç eşit parçaya bölündüğünü; pay ise kaç parçanın alındığını gösterir.');
 es(68,1,'','Wie viel sind 2/3 von 60 cm? Teile in Drittel und nimm zwei davon.','60 cm’nin 2/3’ü kaç santimetredir? Üç eşit parçaya ayır, ikisini al.','60 cm : 3=20 cm; 20 cm · 2=40 cm.');
 note(68,'Anteile berechnen','Dividiere die Größe durch den Nenner. Multipliziere das Ergebnis mit dem Zähler.','Büyüklüğü önce paydaya böl, sonra çıkan sonucu payla çarp.');
