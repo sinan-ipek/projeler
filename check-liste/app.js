@@ -3,8 +3,8 @@
 const $=id=>document.getElementById(id), pack=window.CHECKLIST_PACK;
 if(!pack||!Array.isArray(pack.questions)){document.getElementById('menu').textContent='Soru verileri bulunamadı.';return}
 const qs=pack.questions, checkId=pack.id||'check-liste-default', profile=new URLSearchParams(location.search).get('profile')||'default';
-/* Show the left-bottom quiz only for graded packs. Other lessons remain unchanged. */
-document.body.classList.toggle('has-graded-quiz',qs.some(q=>(Array.isArray(q.choices)&&q.choices.length>=4)||q.answerMode==='worked-solution'));
+/* Sidebar formatting is only for actual four-choice quizzes; Tuana 2 uses a natural inline answer button at the end of each question. */
+document.body.classList.toggle('has-graded-quiz',qs.some(q=>Array.isArray(q.choices)&&q.choices.length>=4));
 let current=Math.max(0,qs.findIndex(q=>'#'+q.id===decodeURIComponent(location.hash))), done={},answers={},viewedAnswers={};
 const key=type=>['dotem-checkliste-v2',checkId,profile,type].join(':');
 // Preserve local work when a checklist receives a new, anonymous package id.
@@ -157,8 +157,9 @@ function renderQuiz(q){
  if(!panel||!options)return;
  const solutionMode=q.answerMode==='worked-solution';
  const hasQuiz=!solutionMode&&Array.isArray(q.choices)&&q.choices.length>=4;
- panel.hidden=!hasQuiz&&!solutionMode;
- const action=$('answerAction'),hint=$('answerHint'),heading=$('quizHeading');
+ panel.hidden=!hasQuiz;
+ const action=$('answerAction'),hint=$('answerHint'),heading=$('quizHeading'),inline=$('answerInline');
+ if(inline)inline.hidden=!solutionMode;
  if(action)action.hidden=!solutionMode;
  if(hint){
   hint.hidden=!solutionMode;
