@@ -154,8 +154,9 @@ function renderQuiz(q){
  const hasQuiz=!solutionMode&&Array.isArray(q.choices)&&q.choices.length>=4;
  panel.hidden=!hasQuiz;
  const action=$('answerAction'),heading=$('quizHeading'),inline=$('answerInline');
- if(inline)inline.hidden=!solutionMode;
- if(action)action.hidden=!solutionMode;
+ // A Yanıt button follows every shared Check Liste question, not only Tuana 2.
+ if(inline)inline.hidden=false;
+ if(action)action.hidden=false;
  if(heading)heading.textContent=solutionMode?'Açıklamalı çözüm':'Yanıtını seç · 4 seçenek';
  options.hidden=!hasQuiz;
  if(message)message.hidden=!hasQuiz;
@@ -199,20 +200,19 @@ function renderQuiz(q){
 if($('answerAction')){
  $('answerAction').addEventListener('click',()=>{
   const q=qs[current];
-  if(q.answerMode!=='worked-solution')return;
-  const destination=new URL('./answer.html',location.href);
-  destination.searchParams.set('set','tuana-2');
+  const isTuana=pack.id==='tuana-2-vorabitur-2026';
+  const destination=new URL(isTuana?'./answer.html':'./answer-generic.html',location.href);
+  destination.searchParams.set('set',new URLSearchParams(location.search).get('set')||'cetin-1');
   destination.searchParams.set('id',q.id);
-  // The host browser may use a tab instead of a separate popup window.
-  const separate=window.open(destination.href,'tuana2-answer-'+q.id,'popup=yes,width=900,height=820,scrollbars=yes,resizable=yes');
-  if(!separate){
-   window.alert('Yanıt penceresi engellendi. Bu site için açılır pencerelere izin verin.');
-   return;
-  }
+  // Browsers may open an independent tab instead of a floating window.
+  const separate=window.open(destination.href,'checkliste-answer-'+q.id,'popup=yes,width=900,height=820,scrollbars=yes,resizable=yes');
+  if(!separate){window.alert('Yanıt penceresi engellendi. Açılır pencerelere izin verin.');return}
   try{separate.focus()}catch{}
-  viewedAnswers[q.id]=true;
-  saveViewedAnswers();
-  applyCompletionLock(q);
+  if(q.answerMode==='worked-solution'){
+   viewedAnswers[q.id]=true;
+   saveViewedAnswers();
+   applyCompletionLock(q);
+  }
  });
 }
 if($('quizDone')){
@@ -247,6 +247,38 @@ $('pageSelect').onchange=()=>{const p=$('pageSelect').value;if(p!=='all'){let i=
 $('search').oninput=drawMenu;$('figure').onclick=()=>{$('figure').classList.toggle('zoom')};
 const area=$('boardArea'),canvas=$('board'),ctx=canvas.getContext('2d');
 let objects=[],selected=[],tool='pen',drag=null,holding=null,preview=null,holdTimer=null,pan={x:0,y:0},activePointers=new Map(),raf=0,inkWidth=2.25;
+const INK_COLORS=['#111111','#d62d35','#2364c9','#228044','#8a9297'];
+let activeInkColor=INK_COLORS[0],activeInkStyle='solid';
+try{
+ const brush=JSON.parse(localStorage.getItem(key('brush'))||'{}');
+ if(INK_COLORS.includes(brush.color))activeInkColor=brush.color;
+ if(['solid','dashed'].includes(brush.style))activeInkStyle=brush.style;
+}catch{}
+function brushSnapshot(){return{color:activeInkColor,strokeStyle:activeInkStyle}}
+function saveBrush(){try{localStorage.setItem(key('brush'),JSON.stringify({color:activeInkColor,style:activeInkStyle}))}catch{}}
+function syncBrushControls(){
+ for(const b of document.querySelectorAll('[data-ink-color]')){
+  const on=b.dataset.inkColor===activeInkColor;
+  b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));
+ }
+ for(const b of document.querySelectorAll('[data-stroke-style]')){
+  const on=b.dataset.strokeStyle===activeInkStyle;
+  b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));
+ }
+}
+for(const b of document.querySelectorAll('[data-ink-color]')){
+ b.addEventListener('click',()=>{
+  if(!INK_COLORS.includes(b.dataset.inkColor))return;
+  activeInkColor=b.dataset.inkColor;saveBrush();syncBrushControls();
+ });
+}
+for(const b of document.querySelectorAll('[data-stroke-style]')){
+ b.addEventListener('click',()=>{
+  if(!['solid','dashed'].includes(b.dataset.strokeStyle))return;
+  activeInkStyle=b.dataset.strokeStyle;saveBrush();syncBrushControls();
+ });
+}
+syncBrushControls();
 const RIGHT_FORCE_MS=700,RIGHT_MOVE_TOLERANCE=6;
 let rightForceTimer=null,latestInkIndex=-1;
 function cancelRightForce(){if(rightForceTimer!==null){clearTimeout(rightForceTimer);rightForceTimer=null}}
@@ -470,7 +502,8 @@ function resize(){
 function lineObj(o,highlight=false){
  const p=o.pts||[];if(!p.length)return;
  ctx.lineWidth=inkWidth;ctx.lineJoin='round';ctx.lineCap='round';
- const color=highlight?'#278bd2':'#1a2520';
+ const color=highlight?'#278bd2':(INK_COLORS.includes(o.color)?o.color:'#111111');
+ const dash=highlight?[9,6]:(o.strokeStyle==='dashed'?[10,7]:[]);
  // A single click creates an actual dot object, with no pointer motion.
  if(p.length===1){
   ctx.beginPath();ctx.arc(p[0].x,p[0].y,Math.max(2.4,inkWidth*1.1),0,Math.PI*2);
@@ -492,13 +525,13 @@ function lineObj(o,highlight=false){
   // Lines, rectangles, triangles and other geometric shapes stay precise.
   p.slice(1).forEach(t=>ctx.lineTo(t.x,t.y));
  }
- ctx.strokeStyle=color;ctx.setLineDash(highlight?[9,6]:[]);
+ ctx.strokeStyle=color;ctx.setLineDash(dash);
  ctx.stroke();ctx.setLineDash([]);
 }
 function bboxAll(){if(!selected.length)return null;let p=selected.flatMap(i=>objects[i]?.pts||[]);return bounds({pts:p})}
 function handles(r){let x=r.x,y=r.y,w=r.w,h=r.h;return[{kind:'tl',x,y},{kind:'tr',x:x+w,y},{kind:'br',x:x+w,y:y+h},{kind:'bl',x,y:y+h},{kind:'rot',x:x+w/2,y:y-33}]}
 function repaint(){if(!canvas.width||!canvas.height)return;const d=canvas.width/Math.max(1,canvas.clientWidth);ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);ctx.save();ctx.translate(pan.x,pan.y);
- objects.forEach((o,i)=>{if(drag?.kind==='forced'&&i===drag.target)return;lineObj(o,selected.includes(i))});if(holding)lineObj(preview||{pts:holding.pts},!!preview);if(drag?.kind==='forced')lineObj(drag.preview,true);
+ objects.forEach((o,i)=>{if(drag?.kind==='forced'&&i===drag.target)return;lineObj(o,selected.includes(i))});if(holding)lineObj(preview||{pts:holding.pts,color:holding.color,strokeStyle:holding.strokeStyle},!!preview);if(drag?.kind==='forced')lineObj(drag.preview,true);
  const b=drag?.kind==='marquee'?null:bboxAll();if(b){ctx.strokeStyle='#2988d7';ctx.lineWidth=1.2;ctx.setLineDash([6,4]);ctx.strokeRect(b.x-7,b.y-7,b.w+14,b.h+14);ctx.setLineDash([]);handles(b).forEach(h=>{ctx.beginPath();ctx.arc(h.x,h.y,7,0,2*Math.PI);ctx.fillStyle=h.kind==='rot'?'#fff':'#3095d4';ctx.fill();ctx.strokeStyle='#1684c5';ctx.stroke()})}
  if(drag?.kind==='marquee'&&drag.moved){
   const r=marqueeRect(drag.start,drag.current);
@@ -680,14 +713,14 @@ function armHold(){
   if(!recognized)return;
   const mouse=holding.pts[holding.pts.length-1];
   shapeLock=makeShapeLock(recognized,mouse);
-  preview=shapeLock?lockedShape(shapeLock,mouse):recognized;
+  preview={...(shapeLock?lockedShape(shapeLock,mouse):recognized),color:holding.color,strokeStyle:holding.strokeStyle};
   repaint();
  },650);
 }
 function previewResize(p){
  if(!preview||!holding||!shapeLock)return;
  shapeLock.cursor={...p};
- preview=lockedShape(shapeLock,p);
+ preview={...lockedShape(shapeLock,p),color:holding.color,strokeStyle:holding.strokeStyle};
  holding.pts[holding.pts.length-1]={...p};
 }
 function eligibleInkIndex(p){
@@ -709,7 +742,7 @@ function armRightForce(down){
   // Start exactly at the best-fit geometry; moving the pointer afterwards
   // edits the control point relative to the right-press starting position.
   const lock=makeShapeLock(candidate,endpoint);
-  drag={kind:'forced',target:down.target,preview:candidate,
+  drag={kind:'forced',target:down.target,preview:{...candidate,color:ink.color,strokeStyle:ink.strokeStyle},
    lock,origin:{...down.startWorld},
    endpoint:{...endpoint},pointerId:down.pointerId};
   repaint();
@@ -723,7 +756,7 @@ function finish(e,cancel=false){
   if(drag.kind==='forced'){
    if(!cancel&&objects[drag.target]){
     // On release, the chosen best-fit geometry replaces the same saved stroke.
-    objects[drag.target]=drag.preview;
+    objects[drag.target]={...drag.preview,color:objects[drag.target].color||'#111111',strokeStyle:objects[drag.target].strokeStyle||'solid'};
     latestInkIndex=-1;
     saveBoard();
    }
@@ -741,7 +774,7 @@ function finish(e,cancel=false){
    const item=preview||(holding.pts.length===1?
     {kind:'dot',pts:[{...holding.pts[0]}]}:
     {kind:'ink',pts:holding.pts});
-   objects.push(item);
+   objects.push({...item,color:holding.color,strokeStyle:holding.strokeStyle});
    latestInkIndex=item.kind==='ink'?objects.length-1:-1;
    saveBoard();
   }
@@ -780,7 +813,7 @@ area.addEventListener('pointerdown',e=>{
   selected=drag.base.slice();repaint();return;
  }
  // Pen mode starts a new stroke even directly on top of an existing one.
- selected=[];holding={pts:[p]};preview=null;shapeLock=null;drag=null;repaint();
+ selected=[];holding={pts:[p],...brushSnapshot()};preview=null;shapeLock=null;drag=null;repaint();
 });
 area.addEventListener('pointermove',e=>{
  let cur=eventScreen(e);if(activePointers.has(e.pointerId))activePointers.set(e.pointerId,cur);
@@ -800,7 +833,7 @@ area.addEventListener('pointermove',e=>{
  if(drag?.kind==='forced'){
   const p=point(e),origin=drag.origin,endpoint=drag.endpoint;
   const control={x:endpoint.x+p.x-origin.x,y:endpoint.y+p.y-origin.y};
-  drag.preview=drag.lock?lockedShape(drag.lock,control):drag.preview;
+  drag.preview=drag.lock?{...lockedShape(drag.lock,control),color:objects[drag.target]?.color,strokeStyle:objects[drag.target]?.strokeStyle}:drag.preview;
   repaint();return;
  }
  if(drag?.kind==='pan'){pan.x+=cur.x-drag.last.x;pan.y+=cur.y-drag.last.y;drag.last=cur;repaint();return}
