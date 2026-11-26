@@ -1,6 +1,12 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.34.0 · Egemen 1 eklendi; dokuz sade çalışma düğmesi.**
+**Sürüm v1.35.0 · Kerem 1 kesir çalışması eklendi; on sade öğrenci düğmesi.**
+
+## v1.35.0 — Kerem 1 · Kesirler
+
+Kullanıcının sayfa **62, 63, 64, 68, 70, 71** fotoğraflarından **169 kart** oluşturuldu. Kartlar alıştırma, `Beispiel` (21 çözümlü örnek), `Merke` (8 kural) ve sözlük (13 madde) ayrımına sahiptir; 127 alıştırma/keşfetme alt maddesi bulunur. Almanca metinlerle Türkçe karşılıklar aynı kartta, matematik ifadeleri KaTeX gösterimindedir. Şekle bağlı sorular beyaz zeminli yeniden çizilmiş SVG şemalarıyla desteklenir.
+
+Veri: `sets/kerem-1-fractions-2026/data.js`; doğrudan bağlantı `kerem-1/`. Bu çalışmanın `Çözüm` düğmesi yalnızca kitaptaki çözümlü örnekler, kurallar ve sözlük açıklamalarında görünür; alıştırmaların sonuçları verilmez. Daha önceki `sets/kerem-1/data.js` parabol dosyası korunur. Ana sayfada **10 sade düğme** bulunur.
 
 ## v1.34.0 — Egemen 1
 
