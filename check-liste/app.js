@@ -154,7 +154,7 @@ function renderQuiz(q){
  const hasQuiz=!solutionMode&&Array.isArray(q.choices)&&q.choices.length>=4;
  panel.hidden=!hasQuiz;
  const action=$('answerAction'),heading=$('quizHeading'),inline=$('answerInline');
- // A Yanıt button follows every shared Check Liste question, not only Tuana 2.
+ // A Çözüm button follows every shared Check Liste question, not only Tuana 2.
  if(inline)inline.hidden=false;
  if(action)action.hidden=false;
  if(heading)heading.textContent=solutionMode?'Açıklamalı çözüm':'Yanıtını seç · 4 seçenek';
@@ -206,7 +206,7 @@ if($('answerAction')){
   destination.searchParams.set('id',q.id);
   // Browsers may open an independent tab instead of a floating window.
   const separate=window.open(destination.href,'checkliste-answer-'+q.id,'popup=yes,width=900,height=820,scrollbars=yes,resizable=yes');
-  if(!separate){window.alert('Yanıt penceresi engellendi. Açılır pencerelere izin verin.');return}
+  if(!separate){window.alert('Çözüm penceresi engellendi. Açılır pencerelere izin verin.');return}
   try{separate.focus()}catch{}
   if(q.answerMode==='worked-solution'){
    viewedAnswers[q.id]=true;
