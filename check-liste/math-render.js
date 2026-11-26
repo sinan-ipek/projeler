@@ -1,4 +1,4 @@
-/* Check Liste v1.29.0 — TeX-quality inline math for German/Turkish questions and solutions.
+/* Check Liste v1.30.0 — TeX-quality inline math for German/Turkish questions and solutions.
  * Safe renderer: every prose span uses textContent; only equations are sent to KaTeX.
  * Supports explicit \( ... \) / \[ ... \] and automatic detection in legacy data.
  */
@@ -27,6 +27,11 @@ function mathToken(core){
  if(!core||/^[a-zA-Z]\)$/.test(core))return false; // a), b): question labels, not algebra.
  if(opOnly.test(core)||number.test(core)||variable.test(core)||unitNames.has(core)||/^(?:cm|mm|km|kg|mg|min|ct|LE|m|g|t|h|s)[²³⁴⁵]$/.test(core))return true;
  if(!mathChars.test(core))return false;
+ // In formulas like f(x)=ax³+bx²+cx+d the pairs ax, bx, cx are
+ // algebraic monomials, NOT prose. Handle them before word detection.
+ if(/[=≤≥≈≠]/.test(core)&&/[A-Za-z0-9]/.test(core))return true;
+ if(/[\^²³⁴⁵⁶⁷⁸⁹]/.test(core)&&/\d|[()[\]]/.test(core))return true;
+ if(/^(?:ln|sin|cos|tan|log|exp)$/.test(core))return true;
  // Natural-language words must never be mistaken for mathematical variables.
  if(/[a-zA-Z]{2,}/.test(core.replace(/\b(?:sqrt|sin|cos|tan|lim|log|exp|max|min|frac|cdot|mathbb)\b/g,'x').replace(/^(?:cm|mm|km|kg|mg|min|ct|LE)(?=[²³⁴⁵]?\b|[²³⁴⁵]?$)/,'x')))return false;
  if(/^\d+(?:\d+)?[a-zA-Z]{3,}$/.test(core))return false;
@@ -34,6 +39,27 @@ function mathToken(core){
 }
 function standaloneMath(core){
  return variable.test(core)||functionRef.test(core)||/[²³⁴⁵⁶⁷⁸⁹√∞πℝ□]|(?:\d+\/\d+)|(?:[A-Za-z][′″])/u.test(core);
+}
+// Parenthesized and square-bracket powers need a COMPLETE exponent.
+// TeX parses e^[(a+b)] incorrectly as just an opening bracket superscript.
+function groupPowers(source){
+ let out='';
+ for(let i=0;i<source.length;){
+  if(source[i]==='^'&&'([{'.includes(source[i+1]||'')){
+   const open=source[i+1],close={'(':')','[':']','{':'}'}[open];
+   let depth=1,j=i+2;
+   while(j<source.length&&depth>0){
+    if(source[j]===open)depth++;
+    else if(source[j]===close)depth--;
+    if(depth>0)j++;
+   }
+   if(depth===0){
+    out+='^{'+source.slice(i+2,j)+'}';i=j+1;continue;
+   }
+  }
+  out+=source[i++];
+ }
+ return out;
 }
 function expressionToTex(expr){
  let t=String(expr).trim().replace(/\u00a0/g,' ');
@@ -50,8 +76,8 @@ function expressionToTex(expr){
    .replace(/[′″]/g,v=>v==='′'?"'":"''");
  // Superscript glyphs (x², t³, m², etc.).
  t=t.replace(/([A-Za-z0-9)\]}])([⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+)/g,(_m,base,sup)=>base+'^{'+[...sup].map(c=>supMap[c]).join('')+'}');
- // Parenthesized exponents: e^(k·t) and e^(−x)
- t=t.replace(/\^\(([^()]*)\)/g,(_m,part)=>'^{'+part+'}');
+ // Powers with parentheses or brackets, including nested expressions.
+ t=groupPowers(t);
  // Single-token exponent: a^t, x^2
  t=t.replace(/\^([+\-]?\d+(?:[.,]\d+)?|[a-zA-Z])/g,(_m,part)=>'^{'+part+'}');
  // Genuine inline numeric fractions, not a slash in a web path.
