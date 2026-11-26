@@ -230,6 +230,21 @@ function explainArithmetic(q){
 }
 for(const q of Q)if(!q.solution)q.solution=explainArithmetic(q);
 
+
+// v1.36.0 — Page 62: opening explorations.
+{
+ const answers={
+ '62-Entdecken-1-a':'1. Selina’dan 1/4 pizza ve Mark’tan 1/4 pizza kalır.\n2. 1/4+1/4=2/4.\n3. 2/4=1/2.\nSonuç: Yarım pizza.',
+ '62-Entdecken-1-b':'1. İki pizza parçasının paydası dörttür.\n2. 1/4+1/4=(1+1)/4=2/4.\n3. Sadeleştir: 2/4=1/2.\nSonuç: 1/2 pizza.',
+ '62-Entdecken-2-a':'1. Başlangıçta 7/8 dolu, 1/8 boş bellek vardır.\n2. 3/8 daha silinir.\n3. Boş alan=1/8+3/8=4/8=1/2.\nSonuç: Belleğin yarısı artık boştur.',
+ '62-Entdecken-2-b':'1. Önceden boş alan=1−7/8=1/8.\n2. Silinen alanı ekle: 1/8+3/8=4/8.\n3. 4/8=1/2.\nSonuç: 1/2 boş alan.'
+ };
+ for(const [suffix,solution] of Object.entries(answers)){
+  const q=Q.find(q=>q.id==='kerem1-'+suffix);
+  if(!q)throw Error('Unknown source id '+suffix);
+  q.solution=solution;
+ }
+}
 if(new Set(Q.map(q=>q.id)).size!==Q.length)throw Error('duplicate IDs');
 if(Q.some(q=>!q.german||!q.turkish))throw Error('blank text');
 window.CHECKLIST_PACK={id:'kerem-1-fractions-2026',title:'Kerem 1 · Mit Brüchen rechnen · Seiten 62, 63, 64, 68, 70, 71',onlySolvedAnswers:true,questions:Q};
