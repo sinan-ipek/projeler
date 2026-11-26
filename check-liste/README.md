@@ -1,6 +1,11 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.31.0 · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.32.0 · Sade ana sayfa, ortak çizim ve çözüm sistemi.**
+
+## v1.32.0 — Check Liste ana sayfası
+
+Ana sayfa `check-liste/index.html`, `projeler/index.html` içindeki yalın düğme düzenine uyumlu olacak şekilde yeniden tasarlandı. Ana ekranda sadece **7 öğrenci/çalışma düğmesi ve adları** var: 7. sınıf, Munzur, Miraç 1, Çetin 1, Aras 1, Tuana 2, Tuana 1. Ders alt başlıkları, soru sayıları, açıklamalar ve ayrı büyük kartlar kaldırıldı. Bağlantılar korunur; **7. sınıf** düğmesi açıldığında önceden var olan ZIP yükleme ve kayıtlı çalışma açma seçenekleri görünür. Diğer proje sayfalarından istenen Home, Dil, Help kontrolleri ve alt solda sürüm notu korunur. Bu değişiklik sadece ana sayfayı etkiler; ders, matematik dizgisi, çizim ve çözüm dosyaları aynen kalır.
+
 
 ## Tuana 2 (v1.30.0)
 
