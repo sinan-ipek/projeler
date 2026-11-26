@@ -12,7 +12,7 @@ const mathChars=/^[0-9A-Za-zπℝ∞√□¬°€%⁰¹²³⁴⁵⁶⁷⁸⁹⁻
 const number=/^[+\-−]?\d+(?:[.,]\d+)?$/;
 const variable=/^(?:[a-zA-Z]|π|∞|ℝ)(?:[′″']{1,2}|[₀₁₂₃₄₅₆₇₈₉])?$/u;
 const functionRef=/^(?:[a-zA-Z][′″']{0,2}|P)\([^\s]*\)$/u;
-const strong=/[=+·×÷^²³⁴⁵⁶⁷⁸⁹√≤≥≠≈→∈∩∪□]|(?:\d+\/\d+)|(?:[a-zA-Z][′″])/u;
+const strong=/[=+\-−·×÷^²³⁴⁵⁶⁷⁸⁹√≤≥≠≈→∈∩∪□]|(?:\d+\/\d+)|(?:[a-zA-Z][′″])/u;
 function tokenParts(word){
  let s=word,prefix='',suffix='';
  while(s&&/^[“„«"'‹]/.test(s)){prefix+=s[0];s=s.slice(1)}
@@ -33,7 +33,7 @@ function mathToken(core){
  return /[0-9a-zA-Zπℝ∞√□²³|=^()\/]/u.test(core);
 }
 function standaloneMath(core){
- return functionRef.test(core)||/[²³⁴⁵⁶⁷⁸⁹√∞πℝ□]|(?:\d+\/\d+)|(?:[A-Za-z][′″])/u.test(core);
+ return variable.test(core)||functionRef.test(core)||/[²³⁴⁵⁶⁷⁸⁹√∞πℝ□]|(?:\d+\/\d+)|(?:[A-Za-z][′″])/u.test(core);
 }
 function expressionToTex(expr){
  let t=String(expr).trim().replace(/\u00a0/g,' ');
@@ -56,6 +56,8 @@ function expressionToTex(expr){
  t=t.replace(/\^([+\-]?\d+(?:[.,]\d+)?|[a-zA-Z])/g,(_m,part)=>'^{'+part+'}');
  // Genuine inline numeric fractions, not a slash in a web path.
  t=t.replace(/(?<![A-Za-z0-9\\])(\d+)\/(\d+)(?![A-Za-z0-9])/g,(_m,a,b)=>'\\frac{'+a+'}{'+b+'}');
+ // Algebraic terms over numeric denominators also use a stacked fraction.
+ t=t.replace(/(?<![A-Za-z0-9\\])((?:\d+)?[a-zA-Z](?:\^\{[^{}]+\})?)\/(\d+)(?![A-Za-z0-9])/g,(_m,a,b)=>'\\frac{'+a+'}{'+b+'}');
  // Decimal comma remains comma, but not KaTeX punctuation spacing.
  t=t.replace(/(\d),(\d)/g,'$1{,}$2');
  // Coordinate separators, probability separator.
