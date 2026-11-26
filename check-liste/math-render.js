@@ -25,10 +25,10 @@ function tokenParts(word){
 }
 function mathToken(core){
  if(!core||/^[a-zA-Z]\)$/.test(core))return false; // a), b): question labels, not algebra.
- if(opOnly.test(core)||number.test(core)||variable.test(core)||unitNames.has(core))return true;
+ if(opOnly.test(core)||number.test(core)||variable.test(core)||unitNames.has(core)||/^(?:cm|mm|km|kg|mg|min|ct|LE|m|g|t|h|s)[²³⁴⁵]$/.test(core))return true;
  if(!mathChars.test(core))return false;
  // Natural-language words must never be mistaken for mathematical variables.
- if(/[a-zA-Z]{3,}/.test(core.replace(/\b(?:sqrt|sin|cos|tan|lim|log|exp|max|min|frac|cdot|mathbb)\b/g,'')))return false;
+ if(/[a-zA-Z]{2,}/.test(core.replace(/\b(?:sqrt|sin|cos|tan|lim|log|exp|max|min|frac|cdot|mathbb)\b/g,'x').replace(/^(?:cm|mm|km|kg|mg|min|ct|LE)(?=[²³⁴⁵]?\b|[²³⁴⁵]?$)/,'x')))return false;
  if(/^\d+(?:\d+)?[a-zA-Z]{3,}$/.test(core))return false;
  return /[0-9a-zA-Zπℝ∞√□²³|=^()\/]/u.test(core);
 }
