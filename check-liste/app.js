@@ -215,23 +215,158 @@ function renderQuiz(q){
  if(notes){notes.hidden=!q.notes;notes.textContent=q.notes||''}
  applyCompletionLock(q);
 }
+/* v1.38.2: Aynı sayfada, yataya genişleyen ve gerektiğinde sütunlara ayrılan çözüm penceresi. */
+const solutionOverlay=$('solutionOverlay'),solutionDialog=$('solutionDialog'),
+      solutionColumns=$('solutionColumns'),solutionClose=$('solutionClose');
+let solutionBlocks=[],solutionRequest=0,previousBodyOverflow='',returnFocus=null,tuanaSolutionsPromise=null;
+function closeSolution(){
+ if(!solutionOverlay||solutionOverlay.hidden)return;
+ solutionOverlay.hidden=true;
+ solutionRequest++;
+ solutionBlocks=[];
+ solutionColumns.replaceChildren();
+ document.body.style.overflow=previousBodyOverflow;
+ if(returnFocus&&returnFocus.isConnected)try{returnFocus.focus({preventScroll:true})}catch{}
+}
+function renderSolutionPieces(items){
+ solutionBlocks=items.map(item=>{
+  const el=document.createElement('div');
+  el.className='solution-piece'+(item.conclusion?' solution-conclusion':'');
+  if(window.CheckMath)window.CheckMath.render(el,item.text);
+  else el.textContent=item.text;
+  return el;
+ });
+ layoutSolutionColumns();
+}
+function layoutSolutionColumns(){
+ if(!solutionOverlay||solutionOverlay.hidden||!solutionBlocks.length)return;
+ const viewportWidth=Math.max(280,window.innerWidth);
+ const widthLimit=Math.max(250,Math.min(1540,Math.floor(viewportWidth*.95)));
+ const heightLimit=Math.max(145,Math.floor(window.innerHeight*.9-100));
+ const gutter=32,sidePadding=50,minColumnWidth=275,targetWidth=410;
+ const maxColumns=Math.min(4,Math.max(1,Math.floor((widthLimit-sidePadding+gutter)/(minColumnWidth+gutter))));
+ const probe=document.createElement('div');
+ probe.className='solution-column';
+ probe.style.cssText='position:fixed;left:-10000px;top:0;visibility:hidden;pointer-events:none;display:flex;flex-direction:column;gap:10px;padding:2px 0;box-sizing:border-box;';
+ document.body.appendChild(probe);
+ let best=null;
+ try{
+  for(let n=1;n<=maxColumns;n++){
+   const w=Math.max(210,Math.min(targetWidth,Math.floor((widthLimit-sidePadding-(n-1)*gutter)/n)));
+   probe.style.width=w+'px';
+   const heights=solutionBlocks.map(el=>{
+    probe.appendChild(el);
+    return Math.ceil(el.getBoundingClientRect().height)+10;
+   });
+   const indexes=[];let col=0,used=0,maxUsed=0;
+   for(const [i,h] of heights.entries()){
+    if(used>0&&used+h>heightLimit&&col<n-1){
+     maxUsed=Math.max(maxUsed,used);col++;used=0;
+    }
+    indexes[i]=col;used+=h;
+   }
+   maxUsed=Math.max(maxUsed,used);
+   best={n,w,indexes,maxUsed};
+   if(maxUsed<=heightLimit)break;
+  }
+ }finally{probe.remove()}
+ if(!best)return;
+ const {n,w,indexes}=best;
+ solutionDialog.style.width=Math.min(widthLimit,n*w+(n-1)*gutter+sidePadding)+'px';
+ solutionColumns.style.setProperty('--solution-cols',String(n));
+ solutionColumns.style.setProperty('--solution-height',heightLimit+'px');
+ solutionColumns.replaceChildren();
+ const cols=[];
+ for(let k=0;k<n;k++){
+  const c=document.createElement('div');c.className='solution-column';cols.push(c);
+  solutionColumns.append(c);
+ }
+ solutionBlocks.forEach((block,i)=>cols[indexes[i]].append(block));
+ solutionColumns.scrollTop=0;
+}
+function plainSolutionParts(raw){
+ const text=Array.isArray(raw)?raw.join('\n'):String(raw||'');
+ const segments=text.split(/\n+/).map(t=>t.trim()).filter(Boolean);
+ return (segments.length?segments:['Bu soru için açıklamalı çözüm henüz eklenmedi.']).map(t=>({
+  text:t,conclusion:/^(?:Sonuç|Ergebnis|Result)\s*:/i.test(t)
+ }));
+}
+function loadTuanaSolutions(){
+ if(window.TUANA2_SOLUTIONS)return Promise.resolve(window.TUANA2_SOLUTIONS);
+ if(!tuanaSolutionsPromise){
+  tuanaSolutionsPromise=new Promise((resolve,reject)=>{
+   const script=document.createElement('script');
+   script.src='./sets/tuana-2/solutions.js?v=1.38.2';
+   script.onload=()=>window.TUANA2_SOLUTIONS?resolve(window.TUANA2_SOLUTIONS):reject(Error('Tuana çözüm verisi eksik'));
+   script.onerror=()=>reject(Error('Tuana çözüm dosyası yüklenemedi'));
+   document.head.appendChild(script);
+  }).catch(e=>{tuanaSolutionsPromise=null;throw e});
+ }
+ return tuanaSolutionsPromise;
+}
+async function openSolution(q){
+ if(!solutionOverlay)return;
+ const token=++solutionRequest;
+ returnFocus=document.activeElement;
+ previousBodyOverflow=document.body.style.overflow;
+ const lng=$('uiLanguage')?.value||'tr';
+ $('solutionHeading').textContent=lng==='de'?'Lösung':lng==='en'?'Solution':'Çözüm';
+ solutionOverlay.hidden=false;
+ document.body.style.overflow='hidden';
+ renderSolutionPieces([{text:'Çözüm yükleniyor…'}]);
+ try{solutionClose.focus({preventScroll:true})}catch{}
+ let items=[];
+ if(pack.id==='tuana-2-vorabitur-2026'){
+  try{
+   const book=await loadTuanaSolutions();
+   if(token!==solutionRequest||solutionOverlay.hidden)return;
+   if(q.kind==='operator'){
+    const operatorQuestions=qs.filter(x=>x.kind==='operator');
+    const index=operatorQuestions.findIndex(x=>x.id===q.id);
+    if(q.explanation)items.push(...plainSolutionParts(q.explanation));
+    const example=book.operatorExamples?.[index]?.[1];
+    if(example)items.push({text:'Örnek: '+example,conclusion:false});
+   }else{
+    const entry=book.math?.[q.id];
+    if(entry){
+     items=entry.steps.map(step=>({text:String(step),conclusion:false}));
+     if(entry.conclusion)items.push({text:'Sonuç: '+entry.conclusion,conclusion:true});
+    }
+   }
+  }catch(error){
+   console.warn('Çözüm paketi yüklenemedi:',error);
+  }
+ }
+ if(!items.length){
+  const raw=q.solution||q.explainedSolution||q.explanation||q.answer||q.correctAnswerText||'';
+  items=plainSolutionParts(raw);
+ }
+ if(token!==solutionRequest||solutionOverlay.hidden)return;
+ renderSolutionPieces(items);
+ if(q.answerMode==='worked-solution'){
+  viewedAnswers[q.id]=true;
+  saveViewedAnswers();
+  applyCompletionLock(q);
+ }
+}
+if(solutionOverlay){
+ solutionClose.addEventListener('click',closeSolution);
+ solutionOverlay.addEventListener('click',event=>{if(event.target===solutionOverlay)closeSolution()});
+ document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&!solutionOverlay.hidden){event.preventDefault();closeSolution()}
+ });
+ let solutionResizeFrame=0;
+ window.addEventListener('resize',()=>{
+  if(solutionOverlay.hidden||!solutionBlocks.length)return;
+  cancelAnimationFrame(solutionResizeFrame);
+  solutionResizeFrame=requestAnimationFrame(layoutSolutionColumns);
+ });
+}
 if($('answerAction')){
  $('answerAction').addEventListener('click',()=>{
   const q=qs[current];
   if(pack.hideSolutions||(pack.onlySolvedAnswers&&!q.solution))return;
-  const isTuana=pack.id==='tuana-2-vorabitur-2026';
-  const destination=new URL(isTuana?'./answer.html':'./answer-generic.html',location.href);
-  destination.searchParams.set('set',new URLSearchParams(location.search).get('set')||'cetin-1');
-  destination.searchParams.set('id',q.id);
-  // Browsers may open an independent tab instead of a floating window.
-  const separate=window.open(destination.href,'checkliste-answer-'+q.id,'popup=yes,width=900,height=820,scrollbars=yes,resizable=yes');
-  if(!separate){window.alert('Çözüm penceresi engellendi. Açılır pencerelere izin verin.');return}
-  try{separate.focus()}catch{}
-  if(q.answerMode==='worked-solution'){
-   viewedAnswers[q.id]=true;
-   saveViewedAnswers();
-   applyCompletionLock(q);
-  }
+  void openSolution(q);
  });
 }
 if($('quizDone')){
