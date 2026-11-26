@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tuana 2 · Yanıt</title>
+<title>Tuana 2 · Çözüm</title>
 <meta name="description" content="Tuana 2 için açıklamalı matematik çözümleri ve operatör anlamları">
 <style>
 :root{--bg:#f3f7f2;--ink:#253a2c;--green:#356c4c;--line:#dbe5dc;--muted:#687b6b}
@@ -47,19 +47,11 @@ figure img{display:block;max-width:100%;height:auto;background:#fff;border:1px s
  </select>
  <button type="button" id="help" title="Help" aria-expanded="false">?</button>
 </nav>
-<div id="helpText" class="help" hidden>Bu sayfa soruyu adım adım açıklar. Adımları sırayla oku.</div>
+<div id="helpText" class="help" hidden>Bu sayfada çözüm adımları bulunur. Sırayla oku.</div>
 <main class="container">
  <div class="eyebrow" id="subTitle">Tuana 2 · Açıklamalı çözüm</div>
- <h1 id="answerTitle">Yanıt yükleniyor…</h1>
+ <h1 id="answerTitle">Çözüm yükleniyor…</h1>
  <p class="subtitle" id="answerStatus" role="status"></p>
- <section class="card" aria-label="Soru metni">
-  <div class="section-tag" id="deTitle">Almanca soru</div>
-  <div id="german" class="statement"></div>
-  <div class="section-tag" id="trTitle">Türkçe çevirisi</div>
-  <div id="turkish" class="statement"></div>
-  <div id="calculatorNote" class="calc" hidden></div>
-  <figure id="picture" hidden><img id="figure" alt="Soruya ait temizlenmiş şekil"></figure>
- </section>
  <section class="card" id="solutionCard" hidden aria-label="Açıklamalı çözüm">
   <h2 id="solutionTitle">Adım adım açıklamalı çözüm</h2>
   <div id="operatorInfo" class="source-explanation" hidden></div>
@@ -68,17 +60,17 @@ figure img{display:block;max-width:100%;height:auto;background:#fff;border:1px s
  </section>
  <button class="close" id="close" type="button">Pencereyi kapat</button>
 </main>
-<div class="version">v1.27.0 · Tuana 2 · Açıklamalı yanıtlar</div>
-<script src="./sets/tuana-2/data.js?v=1.24.0"></script>
-<script src="./sets/tuana-2/solutions.js?v=1.24.0"></script>
+<div class="version">v1.28.0 · Tuana 2 · Yalnızca açıklamalı çözüm</div>
+<script src="./sets/tuana-2/data.js?v=1.28.0"></script>
+<script src="./sets/tuana-2/solutions.js?v=1.28.0"></script>
 <script>
 (function(){
  'use strict';
  const $=id=>document.getElementById(id);
  const labels={
-  tr:{subtitle:'Tuana 2 · Açıklamalı çözüm',de:'Almanca soru',tr:'Türkçe çevirisi',heading:'Adım adım açıklamalı çözüm',operator:'Anlamı ve açıklaması',example:'Kullanım örneği:',close:'Pencereyi kapat',help:'Bu sayfa soruyu adım adım açıklar. Adımları sırayla oku.',missing:'Bu soru için açıklama bulunamadı.'},
-  de:{subtitle:'Tuana 2 · Erläuterte Lösung (Türkisch)',de:'Deutsche Aufgabe',tr:'Türkische Übersetzung',heading:'Schritt-für-Schritt-Lösung (Türkisch)',operator:'Bedeutung und Erklärung',example:'Beispiel (Türkisch):',close:'Fenster schließen',help:'Hier sehen Sie den Lösungsweg. Lesen Sie die Schritte.',missing:'Keine Erklärung für diese Aufgabe gefunden.'},
-  en:{subtitle:'Tuana 2 · Explained answer (Turkish)',de:'German question',tr:'Turkish translation',heading:'Step-by-step explanation (Turkish)',operator:'Meaning and explanation',example:'Example (Turkish):',close:'Close window',help:'This page explains the answer. Read each step.',missing:'No explanation found for this question.'}
+  tr:{subtitle:'Tuana 2 · Açıklamalı çözüm',heading:'Adım adım açıklamalı çözüm',operator:'Anlamı ve açıklaması',example:'Kullanım örneği:',close:'Pencereyi kapat',help:'Bu sayfada çözüm adımları bulunur. Sırayla oku.',missing:'Bu soru için çözüm bulunamadı.'},
+  de:{subtitle:'Tuana 2 · Erläuterte Lösung (Türkisch)',heading:'Schritt-für-Schritt-Lösung (Türkisch)',operator:'Bedeutung und Erklärung',example:'Beispiel (Türkisch):',close:'Fenster schließen',help:'Hier sehen Sie die Lösung. Lesen Sie die Schritte.',missing:'Keine Lösung für diese Aufgabe gefunden.'},
+  en:{subtitle:'Tuana 2 · Worked solution (Turkish)',heading:'Step-by-step solution (Turkish)',operator:'Meaning and explanation',example:'Example (Turkish):',close:'Close window',help:'This page contains the solution steps.',missing:'No solution found for this question.'}
  };
  const p=new URLSearchParams(location.search),id=p.get('id')||'';
  const pack=window.CHECKLIST_PACK,book=window.TUANA2_SOLUTIONS;
@@ -92,7 +84,6 @@ figure img{display:block;max-width:100%;height:auto;background:#fff;border:1px s
  function applyLanguage(){
   const lang=labels[$('language').value]||labels.tr;
   $('subTitle').textContent=lang.subtitle;
-  $('deTitle').textContent=lang.de;$('trTitle').textContent=lang.tr;
   $('solutionTitle').textContent=question?.kind==='operator'?lang.operator:lang.heading;
   $('close').textContent=lang.close;$('helpText').textContent=lang.help;
   if(question?.kind==='operator'&&operatorIndex>=0&&book){
@@ -108,13 +99,8 @@ figure img{display:block;max-width:100%;height:auto;background:#fff;border:1px s
  });
  $('close').addEventListener('click',()=>window.close());
  if(question&&book){
-  document.title=question.number+' · Tuana 2 · Yanıt';
+  document.title=question.number+' · Tuana 2 · Çözüm';
   $('answerTitle').textContent=question.number;
-  $('german').textContent=question.german;
-  $('turkish').textContent=question.turkish;
-  $('calculatorNote').textContent=question.calculatorNote||'';
-  $('calculatorNote').hidden=!question.calculatorNote;
-  if(question.figureImage){$('figure').src=question.figureImage;$('picture').hidden=false}
   if(question.kind==='operator'){
    $('operatorInfo').hidden=false;
    $('operatorInfo').textContent=question.explanation||'';
