@@ -310,6 +310,21 @@ for(const q of Q)if(!q.solution)q.solution=explainArithmetic(q);
   q.solution=solution;
  }
 }
+
+// v1.36.0 — Page 70: multiply fractions by natural numbers.
+{
+ const answers={
+ '70-Entdecken-1-a':'1. Her porsiyon 1/8 litre vişne suyu içerir.\n2. Üç porsiyonda üç kez 1/8 alınır.\n3. 1/8+1/8+1/8=3/8.\nSonuç: 3/8 litre vişne suyu.',
+ '70-Entdecken-1-b':'1. Aynı kesrin tekrarını çarpma olarak yaz.\n2. 1/8+1/8+1/8=3·1/8.\n3. 3·1/8=3/8.\nSonuç: 3/8 litre.',
+ '70-Entdecken-2-a':'1. Thomas iki pizzanın her birinden 2/5’lik bölüm alır.\n2. 2/5+2/5=4/5.\nSonuç: 4/5 pizza.',
+ '70-Entdecken-2-b':'1. İki pizzanın 2/5’i, iki kere 2/5 pizza almaktır.\n2. 2·2/5=(2·2)/5=4/5.\nSonuç: 4/5 pizza.'
+ };
+ for(const [suffix,solution] of Object.entries(answers)){
+  const q=Q.find(q=>q.id==='kerem1-'+suffix);
+  if(!q)throw Error('Unknown source id '+suffix);
+  q.solution=solution;
+ }
+}
 if(new Set(Q.map(q=>q.id)).size!==Q.length)throw Error('duplicate IDs');
 if(Q.some(q=>!q.german||!q.turkish))throw Error('blank text');
 window.CHECKLIST_PACK={id:'kerem-1-fractions-2026',title:'Kerem 1 · Mit Brüchen rechnen · Seiten 62, 63, 64, 68, 70, 71',onlySolvedAnswers:true,questions:Q};
