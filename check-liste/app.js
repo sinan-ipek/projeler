@@ -117,16 +117,33 @@ function questionLabel(q){
  return /^\d/.test(String(q.number))?'Soru '+q.number:String(q.number);
 }
 function drawMenu(){
- const pg=$('pageSelect').value,s=$('search').value.toLocaleLowerCase('tr');let last=null;
+ const pg=$('pageSelect').value;
+ const s=$('search').value.trim().toLocaleLowerCase('tr');
+ let lastPage=null, visible=0;
  $('menu').replaceChildren();
  for(let i=0;i<qs.length;i++){
-  let q=qs[i];if(pg!=='all'&&String(q.page)!==pg)continue;
-  if(s&&!([q.id,q.german,q.turkish].join(' ').toLocaleLowerCase('tr').includes(s)))continue;
-  const group=q.exercise!=null?'exercise:'+q.page+':'+q.exercise:'page:'+q.page;
-  if(group!==last){let h=document.createElement('div');h.className='group';h.textContent='SAYFA '+q.page+(q.exercise!=null?' · SORU '+q.exercise:'');$('menu').append(h);last=group}
-  let b=document.createElement('button');b.type='button';b.className='item'+(done[q.id]?' done':'')+(i===current?' active':'');b.textContent=(done[q.id]?'✓ ':'')+questionLabel(q)+(q.star?' ★':'')+(q.plus?' +':'');b.onclick=()=>open(i);$('menu').append(b);
+  const q=qs[i];
+  if(pg!=='all'&&String(q.page)!==pg)continue;
+  if(s&&!([q.id,q.german,q.turkish,questionLabel(q)].join(' ').toLocaleLowerCase('tr').includes(s)))continue;
+  // Sayfa, açılır menüde seçiliyse ikinci bir başlık basma.
+  if(pg==='all'&&q.page!==lastPage){
+   const heading=document.createElement('div');
+   heading.className='group';heading.textContent='Sayfa '+q.page;
+   $('menu').append(heading);lastPage=q.page;
+  }
+  const b=document.createElement('button');
+  b.type='button';b.className='item'+(done[q.id]?' done':'')+(i===current?' active':'');
+  b.textContent=(done[q.id]?'✓ ':'')+questionLabel(q)+(q.star?' ★':'')+(q.plus?' +':'');
+  b.onclick=()=>open(i);$('menu').append(b);visible++;
  }
- const n=qs.filter(q=>done[q.id]).length;$('progressText').textContent=n+' / '+qs.length+' tamamlandı';$('progressBar').style.width=100*n/qs.length+'%';
+ if(!visible){
+  const message=document.createElement('p');
+  message.className='small';message.textContent='Uygun soru bulunamadı.';
+  $('menu').append(message);
+ }
+ const n=qs.filter(q=>done[q.id]).length;
+ $('progressText').textContent=n+' / '+qs.length+' tamamlandı';
+ $('progressBar').style.width=100*n/qs.length+'%';
 }
 /* Optional graded multiple choice is active only when a question has choices.
    Existing student packs without choices retain their normal done checkbox. */
@@ -226,7 +243,7 @@ if($('quizDone')){
 window.openChecklistQuestion=(i)=>open(i);
 function open(i){
  if(i<0||i>=qs.length)return;
- current=i;let q=qs[i];$('qid').textContent='Sayfa '+q.page+' · '+questionLabel(q)+(q.star?'  ★':'');$('qtitle').textContent=questionLabel(q);
+ current=i;let q=qs[i];$('qid').textContent='Sayfa '+q.page+' · '+questionLabel(q)+(q.star?' ★':'')+(q.plus?' +':'');$('qtitle').textContent='';
  if(window.CheckMath){
   window.CheckMath.render($('german'),q.german);
   window.CheckMath.render($('turkish'),q.turkish);
@@ -252,7 +269,7 @@ function open(i){
 $('done').onchange=e=>{const q=qs[current];if(!completionUnlocked(q)){e.target.checked=false;return}done[q.id]=e.target.checked;if($('quizDone'))$('quizDone').checked=e.target.checked;saveDone();drawMenu()};
 $('prev').onclick=()=>open(current-1);$('next').onclick=()=>open(current+1);
 $('pageSelect').onchange=()=>{const p=$('pageSelect').value;if(p!=='all'){let i=qs.findIndex(q=>String(q.page)===p);if(i>=0)open(i)}else drawMenu()};
-$('search').oninput=drawMenu;$('figure').onclick=()=>{$('figure').classList.toggle('zoom')};
+$('search').oninput=drawMenu; // Büyütme ortak çerçevedeki ışık kutusu ile yönetilir.
 const area=$('boardArea'),canvas=$('board'),ctx=canvas.getContext('2d');
 let objects=[],selected=[],tool='pen',drag=null,holding=null,preview=null,holdTimer=null,pan={x:0,y:0},activePointers=new Map(),raf=0,inkWidth=2.25;
 const INK_COLORS=['#111111','#d62d35','#2364c9','#228044','#8a9297'];
