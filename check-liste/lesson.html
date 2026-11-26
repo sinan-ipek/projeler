@@ -88,6 +88,62 @@ body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedbac
 @media(max-width:620px){
  .check-math-inline .katex,.check-math-display .katex{font-size:1em}
 }
+
+/* v1.38.0 — Ortak minimal çerçeve: beyaz zemin ve havada duran soru kartları. */
+:root{--check-shadow:0 10px 22px rgba(16,28,20,.12);--check-edge:1px solid rgba(24,41,29,.13);--check-h:42px}
+body{background:#dedede}
+.app{height:100dvh;gap:14px;padding:14px;grid-template-columns:minmax(212px,240px) minmax(320px,1fr) minmax(330px,46%)}
+.left{border:0;border-radius:22px;background:#f2f2f3;padding:14px 12px 36px;box-shadow:0 2px 18px #0000000d}
+.left h2{margin:6px 4px 10px;font-size:18px}
+.return-to-lists,#setTitle{display:none!important}
+.utility-bar{gap:7px;margin-bottom:12px}
+.utility-home,.utility-help,.utility-bar select{height:var(--check-h);min-height:var(--check-h)}
+.utility-home{flex:0 0 42px;border-radius:3px}
+.utility-help{flex:0 0 42px;border-radius:10px}
+.utility-bar select{width:1px;min-width:0;flex:1;border-radius:10px;padding:7px 8px!important;font-size:13px!important}
+.left select,.left input[type="search"]{min-height:42px;border-radius:11px}
+.group{padding:12px 4px 3px;font-size:12px}
+.item{min-height:42px;border:var(--check-edge);border-radius:11px;background:#fff;padding:9px 11px;box-shadow:0 6px 15px #00000011}
+.item:hover{background:#fff;box-shadow:var(--check-shadow)}
+.item.active{background:#e2ece5;border-color:#aac5b0}
+.item.done{background:#edf0ed}
+.main{overflow:auto;min-width:0;padding:16px;background:#fff;border-radius:24px;box-shadow:0 2px 18px #00000010}
+.card{display:flex;flex-direction:column;gap:15px;max-width:none;width:100%;min-height:100%;margin:0;border:0;border-radius:0;padding:0;background:transparent;box-shadow:none}
+.question-id{align-self:flex-start;display:inline-flex;align-items:center;min-height:42px;padding:8px 16px;margin:0 0 2px;background:#f7f7f8;border:var(--check-edge);border-radius:11px;box-shadow:var(--check-shadow);color:#30483a;font-size:15px;font-weight:700;line-height:1.3}
+#qtitle{display:none!important}
+.question-language-card,.question-image-card{background:#fff;border:var(--check-edge);border-radius:17px;box-shadow:var(--check-shadow);padding:18px 20px;min-width:0}
+.question-language-card{font-size:17px;line-height:1.6;white-space:pre-wrap;overflow-wrap:break-word}
+.question-image-card{padding:12px}
+#pictures[hidden]{display:none!important}
+.figcontainer{display:flex;align-items:center;justify-content:center;overflow:visible;max-height:none;min-height:0}
+#figure.source{display:block;width:auto;height:auto;max-width:100%;max-height:min(46vh,520px);margin:auto;object-fit:contain;cursor:zoom-in;transition:none;transform:none!important}
+#figure.source[hidden]{display:none!important}
+.actions{margin-top:auto;padding-top:12px}
+.navbtn,.answer-action{min-height:var(--check-h);height:var(--check-h);padding:8px 14px;border-radius:11px}
+.answer-inline{margin-top:4px}
+.boardpanel{border:0;border-radius:24px;background:#fff;min-height:0;overflow:hidden;box-shadow:0 2px 18px #00000010}
+.boardbar{gap:7px;padding:11px 12px;border-bottom:1px solid #e8ece8}
+.boardbar .tool,.boardbar .clear,.boardbar .shareSolutions,.boardbar #sharePdfFile{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;height:var(--check-h);min-height:var(--check-h);padding:0 11px;border-radius:10px;font-size:13px;line-height:1.1}
+.boardbar .ink-colors,.boardbar .ink-styles{min-height:var(--check-h);height:var(--check-h);border-radius:10px;padding:4px 6px;flex:0 0 auto}
+.boardbar .ink-style{min-height:32px;height:32px;padding:4px 8px}
+.board-area{margin:13px;min-height:230px;border:var(--check-edge);border-radius:15px;background:#fff;box-shadow:var(--check-shadow);overflow:hidden}
+#exportStatus:empty{display:none}
+.version-note{z-index:5;color:#929992;background:#f2f2f3cc;border-radius:4px;padding:2px 5px}
+.image-lightbox[hidden]{display:none!important}
+.image-lightbox{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px;background:#0e1614c9;cursor:zoom-out}
+.image-lightbox img{display:block;width:auto;height:auto;max-width:min(95vw,1500px);max-height:93vh;object-fit:contain;background:#fff;padding:10px;border-radius:15px;box-shadow:0 22px 55px #0008;cursor:zoom-out}
+body.has-graded-quiz .app{grid-template-columns:minmax(270px,290px) minmax(300px,1fr) minmax(330px,44%)}
+@media(max-width:1050px){.app{grid-template-columns:minmax(190px,220px) minmax(260px,1fr) minmax(300px,42%);gap:10px;padding:10px}}
+@media(max-width:900px){
+ .app,body.has-graded-quiz .app{display:flex;flex-direction:column;height:auto;min-height:100dvh;gap:12px;padding:10px}
+ .left{max-height:350px;min-height:180px}
+ .main{overflow:visible;min-height:0}
+ .card{min-height:0}
+ .boardpanel,body.has-graded-quiz .boardpanel{height:70vh;min-height:420px}
+ body.has-graded-quiz .left{max-height:none}
+}
+@media(max-width:550px){.question-language-card{padding:14px;font-size:16px}.main{padding:12px}.boardbar{padding:9px}.board-area{margin:10px}}
+
 </style></head><body><div class="app"><aside class="left"><nav class="utility-bar" aria-label="Sayfa araçları"><a class="utility-home" href="/projeler/" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a><select id="uiLanguage" aria-label="Dil" title="Dil"><option value="tr">Türkçe</option><option value="de">Almanca</option><option value="en">İngilizce</option></select><button id="quickHelp" class="utility-help" type="button" aria-expanded="false" title="Help">?</button></nav><div id="quickHelpText" class="utility-helptext" hidden></div><h2 id="lessonName">Ders</h2><a class="return-to-lists" href="./index.html">← Check Liste</a><div id="setTitle" class="small">Ders yükleniyor…</div><div id="progressText" class="small"></div><div class="progress"><i id="progressBar"></i></div><select id="pageSelect"><option value="all">Tüm sayfalar</option></select><input id="search" type="search" placeholder="Soru ara…"><button id="importPrivateImages" type="button" hidden style="width:100%;padding:9px;margin:7px 0;background:#fff;border:1px solid #8ea899;border-radius:7px;cursor:pointer">⤴ Görselleri içe aktar</button><input id="privateImagesInput" type="file" multiple accept="image/png,image/jpeg,image/webp" hidden><p id="privateImagesHint" class="small" hidden></p><div id="menu"></div>
 <section id="quizPanel" class="quiz-panel" hidden aria-label="Çoktan seçmeli yanıt kontrolü">
 <div class="quiz-head" id="quizHeading">Yanıtını seç · 4 seçenek</div>
@@ -96,7 +152,7 @@ body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedbac
 <div id="quizExplanation" class="quiz-explanation" hidden></div>
 <div id="quizExtraNotes" class="quiz-notes" hidden></div>
 <label class="quiz-done"><input type="checkbox" id="quizDone" disabled> Tamamlandı ✓</label>
-</section></aside><main class="main"><article class="card"><div id="qid" class="title"></div><h1 id="qtitle"></h1><div class="section">🇩🇪 Deutsch · Almanca</div><div id="german" class="statement"></div><div class="section">🇹🇷 Türkçe · Çeviri</div><div id="turkish" class="statement turkish"></div><div id="calculatorNote" class="calculator-note" hidden></div><div id="pictures" hidden><div id="privateImageStatus" class="small" hidden aria-live="polite"></div><div class="figcontainer"><img id="figure" class="source" alt="Soru görseli"></div></div><div class="answer-inline" id="answerInline" hidden><button type="button" id="answerAction" class="answer-action">Çözüm</button></div><div class="actions"><label class="doneLabel"><input type="checkbox" id="done"> Tamamlandı ✓</label><div><button class="navbtn" id="prev">← Geri</button><button class="navbtn primary" id="next">İleri →</button></div></div></article></main><section class="boardpanel"><div class="boardbar"><strong>✎ Çözüm alanı</strong><button id="shareSolutions" class="shareSolutions" type="button" title="Tüm sorular ve kaydedilmiş çözüm çizimleri tek PDF olarak indirilir">↗ Paylaş</button><button id="pen" class="tool on" type="button" aria-pressed="true">✎ Kalem</button><button id="selectTool" class="tool" type="button" aria-pressed="false">↖ Seçim</button><button id="eraser" class="tool" type="button" aria-pressed="false">▧ Silgi</button>
+</section></aside><main class="main"><article class="card"><div id="qid" class="question-id"></div><h1 id="qtitle" hidden></h1><div id="german" class="statement question-language-card"></div><div id="turkish" class="statement turkish question-language-card"></div><div id="calculatorNote" class="calculator-note" hidden></div><div id="pictures" class="question-image-card" hidden><div id="privateImageStatus" class="small" hidden aria-live="polite"></div><div class="figcontainer"><img id="figure" class="source" alt="Soru görseli"></div></div><div class="answer-inline" id="answerInline" hidden><button type="button" id="answerAction" class="answer-action">Çözüm</button></div><div class="actions"><label class="doneLabel"><input type="checkbox" id="done"> Tamamlandı ✓</label><div><button class="navbtn" id="prev">← Geri</button><button class="navbtn primary" id="next">İleri →</button></div></div></article></main><section class="boardpanel"><div class="boardbar"><button id="shareSolutions" class="shareSolutions" type="button" title="Tüm sorular ve kaydedilmiş çözüm çizimleri tek PDF olarak indirilir">↗ Paylaş</button><button id="pen" class="tool on" type="button" aria-pressed="true">✎ Kalem</button><button id="selectTool" class="tool" type="button" aria-pressed="false">↖ Seçim</button><button id="eraser" class="tool" type="button" aria-pressed="false">▧ Silgi</button>
 <div class="ink-colors" role="group" aria-label="Çizim rengi">
  <button type="button" class="ink-swatch selected" data-ink-color="#111111" title="Siyah" aria-label="Siyah" aria-pressed="true" style="--swatch:#111111"></button>
  <button type="button" class="ink-swatch" data-ink-color="#d62d35" title="Kırmızı" aria-label="Kırmızı" aria-pressed="false" style="--swatch:#d62d35"></button>
@@ -109,7 +165,8 @@ body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedbac
  <button id="inkDashed" class="ink-style" type="button" data-stroke-style="dashed" aria-pressed="false" title="Kesikli çizgi">Dashed</button>
 </div><button id="clear" class="clear">Tümünü sil</button><button id="sharePdfFile" type="button" hidden>↗ Dosyayı paylaş</button></div><span id="exportStatus" role="status" aria-live="polite"></span><div class="board-area pen" id="boardArea"><canvas id="board"></canvas></div></section></div>
 
-<div class="version-note" aria-label="Sürüm">v1.37.1 · Görsel başlığı kaldırıldı</div>
+<div id="imageLightbox" class="image-lightbox" role="dialog" aria-modal="true" aria-label="Büyütülmüş soru görseli" hidden><img id="imageLightboxImg" alt="Büyütülmüş görsel" title="Küçültmek için tıkla"></div>
+<div class="version-note" aria-label="Sürüm">v1.38.0 · Minimal soru kartları ve görsel büyütme</div>
 <script>
 (function(){
  const lang=document.getElementById('uiLanguage');
@@ -157,5 +214,21 @@ body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedbac
  help.addEventListener('click',()=>{text.hidden=!text.hidden;help.setAttribute('aria-expanded',String(!text.hidden))});
  translate();
 })();
-</script><script src="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.js" integrity="sha384-a1WQdjRj162i159OYq041X6I4K8NenkrI09LlPmiHg0YOb7CR+wJOraXwK9abpnE" crossorigin="anonymous"></script><script src="./math-render.js?v=1.31.0"></script><script src="./lesson-loader.js?v=1.36.0"></script><script src="/projeler/analytics.js?v=20261114-auto"></script>
+</script><script>
+(function(){
+ 'use strict';
+ const popup=document.getElementById('imageLightbox');
+ const large=document.getElementById('imageLightboxImg');
+ const figure=document.getElementById('figure');
+ const close=()=>{popup.hidden=true;large.removeAttribute('src');document.body.style.overflow='';};
+ figure.addEventListener('click',()=>{
+  if(figure.hidden||!figure.getAttribute('src'))return;
+  large.src=figure.src;
+  popup.hidden=false;
+  document.body.style.overflow='hidden';
+ });
+ popup.addEventListener('click',close);
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!popup.hidden){e.preventDefault();close();}});
+})();
+</script><script src="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.js" integrity="sha384-a1WQdjRj162i159OYq041X6I4K8NenkrI09LlPmiHg0YOb7CR+wJOraXwK9abpnE" crossorigin="anonymous"></script><script src="./math-render.js?v=1.31.0"></script><script src="./lesson-loader.js?v=1.38.0"></script><script src="/projeler/analytics.js?v=20261114-auto"></script>
 </body></html>
