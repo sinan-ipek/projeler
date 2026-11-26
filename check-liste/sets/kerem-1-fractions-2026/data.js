@@ -287,6 +287,29 @@ for(const q of Q)if(!q.solution)q.solution=explainArithmetic(q);
   q.solution=solution;
  }
 }
+
+// v1.36.0 — Page 68: fractions of lengths, weights and times.
+{
+ const answers={
+ '68-Entdecken-1-a1':'1. Bir saat 60 dakikadır.\n2. Payda 4 olduğu için 60:4=15 dakika.\n3. Birinci adım saati dört çeyreğe bölmektir.\nSonuç: 1/4 saat=15 dakika.',
+ '68-Entdecken-1-a2':'1. Bir çeyrek saat 60:4=15 dakikadır.\n2. Pay 3 olduğu için 15·3=45 dakika.\n3. İkinci adım üç çeyreği seçmektir.\nSonuç: 3/4 saat=45 dakika.',
+ '68-Entdecken-1-b1':'1. Bütün miktar 200 gramdır.\n2. Üç eşit parçaya böl: 200:3=66 2/3 gram.\nSonuç: 1/3 miktar 66 2/3 gramdır.',
+ '68-Entdecken-1-b2':'1. Bir parça 200/3 gramdır.\n2. İki parça al: (200/3)·2=400/3 gram.\n3. 400/3=133 1/3.\nSonuç: 133 1/3 gram (yaklaşık 133,33 g).',
+ '68-Entdecken-1-c1':'1. Önce birimi çevir: 1 m=100 cm.\n2. Payda 5 olduğu için 100:5=20 cm.\nSonuç: 1/5 metre 20 cm’dir.',
+ '68-Entdecken-1-c2':'1. Beşte birlik parça 100:5=20 cm’dir.\n2. Üç parça al: 20·3=60 cm.\nSonuç: 3/5 metre=60 cm.',
+ '68-Entdecken-2-':'1. Önce bütün miktarın hangi birimde verildiğini belirle.\n2. Miktarı kesrin paydasına böl.\n3. Çıkan sonucu kesrin payıyla çarp.\n4. Örnek: 3/5 von 20 cm: 20:5=4, sonra 4·3=12 cm.\nSonuç: (Bütün miktar:payda)·pay.',
+ '68-A-3-a':'1. Bir saat 60 dakika eder.\n2. 60:4=15 dakika.\nSonuç: 1/4 saat=15 dakika.',
+ '68-A-3-b':'1. 240:8=30 gram.\n2. 30·7=210 gram.\nSonuç: 210 g.',
+ '68-A-3-c':'1. 20:5=4 cm.\n2. 4·3=12 cm.\nSonuç: 12 cm.',
+ '68-A-3-d':'1. 2 €=200 cent.\n2. 200:10=20 cent.\n3. 20·2=40 cent.\nSonuç: 0,40 €.',
+ '68-A-3-e':'1. 27:9=3 metre.\n2. 3·4=12 metre.\nSonuç: 12 m.'
+ };
+ for(const [suffix,solution] of Object.entries(answers)){
+  const q=Q.find(q=>q.id==='kerem1-'+suffix);
+  if(!q)throw Error('Unknown source id '+suffix);
+  q.solution=solution;
+ }
+}
 if(new Set(Q.map(q=>q.id)).size!==Q.length)throw Error('duplicate IDs');
 if(Q.some(q=>!q.german||!q.turkish))throw Error('blank text');
 window.CHECKLIST_PACK={id:'kerem-1-fractions-2026',title:'Kerem 1 · Mit Brüchen rechnen · Seiten 62, 63, 64, 68, 70, 71',onlySolvedAnswers:true,questions:Q};
