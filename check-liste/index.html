@@ -3,250 +3,223 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Check Liste · Dersler</title>
-<meta name="description" content="Çetin 1, Aras 1, Munzur ve 7. sınıf matematik çalışmaları.">
+<title>Check Liste</title>
+<meta name="description" content="Check Liste — öğrenci çalışmalarına doğrudan erişim">
 <style>
-:root{--ink:#20372b;--muted:#6b7c70;--green:#426751;--border:#dce6df;--bg:#f5f8f5;--card:#fff}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
-a{color:inherit}
-.shell{max-width:1080px;min-height:100dvh;margin:auto;padding:26px 24px 76px}
-.utility{display:flex;align-items:center;gap:12px}
-.home{width:40px;height:40px;display:grid;place-items:center;flex:none;background:#ffdc28;border:1px solid #d9b621;border-radius:3px;color:#111}
-.home svg{width:24px;height:24px;fill:currentColor}
-.lang{margin-left:auto;display:flex;align-items:center;gap:9px;color:var(--muted);font-size:13px}
-.lang select{padding:9px 11px;border:1px solid #c9d6cb;border-radius:8px;background:#fff;color:var(--ink);font:inherit}
-.help{width:40px;height:40px;border:1px solid #c9d6cb;border-radius:9px;background:#fff;color:var(--ink);font-size:22px;font-weight:750;cursor:pointer}
-.help-text{padding:12px 14px;background:#fff;border:1px solid var(--border);border-radius:10px;margin-top:14px;max-width:430px;color:#4f6957}
-.help-text[hidden]{display:none}
-.intro{margin:66px 0 28px}
-.eyebrow{color:#638b6c;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
-h1{font-size:clamp(32px,5vw,54px);font-weight:760;line-height:1.15;letter-spacing:-.045em;margin:9px 0 13px}
-.subtitle{font-size:17px;color:var(--muted);max-width:650px;margin:0}
-.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:33px}
-.lesson{display:flex;flex-direction:column;min-height:236px;padding:25px 24px;border:1px solid var(--border);border-radius:17px;background:var(--card);text-decoration:none;box-shadow:0 7px 19px #24432b09;transition:box-shadow .15s,transform .15s}
-.lesson:hover,.lesson:focus-visible{transform:translateY(-3px);box-shadow:0 13px 26px #24432b1a;border-color:#a3bfa9}
-.lesson:focus-visible,.home:focus-visible,.help:focus-visible,.lang select:focus-visible{outline:3px solid #83ad89;outline-offset:2px}
-.lesson-number{font-size:12px;font-weight:800;color:#608568}
-.lesson h2{margin:14px 0 8px;font-size:26px;letter-spacing:-.035em}
-.lesson .description{color:var(--muted);font-size:14px;line-height:1.5}
-.lesson .foot{margin-top:auto;padding-top:20px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-weight:700;font-size:13px;color:#416950}
-.lesson .arrow{font-size:20px}
-.lesson-choice{min-width:0;position:relative;display:flex;flex-direction:column}
-.lesson-choice>.lesson{flex:1}
-.grade7-menu{position:absolute;z-index:15;top:calc(100% + 7px);left:0;right:0;min-width:230px;padding:12px;background:#fff;border:1px solid #c8d7cb;border-radius:13px;box-shadow:0 15px 40px #18311e30}
+html,body{margin:0;min-height:100%}
+body{
+ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+ background:#dedede;color:#111;-webkit-font-smoothing:antialiased
+}
+.site-shell{
+ width:min(94vw,1460px);min-height:210px;margin:28px auto;
+ padding:24px 0 38px;border-radius:30px;background:#f2f2f3;
+ box-shadow:0 1px 0 rgba(0,0,0,.03)
+}
+.utility{
+ padding:0 32px;display:flex;align-items:center;gap:12px
+}
+.home{
+ width:40px;height:40px;display:grid;place-items:center;flex:none;
+ background:#ffdc28;border:1px solid #d1b11b;border-radius:3px;color:#101010
+}
+.home svg{width:23px;height:23px;fill:currentColor}
+.language{display:flex;gap:8px;align-items:center;margin-left:auto;font-size:14px;color:#3b443c}
+.language select,.help{
+ border:1px solid #c9c9c9;border-radius:8px;background:#fafafa;color:#222;
+ font:inherit;min-height:40px
+}
+.language select{padding:6px 9px}
+.help{width:40px;font-size:21px;font-weight:700;cursor:pointer}
+.page{padding:44px 56px 22px}
+.grid{
+ display:grid;grid-template-columns:repeat(7,minmax(0,1fr));
+ gap:19px 12px
+}
+/* Match the simple buttons on the main Projeler page. */
+.btn-card{
+ display:flex;align-items:center;justify-content:center;
+ width:60%;justify-self:center;height:54px;padding:0 10px;
+ text-align:center;text-decoration:none;cursor:pointer;color:#000;
+ font:400 13px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+ background:#f7f7f8;border:1px solid rgba(0,0,0,.16);border-radius:11px;
+ box-shadow:0 10px 22px rgba(0,0,0,.14);transition:.15s ease
+}
+.btn-card:hover{
+ transform:translateY(-2px);background:#fff;
+ box-shadow:0 14px 28px rgba(0,0,0,.18)
+}
+.btn-card:focus-visible,.home:focus-visible,.help:focus-visible,.language select:focus-visible{
+ outline:3px solid #829c88;outline-offset:3px
+}
+.choice{min-width:0;position:relative;display:grid;place-items:center}
+.choice>.btn-card{width:60%}
+.grade7-menu{
+ position:absolute;z-index:20;top:calc(100% + 10px);left:0;
+ width:max(180px,100%);padding:10px;border-radius:12px;
+ background:#fff;border:1px solid #ccd4ce;box-shadow:0 16px 30px #171e1830
+}
 .grade7-menu[hidden],.grade7-menu [hidden]{display:none!important}
-.grade7-menu a,.grade7-menu button{display:block;width:100%;box-sizing:border-box;font:inherit;font-size:14px;font-weight:700;padding:11px 13px;margin:0 0 5px;text-align:left;text-decoration:none;cursor:pointer;background:#f3f6f2;border:1px solid #e0e9e2;border-radius:8px;color:#284b34}
-.grade7-menu a:hover,.grade7-menu button:hover{background:#e1ece2;border-color:#9ebca3}
-.grade7-menu .grade7-note,.grade7-menu .grade7-status{font-size:12px;color:#5d7862;line-height:1.4;margin:8px 3px 2px;overflow-wrap:anywhere}
-.grade7-menu .grade7-status{color:#315c40}
-.version{position:fixed;bottom:9px;left:11px;color:#939f96;font-size:10px;pointer-events:none}
-@media(max-width:820px){.cards{grid-template-columns:1fr}.lesson{min-height:170px}.shell{padding:20px 18px 64px}.intro{margin:42px 0 22px}}
-@media(max-width:380px){.lang{gap:4px}.lang select{padding:8px 4px;font-size:12px}.shell{padding-left:12px;padding-right:12px}}
-.lang,.eyebrow,.lesson-number,.lesson .foot,.grade7-menu .grade7-note,.grade7-menu .grade7-status{font-size:14px}
-@media(max-width:380px){.lang select{font-size:14px}}
+.grade7-menu a,.grade7-menu button{
+ display:block;width:100%;padding:11px 12px;margin:0 0 5px;
+ border:1px solid #dce5de;border-radius:7px;background:#f5f6f5;
+ color:#1f3928;text-decoration:none;text-align:left;cursor:pointer;font:inherit;font-size:14px
+}
+.grade7-menu a:hover,.grade7-menu button:hover{background:#e6ece7}
+.grade7-status{color:#3a6544;font-size:14px;line-height:1.45;margin:8px 2px 1px;overflow-wrap:anywhere}
+.grade7-status:empty{display:none}
+.help-text{
+ margin:15px 32px 0;padding:11px 13px;max-width:430px;
+ border:1px solid #dce4dd;background:#fff;border-radius:9px;font-size:14px
+}
+.help-text[hidden]{display:none}
+.version{
+ position:fixed;bottom:6px;left:10px;font-size:10px;color:#929a94;
+ background:#f2f2f3cc;border-radius:4px;padding:2px 5px;pointer-events:none
+}
+@media(max-width:1050px){
+ .site-shell{width:min(96vw,980px);margin:28px auto}
+ .page{padding:35px 32px 22px}
+ .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:760px){
+ .site-shell{width:96vw;margin:18px auto;border-radius:24px}
+ .page{padding:32px 24px 20px}
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+ .btn-card,.choice>.btn-card{height:76px;width:75%;font-size:16px}
+}
+@media(max-width:500px){
+ .site-shell{width:100%;margin:0;border-radius:0}
+ .utility{padding:0 14px;gap:8px}
+ .page{padding:28px 14px}
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+ .btn-card,.choice>.btn-card{height:68px;width:92%;font-size:16px}
+}
 </style>
 </head>
 <body>
-<main class="shell">
+<main class="site-shell" aria-label="Check Liste">
  <nav class="utility" aria-label="Sayfa araçları">
-  <a class="home" href="../index.html" aria-label="Home" title="Home">
+  <a class="home" href="../index.html" title="Home" aria-label="Home">
    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg>
   </a>
-  <label class="lang" for="language"><span id="languageLabel">Dil</span>
+  <label class="language" for="language">
+   <span id="languageLabel">Dil</span>
    <select id="language" aria-label="Dil">
     <option value="tr">Türkçe</option>
     <option value="de">Almanca</option>
     <option value="en">İngilizce</option>
    </select>
   </label>
-  <button id="help" class="help" type="button" title="Help" aria-label="Help" aria-expanded="false" aria-controls="helpText">?</button>
+  <button class="help" id="help" type="button" aria-expanded="false" title="Help" aria-label="Help">?</button>
  </nav>
- <p id="helpText" class="help-text" hidden></p>
- <section class="intro">
-  <div class="eyebrow" id="eyebrow">Derslerim</div>
-  <h1 id="heading">Check Liste</h1>
-  <p class="subtitle" id="subtitle">Çalışmak istediğin öğrenci ve dersi seç.</p>
- </section>
- <section class="cards" aria-label="Ders listesi">
-  <div class="lesson-choice" id="grade7Choice">
-   <a class="lesson" id="grade7Toggle" href="./lesson.html?set=lambacher-7" aria-expanded="false" aria-controls="grade7Menu" aria-haspopup="true">
-    <span class="lesson-number" id="ls7Type">Matematik · 7. sınıf · NRW · Sayfa 4–295</span>
-    <h2 id="ls7Title">7. sınıf</h2>
-    <span class="description" id="ls7Description">207 soru/örnek sayfası · 2955 takip kartı · Almanca–Türkçe.</span>
-    <span class="foot"><span id="ls7Action">Seçenekler</span><span class="arrow" aria-hidden="true">⌄</span></span>
-   </a>
-   <div class="grade7-menu" id="grade7Menu" hidden>
-    <a id="grade7Start" href="./lesson.html?set=lambacher-7">Çalışmayı aç</a>
-    <button id="grade7Upload" type="button">Yükle</button>
-    <input id="grade7File" type="file" accept=".zip,application/zip,application/x-zip-compressed" hidden>
-    <p class="grade7-note" id="grade7Note">ZIP paketi bu tarayıcıda açılır; görseller internete gönderilmez.</p>
-    <p class="grade7-status" id="grade7Status" role="status" aria-live="polite"></p>
+ <p class="help-text" id="helpText" hidden></p>
+ <div class="page">
+  <section class="grid" aria-label="Öğrenci çalışmaları">
+   <div class="choice" id="grade7Choice">
+    <button class="btn-card" id="grade7Toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="grade7Menu">7. sınıf</button>
+    <div class="grade7-menu" id="grade7Menu" hidden>
+     <a id="grade7Start" href="./lesson.html?set=lambacher-7" hidden>Çalışmayı aç</a>
+     <button id="grade7Upload" type="button">Yükle</button>
+     <input id="grade7File" type="file" accept=".zip,application/zip,application/x-zip-compressed" hidden>
+     <p id="grade7Status" class="grade7-status" role="status" aria-live="polite"></p>
+    </div>
    </div>
-  </div>
-  <a class="lesson" href="./lesson.html?set=munzur">
-   <span class="lesson-number" id="munzurType">Ödev öncelikli · Sayfa 50–52, 91–93</span>
-   <h2>Munzur</h2>
-   <span class="description" id="munzurDescription">87 çalışma maddesi. İlk sırada ödev: 50/4, 51/7–8.</span>
-   <span class="foot"><span id="munzurAction">Ödeve başla</span><span class="arrow" aria-hidden="true">↗</span></span>
-  </a>
-  <a class="lesson" href="./lesson.html?set=mirac-1">
-   <span class="lesson-number" id="miracType">Denklemler · Sayfa 20</span>
-   <h2>Miraç 1</h2>
-   <span class="description" id="miracDescription">44 alt soru · Eşitlikler, sadeleştirme ve kesirli denklemler.</span>
-   <span class="foot"><span id="miracAction">Çalışmayı aç</span><span class="arrow" aria-hidden="true">↗</span></span>
-  </a>
-  <a class="lesson" href="./lesson.html?set=cetin-1">
-   <span class="lesson-number" id="cetinType">Matematik · 5. sınıf</span>
-   <h2>Çetin 1</h2>
-   <span class="description" id="cetinDescription">41 soru, Almanca–Türkçe çeviri ve çizimle çözüm alanı.</span>
-   <span class="foot"><span id="cetinAction">Çalışmayı aç</span><span class="arrow" aria-hidden="true">↗</span></span>
-  </a>
-  <a class="lesson" href="./lesson.html?set=aras-1">
-   <span class="lesson-number" id="arasType">Zaman hesaplama · Sayfa 35</span>
-   <h2>Aras 1</h2>
-   <span class="description" id="arasDescription">34 alt soru, saat çizimleri ve çözüm alanı.</span>
-   <span class="foot"><span id="arasAction">Çalışmayı aç</span><span class="arrow" aria-hidden="true">↗</span></span>
-  </a>
-  <a class="lesson" href="./lesson.html?set=tuana-2">
-   <span class="lesson-number" id="tuana2Type">Vor-Abiturprüfung 2026 · Teil A + B</span>
-   <h2>Tuana 2</h2>
-   <span class="description" id="tuana2Description">63 kart · Yanıt düğmesiyle açıklamalı çözümler.</span>
-   <span class="foot"><span id="tuana2Action">Çalışmayı aç</span><span class="arrow" aria-hidden="true">↗</span></span>
-  </a>
-  <a class="lesson" href="../mathe-gk/index.html">
-   <span class="lesson-number" id="tuanaType">Mathe GK · Analysis</span>
-   <h2>Tuana 1</h2>
-   <span class="description" id="tuanaDescription">Trigonometri, türev ve integral ders sunumu.</span>
-   <span class="foot"><span id="tuanaAction">Sunumu aç</span><span class="arrow" aria-hidden="true">↗</span></span>
-  </a>
- </section>
+   <a class="btn-card" href="./lesson.html?set=munzur">Munzur</a>
+   <a class="btn-card" href="./lesson.html?set=mirac-1">Miraç 1</a>
+   <a class="btn-card" href="./lesson.html?set=cetin-1">Çetin 1</a>
+   <a class="btn-card" href="./lesson.html?set=aras-1">Aras 1</a>
+   <a class="btn-card" href="./lesson.html?set=tuana-2">Tuana 2</a>
+   <a class="btn-card" href="../mathe-gk/index.html">Tuana 1</a>
+  </section>
+ </div>
 </main>
-<div class="version">v1.31.0 · KaTeX kaydırma okları kaldırıldı</div>
+<div class="version">v1.32.0 · Sadece öğrenci düğmeleri</div>
 <script src="./zip-import.js?v=1.20.0"></script>
 <script>
 (function(){
  'use strict';
  const $=id=>document.getElementById(id);
- const texts={
-  tr:{languageLabel:'Dil',eyebrow:'Derslerim',heading:'Check Liste',
-   subtitle:'Çalışmak istediğin öğrenci ve dersi seç.',
-   ls7Type:'Matematik · 7. sınıf · NRW · Sayfa 4–295',ls7Title:'7. sınıf',ls7Description:'Çalışma ve görseller ZIP paketinden yüklenir.',ls7Action:'Seçenekler',
-   grade7Start:'Çalışmayı aç',grade7Upload:'Yükle',grade7View:'HTML dosyasını aç',grade7Note:'ZIP yüklenmeden çalışma açılmaz. Önceki görsel ZIP’ini de seçebilirsin: uygulama çalışma kartlarını ekleyip tam ZIP dosyasını indirir.',bookSaved:'Yüklü kitap: ',bookMissing:'Henüz HTML yüklenmedi.',bookSaving:'ZIP paketi açılıyor…',bookError:'Kaydedilemedi: ',
-   munzurType:'Ödev öncelikli · Sayfa 50–51, 91–93',munzurDescription:'77 çalışma maddesi. İlk sırada ödev: 50/4, 51/7–8.',munzurAction:'Ödeve başla',
-   miracType:'Denklemler · Sayfa 20',miracDescription:'44 alt soru · Eşitlikler, sadeleştirme ve kesirli denklemler.',miracAction:'Çalışmayı aç',
-   cetinType:'Matematik · 5. sınıf',cetinDescription:'41 soru, Almanca–Türkçe çeviri ve çizimle çözüm alanı.',
-   arasType:'Zaman hesaplama · Sayfa 35',arasDescription:'34 alt soru, saat çizimleri ve çözüm alanı.',
-   tuana2Type:'Vor-Abiturprüfung 2026 · Teil A + B',tuana2Description:'63 kart: 42 matematik maddesi + 21 operatör · Çoktan seçmeli.',tuana2Action:'Çalışmayı aç',
-   tuanaType:'Mathe GK · Analysis',tuanaDescription:'Trigonometri, türev ve integral ders sunumu.',
-   cetinAction:'Çalışmayı aç',arasAction:'Çalışmayı aç',tuanaAction:'Sunumu aç',
-   help:'Bir öğrenciye tıkla. Çalışması açılır. Geri dönebilirsin.'},
-  de:{languageLabel:'Sprache',eyebrow:'Meine Kurse',heading:'Check Liste',
-   subtitle:'Wähle einen Schüler und eine Unterrichtseinheit.',
-   ls7Type:'Mathematik · 7. Klasse · NRW · Seiten 4–295',ls7Title:'7. Klasse',ls7Description:'Lernkarten und Bilder werden aus dem ZIP-Paket geladen.',ls7Action:'Optionen',
-   grade7Start:'Übungen öffnen',grade7Upload:'Hochladen',grade7View:'HTML öffnen',grade7Note:'ZIP auswählen: 3080 Lernkarten und 700 Bilder werden lokal gespeichert. Alte Bilder-ZIPs werden zu einem vollständigen ZIP ergänzt.',bookSaved:'Gespeichertes Buch: ',bookMissing:'Noch keine HTML-Datei geladen.',bookSaving:'ZIP-Paket wird geöffnet…',bookError:'Speichern fehlgeschlagen: ',
-   munzurType:'Hausaufgaben zuerst · Seiten 50–52, 91–93',munzurDescription:'87 Übungen. Zuerst: S. 50 Nr. 4 und S. 51 Nr. 7–8.',munzurAction:'Hausaufgaben öffnen',
-   miracType:'Gleichungen · Seite 20',miracDescription:'44 Teilaufgaben zu Gleichungen, Termen und Brüchen.',miracAction:'Aufgaben öffnen',
-   cetinType:'Mathematik · 5. Klasse',cetinDescription:'41 Aufgaben, zweisprachig, mit Zeichenfläche.',
-   arasType:'Zeitangaben · Seite 35',arasDescription:'34 Aufgaben mit Uhren und Zeichenfläche.',
-   tuana2Type:'Vor-Abiturprüfung 2026 · Teil A + B',tuana2Description:'63 Karten · Erläuterte Lösungen im eigenen Fenster.',tuana2Action:'Übungen öffnen',
-   tuanaType:'Mathe GK · Analysis',tuanaDescription:'Präsentation zu Trigonometrie, Ableitungen und Integralen.',
-   cetinAction:'Übung öffnen',arasAction:'Übung öffnen',tuanaAction:'Präsentation öffnen',
-   help:'Klicke auf einen Namen. Die Übung öffnet sich. Du kannst zurückgehen.'},
-  en:{languageLabel:'Language',eyebrow:'My lessons',heading:'Check Liste',
-   subtitle:'Choose a student and a lesson.',
-   ls7Type:'Mathematics · Grade 7 · NRW · Pages 4–295',ls7Title:'Grade 7',ls7Description:'Study cards and images are loaded from a local ZIP package.',ls7Action:'Options',
-   grade7Start:'Open exercises',grade7Upload:'Upload',grade7View:'Open HTML',grade7Note:'Select the ZIP: 3,080 study cards and 700 images are saved locally. An old images-only ZIP will be upgraded to a complete ZIP.',bookSaved:'Saved book: ',bookMissing:'No HTML file selected yet.',bookSaving:'Opening ZIP package…',bookError:'Could not save: ',
-   munzurType:'Homework first · Pages 50–52, 91–93',munzurDescription:'87 exercises. Homework first: page 50 no. 4 and page 51 nos. 7–8.',munzurAction:'Start homework',
-   miracType:'Equations · Page 20',miracDescription:'44 questions on equations, simplification and fractions.',miracAction:'Open exercises',
-   cetinType:'Math · Grade 5',cetinDescription:'41 questions, German–Turkish, with a drawing board.',
-   arasType:'Time calculations · Page 35',arasDescription:'34 questions with clocks and a drawing board.',
-   tuana2Type:'Pre-Abitur Exam 2026 · Part A + B',tuana2Description:'63 cards · Worked solutions in a separate window.',tuana2Action:'Open exercises',
-   tuanaType:'Mathe GK · Analysis',tuanaDescription:'Presentation on trigonometry, derivatives and integrals.',
-   cetinAction:'Open exercise',arasAction:'Open exercise',tuanaAction:'Open presentation',
-   help:'Click a name. The lesson opens. You can go back.'}
+ const dictionary={
+  tr:{label:'Dil',grade:'7. sınıf',open:'Çalışmayı aç',upload:'Yükle',
+      help:'Bir öğrenci düğmesine bas. Çalışması açılır.',
+      loading:'ZIP paketi açılıyor…',error:'Yüklenemedi: ',done:'Çalışma açılıyor…'},
+  de:{label:'Sprache',grade:'7. Klasse',open:'Übungen öffnen',upload:'Hochladen',
+      help:'Klicke auf einen Namen. Die Übungen öffnen sich.',
+      loading:'ZIP-Paket wird geöffnet…',error:'Fehler: ',done:'Übungen werden geöffnet…'},
+  en:{label:'Language',grade:'Grade 7',open:'Open exercises',upload:'Upload',
+      help:'Click a student name to open the exercises.',
+      loading:'Opening ZIP package…',error:'Could not upload: ',done:'Opening exercises…'}
  };
- const select=$('language'),help=$('help'),helpText=$('helpText');
- function applyLanguage(){
-  const language=texts[select.value]||texts.tr;
+ const select=$('language'),menu=$('grade7Menu'),toggle=$('grade7Toggle');
+ const upload=$('grade7Upload'),fileInput=$('grade7File'),start=$('grade7Start');
+ const status=$('grade7Status'),help=$('help'),helpText=$('helpText');
+ const t=()=>dictionary[select.value]||dictionary.tr;
+ function language(){
   document.documentElement.lang=select.value;
-  for(const [id,value] of Object.entries(language)){
-   if(id==='help')continue;
-   const element=$(id);
-   if(element)element.textContent=value;
-  }
-  helpText.textContent=language.help;
+  $('languageLabel').textContent=t().label;
+  toggle.textContent=t().grade;
+  start.textContent=t().open;
+  upload.textContent=t().upload;
+  helpText.textContent=t().help;
  }
- try{const last=localStorage.getItem('check-liste:hub-language');if(texts[last])select.value=last}catch(e){}
+ try{
+  const previous=localStorage.getItem('check-liste:hub-language');
+  if(dictionary[previous])select.value=previous;
+ }catch(_){}
+ language();
  select.addEventListener('change',()=>{
-  applyLanguage();
-  void refreshGrade7Available();
-  // ZIP importer keeps the selected images in the browser.
-  try{localStorage.setItem('check-liste:hub-language',select.value)}catch(e){}
+  language();
+  try{localStorage.setItem('check-liste:hub-language',select.value)}catch(_){}
  });
  help.addEventListener('click',()=>{
   helpText.hidden=!helpText.hidden;
   help.setAttribute('aria-expanded',String(!helpText.hidden));
  });
- applyLanguage();
- // 7. sınıf: open a small action menu rather than navigating immediately.
- const grade7Choice=$('grade7Choice'),grade7Toggle=$('grade7Toggle'),grade7Menu=$('grade7Menu');
- const grade7Upload=$('grade7Upload'),grade7File=$('grade7File'),grade7Start=$('grade7Start');
- const grade7Status=$('grade7Status');
- function setGrade7Menu(open){
-  grade7Menu.hidden=!open;grade7Toggle.setAttribute('aria-expanded',String(open));
+ function showMenu(show){
+  menu.hidden=!show;
+  toggle.setAttribute('aria-expanded',String(show));
  }
- grade7Toggle.addEventListener('click',e=>{
-  e.preventDefault();
-  setGrade7Menu(grade7Menu.hidden);
- });
+ toggle.addEventListener('click',()=>showMenu(menu.hidden));
  document.addEventListener('click',e=>{
-  if(!grade7Choice.contains(e.target))setGrade7Menu(false);
+  if(!$('grade7Choice').contains(e.target))showMenu(false);
  });
  document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'&&!grade7Menu.hidden){setGrade7Menu(false);grade7Toggle.focus();}
+  if(e.key==='Escape'&&!menu.hidden){showMenu(false);toggle.focus()}
  });
-
- grade7Upload.addEventListener('click',()=>grade7File.click());
- grade7File.addEventListener('change',async()=>{
-  const file=grade7File.files&&grade7File.files[0];
-  if(!file)return;
-  grade7Upload.disabled=true;
-  grade7Status.textContent=(texts[select.value]||texts.tr).bookSaving;
+ async function updateGrade7(){
   try{
-   if(!window.CheckListeZipImport)throw new Error('ZIP yükleyici açılmadı. Sayfayı yenile.');
-   const result=await window.CheckListeZipImport.importFile(file,message=>{
-    grade7Status.textContent=message;
-   });
+   start.hidden=!(window.CheckListeZipImport&&await window.CheckListeZipImport.hasStudy());
+  }catch(_){start.hidden=true}
+ }
+ void updateGrade7();
+ upload.addEventListener('click',()=>fileInput.click());
+ fileInput.addEventListener('change',async()=>{
+  const file=fileInput.files&&fileInput.files[0];
+  if(!file)return;
+  upload.disabled=true;status.textContent=t().loading;
+  try{
+   if(!window.CheckListeZipImport)throw Error('ZIP import module unavailable');
+   const result=await window.CheckListeZipImport.importFile(file,msg=>{status.textContent=msg});
    if(result.fullZip){
     const url=URL.createObjectURL(result.fullZip);
     const link=document.createElement('a');
     link.href=url;link.download='7_sinif_Tam_Calisma_Paketi_v1.21.0.zip';
     link.hidden=true;document.body.appendChild(link);link.click();link.remove();
-    grade7Status.textContent='Tam paket indiriliyor: 3080 kart + 700 görsel. Çalışma açılıyor…';
-    setTimeout(()=>location.assign('./lesson.html?set=lambacher-7'),1800);
+    status.textContent=t().done;
+    setTimeout(()=>{URL.revokeObjectURL(url);location.assign('./lesson.html?set=lambacher-7')},1800);
    }else{
     location.assign('./lesson.html?set=lambacher-7');
    }
-  }catch(err){
-   grade7Status.textContent=(texts[select.value]||texts.tr).bookError+String(err.message||err);
+  }catch(error){
+   status.textContent=t().error+String(error.message||error);
   }finally{
-   grade7Upload.disabled=false;grade7File.value='';
+   upload.disabled=false;fileInput.value='';
+   void updateGrade7();
   }
  });
- async function refreshGrade7Available(){
-  try{
-   const active=await window.CheckListeZipImport.hasStudy();
-   grade7Start.hidden=!active;
-   const t=texts[select.value]||texts.tr;
-   $('ls7Description').textContent=active
-    ? (select.value==='de'?'207 Übungsseiten · 2955 Karten lokal geladen.':select.value==='en'?'207 exercise pages · 2955 cards loaded locally.':'207 çalışma sayfası · 2955 kart yerel olarak yüklü.')
-    :t.ls7Description;
-   grade7Status.textContent=active?'Çalışma yüklü. İstersen yeni ZIP seçebilirsin.':'';
-  }catch(e){grade7Start.hidden=true;grade7Status.textContent='Yerel çalışma kontrol edilemedi: '+(e.message||e);}
- }
- void refreshGrade7Available();
- // Preserve old bookmarked question links after the index became a lesson hub.
+ // Backward compatibility for old bookmarked Çetin question anchors.
  if(/^#\d+[-_]/.test(location.hash)){
   location.replace('./lesson.html?set=cetin-1'+(location.search?'&'+location.search.slice(1):'')+location.hash);
  }
