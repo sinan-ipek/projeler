@@ -154,10 +154,10 @@ function renderQuiz(q){
  const hasQuiz=!solutionMode&&Array.isArray(q.choices)&&q.choices.length>=4;
  panel.hidden=!hasQuiz;
  const action=$('answerAction'),heading=$('quizHeading'),inline=$('answerInline');
- // Some question-only packs deliberately have no worked answers.
- // Do not show an empty Çözüm popup in those packs.
- if(inline)inline.hidden=!!pack.hideSolutions;
- if(action)action.hidden=!!pack.hideSolutions;
+ // A pack may hide all solutions or show the button only on cards with a worked example.
+ const unavailable=!!pack.hideSolutions||!!(pack.onlySolvedAnswers&&!q.solution);
+ if(inline)inline.hidden=unavailable;
+ if(action)action.hidden=unavailable;
  if(heading)heading.textContent=solutionMode?'Açıklamalı çözüm':'Yanıtını seç · 4 seçenek';
  options.hidden=!hasQuiz;
  if(message)message.hidden=!hasQuiz;
@@ -201,7 +201,7 @@ function renderQuiz(q){
 if($('answerAction')){
  $('answerAction').addEventListener('click',()=>{
   const q=qs[current];
-  if(pack.hideSolutions)return;
+  if(pack.hideSolutions||(pack.onlySolvedAnswers&&!q.solution))return;
   const isTuana=pack.id==='tuana-2-vorabitur-2026';
   const destination=new URL(isTuana?'./answer.html':'./answer-generic.html',location.href);
   destination.searchParams.set('set',new URLSearchParams(location.search).get('set')||'cetin-1');
