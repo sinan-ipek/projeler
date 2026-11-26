@@ -245,6 +245,34 @@ for(const q of Q)if(!q.solution)q.solution=explainArithmetic(q);
   q.solution=solution;
  }
 }
+
+// v1.36.0 — Page 63 diagrams, blanks and paint word problems.
+{
+ const answers={
+ '63-A-1-a':'1. İlk şerit 3/5, ikinci şerit 1/5 boyalıdır.\n2. 3/5+1/5=(3+1)/5=4/5.\nSonuç: 4/5.',
+ '63-A-1-b':'1. İlk şeritte 3/4, çıkarılan kırmızı parçada 1/4 vardır.\n2. 3/4−1/4=2/4.\n3. 2/4=1/2.\nSonuç: 1/2.',
+ '63-A-4-a':'1. Bir bütün 9/9’dur.\n2. Eksik pay=9−5=4.\n3. 5/9+4/9=9/9=1.\nSonuç: 4/9.',
+ '63-A-4-b':'1. Bir bütün 8/8’dir.\n2. Eksik pay=8−3=5.\n3. 3/8+5/8=8/8=1.\nSonuç: 5/8.',
+ '63-A-4-c':'1. Bir bütün 11/11’dir.\n2. Eksik pay=11−8=3.\n3. 8/11+3/11=11/11=1.\nSonuç: 3/11.',
+ '63-A-4-d':'1. Hedef 28/14=2’dir.\n2. Eksik pay=28−6=22.\n3. 6/14+22/14=28/14=2.\nSonuç: 22/14=11/7.',
+ '63-A-8-a':'1. Kutularda 3 1/4 litre ve 1 3/4 litre boya vardır.\n2. Tamları topla: 3+1=4.\n3. Kesirleri topla: 1/4+3/4=1.\n4. 4+1=5.\nSonuç: 5 litre boya.',
+ '63-A-8-b':'1. Toplam boya=3 1/4+1 3/4=5 litredir.\n2. 2 2/4=2 1/2 litre harcanır.\n3. 5−2 1/2=2 1/2.\nSonuç: 2 1/2 litre boya kalır.',
+ '63-B-1-a':'1. Dört bölümden ikisi açık mor, biri koyu mordur.\n2. 2/4+1/4=3/4.\nSonuç: 3/4.',
+ '63-B-1-b':'1. Sekiz eş bölümden altısı boyalıdır: 6/8.\n2. Üzeri çizilen iki bölüm çıkarılır: 2/8.\n3. 6/8−2/8=4/8=1/2.\nSonuç: 1/2.',
+ '63-B-4-a':'1. 1=11/11.\n2. Eksik pay=11−6=5.\n3. 6/11+5/11=1.\nSonuç: 5/11.',
+ '63-B-4-b':'1. 1=23/23.\n2. Eksik pay=23−7=16.\n3. 7/23+16/23=1.\nSonuç: 16/23.',
+ '63-B-4-c':'1. 2=8/4.\n2. Eksik pay=8−6=2.\n3. 6/4+2/4=8/4=2.\nSonuç: 2/4=1/2.',
+ '63-B-4-d':'1. 3=9/3.\n2. Eksik pay=9−7=2.\n3. 7/3+2/3=9/3=3.\nSonuç: 2/3.',
+ '63-B-6-a':'1. Soldaki şeritler 2 tam ve 1/3, sağdakiler 1 tam ve 1/3 gösterir.\n2. 2 1/3+1 1/3=3 2/3.\nSonuç: 3 2/3.',
+ '63-B-6-b':'1. Yeşil şeritler 1 3/4, kırmızı şeritler 1 2/4 gösterir.\n2. 1 3/4−1 2/4=1/4.\nSonuç: 1/4.',
+ '63-B-8-':'1. Toplam boya=3 1/4+1 3/4=5 litredir.\n2. Kullanılan boya 3 1/2 litredir.\n3. 5−3 1/2=1 1/2.\nSonuç: 1 1/2 litre boya kalır.'
+ };
+ for(const [suffix,solution] of Object.entries(answers)){
+  const q=Q.find(q=>q.id==='kerem1-'+suffix);
+  if(!q)throw Error('Unknown source id '+suffix);
+  q.solution=solution;
+ }
+}
 if(new Set(Q.map(q=>q.id)).size!==Q.length)throw Error('duplicate IDs');
 if(Q.some(q=>!q.german||!q.turkish))throw Error('blank text');
 window.CHECKLIST_PACK={id:'kerem-1-fractions-2026',title:'Kerem 1 · Mit Brüchen rechnen · Seiten 62, 63, 64, 68, 70, 71',onlySolvedAnswers:true,questions:Q};
