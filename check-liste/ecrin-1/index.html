@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ecrin 1 · Check Liste</title>
+<meta http-equiv="refresh" content="5;url=../lesson.html?set=ecrin-1">
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:26px;font:16px/1.5 system-ui,sans-serif;background:#f2f2f3;color:#283e30}
+nav{display:flex;gap:10px;align-items:center}
+.home{width:40px;height:40px;background:#ffdc28;display:grid;place-items:center;border:1px solid #cda900;border-radius:3px;color:#111}
+.home svg{width:22px;height:22px;fill:currentColor}
+select,button{background:white;border:1px solid #ccdacc;border-radius:7px;padding:9px;font:inherit}
+.version{position:fixed;bottom:7px;left:10px;color:#98a299;font-size:10px}
+a{color:#36654a}
+</style>
+</head>
+<body>
+<nav aria-label="Sayfa araçları">
+<a class="home" title="Home" aria-label="Home" href="/projeler/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a>
+<label for="language">Dil</label>
+<select id="language" aria-label="Dil"><option value="tr">Türkçe</option><option value="de">Almanca</option><option value="en">İngilizce</option></select>
+<button id="help" type="button" aria-label="Help" title="Help">?</button>
+</nav>
+<h1>Ecrin 1</h1>
+<p id="description">55 ve 56. sayfalardaki matematik soruları.</p>
+<p><a id="go" href="../lesson.html?set=ecrin-1">Çalışmayı aç</a></p>
+<p id="helpText" hidden></p>
+<div class="version">v1.37.0 · Ecrin 1 · 27 çözümlü kart</div>
+<script>
+(function(){
+'use strict';
+const to=new URL('../lesson.html',location.href);
+to.searchParams.set('set','ecrin-1');
+for(const [key,value] of new URLSearchParams(location.search)){
+ if(key!=='set')to.searchParams.append(key,value);
+}
+to.hash=location.hash;
+document.getElementById('go').href=to.href;
+const dict={
+ tr:{title:'Ecrin 1',desc:'55 ve 56. sayfalardaki matematik soruları.',go:'Çalışmayı aç',help:'Bir soruyu seç. Kendin çöz. Sonra çözümü gör.'},
+ de:{title:'Ecrin 1',desc:'Matheaufgaben von den Seiten 55 und 56.',go:'Übungen öffnen',help:'Wähle eine Aufgabe. Rechne. Dann sieh die Lösung.'},
+ en:{title:'Ecrin 1',desc:'Math exercises from pages 55 and 56.',go:'Open exercises',help:'Choose a question. Solve it. Then see the answer.'}
+};
+const select=document.getElementById('language'),help=document.getElementById('help');
+function language(){
+ const t=dict[select.value];
+ document.documentElement.lang=select.value;
+ document.getElementById('description').textContent=t.desc;
+ document.getElementById('go').textContent=t.go;
+ document.getElementById('helpText').textContent=t.help;
+}
+select.addEventListener('change',language);
+help.addEventListener('click',()=>{const p=document.getElementById('helpText');p.hidden=!p.hidden});
+language();
+location.replace(to.href);
+})();
+</script>
+</body>
+</html>
