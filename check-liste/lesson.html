@@ -154,6 +154,29 @@ html,body{background:#fff!important}
 @media(max-width:900px){
  .main{background:transparent;border:0;border-radius:0;box-shadow:none;padding:10px 12px 18px}
 }
+
+/* v1.38.2 — Çözümler, resim büyütme gibi üstte açılan yatay ve çok sütunlu kartta. */
+.solution-overlay[hidden]{display:none!important}
+.solution-overlay{position:fixed;inset:0;z-index:9100;display:flex;align-items:center;justify-content:center;background:#0e1614c9;padding:clamp(9px,2vw,24px)}
+.solution-dialog{box-sizing:border-box;display:flex;flex-direction:column;min-width:0;width:min(94vw,475px);max-width:96vw;max-height:93dvh;padding:20px 23px 22px;border:1px solid #d7dfd8;border-radius:22px;background:#fff;color:#293d30;box-shadow:0 24px 70px #0007;overflow:hidden}
+.solution-header{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:38px;margin-bottom:13px}
+.solution-header h2{margin:0;font-size:19px;line-height:1.25;font-weight:700;color:#304d3b}
+.solution-close{flex:0 0 36px;width:36px;height:36px;display:grid;place-items:center;border:1px solid #d7ded8;border-radius:10px;background:#fff;color:#304336;font:26px/1 system-ui,sans-serif;cursor:pointer}
+.solution-close:hover{background:#f2f5f2}
+.solution-close:focus-visible{outline:3px solid #8eb39a;outline-offset:2px}
+.solution-columns{display:grid;grid-template-columns:repeat(var(--solution-cols,1),minmax(0,1fr));gap:0;min-width:0;min-height:0;max-height:var(--solution-height,75dvh);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable}
+.solution-column{min-width:0;display:flex;flex-direction:column;gap:10px;padding:2px 13px 2px 0;align-self:start}
+.solution-column+.solution-column{border-left:1px solid #c5cdc6;padding-left:20px}
+.solution-piece{min-width:0;margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:16px/1.62 system-ui,-apple-system,"Segoe UI",sans-serif;color:#2a4133}
+.solution-piece .katex{font-size:1.05em}
+.solution-piece .check-math-inline{white-space:normal}
+.solution-piece.solution-conclusion{font-weight:700;color:#2f5f43}
+@media(max-width:600px){
+ .solution-dialog{width:calc(100vw - 18px)!important;max-width:calc(100vw - 18px);padding:14px 14px 16px;border-radius:17px}
+ .solution-header{margin-bottom:9px}
+ .solution-piece{font-size:15px;line-height:1.55}
+ .solution-column{padding-right:5px}
+}
 </style></head><body><div class="app"><aside class="left"><nav class="utility-bar" aria-label="Sayfa araçları"><a class="utility-home" href="/projeler/" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a><select id="uiLanguage" aria-label="Dil" title="Dil"><option value="tr">Türkçe</option><option value="de">Almanca</option><option value="en">İngilizce</option></select><button id="quickHelp" class="utility-help" type="button" aria-expanded="false" title="Help">?</button></nav><div id="quickHelpText" class="utility-helptext" hidden></div><h2 id="lessonName">Ders</h2><a class="return-to-lists" href="./index.html">← Check Liste</a><div id="setTitle" class="small">Ders yükleniyor…</div><div id="progressText" class="small"></div><div class="progress"><i id="progressBar"></i></div><select id="pageSelect"><option value="all">Tüm sayfalar</option></select><input id="search" type="search" placeholder="Soru ara…"><button id="importPrivateImages" type="button" hidden style="width:100%;padding:9px;margin:7px 0;background:#fff;border:1px solid #8ea899;border-radius:7px;cursor:pointer">⤴ Görselleri içe aktar</button><input id="privateImagesInput" type="file" multiple accept="image/png,image/jpeg,image/webp" hidden><p id="privateImagesHint" class="small" hidden></p><div id="menu"></div>
 <section id="quizPanel" class="quiz-panel" hidden aria-label="Çoktan seçmeli yanıt kontrolü">
 <div class="quiz-head" id="quizHeading">Yanıtını seç · 4 seçenek</div>
@@ -175,8 +198,18 @@ html,body{background:#fff!important}
  <button id="inkDashed" class="ink-style" type="button" data-stroke-style="dashed" aria-pressed="false" title="Kesikli çizgi">Dashed</button>
 </div><button id="clear" class="clear">Tümünü sil</button><button id="sharePdfFile" type="button" hidden>↗ Dosyayı paylaş</button></div><span id="exportStatus" role="status" aria-live="polite"></span><div class="board-area pen" id="boardArea"><canvas id="board"></canvas></div></section></div>
 
+
+<div id="solutionOverlay" class="solution-overlay" hidden>
+ <section id="solutionDialog" class="solution-dialog" role="dialog" aria-modal="true" aria-labelledby="solutionHeading" tabindex="-1">
+  <div class="solution-header">
+   <h2 id="solutionHeading">Çözüm</h2>
+   <button id="solutionClose" class="solution-close" type="button" aria-label="Çözümü kapat" title="Kapat">×</button>
+  </div>
+  <div id="solutionColumns" class="solution-columns" aria-live="polite"></div>
+ </section>
+</div>
 <div id="imageLightbox" class="image-lightbox" role="dialog" aria-modal="true" aria-label="Büyütülmüş soru görseli" hidden><img id="imageLightboxImg" alt="Büyütülmüş görsel" title="Küçültmek için tıkla"></div>
-<div class="version-note" aria-label="Sürüm">v1.38.1 · Dış çerçeveler kaldırıldı, beyaz zemin</div>
+<div class="version-note" aria-label="Sürüm">v1.38.2 · Yatay sütunlu çözüm penceresi</div>
 <script>
 (function(){
  const lang=document.getElementById('uiLanguage');
