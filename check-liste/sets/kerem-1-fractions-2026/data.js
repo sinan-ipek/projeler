@@ -273,6 +273,20 @@ for(const q of Q)if(!q.solution)q.solution=explainArithmetic(q);
   q.solution=solution;
  }
 }
+
+// v1.36.0 — Page 64: ungleichnamige Brüche.
+{
+ const answers={
+ '64-Entdecken-1-a':'1. Margarita pizzadan 1/4, vejetaryen pizzadan 5/8 kalmıştır.\n2. Ortak payda 8: 1/4=2/8.\n3. 2/8+5/8=7/8.\nSonuç: 7/8 pizza.',
+ '64-Entdecken-1-b':'1. Vejetaryen pizzadan 5/8 kalmıştır.\n2. Lennart 1/4=2/8 pizza daha yer.\n3. 5/8−2/8=3/8.\nSonuç: 3/8 pizza.',
+ '64-Entdecken-1-c':'1. Önce paydaları eşitle: 1/4=2/8.\n2. Toplama: 2/8+5/8=7/8.\n3. Çıkarma: 5/8−2/8=3/8.\nSonuç: Farklı paydalı kesirlerde önce ortak payda bulunur, ardından paylar toplanır veya çıkarılır.'
+ };
+ for(const [suffix,solution] of Object.entries(answers)){
+  const q=Q.find(q=>q.id==='kerem1-'+suffix);
+  if(!q)throw Error('Unknown source id '+suffix);
+  q.solution=solution;
+ }
+}
 if(new Set(Q.map(q=>q.id)).size!==Q.length)throw Error('duplicate IDs');
 if(Q.some(q=>!q.german||!q.turkish))throw Error('blank text');
 window.CHECKLIST_PACK={id:'kerem-1-fractions-2026',title:'Kerem 1 · Mit Brüchen rechnen · Seiten 62, 63, 64, 68, 70, 71',onlySolvedAnswers:true,questions:Q};
