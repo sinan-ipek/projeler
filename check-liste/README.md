@@ -1,6 +1,10 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.33.0 · Liya 1 eklendi; ortak çizim ve çözüm sistemi.**
+**Sürüm v1.34.0 · Egemen 1 eklendi; dokuz sade çalışma düğmesi.**
+
+## v1.34.0 — Egemen 1
+
+Test 72 / Parabol sayfalarından **16 çoktan seçmeli soru** Almanca ve Türkçe metin, A–E seçenekleri ve **11 temizlenmiş SVG parabol grafiği** ile eklendi. Sorular 1–16'dır. Kullanıcının isteği gereği **çözüm ve cevap anahtarı yoktur**; Egemen 1'de boş Çözüm düğmesi gizlenmiştir. Diğer öğrencilerin Çözüm düğmeleri aynı şekilde çalışır. Paket `egemen-1-test72-2026`, kaynak `sets/egemen-1/data.js`, doğrudan bağlantı `egemen-1/`. Check Liste ana sayfası dokuz sade öğrenci düğmesi içerir.
 
 ## v1.33.0 — Liya 1
 
