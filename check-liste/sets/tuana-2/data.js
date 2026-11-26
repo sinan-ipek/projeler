@@ -1,4 +1,4 @@
-/* Tuana 2 · v1.22.0: Vor-Abiturprüfung 2026, Teil A/B, Operatoren.
+/* Tuana 2 · v1.23.0: Vor-Abiturprüfung 2026, Teil A/B, Operatoren.
    10 photographs supplied by the user. Figures reconstructed on white SVG.
    Correct choice stored as an ID; not rendered as a spoiler.
 */
@@ -148,6 +148,195 @@ ops.forEach(([part,term,definition,tr,correct],i)=>{
   notes:'Anlamı doğru seçmeden açıklama gösterilmez.'
  });
 });
+
+/* v1.23.0 · Satır satır Almanca–Türkçe eşleme denetimi.
+   Bu sözlük önceki kart kimliklerini, cevapları ve ilerleme kayıtlarını korur.
+   Almanca ve Türkçe metinler aynı verileri, aynı koşulları ve aynı talepleri içerir.
+   B1 inceleme sorusunun genel talimatı, kontrol maddelerine bölünmüştür. */
+const bilateral=new Map();
+const contexts={
+ B1:[
+ 'In einem Vorgarten sind 1,5 m² Unkraut. Der Gärtner geht von einer exponentiellen Ausbreitung aus. Denn 10 Tage später sind es bereits 2 m².',
+ 'Bir ön bahçede 1,5 m² yabani ot bulunmaktadır. Bahçıvan bunların üstel biçimde yayıldığını varsaymaktadır. Çünkü 10 gün sonra yabani otlarla kaplı alan 2 m² olmuştur.'
+ ],
+ B1H:[
+ 'Da jedes Unkraut eine andere Wachstumshöhe hat, hat sich der Gärtner nun die folgende Funktion f(x)=(x−0,5)·e^(−x) zur Höhe einer Unkrautart überlegt.',
+ 'Her yabani otun büyüme yüksekliği farklı olduğundan bahçıvan, bir yabani ot türünün yüksekliği için f(x)=(x−0,5)·e^(−x) fonksiyonunu düşünmüştür.'
+ ],
+ B3:[
+ 'Auf einer Messe für Kinderspielzeug wird eine modulare Murmelbahn präsentiert. In einem Bauteil durchläuft die Kugel eine Tal-Berg-Fahrt. Wählt man als eine Längeneinheit 10 cm, kann die Profillinie des Bauteils im Längsschnitt mit einem Graphen einer ganzrationalen Funktion dritten Grades für 0≤x≤6 beschrieben werden. Die Kugel startet im Punkt A in einer Höhe von 30 cm und rollt zunächst bergab. Nach einer horizontalen Entfernung von 20 cm erreicht sie den Punkt B, den tiefsten Punkt des Tals. Von dort geht es leicht bergauf über einen Hügel. Im Punkt C(3|1) ist der Anstieg des Hügels am stärksten.',
+ 'Bir çocuk oyuncağı fuarında modüler bir misket yolu tanıtılmaktadır. Misket, bir parçada önce vadiye inip sonra tepeye çıkar. Uzunluk birimi olarak 10 cm seçilirse parçanın boyuna kesitteki profili, 0≤x≤6 için üçüncü dereceden bir polinom fonksiyonun grafiğiyle tanımlanabilir. Misket A noktasında 30 cm yükseklikten başlar ve önce aşağı yuvarlanır. Yatayda 20 cm yol aldıktan sonra vadinin en alçak noktası olan B noktasına ulaşır. Oradan hafifçe yokuş yukarı çıkıp bir tepenin üzerinden geçer. C(3|1) noktasında tepenin eğimi en büyüktür.'
+ ],
+ B3T:[
+ 'Nun soll das Bauteil der Murmelbahn optimiert werden, indem ein Tunnel durch das Bauteil führt. Dafür wird nur noch der Hügel des Bauteils betrachtet. Zur Vereinfachung wird dieser Hügel mit der Funktion f(x)=−0,2x³−0,1x²+2x dargestellt. Hinweis: Diese Funktion hat keinerlei Zusammenhang mit Teilaufgabe a). Um die Herstellung des Bauteils zu vereinfachen, soll der Tunnel die Form eines Dreiecks annehmen.',
+ 'Şimdi misket yolu parçasının içinden bir tünel geçirilerek parça iyileştirilmek isteniyor. Bunun için yalnızca parçanın tepesi inceleniyor. Basitleştirme amacıyla bu tepe f(x)=−0,2x³−0,1x²+2x fonksiyonuyla gösteriliyor. Not: Bu fonksiyonun a alt maddesiyle hiçbir bağlantısı yoktur. Parçanın üretimini kolaylaştırmak için tünelin üçgen biçiminde olması isteniyor.'
+ ],
+ B4:[
+ 'Der Steckbrief beschreibt den Graphen einer ganzrationalen Funktion f dritten Grades. Angaben: Der Graph schneidet die y-Achse bei y=−3,5; Nullstelle x=−1; Wendestelle x=−2; Extremstelle bei x=0.',
+ 'Özellik listesi, üçüncü dereceden bir polinom fonksiyonu f’nin grafiğini tanımlıyor. Veriler: Grafik y eksenini y=−3,5 değerinde kesiyor; kök x=−1; büküm noktası x=−2; ekstremum yeri x=0.'
+ ],
+ P1:[
+ 'Der Graph einer quadratischen Funktion f mit f(x)=ax²+bx+c verläuft durch die Punkte A(−1|4), B(1|1) und C(3|0).',
+ 'f(x)=ax²+bx+c biçimindeki ikinci dereceden f fonksiyonunun grafiği A(−1|4), B(1|1) ve C(3|0) noktalarından geçmektedir.'
+ ],
+ P2:[
+ 'Gegeben ist ein lineares Gleichungssystem mit Parameter a:\nx−2y−3z=−3\ny+5z=4\n2y+a·z=4.',
+ 'a parametreli bir doğrusal denklem sistemi verilmiştir:\nx−2y−3z=−3\ny+5z=4\n2y+a·z=4.'
+ ],
+ P3:[
+ 'Eine Urne enthält vier rote und zwei blaue Kugeln. Es werden zwei Kugeln ohne Zurücklegen entnommen.',
+ 'Bir torbada dört kırmızı ve iki mavi top bulunmaktadır. Geri koymadan iki top çekiliyor.'
+ ],
+ W1:[
+ 'Gegeben ist die Funktion f mit f(x)=(1/5)x⁴−(2/5)x²−(1/2)x+1.',
+ 'f(x)=(1/5)x⁴−(2/5)x²−(1/2)x+1 fonksiyonu verilmiştir.'
+ ],
+ W2:[
+ 'Gegeben ist die in ℝ definierte Funktion f mit f(x)=x³−12x+16.',
+ 'Gerçek sayılar kümesinde (ℝ) tanımlı f(x)=x³−12x+16 fonksiyonu verilmiştir.'
+ ],
+ W3:[
+ 'Zeichnen Sie ein kartesisches Koordinatensystem. Gegeben sind die Punkte A(2|3|0), B(−3|2|1) und C(3|−1|2).',
+ 'Bir Kartezyen koordinat sistemi çiziniz. A(2|3|0), B(−3|2|1) ve C(3|−1|2) noktaları verilmiştir.'
+ ],
+ W4:[
+ 'Gegeben sind die Eckpunkte eines Rechtecks mit A(3|−1|0), B(3|3|0), C(3|3|3) und D(3|−1|3).',
+ 'Bir dikdörtgenin köşe noktaları A(3|−1|0), B(3|3|0), C(3|3|3) ve D(3|−1|3) olarak verilmiştir.'
+ ],
+ W5:[
+ 'Für zwei Ereignisse A und B ist die Wahrscheinlichkeit, dass beide eintreten, mit P(A∩B)=1/20 gegeben. Im nebenstehenden Baumdiagramm stehen außerdem P(A)=1/4 und P(B|¬A)=1/3.',
+ 'A ve B adlı iki olayın ikisinin birden gerçekleşme olasılığı P(A∩B)=1/20 olarak verilmiştir. Yandaki ağaç diyagramında ayrıca P(A)=1/4 ve P(B|¬A)=1/3 bulunuyor.'
+ ],
+ W6:[
+ 'Eine Klasse mit 21 Schülerinnen und Schülern erzielte in einem Berlin-Test mit fünf Fragen zu Daten und Fakten über Berlin folgende Punktzahlen:\n'+vals.join(', ')+'.',
+ '21 öğrencilik bir sınıf, Berlin hakkındaki veri ve olgularla ilgili beş soruluk bir Berlin testinde şu puanları aldı:\n'+vals.join(', ')+'.'
+ ]
+};
+function bilingual(id,ctx,de,tr){
+ const pref=contexts[ctx]||['',''];
+ if(!pref[0]||!pref[1])throw Error('Bilingual context missing '+ctx);
+ if(bilateral.has(id))throw Error('Repeated translation '+id);
+ bilateral.set(id,[pref[0]+'\n'+de,pref[1]+'\n'+tr]);
+}
+bilingual('tuana2-b-b1-a','B1',
+ 'a) Stellen Sie die Ausbreitung des Unkrauts mit einer Funktionsgleichung der Form f(t)=c·a^t dar. Formulieren Sie die entstandene Funktionsgleichung in die Form f(t)=c·e^(k·t) um.',
+ 'a) Yabani otların yayılmasını f(t)=c·a^t biçimindeki bir fonksiyon denklemiyle gösteriniz. Elde edilen fonksiyon denklemini f(t)=c·e^(k·t) biçimine dönüştürünüz.');
+bilingual('tuana2-b-b1-b','B1',
+ 'b) Bestimmen Sie die Größe der von Unkraut bewachsenen Fläche nach 14 Tagen.',
+ 'b) 14 gün sonra yabani otlarla kaplı alanın büyüklüğünü belirleyiniz.');
+bilingual('tuana2-b-b1-c','B1',
+ 'c) Berechnen Sie, nach wie vielen Tagen 3 m² von Unkraut bewachsen sein werden.',
+ 'c) Kaç gün sonra 3 m² alanın yabani otlarla kaplanacağını hesaplayınız.');
+bilingual('tuana2-b-b1-d','B1',
+ 'd) Bestimmen Sie die Verdopplungszeit und deuten Sie diese im Sachzusammenhang.',
+ 'd) İkiye katlanma süresini belirleyiniz ve bunun verilen durumdaki anlamını açıklayınız.');
+const aTasks=[
+ ['2a1','Bestimmen Sie die Nullstelle der Funktion.','Fonksiyonun kökünü belirleyiniz.'],
+ ['2a2','Bestimmen Sie die Extremstellen und entscheiden Sie, ob Hochpunkte oder Tiefpunkte vorliegen.','Ekstremum yerlerini belirleyiniz ve bunların maksimum mu minimum mu olduğuna karar veriniz.'],
+ ['2a3','Bestimmen Sie die Wendepunkte der Funktion.','Fonksiyonun büküm noktalarını belirleyiniz.'],
+ ['2a4','Untersuchen Sie das Krümmungsverhalten der Funktion.','Fonksiyonun eğrilik davranışını inceleyiniz.'],
+ ['2a5','Bestimmen Sie den Definitionsbereich der Funktion.','Fonksiyonun tanım kümesini belirleyiniz.'],
+ ['2a6','Bestimmen Sie die Randextrema im vorgegebenen Definitionsbereich. Berechnen Sie dazu f(0) und f(4). Diese entsprechen der Einpflanztiefe des Samens f(0) und der Pflanzenhöhe nach vier Tagen f(4).','Verilen tanım aralığının uç noktalarındaki ekstremum değerleri belirleyiniz. Bunun için f(0) ve f(4) değerlerini hesaplayınız. Bunlar sırasıyla tohumun dikilme derinliği f(0) ve dört gün sonraki bitki yüksekliği f(4) anlamına gelmektedir.'],
+ ['2a7','Untersuchen Sie die Monotonie der Funktion.','Fonksiyonun artma ve azalma davranışını inceleyiniz.'],
+ ['2a8','Bestimmen Sie den Wertebereich für 0≤x≤4.','0≤x≤4 aralığındaki değer kümesini belirleyiniz.'],
+ ['2a9','Bestimmen Sie den Grenzwert für x→∞.','x→∞ iken limit değerini belirleyiniz.'],
+ ['2a10','Skizzieren Sie den Graphen für 0≤x≤4.','0≤x≤4 aralığında grafiğin taslağını çiziniz.']
+];
+for(const [n,de,tr] of aTasks)bilingual('tuana2-b-b1-'+n,'B1H',
+ 'a) Diskutieren Sie diese Funktion. Untersuchungspunkt: '+de,
+ 'a) Bu fonksiyonu ayrıntılı inceleyiniz. İncelenecek konu: '+tr);
+bilingual('tuana2-b-b1-2b','B1H',
+ 'b) Bestimmen Sie die Tangente t durch den Wendepunkt, die sogenannte Wendetangente.',
+ 'b) Büküm noktasından geçen ve büküm teğeti olarak adlandırılan t teğetini belirleyiniz.');
+bilingual('tuana2-b-b3-a','B3',
+ 'a) Bestimmen Sie eine passende Funktionsgleichung.',
+ 'a) Uygun bir fonksiyon denklemi belirleyiniz.');
+bilingual('tuana2-b-b3-b','B3',
+ 'b) Ermitteln Sie den höchsten Punkt des Hügels. Geben Sie die horizontale Entfernung dieses Punktes zum Punkt A an.',
+ 'b) Tepenin en yüksek noktasını bulunuz. Bu noktanın A noktasına olan yatay uzaklığını belirtiniz.');
+bilingual('tuana2-b-b3-c','B3',
+ 'Das Bauteil wird am Ende einer Bahn auf den Boden gestellt. Die Kugel kommt mit einer bestimmten Geschwindigkeit im Punkt A an. Ist diese Geschwindigkeit zu hoch, verlässt sie im Punkt C die Bahn und geht tangential in eine parabelförmige Flugbahn über.\nc) Die Flugbahn soll mit einer quadratischen Funktion beschrieben werden. Ihr Graph verläuft durch Punkt C mit der gleichen Steigung wie der Graph von f (knickfrei) und erreicht an der Stelle x=19/3 die maximale Höhe. Bestimmen Sie eine passende Funktionsgleichung für die Flugbahn.',
+ 'Parça yolun sonuna, zeminin üzerine yerleştiriliyor. Misket A noktasına belirli bir hızla geliyor. Bu hız çok yüksekse misket C noktasında yolu terk ederek teğet doğrultusunda parabol biçiminde bir uçuş yoluna geçiyor.\nc) Uçuş yolu ikinci dereceden bir fonksiyonla tanımlanmalıdır. Grafiği C noktasından f grafiğiyle aynı eğimde (kırılma olmadan) geçmeli ve x=19/3 konumunda en yüksek değerine ulaşmalıdır. Uçuş yolu için uygun bir fonksiyon denklemi belirleyiniz.');
+bilingual('tuana2-b-b3-d1','B3T',
+ 'c) Stellen Sie eine Zielfunktion für den Flächeninhalt des Dreiecks auf und geben Sie einen sinnvollen Definitionsbereich an.',
+ 'c) Üçgenin alanı için bir amaç fonksiyonu oluşturunuz ve anlamlı bir tanım aralığı belirtiniz.');
+bilingual('tuana2-b-b3-d2','B3T',
+ 'd) Ermitteln Sie den maximalen Flächeninhalt, damit eine Kugel durch den Tunnel rollen kann. Eine LE entspricht 2 cm.',
+ 'd) Bir misketin tünelden yuvarlanarak geçebilmesi için en büyük alanı hesaplayınız. Bir uzunluk birimi (LE), 2 cm’ye karşılık gelmektedir.');
+bilingual('tuana2-b-b4-a','B4',
+ 'a) Stellen Sie anhand der Stichpunkte ein lineares Gleichungssystem auf und bestimmen Sie mithilfe des Gauß-Verfahrens eine passende Funktionsgleichung.',
+ 'a) Verilen maddelerden yararlanarak doğrusal bir denklem sistemi kurunuz ve Gauss yöntemi yardımıyla uygun bir fonksiyon denklemi belirleyiniz.');
+bilingual('tuana2-b-b4-b','B4',
+ 'b) Untersuchen Sie die Extremstellen von f und begründen Sie, warum die Skizze auf dem Steckbrief nicht zur Lösung passt.',
+ 'b) f fonksiyonunun ekstremum yerlerini inceleyiniz ve özellik listesindeki çizimin neden çözüme uymadığını gerekçelendiriniz.');
+bilingual('tuana2-a-pflicht-1-a','P1',
+ 'a) Bestimmen Sie die Funktionsgleichung.',
+ 'a) Fonksiyon denklemini belirleyiniz.');
+bilingual('tuana2-a-pflicht-1-b','P1',
+ 'b) Geben Sie die Nullstellen dieser Funktion an.',
+ 'b) Bu fonksiyonun köklerini belirtiniz.');
+bilingual('tuana2-a-pflicht-2-a','P2',
+ 'a) Lösen Sie das Gleichungssystem für a=6.',
+ 'a) a=6 için denklem sistemini çözünüz.');
+bilingual('tuana2-a-pflicht-2-b','P2',
+ 'b) Begründen Sie, dass das Gleichungssystem für a=10 keine Lösung hat.',
+ 'b) a=10 için denklem sisteminin neden çözümü olmadığını gerekçelendiriniz.');
+bilingual('tuana2-a-pflicht-3-a','P3',
+ 'a) Zeichnen Sie ein passendes Baumdiagramm und geben Sie die Pfadwahrscheinlichkeiten an.',
+ 'a) Uygun bir ağaç diyagramı çiziniz ve yol olasılıklarını belirtiniz.');
+bilingual('tuana2-a-pflicht-3-b1','P3',
+ 'b) Bestimmen Sie die Wahrscheinlichkeit, dass 1. eine rote und eine blaue Kugel gezogen werden.',
+ 'b) 1. Bir kırmızı ve bir mavi top çekilme olasılığını belirleyiniz.');
+bilingual('tuana2-a-pflicht-3-b2','P3',
+ 'b) Bestimmen Sie die Wahrscheinlichkeit, dass 2. zwei gleichfarbige Kugeln gezogen werden.',
+ 'b) 2. Aynı renkte iki top çekilme olasılığını belirleyiniz.');
+bilingual('tuana2-a-wahl-1-a','W1',
+ 'a) Bestimmen Sie die erste und die zweite Ableitung (f′ und f″) der Funktion f(x).',
+ 'a) f(x) fonksiyonunun birinci ve ikinci türevlerini (f′ ve f″) belirleyiniz.');
+bilingual('tuana2-a-wahl-1-b','W1',
+ 'b) Zeichnen Sie ein Koordinatensystem und skizzieren Sie die Graphen der Funktionen f(x), f′(x) und f″(x).',
+ 'b) Bir koordinat sistemi çiziniz ve f(x), f′(x) ve f″(x) fonksiyonlarının grafiklerini taslak olarak çiziniz.');
+bilingual('tuana2-a-wahl-2-a','W2',
+ 'a) Zeigen Sie, dass −2 und 2 die Extremstellen von f sind.',
+ 'a) −2 ve 2’nin f fonksiyonunun ekstremum yerleri olduğunu gösteriniz.');
+bilingual('tuana2-a-wahl-2-b','W2',
+ 'b) Begründen Sie, dass die x-Achse den Graphen von f in genau einem Punkt berührt.',
+ 'b) x ekseninin f grafiğine tam olarak bir noktada teğet olduğunu gerekçelendiriniz.');
+bilingual('tuana2-a-wahl-3-a','W3',
+ 'Zeichnen Sie die drei Punkte ein. Verbinden Sie anschließend die Punkte und benennen Sie die entstehende Figur.',
+ 'Üç noktayı koordinat sistemine yerleştiriniz. Ardından noktaları birleştiriniz ve oluşan şeklin adını belirtiniz.');
+bilingual('tuana2-a-wahl-3-b','W3',
+ 'Ergänzen Sie einen weiteren Punkt zu einem Parallelogramm und bestimmen Sie dessen Koordinaten.',
+ 'Bir paralelkenar oluşturmak için bir nokta daha ekleyiniz ve bu noktanın koordinatlarını belirleyiniz.');
+bilingual('tuana2-a-wahl-4-a','W4',
+ 'Bestimmen Sie den Mittelpunkt des Rechtecks.',
+ 'Dikdörtgenin orta noktasını belirleyiniz.');
+bilingual('tuana2-a-wahl-5-a','W5',
+ 'a) Übertragen Sie das nebenstehende Baumdiagramm und ergänzen Sie die fehlenden Wahrscheinlichkeiten sowie die Pfadwahrscheinlichkeiten.',
+ 'a) Yandaki ağaç diyagramını kopyalayınız ve eksik olasılıklarla yol olasılıklarını tamamlayınız.');
+bilingual('tuana2-a-wahl-5-b1','W5',
+ 'b) Bestimmen Sie die Wahrscheinlichkeit dafür, dass (1) B eintritt.',
+ 'b) (1) B olayının gerçekleşme olasılığını belirleyiniz.');
+bilingual('tuana2-a-wahl-5-b2','W5',
+ 'b) Bestimmen Sie die Wahrscheinlichkeit dafür, dass (2) B eintritt, nachdem ¬A eingetreten ist.',
+ 'b) (2) A olayının gerçekleşmemiş olması koşuluyla B olayının gerçekleşme olasılığını belirleyiniz.');
+bilingual('tuana2-a-wahl-5-b3','W5',
+ 'b) Bestimmen Sie die Wahrscheinlichkeit dafür, dass (3) ¬B eintritt.',
+ 'b) (3) B olayının gerçekleşmeme olasılığını belirleyiniz.');
+bilingual('tuana2-a-wahl-6-a','W6',
+ 'a) Erstellen Sie eine Tabelle mit den absoluten und relativen Häufigkeiten.',
+ 'a) Mutlak ve bağıl frekansların yer aldığı bir tablo hazırlayınız.');
+bilingual('tuana2-a-wahl-6-b','W6',
+ 'b) Berechnen Sie das arithmetische Mittel und interpretieren Sie dieses im Sachzusammenhang.',
+ 'b) Aritmetik ortalamayı hesaplayınız ve bunu verilen durumla ilişkili olarak yorumlayınız.');
+const mathQuestions=questions.filter(q=>q.kind!=='operator');
+if(mathQuestions.length!==42||bilateral.size!==42)throw Error('Incomplete bilingual audit: '+bilateral.size+'/'+mathQuestions.length);
+for(const q of mathQuestions){
+ const pair=bilateral.get(q.id);
+ if(!pair)throw Error('Unaudited mathematical card '+q.id);
+ q.german=pair[0];q.turkish=pair[1];
+}
+
 for(const q of questions)if(!q.choices.some(c=>c.value===q.correctAnswer))throw Error('Missing key '+q.id);
 window.CHECKLIST_PACK={
  id:'tuana-2-vorabitur-2026',
