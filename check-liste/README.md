@@ -1,10 +1,10 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.25.0 · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.26.0 · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
-## Tuana 2 (v1.25.0)
+## Tuana 2 (v1.26.0)
 
-Vor-Abiturprüfung 2026 Grundkurs için **63 kart** (`Teil A`, `Teil B`, **21 operatör**). Dört seçenekli cevap doğrulaması, doğru şıktan sonra etkinleşen Tamamlandı, öğrenciye özel cevap kaydı, hesaba göre izin notları ve beyaz SVG çizimleri. Veri: `sets/tuana-2/data.js`. Link: `lesson.html?set=tuana-2`. Diğer dersler için cevap doğrulama **opsiyoneldir**; varsa çalışır, yoksa eski tamamlama davranışı korunur. Ayrıntı: `sets/tuana-2/README.md`.
+Vor-Abiturprüfung 2026 Grundkurs için **63 kart** (42 matematik alt maddesi ve 21 operatör). Her soru için **Yanıt** düğmesi açıklamalı çözümü ayrı pencerede açar. Matematik sorularının Almancası ve Türkçesi birlikte yer alır. Hesap makinesi izin notları ve öğrencinin kendi Tamamlandı işareti korunur. Veri: `sets/tuana-2/data.js`; çözümler: `sets/tuana-2/solutions.js`. Bağlantı: `lesson.html?set=tuana-2`.
 
 ### v1.23.0 düzenlemesi
 
@@ -17,6 +17,10 @@ Tuana 2'nin 63 kartında seçenekler kaldırıldı; sol sütunun en altına **Ya
 ### v1.25.0 düzenlemesi
 
 Tuana 2 Yanıt düğmesi sol sütundan kaldırılıp **sorunun ve şeklin altına, doğal sayfa akışına** taşındı. Ayrı çerçeve ve yanıttaki ikinci Tamamlandı kutusu yok; dersin asıl tamamlanma kaydı korunuyor. Sayfa kaydırıldığında düğme de kayar.
+
+### v1.26.0 düzenlemesi
+
+Küçük yardımcı açıklamalar kaldırıldı: sınavın genel Teil A/B açıklaması, Yanıt düğmesi altındaki durum mesajları ve çizim tahtasının altındaki uzun kullanım yönergeleri. Hesap makinesi izin notu, sorunun Tamamlandı kutusu ve sol alt köşedeki gri sürüm yazısı korunur.
 
 ## Miraç 1 (v1.21.0)
 
