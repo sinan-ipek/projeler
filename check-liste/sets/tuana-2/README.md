@@ -1,6 +1,6 @@
 # Tuana 2 — Vor-Abiturprüfung 2026
 
-**Sürüm:** Check Liste v1.22.0
+**Sürüm:** Check Liste v1.23.0
 
 **Açılış:** https://sinan-ipek.github.io/projeler/check-liste/lesson.html?set=tuana-2
 
@@ -12,6 +12,12 @@ Kullanıcının paylaştığı **10 fotoğraf** kaynak alınmıştır. Bunlar Vo
 - **Teil B (hesap makinesi kullanılabilir): 22 matematik alt maddesi.** B1, B3, B4. B1 fonksiyon incelemesinin kendi başlıkları ayrı kartlar olarak düzenlenmiştir. Fotoğraflarda B2 yoktur; uydurulmamıştır.
 - **Teil A (hesap makinesi kullanılamaz): 20 matematik alt maddesi.** Pflicht 1–3 ve Wahlpflicht 1–6. Zorunlu görevlerin tümü ve seçmelilerden 2 tanesi sınavda cevaplanacaktır; çalışmada tamamı sunulur.
 - **Operatör sözlüğü: 21 kart.** Teil B'den 14, Teil A'dan 7 ek/ayrı ifade. Her biri Almanca–Türkçe anlam testidir.
+
+## v1.23.0 · Tam çeviri ve yeni yerleşim
+
+**42 matematik kartının** Almancası ve Türkçesi satır satır yeniden eşleştirildi. B1a dahil bütün formüller, sayısal veriler ve soru koşulları her iki dilde aynı bilgiyi aktarıyor. **21 operatör kartında** Almanca kaynak açıklamaları ile tam Türkçe karşılıkları doğru yanıt sonrasında gösterilir. Kelime testinin dört seçeneği Türkçedir.
+
+Çoktan seçmeli yanıtlar **sol sütunun en altında**, ayrı kaydırılabilir bir paneldedir. Soru menüsü bunun üzerinde bağımsız kaydırılır. Çizim tahtası tam yüksekliğini korur. Eski öğrencilerin ekranı ve kaydedilmiş çözümleri değiştirilmemiştir.
 
 ## Çoktan seçmeli davranış
 
