@@ -337,6 +337,63 @@ for(const q of mathQuestions){
  q.german=pair[0];q.turkish=pair[1];
 }
 
+
+/* v1.23.0 · Operatoren: Alman kaynak açıklamaları tam, Türkçe karşılıkları eksiksiz.
+   Her operatörün dört yanıt seçeneği Türkçedir; açıklama doğru seçime kadar gizlidir. */
+const opFull={
+ path:['Zusammenhänge bzw. Lösungswege aufzeigen, das Vorgehen darstellen und die Ergebnisse formulieren.','Bağlantıları veya çözüm yollarını göstermek, izlenen yöntemi ortaya koymak ve sonuçları ifade etmek.'],
+ discuss:['Eine vollständige Funktionsuntersuchung ist rechnerisch darzustellen.','Eksiksiz bir fonksiyon incelemesi hesap yoluyla gösterilmelidir.'],
+ examine:['Die Art des Vorgehens kann – sofern nicht durch einen Zusatz anders angegeben – frei gewählt werden (z. B. Anwenden rechnerischer oder grafischer Verfahren). Das Vorgehen ist darzustellen.','Bir ek yönergede aksi belirtilmedikçe, izlenecek yöntem serbestçe seçilebilir (örneğin hesaplama veya grafik yöntemlerini kullanmak). İzlenen yöntem gösterilmelidir.'],
+ justify:['Aussagen oder Sachverhalte sind durch logisches Schließen zu bestätigen. Die Art des Vorgehens kann – sofern nicht durch einen Zusatz anders angegeben – frei gewählt werden (z. B. Anwenden rechnerischer oder grafischer Verfahren). Das Vorgehen ist darzustellen.','İfadeler veya durumlar mantıksal çıkarımlarla doğrulanmalıdır. Bir ek yönergede aksi belirtilmedikçe, yöntem serbestçe seçilebilir (örneğin hesaplama veya grafik yöntemlerini kullanmak). İzlenen yöntem gösterilmelidir.'],
+ calculate:['Die Berechnung ist ausgehend von einem Ansatz darzustellen.','Hesaplama, bir başlangıç yaklaşımından hareketle gösterilmelidir.'],
+ draw:['Die grafische und inhaltliche Darstellung einer Zeichnung/Skizze/Übersicht ist möglichst genau anzufertigen.','Bir çizimin, taslağın veya genel görünümün grafiksel ve içeriksel sunumu olabildiğince doğru hazırlanmalıdır.'],
+ give:['Für die Angabe bzw. Nennung ist keine Begründung notwendig.','Bilgiyi belirtmek veya adını söylemek için gerekçe gerekli değildir.'],
+ create:['Siehe „Erstellen Sie“.','Bkz. „Erstellen Sie“ (Oluşturunuz).'],
+ solve:['Sinnvolles Anwenden der Rechenfähigkeiten.','Hesaplama becerilerini uygun biçimde kullanmak.'],
+ show:['Siehe „Zeigen Sie“.','Bkz. „Zeigen Sie“ (Gösteriniz).'],
+ determine:['Siehe „Bestimmen Sie“.','Bkz. „Bestimmen Sie“ (Belirleyiniz).'],
+ sketch:['Die Skizze ist so anzufertigen, dass sie das im betrachteten Zusammenhang Wesentliche grafisch beschreibt.','Taslak çizim, incelenen durumdaki temel özellikleri grafiksel olarak gösterecek biçimde hazırlanmalıdır.'],
+ transfer:['Siehe „Zeichnen Sie“.','Bkz. „Zeichnen Sie“ (Çiziniz).'],
+ name:['Siehe „Geben Sie an“.','Bkz. „Geben Sie an“ (Belirtiniz).']
+};
+const opKeys=[
+ ['path','Çözüm yolunu, yöntemi ve sonucu göstermek.'],
+ ['path','İlişkileri ve sonucu izlenen yöntemle belirlemek.'],
+ ['discuss','Fonksiyonun tamamını hesaplarla incelemek.'],
+ ['examine','Yöntemi seçerek inceleme yapmak ve yolu göstermek.'],
+ ['justify','Bir iddianın doğruluğunu mantıksal olarak göstermek.'],
+ ['justify','Bir ifadenin doğruluğunu mantıksal olarak sınamak.'],
+ ['justify','Gerekçeli bir karar vermek.'],
+ ['justify','Bir durumu gerekçeleriyle değerlendirmek.'],
+ ['justify','Sonucun neden doğru olduğunu mantıksal gerekçeyle açıklamak.'],
+ ['calculate','Başlangıç işleminden itibaren hesaplama yapmak.'],
+ ['draw','İstenen çizimi veya gösterimi doğru oluşturmak.'],
+ ['draw','Bir şekli olabildiğince doğru çizmek.'],
+ ['give','Sonucu gerekçe yazmadan belirtmek.'],
+ ['create','İstenen denklemi ya da gösterimi kurmak.'],
+ ['solve','Uygun işlemlerle matematik problemini çözmek.'],
+ ['show','Bir ifadeyi hesap yoluyla gerekçelendirmek.'],
+ ['determine','Yöntemini ve sonucunu düzenli biçimde ortaya koymak.'],
+ ['sketch','Temel özellikleri gösteren bir taslak çizmek.'],
+ ['transfer','Verilen şekli veya tabloyu kendi sayfana geçirmek.'],
+ ['name','Eksik bilgileri tamamlamak.'],
+ ['name','İstenen nesnenin adını belirtmek.']
+];
+const falseMeanings=[
+ 'Gereken işlemler olmadan rastgele bir sayı tahmin etmek.',
+ 'Yalnızca grafiğin renklerini değiştirmek.',
+ 'Verileri hiçbir kontrol yapmadan olduğu gibi kabul etmek.'
+];
+const operatorQuestions=questions.filter(q=>q.kind==='operator');
+if(operatorQuestions.length!==opKeys.length)throw Error('Operator kartları tam değil.');
+operatorQuestions.forEach((q,i)=>{
+ const [type,meaning]=opKeys[i],[german,turkish]=opFull[type];
+ q.german='Was bedeutet die Aufforderung „'+q.number+'“ in einer Mathematikprüfung?';
+ q.turkish='Matematik sınavında „'+q.number+'“ yönergesi ne anlama gelir?';
+ q.explanation='Deutsch: '+german+'\nTürkçe: '+turkish;
+ for(const option of q.choices)option.label=option.value==='0'?meaning:falseMeanings[Number(option.value)-1];
+});
+
 for(const q of questions)if(!q.choices.some(c=>c.value===q.correctAnswer))throw Error('Missing key '+q.id);
 window.CHECKLIST_PACK={
  id:'tuana-2-vorabitur-2026',
