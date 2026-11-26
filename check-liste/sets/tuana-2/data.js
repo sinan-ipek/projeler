@@ -394,6 +394,11 @@ operatorQuestions.forEach((q,i)=>{
  for(const option of q.choices)option.label=option.value==='0'?meaning:falseMeanings[Number(option.value)-1];
 });
 
+// v1.23.0: Aynı fonksiyon harfi tüm kartta ve cevap şıklarında korunur.
+const boundaryCard=questions.find(q=>q.id==='tuana2-b-b1-2a6');
+if(!boundaryCard)throw Error('Boundary question missing');
+for(const opt of boundaryCard.choices)opt.label=opt.label.replace(/g\(/g,'f(');
+
 for(const q of questions)if(!q.choices.some(c=>c.value===q.correctAnswer))throw Error('Missing key '+q.id);
 window.CHECKLIST_PACK={
  id:'tuana-2-vorabitur-2026',
