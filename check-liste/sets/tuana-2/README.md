@@ -1,6 +1,6 @@
 # Tuana 2 — Vor-Abiturprüfung 2026
 
-**Sürüm:** Check Liste v1.23.0
+**Sürüm:** Check Liste v1.24.0
 
 **Açılış:** https://sinan-ipek.github.io/projeler/check-liste/lesson.html?set=tuana-2
 
@@ -19,7 +19,13 @@ Kullanıcının paylaştığı **10 fotoğraf** kaynak alınmıştır. Bunlar Vo
 
 Çoktan seçmeli yanıtlar **sol sütunun en altında**, ayrı kaydırılabilir bir paneldedir. Soru menüsü bunun üzerinde bağımsız kaydırılır. Çizim tahtası tam yüksekliğini korur. Eski öğrencilerin ekranı ve kaydedilmiş çözümleri değiştirilmemiştir.
 
-## Çoktan seçmeli davranış
+## v1.24.0 · Yanıt düğmesi ve ayrı çözüm penceresi
+
+Tuana 2'de **çoktan seçmeli seçenekler kaldırıldı**. Her kartta sol sütunun en altında yalnızca **Yanıt** düğmesi bulunur. Öğrenci kendi çözümünü yaptıktan sonra düğmeye basar; soru kimliğiyle açılan `check-liste/answer.html` penceresinde adım adım Türkçe açıklama ve kaynak soru metinleri gösterilir. `sets/tuana-2/solutions.js` içinde **42 matematik sorusunun** açıklamalı işlem yolu, **21 operatör için** kaynak açıklama ve uygulama örneği yer alır.
+
+Yanıt penceresi açıldıktan sonra Tamamlandı kutusu etkinleşir, öğrenci kendisi işaretler. Eski kayıtlar ve çizimler korunur. Çizim tahtasının yüksekliği değiştirilmez. Bazı tarayıcılar yeni pencereyi ayrı sekmede açabilir.
+
+## Önceki sistem: çoktan seçmeli davranış (v1.23.0 öncesi)
 
 Her kartta tam 4 seçenek vardır. Önce beyaz tahtada çözüm yapılır. Yanlış şıkta doğru cevap gösterilmez, **Tamamlandı** kutusu kapalıdır. Doğru seçenek kilidi açar; öğrenci kutuyu işaretlediğinde ilerleme kaydedilir. Öğrencinin seçimi de yerel depoda saklanır. Operatörlerde Almanca kaynak açıklama ve Türkçesi yalnızca doğru yanıt seçildikten sonra görüntülenir.
 
