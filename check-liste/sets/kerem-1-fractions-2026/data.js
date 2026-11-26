@@ -31,8 +31,29 @@ F.juice70=svg(text(64,40,'1 Portion: 1/8 l Kirschsaft')+bar(64,72,8,1,178,80,'#d
 F.pizza70=svg(circle(174,118,5,2,76)+circle(528,118,5,2,76)+text(67,230,'2/5 der ersten Pizza')+text(431,230,'2/5 der zweiten Pizza'));
 F.circles71=svg(circle(148,122,10,3,66)+circle(356,122,10,3,66)+circle(563,122,10,3,66)+text(84,235,'3 gleiche Kreise'));
 F.rectangles71=svg(bar(88,93,8,4,232,80,'#efc48c')+bar(397,93,8,4,232,80,'#efc48c'));
-F.triangles71=svg(text(38,42,'Drei gleiche Dreiecke')+circle(156,131,9,1,66,'#c5a0d3')+circle(357,131,9,1,66,'#c5a0d3')+circle(558,131,9,1,66,'#c5a0d3')+text(160,235,'Schematische 9-Teilung'));
-F.stars71=svg(text(80,44,'Zwei Sterne, je 5 gleiche Teile')+circle(252,130,5,3,75,'#c6a0d8')+circle(494,130,5,3,75,'#c6a0d8'));
+function triangle(cx){
+ const A=[cx,54],B=[cx-78,212],C=[cx+78,212];
+ const P=(i,j)=>[A[0]+(i*(B[0]-A[0])+j*(C[0]-A[0]))/3,A[1]+(i*(B[1]-A[1])+j*(C[1]-A[1]))/3];
+ const polygon=(pts,fill)=>'<polygon points="'+pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')+'" fill="'+fill+'" stroke="#526054" stroke-width="1.9"/>';
+ let out='';
+ for(let i=0;i<3;i++)for(let j=0;i+j<3;j++){
+  out+=polygon([P(i,j),P(i+1,j),P(i,j+1)],i===0&&j===0?'#c8a0d7':'#fff');
+  if(i+j<2)out+=polygon([P(i+1,j),P(i,j+1),P(i+1,j+1)],'#fff');
+ }
+ return out;
+}
+function star(cx,cy=131){
+ let out='';
+ for(let i=0;i<5;i++){
+  const angle=-Math.PI/2+i*2*Math.PI/5;
+  const xy=(a,r)=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];
+  const pts=[[cx,cy],xy(angle-Math.PI/5,34),xy(angle,82),xy(angle+Math.PI/5,34)];
+  out+='<polygon points="'+pts.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' ')+'" fill="'+(i<3?'#c8a0d7':'#fff')+'" stroke="#526054" stroke-width="2"/>';
+ }
+ return out;
+}
+F.triangles71=svg(text(45,31,'Je Dreieck: 9 gleiche Teilflächen')+triangle(145)+triangle(359)+triangle(574));
+F.stars71=svg(text(55,32,'Zwei Sterne, je fünf Teilflächen')+star(235)+star(486));
 F.apple71=svg(text(55,49,'12 Beutel, je 4/5 kg Äpfel')+bar(54,79,5,4,600,85,'#eec083'));
 F.water71=svg(text(55,49,'6 Flaschen, je 3/4 Liter')+bar(54,79,4,3,600,85,'#b9dce7'));
 F.paints63=svg(text(42,44,'3 1/4 l')+bar(55,68,4,1,255,65,'#c5dae3')+text(350,109,'+')+text(425,44,'1 3/4 l')+bar(413,68,4,3,255,65,'#f0cb78'));
