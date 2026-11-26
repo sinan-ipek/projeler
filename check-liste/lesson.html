@@ -12,9 +12,6 @@
 .calculator-note[data-allowed="no"]{background:#fff6ee;border-color:#e4cdbb;color:#875232}
 .quiz-panel{background:#fff;padding:18px;border-radius:12px;border:1px solid #ceded2;margin:14px 3px 18px;display:flex;flex-direction:column;gap:12px;flex-shrink:0}
 .quiz-panel[hidden],.calculator-note[hidden],.quiz-explanation[hidden],.quiz-notes[hidden]{display:none!important}
-.boardpanel:has(.quiz-panel:not([hidden])){overflow-y:auto;min-height:0}
-.boardpanel:has(.quiz-panel:not([hidden])) .board-area{flex:0 0 43vh;min-height:240px}
-@media(max-width:900px){.boardpanel:has(.quiz-panel:not([hidden])){height:auto;min-height:0;overflow:visible}.boardpanel:has(.quiz-panel:not([hidden])) .board-area{height:48vh;flex:0 0 48vh;min-height:240px}}
 .quiz-head{font-size:16px;font-weight:750;color:#2f4a37}
 .quiz-options{display:grid;grid-template-columns:1fr;gap:8px}
 .quiz-option{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border:1px solid #d8e4dc;background:#f9fbf9;border-radius:8px;cursor:pointer;font-size:14px;line-height:1.45}
@@ -30,16 +27,36 @@
 .quiz-done input{accent-color:#42794d}
 .quiz-done:has(input:disabled){color:#9aa7a0;cursor:not-allowed}
 .doneLabel:has(input:disabled){opacity:.52;cursor:not-allowed}
-</style></head><body><div class="app"><aside class="left"><nav class="utility-bar" aria-label="Sayfa araçları"><a class="utility-home" href="/projeler/" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a><select id="uiLanguage" aria-label="Dil" title="Dil"><option value="tr">Türkçe</option><option value="de">Almanca</option><option value="en">İngilizce</option></select><button id="quickHelp" class="utility-help" type="button" aria-expanded="false" title="Help">?</button></nav><div id="quickHelpText" class="utility-helptext" hidden></div><h2 id="lessonName">Ders</h2><a class="return-to-lists" href="./index.html">← Check Liste</a><div id="setTitle" class="small">Ders yükleniyor…</div><div id="progressText" class="small"></div><div class="progress"><i id="progressBar"></i></div><select id="pageSelect"><option value="all">Tüm sayfalar</option></select><input id="search" type="search" placeholder="Soru ara…"><button id="importPrivateImages" type="button" hidden style="width:100%;padding:9px;margin:7px 0;background:#fff;border:1px solid #8ea899;border-radius:7px;cursor:pointer">⤴ Görselleri içe aktar</button><input id="privateImagesInput" type="file" multiple accept="image/png,image/jpeg,image/webp" hidden><p id="privateImagesHint" class="small" hidden></p><div id="menu"></div></aside><main class="main"><article class="card"><div id="qid" class="title"></div><h1 id="qtitle"></h1><div class="section">🇩🇪 Deutsch · Almanca</div><div id="german" class="statement"></div><div class="section">🇹🇷 Türkçe · Çeviri</div><div id="turkish" class="statement turkish"></div><div id="calculatorNote" class="calculator-note" hidden></div><div id="examInfo" class="exam-info" hidden></div><div id="pictures" hidden><div class="section">Kitaptan kırpılmış görsel (tıklayarak büyüt)</div><div id="privateImageStatus" class="small" hidden aria-live="polite"></div><div class="figcontainer"><img id="figure" class="source" alt="Soru görseli"></div></div><div class="actions"><label class="doneLabel"><input type="checkbox" id="done"> Tamamlandı ✓</label><div><button class="navbtn" id="prev">← Geri</button><button class="navbtn primary" id="next">İleri →</button></div></div></article></main><section class="boardpanel"><div class="boardbar"><strong>✎ Çözüm alanı</strong><button id="shareSolutions" class="shareSolutions" type="button" title="Tüm sorular ve kaydedilmiş çözüm çizimleri tek PDF olarak indirilir">↗ Paylaş</button><button id="pen" class="tool on" type="button" aria-pressed="true">✎ Kalem</button><button id="selectTool" class="tool" type="button" aria-pressed="false">↖ Seçim</button><button id="eraser" class="tool" type="button" aria-pressed="false">▧ Silgi</button><button id="clear" class="clear">Tümünü sil</button><button id="sharePdfFile" type="button" hidden>↗ Dosyayı paylaş</button></div><span id="exportStatus" role="status" aria-live="polite"></span><div class="board-area pen" id="boardArea"><canvas id="board"></canvas></div><div class="boardhint">Kalem: üst üste çiz, seçim yapılmaz · Seçim: boş alandan sürükle ve birden çok nesneyi çerçeveyle seç; Shift+sürükle ile seçime ekle · Köşeden sürükle: serbest en/boy; Shift+köşeden sürükle: oranı koru · Seçilenleri birlikte taşı, Alt+sürükle ile kopyala · Esc: Kalem ↔ Seçim · Sol tuşla çizerken 0,65 sn bekle: normal şekil tanıma · Çizimi bitirip sağ tuşa 0,7 sn hareketsiz basılı tut: en benzer şekle zorunlu dönüştür · Basılıyken hareket ettir: şekli güncelle · Bırak: sabitle · Sağ tuşla hemen sürükle: kaydır.</div><section id="quizPanel" class="quiz-panel" hidden aria-label="Çoktan seçmeli yanıt kontrolü">
+
+/* v1.23.0: quiz anchored at bottom of the LEFT column; drawing board retains its full height. */
+body.has-graded-quiz .app{grid-template-columns:minmax(270px,290px) minmax(300px,1fr) minmax(320px,44%)}
+body.has-graded-quiz .left{display:flex;flex-direction:column;overflow:hidden;min-height:0;padding-bottom:24px}
+body.has-graded-quiz .left #menu{flex:1 1 auto;min-height:45px;overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
+body.has-graded-quiz .left #quizPanel{flex:0 1 auto;min-height:0;max-height:min(53dvh,540px);overflow-y:auto;overscroll-behavior:contain;margin:10px 0 0;padding:12px 10px;box-shadow:0 -4px 12px #28402e0c}
+body.has-graded-quiz .left .quiz-head{font-size:14px}
+body.has-graded-quiz .left .quiz-option{font-size:12px;line-height:1.35;padding:8px}
+body.has-graded-quiz .left .quiz-feedback,body.has-graded-quiz .left .quiz-explanation{font-size:12px}
+body.has-graded-quiz .boardpanel{overflow:hidden}
+body.has-graded-quiz .board-area{flex:1;min-height:220px;height:auto}
+@media(max-width:900px){
+ body.has-graded-quiz .app{display:flex;flex-direction:column;height:auto;min-height:100dvh}
+ body.has-graded-quiz .left{height:min(76dvh,650px);max-height:none;min-height:350px;overflow:hidden}
+ body.has-graded-quiz .left #menu{min-height:45px;max-height:160px}
+ body.has-graded-quiz .left #quizPanel{max-height:min(42dvh,360px);flex:0 1 auto}
+ body.has-graded-quiz .boardpanel{height:70vh;min-height:420px;overflow:hidden}
+ body.has-graded-quiz .board-area{flex:1;min-height:250px}
+}
+</style></head><body><div class="app"><aside class="left"><nav class="utility-bar" aria-label="Sayfa araçları"><a class="utility-home" href="/projeler/" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a><select id="uiLanguage" aria-label="Dil" title="Dil"><option value="tr">Türkçe</option><option value="de">Almanca</option><option value="en">İngilizce</option></select><button id="quickHelp" class="utility-help" type="button" aria-expanded="false" title="Help">?</button></nav><div id="quickHelpText" class="utility-helptext" hidden></div><h2 id="lessonName">Ders</h2><a class="return-to-lists" href="./index.html">← Check Liste</a><div id="setTitle" class="small">Ders yükleniyor…</div><div id="progressText" class="small"></div><div class="progress"><i id="progressBar"></i></div><select id="pageSelect"><option value="all">Tüm sayfalar</option></select><input id="search" type="search" placeholder="Soru ara…"><button id="importPrivateImages" type="button" hidden style="width:100%;padding:9px;margin:7px 0;background:#fff;border:1px solid #8ea899;border-radius:7px;cursor:pointer">⤴ Görselleri içe aktar</button><input id="privateImagesInput" type="file" multiple accept="image/png,image/jpeg,image/webp" hidden><p id="privateImagesHint" class="small" hidden></p><div id="menu"></div>
+<section id="quizPanel" class="quiz-panel" hidden aria-label="Çoktan seçmeli yanıt kontrolü">
 <div class="quiz-head">Yanıtını seç · 4 seçenek</div>
 <div id="quizChoices" class="quiz-options" role="group" aria-label="Yanıt seçenekleri"></div>
 <div id="quizFeedback" class="quiz-feedback" role="status" aria-live="polite"></div>
 <div id="quizExplanation" class="quiz-explanation" hidden></div>
 <div id="quizExtraNotes" class="quiz-notes" hidden></div>
 <label class="quiz-done"><input type="checkbox" id="quizDone" disabled> Tamamlandı ✓</label>
-</section></section></div>
+</section></aside><main class="main"><article class="card"><div id="qid" class="title"></div><h1 id="qtitle"></h1><div class="section">🇩🇪 Deutsch · Almanca</div><div id="german" class="statement"></div><div class="section">🇹🇷 Türkçe · Çeviri</div><div id="turkish" class="statement turkish"></div><div id="calculatorNote" class="calculator-note" hidden></div><div id="examInfo" class="exam-info" hidden></div><div id="pictures" hidden><div class="section">Kitaptan kırpılmış görsel (tıklayarak büyüt)</div><div id="privateImageStatus" class="small" hidden aria-live="polite"></div><div class="figcontainer"><img id="figure" class="source" alt="Soru görseli"></div></div><div class="actions"><label class="doneLabel"><input type="checkbox" id="done"> Tamamlandı ✓</label><div><button class="navbtn" id="prev">← Geri</button><button class="navbtn primary" id="next">İleri →</button></div></div></article></main><section class="boardpanel"><div class="boardbar"><strong>✎ Çözüm alanı</strong><button id="shareSolutions" class="shareSolutions" type="button" title="Tüm sorular ve kaydedilmiş çözüm çizimleri tek PDF olarak indirilir">↗ Paylaş</button><button id="pen" class="tool on" type="button" aria-pressed="true">✎ Kalem</button><button id="selectTool" class="tool" type="button" aria-pressed="false">↖ Seçim</button><button id="eraser" class="tool" type="button" aria-pressed="false">▧ Silgi</button><button id="clear" class="clear">Tümünü sil</button><button id="sharePdfFile" type="button" hidden>↗ Dosyayı paylaş</button></div><span id="exportStatus" role="status" aria-live="polite"></span><div class="board-area pen" id="boardArea"><canvas id="board"></canvas></div><div class="boardhint">Kalem: üst üste çiz, seçim yapılmaz · Seçim: boş alandan sürükle ve birden çok nesneyi çerçeveyle seç; Shift+sürükle ile seçime ekle · Köşeden sürükle: serbest en/boy; Shift+köşeden sürükle: oranı koru · Seçilenleri birlikte taşı, Alt+sürükle ile kopyala · Esc: Kalem ↔ Seçim · Sol tuşla çizerken 0,65 sn bekle: normal şekil tanıma · Çizimi bitirip sağ tuşa 0,7 sn hareketsiz basılı tut: en benzer şekle zorunlu dönüştür · Basılıyken hareket ettir: şekli güncelle · Bırak: sabitle · Sağ tuşla hemen sürükle: kaydır.</div></section></div>
 
-<div class="version-note" aria-label="Sürüm">v1.22.0 · Tuana 2 · Çoktan seçmeli kontrol</div>
+<div class="version-note" aria-label="Sürüm">v1.23.0 · Tuana 2 · Tam çeviri ve solda yanıtlar</div>
 <script>
 (function(){
  const lang=document.getElementById('uiLanguage');
@@ -82,5 +99,5 @@
  help.addEventListener('click',()=>{text.hidden=!text.hidden;help.setAttribute('aria-expanded',String(!text.hidden))});
  translate();
 })();
-</script><script src="./lesson-loader.js?v=1.22.0-final"></script><script src="/projeler/analytics.js?v=20261114-auto"></script>
+</script><script src="./lesson-loader.js?v=1.23.0"></script><script src="/projeler/analytics.js?v=20261114-auto"></script>
 </body></html>
