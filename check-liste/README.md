@@ -1,8 +1,8 @@
 # Check Liste — Ortak ders sistemi
 
-**Sürüm v1.28.0 · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
+**Sürüm v1.29.0 · HTML arayüzü, çizim motoru ve PDF çıktısı artık ortak kaynaklardan çalışır.
 
-## Tuana 2 (v1.28.0)
+## Tuana 2 (v1.29.0)
 
 Vor-Abiturprüfung 2026 Grundkurs için **63 kart** (42 matematik alt maddesi ve 21 operatör). Her soru için **Çözüm** düğmesi açıklamalı çözümü ayrı pencerede açar. Açılan pencerede sorunun Almanca/Türkçe metni ve görseli yeniden gösterilmez. Matematik sorularının Almancası ve Türkçesi birlikte yer alır. Hesap makinesi izin notları ve öğrencinin kendi Tamamlandı işareti korunur. Veri: `sets/tuana-2/data.js`; çözümler: `sets/tuana-2/solutions.js`. Bağlantı: `lesson.html?set=tuana-2`.
 
@@ -29,6 +29,10 @@ Küçük yardımcı açıklamalar kaldırıldı: sınavın genel Teil A/B açık
 ### v1.28.0 düzenlemesi
 
 Bütün Check Liste soru kartlarındaki düğmenin adı **Çözüm** (Almanca: Lösung, İngilizce: Solution) oldu. Tuana 2 ve ortak çözüm pencerelerinde soru metinleri ve soru şekilleri tekrar gösterilmiyor: yalnızca açıklamalı çözüm, sonuç veya henüz hazır çözüm bulunmadığını belirten mesaj yer alıyor. Çizimler, tamamlanma kayıtları, renkler ve çizgi stilleri korunmuştur.
+
+### v1.29.0 — Gerçek LaTeX matematik görünümü
+
+Ortak `check-liste/math-render.js` dosyası ve sabit sürümlü **KaTeX v0.19.1** kullanılır. Bütün Check Liste soru kartlarının Almanca/Türkçe metinlerinde üstlü ifadeler (`x²`, `a^t`), kesirler (`1/3`), kökler (`√161`), fonksiyonlar, eşitlikler, koordinatlar ve olasılık sembolleri **gerçek TeX tipografisi** ile gösterilir. Aynı dizgi `answer.html` ve `answer-generic.html` açıklamalı çözüm pencerelerinde de kullanılır. Metinler güvenli `textContent` tabanlı render ile işlenir; doğru olmayan sonuçlar ya da yeni çözüm verisi üretilmez. İnternet bağlantısı olmayan veya KaTeX'in engellendiği durumda özgün düz metin görünür. Bu değişiklik mevcut soru kimliklerini ve çizim/ilerleme kayıtlarını değiştirmez.
 
 ## Miraç 1 (v1.21.0)
 
