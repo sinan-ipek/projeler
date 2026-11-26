@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Liya 1 · Check Liste</title>
+<meta http-equiv="refresh" content="5;url=../lesson.html?set=liya-1">
+<style>
+body{font:16px/1.5 system-ui,sans-serif;background:#f2f2f3;color:#283e30;margin:0;padding:28px}
+nav{display:flex;gap:10px;align-items:center}
+.home{width:40px;height:40px;background:#ffdc28;display:grid;place-items:center;border:1px solid #cda900;border-radius:3px;color:#111}
+.home svg{width:22px;height:22px;fill:currentColor}
+select,button{background:white;border:1px solid #ccdacc;border-radius:7px;padding:9px;font:inherit}
+.version{position:fixed;bottom:7px;left:10px;color:#98a299;font-size:10px}
+a{color:#36654a}
+</style>
+</head>
+<body>
+<nav>
+<a class="home" title="Home" aria-label="Home" href="/projeler/">
+<svg viewBox="0 0 24 24"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg>
+</a>
+<select aria-label="Dil"><option>Türkçe</option><option>Almanca</option><option>İngilizce</option></select>
+<button id="help" aria-label="Help" title="Help">?</button>
+</nav>
+<h1>Liya 1</h1>
+<p><a id="go" href="../lesson.html?set=liya-1">Çalışmayı aç</a></p>
+<div class="version">v1.33.0 · Liya 1 · 7 çalışma kartı</div>
+<script>
+(function(){
+ const to=new URL('../lesson.html',location.href);
+ to.searchParams.set('set','liya-1');
+ for(const [key,value] of new URLSearchParams(location.search)){
+  if(key!=='set')to.searchParams.append(key,value);
+ }
+ to.hash=location.hash;
+ document.getElementById('go').href=to.href;
+ document.getElementById('help').onclick=()=>alert('Liya 1 matematik sorularını açar.');
+ location.replace(to.href);
+})();
+</script>
+<script src="/projeler/analytics.js?v=20261114-auto"></script>
+</body></html>
