@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tuana 2 · Çözüm</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css" integrity="sha384-WwGtaC6ywCHxA5cstpj/3+xIZvTez8dq2IcBQaXRkenHZ7FVVq1ZROtURwfbtTlG" crossorigin="anonymous">
 <meta name="description" content="Tuana 2 için açıklamalı matematik çözümleri ve operatör anlamları">
 <style>
 :root{--bg:#f3f7f2;--ink:#253a2c;--green:#356c4c;--line:#dbe5dc;--muted:#687b6b}
@@ -35,6 +36,10 @@ figure img{display:block;max-width:100%;height:auto;background:#fff;border:1px s
 .close{background:white;border:1px solid #9eb9a4;border-radius:9px;color:#315e3d;padding:9px 18px;font:inherit;cursor:pointer}
 .version{position:fixed;left:10px;bottom:6px;z-index:3;font-size:10px;color:#9ba49d;pointer-events:none}
 [hidden]{display:none!important}
+
+.steps .katex,.source-explanation .katex,.conclusion .katex{font-size:1.1em}
+.check-math-inline{display:inline-block;max-width:100%;overflow-x:auto;vertical-align:middle;white-space:nowrap;line-height:1.5}
+.check-math-display{margin:12px 0;max-width:100%;overflow-x:auto}
 </style>
 </head>
 <body>
@@ -60,9 +65,11 @@ figure img{display:block;max-width:100%;height:auto;background:#fff;border:1px s
  </section>
  <button class="close" id="close" type="button">Pencereyi kapat</button>
 </main>
-<div class="version">v1.28.0 · Tuana 2 · Yalnızca açıklamalı çözüm</div>
-<script src="./sets/tuana-2/data.js?v=1.28.0"></script>
-<script src="./sets/tuana-2/solutions.js?v=1.28.0"></script>
+<div class="version">v1.29.0 · Tuana 2 · LaTeX biçimli açıklamalı çözüm</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.js" integrity="sha384-a1WQdjRj162i159OYq041X6I4K8NenkrI09LlPmiHg0YOb7CR+wJOraXwK9abpnE" crossorigin="anonymous"></script>
+<script src="./math-render.js?v=1.29.0"></script>
+<script src="./sets/tuana-2/data.js?v=1.29.0"></script>
+<script src="./sets/tuana-2/solutions.js?v=1.29.0"></script>
 <script>
 (function(){
  'use strict';
@@ -77,7 +84,10 @@ figure img{display:block;max-width:100%;height:auto;background:#fff;border:1px s
  const index=pack&&Array.isArray(pack.questions)?pack.questions.findIndex(q=>q.id===id):-1;
  const question=index>=0?pack.questions[index]:null;
  function insertStep(text){
-  const li=document.createElement('li');li.textContent=text;$('steps').appendChild(li);
+  const li=document.createElement('li');
+  if(window.CheckMath)window.CheckMath.render(li,text);
+  else li.textContent=text;
+  $('steps').appendChild(li);
  }
  const opItems=pack?.questions.filter(q=>q.kind==='operator')||[];
  const operatorIndex=question?.kind==='operator'?opItems.findIndex(q=>q.id===question.id):-1;
@@ -103,13 +113,18 @@ figure img{display:block;max-width:100%;height:auto;background:#fff;border:1px s
   $('answerTitle').textContent=question.number;
   if(question.kind==='operator'){
    $('operatorInfo').hidden=false;
-   $('operatorInfo').textContent=question.explanation||'';
+   if(window.CheckMath)window.CheckMath.render($('operatorInfo'),question.explanation||'');
+   else $('operatorInfo').textContent=question.explanation||'';
   }else{
    const entry=book.math[id];
    if(entry){
     $('solutionTitle').textContent=entry.title;
     entry.steps.forEach(insertStep);
-    if(entry.conclusion){$('conclusion').hidden=false;$('conclusion').textContent='Sonuç: '+entry.conclusion}
+    if(entry.conclusion){
+     $('conclusion').hidden=false;
+     if(window.CheckMath)window.CheckMath.render($('conclusion'),'Sonuç: '+entry.conclusion);
+     else $('conclusion').textContent='Sonuç: '+entry.conclusion;
+    }
    }else $('answerStatus').textContent='Bu soru için çözüm bulunamadı.';
   }
   $('solutionCard').hidden=false;
