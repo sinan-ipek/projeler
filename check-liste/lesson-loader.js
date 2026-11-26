@@ -1,4 +1,4 @@
-/* Check Liste v1.33.0 — Tek ortak ders yükleyicisi.
+/* Check Liste v1.34.0 — Tek ortak ders yükleyicisi.
    Yalnızca ders veri kaynağı değişir: aynı HTML, çizim motoru ve PDF oluşturucu. */
 (function(){
  'use strict';
@@ -11,7 +11,8 @@
   'lambacher-7':{data:'./sets/lambacher-schweizer-7/data.js',pack:'lambacher-schweizer-7-nrw',name:'7. sınıf'},
   'mirac-1':{data:'./sets/mirac-denklemler-2026/data.js',pack:'mirac-denklemler-2026',name:'Miraç 1'},
   'tuana-2':{data:'./sets/tuana-2/data.js',pack:'tuana-2-vorabitur-2026',name:'Tuana 2'},
-  'liya-1':{data:'./sets/liya-1/data.js',pack:'liya-1-proportion-2026',name:'Liya 1'}
+  'liya-1':{data:'./sets/liya-1/data.js',pack:'liya-1-proportion-2026',name:'Liya 1'},
+  'egemen-1':{data:'./sets/egemen-1/data.js',pack:'egemen-1-test72-2026',name:'Egemen 1'}
  });
  const selected=sources[id];
  const status=document.getElementById('exportStatus');
@@ -98,13 +99,13 @@
     if(!available)return;
     filterLambacherMenuPages(window.CHECKLIST_PACK);
    }else{
-    await load(selected.data+'?v=1.33.0');
+    await load(selected.data+'?v=1.34.0');
     if(!window.CHECKLIST_PACK||
        window.CHECKLIST_PACK.id!==selected.pack||
        !Array.isArray(window.CHECKLIST_PACK.questions))
      throw new Error('Ders verileri doğrulanamadı.');
    }
-   await load('./app.js?v=1.29.0');
+   await load('./app.js?v=1.34.0');
    await load('./pdf-export.js?v=1.27.0');
   }catch(err){
    console.error('Check Liste yükleme hatası:',err);
