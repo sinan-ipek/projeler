@@ -325,6 +325,32 @@ for(const q of Q)if(!q.solution)q.solution=explainArithmetic(q);
   q.solution=solution;
  }
 }
+
+// v1.36.0 — Page 71: drawn fractions, mixed units and number cards.
+{
+ const answers={
+ '71-A-1-a':'1. Üç dairenin her biri 10 eş dilime ayrılmıştır.\n2. Her dairede 3/10 boyalıdır.\n3. Üç daire için 3·3/10=9/10.\nSonuç: 9/10.',
+ '71-A-1-b':'1. İki dikdörtgenden her biri 8 eş parçaya ayrılmıştır.\n2. Her birinde 3/8 boyalıdır.\n3. 2·3/8=6/8.\n4. 6/8=3/4.\nSonuç: 3/4.',
+ '71-A-5-':'1. Bir şişede 3/4 litre su vardır.\n2. 6 şişede 6·3/4=18/4 litre bulunur.\n3. 18/4=9/2=4 1/2.\nSonuç: 4 1/2 litre.',
+ '71-A-7-a':'1. 3/□·3=9/10 eşitliğinde pay 3·3=9 olur.\n2. Paydanın 10 olması gerekir.\n3. 3/10·3=9/10.\nSonuç: Kutudaki sayı 10.',
+ '71-A-7-b':'1. 4·□/13=12/13.\n2. Pay için 4·□=12 gereklidir.\n3. 12:4=3.\nSonuç: Kutudaki sayı 3.',
+ '71-A-7-c':'1. □·2/9=2/3.\n2. 2/3=6/9 olduğundan □·2=6.\n3. 6:2=3.\nSonuç: Kutudaki sayı 3.',
+ '71-A-7-d':'1. 7·□/□=4 olacak şekilde kesri seç.\n2. 4/7 seçersen 7·4/7=28/7=4.\nSonuç: Kesrin payı 4, paydası 7.',
+ '71-B-1-a':'1. Üç büyük üçgenin her biri 9 eş parçadan oluşur.\n2. Her üçgende iki küçük parça boyalıdır: 2/9.\n3. 3·2/9=6/9=2/3.\nSonuç: 2/3.',
+ '71-B-1-b':'1. İki yıldızın her birinde beş bölümden üçü boyalıdır.\n2. Her yıldız 3/5 gösterir.\n3. 2·3/5=6/5=1 1/5.\nSonuç: 1 1/5.',
+ '71-B-5-':'1. Kasada 12 torba vardır ve her torba 4/5 kg elma alır.\n2. 12·4/5=48/5 kilogram.\n3. 48/5=9 3/5.\nSonuç: 9 3/5 kg, yani 9,6 kg.',
+ '71-B-7-a':'1. 2, 3, 4 ve 8 kartlarından pay, payda ve çarpan için üç farklı sayı seçilir.\n2. En büyük sonuç için 8’i çarpan, 4’ü pay ve 2’yi payda seç.\n3. 8·4/2=16.\nSonuç: En büyük değer 16.',
+ '71-B-7-b':'1. En küçük sonuç için paydayı en büyük sayı olan 8 seç.\n2. Kalanlardan pay ve çarpanı 2 ve 3 olarak belirle.\n3. 2·3/8=6/8=3/4.\nSonuç: En küçük değer 3/4.',
+ '71-B-7-c':'1. Bir bütün, yani 1 elde etmek gerekiyor.\n2. 4·2/8=8/8=1.\n3. Alternatif olarak 2·4/8=1 de mümkündür.\nSonuç: Örnek doğru işlem 4·2/8=1.'
+ };
+ for(const [suffix,solution] of Object.entries(answers)){
+  const q=Q.find(q=>q.id==='kerem1-'+suffix);
+  if(!q)throw Error('Unknown source id '+suffix);
+  q.solution=solution;
+ }
+}
+const noSolution=Q.filter(q=>!q.solution);
+if(noSolution.length)throw Error('Missing Kerem 1 solutions: '+noSolution.map(q=>q.id).join(', '));
 if(new Set(Q.map(q=>q.id)).size!==Q.length)throw Error('duplicate IDs');
 if(Q.some(q=>!q.german||!q.turkish))throw Error('blank text');
 window.CHECKLIST_PACK={id:'kerem-1-fractions-2026',title:'Kerem 1 · Mit Brüchen rechnen · Seiten 62, 63, 64, 68, 70, 71',onlySolvedAnswers:true,questions:Q};
