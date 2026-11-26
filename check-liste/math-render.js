@@ -8,7 +8,7 @@ const unitNames=new Set(['m','cm','mm','km','kg','mg','g','t','h','min','s','ct'
 const units='cm|mm|km|kg|mg|min|ct|LE|m|g|t|h|s';
 const supMap={'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁻':'-','⁺':'+'};
 const opOnly=/^[+\-−·×÷=≤≥<>≈≠:→∈∩∪]$/;
-const mathChars=/^[0-9A-Za-zπℝ∞√□°€%⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺′″'_,.;:|(){}\[\]+\-−·×÷/*^=≤≥<>≈≠→∈∩∪]+$/u;
+const mathChars=/^[0-9A-Za-zπℝ∞√□¬°€%⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺′″'_,.;:|(){}\[\]+\-−·×÷/*^=≤≥<>≈≠→∈∩∪]+$/u;
 const number=/^[+\-−]?\d+(?:[.,]\d+)?$/;
 const variable=/^(?:[a-zA-Z]|π|∞|ℝ)(?:[′″']{1,2}|[₀₁₂₃₄₅₆₇₈₉])?$/u;
 const functionRef=/^(?:[a-zA-Z][′″']{0,2}|P)\([^\s]*\)$/u;
@@ -24,7 +24,7 @@ function tokenParts(word){
  return {prefix,core:s,suffix};
 }
 function mathToken(core){
- if(!core)return false;
+ if(!core||/^[a-zA-Z]\)$/.test(core))return false; // a), b): question labels, not algebra.
  if(opOnly.test(core)||number.test(core)||variable.test(core)||unitNames.has(core))return true;
  if(!mathChars.test(core))return false;
  // Natural-language words must never be mistaken for mathematical variables.
@@ -43,7 +43,7 @@ function expressionToTex(expr){
    .replace(/≠/g,' \\ne ').replace(/≈/g,' \\approx ')
    .replace(/→/g,' \\to ').replace(/∞/g,'\\infty ')
    .replace(/∈/g,' \\in ').replace(/∩/g,' \\cap ').replace(/∪/g,' \\cup ')
-   .replace(/ℝ/g,'\\mathbb{R}').replace(/π/g,'\\pi ')
+   .replace(/ℝ/g,'\\mathbb{R}').replace(/π/g,'\\pi ').replace(/¬/g,'\\neg ')
    .replace(/□/g,'\\square ').replace(/°C/g,'^{\\circ}\\mathrm{C}')
    .replace(/√\(([^()]*)\)/g,'\\sqrt{$1}')
    .replace(/√(\d+)/g,'\\sqrt{$1}')
