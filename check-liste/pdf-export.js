@@ -151,9 +151,13 @@ function drawSolutionBoard(objects){
  const oy=top+(height-bh*scale)/2-minY*scale;
  ctx.save();
  ctx.beginPath();ctx.rect(left+3,top+3,width-6,height-6);ctx.clip();
- ctx.lineJoin='round';ctx.lineCap='round';ctx.strokeStyle='#17231e';
+ ctx.lineJoin='round';ctx.lineCap='round';
  ctx.lineWidth=Math.max(2,Math.min(6,2.25*scale));
+ const allowedInk=['#111111','#d62d35','#2364c9','#228044','#8a9297'];
  for(const o of paths){
+  const inkColor=allowedInk.includes(o.color)?o.color:'#111111';
+  ctx.strokeStyle=inkColor;
+  ctx.setLineDash(o.strokeStyle==='dashed'?[10*scale,7*scale]:[]);
   // Use the same freehand smoothing as the interactive solution board.
   const valid=o.pts.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));
   if(!valid.length)continue;
@@ -163,7 +167,7 @@ function drawSolutionBoard(objects){
   ctx.moveTo(first.x,first.y);
   if(valid.length===1){
    ctx.arc(first.x,first.y,ctx.lineWidth/2,0,Math.PI*2);
-   ctx.fillStyle='#17231e';ctx.fill();
+   ctx.fillStyle=inkColor;ctx.fill();
   }else{
    if(o.kind==='ink'&&valid.length>2){
     const mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
@@ -183,6 +187,7 @@ function drawSolutionBoard(objects){
    }
    ctx.stroke();
   }
+  ctx.setLineDash([]);
  }
  ctx.restore();y+=height+20;
 }
