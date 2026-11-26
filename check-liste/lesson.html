@@ -1,4 +1,4 @@
-<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Check Liste · Ders</title><style>
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Check Liste · Ders</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css" integrity="sha384-WwGtaC6ywCHxA5cstpj/3+xIZvTez8dq2IcBQaXRkenHZ7FVVq1ZROtURwfbtTlG" crossorigin="anonymous"><style>
 :root{--green:#426751;--line:#e4e8e3}*{box-sizing:border-box}body{margin:0;color:#26352b;background:#f7f8f5;font:15px system-ui,-apple-system,sans-serif}.app{display:grid;grid-template-columns:205px minmax(300px,1fr) minmax(320px,48%);height:100dvh;gap:0}.left{background:#f1f4f0;border-right:1px solid var(--line);overflow:auto;padding:19px 12px}.left h2{margin:0 0 8px;font-size:20px}.small{color:#718079;font-size:12px}.progress{height:7px;border-radius:9px;background:#dae3d9;margin:13px 0}.progress>i{height:100%;display:block;background:#53926a;border-radius:9px} .shareSolutions{width:auto;flex:0 0 auto;margin:0;padding:9px 10px;border:1px solid #33684a;border-radius:10px;background:#426751;color:white;font-size:13px;font-weight:750;cursor:pointer;text-align:center}
 .shareSolutions:hover{background:#315e41}
 .shareSolutions:disabled{opacity:.55;cursor:wait}
@@ -74,6 +74,13 @@ body.has-graded-quiz .board-area{flex:1;min-height:220px;height:auto}
 .app .section{font-size:14px}
 body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedback,body.has-graded-quiz .left .quiz-explanation{font-size:14px}
 @media(max-width:1100px){.ink-swatch{width:25px;height:25px;flex-basis:25px}.boardbar{gap:6px}}
+
+/* v1.29.0: KaTeX typesets authentic fraction bars, powers, roots and equations. */
+.statement .katex,.statement .check-math-inline .katex{font-size:1.12em}
+.check-math-inline{display:inline-block;max-width:100%;overflow-x:auto;vertical-align:middle;white-space:nowrap;line-height:1.4}
+.check-math-display{margin:12px 0;max-width:100%;overflow-x:auto}
+.check-math-display .katex-display{margin:.5em 0}
+.katex .katex-mathml{position:absolute}
 </style></head><body><div class="app"><aside class="left"><nav class="utility-bar" aria-label="Sayfa araçları"><a class="utility-home" href="/projeler/" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a><select id="uiLanguage" aria-label="Dil" title="Dil"><option value="tr">Türkçe</option><option value="de">Almanca</option><option value="en">İngilizce</option></select><button id="quickHelp" class="utility-help" type="button" aria-expanded="false" title="Help">?</button></nav><div id="quickHelpText" class="utility-helptext" hidden></div><h2 id="lessonName">Ders</h2><a class="return-to-lists" href="./index.html">← Check Liste</a><div id="setTitle" class="small">Ders yükleniyor…</div><div id="progressText" class="small"></div><div class="progress"><i id="progressBar"></i></div><select id="pageSelect"><option value="all">Tüm sayfalar</option></select><input id="search" type="search" placeholder="Soru ara…"><button id="importPrivateImages" type="button" hidden style="width:100%;padding:9px;margin:7px 0;background:#fff;border:1px solid #8ea899;border-radius:7px;cursor:pointer">⤴ Görselleri içe aktar</button><input id="privateImagesInput" type="file" multiple accept="image/png,image/jpeg,image/webp" hidden><p id="privateImagesHint" class="small" hidden></p><div id="menu"></div>
 <section id="quizPanel" class="quiz-panel" hidden aria-label="Çoktan seçmeli yanıt kontrolü">
 <div class="quiz-head" id="quizHeading">Yanıtını seç · 4 seçenek</div>
@@ -95,7 +102,7 @@ body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedbac
  <button id="inkDashed" class="ink-style" type="button" data-stroke-style="dashed" aria-pressed="false" title="Kesikli çizgi">Dashed</button>
 </div><button id="clear" class="clear">Tümünü sil</button><button id="sharePdfFile" type="button" hidden>↗ Dosyayı paylaş</button></div><span id="exportStatus" role="status" aria-live="polite"></span><div class="board-area pen" id="boardArea"><canvas id="board"></canvas></div></section></div>
 
-<div class="version-note" aria-label="Sürüm">v1.28.0 · Çözüm düğmesi · Soru tekrarı kaldırıldı</div>
+<div class="version-note" aria-label="Sürüm">v1.29.0 · Matematik ifadeleri KaTeX/LaTeX biçiminde</div>
 <script>
 (function(){
  const lang=document.getElementById('uiLanguage');
@@ -139,5 +146,5 @@ body.has-graded-quiz .left .quiz-option,body.has-graded-quiz .left .quiz-feedbac
  help.addEventListener('click',()=>{text.hidden=!text.hidden;help.setAttribute('aria-expanded',String(!text.hidden))});
  translate();
 })();
-</script><script src="./lesson-loader.js?v=1.28.0"></script><script src="/projeler/analytics.js?v=20261114-auto"></script>
+</script><script src="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.js" integrity="sha384-a1WQdjRj162i159OYq041X6I4K8NenkrI09LlPmiHg0YOb7CR+wJOraXwK9abpnE" crossorigin="anonymous"></script><script src="./math-render.js?v=1.29.0"></script><script src="./lesson-loader.js?v=1.29.0"></script><script src="/projeler/analytics.js?v=20261114-auto"></script>
 </body></html>
