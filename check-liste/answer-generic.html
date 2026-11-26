@@ -21,8 +21,15 @@ p{white-space:pre-wrap}.question{white-space:pre-wrap;color:#304336}
 .version{position:fixed;bottom:6px;left:10px;color:#9ba49d;font-size:10px;pointer-events:none}
 
 #answerDetail .katex{font-size:1.1em}
-.check-math-inline{display:inline-block;max-width:100%;overflow-x:auto;vertical-align:middle;white-space:nowrap;line-height:1.5}
-.check-math-display{margin:12px 0;max-width:100%;overflow-x:auto}
+.check-math-inline{display:inline;max-width:none;overflow:visible;vertical-align:baseline;white-space:normal;line-height:inherit}
+.check-math-display{margin:12px 0;max-width:100%;overflow:visible;white-space:normal}
+
+/* v1.31.0: inline equations flow with prose; no nested scrollbars or arrow buttons. */
+.check-math-inline .katex,.check-math-display .katex{white-space:normal}
+.check-math-inline .katex .base,.check-math-display .katex .base{white-space:nowrap}
+@media(max-width:620px){
+ .check-math-inline .katex,.check-math-display .katex{font-size:1em}
+}
 </style></head>
 <body>
 <nav>
@@ -35,9 +42,9 @@ p{white-space:pre-wrap}.question{white-space:pre-wrap;color:#304336}
  <h1 id="questionTitle">Çözüm</h1>
  <section class="card"><h2 id="answerLabel">Açıklamalı çözüm</h2><div id="answerDetail" role="status">Soru yükleniyor…</div></section>
 </main>
-<div class="version">v1.30.0 · Ortak Çözüm penceresi · KaTeX ile formüller</div>
+<div class="version">v1.31.0 · Ortak Çözüm penceresi · KaTeX ile formüller</div>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.js" integrity="sha384-a1WQdjRj162i159OYq041X6I4K8NenkrI09LlPmiHg0YOb7CR+wJOraXwK9abpnE" crossorigin="anonymous"></script>
-<script src="./math-render.js?v=1.30.0"></script>
+<script src="./math-render.js?v=1.31.0"></script>
 <script>
 (function(){
 'use strict';
