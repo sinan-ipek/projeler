@@ -225,7 +225,13 @@ window.openChecklistQuestion=(i)=>open(i);
 function open(i){
  if(i<0||i>=qs.length)return;
  current=i;let q=qs[i];$('qid').textContent='Sayfa '+q.page+' · '+questionLabel(q)+(q.star?'  ★':'');$('qtitle').textContent=questionLabel(q);
- $('german').textContent=q.german;$('turkish').textContent=q.turkish;$('done').checked=!!done[q.id];
+ if(window.CheckMath){
+  window.CheckMath.render($('german'),q.german);
+  window.CheckMath.render($('turkish'),q.turkish);
+ }else{
+  $('german').textContent=q.german;$('turkish').textContent=q.turkish;
+ }
+ $('done').checked=!!done[q.id];
  renderQuiz(q);
  $('prev').disabled=i===0;$('next').disabled=i===qs.length-1;
  const src=q.figureImage||q.sourceImage||q.image||'';
