@@ -3,6 +3,8 @@
 const $=id=>document.getElementById(id), pack=window.CHECKLIST_PACK;
 if(!pack||!Array.isArray(pack.questions)){document.getElementById('menu').textContent='Soru verileri bulunamadı.';return}
 const qs=pack.questions, checkId=pack.id||'check-liste-default', profile=new URLSearchParams(location.search).get('profile')||'default';
+/* Show the left-bottom quiz only for graded packs. Other lessons remain unchanged. */
+document.body.classList.toggle('has-graded-quiz',qs.some(q=>Array.isArray(q.choices)&&q.choices.length>=4));
 let current=Math.max(0,qs.findIndex(q=>'#'+q.id===decodeURIComponent(location.hash))), done={},answers={};
 const key=type=>['dotem-checkliste-v2',checkId,profile,type].join(':');
 // Preserve local work when a checklist receives a new, anonymous package id.
