@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Geometri · v1.1</title>
+<title>Geometri · v1.2</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
@@ -38,15 +38,25 @@ h1{font-size:29px;font-weight:500;margin:0 0 29px}
 <div class="site-shell"><main class="page">
 <div class="toolbar">
 <a id="homeBtn" href="/projeler/" title="Ana Sayfa · Startseite" aria-label="Ana Sayfa · Startseite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 2 11.2l1.4 1.7L5 11.6V21h5.1v-6.2h3.8V21H19v-9.4l1.6 1.3 1.4-1.7L12 2.6Z"/></svg></a>
-
+<div class="lang-container"><button class="btn" id="langBtn" aria-expanded="false" aria-haspopup="true">Dil</button><div class="lang-menu" id="langMenu" hidden><button data-lang="tr">Türkçe</button><button data-lang="de">Deutsch</button><button data-lang="en">English</button></div></div><button class="btn" id="helpBtn" title="Yardım" aria-label="Yardım">?</button>
 </div>
 
 <div class="grid">
 <a class="btn-card" href="../Menelaus/index.html" data-label="menelaus">Menelaus</a>
 <a class="btn-card" href="../Ceva/index.html" data-label="ceva">Ceva Teoremi</a>
+<a class="btn-card" href="pisagor/index.html" data-label="pisagor">Pisagor Teoremi</a>
 </div>
 </main></div>
-<div id="version">v1.1 · Sade menü, yalnızca Home</div>
+<div id="version">v1.2 · Pisagor Teoremi eklendi</div>
 
+<div class="modal" id="helpModal" hidden><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><h2 id="helpTitle">Yardım</h2><p id="helpText">Bir düğmeye bas. Bir geometri animasyonu açılır.</p><button class="btn" id="closeHelp">Kapat</button></div></div>
+<script>
+const dict={tr:{title:"Geometri",lang:"Dil",help:"Yardım",home:"Ana Sayfa",close:"Kapat",text:"Bir düğmeye bas. Bir geometri animasyonu açılır.",menelaus:"Menelaus",ceva:"Ceva Teoremi",pisagor:"Pisagor Teoremi",version:"Pisagor Teoremi eklendi"},de:{title:"Geometrie",lang:"Sprache",help:"Hilfe",home:"Startseite",close:"Schließen",text:"Drücke auf eine Taste. Eine Geometrie-Animation öffnet sich.",menelaus:"Menelaos",ceva:"Satz von Ceva",pisagor:"Satz des Pythagoras",version:"Satz des Pythagoras hinzugefügt"},en:{title:"Geometry",lang:"Language",help:"Help",home:"Home",close:"Close",text:"Press a button. A geometry animation opens.",menelaus:"Menelaus",ceva:"Ceva's theorem",pisagor:"Pythagorean theorem",version:"Pythagorean theorem added"}};
+const el=id=>document.getElementById(id);let lang="tr";try{const saved=localStorage.getItem("geometry.lang");if(dict[saved])lang=saved;}catch(e){}
+function menu(open){el("langMenu").hidden=!open;el("langBtn").setAttribute("aria-expanded",String(open));}
+function apply(){const d=dict[lang];document.documentElement.lang=lang;document.title=d.title+" · v1.2";el("langBtn").textContent=d.lang;el("helpBtn").title=d.help;el("helpBtn").setAttribute("aria-label",d.help);el("homeBtn").title=d.home;el("homeBtn").setAttribute("aria-label",d.home);el("helpTitle").textContent=d.help;el("helpText").textContent=d.text;el("closeHelp").textContent=d.close;el("version").textContent="v1.2 · "+d.version;document.querySelectorAll("[data-label]").forEach(a=>a.textContent=d[a.dataset.label]);}
+el("langBtn").onclick=()=>menu(el("langMenu").hidden);el("langMenu").onclick=e=>{const v=e.target.dataset.lang;if(!dict[v])return;lang=v;try{localStorage.setItem("geometry.lang",v);localStorage.setItem("pythagoras.lang",v);}catch(e){}apply();menu(false);};
+el("helpBtn").onclick=()=>{el("helpModal").hidden=false;el("closeHelp").focus();};function close(){el("helpModal").hidden=true;el("helpBtn").focus();}el("closeHelp").onclick=close;el("helpModal").onclick=e=>{if(e.target===el("helpModal"))close();};document.addEventListener("keydown",e=>{if(e.key==="Escape"){menu(false);if(!el("helpModal").hidden)close();}});document.addEventListener("click",e=>{if(!e.target.closest(".lang-container"))menu(false);});apply();
+</script>
 <script src="/projeler/analytics.js?v=20261123"></script>
 </body></html>
