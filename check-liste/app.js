@@ -310,28 +310,23 @@ async function openSolution(q){
  returnFocus=document.activeElement;
  previousBodyOverflow=document.body.style.overflow;
  const lng=$('uiLanguage')?.value||'tr';
- $('solutionHeading').textContent=lng==='de'?'Lösung':lng==='en'?'Solution':'Çözüm';
+ $('solutionHeading').textContent=q.kind==='operator'?q.number:(lng==='de'?'Lösung':lng==='en'?'Solution':'Çözüm');
  solutionOverlay.hidden=false;
  document.body.style.overflow='hidden';
  renderSolutionPieces([{text:'Çözüm yükleniyor…'}]);
  try{solutionClose.focus({preventScroll:true})}catch{}
  let items=[];
- if(pack.id==='tuana-2-vorabitur-2026'){
+ if(pack.id==='tuana-2-vorabitur-2026'&&q.kind==='operator'){
+  // Bir dil ifadesinin anlamı soruluyor; örnek veya işlem adımı gösterme.
+  items=plainSolutionParts(q.explanation);
+ }else if(pack.id==='tuana-2-vorabitur-2026'){
   try{
    const book=await loadTuanaSolutions();
    if(token!==solutionRequest||solutionOverlay.hidden)return;
-   if(q.kind==='operator'){
-    const operatorQuestions=qs.filter(x=>x.kind==='operator');
-    const index=operatorQuestions.findIndex(x=>x.id===q.id);
-    if(q.explanation)items.push(...plainSolutionParts(q.explanation));
-    const example=book.operatorExamples?.[index]?.[1];
-    if(example)items.push({text:'Örnek: '+example,conclusion:false});
-   }else{
-    const entry=book.math?.[q.id];
-    if(entry){
-     items=entry.steps.map(step=>({text:String(step),conclusion:false}));
-     if(entry.conclusion)items.push({text:'Sonuç: '+entry.conclusion,conclusion:true});
-    }
+   const entry=book.math?.[q.id];
+   if(entry){
+    items=entry.steps.map(step=>({text:String(step),conclusion:false}));
+    if(entry.conclusion)items.push({text:'Sonuç: '+entry.conclusion,conclusion:true});
    }
   }catch(error){
    console.warn('Çözüm paketi yüklenemedi:',error);
