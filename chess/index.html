@@ -3693,7 +3693,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   function igorBuild(){
     const nav=document.querySelector(".simpleNav");
     const btn=document.createElement("button");
-    btn.id="simpleIgor";btn.type="button";btn.textContent="Igor";
+    btn.id="simpleIgor";btn.type="button";btn.textContent="Çalışma";
     nav.appendChild(btn);
     btn.addEventListener("click",()=>{
       if(igorActive){igorExit();return;}
@@ -3711,7 +3711,7 @@ body.igor-mode #chessPlaybackControls{display:none!important}
     },true);
     const panel=document.createElement("section");
     panel.id="igorPanel";panel.hidden=true;panel.className="igor-panel";
-    const select=igorBooks.map((title,i)=>'<option value="'+(i+1)+'">'+(i===7?'Chess Gems':'Kitap '+(i+1)+' – '+title)+'</option>').join("");
+    const select=igorBooks.map((title,i)=>'<option value="'+(i+1)+'">'+('Kitap '+(i+1))+'</option>').join("");
     panel.innerHTML=
       '<select id="igorBook" aria-label="Kitap seç">'+select+'</select>'+
       '<p id="igorTask"></p>'+
@@ -3790,5 +3790,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.9.1 · Chess Gems okuma, alıştırma ve PDF</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.9.2 · Çalışma menüsü ve kitap adları sadeleştirildi</div></body>
 </html>
