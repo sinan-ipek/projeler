@@ -384,13 +384,39 @@ const falseMeanings=[
  'Yalnızca grafiğin renklerini değiştirmek.',
  'Verileri hiçbir kontrol yapmadan olduğu gibi kabul etmek.'
 ];
+/* v1.38.3: Operator soruları yalnızca kısa Türkçe karşılık ister. */
+const operatorTurkish={
+ 'Bestimmen Sie':'Belirleyin, bulun.',
+ 'Ermitteln Sie':'Bulun, tespit edin.',
+ 'Diskutieren Sie':'Ayrıntılı inceleyin, tartışın.',
+ 'Untersuchen Sie':'İnceleyin, araştırın.',
+ 'Zeigen Sie':'Gösterin, kanıtlayın.',
+ 'Prüfen Sie':'Kontrol edin, doğruluğunu sınayın.',
+ 'Entscheiden Sie':'Karar verin, seçin.',
+ 'Bewerten Sie':'Değerlendirin, yorumlayın.',
+ 'Begründen Sie':'Gerekçelendirin, nedenini açıklayın.',
+ 'Berechnen Sie':'Hesaplayın.',
+ 'Erstellen Sie':'Oluşturun, hazırlayın.',
+ 'Zeichnen Sie':'Çizin.',
+ 'Geben Sie an':'Belirtin, yazın.',
+ 'Stellen Sie auf':'Kurun, oluşturun.',
+ 'Lösen Sie':'Çözün.',
+ 'Begründen Sie (rechnerisch)':'İşlemle gerekçelendirin, hesapla kanıtlayın.',
+ 'Stellen Sie dar':'Gösterin, açıklayın.',
+ 'Skizzieren Sie':'Taslak çizin, kabaca çizin.',
+ 'Übertragen Sie':'Aktarın, olduğu gibi geçirin.',
+ 'Ergänzen Sie':'Tamamlayın, eksikleri doldurun.',
+ 'Benennen Sie':'Adlandırın, ismini yazın.'
+};
 const operatorQuestions=questions.filter(q=>q.kind==='operator');
 if(operatorQuestions.length!==opKeys.length)throw Error('Operator kartları tam değil.');
 operatorQuestions.forEach((q,i)=>{
- const [type,meaning]=opKeys[i],[german,turkish]=opFull[type];
+ const [,meaning]=opKeys[i];
+ const shortMeaning=operatorTurkish[q.number];
+ if(!shortMeaning)throw Error('Türkçe operatör karşılığı eksik: '+q.number);
  q.german='Was bedeutet die Aufforderung „'+q.number+'“ in einer Mathematikprüfung?';
  q.turkish='Matematik sınavında „'+q.number+'“ yönergesi ne anlama gelir?';
- q.explanation='Deutsch: '+german+'\nTürkçe: '+turkish;
+ q.explanation=shortMeaning;
  for(const option of q.choices)option.label=option.value==='0'?meaning:falseMeanings[Number(option.value)-1];
 });
 
