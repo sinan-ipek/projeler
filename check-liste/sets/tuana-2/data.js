@@ -417,6 +417,10 @@ operatorQuestions.forEach((q,i)=>{
  q.german='Was bedeutet „'+q.number+'“?';
  q.turkish='„'+q.number+'“ nedir?';
  q.explanation=shortMeaning;
+ // Sözlük sorularında hesap makinesi ve sınav açıklaması gösterme.
+ q.calculatorNote='';
+ delete q.calculatorAllowed;
+ q.notes='';
  for(const option of q.choices)option.label=option.value==='0'?meaning:falseMeanings[Number(option.value)-1];
 });
 
