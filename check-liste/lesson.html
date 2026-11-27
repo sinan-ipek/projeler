@@ -187,19 +187,18 @@ html,body{background:#fff!important}
  .app{grid-template-columns:110px minmax(260px,1fr) minmax(300px,calc(42% + 110px))}
  body.has-graded-quiz .app{grid-template-columns:145px minmax(300px,1fr) minmax(300px,calc(44% + 145px))}
 }
-/* Dar sol sütunda Home / Help ilk sırada, dil seçimi ikinci sırada. */
+/* Dar sol sütunda Home / Help tek satırda. */
 @media(min-width:901px){
  .left{min-width:0;padding-left:8px;padding-right:8px}
  .left .utility-bar{display:grid;grid-template-columns:minmax(0,1fr) 42px;gap:6px}
  .left .utility-home{grid-column:1;grid-row:1;width:42px;height:42px}
  .left .utility-help{grid-column:2;grid-row:1;width:42px;height:42px}
- .left .utility-bar select{grid-column:1 / -1;grid-row:2;display:block;width:100%;min-width:0;margin:0!important}
- .left .item{overflow-wrap:anywhere;hyphens:auto;font-size:13px;padding:9px 7px}
+  .left .item{overflow-wrap:anywhere;hyphens:auto;font-size:13px;padding:9px 7px}
  .left .group{overflow-wrap:anywhere}
  .left h2{overflow-wrap:anywhere;font-size:16px}
  .left select,.left input[type="search"]{font-size:12px;padding-left:6px;padding-right:6px}
 }
-</style></head><body><div class="app"><aside class="left"><nav class="utility-bar" aria-label="Sayfa araçları"><a class="utility-home" href="/projeler/" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a><select id="uiLanguage" aria-label="Dil" title="Dil"><option value="tr">Türkçe</option><option value="de">Almanca</option><option value="en">İngilizce</option></select><button id="quickHelp" class="utility-help" type="button" aria-expanded="false" title="Help">?</button></nav><div id="quickHelpText" class="utility-helptext" hidden></div><h2 id="lessonName">Ders</h2><a class="return-to-lists" href="./index.html">← Check Liste</a><div id="setTitle" class="small">Ders yükleniyor…</div><div id="progressText" class="small"></div><div class="progress"><i id="progressBar"></i></div><select id="pageSelect"><option value="all">Tüm sayfalar</option></select><input id="search" type="search" placeholder="Soru ara…"><button id="importPrivateImages" type="button" hidden style="width:100%;padding:9px;margin:7px 0;background:#fff;border:1px solid #8ea899;border-radius:7px;cursor:pointer">⤴ Görselleri içe aktar</button><input id="privateImagesInput" type="file" multiple accept="image/png,image/jpeg,image/webp" hidden><p id="privateImagesHint" class="small" hidden></p><div id="menu"></div>
+</style></head><body><div class="app"><aside class="left"><nav class="utility-bar" aria-label="Sayfa araçları"><a class="utility-home" href="/projeler/" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a><button id="quickHelp" class="utility-help" type="button" aria-expanded="false" title="Help">?</button></nav><div id="quickHelpText" class="utility-helptext" hidden></div><h2 id="lessonName">Ders</h2><a class="return-to-lists" href="./index.html">← Check Liste</a><div id="setTitle" class="small">Ders yükleniyor…</div><div id="progressText" class="small"></div><div class="progress"><i id="progressBar"></i></div><select id="pageSelect"><option value="all">Tüm sayfalar</option></select><input id="search" type="search" placeholder="Soru ara…"><button id="importPrivateImages" type="button" hidden style="width:100%;padding:9px;margin:7px 0;background:#fff;border:1px solid #8ea899;border-radius:7px;cursor:pointer">⤴ Görselleri içe aktar</button><input id="privateImagesInput" type="file" multiple accept="image/png,image/jpeg,image/webp" hidden><p id="privateImagesHint" class="small" hidden></p><div id="menu"></div>
 <section id="quizPanel" class="quiz-panel" hidden aria-label="Çoktan seçmeli yanıt kontrolü">
 <div class="quiz-head" id="quizHeading">Yanıtını seç · 4 seçenek</div>
 <div id="quizChoices" class="quiz-options" role="group" aria-label="Yanıt seçenekleri"></div>
@@ -231,10 +230,10 @@ html,body{background:#fff!important}
  </section>
 </div>
 <div id="imageLightbox" class="image-lightbox" role="dialog" aria-modal="true" aria-label="Büyütülmüş soru görseli" hidden><img id="imageLightboxImg" alt="Büyütülmüş görsel" title="Küçültmek için tıkla"></div>
-<div class="version-note" aria-label="Sürüm">v1.38.6 · Sol menü yarıya, çizim alanı genişletildi</div>
+<div class="version-note" aria-label="Sürüm">v1.38.7 · Ders menüsünden dil seçimi kaldırıldı</div>
 <script>
 (function(){
- const lang=document.getElementById('uiLanguage');
+ // Ders ekranında sabit Türkçe arayüz; proje ana sayfasındaki dil seçimi korunur.
  const help=document.getElementById('quickHelp');
  const text=document.getElementById('quickHelpText');
  const lesson=new URLSearchParams(location.search).get('set')||'cetin-1';
@@ -259,9 +258,9 @@ html,body{background:#fff!important}
   en:{help:'Draw with Pen. Move with Select. Save PDF with Share.',title:'Çetin 1 · Math',search:'Search questions…',all:'All pages',share:'↗ Share',pen:'✎ Pen',select:'↖ Select',eraser:'▧ Eraser',clear:'Clear all',prev:'← Back',next:'Next →',done:'Done ✓',answer:'Solution',heading:'✎ Solution board'}
  };
  function translate(){
-  const l=labels[lang.value]||labels.tr;
-  document.documentElement.lang=lang.value;
-  document.getElementById('setTitle').textContent=chosen.title[lang.value]||chosen.title.tr;
+  const l=labels.tr;
+  document.documentElement.lang='tr';
+  document.getElementById('setTitle').textContent=chosen.title.tr;
   document.getElementById('search').placeholder=l.search;
   document.getElementById('pageSelect').options[0].textContent=l.all;
   for(const [id,key] of [['shareSolutions','share'],['pen','pen'],['selectTool','select'],['eraser','eraser'],['clear','clear'],['prev','prev'],['next','next']]){
@@ -274,8 +273,6 @@ html,body{background:#fff!important}
   if(bar)bar.textContent=l.heading;
   text.textContent=l.help;
  }
- try{const saved=localStorage.getItem('check-liste:ui-language');if(labels[saved])lang.value=saved}catch(e){}
- lang.addEventListener('change',()=>{translate();try{localStorage.setItem('check-liste:ui-language',lang.value)}catch(e){}});
  help.addEventListener('click',()=>{text.hidden=!text.hidden;help.setAttribute('aria-expanded',String(!text.hidden))});
  translate();
 })();
