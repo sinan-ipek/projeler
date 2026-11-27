@@ -177,6 +177,28 @@ html,body{background:#fff!important}
  .solution-piece{font-size:15px;line-height:1.55}
  .solution-column{padding-right:5px}
 }
+
+/* v1.38.6 — Sol seçim sütunu yarıya; orta sütun sabit, fark çizim alanına. */
+@media(min-width:1051px){
+ .app{grid-template-columns:120px minmax(320px,1fr) minmax(330px,calc(46% + 120px))}
+ body.has-graded-quiz .app{grid-template-columns:145px minmax(300px,1fr) minmax(330px,calc(44% + 145px))}
+}
+@media(min-width:901px) and (max-width:1050px){
+ .app{grid-template-columns:110px minmax(260px,1fr) minmax(300px,calc(42% + 110px))}
+ body.has-graded-quiz .app{grid-template-columns:145px minmax(300px,1fr) minmax(300px,calc(44% + 145px))}
+}
+/* Dar sol sütunda Home / Help ilk sırada, dil seçimi ikinci sırada. */
+@media(min-width:901px){
+ .left{min-width:0;padding-left:8px;padding-right:8px}
+ .left .utility-bar{display:grid;grid-template-columns:minmax(0,1fr) 42px;gap:6px}
+ .left .utility-home{grid-column:1;grid-row:1;width:42px;height:42px}
+ .left .utility-help{grid-column:2;grid-row:1;width:42px;height:42px}
+ .left .utility-bar select{grid-column:1 / -1;grid-row:2;display:block;width:100%;min-width:0;margin:0!important}
+ .left .item{overflow-wrap:anywhere;hyphens:auto;font-size:13px;padding:9px 7px}
+ .left .group{overflow-wrap:anywhere}
+ .left h2{overflow-wrap:anywhere;font-size:16px}
+ .left select,.left input[type="search"]{font-size:12px;padding-left:6px;padding-right:6px}
+}
 </style></head><body><div class="app"><aside class="left"><nav class="utility-bar" aria-label="Sayfa araçları"><a class="utility-home" href="/projeler/" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a><select id="uiLanguage" aria-label="Dil" title="Dil"><option value="tr">Türkçe</option><option value="de">Almanca</option><option value="en">İngilizce</option></select><button id="quickHelp" class="utility-help" type="button" aria-expanded="false" title="Help">?</button></nav><div id="quickHelpText" class="utility-helptext" hidden></div><h2 id="lessonName">Ders</h2><a class="return-to-lists" href="./index.html">← Check Liste</a><div id="setTitle" class="small">Ders yükleniyor…</div><div id="progressText" class="small"></div><div class="progress"><i id="progressBar"></i></div><select id="pageSelect"><option value="all">Tüm sayfalar</option></select><input id="search" type="search" placeholder="Soru ara…"><button id="importPrivateImages" type="button" hidden style="width:100%;padding:9px;margin:7px 0;background:#fff;border:1px solid #8ea899;border-radius:7px;cursor:pointer">⤴ Görselleri içe aktar</button><input id="privateImagesInput" type="file" multiple accept="image/png,image/jpeg,image/webp" hidden><p id="privateImagesHint" class="small" hidden></p><div id="menu"></div>
 <section id="quizPanel" class="quiz-panel" hidden aria-label="Çoktan seçmeli yanıt kontrolü">
 <div class="quiz-head" id="quizHeading">Yanıtını seç · 4 seçenek</div>
@@ -209,7 +231,7 @@ html,body{background:#fff!important}
  </section>
 </div>
 <div id="imageLightbox" class="image-lightbox" role="dialog" aria-modal="true" aria-label="Büyütülmüş soru görseli" hidden><img id="imageLightboxImg" alt="Büyütülmüş görsel" title="Küçültmek için tıkla"></div>
-<div class="version-note" aria-label="Sürüm">v1.38.5 · Tuana 2 tek ifadeli operatör kartları</div>
+<div class="version-note" aria-label="Sürüm">v1.38.6 · Sol menü yarıya, çizim alanı genişletildi</div>
 <script>
 (function(){
  const lang=document.getElementById('uiLanguage');
