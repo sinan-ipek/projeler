@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Beyaz Tahta v19.15-deneme</title>
+<title>Beyaz Tahta v19.16</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -1347,7 +1347,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.15-deneme · 3D araba yakın-teker görünürlüğü · checkpoint: v19.00</div>
+  <div id="appVersion" class="app-version" aria-label="Sürüm">v19.16 · Büyük nokta ve Check Liste şekil davranışı · checkpoint: v19.00</div>
 
   <button id="creatorSignature"
           class="creator-signature"
@@ -3661,6 +3661,10 @@
     ctx.lineJoin='round';
 
     const baseWidth=visualStrokeWidth(style);
+    if(pts.length===1){
+      ctx.beginPath();ctx.arc(pts[0].x,pts[0].y,clickDotRadius(style),0,Math.PI*2);
+      ctx.fill();ctx.restore();return;
+    }
     applyCanvasLineStyle(ctx,style);
 
     if(style && (style.lineStyle==='dotted' || style.lineStyle==='dashed')){
@@ -3877,7 +3881,7 @@
 
     if(pts.length===1){
       targetCtx.beginPath();
-      targetCtx.arc(pts[0].x,pts[0].y,width/2,0,Math.PI*2);
+      targetCtx.arc(pts[0].x,pts[0].y,clickDotRadius(style),0,Math.PI*2);
       targetCtx.fill();
       targetCtx.restore();
       return;
@@ -3900,6 +3904,7 @@
 
   function drawAdaptiveInkStroke(targetCtx,pts,style){
     if(!pts || !pts.length) return;
+    if(pts.length===1){drawFastCommittedStroke(targetCtx,pts,style);return;}
 
     if(style && (style.lineStyle==='dotted' || style.lineStyle==='dashed')){
       drawFastCommittedStroke(targetCtx,pts,style);
@@ -15136,6 +15141,86 @@
     }
   }
 
+
+  // v19.16: Check Liste closed-shape recognizer, in CSS pixels.
+  function checklistClosedShape(pts,style){
+    const ps=pts.map(p=>({x:(p.x-pts[0].x)*viewZoom,y:(p.y-pts[0].y)*viewZoom}));
+    if(ps.length<6)return null;
+    let total=0;
+    for(let i=1;i<ps.length;i++)total+=dist(ps[i-1],ps[i]);
+    if(total<45)return null;
+    const box=bbox(ps),diag=Math.hypot(box.w,box.h);
+    const endDistance=dist(ps[0],ps[ps.length-1]);
+    if(box.w<=28||box.h<=28||endDistance>=Math.max(15,diag*.17))return null;
+    const center={x:box.cx,y:box.cy}, radius=(box.w+box.h)/4;
+    const aspect=Math.min(box.w,box.h)/Math.max(box.w,box.h);
+    let turn=0,absolute=0,prev=Math.atan2(ps[0].y-center.y,ps[0].x-center.x),residual=0;
+    for(let i=0;i<ps.length;i++){
+      const p=ps[i],a=Math.atan2(p.y-center.y,p.x-center.x);
+      if(i){const d=Math.atan2(Math.sin(a-prev),Math.cos(a-prev));turn+=d;absolute+=Math.abs(d)}
+      prev=a;residual+=(dist(p,center)-radius)**2;
+    }
+    const world=p=>({x:pts[0].x+p.x/viewZoom,y:pts[0].y+p.y/viewZoom});
+    if(aspect>=.78&&Math.sqrt(residual/ps.length)/radius<=.112&&
+       Math.abs(turn)>=5.72&&Math.abs(turn)<=6.90&&(absolute-Math.abs(turn))/2<absolute*.11){
+      return {kind:'ellipse',center:world(center),rx:radius/viewZoom,ry:radius/viewZoom,angle:0,style,shapeName:'circle',source:'auto'};
+    }
+    const corners=[{x:box.x,y:box.y},{x:box.x+box.w,y:box.y},{x:box.x+box.w,y:box.y+box.h},{x:box.x,y:box.y+box.h}];
+    const distances=corners.map(q=>ps.reduce((m,p)=>Math.min(m,dist(p,q)),Infinity));
+    const edgeError=ps.reduce((sum,p)=>sum+Math.min(Math.abs(p.x-box.x),Math.abs(p.x-box.x-box.w),Math.abs(p.y-box.y),Math.abs(p.y-box.y-box.h)),0)/ps.length;
+    if(distances.every(d=>d<Math.min(diag*.14,Math.min(box.w,box.h)*.24))&&edgeError<Math.max(9,Math.min(box.w,box.h)*.12)){
+      return {kind:'rect',center:world(center),w:box.w/viewZoom,h:box.h/viewZoom,angle:0,style,shapeName:'rectangle',source:'auto'};
+    }
+    const vertices=simplifyRDP(ps,Math.max(12,diag*.15));
+    if(vertices.length===4){
+      const v=vertices.slice(0,-1).map(world);
+      return {kind:'polygon',center:{x:bbox(v).cx,y:bbox(v).cy},baseVertices:v,angle:0,style,shapeName:'triangle',source:'auto'};
+    }
+    return null;
+  }
+
+  function checklistEditLockedShape(snap,start,p){
+    if(!snap||!start||snap.kind!=='bezier')return null;
+    const type=snap.shapeType;
+    if(type==='circle'){
+      const center=snap.center;
+      const r=Math.max(8/viewZoom,dist(center,p));
+      return ellipseBezier(center,r,r,0,snap.style,'circle','auto');
+    }
+    if(type!=='triangle'&&type!=='rectangle')return null;
+    const corners=snap.anchors.map(a=>({x:a.x,y:a.y}));
+    const n=type==='triangle'?3:4;
+    if(corners.length!==n)return null;
+    let i=0;
+    for(let j=1;j<n;j++)if(dist(corners[j],start)<dist(corners[i],start))i=j;
+    let verts;
+    if(n===3){
+      const A=corners[(i+1)%3],B=corners[(i+2)%3];
+      verts=[A,B,{x:p.x,y:p.y}];
+    }else{
+      const a=corners[(i+1)%4],B=corners[(i+2)%4];
+      const vertical=Math.abs(a.x-B.x)<Math.abs(a.y-B.y);
+      const A=vertical?{x:B.x,y:p.y}:{x:p.x,y:B.y};
+      const C=vertical?{x:p.x,y:B.y}:{x:B.x,y:p.y};
+      verts=[A,B,C,{x:p.x,y:p.y}];
+    }
+    return straightBezierFromPoints(verts,{closed:true,style:snap.style,shapeType:type,source:'auto',boxAngle:0});
+  }
+
+  function recognizeChecklistPartial(pts){
+    const old=recognize(pts);
+    // Existing arc, line, bracket and ellipse paths stay intact.
+    if(old&&(old.kind==='arc'||old.kind==='line'||old.kind==='bracket'))return old;
+    const fresh=checklistClosedShape(pts,strokeStyle());
+    if(fresh)return fresh;
+    if(old&&['circle','rectangle','triangle'].includes(old.shapeName))return null;
+    return old;
+  }
+
+  function clickDotRadius(style){
+    return Math.max(4,visualStrokeWidth(style)*1.1);
+  }
+
   function armHold(){
     clearTimeout(holdTimer);
     holdTimer=setTimeout(()=>{
@@ -15143,7 +15228,7 @@
       const idle=performance.now()-lastMoveTime;
       if(idle<480) return;
 
-      const recognizedRaw=recognize(points);
+      const recognizedRaw=recognizeChecklistPartial(points);
       const recognized=recognizedRaw ? drawableToBezier(recognizedRaw) : null;
       if(recognized){
         lockedShape=JSON.parse(JSON.stringify(recognized));
@@ -15169,6 +15254,10 @@
           normalizeBezierCenter(lockedShape);
           lockedShapeSnapshot=JSON.parse(JSON.stringify(lockedShape));
           statusEl.textContent='Doğru aktif — A sabit, B’yi sürükleyebilirsin';
+        }else if(lockedShape.kind==='bezier' && ['triangle','rectangle','circle'].includes(lockedShape.shapeType)){
+          lockedShapeSnapshot=JSON.parse(JSON.stringify(lockedShape));
+          lockedShape=checklistEditLockedShape(lockedShapeSnapshot,lockPointer,lockPointer)||lockedShape;
+          statusEl.textContent='Şekil aktif — köşeyi veya yarıçapı sürükle';
         }else if(lockedShape.kind==='arc'){
           lockedShapeSnapshot=JSON.parse(JSON.stringify(lockedShape));
           rotationCenter={...lockedShape.center};
@@ -17840,6 +17929,9 @@
         normalizeBezierCenter(lockedShape);
         statusEl.textContent='Doğru aktif — B noktası hareket ediyor';
 
+      }else if(lockedShape.kind==='bezier' && ['triangle','rectangle','circle'].includes(lockedShape.shapeType)){
+        lockedShape=checklistEditLockedShape(lockedShapeSnapshot,lockPointer,p)||lockedShape;
+        statusEl.textContent='Şekil aktif — köşe veya yarıçap değişiyor';
       }else if(lockedShape.kind==='arc'){
         const snap=lockedShapeSnapshot || lockedShape;
         lockedShape=JSON.parse(JSON.stringify(snap));
@@ -18182,6 +18274,9 @@
 
     if(lockedShape){
       // Sol tuşun bırakılması otomatik şeklin kabulüdür.
+      if(e.type==='pointerup' && lockedShape.kind==='bezier' && ['triangle','rectangle','circle'].includes(lockedShape.shapeType)){
+        lockedShape=checklistEditLockedShape(lockedShapeSnapshot,lockPointer,pFromEvent(e))||lockedShape;
+      }
       const accepted=JSON.parse(JSON.stringify(lockedShape));
       accepted.boxAngle=0;
       accepted.id=liveInkId || makeObjectId();
