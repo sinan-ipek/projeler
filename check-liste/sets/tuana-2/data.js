@@ -384,7 +384,7 @@ const falseMeanings=[
  'Yalnızca grafiğin renklerini değiştirmek.',
  'Verileri hiçbir kontrol yapmadan olduğu gibi kabul etmek.'
 ];
-/* v1.38.3: Operator soruları yalnızca kısa Türkçe karşılık ister. */
+/* v1.38.4: Operatör soruları ve cevapları tek satırlık, sade ifadelerdir. */
 const operatorTurkish={
  'Bestimmen Sie':'Belirleyin, bulun.',
  'Ermitteln Sie':'Bulun, tespit edin.',
@@ -414,8 +414,8 @@ operatorQuestions.forEach((q,i)=>{
  const [,meaning]=opKeys[i];
  const shortMeaning=operatorTurkish[q.number];
  if(!shortMeaning)throw Error('Türkçe operatör karşılığı eksik: '+q.number);
- q.german='Was bedeutet die Aufforderung „'+q.number+'“ in einer Mathematikprüfung?';
- q.turkish='Matematik sınavında „'+q.number+'“ yönergesi ne anlama gelir?';
+ q.german='Was bedeutet „'+q.number+'“?';
+ q.turkish='„'+q.number+'“ nedir?';
  q.explanation=shortMeaning;
  for(const option of q.choices)option.label=option.value==='0'?meaning:falseMeanings[Number(option.value)-1];
 });
