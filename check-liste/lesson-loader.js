@@ -103,7 +103,7 @@
     if(!available)return;
     filterLambacherMenuPages(window.CHECKLIST_PACK);
    }else{
-    await load(selected.data+'?v=1.39.1');
+    await load(selected.data+'?v=1.39.2');
     if(!window.CHECKLIST_PACK||
        window.CHECKLIST_PACK.id!==selected.pack||
        !Array.isArray(window.CHECKLIST_PACK.questions))
