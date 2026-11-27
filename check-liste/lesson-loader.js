@@ -1,4 +1,4 @@
-/* Check Liste v1.38.5 — Tek ortak ders yükleyicisi.
+/* Check Liste v1.39.0 — Tek ortak ders yükleyicisi.
    Yalnızca ders veri kaynağı değişir: aynı HTML, çizim motoru ve PDF oluşturucu. */
 (function(){
  'use strict';
@@ -14,7 +14,8 @@
   'liya-1':{data:'./sets/liya-1/data.js',pack:'liya-1-proportion-2026',name:'Liya 1'},
   'egemen-1':{data:'./sets/egemen-1/data.js',pack:'egemen-1-test72-2026',name:'Egemen 1'},
   'kerem-1':{data:'./sets/kerem-1-fractions-2026/data.js',pack:'kerem-1-fractions-2026',name:'Kerem 1'},
-  'ecrin-1':{data:'./sets/ecrin-1/data.js',pack:'ecrin-1-zuordnungen-2026',name:'Ecrin 1'}
+  'ecrin-1':{data:'./sets/ecrin-1/data.js',pack:'ecrin-1-zuordnungen-2026',name:'Ecrin 1'},
+  'cinar-1':{data:'./sets/cinar-1/data.js',pack:'cinar-1-page30-2026',name:'Çınar 1'}
  });
  const selected=sources[id];
  const status=document.getElementById('exportStatus');
@@ -101,7 +102,7 @@
     if(!available)return;
     filterLambacherMenuPages(window.CHECKLIST_PACK);
    }else{
-    await load(selected.data+'?v=1.38.5');
+    await load(selected.data+'?v=1.39.0');
     if(!window.CHECKLIST_PACK||
        window.CHECKLIST_PACK.id!==selected.pack||
        !Array.isArray(window.CHECKLIST_PACK.questions))
