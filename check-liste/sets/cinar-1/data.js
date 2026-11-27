@@ -1,4 +1,4 @@
-/* Çınar 1 · v1.39.0 · Seite 30 · Aufgaben 19–26 und Wortliste.
+/* Übungsblatt 5 · v1.39.1 · Seite 30 · Aufgaben 19–26 und Wortliste.
  * Quelle: vom Nutzer bereitgestelltes Foto der Buchseite.
  * 29 Teilaufgaben + 11 Wortkarten; Fragen zweisprachig, Antworten Türkisch.
  * Die Skizze zu Aufgabe 20 ist neu als SVG gezeichnet, kein Buchfoto.
@@ -147,7 +147,7 @@ if(Q.some(q=>!q.german||!q.turkish||!q.solution))throw Error('Eksik soru, çevir
 if(Q.filter(q=>q.figureImage).length!==3)throw Error('Koordinat diyagramları eksik');
 window.CHECKLIST_PACK={
  id:'cinar-1-page30-2026',
- title:'Çınar 1 · Mathematik · Seite 30 · Aufgaben 19–26 + Wortliste',
+ title:'Übungsblatt 5 · Mathematik · Seite 30 · Aufgaben 19–26 + Wortliste',
  onlySolvedAnswers:true,
  questions:Q
 };
