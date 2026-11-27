@@ -1,4 +1,4 @@
-/* Check Liste v1.38.2 — Tek ortak ders yükleyicisi.
+/* Check Liste v1.38.3 — Tek ortak ders yükleyicisi.
    Yalnızca ders veri kaynağı değişir: aynı HTML, çizim motoru ve PDF oluşturucu. */
 (function(){
  'use strict';
@@ -101,13 +101,13 @@
     if(!available)return;
     filterLambacherMenuPages(window.CHECKLIST_PACK);
    }else{
-    await load(selected.data+'?v=1.37.0');
+    await load(selected.data+'?v=1.38.3');
     if(!window.CHECKLIST_PACK||
        window.CHECKLIST_PACK.id!==selected.pack||
        !Array.isArray(window.CHECKLIST_PACK.questions))
      throw new Error('Ders verileri doğrulanamadı.');
    }
-   await load('./app.js?v=1.38.2');
+   await load('./app.js?v=1.38.3');
    await load('./pdf-export.js?v=1.27.0');
   }catch(err){
    console.error('Check Liste yükleme hatası:',err);
