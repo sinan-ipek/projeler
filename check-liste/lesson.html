@@ -126,7 +126,7 @@ body{background:#dedede}
 .boardbar .tool,.boardbar .clear,.boardbar .shareSolutions,.boardbar #sharePdfFile{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;height:var(--check-h);min-height:var(--check-h);padding:0 11px;border-radius:10px;font-size:13px;line-height:1.1}
 .boardbar .ink-colors,.boardbar .ink-styles{min-height:var(--check-h);height:var(--check-h);border-radius:10px;padding:4px 6px;flex:0 0 auto}
 .boardbar .ink-style{min-height:32px;height:32px;padding:4px 8px}
-.board-area{margin:13px;min-height:230px;border:var(--check-edge);border-radius:15px;background:#fff;box-shadow:var(--check-shadow);overflow:hidden}
+.board-area{margin:0;min-height:230px;border:0;border-radius:0;background:#fff;box-shadow:none;overflow:hidden}
 #exportStatus:empty{display:none}
 .version-note{z-index:5;color:#929992;background:#f2f2f3cc;border-radius:4px;padding:2px 5px}
 .image-lightbox[hidden]{display:none!important}
@@ -198,6 +198,8 @@ html,body{background:#fff!important}
  .left h2{overflow-wrap:anywhere;font-size:16px}
  .left select,.left input[type="search"]{font-size:12px;padding-left:6px;padding-right:6px}
 }
+/* v1.38.8 — Çizim alanında çerçeve, gölge ve dış boşluk yok. */
+.boardpanel .board-area{margin:0;border:none;border-radius:0;box-shadow:none;background:#fff}
 </style></head><body><div class="app"><aside class="left"><nav class="utility-bar" aria-label="Sayfa araçları"><a class="utility-home" href="/projeler/" title="Home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 11h3v10h6v-7h2v7h6V11h3L12 2Z"/></svg></a><button id="quickHelp" class="utility-help" type="button" aria-expanded="false" title="Help">?</button></nav><div id="quickHelpText" class="utility-helptext" hidden></div><h2 id="lessonName">Ders</h2><a class="return-to-lists" href="./index.html">← Check Liste</a><div id="setTitle" class="small">Ders yükleniyor…</div><div id="progressText" class="small"></div><div class="progress"><i id="progressBar"></i></div><select id="pageSelect"><option value="all">Tüm sayfalar</option></select><input id="search" type="search" placeholder="Soru ara…"><button id="importPrivateImages" type="button" hidden style="width:100%;padding:9px;margin:7px 0;background:#fff;border:1px solid #8ea899;border-radius:7px;cursor:pointer">⤴ Görselleri içe aktar</button><input id="privateImagesInput" type="file" multiple accept="image/png,image/jpeg,image/webp" hidden><p id="privateImagesHint" class="small" hidden></p><div id="menu"></div>
 <section id="quizPanel" class="quiz-panel" hidden aria-label="Çoktan seçmeli yanıt kontrolü">
 <div class="quiz-head" id="quizHeading">Yanıtını seç · 4 seçenek</div>
@@ -230,7 +232,7 @@ html,body{background:#fff!important}
  </section>
 </div>
 <div id="imageLightbox" class="image-lightbox" role="dialog" aria-modal="true" aria-label="Büyütülmüş soru görseli" hidden><img id="imageLightboxImg" alt="Büyütülmüş görsel" title="Küçültmek için tıkla"></div>
-<div class="version-note" aria-label="Sürüm">v1.38.7 · Ders menüsünden dil seçimi kaldırıldı</div>
+<div class="version-note" aria-label="Sürüm">v1.38.8 · Çizim alanı çerçevesiz ve gölgesiz</div>
 <script>
 (function(){
  // Ders ekranında sabit Türkçe arayüz; proje ana sayfasındaki dil seçimi korunur.
