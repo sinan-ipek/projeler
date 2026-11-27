@@ -384,7 +384,7 @@ const falseMeanings=[
  'Yalnızca grafiğin renklerini değiştirmek.',
  'Verileri hiçbir kontrol yapmadan olduğu gibi kabul etmek.'
 ];
-/* v1.38.4: Operatör soruları ve cevapları tek satırlık, sade ifadelerdir. */
+/* v1.38.5: Operatörlerde Almanca sadece ifade, Türkçe sadece '?' gösterilir. */
 const operatorTurkish={
  'Bestimmen Sie':'Belirleyin, bulun.',
  'Ermitteln Sie':'Bulun, tespit edin.',
@@ -414,8 +414,8 @@ operatorQuestions.forEach((q,i)=>{
  const [,meaning]=opKeys[i];
  const shortMeaning=operatorTurkish[q.number];
  if(!shortMeaning)throw Error('Türkçe operatör karşılığı eksik: '+q.number);
- q.german='Was bedeutet „'+q.number+'“?';
- q.turkish='„'+q.number+'“ nedir?';
+ q.german=String(q.number);
+ q.turkish='?';
  q.explanation=shortMeaning;
  // Sözlük sorularında hesap makinesi ve sınav açıklaması gösterme.
  q.calculatorNote='';
