@@ -72,17 +72,17 @@ figure img{display:block;max-width:100%;height:auto;background:#fff;border:1px s
  </section>
  <button class="close" id="close" type="button">Pencereyi kapat</button>
 </main>
-<div class="version">v1.31.0 · Tuana 2 · KaTeX ile adım adım çözüm</div>
+<div class="version">v1.38.3 · Operatörlerde kısa Türkçe karşılık</div>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.js" integrity="sha384-a1WQdjRj162i159OYq041X6I4K8NenkrI09LlPmiHg0YOb7CR+wJOraXwK9abpnE" crossorigin="anonymous"></script>
 <script src="./math-render.js?v=1.31.0"></script>
-<script src="./sets/tuana-2/data.js?v=1.29.0"></script>
+<script src="./sets/tuana-2/data.js?v=1.38.3"></script>
 <script src="./sets/tuana-2/solutions.js?v=1.29.0"></script>
 <script>
 (function(){
  'use strict';
  const $=id=>document.getElementById(id);
  const labels={
-  tr:{subtitle:'Tuana 2 · Açıklamalı çözüm',heading:'Adım adım açıklamalı çözüm',operator:'Anlamı ve açıklaması',example:'Kullanım örneği:',close:'Pencereyi kapat',help:'Bu sayfada çözüm adımları bulunur. Sırayla oku.',missing:'Bu soru için çözüm bulunamadı.'},
+  tr:{subtitle:'Tuana 2 · Açıklamalı çözüm',heading:'Adım adım açıklamalı çözüm',operator:'Türkçe karşılığı',example:'Kullanım örneği:',close:'Pencereyi kapat',help:'Bu sayfada çözüm adımları bulunur. Sırayla oku.',missing:'Bu soru için çözüm bulunamadı.'},
   de:{subtitle:'Tuana 2 · Erläuterte Lösung (Türkisch)',heading:'Schritt-für-Schritt-Lösung (Türkisch)',operator:'Bedeutung und Erklärung',example:'Beispiel (Türkisch):',close:'Fenster schließen',help:'Hier sehen Sie die Lösung. Lesen Sie die Schritte.',missing:'Keine Lösung für diese Aufgabe gefunden.'},
   en:{subtitle:'Tuana 2 · Worked solution (Turkish)',heading:'Step-by-step solution (Turkish)',operator:'Meaning and explanation',example:'Example (Turkish):',close:'Close window',help:'This page contains the solution steps.',missing:'No solution found for this question.'}
  };
@@ -103,9 +103,10 @@ figure img{display:block;max-width:100%;height:auto;background:#fff;border:1px s
   $('subTitle').textContent=lang.subtitle;
   $('solutionTitle').textContent=question?.kind==='operator'?lang.operator:lang.heading;
   $('close').textContent=lang.close;$('helpText').textContent=lang.help;
-  if(question?.kind==='operator'&&operatorIndex>=0&&book){
+  if(question?.kind==='operator'){
+   // Yalnızca kısa Türkçe karşılık: işlem ve örnek yok.
    $('steps').replaceChildren();
-   insertStep(lang.example+' '+book.operatorExamples[operatorIndex][1]);
+   $('steps').hidden=true;
   }
   if(!question)$('answerStatus').textContent=lang.missing;
  }
