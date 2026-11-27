@@ -1,4 +1,4 @@
-/* Check Liste v1.39.1 — Tek ortak ders yükleyicisi.
+/* Check Liste v1.39.2 — Tek ortak ders yükleyicisi.
    Yalnızca ders veri kaynağı değişir: aynı HTML, çizim motoru ve PDF oluşturucu. */
 (function(){
  'use strict';
@@ -15,8 +15,8 @@
   'egemen-1':{data:'./sets/egemen-1/data.js',pack:'egemen-1-test72-2026',name:'Egemen 1'},
   'kerem-1':{data:'./sets/kerem-1-fractions-2026/data.js',pack:'kerem-1-fractions-2026',name:'Kerem 1'},
   'ecrin-1':{data:'./sets/ecrin-1/data.js',pack:'ecrin-1-zuordnungen-2026',name:'Ecrin 1'},
-  'cinar-1':{data:'./sets/cinar-1/data.js',pack:'cinar-1-page30-2026',name:'Übungsblatt 5'},
-  'uebungsblatt-5':{data:'./sets/cinar-1/data.js',pack:'cinar-1-page30-2026',name:'Übungsblatt 5'}
+  'cinar-1':{data:'./sets/cinar-1/data.js',pack:'cinar-1-page30-2026',name:'Çınar 1'},
+  'uebungsblatt-5':{data:'./sets/uebungsblatt-5/data.js',pack:'tu-dortmund-mafi1-uebungsblatt-05-2026',name:'Übungsblatt 5'}
  });
  const selected=sources[id];
  const status=document.getElementById('exportStatus');
