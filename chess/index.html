@@ -3558,11 +3558,115 @@ body.igor-mode #chessPlaybackControls{display:none!important}
   try{const p=JSON.parse(localStorage.getItem(igorKey)||"null");if(p&&typeof p==="object")igorSave={...igorSave,...p};}catch(e){}
   function igorPersist(){try{localStorage.setItem(igorKey,JSON.stringify(igorSave));}catch(e){}}
   function igorList(){return igorProblems[igorSave.book]||[];}
+  // Igor success feedback: synthesized applause and lightweight fireworks.
+  // Uses no external assets, and never changes game or exercise state.
+  let igorFireworksCleanup=null;
+  let igorApplauseLast=0;
+  function igorPlayApplause(){
+    if(!soundEnabled)return;
+    const ctx=ensureAudio();
+    if(!ctx)return;
+    const now=ctx.currentTime;
+    if(now-igorApplauseLast<0.6)return;
+    igorApplauseLast=now;
+    // Layered, short filtered-noise claps (not a musical tune).
+    const noise=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.11),ctx.sampleRate);
+    const data=noise.getChannelData(0);
+    for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;
+    for(let n=0;n<17;n++){
+      const t=now+0.035+n*0.085+(Math.random()*0.035);
+      const src=ctx.createBufferSource();src.buffer=noise;
+      const filter=ctx.createBiquadFilter();filter.type="bandpass";
+      filter.frequency.value=1100+Math.random()*1250;
+      filter.Q.value=0.65;
+      const gain=ctx.createGain();
+      const volume=(0.025+Math.random()*0.023)*(n<4?0.65:1);
+      gain.gain.setValueAtTime(0.0001,t);
+      gain.gain.exponentialRampToValueAtTime(volume,t+0.007);
+      gain.gain.exponentialRampToValueAtTime(0.0001,t+0.09);
+      src.connect(filter).connect(gain).connect(ctx.destination);
+      src.start(t);src.stop(t+0.1);
+    }
+  }
+  function igorFireworks(){
+    if(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches)return;
+    if(igorFireworksCleanup)igorFireworksCleanup();
+    const canvas=document.createElement("canvas");
+    canvas.setAttribute("aria-hidden","true");
+    canvas.style.cssText="position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:10035";
+    document.body.appendChild(canvas);
+    const ctx=canvas.getContext("2d");
+    if(!ctx){canvas.remove();return;}
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    const width=window.innerWidth,height=window.innerHeight;
+    canvas.width=Math.round(width*dpr);
+    canvas.height=Math.round(height*dpr);
+    ctx.scale(dpr,dpr);
+    const palette=["#ffc83d","#ff655d","#66d9fa","#9d74fc","#6ee7a4","#ff8ed2"];
+    const bursts=[
+      [width*0.30,height*0.36,0],
+      [width*0.68,height*0.29,230],
+      [width*0.50,height*0.48,490],
+      [width*0.77,height*0.55,700]
+    ];
+    const particles=[];
+    const totalDuration=1950;
+    let frame=0,disposed=false;
+    const start=performance.now();
+    for(const [x,y,delay] of bursts){
+      for(let i=0;i<48;i++){
+        const angle=(i/48)*Math.PI*2+(Math.random()-0.5)*0.14;
+        const velocity=55+Math.random()*125;
+        particles.push({x,y,delay,vx:Math.cos(angle)*velocity,vy:Math.sin(angle)*velocity,
+          color:palette[Math.floor(Math.random()*palette.length)],radius:1.7+Math.random()*1.9});
+      }
+    }
+    const cleanup=()=>{
+      if(disposed)return;
+      disposed=true;
+      cancelAnimationFrame(frame);
+      canvas.remove();
+      if(igorFireworksCleanup===cleanup)igorFireworksCleanup=null;
+    };
+    igorFireworksCleanup=cleanup;
+    function draw(now){
+      if(disposed)return;
+      const elapsed=now-start;
+      ctx.clearRect(0,0,width,height);
+      for(const p of particles){
+        const age=(elapsed-p.delay)/1000;
+        if(age<0||age>1.2)continue;
+        const alpha=Math.pow(Math.max(0,1-age/1.2),1.45);
+        const px=p.x+p.vx*age;
+        const py=p.y+p.vy*age+85*age*age;
+        ctx.globalAlpha=alpha;
+        ctx.fillStyle=p.color;
+        ctx.beginPath();
+        ctx.arc(px,py,p.radius,0,Math.PI*2);
+        ctx.fill();
+      }
+      ctx.globalAlpha=1;
+      if(elapsed<totalDuration&&igorActive)frame=requestAnimationFrame(draw);
+      else cleanup();
+    }
+    frame=requestAnimationFrame(draw);
+  }
+  function igorCelebrate(){
+    // Correct answers only; ignored for unverified moves and wrong attempts.
+    igorPlayApplause();
+    igorFireworks();
+  }
+  // Unlock the browser audio context during an actual user gesture;
+  // some checked solutions are displayed after the move animation.
+  document.addEventListener("pointerdown",()=>{
+    if(igorActive&&soundEnabled)ensureAudio();
+  },{passive:true});
   function igorMessage(t){
     const el=document.getElementById("igorFeedback");
     el.textContent=t;
     el.classList.remove("igor-correct","igor-retry");
     if(t==="Doğru!"){
+      igorCelebrate();
       igorWrongCount=0;
       igorShowAnswer=false;
       el.classList.add("igor-correct");
@@ -3790,5 +3894,5 @@ body.igor-mode #chessPlaybackControls{display:none!important}
 })();
 </script>
 <script src="/projeler/shared-ui.js?v=20261018-home"></script>
-<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.9.2 · Çalışma menüsü ve kitap adları sadeleştirildi</div></body>
+<script src="stockfish-adapter.js?v=1.7.0"></script><script src="stockfish-opponent.js?v=1.9.0"></script><script src="simple-ui.js?v=1.8.0"></script><script src="board-colors.js?v=1.7.3"></script><script src="mate-animation.js?v=3.7.3"></script><script src="chess-playback.js?v=1.8.0"></script><script src="live-analysis.js?v=1.9.1"></script><script src="chess-file-io.js?v=1.8.2"></script><div class="versionNote">v3.9.3 · Igor doğru cevapta alkış ve havai fişek</div></body>
 </html>
