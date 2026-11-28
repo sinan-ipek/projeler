@@ -438,8 +438,110 @@ const RIGHT_FORCE_MS=700,RIGHT_MOVE_TOLERANCE=6;
 let rightForceTimer=null,latestInkIndex=-1;
 function cancelRightForce(){if(rightForceTimer!==null){clearTimeout(rightForceTimer);rightForceTimer=null}}
 function boardKey(){return key('board:'+qs[current].id)}
-function saveBoard(){try{localStorage.setItem(boardKey(),JSON.stringify({objects,pan}))}catch{}}
+function saveBoard(){
+ try{localStorage.setItem(boardKey(),JSON.stringify({objects,pan}));return true}
+ catch(error){
+  const status=$('exportStatus');
+  if(status)status.textContent='Çizim kaydedilemedi. Resim çok büyük olabilir; daha küçük bir resim deneyin.';
+  console.error('Çözüm panosu kaydedilemedi:',error);
+  return false;
+ }
+}
 window.loadBoard=function(){cancelRightForce();latestInkIndex=-1;holding=null;preview=null;shapeLock=null;drag=null;selected=[];clearTimeout(holdTimer);try{let v=JSON.parse(localStorage.getItem(boardKey())||'{}');objects=Array.isArray(v.objects)?v.objects:[];pan=v.pan||{x:0,y:0}}catch{objects=[];pan={x:0,y:0}}repaint()};
+/* v1.40.1 — Pano görseli: tek bir seçilebilir / taşınabilir / ölçeklenebilir nesne. */
+const boardImageCache=new Map();
+function imageForBoard(src){
+ if(!src||typeof src!=='string')return null;
+ const existing=boardImageCache.get(src);
+ if(existing)return existing.complete&&existing.naturalWidth>0?existing:null;
+ const im=new Image();
+ boardImageCache.set(src,im);
+ im.onload=()=>repaint();
+ im.onerror=()=>{boardImageCache.delete(src);console.warn('Yapıştırılan resim yüklenemedi')};
+ im.src=src;
+ return im.complete&&im.naturalWidth>0?im:null;
+}
+function paintBoardImage(o,highlight=false){
+ const im=imageForBoard(o.src);
+ const p=o.pts||[];
+ if(!im||p.length<4)return;
+ const a=p[0],b=p[1],d=p[3];
+ ctx.save();
+ ctx.transform((b.x-a.x)/im.naturalWidth,(b.y-a.y)/im.naturalWidth,
+               (d.x-a.x)/im.naturalHeight,(d.y-a.y)/im.naturalHeight,a.x,a.y);
+ ctx.drawImage(im,0,0,im.naturalWidth,im.naturalHeight);
+ ctx.restore();
+ if(highlight){
+  ctx.save();ctx.strokeStyle='#278bd2';ctx.lineWidth=2;ctx.setLineDash([7,5]);
+  ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);
+  for(let i=1;i<4;i++)ctx.lineTo(p[i].x,p[i].y);
+  ctx.closePath();ctx.stroke();ctx.restore();
+ }
+}
+function imagePolygonContains(p,pts){
+ if(!pts||pts.length<4)return false;
+ let hit=false;
+ for(let i=0,j=3;i<4;j=i++){
+  const a=pts[i],b=pts[j];
+  if((a.y>p.y)!==(b.y>p.y)&&
+     p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)hit=!hit;
+ }
+ return hit;
+}
+async function pasteBoardImage(file){
+ if(!file||!/^image\/(?:png|jpeg|webp|gif|bmp)$/i.test(file.type))return;
+ const url=URL.createObjectURL(file);
+ try{
+  const im=new Image();
+  await new Promise((resolve,reject)=>{
+   im.onload=resolve;im.onerror=()=>reject(new Error('Resim okunamadı'));im.src=url;
+  });
+  // Keep clipboard content local and compress it before localStorage persistence.
+  const MAX_SOURCE_EDGE=1600;
+  const factor=Math.min(1,MAX_SOURCE_EDGE/Math.max(im.naturalWidth,im.naturalHeight));
+  const width=Math.max(1,Math.round(im.naturalWidth*factor));
+  const height=Math.max(1,Math.round(im.naturalHeight*factor));
+  const temp=document.createElement('canvas');temp.width=width;temp.height=height;
+  const target=temp.getContext('2d',{alpha:false});
+  target.fillStyle='#fff';target.fillRect(0,0,width,height);
+  target.drawImage(im,0,0,width,height);
+  // JPEG is intentionally used to keep local storage and PDF export manageable.
+  const src=temp.toDataURL('image/jpeg',0.82);
+  const roomW=Math.max(120,area.clientWidth-42);
+  const roomH=Math.max(120,area.clientHeight-42);
+  const fit=Math.min(1,roomW/width,roomH/height);
+  const w=Math.max(40,Math.round(width*fit)),h=Math.max(40,Math.round(height*fit));
+  const x=(area.clientWidth-w)/2-pan.x,y=(area.clientHeight-h)/2-pan.y;
+  const obj={kind:'image',src,pts:[
+   {x,y},{x:x+w,y},{x:x+w,y:y+h},{x,y:y+h}
+  ]};
+  const oldObjects=objects.slice(),oldSelected=selected.slice();
+  objects.push(obj);selected=[objects.length-1];
+  if(!saveBoard()){
+   objects=oldObjects;selected=oldSelected;repaint();return;
+  }
+  imageForBoard(src);
+  setTool('select');
+  selected=[objects.length-1];
+  repaint();
+  const status=$('exportStatus');
+  if(status)status.textContent='Resim yapıştırıldı. Seçim aracıyla taşıyabilir, köşelerinden boyutlandırabilirsin.';
+ }catch(error){
+  const status=$('exportStatus');
+  if(status)status.textContent='Resim eklenemedi: '+String(error.message||error);
+ }finally{URL.revokeObjectURL(url)}
+}
+document.addEventListener('paste',event=>{
+ const target=event.target;
+ if(target&&((target instanceof HTMLInputElement)||(target instanceof HTMLTextAreaElement)||target.isContentEditable))return;
+ if($('solutionOverlay')&&!$('solutionOverlay').hidden)return;
+ const image=Array.from(event.clipboardData?.items||[]).find(item=>item.kind==='file'&&item.type.startsWith('image/'));
+ if(!image)return;
+ const file=image.getAsFile();if(!file)return;
+ event.preventDefault();
+ void pasteBoardImage(file);
+});
+
 function point(e){const r=canvas.getBoundingClientRect();return {x:e.clientX-r.left-pan.x,y:e.clientY-r.top-pan.y}}
 function eventScreen(e){const r=canvas.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}}
 function length(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
@@ -655,6 +757,7 @@ function resize(){
  ctx.setTransform(d,0,0,d,0,0);repaint();
 }
 function lineObj(o,highlight=false){
+ if(o.kind==='image'){paintBoardImage(o,highlight);return}
  const p=o.pts||[];if(!p.length)return;
  ctx.lineWidth=inkWidth;ctx.lineJoin='round';ctx.lineCap='round';
  const color=highlight?'#278bd2':(INK_COLORS.includes(o.color)?o.color:'#111111');
@@ -711,6 +814,10 @@ function segmentTouchesRect(a,b,r){
 }
 function strokeTouchesMarquee(o,r){
  const pts=o.pts||[];
+ if(o.kind==='image'){
+  const b=bounds(o);
+  return b.x<=r.x+r.w&&b.x+b.w>=r.x&&b.y<=r.y+r.h&&b.y+b.h>=r.y;
+ }
  for(let i=0;i<pts.length;i++){
   if(pts[i].x>=r.x&&pts[i].x<=r.x+r.w&&pts[i].y>=r.y&&pts[i].y<=r.y+r.h)return true;
   if(i>0&&segmentTouchesRect(pts[i-1],pts[i],r))return true;
@@ -720,6 +827,7 @@ function strokeTouchesMarquee(o,r){
 function hit(p){
  for(let i=objects.length-1;i>=0;i--){
   const pts=objects[i].pts||[];
+  if(objects[i].kind==='image'&&imagePolygonContains(p,pts))return i;
   if(pts.length===1&&length(p,pts[0])<11)return i;
   for(let j=1;j<pts.length;j++)if(segdist(p,pts[j-1],pts[j])<11)return i;
  }
