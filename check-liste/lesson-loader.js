@@ -17,6 +17,7 @@
   'kerem-1':{data:'./sets/kerem-1-fractions-2026/data.js',pack:'kerem-1-fractions-2026',name:'Kerem 1'},
   'ecrin-1':{data:'./sets/ecrin-1/data.js',pack:'ecrin-1-zuordnungen-2026',name:'Ecrin 1'},
   'cinar-1':{data:'./sets/cinar-1/data.js',pack:'cinar-1-page30-2026',name:'Çınar 1'},
+  'miray-1':{data:'./sets/miray-1/data.js',pack:'miray-1-daten-2026',name:'Miray 1'},
   'uebungsblatt-5':{data:'./sets/uebungsblatt-5/data.js',pack:'tu-dortmund-mafi1-uebungsblatt-05-2026',name:'Übungsblatt 5'}
  });
  const selected=sources[id];
