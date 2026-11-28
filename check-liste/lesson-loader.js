@@ -1,4 +1,4 @@
-/* Check Liste v1.39.2 — Tek ortak ders yükleyicisi.
+/* Check Liste v1.40.0 — Tek ortak ders yükleyicisi.
    Yalnızca ders veri kaynağı değişir: aynı HTML, çizim motoru ve PDF oluşturucu. */
 (function(){
  'use strict';
@@ -7,6 +7,7 @@
  const sources=Object.freeze({
   'cetin-1':{data:'./sets/matematik-5-2026/data.js',pack:'matematik-5-2026',name:'Çetin 1'},
   'aras-1':{data:'../aras/data.js',pack:'aras-zaman-2026',name:'Aras 1'},
+  'aras-2':{data:'./sets/aras-2/data.js',pack:'aras-2-symmetrie-pages74-75-2026',name:'Aras 2'},
   'munzur':{data:'./sets/munzur-2026/data.js',pack:'munzur-2026',name:'Munzur'},
   'lambacher-7':{data:'./sets/lambacher-schweizer-7/data.js',pack:'lambacher-schweizer-7-nrw',name:'7. sınıf'},
   'mirac-1':{data:'./sets/mirac-denklemler-2026/data.js',pack:'mirac-denklemler-2026',name:'Miraç 1'},
@@ -103,7 +104,7 @@
     if(!available)return;
     filterLambacherMenuPages(window.CHECKLIST_PACK);
    }else{
-    await load(selected.data+'?v=1.39.2');
+    await load(selected.data+'?v=1.40.0');
     if(!window.CHECKLIST_PACK||
        window.CHECKLIST_PACK.id!==selected.pack||
        !Array.isArray(window.CHECKLIST_PACK.questions))
