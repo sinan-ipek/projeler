@@ -124,7 +124,7 @@ async function drawExerciseImage(q){
   image.naturalHeight*Math.min(WIDTH/image.naturalWidth,h/image.naturalHeight));
  y+=h+25;
 }
-function drawSolutionBoard(objects){
+async function drawSolutionBoard(objects){
  room(510);
  heading('ÇÖZÜM ALANI');
  let height=Math.min(760,MAXY-y-17);
@@ -155,6 +155,18 @@ function drawSolutionBoard(objects){
  ctx.lineWidth=Math.max(2,Math.min(6,2.25*scale));
  const allowedInk=['#111111','#d62d35','#2364c9','#228044','#8a9297'];
  for(const o of paths){
+  if(o.kind==='image'&&typeof o.src==='string'){
+   const im=await imageLoad(o.src);
+   if(!im||!o.pts||o.pts.length<4)continue;
+   const a=o.pts[0],b=o.pts[1],d=o.pts[3];
+   ctx.save();ctx.setTransform(
+    ((b.x-a.x)*scale)/im.naturalWidth,((b.y-a.y)*scale)/im.naturalWidth,
+    ((d.x-a.x)*scale)/im.naturalHeight,((d.y-a.y)*scale)/im.naturalHeight,
+    ox+a.x*scale,oy+a.y*scale
+   );
+   ctx.drawImage(im,0,0,im.naturalWidth,im.naturalHeight);
+   ctx.restore();continue;
+  }
   const inkColor=allowedInk.includes(o.color)?o.color:'#111111';
   ctx.strokeStyle=inkColor;
   ctx.setLineDash(o.strokeStyle==='dashed'?[10*scale,7*scale]:[]);
@@ -200,7 +212,7 @@ async function renderAll(){
   heading('TÜRKÇE · ÇEVİRİ');paragraph(q.turkish,'#355a42');
   if(q.calculatorNote)paragraph(q.calculatorNote,q.calculatorAllowed?'#356f43':'#8d5637');
   await drawExerciseImage(q);
-  drawSolutionBoard(savedObjects(q));
+  await drawSolutionBoard(savedObjects(q));
   if(Array.isArray(q.choices)&&q.choices.length){
    heading('YANIT KONTROLÜ · ÇOKTAN SEÇMELİ');
    const marked=selectedAnswers[q.id]||null;
